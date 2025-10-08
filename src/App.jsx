@@ -102,11 +102,16 @@ export default function App() {
     toggleAdminStatus,
     resetMemberWalkCount,
     resetAllWalkCounts,
-    resetGameData
+    resetGameData,
+    movePokemonToParty,
+    movePokemonToBox,
+    releasePokemon,
+    useRareCandy,
+    updatePokemonNickname
   } = useGameState();
 
   // 로그인하지 않은 경우 로그인 화면 표시
-  if (!currentUser) {
+  if (!currentUser || !currentUser.id) {
     return <LoginScreen onLogin={handleLogin} />;
   }
 
@@ -116,7 +121,6 @@ export default function App() {
         currentTab={currentTab}
         setCurrentTab={setCurrentTab}
         isAdmin={isAdmin}
-        setIsAdmin={() => {}} // 더 이상 토글 방식 아님
         trainer={trainer}
         onLogout={handleLogout}
       />
@@ -132,10 +136,18 @@ export default function App() {
             />
           )}
           {currentTab === 'pokedex' && (
-            <PokedexView caughtPokemon={caughtPokemon} />
+            <PokedexView caughtPokemon={caughtPokemon.filter(p => p !== null)} />
           )}
           {currentTab === 'pokemon' && (
-            <PokemonView caughtPokemon={caughtPokemon} />
+            <PokemonView 
+              caughtPokemon={caughtPokemon}
+              items={items}
+              onMoveToParty={movePokemonToParty}
+              onMoveToBox={movePokemonToBox}
+              onReleasePokemon={releasePokemon}
+              onUseRareCandy={useRareCandy}
+              onUpdateNickname={updatePokemonNickname}
+            />
           )}
           {currentTab === 'items' && (
             <ItemsView items={items} />

@@ -6,7 +6,31 @@ import regionsData from '../data/regions.json';
 export default function useGameState() {
   const [currentTab, setCurrentTab] = useState('map');
   const [encounterPokemon, setEncounterPokemon] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null); // 현재 로그인한 사용자
+  
+  // 로그인 상태 복원 (localStorage에서)
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const savedUserId = localStorage.getItem('poke_currentUserId');
+      if (!savedUserId) {
+        return null; // 명시적으로 null 반환
+      }
+      
+      const members = loadFromStorage('poke_members', {});
+      const user = members[savedUserId];
+      
+      // 사용자가 없으면 localStorage 정리하고 null 반환
+      if (!user) {
+        localStorage.removeItem('poke_currentUserId');
+        return null;
+      }
+      
+      return user;
+    } catch (error) {
+      console.error('로그인 상태 복원 실패:', error);
+      localStorage.removeItem('poke_currentUserId');
+      return null;
+    }
+  });
 
   // 마스터 데이터
   const [allPokemon] = useState(pokemonData.pokemon);
@@ -71,10 +95,18 @@ export default function useGameState() {
     }));
   });
 
-  // members 변경 시 자동 저장
+  // members 변경 시 자동 저장 + currentUser 업데이트
   useEffect(() => {
     saveToStorage('poke_members', members);
-  }, [members]);
+    
+    // 현재 로그인한 사용자 정보 동기화
+    if (currentUser && currentUser.id) {
+      const updatedUser = members[currentUser.id];
+      if (updatedUser && JSON.stringify(updatedUser) !== JSON.stringify(currentUser)) {
+        setCurrentUser(updatedUser);
+      }
+    }
+  }, [members, currentUser]);
 
   // regions 변경 시 자동 저장
   useEffect(() => {
@@ -114,6 +146,7 @@ export default function useGameState() {
     const member = members[userId];
     if (member && member.password === password) {
       setCurrentUser(member);
+      localStorage.setItem('poke_currentUserId', userId); // 로그인 상태 저장
       return true;
     }
     return false;
@@ -123,6 +156,11 @@ export default function useGameState() {
   const handleLogout = () => {
     setCurrentUser(null);
     setCurrentTab('map');
+    setEncounterPokemon(null);
+    localStorage.removeItem('poke_currentUserId'); // 로그인 상태 제거
+    
+    // 강제 새로고침으로 완전히 초기화
+    window.location.reload();
   };
 
   // 현재 사용자 업데이트
@@ -316,6 +354,162 @@ export default function useGameState() {
     }
   };
 
+  // 포켓몬 엔트리로 이동
+  const movePokemonToParty = (uniqueId) => {
+    if (!currentUser) return;
+    
+    const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === uniqueId);
+    if (pokemonIndex === -1) {
+      alert('포켓몬을 찾을 수 없습니다!');
+      return;
+    }
+    
+    // 이미 엔트리에 있으면
+    if (pokemonIndex < 6) {
+      alert('이미 엔트리에 있습니다!');
+      return;
+    }
+    
+    // 빈 슬롯 찾기 (null인 위치)
+    const emptySlotIndex = currentUser.caughtPokemon.slice(0, 6).findIndex(p => p === null);
+    
+    if (emptySlotIndex === -1) {
+      alert('엔트리가 가득 찼습니다! (최대 6마리)');
+      return;
+    }
+    
+    const newCaughtPokemon = [...currentUser.caughtPokemon];
+    const pokemon = newCaughtPokemon[pokemonIndex];
+    
+    // 엔트리 빈 슬롯에 포켓몬 배치
+    newCaughtPokemon[emptySlotIndex] = pokemon;
+    
+    // 박스에서 제거 (splice 사용)
+    newCaughtPokemon.splice(pokemonIndex, 1);
+    
+    // 직접 members 업데이트
+    const updatedMembers = {
+      ...members,
+      [currentUser.id]: {
+        ...members[currentUser.id],
+        caughtPokemon: newCaughtPokemon
+      }
+    };
+    
+    setMembers(updatedMembers);
+    setCurrentUser({
+      ...currentUser,
+      caughtPokemon: newCaughtPokemon
+    });
+    
+    alert('엔트리로 이동했습니다!');
+  };
+
+  // 포켓몬 박스로 이동 (자동 정렬)
+  const movePokemonToBox = (uniqueId) => {
+    if (!currentUser) return;
+    
+    const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === uniqueId);
+    if (pokemonIndex === -1) {
+      alert('포켓몬을 찾을 수 없습니다!');
+      return;
+    }
+    
+    // 이미 박스에 있으면
+    if (pokemonIndex >= 6) {
+      alert('이미 박스에 있습니다!');
+      return;
+    }
+    
+    const newCaughtPokemon = [...currentUser.caughtPokemon];
+    const pokemon = newCaughtPokemon[pokemonIndex];
+    
+    // 엔트리 슬롯을 null로 변경
+    newCaughtPokemon[pokemonIndex] = null;
+    
+    // 박스에 추가
+    newCaughtPokemon.push(pokemon);
+    
+    // 엔트리 자동 정렬: null을 뒤로 보내기
+    const party = newCaughtPokemon.slice(0, 6);
+    const box = newCaughtPokemon.slice(6);
+    
+    const sortedParty = [
+      ...party.filter(p => p !== null), // null 아닌 포켓몬들
+      ...party.filter(p => p === null)   // null들을 뒤로
+    ];
+    
+    const finalPokemon = [...sortedParty, ...box];
+    
+    // 직접 members 업데이트
+    const updatedMembers = {
+      ...members,
+      [currentUser.id]: {
+        ...members[currentUser.id],
+        caughtPokemon: finalPokemon
+      }
+    };
+    
+    setMembers(updatedMembers);
+    setCurrentUser({
+      ...currentUser,
+      caughtPokemon: finalPokemon
+    });
+    
+    alert('박스로 이동했습니다!');
+  };
+
+  // 포켓몬 방생
+  const releasePokemon = (uniqueId) => {
+    if (!currentUser) return;
+    
+    const newCaughtPokemon = currentUser.caughtPokemon.filter(p => !p || p.uniqueId !== uniqueId);
+    updateCurrentUser({ caughtPokemon: newCaughtPokemon });
+  };
+
+  // 이상한사탕 사용
+  const useRareCandy = (uniqueId) => {
+    if (!currentUser) return;
+    
+    const candyItem = currentUser.inventory.find(item => item.name === '이상한사탕');
+    if (!candyItem || candyItem.count <= 0) {
+      alert('이상한사탕이 없습니다!');
+      return;
+    }
+    
+    const newCaughtPokemon = currentUser.caughtPokemon.map(p => 
+      p && p.uniqueId === uniqueId 
+        ? { ...p, level: p.level + 1 }
+        : p
+    );
+    
+    const newInventory = currentUser.inventory.map(item =>
+      item.name === '이상한사탕'
+        ? { ...item, count: item.count - 1 }
+        : item
+    );
+    
+    updateCurrentUser({ 
+      caughtPokemon: newCaughtPokemon,
+      inventory: newInventory
+    });
+    
+    alert('레벨이 1 올랐습니다!');
+  };
+
+  // 포켓몬 별명 변경
+  const updatePokemonNickname = (uniqueId, nickname) => {
+    if (!currentUser) return;
+    
+    const newCaughtPokemon = currentUser.caughtPokemon.map(p => 
+      p && p.uniqueId === uniqueId 
+        ? { ...p, nickname: nickname }
+        : p
+    );
+    
+    updateCurrentUser({ caughtPokemon: newCaughtPokemon });
+  };
+
   return {
     currentTab,
     setCurrentTab,
@@ -340,6 +534,11 @@ export default function useGameState() {
     toggleAdminStatus,
     resetMemberWalkCount,
     resetAllWalkCounts,
-    resetGameData
+    resetGameData,
+    movePokemonToParty,
+    movePokemonToBox,
+    releasePokemon,
+    useRareCandy,
+    updatePokemonNickname
   };
 }

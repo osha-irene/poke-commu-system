@@ -1,11 +1,12 @@
 import React from 'react';
 
-export default function PokedexView({ caughtPokemon }) {
+export default function PokedexView({ caughtPokemon = [] }) {
   const uniquePokemon = [];
   const seenNumbers = new Set();
   
+  // null 체크 추가
   caughtPokemon.forEach(pokemon => {
-    if (!seenNumbers.has(pokemon.number)) {
+    if (pokemon && !seenNumbers.has(pokemon.number)) {
       seenNumbers.add(pokemon.number);
       uniquePokemon.push(pokemon);
     }

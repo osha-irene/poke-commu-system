@@ -5,6 +5,13 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
   const [catching, setCatching] = useState(false);
   const [result, setResult] = useState(null);
   const [shaking, setShaking] = useState(0);
+  const [isReady, setIsReady] = useState(false);
+
+  // 모달이 열린 직후 클릭 방지
+  React.useEffect(() => {
+    const timer = setTimeout(() => setIsReady(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const pokeballs = [
     { name: '몬스터볼', multiplier: 1.0, color: 'bg-red-500', imageUrl: '/images/items/pokeball.png' },
@@ -12,7 +19,10 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
     { name: '하이퍼볼', multiplier: 2.0, color: 'bg-yellow-500', imageUrl: '/images/items/ultraball.png' },
   ];
 
-  const handleCatch = () => {
+  const handleCatch = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (!selectedBall) {
       alert('몬스터볼을 선택해주세요!');
       return;
@@ -25,6 +35,7 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
     }
 
     setCatching(true);
+    setResult(null); // 결과 초기화
 
     setTimeout(() => {
       let shakeCount = 0;
@@ -53,10 +64,28 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
     }, 1000);
   };
 
+  const handleBallSelect = (e, ball) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedBall(ball);
+  };
+
+  const handleCloseClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // 모달이 완전히 준비되지 않았거나, 포획 중이거나 결과가 표시 중이면 닫기 방지
+    if (!isReady || catching || result) {
+      return;
+    }
+    
+    onClose();
+  };
+
   return (
     <div 
       className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50" 
-      onClick={onClose}
+      onClick={isReady && !catching && !result ? handleCloseClick : undefined}
     >
       <div 
         className="w-full max-w-4xl mx-4" 
@@ -73,7 +102,7 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
                     <div className="text-sm text-gray-600">Lv.???</div>
                   </div>
                   
-                  {/* 포켓몬 스프라이트 (Gen V Black & White 애니메이션) */}
+                  {/* 포켓몬 스프라이트 */}
                   <div 
                     className="w-48 h-48 mx-auto"
                     style={{
@@ -107,7 +136,7 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
                 <div className="flex items-center justify-between mb-4">
                   <span className="font-bold text-lg">볼을 선택하세요</span>
                   <button 
-                    onClick={onClose}
+                    onClick={handleCloseClick}
                     className="text-gray-500 hover:text-gray-700 font-bold"
                   >
                     ✕ 도망치기
@@ -123,7 +152,7 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
                     return (
                       <button
                         key={i}
-                        onClick={() => !disabled && setSelectedBall(ball)}
+                        onClick={(e) => !disabled && handleBallSelect(e, ball)}
                         disabled={disabled}
                         className={`relative ${ball.color} text-white rounded-lg p-4 border-4 transition-all ${
                           disabled 

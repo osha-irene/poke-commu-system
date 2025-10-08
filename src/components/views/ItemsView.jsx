@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function ItemsView({ items }) {
+export default function ItemsView({ items = [] }) {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -24,7 +24,7 @@ export default function ItemsView({ items }) {
                 />
                 <div>
                   <div className="font-bold text-lg text-gray-800">{item.name}</div>
-                  <div className="text-sm text-gray-600">{item.description}</div>
+                  <div className="text-sm text-gray-600">{item.description || '유용한 아이템'}</div>
                 </div>
               </div>
               <div className="text-3xl font-bold text-indigo-600">×{item.count}</div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Map, BookOpen, Smile, Package, User, Settings, LogOut } from 'lucide-react';
 import NavButton from './NavButton';
 
 export default function Sidebar({ currentTab, setCurrentTab, isAdmin, trainer, onLogout }) {
@@ -40,31 +41,31 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin, trainer, o
       {/* 네비게이션 */}
       <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         <NavButton 
-          icon="🗺️" 
+          icon={Map}
           label="지도" 
           active={currentTab === 'map'}
           onClick={() => setCurrentTab('map')}
         />
         <NavButton 
-          icon="📖" 
+          icon={BookOpen}
           label="도감" 
           active={currentTab === 'pokedex'}
           onClick={() => setCurrentTab('pokedex')}
         />
         <NavButton 
-          icon="👾" 
+          icon={Smile}
           label="포켓몬" 
           active={currentTab === 'pokemon'}
           onClick={() => setCurrentTab('pokemon')}
         />
         <NavButton 
-          icon="🎒" 
+          icon={Package}
           label="아이템" 
           active={currentTab === 'items'}
           onClick={() => setCurrentTab('items')}
         />
         <NavButton 
-          icon="👤" 
+          icon={User}
           label="프로필" 
           active={currentTab === 'profile'}
           onClick={() => setCurrentTab('profile')}
@@ -72,9 +73,9 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin, trainer, o
         
         {isAdmin && (
           <>
-            <div className="border-t border-gray-200 my-2 pt-2"></div>
+            <div className="border-t border-gray-300 my-4 pt-2"></div>
             <NavButton 
-              icon="⚙️" 
+              icon={Settings}
               label="관리자" 
               active={currentTab === 'admin'}
               onClick={() => setCurrentTab('admin')}
@@ -89,7 +90,7 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin, trainer, o
           onClick={onLogout}
           className="w-full bg-gray-100 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-200 font-semibold transition-colors flex items-center justify-center gap-2"
         >
-          <span>🚪</span>
+          <LogOut size={18} />
           <span>로그아웃</span>
         </button>
       </div>
