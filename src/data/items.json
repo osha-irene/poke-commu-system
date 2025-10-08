@@ -1,0 +1,57 @@
+{
+  "items": [
+    {
+      "id": 1,
+      "name": "몬스터볼",
+      "type": "pokeball",
+      "catchMultiplier": 1.0,
+      "description": "야생 포켓몬을 잡을 수 있는 기본 볼",
+      "price": 200,
+      "imageUrl": "/images/items/pokeball.png"
+    },
+    {
+      "id": 2,
+      "name": "슈퍼볼",
+      "type": "pokeball",
+      "catchMultiplier": 1.5,
+      "description": "몬스터볼보다 성능이 좋은 볼",
+      "price": 600,
+      "imageUrl": "/images/items/greatball.png"
+    },
+    {
+      "id": 3,
+      "name": "하이퍼볼",
+      "type": "pokeball",
+      "catchMultiplier": 2.0,
+      "description": "슈퍼볼보다 성능이 좋은 볼",
+      "price": 1200,
+      "imageUrl": "/images/items/ultraball.png"
+    },
+    {
+      "id": 4,
+      "name": "이상한사탕",
+      "type": "consumable",
+      "description": "포켓몬의 레벨을 1 올려주는 사탕",
+      "price": 500,
+      "imageUrl": "/images/items/rare-candy.png"
+    },
+    {
+      "id": 5,
+      "name": "상처약",
+      "type": "medicine",
+      "healAmount": 20,
+      "description": "포켓몬의 HP를 20 회복시킨다",
+      "price": 300,
+      "imageUrl": "/images/items/potion.png"
+    },
+    {
+      "id": 6,
+      "name": "좋은상처약",
+      "type": "medicine",
+      "healAmount": 50,
+      "description": "포켓몬의 HP를 50 회복시킨다",
+      "price": 700,
+      "imageUrl": "/images/items/super-potion.png"
+    }
+  ]
+}

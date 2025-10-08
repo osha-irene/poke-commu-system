@@ -1,0 +1,49 @@
+{
+  "regions": [
+    {
+      "id": 1,
+      "name": "초원 지대",
+      "x": 20,
+      "y": 30,
+      "color": "bg-green-500",
+      "imageUrl": "/images/regions/grassland.png",
+      "defaultPokemon": [1, 5]
+    },
+    {
+      "id": 2,
+      "name": "숲 속",
+      "x": 50,
+      "y": 20,
+      "color": "bg-green-700",
+      "imageUrl": "/images/regions/forest.png",
+      "defaultPokemon": [1, 2, 5]
+    },
+    {
+      "id": 3,
+      "name": "호수",
+      "x": 75,
+      "y": 45,
+      "color": "bg-blue-500",
+      "imageUrl": "/images/regions/lake.png",
+      "defaultPokemon": [3]
+    },
+    {
+      "id": 4,
+      "name": "동굴",
+      "x": 30,
+      "y": 70,
+      "color": "bg-gray-600",
+      "imageUrl": "/images/regions/cave.png",
+      "defaultPokemon": [1, 4]
+    },
+    {
+      "id": 5,
+      "name": "산",
+      "x": 65,
+      "y": 75,
+      "color": "bg-orange-500",
+      "imageUrl": "/images/regions/mountain.png",
+      "defaultPokemon": [2, 4]
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "pokemon": [
+    {
+      "id": 1,
+      "number": 1,
+      "name": "이상해씨",
+      "type": "풀",
+      "catchRate": 0.3,
+      "baseHp": 45,
+      "baseAttack": 49,
+      "baseDefense": 49,
+      "baseSpeed": 45,
+      "imageUrl": "/images/pokemon/001.png"
+    },
+    {
+      "id": 2,
+      "number": 4,
+      "name": "파이리",
+      "type": "불꽃",
+      "catchRate": 0.3,
+      "baseHp": 39,
+      "baseAttack": 52,
+      "baseDefense": 43,
+      "baseSpeed": 65,
+      "imageUrl": "/images/pokemon/004.png"
+    },
+    {
+      "id": 3,
+      "number": 7,
+      "name": "꼬부기",
+      "type": "물",
+      "catchRate": 0.3,
+      "baseHp": 44,
+      "baseAttack": 48,
+      "baseDefense": 65,
+      "baseSpeed": 43,
+      "imageUrl": "/images/pokemon/007.png"
+    },
+    {
+      "id": 4,
+      "number": 25,
+      "name": "피카츄",
+      "type": "전기",
+      "catchRate": 0.4,
+      "baseHp": 35,
+      "baseAttack": 55,
+      "baseDefense": 40,
+      "baseSpeed": 90,
+      "imageUrl": "/images/pokemon/025.png"
+    },
+    {
+      "id": 5,
+      "number": 12,
+      "name": "버터플",
+      "type": "벌레",
+      "catchRate": 0.5,
+      "baseHp": 60,
+      "baseAttack": 45,
+      "baseDefense": 50,
+      "baseSpeed": 70,
+      "imageUrl": "/images/pokemon/012.png"
+    }
+  ]
+}
