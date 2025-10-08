@@ -73,15 +73,15 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
                     <div className="text-sm text-gray-600">Lv.???</div>
                   </div>
                   
-                  {/* 포켓몬 이미지 */}
+                  {/* 포켓몬 스프라이트 (Gen V Black & White 애니메이션) */}
                   <div 
                     className="w-48 h-48 mx-auto"
                     style={{
-                      backgroundImage: `url(${pokemon.imageUrl})`,
+                      backgroundImage: `url(https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${pokemon.number}.gif)`,
                       backgroundSize: 'contain',
                       backgroundRepeat: 'no-repeat',
                       backgroundPosition: 'center',
-                      animation: 'bounce 2s ease-in-out infinite'
+                      imageRendering: 'pixelated'
                     }}
                   />
                 </div>
@@ -99,7 +99,7 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
                   야생의 {pokemon.name}이(가) 나타났다!
                 </p>
                 <p className="text-sm text-gray-600 mt-2">
-                  {pokemon.type} 타입 | HP {pokemon.hp} | 포획률 {Math.round(pokemon.catchRate * 100)}%
+                  {pokemon.type} 타입 | HP {pokemon.hp || pokemon.baseHp} | 포획률 {Math.round(pokemon.catchRate * 100)}%
                 </p>
               </div>
 
@@ -236,12 +236,7 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
         )}
       </div>
 
-      <style jsx>{`
-        @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-20px); }
-        }
-        
+      <style>{`
         @keyframes shake {
           0%, 100% { transform: rotate(0deg); }
           25% { transform: rotate(-15deg); }

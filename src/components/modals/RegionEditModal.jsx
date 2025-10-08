@@ -25,7 +25,7 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-lg border border-gray-300 p-8 max-w-3xl w-full mx-4 max-h-[80vh] overflow-auto"
+        className="bg-white rounded-lg border border-gray-300 p-8 max-w-4xl w-full mx-4 max-h-[80vh] overflow-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-2xl font-bold text-gray-800 mb-4">
@@ -35,36 +35,52 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
           이 지역에 등장할 포켓몬을 선택하세요 (현재 {selectedPokemon.length}종 선택됨)
         </p>
 
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        {/* 리스트 형식 */}
+        <div className="space-y-2 mb-6 max-h-96 overflow-auto">
           {allPokemon.map((pokemon) => {
             const isSelected = selectedPokemon.includes(pokemon.id);
             return (
               <button
                 key={pokemon.id}
                 onClick={() => togglePokemon(pokemon.id)}
-                className={`p-4 rounded-lg border-2 transition-all ${
+                className={`w-full flex items-center gap-4 p-3 rounded-lg border-2 transition-all ${
                   isSelected
                     ? 'border-indigo-500 bg-indigo-50'
                     : 'border-gray-200 bg-white hover:border-gray-300'
                 }`}
               >
-                {/* 포켓몬 이미지 */}
+                {/* 선택 체크박스 */}
+                <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                  isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-gray-300'
+                }`}>
+                  {isSelected && <span className="text-white text-sm">✓</span>}
+                </div>
+                
+                {/* 포켓몬 아이콘 (Gen VIII Icons) */}
                 <div 
-                  className="w-full h-24 mb-2 bg-gray-100 rounded flex items-center justify-center"
+                  className="w-12 h-12 flex-shrink-0"
                   style={{
-                    backgroundImage: `url(${pokemon.imageUrl})`,
+                    backgroundImage: `url(https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemon.number}.png)`,
                     backgroundSize: 'contain',
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'center'
                   }}
-                >
-                  <span className="text-xs text-gray-400">No.{pokemon.number}</span>
+                />
+                
+                {/* 포켓몬 정보 */}
+                <div className="flex-1 text-left">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold">No.{String(pokemon.number).padStart(3, '0')}</span>
+                    <span className="font-semibold text-lg">{pokemon.name}</span>
+                  </div>
+                  <div className="text-sm text-gray-600">{pokemon.type} 타입</div>
                 </div>
-                <div className="font-bold text-sm">{pokemon.name}</div>
-                <div className="text-xs text-gray-600">{pokemon.type} 타입</div>
-                {isSelected && (
-                  <div className="mt-2 text-xs font-bold text-indigo-600">✓ 선택됨</div>
-                )}
+                
+                {/* 포획률 */}
+                <div className="text-right flex-shrink-0">
+                  <div className="text-xs text-gray-500">포획률</div>
+                  <div className="text-sm font-semibold">{Math.round(pokemon.catchRate * 100)}%</div>
+                </div>
               </button>
             );
           })}

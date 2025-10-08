@@ -1,14 +1,15 @@
 import React from 'react';
 import Sidebar from './components/layout/Sidebar';
-import Header from './components/layout/Header.jsx';
+import Header from './components/layout/Header';
 import MapView from './components/views/MapView';
 import PokedexView from './components/views/PokedexView';
 import PokemonView from './components/views/PokemonView';
-import ItemsView from './components/views/ItemView.jsx';
+import ItemsView from './components/views/ItemsView';
 import ProfileView from './components/views/ProfileView';
 import AdminView from './components/views/AdminView';
 import EncounterModal from './components/modals/EncounterModal';
 import useGameState from './hooks/useGameState';
+
 export default function App() {
   const {
     currentTab,
@@ -25,7 +26,8 @@ export default function App() {
     handleCloseEncounter,
     handleCatchSuccess,
     updateMaxDailyWalks,
-    updateRegionPokemon
+    updateRegionPokemon,
+    resetGameData  // 이거 추가!
   } = useGameState();
 
   return (
@@ -54,7 +56,7 @@ export default function App() {
               regions={regions}
               allPokemon={allPokemon}
               updateRegionPokemon={updateRegionPokemon}
-              resetGameData={resetGameData}
+              resetGameData={resetGameData}  // 이것도 전달!
             />
           )}
         </main>

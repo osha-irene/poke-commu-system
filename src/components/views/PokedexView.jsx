@@ -31,38 +31,36 @@ export default function PokedexView({ caughtPokemon }) {
           </div>
         </div>
         
-        <div className="grid grid-cols-6 gap-4">
+        {/* 그리드 형식 - 아이콘 사용 */}
+        <div className="grid grid-cols-8 gap-3">
           {uniquePokemon.map(pokemon => (
             <div 
               key={pokemon.number} 
-              className="bg-yellow-50 rounded-lg p-4 text-center hover:shadow-md transition-shadow cursor-pointer border border-yellow-200"
+              className="bg-yellow-50 rounded-lg p-3 text-center hover:shadow-md transition-shadow cursor-pointer border border-yellow-200"
             >
-              {/* 포켓몬 이미지 */}
+              {/* Gen VIII Icon */}
               <div 
-                className="w-full h-20 mb-2 flex items-center justify-center"
+                className="w-full h-16 mb-1"
                 style={{
-                  backgroundImage: `url(${pokemon.imageUrl})`,
+                  backgroundImage: `url(https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemon.number}.png)`,
                   backgroundSize: 'contain',
                   backgroundRepeat: 'no-repeat',
                   backgroundPosition: 'center'
                 }}
-              >
-                {/* 이미지 로딩 실패시 대체 텍스트 */}
-                <span className="text-gray-400 text-xs">No.{pokemon.number}</span>
-              </div>
+              />
               <div className="text-xs text-gray-600 font-semibold">No.{pokemon.number}</div>
-              <div className="font-bold text-sm">{pokemon.name}</div>
+              <div className="font-bold text-xs truncate">{pokemon.name}</div>
             </div>
           ))}
           
           {/* 미포획 포켓몬 */}
-          {[...Array(Math.max(0, 12 - uniquePokemon.length))].map((_, i) => (
-            <div key={`unknown-${i}`} className="bg-gray-50 rounded-lg p-4 text-center border border-gray-200">
-              <div className="w-full h-20 mb-2 flex items-center justify-center text-5xl opacity-20">
+          {[...Array(Math.max(0, 16 - uniquePokemon.length))].map((_, i) => (
+            <div key={`unknown-${i}`} className="bg-gray-50 rounded-lg p-3 text-center border border-gray-200">
+              <div className="w-full h-16 mb-1 flex items-center justify-center text-4xl opacity-20">
                 ?
               </div>
               <div className="text-xs text-gray-400 font-semibold">No.???</div>
-              <div className="font-bold text-sm text-gray-400">???</div>
+              <div className="font-bold text-xs text-gray-400">???</div>
             </div>
           ))}
         </div>

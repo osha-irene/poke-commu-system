@@ -132,30 +132,33 @@ export default function useGameState() {
     setEncounterPokemon(null);
   };
 
-  const handleCatchSuccess = (pokemon, ballUsed) => {
-    const pokemonTemplate = allPokemon.find(p => p.id === pokemon.id);
-    
-    const newPokemon = {
-      uniqueId: Date.now(),
-      pokemonId: pokemon.id,
-      name: pokemon.name,
-      number: pokemon.number,
-      type: pokemon.type,
-      level: Math.floor(Math.random() * 20) + 5,
-      hp: pokemonTemplate.baseHp,
-      maxHp: pokemonTemplate.baseHp,
-      exp: 0,
-      imageUrl: pokemon.imageUrl
-    };
-    
-    setCaughtPokemon(prev => [...prev, newPokemon]);
-
-    setInventory(prev => prev.map(item => 
-      item.name === ballUsed.name 
-        ? { ...item, count: Math.max(0, item.count - 1) }
-        : item
-    ));
+const handleCatchSuccess = (pokemon, ballUsed) => {
+  const pokemonTemplate = allPokemon.find(p => p.id === pokemon.id);
+  
+  const newPokemon = {
+    uniqueId: Date.now(),
+    pokemonId: pokemon.id,
+    name: pokemon.name,
+    number: pokemon.number,
+    type: pokemon.type,
+    level: Math.floor(Math.random() * 20) + 5,
+    hp: pokemonTemplate.baseHp,
+    maxHp: pokemonTemplate.baseHp,
+    exp: 0,
+    // 여러 이미지 URL 추가
+    imageUrl: pokemon.imageUrl,
+    iconUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemon.number}.png`,
+    spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${pokemon.number}.gif`
   };
+  
+  setCaughtPokemon(prev => [...prev, newPokemon]);
+
+  setInventory(prev => prev.map(item => 
+    item.name === ballUsed.name 
+      ? { ...item, count: Math.max(0, item.count - 1) }
+      : item
+  ));
+};
 
   const updateMaxDailyWalks = (newMax) => {
     setTrainer(prev => ({
