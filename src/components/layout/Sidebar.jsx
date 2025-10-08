@@ -1,31 +1,96 @@
 import React from 'react';
-import { Map, Book, Package, Settings, User, LogOut, Backpack } from 'lucide-react';
 import NavButton from './NavButton';
 
-export default function Sidebar({ currentTab, setCurrentTab, isAdmin, setIsAdmin, trainer }) {
+export default function Sidebar({ currentTab, setCurrentTab, isAdmin, trainer, onLogout }) {
   return (
-    <aside className="w-64 bg-indigo-600 text-white flex flex-col">
-      <div className="p-6 border-b border-indigo-500">
-        <h1 className="text-2xl font-bold mb-2">포켓몬 월드</h1>
-        <div className="text-sm opacity-90">트레이너: {trainer.name}</div>
+    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
+      {/* 로고 */}
+      <div className="p-6 border-b border-gray-200">
+        <h1 className="text-2xl font-bold text-indigo-600">🐾 포켓몬 산책</h1>
+        <p className="text-sm text-gray-500 mt-1">커뮤니티 시스템</p>
       </div>
 
-      <nav className="flex-1 px-3 py-4">
-        <NavButton icon={Map} label="지도" active={currentTab === 'map'} onClick={() => setCurrentTab('map')} />
-        <NavButton icon={Book} label="도감" active={currentTab === 'pokedex'} onClick={() => setCurrentTab('pokedex')} />
-        <NavButton icon={User} label="포켓몬" active={currentTab === 'pokemon'} onClick={() => setCurrentTab('pokemon')} />
-        <NavButton icon={Backpack} label="아이템" active={currentTab === 'items'} onClick={() => setCurrentTab('items')} />
-        <NavButton icon={Package} label="프로필" active={currentTab === 'profile'} onClick={() => setCurrentTab('profile')} />
-        {isAdmin && <NavButton icon={Settings} label="관리자" active={currentTab === 'admin'} onClick={() => setCurrentTab('admin')} />}
+      {/* 사용자 정보 */}
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
+            {trainer.name?.charAt(0) || '?'}
+          </div>
+          <div className="flex-1">
+            <div className="font-semibold text-gray-800">{trainer.name}</div>
+            <div className="text-xs text-gray-500 flex items-center gap-1">
+              {isAdmin && (
+                <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">
+                  {trainer.isSuperAdmin ? '슈퍼관리자' : '관리자'}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="mt-3 text-sm">
+          <div className="flex justify-between text-gray-600">
+            <span>오늘의 산책</span>
+            <span className="font-semibold text-indigo-600">
+              {trainer.dailyWalks}/{trainer.maxDailyWalks}회
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* 네비게이션 */}
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        <NavButton 
+          icon="🗺️" 
+          label="지도" 
+          active={currentTab === 'map'}
+          onClick={() => setCurrentTab('map')}
+        />
+        <NavButton 
+          icon="📖" 
+          label="도감" 
+          active={currentTab === 'pokedex'}
+          onClick={() => setCurrentTab('pokedex')}
+        />
+        <NavButton 
+          icon="👾" 
+          label="포켓몬" 
+          active={currentTab === 'pokemon'}
+          onClick={() => setCurrentTab('pokemon')}
+        />
+        <NavButton 
+          icon="🎒" 
+          label="아이템" 
+          active={currentTab === 'items'}
+          onClick={() => setCurrentTab('items')}
+        />
+        <NavButton 
+          icon="👤" 
+          label="프로필" 
+          active={currentTab === 'profile'}
+          onClick={() => setCurrentTab('profile')}
+        />
+        
+        {isAdmin && (
+          <>
+            <div className="border-t border-gray-200 my-2 pt-2"></div>
+            <NavButton 
+              icon="⚙️" 
+              label="관리자" 
+              active={currentTab === 'admin'}
+              onClick={() => setCurrentTab('admin')}
+            />
+          </>
+        )}
       </nav>
 
-      <div className="p-4 border-t border-indigo-500">
-        <button onClick={() => setIsAdmin(!isAdmin)} className="w-full text-sm bg-indigo-700 hover:bg-indigo-800 px-3 py-2 rounded-lg mb-2">
-          {isAdmin ? '일반 모드' : '관리자 모드'}
-        </button>
-        <button className="w-full text-sm bg-indigo-700 hover:bg-indigo-800 px-3 py-2 rounded-lg flex items-center justify-center gap-2">
-          <LogOut size={16} />
-          로그아웃
+      {/* 로그아웃 버튼 */}
+      <div className="p-4 border-t border-gray-200">
+        <button
+          onClick={onLogout}
+          className="w-full bg-gray-100 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-200 font-semibold transition-colors flex items-center justify-center gap-2"
+        >
+          <span>🚪</span>
+          <span>로그아웃</span>
         </button>
       </div>
     </aside>

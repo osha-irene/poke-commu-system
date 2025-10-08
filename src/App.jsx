@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import MapView from './components/views/MapView';
@@ -10,20 +10,105 @@ import AdminView from './components/views/AdminView';
 import EncounterModal from './components/modals/EncounterModal';
 import useGameState from './hooks/useGameState';
 
+// 로그인 화면 컴포넌트
+function LoginScreen({ onLogin }) {
+  const [userId, setUserId] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const success = onLogin(userId, password);
+    if (!success) {
+      alert('아이디 또는 비밀번호가 올바르지 않습니다.');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">🐾 포켓몬 산책</h1>
+          <p className="text-gray-600">커뮤니티 시스템</p>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              아이디
+            </label>
+            <input
+              type="text"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              placeholder="아이디를 입력하세요"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              비밀번호
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              placeholder="비밀번호를 입력하세요"
+              required
+            />
+          </div>
+          
+          <button
+            type="submit"
+            className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-semibold transition-colors"
+          >
+            로그인
+          </button>
+        </form>
+
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
+          <p className="font-semibold mb-1">💡 최초 관리자 계정:</p>
+          <p>아이디: <code className="bg-white px-2 py-1 rounded">admin</code></p>
+          <p>비밀번호: <code className="bg-white px-2 py-1 rounded">admin123</code></p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const {
     currentTab,
     setCurrentTab,
+    currentUser,
     isAdmin,
-    setIsAdmin,
     trainer,
     caughtPokemon,
     items,
     encounterPokemon,
+    regions,
+    allPokemon,
+    members,
+    handleLogin,
+    handleLogout,
     handleRegionClick,
     handleCloseEncounter,
-    handleCatchSuccess
+    handleCatchSuccess,
+    updateMaxDailyWalks,
+    updateRegionPokemon,
+    addMember,
+    toggleAdminStatus,
+    resetMemberWalkCount,
+    resetAllWalkCounts,
+    resetGameData
   } = useGameState();
+
+  // 로그인하지 않은 경우 로그인 화면 표시
+  if (!currentUser) {
+    return <LoginScreen onLogin={handleLogin} />;
+  }
 
   return (
     <div className="h-screen flex bg-gray-50">
@@ -31,20 +116,51 @@ export default function App() {
         currentTab={currentTab}
         setCurrentTab={setCurrentTab}
         isAdmin={isAdmin}
-        setIsAdmin={setIsAdmin}
+        setIsAdmin={() => {}} // 더 이상 토글 방식 아님
         trainer={trainer}
+        onLogout={handleLogout}
       />
 
       <div className="flex-1 flex flex-col">
         <Header currentTab={currentTab} trainer={trainer} />
 
         <main className="flex-1 overflow-auto p-8">
-          {currentTab === 'map' && <MapView onRegionClick={handleRegionClick} />}
-          {currentTab === 'pokedex' && <PokedexView caughtPokemon={caughtPokemon} />}
-          {currentTab === 'pokemon' && <PokemonView caughtPokemon={caughtPokemon} />}
-          {currentTab === 'items' && <ItemsView items={items} />}
-          {currentTab === 'profile' && <ProfileView trainer={trainer} caughtCount={caughtPokemon.length} />}
-          {currentTab === 'admin' && <AdminView />}
+          {currentTab === 'map' && (
+            <MapView 
+              regions={regions} 
+              onRegionClick={handleRegionClick} 
+            />
+          )}
+          {currentTab === 'pokedex' && (
+            <PokedexView caughtPokemon={caughtPokemon} />
+          )}
+          {currentTab === 'pokemon' && (
+            <PokemonView caughtPokemon={caughtPokemon} />
+          )}
+          {currentTab === 'items' && (
+            <ItemsView items={items} />
+          )}
+          {currentTab === 'profile' && (
+            <ProfileView 
+              trainer={trainer} 
+              caughtCount={caughtPokemon.length} 
+            />
+          )}
+          {currentTab === 'admin' && isAdmin && (
+            <AdminView 
+              trainer={trainer}
+              members={members}
+              updateMaxDailyWalks={updateMaxDailyWalks}
+              regions={regions}
+              allPokemon={allPokemon}
+              updateRegionPokemon={updateRegionPokemon}
+              addMember={addMember}
+              toggleAdminStatus={toggleAdminStatus}
+              resetMemberWalkCount={resetMemberWalkCount}
+              resetAllWalkCounts={resetAllWalkCounts}
+              resetGameData={resetGameData}
+            />
+          )}
         </main>
       </div>
 
