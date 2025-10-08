@@ -54,6 +54,7 @@ export default function App() {
               regions={regions}
               allPokemon={allPokemon}
               updateRegionPokemon={updateRegionPokemon}
+              resetGameData={resetGameData}
             />
           )}
         </main>
