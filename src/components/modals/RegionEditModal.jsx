@@ -48,6 +48,7 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
                     : 'border-gray-200 bg-white hover:border-gray-300'
                 }`}
               >
+                {/* 포켓몬 이미지 */}
                 <div 
                   className="w-full h-24 mb-2 bg-gray-100 rounded flex items-center justify-center"
                   style={{
@@ -57,8 +58,7 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
                     backgroundPosition: 'center'
                   }}
                 >
-                  {/* 이미지가 없을 때 대체 텍스트 */}
-                  <span className="text-4xl">No.{pokemon.number}</span>
+                  <span className="text-xs text-gray-400">No.{pokemon.number}</span>
                 </div>
                 <div className="font-bold text-sm">{pokemon.name}</div>
                 <div className="text-xs text-gray-600">{pokemon.type} 타입</div>

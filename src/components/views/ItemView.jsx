@@ -12,17 +12,16 @@ export default function ItemsView({ items }) {
               className="flex items-center justify-between bg-gray-50 rounded-lg p-5 border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
             >
               <div className="flex items-center gap-4">
+                {/* 아이템 이미지 */}
                 <div 
-                  className="text-4xl w-16 text-center"
+                  className="w-16 h-16 flex-shrink-0"
                   style={{
-                    // backgroundImage: `url(${item.imageUrl})`,
+                    backgroundImage: `url(${item.imageUrl})`,
                     backgroundSize: 'contain',
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'center'
                   }}
-                >
-                  {item.emoji}
-                </div>
+                />
                 <div>
                   <div className="font-bold text-lg text-gray-800">{item.name}</div>
                   <div className="text-sm text-gray-600">{item.description}</div>

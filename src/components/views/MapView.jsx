@@ -24,17 +24,27 @@ export default function MapView({ regions, onRegionClick }) {
               <button
                 key={region.id}
                 onClick={() => onRegionClick(region)}
-                className={`absolute ${region.color} hover:opacity-90 active:scale-95 transition-all rounded-full w-36 h-36 flex flex-col items-center justify-center text-white font-bold border-4 border-white shadow-lg`}
+                className={`absolute hover:opacity-90 active:scale-95 transition-all rounded-lg w-36 h-36 flex items-center justify-center text-white font-bold border-4 border-white shadow-lg overflow-hidden`}
                 style={{ 
                   left: `${region.x}%`, 
                   top: `${region.y}%`, 
                   transform: 'translate(-50%, -50%)',
-                  backgroundImage: `url(${region.imageUrl})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center'
+                  backgroundColor: region.color.replace('bg-', '#') // fallback color
                 }}
               >
-                <span className="text-sm px-2 text-center leading-tight bg-black bg-opacity-50 rounded px-2 py-1">
+                {/* 지역 이미지 */}
+                <div 
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage: `url(${region.imageUrl})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    opacity: 0.8
+                  }}
+                />
+                
+                {/* 지역 이름 오버레이 */}
+                <span className="relative z-10 text-sm px-3 py-1 bg-black bg-opacity-60 rounded">
                   {region.name}
                 </span>
               </button>

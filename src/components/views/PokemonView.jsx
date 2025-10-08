@@ -1,8 +1,8 @@
 import React from 'react';
 
 export default function PokemonView({ caughtPokemon }) {
-  const party = caughtPokemon.slice(0, 6); // 메인 엔트리 6마리
-  const box = caughtPokemon.slice(6); // 나머지는 박스
+  const party = caughtPokemon.slice(0, 6);
+  const box = caughtPokemon.slice(6);
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -12,23 +12,20 @@ export default function PokemonView({ caughtPokemon }) {
         <div className="grid grid-cols-3 gap-4">
           {party.map(pokemon => (
             <div 
-              key={pokemon.id} 
+              key={pokemon.uniqueId} 
               className="bg-indigo-50 rounded-lg p-4 flex items-center justify-between border border-indigo-200 hover:shadow-md transition-shadow cursor-pointer"
             >
               <div className="flex items-center gap-4">
+                {/* 포켓몬 이미지 */}
                 <div 
-                  className="text-4xl"
+                  className="w-16 h-16 flex-shrink-0"
                   style={{
-                    // backgroundImage: `url(${pokemon.imageUrl})`,
-                    width: '48px',
-                    height: '48px',
+                    backgroundImage: `url(${pokemon.imageUrl})`,
                     backgroundSize: 'contain',
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'center'
                   }}
-                >
-                  {pokemon.emoji}
-                </div>
+                />
                 <div>
                   <div className="font-bold text-lg">{pokemon.name}</div>
                   <div className="text-sm text-gray-600">Lv.{pokemon.level}</div>
@@ -55,10 +52,19 @@ export default function PokemonView({ caughtPokemon }) {
           <div className="grid grid-cols-6 gap-3">
             {box.map(pokemon => (
               <div 
-                key={pokemon.id} 
+                key={pokemon.uniqueId} 
                 className="bg-gray-50 rounded-lg p-3 text-center border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
               >
-                <div className="text-4xl mb-1">{pokemon.emoji}</div>
+                {/* 포켓몬 이미지 */}
+                <div 
+                  className="w-full h-16 mb-1 flex items-center justify-center"
+                  style={{
+                    backgroundImage: `url(${pokemon.imageUrl})`,
+                    backgroundSize: 'contain',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'center'
+                  }}
+                />
                 <div className="text-xs font-bold text-gray-700">{pokemon.name}</div>
                 <div className="text-xs text-gray-500">Lv.{pokemon.level}</div>
               </div>
