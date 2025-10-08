@@ -1,211 +1,187 @@
-import React, { useState } from 'react';
-import { X, ArrowUpCircle, ArrowDownCircle, Trash2, Heart } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowUpCircle, ArrowDownCircle, Trash2, Heart, X, Edit2, Check } from 'lucide-react';
 
-export default function PokemonDetailModal({ 
+export default function PokemonDetailPanel({ 
   pokemon, 
-  isInParty, 
-  onClose, 
-  onMoveToParty, 
-  onMoveToBox, 
+  hasRareCandy,
+  onClose,
+  onUseCandy,
+  onMove,
   onRelease,
-  onUseRareCandy,
-  hasRareCandy 
+  onUpdateNickname
 }) {
-  const [confirmRelease, setConfirmRelease] = useState(false);
+  const [isEditingNickname, setIsEditingNickname] = useState(false);
+  const [nickname, setNickname] = useState(pokemon.nickname || pokemon.name);
+  
+  // pokemon이 변경될 때마다 nickname 동기화
+  useEffect(() => {
+    setNickname(pokemon.nickname || pokemon.name);
+    setIsEditingNickname(false);
+  }, [pokemon.uniqueId, pokemon.nickname, pokemon.name]);
+  
+  const hpPercent = Math.max(0, (pokemon.hp / pokemon.maxHp) * 100);
+  const hpColor = hpPercent > 50 ? 'bg-green-500' : hpPercent > 20 ? 'bg-yellow-500' : 'bg-red-500';
 
-  const handleRelease = () => {
-    if (!confirmRelease) {
-      setConfirmRelease(true);
-      setTimeout(() => setConfirmRelease(false), 3000);
-      return;
-    }
-    onRelease(pokemon.uniqueId);
-    onClose();
-  };
-
-  const handleUseCandy = () => {
-    if (!hasRareCandy) {
-      alert('이상한사탕이 없습니다!');
-      return;
-    }
-    if (window.confirm(`${pokemon.name}에게 이상한사탕을 사용하시겠습니까?\n레벨이 1 올라갑니다.`)) {
-      onUseRareCandy(pokemon.uniqueId);
+  const handleSaveNickname = () => {
+    if (nickname.trim()) {
+      onUpdateNickname(pokemon.uniqueId, nickname.trim());
+      setIsEditingNickname(false);
     }
   };
 
-  const handleMove = () => {
-    if (isInParty) {
-      onMoveToBox(pokemon.uniqueId);
-    } else {
-      onMoveToParty(pokemon.uniqueId);
-    }
+  const handleCancelEdit = () => {
+    setNickname(pokemon.nickname || pokemon.name);
+    setIsEditingNickname(false);
   };
 
   return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      onClick={onClose}
-    >
-      <div 
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* 헤더 */}
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-6 rounded-t-2xl relative">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-colors"
-          >
-            <X size={24} />
-          </button>
-          
-          <div className="flex items-center gap-6">
-            {/* 포켓몬 이미지 */}
-            <div 
-              className="w-32 h-32 bg-white bg-opacity-20 rounded-2xl"
-              style={{
-                backgroundImage: `url(${pokemon.spriteUrl || pokemon.imageUrl})`,
-                backgroundSize: 'contain',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center',
-                imageRendering: 'pixelated'
-              }}
-            />
-            
-            <div className="flex-1 text-white">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs bg-white bg-opacity-30 px-2 py-1 rounded">
-                  No.{pokemon.number}
-                </span>
-                <span className="text-xs bg-white bg-opacity-30 px-2 py-1 rounded">
-                  {pokemon.type}
-                </span>
-              </div>
-              <h2 className="text-3xl font-bold mb-2">{pokemon.name}</h2>
-              <div className="text-lg">Lv. {pokemon.level}</div>
-            </div>
-          </div>
+    <div className="w-full bg-white rounded-lg border border-gray-200 p-6">
+      <div className="flex justify-between items-start mb-4">
+        <h3 className="text-xl font-bold text-gray-800">포켓몬 정보</h3>
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <X size={20} />
+        </button>
+      </div>
+
+      {/* 왼쪽 이미지 + 오른쪽 전체 정보 */}
+      <div className="flex gap-6">
+        {/* 포켓몬 이미지 (75% 크기 + 여백) */}
+        <div className="flex-shrink-0">
+          <div 
+            className="w-36 h-36 p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg"
+            style={{
+              backgroundImage: `url(${pokemon.spriteUrl || pokemon.imageUrl})`,
+              backgroundSize: '75%',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center',
+              imageRendering: 'pixelated'
+            }}
+          />
         </div>
 
-        {/* 본문 */}
-        <div className="p-6 space-y-6">
-          {/* HP 바 */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex justify-between items-center mb-2">
-              <span className="font-semibold text-gray-700">HP</span>
-              <span className="text-sm text-gray-600">{pokemon.hp} / {pokemon.maxHp}</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-4">
-              <div 
-                className={`h-4 rounded-full transition-all ${
-                  (pokemon.hp / pokemon.maxHp) > 0.5 ? 'bg-green-500' :
-                  (pokemon.hp / pokemon.maxHp) > 0.2 ? 'bg-yellow-500' : 'bg-red-500'
-                }`}
-                style={{ width: `${Math.max(0, (pokemon.hp / pokemon.maxHp) * 100)}%` }}
-              />
-            </div>
-          </div>
-
-          {/* 스탯 정보 */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-              <div className="text-sm text-gray-600 mb-1">레벨</div>
-              <div className="text-2xl font-bold text-blue-600">{pokemon.level}</div>
-            </div>
-            <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-              <div className="text-sm text-gray-600 mb-1">경험치</div>
-              <div className="text-2xl font-bold text-purple-600">{pokemon.exp || 0}</div>
-            </div>
-          </div>
-
-          {/* 기술 (임시 - 나중에 추가) */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="font-semibold text-gray-700 mb-3">배운 기술</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {pokemon.moves && pokemon.moves.length > 0 ? (
-                pokemon.moves.map((move, i) => (
-                  <div key={i} className="bg-white rounded px-3 py-2 border border-gray-200">
-                    <div className="text-sm font-semibold">{move.name}</div>
-                    <div className="text-xs text-gray-500">{move.type}</div>
-                  </div>
-                ))
-              ) : (
-                <div className="col-span-2 text-sm text-gray-500 text-center py-2">
-                  아직 기술이 없습니다
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* 친밀도 (임시) */}
-          <div className="bg-pink-50 rounded-lg p-4 border border-pink-200">
+        {/* 오른쪽: 모든 정보 */}
+        <div className="flex-1 flex flex-col gap-3">
+          {/* 기본 정보 */}
+          <div>
             <div className="flex items-center gap-2 mb-2">
-              <Heart size={20} className="text-pink-500" />
-              <span className="font-semibold text-gray-700">친밀도</span>
+              <span className="text-xs bg-gray-200 px-2 py-1 rounded">No.{pokemon.number}</span>
+              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-semibold">
+                {pokemon.type}
+              </span>
+              <span className="text-xs text-gray-500">{pokemon.name}</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div 
-                className="bg-pink-500 h-3 rounded-full"
-                style={{ width: `${(pokemon.friendship || 50)}%` }}
-              />
+            
+            {/* 별명 편집 */}
+            {isEditingNickname ? (
+              <div className="flex items-center gap-2 mb-1">
+                <input
+                  type="text"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  maxLength={12}
+                  className="text-2xl font-bold border-b-2 border-indigo-500 focus:outline-none bg-transparent"
+                  autoFocus
+                  onKeyPress={(e) => e.key === 'Enter' && handleSaveNickname()}
+                />
+                <button
+                  onClick={handleSaveNickname}
+                  className="text-green-600 hover:text-green-700"
+                >
+                  <Check size={20} />
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 mb-1">
+                <h2 className="text-2xl font-bold">{nickname}</h2>
+                <button
+                  onClick={() => setIsEditingNickname(true)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <Edit2 size={16} />
+                </button>
+              </div>
+            )}
+            
+            <div className="text-lg text-gray-600">Lv. {pokemon.level}</div>
+          </div>
+
+          {/* HP 바 */}
+          <div className="bg-gray-50 rounded-lg p-3">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-semibold text-gray-700">HP</span>
+              <span className="text-sm text-gray-600">{pokemon.hp}/{pokemon.maxHp}</span>
             </div>
-            <div className="text-sm text-gray-600 mt-1 text-right">
-              {pokemon.friendship || 50} / 100
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className={`h-2 rounded-full transition-all ${hpColor}`} style={{ width: `${hpPercent}%` }} />
             </div>
           </div>
 
-          {/* 액션 버튼들 */}
-          <div className="space-y-3 border-t pt-4">
-            {/* 이상한사탕 사용 */}
+          {/* 경험치 + 친밀도 */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
+              <div className="text-xs text-gray-600">경험치</div>
+              <div className="text-lg font-bold text-purple-600">{pokemon.exp || 0}</div>
+            </div>
+
+            <div className="bg-pink-50 rounded-lg p-3 border border-pink-200">
+              <div className="flex items-center gap-1 mb-2">
+                <Heart size={12} className="text-pink-500" />
+                <span className="text-xs font-semibold text-gray-700">친밀도</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
+                <div className="bg-pink-500 h-2 rounded-full" style={{ width: `${pokemon.friendship || 50}%` }} />
+              </div>
+              <div className="text-xs text-gray-600 text-right">
+                {pokemon.friendship || 50}/100
+              </div>
+            </div>
+          </div>
+
+          {/* 액션 버튼 */}
+          <div className="space-y-2">
             <button
-              onClick={handleUseCandy}
+              onClick={onUseCandy}
               disabled={!hasRareCandy}
-              className={`w-full py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 ${
+              className={`w-full py-2 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 ${
                 hasRareCandy
-                  ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 border-2 border-yellow-300'
-                  : 'bg-gray-100 text-gray-400 border-2 border-gray-200 cursor-not-allowed'
+                  ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 border border-yellow-300'
+                  : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
               }`}
             >
               <span>🍬</span>
-              <span>이상한사탕 사용 (Lv +1)</span>
+              <span>이상한사탕 사용</span>
             </button>
 
-            {/* 엔트리/박스 이동 */}
             <button
-              onClick={handleMove}
-              className="w-full bg-indigo-100 text-indigo-700 py-3 rounded-lg font-semibold hover:bg-indigo-200 transition-colors flex items-center justify-center gap-2 border-2 border-indigo-300"
+              onClick={onMove}
+              className="w-full bg-indigo-100 text-indigo-700 py-2 rounded-lg font-semibold hover:bg-indigo-200 transition-colors flex items-center justify-center gap-2 border border-indigo-300"
             >
-              {isInParty ? (
+              {pokemon.isInParty ? (
                 <>
-                  <ArrowDownCircle size={20} />
+                  <ArrowDownCircle size={18} />
                   <span>박스로 이동</span>
                 </>
               ) : (
                 <>
-                  <ArrowUpCircle size={20} />
+                  <ArrowUpCircle size={18} />
                   <span>엔트리로 이동</span>
                 </>
               )}
             </button>
 
-            {/* 방생 */}
             <button
-              onClick={handleRelease}
-              className={`w-full py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 border-2 ${
-                confirmRelease
-                  ? 'bg-red-500 text-white border-red-700 animate-pulse'
-                  : 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200'
-              }`}
+              onClick={onRelease}
+              className="w-full bg-red-50 text-red-600 py-2 rounded-lg font-semibold hover:bg-red-100 transition-colors flex items-center justify-center gap-2 border border-red-200"
             >
-              <Trash2 size={20} />
-              <span>{confirmRelease ? '다시 클릭하여 확정' : '포켓몬 방생'}</span>
+              <Trash2 size={18} />
+              <span>포켓몬 방생</span>
             </button>
-            
-            {confirmRelease && (
-              <p className="text-xs text-red-600 text-center">
-                ⚠️ 방생하면 되돌릴 수 없습니다! (3초 안에 다시 클릭)
-              </p>
-            )}
           </div>
         </div>
       </div>

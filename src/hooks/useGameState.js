@@ -3,6 +3,25 @@ import pokemonData from '../data/pokemon.json';
 import itemsData from '../data/items.json';
 import regionsData from '../data/regions.json';
 
+// LocalStorage 헬퍼 함수 - 맨 위로 이동
+const loadFromStorage = (key, defaultValue) => {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : defaultValue;
+  } catch (error) {
+    console.error(`Error loading ${key}:`, error);
+    return defaultValue;
+  }
+};
+
+const saveToStorage = (key, value) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.error(`Error saving ${key}:`, error);
+  }
+};
+
 export default function useGameState() {
   const [currentTab, setCurrentTab] = useState('map');
   const [encounterPokemon, setEncounterPokemon] = useState(null);
@@ -12,13 +31,12 @@ export default function useGameState() {
     try {
       const savedUserId = localStorage.getItem('poke_currentUserId');
       if (!savedUserId) {
-        return null; // 명시적으로 null 반환
+        return null;
       }
       
       const members = loadFromStorage('poke_members', {});
       const user = members[savedUserId];
       
-      // 사용자가 없으면 localStorage 정리하고 null 반환
       if (!user) {
         localStorage.removeItem('poke_currentUserId');
         return null;
@@ -35,25 +53,6 @@ export default function useGameState() {
   // 마스터 데이터
   const [allPokemon] = useState(pokemonData.pokemon);
   const [allItems] = useState(itemsData.items);
-
-  // LocalStorage 헬퍼 함수
-  const loadFromStorage = (key, defaultValue) => {
-    try {
-      const saved = localStorage.getItem(key);
-      return saved ? JSON.parse(saved) : defaultValue;
-    } catch (error) {
-      console.error(`Error loading ${key}:`, error);
-      return defaultValue;
-    }
-  };
-
-  const saveToStorage = (key, value) => {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-      console.error(`Error saving ${key}:`, error);
-    }
-  };
 
   // 멤버 데이터 관리
   const [members, setMembers] = useState(() => {
@@ -106,7 +105,7 @@ export default function useGameState() {
         setCurrentUser(updatedUser);
       }
     }
-  }, [members, currentUser]);
+  }, [members]);
 
   // regions 변경 시 자동 저장
   useEffect(() => {
@@ -146,7 +145,7 @@ export default function useGameState() {
     const member = members[userId];
     if (member && member.password === password) {
       setCurrentUser(member);
-      localStorage.setItem('poke_currentUserId', userId); // 로그인 상태 저장
+      localStorage.setItem('poke_currentUserId', userId);
       return true;
     }
     return false;
@@ -157,9 +156,7 @@ export default function useGameState() {
     setCurrentUser(null);
     setCurrentTab('map');
     setEncounterPokemon(null);
-    localStorage.removeItem('poke_currentUserId'); // 로그인 상태 제거
-    
-    // 강제 새로고침으로 완전히 초기화
+    localStorage.removeItem('poke_currentUserId');
     window.location.reload();
   };
 
@@ -204,7 +201,7 @@ export default function useGameState() {
     setEncounterPokemon(null);
   };
 
-const handleCatchSuccess = (pokemon, ballUsed) => {
+  const handleCatchSuccess = (pokemon, ballUsed) => {
     if (!currentUser) return;
     
     const pokemonTemplate = allPokemon.find(p => p.id === pokemon.id);
@@ -258,7 +255,7 @@ const handleCatchSuccess = (pokemon, ballUsed) => {
     if (!currentUser?.isAdmin) return false;
     
     if (members[id]) {
-      return false; // 이미 존재하는 ID
+      return false;
     }
     
     setMembers(prev => ({
@@ -287,7 +284,7 @@ const handleCatchSuccess = (pokemon, ballUsed) => {
   // 관리자 기능: 관리자 권한 부여/제거
   const toggleAdminStatus = (memberId) => {
     if (!currentUser?.isSuperAdmin) return;
-    if (memberId === 'admin') return; // 최초 관리자는 변경 불가
+    if (memberId === 'admin') return;
     
     setMembers(prev => ({
       ...prev,
@@ -364,14 +361,18 @@ const handleCatchSuccess = (pokemon, ballUsed) => {
       return;
     }
     
-    // 이미 엔트리에 있으면
     if (pokemonIndex < 6) {
       alert('이미 엔트리에 있습니다!');
       return;
     }
     
-    // 빈 슬롯 찾기 (null인 위치)
-    const emptySlotIndex = currentUser.caughtPokemon.slice(0, 6).findIndex(p => p === null);
+    let emptySlotIndex = -1;
+    for (let i = 0; i < 6; i++) {
+      if (currentUser.caughtPokemon[i] === null) {
+        emptySlotIndex = i;
+        break;
+      }
+    }
     
     if (emptySlotIndex === -1) {
       alert('엔트리가 가득 찼습니다! (최대 6마리)');
@@ -381,26 +382,10 @@ const handleCatchSuccess = (pokemon, ballUsed) => {
     const newCaughtPokemon = [...currentUser.caughtPokemon];
     const pokemon = newCaughtPokemon[pokemonIndex];
     
-    // 엔트리 빈 슬롯에 포켓몬 배치
     newCaughtPokemon[emptySlotIndex] = pokemon;
-    
-    // 박스에서 제거 (splice 사용)
     newCaughtPokemon.splice(pokemonIndex, 1);
     
-    // 직접 members 업데이트
-    const updatedMembers = {
-      ...members,
-      [currentUser.id]: {
-        ...members[currentUser.id],
-        caughtPokemon: newCaughtPokemon
-      }
-    };
-    
-    setMembers(updatedMembers);
-    setCurrentUser({
-      ...currentUser,
-      caughtPokemon: newCaughtPokemon
-    });
+    updateCurrentUser({ caughtPokemon: newCaughtPokemon });
     
     alert('엔트리로 이동했습니다!');
   };
@@ -415,7 +400,6 @@ const handleCatchSuccess = (pokemon, ballUsed) => {
       return;
     }
     
-    // 이미 박스에 있으면
     if (pokemonIndex >= 6) {
       alert('이미 박스에 있습니다!');
       return;
@@ -424,60 +408,42 @@ const handleCatchSuccess = (pokemon, ballUsed) => {
     const newCaughtPokemon = [...currentUser.caughtPokemon];
     const pokemon = newCaughtPokemon[pokemonIndex];
     
-    // 엔트리 슬롯을 null로 변경
     newCaughtPokemon[pokemonIndex] = null;
-    
-    // 박스에 추가
     newCaughtPokemon.push(pokemon);
     
-    // 엔트리 자동 정렬: null을 뒤로 보내기
     const party = newCaughtPokemon.slice(0, 6);
     const box = newCaughtPokemon.slice(6);
     
     const sortedParty = [
-      ...party.filter(p => p !== null), // null 아닌 포켓몬들
-      ...party.filter(p => p === null)   // null들을 뒤로
+      ...party.filter(p => p !== null),
+      ...party.filter(p => p === null)
     ];
     
     const finalPokemon = [...sortedParty, ...box];
     
-    // 직접 members 업데이트
-    const updatedMembers = {
-      ...members,
-      [currentUser.id]: {
-        ...members[currentUser.id],
-        caughtPokemon: finalPokemon
-      }
-    };
-    
-    setMembers(updatedMembers);
-    setCurrentUser({
-      ...currentUser,
-      caughtPokemon: finalPokemon
-    });
+    updateCurrentUser({ caughtPokemon: finalPokemon });
     
     alert('박스로 이동했습니다!');
   };
 
-// 포켓몬 방생
-const releasePokemon = (uniqueId) => {
-  if (!currentUser) return;
-  
-  const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === uniqueId);
-  if (pokemonIndex === -1) return;
-  
-  const newCaughtPokemon = [...currentUser.caughtPokemon];
-  
-  // 엔트리(0~5)에 있는 포켓몬이면 null로 변경
-  if (pokemonIndex < 6) {
-    newCaughtPokemon[pokemonIndex] = null;
-  } else {
-    // 박스에 있는 포켓몬이면 배열에서 제거
-    newCaughtPokemon.splice(pokemonIndex, 1);
-  }
-  
-  updateCurrentUser({ caughtPokemon: newCaughtPokemon });
-};
+  // 포켓몬 방생
+  const releasePokemon = (uniqueId) => {
+    if (!currentUser) return;
+    
+    const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === uniqueId);
+    if (pokemonIndex === -1) return;
+    
+    const newCaughtPokemon = [...currentUser.caughtPokemon];
+    
+    if (pokemonIndex < 6) {
+      newCaughtPokemon[pokemonIndex] = null;
+    } else {
+      newCaughtPokemon.splice(pokemonIndex, 1);
+    }
+    
+    updateCurrentUser({ caughtPokemon: newCaughtPokemon });
+  };
+
   // 이상한사탕 사용
   const useRareCandy = (uniqueId) => {
     if (!currentUser) return;
@@ -512,11 +478,22 @@ const releasePokemon = (uniqueId) => {
   const updatePokemonNickname = (uniqueId, nickname) => {
     if (!currentUser) return;
     
-    const newCaughtPokemon = currentUser.caughtPokemon.map(p => 
-      p && p.uniqueId === uniqueId 
-        ? { ...p, nickname: nickname }
-        : p
-    );
+    console.log('=== updatePokemonNickname 호출 ===');
+    console.log('변경할 uniqueId:', uniqueId);
+    console.log('새 닉네임:', nickname);
+    console.log('현재 포켓몬 목록:', currentUser.caughtPokemon);
+    
+    const newCaughtPokemon = currentUser.caughtPokemon.map(p => {
+      if (p && p.uniqueId === uniqueId) {
+        console.log('매칭된 포켓몬:', p);
+        console.log('업데이트 후:', { ...p, nickname: nickname });
+        return { ...p, nickname: nickname };
+      }
+      return p;
+    });
+    
+    console.log('업데이트된 포켓몬 목록:', newCaughtPokemon);
+    console.log('================================');
     
     updateCurrentUser({ caughtPokemon: newCaughtPokemon });
   };

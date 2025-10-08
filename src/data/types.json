@@ -1,0 +1,150 @@
+{
+  "types": [
+    {
+      "id": 1,
+      "name": "normal",
+      "nameEn": "Normal",
+      "nameKo": "노말",
+      "nameJa": "ノーマル",
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/normal.png"
+    },
+    {
+      "id": 2,
+      "name": "fighting",
+      "nameEn": "Fighting",
+      "nameKo": "격투",
+      "nameJa": "かくとう",
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/fighting.png"
+    },
+    {
+      "id": 3,
+      "name": "flying",
+      "nameEn": "Flying",
+      "nameKo": "비행",
+      "nameJa": "ひこう",
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/flying.png"
+    },
+    {
+      "id": 4,
+      "name": "poison",
+      "nameEn": "Poison",
+      "nameKo": "독",
+      "nameJa": "どく",
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/poison.png"
+    },
+    {
+      "id": 5,
+      "name": "ground",
+      "nameEn": "Ground",
+      "nameKo": "땅",
+      "nameJa": "じめん",
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/ground.png"
+    },
+    {
+      "id": 6,
+      "name": "rock",
+      "nameEn": "Rock",
+      "nameKo": "바위",
+      "nameJa": "いわ",
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/rock.png"
+    },
+    {
+      "id": 7,
+      "name": "bug",
+      "nameEn": "Bug",
+      "nameKo": "벌레",
+      "nameJa": "むし",
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/bug.png"
+    },
+    {
+      "id": 8,
+      "name": "ghost",
+      "nameEn": "Ghost",
+      "nameKo": "고스트",
+      "nameJa": "ゴースト",
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/ghost.png"
+    },
+    {
+      "id": 9,
+      "name": "steel",
+      "nameEn": "Steel",
+      "nameKo": "강철",
+      "nameJa": "はがね",
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/steel.png"
+    },
+    {
+      "id": 10,
+      "name": "fire",
+      "nameEn": "Fire",
+      "nameKo": "불꽃",
+      "nameJa": "ほのお",
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/fire.png"
+    },
+    {
+      "id": 11,
+      "name": "water",
+      "nameEn": "Water",
+      "nameKo": "물",
+      "nameJa": "みず",
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/water.png"
+    },
+    {
+      "id": 12,
+      "name": "grass",
+      "nameEn": "Grass",
+      "nameKo": "풀",
+      "nameJa": "くさ",
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/grass.png"
+    },
+    {
+      "id": 13,
+      "name": "electric",
+      "nameEn": "Electric",
+      "nameKo": "전기",
+      "nameJa": "でんき",
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/electric.png"
+    },
+    {
+      "id": 14,
+      "name": "psychic",
+      "nameEn": "Psychic",
+      "nameKo": "에스퍼",
+      "nameJa": "エスパー",
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/psychic.png"
+    },
+    {
+      "id": 15,
+      "name": "ice",
+      "nameEn": "Ice",
+      "nameKo": "얼음",
+      "nameJa": "こおり",
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/ice.png"
+    },
+    {
+      "id": 16,
+      "name": "dragon",
+      "nameEn": "Dragon",
+      "nameKo": "드래곤",
+      "nameJa": "ドラゴン",
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/dragon.png"
+    },
+    {
+      "id": 17,
+      "name": "dark",
+      "nameEn": "Dark",
+      "nameKo": "악",
+      "nameJa": "あく",
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/dark.png"
+    },
+    {
+      "id": 18,
+      "name": "fairy",
+      "nameEn": "Fairy",
+      "nameKo": "페어리",
+      "nameJa": "フェアリー",
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/fairy.png"
+    }
+  ],
+  "totalCount": 18,
+  "fetchedAt": "2025-10-08T21:54:16.297Z"
+}

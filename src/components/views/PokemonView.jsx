@@ -5,7 +5,7 @@ import BoxPokemon from './pokemon/BoxPokemon';
 import PokemonDetailPanel from './pokemon/PokemonDetailPanel';
 
 export default function PokemonView({ 
-  caughtPokemon, 
+  caughtPokemon = [], // 기본값 추가
   items = [],
   onMoveToParty,
   onMoveToBox,
@@ -13,7 +13,7 @@ export default function PokemonView({
   onUseRareCandy,
   onUpdateNickname
 }) {
-  const [selectedPokemon, setSelectedPokemon] = useState(null);
+  const [selectedPokemonId, setSelectedPokemonId] = useState(null);
   const [showBox, setShowBox] = useState(false);
   const [draggedPokemon, setDraggedPokemon] = useState(null);
   
@@ -24,19 +24,34 @@ export default function PokemonView({
   const rareCandy = items?.find(item => item.name === '이상한사탕');
   const hasRareCandy = rareCandy && rareCandy.count > 0;
 
-  // caughtPokemon이 변경될 때마다 selectedPokemon 동기화
+  // 선택된 포켓몬 찾기 (항상 최신 데이터)
+  const selectedPokemon = selectedPokemonId 
+    ? caughtPokemon.find(p => p && p.uniqueId === selectedPokemonId)
+    : null;
+
+  // 디버깅 로그
   useEffect(() => {
-    if (selectedPokemon) {
-      const updatedPokemon = caughtPokemon.find(p => p && p.uniqueId === selectedPokemon.uniqueId);
-      if (updatedPokemon) {
-        const isInParty = caughtPokemon.indexOf(updatedPokemon) < 6;
-        setSelectedPokemon({ ...updatedPokemon, isInParty });
-      } else {
-        // 포켓몬이 삭제되었으면 선택 해제
-        setSelectedPokemon(null);
-      }
+    if (selectedPokemonId) {
+      console.log('=== 포켓몬 선택 디버깅 ===');
+      console.log('선택된 ID:', selectedPokemonId);
+      console.log('찾은 포켓몬:', selectedPokemon);
+      console.log('전체 포켓몬 목록:', caughtPokemon);
+      console.log('======================');
     }
-  }, [caughtPokemon]);
+  }, [selectedPokemonId, selectedPokemon, caughtPokemon]);
+
+  // 선택된 포켓몬이 엔트리에 있는지 확인
+  const selectedPokemonIndex = selectedPokemon 
+    ? caughtPokemon.findIndex(p => p && p.uniqueId === selectedPokemon.uniqueId)
+    : -1;
+  const isSelectedInParty = selectedPokemonIndex >= 0 && selectedPokemonIndex < 6;
+
+  // 포켓몬이 삭제되면 선택 해제
+  useEffect(() => {
+    if (selectedPokemonId && !selectedPokemon) {
+      setSelectedPokemonId(null);
+    }
+  }, [selectedPokemonId, selectedPokemon]);
 
   const handleDragStart = (e, pokemon, isInParty) => {
     setDraggedPokemon({ pokemon, isInParty });
@@ -64,9 +79,9 @@ export default function PokemonView({
     }
   };
 
-  const handlePokemonClick = (pokemon, isInParty) => {
+  const handlePokemonClick = (pokemon) => {
     if (!pokemon) return;
-    setSelectedPokemon({ ...pokemon, isInParty });
+    setSelectedPokemonId(pokemon.uniqueId);
   };
 
   const handleUseCandy = () => {
@@ -78,7 +93,7 @@ export default function PokemonView({
 
   const handleMove = () => {
     if (!selectedPokemon) return;
-    selectedPokemon.isInParty 
+    isSelectedInParty 
       ? onMoveToBox(selectedPokemon.uniqueId) 
       : onMoveToParty(selectedPokemon.uniqueId);
   };
@@ -87,6 +102,7 @@ export default function PokemonView({
     if (!selectedPokemon) return;
     if (window.confirm(`정말 ${selectedPokemon.nickname || selectedPokemon.name}을(를) 방생하시겠습니까?\n되돌릴 수 없습니다!`)) {
       onReleasePokemon(selectedPokemon.uniqueId);
+      setSelectedPokemonId(null);
     }
   };
 
@@ -106,9 +122,9 @@ export default function PokemonView({
                 key={pokemon?.uniqueId || `empty-${index}`}
                 pokemon={pokemon}
                 index={index}
-                isSelected={selectedPokemon?.uniqueId === pokemon?.uniqueId}
+                isSelected={selectedPokemonId === pokemon?.uniqueId}
                 onDragStart={(e) => handleDragStart(e, pokemon, true)}
-                onClick={() => handlePokemonClick(pokemon, true)}
+                onClick={() => handlePokemonClick(pokemon)}
               />
             ))}
           </div>
@@ -135,9 +151,9 @@ export default function PokemonView({
                   <BoxPokemon
                     key={pokemon.uniqueId}
                     pokemon={pokemon}
-                    isSelected={selectedPokemon?.uniqueId === pokemon.uniqueId}
+                    isSelected={selectedPokemonId === pokemon.uniqueId}
                     onDragStart={(e) => handleDragStart(e, pokemon, false)}
-                    onClick={() => handlePokemonClick(pokemon, false)}
+                    onClick={() => handlePokemonClick(pokemon)}
                   />
                 ))}
               </div>
@@ -152,9 +168,9 @@ export default function PokemonView({
       <div className="overflow-y-auto">
         {selectedPokemon ? (
           <PokemonDetailPanel
-            pokemon={selectedPokemon}
+            pokemon={{ ...selectedPokemon, isInParty: isSelectedInParty }}
             hasRareCandy={hasRareCandy}
-            onClose={() => setSelectedPokemon(null)}
+            onClose={() => setSelectedPokemonId(null)}
             onUseCandy={handleUseCandy}
             onMove={handleMove}
             onRelease={handleRelease}

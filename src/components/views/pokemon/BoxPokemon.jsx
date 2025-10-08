@@ -6,7 +6,31 @@ const STYLES = {
   unselected: "bg-gray-50 border-gray-200 hover:shadow-md hover:border-indigo-300"
 };
 
+// 타입별 색상
+const TYPE_COLORS = {
+  '노말': { bg: '#A8A878', text: '#FFF' },
+  '불꽃': { bg: '#F08030', text: '#FFF' },
+  '물': { bg: '#6890F0', text: '#FFF' },
+  '전기': { bg: '#F8D030', text: '#FFF' },
+  '풀': { bg: '#78C850', text: '#FFF' },
+  '얼음': { bg: '#98D8D8', text: '#FFF' },
+  '격투': { bg: '#C03028', text: '#FFF' },
+  '독': { bg: '#A040A0', text: '#FFF' },
+  '땅': { bg: '#E0C068', text: '#FFF' },
+  '비행': { bg: '#A890F0', text: '#FFF' },
+  '에스퍼': { bg: '#F85888', text: '#FFF' },
+  '벌레': { bg: '#A8B820', text: '#FFF' },
+  '바위': { bg: '#B8A038', text: '#FFF' },
+  '고스트': { bg: '#705898', text: '#FFF' },
+  '드래곤': { bg: '#7038F8', text: '#FFF' },
+  '악': { bg: '#705848', text: '#FFF' },
+  '강철': { bg: '#B8B8D0', text: '#FFF' },
+  '페어리': { bg: '#EE99AC', text: '#FFF' }
+};
+
 export default function BoxPokemon({ pokemon, isSelected, onDragStart, onClick }) {
+  const typeColors = TYPE_COLORS[pokemon.type] || { bg: '#777', text: '#FFF' };
+
   return (
     <div 
       draggable
@@ -25,7 +49,18 @@ export default function BoxPokemon({ pokemon, isSelected, onDragStart, onClick }
         }}
       />
       <div className="text-xs font-bold text-gray-700 truncate">{pokemon.nickname || pokemon.name}</div>
-      <div className="text-xs text-gray-500">Lv.{pokemon.level}</div>
+      <div className="mt-1">
+        <span 
+          className="text-xs px-2 py-0.5 rounded font-bold shadow-sm inline-block"
+          style={{ 
+            backgroundColor: typeColors.bg,
+            color: typeColors.text
+          }}
+        >
+          {pokemon.type}
+        </span>
+      </div>
+      <div className="text-xs text-gray-500 mt-1">Lv.{pokemon.level}</div>
     </div>
   );
 }
