@@ -204,13 +204,13 @@ export default function useGameState() {
     setEncounterPokemon(null);
   };
 
-  const handleCatchSuccess = (pokemon, ballUsed) => {
+const handleCatchSuccess = (pokemon, ballUsed) => {
     if (!currentUser) return;
     
     const pokemonTemplate = allPokemon.find(p => p.id === pokemon.id);
     
     const newPokemon = {
-      uniqueId: Date.now(),
+      uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       pokemonId: pokemon.id,
       name: pokemon.name,
       number: pokemon.number,
@@ -459,14 +459,25 @@ export default function useGameState() {
     alert('박스로 이동했습니다!');
   };
 
-  // 포켓몬 방생
-  const releasePokemon = (uniqueId) => {
-    if (!currentUser) return;
-    
-    const newCaughtPokemon = currentUser.caughtPokemon.filter(p => !p || p.uniqueId !== uniqueId);
-    updateCurrentUser({ caughtPokemon: newCaughtPokemon });
-  };
-
+// 포켓몬 방생
+const releasePokemon = (uniqueId) => {
+  if (!currentUser) return;
+  
+  const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === uniqueId);
+  if (pokemonIndex === -1) return;
+  
+  const newCaughtPokemon = [...currentUser.caughtPokemon];
+  
+  // 엔트리(0~5)에 있는 포켓몬이면 null로 변경
+  if (pokemonIndex < 6) {
+    newCaughtPokemon[pokemonIndex] = null;
+  } else {
+    // 박스에 있는 포켓몬이면 배열에서 제거
+    newCaughtPokemon.splice(pokemonIndex, 1);
+  }
+  
+  updateCurrentUser({ caughtPokemon: newCaughtPokemon });
+};
   // 이상한사탕 사용
   const useRareCandy = (uniqueId) => {
     if (!currentUser) return;

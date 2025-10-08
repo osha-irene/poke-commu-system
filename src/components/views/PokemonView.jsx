@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Package } from 'lucide-react';
 import PartySlot from './pokemon/PartySlot';
 import BoxPokemon from './pokemon/BoxPokemon';
@@ -23,6 +23,20 @@ export default function PokemonView({
   const box = caughtPokemon.slice(6).filter(p => p !== null);
   const rareCandy = items?.find(item => item.name === '이상한사탕');
   const hasRareCandy = rareCandy && rareCandy.count > 0;
+
+  // caughtPokemon이 변경될 때마다 selectedPokemon 동기화
+  useEffect(() => {
+    if (selectedPokemon) {
+      const updatedPokemon = caughtPokemon.find(p => p && p.uniqueId === selectedPokemon.uniqueId);
+      if (updatedPokemon) {
+        const isInParty = caughtPokemon.indexOf(updatedPokemon) < 6;
+        setSelectedPokemon({ ...updatedPokemon, isInParty });
+      } else {
+        // 포켓몬이 삭제되었으면 선택 해제
+        setSelectedPokemon(null);
+      }
+    }
+  }, [caughtPokemon]);
 
   const handleDragStart = (e, pokemon, isInParty) => {
     setDraggedPokemon({ pokemon, isInParty });
@@ -57,9 +71,8 @@ export default function PokemonView({
 
   const handleUseCandy = () => {
     if (!hasRareCandy || !selectedPokemon) return;
-    if (window.confirm(`${selectedPokemon.name}에게 이상한사탕을 사용하시겠습니까?`)) {
+    if (window.confirm(`${selectedPokemon.nickname || selectedPokemon.name}에게 이상한사탕을 사용하시겠습니까?`)) {
       onUseRareCandy(selectedPokemon.uniqueId);
-      setSelectedPokemon(prev => ({ ...prev, level: prev.level + 1 }));
     }
   };
 
@@ -68,14 +81,12 @@ export default function PokemonView({
     selectedPokemon.isInParty 
       ? onMoveToBox(selectedPokemon.uniqueId) 
       : onMoveToParty(selectedPokemon.uniqueId);
-    setSelectedPokemon(null);
   };
 
   const handleRelease = () => {
     if (!selectedPokemon) return;
-    if (window.confirm(`정말 ${selectedPokemon.name}을(를) 방생하시겠습니까?\n되돌릴 수 없습니다!`)) {
+    if (window.confirm(`정말 ${selectedPokemon.nickname || selectedPokemon.name}을(를) 방생하시겠습니까?\n되돌릴 수 없습니다!`)) {
       onReleasePokemon(selectedPokemon.uniqueId);
-      setSelectedPokemon(null);
     }
   };
 
@@ -147,10 +158,7 @@ export default function PokemonView({
             onUseCandy={handleUseCandy}
             onMove={handleMove}
             onRelease={handleRelease}
-            onUpdateNickname={(uniqueId, nickname) => {
-              onUpdateNickname(uniqueId, nickname);
-              setSelectedPokemon(prev => ({ ...prev, nickname }));
-            }}
+            onUpdateNickname={onUpdateNickname}
           />
         ) : (
           <div className="bg-white rounded-lg border border-gray-200 p-6 h-full flex items-center justify-center">
