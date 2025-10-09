@@ -120,7 +120,9 @@ export default function App() {
     updateGamePokedex,
     addItemToSelf,    
     giveItemToMember,   
-    toggleItemManagement  
+    toggleItemManagement,
+    givePokemonToMember,
+    addPokemonToSelf
   } = useGameState();
 
   // 로그인하지 않은 경우 로그인 화면 표시
@@ -207,6 +209,9 @@ export default function App() {
               addItemToSelf={addItemToSelf}
               giveItemToMember={giveItemToMember}
               toggleItemManagement={toggleItemManagement}
+              givePokemonToMember={givePokemonToMember}
+              addPokemonToSelf={addPokemonToSelf}
+          
             />
           )}
         </main>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import RegionEditModal from '../modals/RegionEditModal';
 import PokedexAdminPanel from './PokedexAdminPanel';
 import AdminItemPanel from './AdminItemPanel';
+import AdminPokemonPanel from './AdminPokemonPanel';
 
 export default function AdminView({ 
   trainer,
@@ -14,6 +15,8 @@ export default function AdminView({
   addItemToSelf,
   giveItemToMember,
   toggleItemManagement,
+  givePokemonToMember,
+  addPokemonToSelf,
   gamePokedex,
   updateRegionPokemon,
   updateGamePokedex,
@@ -95,16 +98,6 @@ export default function AdminView({
       {/* 멤버 관리 */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h3 className="text-xl font-bold text-gray-800 mb-4">👥 멤버 관리</h3>
-
-           {/* 아이템 관리 - 새로 추가 */}
-      <AdminItemPanel
-        trainer={trainer}
-        members={members}
-        allItems={allItems}
-        onAddItemToSelf={addItemToSelf}
-        onGiveItemToMember={giveItemToMember}
-        onToggleItemManagement={toggleItemManagement}
-      />
         
         {/* 새 멤버 추가 */}
         <div className="bg-gray-50 rounded-lg p-4 mb-4">
@@ -209,6 +202,25 @@ export default function AdminView({
         </div>
       </div>
 
+      {/* 아이템 관리 */}
+      <AdminItemPanel
+        trainer={trainer}
+        members={members}
+        allItems={allItems}
+        onAddItemToSelf={addItemToSelf}
+        onGiveItemToMember={giveItemToMember}
+        onToggleItemManagement={toggleItemManagement}
+      />
+
+      {/* 포켓몬 지급 - 새로 추가 */}
+      <AdminPokemonPanel
+        trainer={trainer}
+        members={members}
+        allPokemonMaster={allPokemonMaster}
+        onGivePokemonToMember={givePokemonToMember}
+        onAddPokemonToSelf={addPokemonToSelf}
+      />
+
       {/* 일일 산책 설정 (자신의 설정만) */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h3 className="text-xl font-bold text-gray-800 mb-4">⚙️ 내 일일 산책 횟수 설정</h3>
@@ -260,7 +272,7 @@ export default function AdminView({
         </div>
       </div>
 
-      {/* 게임 도감 설정 - 새로 추가된 섹션 */}
+      {/* 게임 도감 설정 */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h3 className="text-xl font-bold text-gray-800 mb-4">📖 게임 도감 포켓몬 설정</h3>
         <p className="text-sm text-gray-600 mb-4">

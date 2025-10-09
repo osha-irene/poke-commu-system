@@ -13,6 +13,10 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
     return () => clearTimeout(timer);
   }, []);
 
+  // 현재 시간 (밤 판정용)
+  const currentHour = new Date().getHours();
+  const isNight = currentHour >= 20 || currentHour < 4;
+
   // 인벤토리에서 볼 종류만 필터링
   const pokeballs = items
     .filter(item => {
@@ -22,39 +26,60 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
     .filter(item => item.count > 0) // 개수가 있는 것만
     .map(item => {
       const name = item.name;
+      const pokemonType = pokemon.type?.toLowerCase() || '';
+      const pokemonTypes = pokemonType.split('/').map(t => t.trim());
       
-      // 볼별 포획률 설정
+      // 볼별 포획률 설정 (조건 반영)
       let multiplier = 1.0;
-      if (name.includes('마스터')) multiplier = 255; // 무조건 포획
-      else if (name.includes('하이퍼') || name.includes('울트라')) multiplier = 2.0;
-      else if (name.includes('슈퍼') || name.includes('수퍼') || name.includes('그레이트')) multiplier = 1.5;
-      else if (name.includes('넷트')) multiplier = 3.0; // 물/벌레 타입
-      else if (name.includes('다이브')) multiplier = 3.5; // 물 속
-      else if (name.includes('네스트')) multiplier = 1.5; // 약한 포켓몬
-      else if (name.includes('리피트')) multiplier = 3.0; // 잡은 적 있는 포켓몬
-      else if (name.includes('타이머')) multiplier = 1.5; // 턴 수
-      else if (name.includes('퀵')) multiplier = 5.0; // 첫 턴
-      else if (name.includes('다크')) multiplier = 3.5; // 밤/동굴
       
-      // 색상 설정
-      let color = 'bg-red-500';
-      if (name.includes('마스터')) color = 'bg-purple-600';
-      else if (name.includes('하이퍼') || name.includes('울트라')) color = 'bg-yellow-500';
-      else if (name.includes('슈퍼') || name.includes('수퍼') || name.includes('그레이트')) color = 'bg-blue-500';
-      else if (name.includes('넷트')) color = 'bg-teal-500';
-      else if (name.includes('다이브')) color = 'bg-cyan-500';
-      else if (name.includes('네스트')) color = 'bg-green-500';
-      else if (name.includes('리피트')) color = 'bg-orange-500';
-      else if (name.includes('타이머')) color = 'bg-gray-600';
-      else if (name.includes('퀵')) color = 'bg-yellow-400';
-      else if (name.includes('다크')) color = 'bg-gray-800';
-      else if (name.includes('프리미어')) color = 'bg-white';
-      else if (name.includes('럭셔리')) color = 'bg-yellow-600';
+      if (name.includes('마스터')) {
+        multiplier = 255; // 무조건 포획
+      } else if (name.includes('하이퍼') || name.includes('울트라')) {
+        multiplier = 2.0;
+      } else if (name.includes('슈퍼') || name.includes('수퍼') || name.includes('그레이트')) {
+        multiplier = 1.5;
+      } else if (name.includes('넷트')) {
+        // 물/벌레 타입
+        const isWaterOrBug = pokemonTypes.some(t => t.includes('물') || t.includes('water') || t.includes('벌레') || t.includes('bug'));
+        multiplier = isWaterOrBug ? 3.5 : 1.0;
+      } else if (name.includes('다이브')) {
+        // 물 타입
+        const isWater = pokemonTypes.some(t => t.includes('물') || t.includes('water'));
+        multiplier = isWater ? 3.5 : 1.0;
+      } else if (name.includes('네스트')) {
+        // 약한 포켓몬 (HP 40 이하)
+        const hp = pokemon.hp || pokemon.baseHp || 100;
+        multiplier = hp <= 40 ? 3.0 : 1.0;
+      } else if (name.includes('리피트')) {
+        // 잡은 적 있는 포켓몬 (도감에 등록되어 있으면)
+        multiplier = 1.0; // 실제 구현 시 도감 체크 필요
+      } else if (name.includes('타이머')) {
+        multiplier = 1.5; // 턴 수 (실제로는 턴마다 증가)
+      } else if (name.includes('퀵')) {
+        multiplier = 5.0; // 첫 턴 (항상 첫 턴으로 가정)
+      } else if (name.includes('다크')) {
+        // 밤이거나 동굴에서
+        multiplier = isNight ? 3.5 : 1.0;
+      } else if (name.includes('문')) {
+        // 달의돌로 진화하는 포켓몬
+        multiplier = 4.0;
+      } else if (name.includes('러브')) {
+        // 같은 종족, 다른 성별
+        multiplier = 8.0;
+      } else if (name.includes('레벨')) {
+        // 낮은 레벨 포켓몬
+        multiplier = 8.0;
+      } else if (name.includes('헤비')) {
+        // 무거운 포켓몬
+        multiplier = 1.0;
+      } else if (name.includes('스피드')) {
+        // 빠른 포켓몬
+        multiplier = 4.0;
+      }
       
       return { 
         name: item.name, 
-        multiplier, 
-        color,
+        multiplier,
         imageUrl: item.imageUrl 
       };
     });
@@ -131,23 +156,23 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
       onClick={isReady && !catching && !result ? handleCloseClick : undefined}
     >
       <div 
-        className="w-full max-w-4xl mx-4" 
+        className="w-full max-w-5xl mx-4 max-h-[95vh] overflow-y-auto" 
         onClick={(e) => e.stopPropagation()}
       >
         {!result && !catching && (
           <div className="bg-white rounded-lg overflow-hidden border-4 border-gray-800">
             {/* 상단 배틀 필드 */}
-            <div className="relative bg-gradient-to-b from-blue-200 to-green-200 p-8 border-b-4 border-gray-800">
-              <div className="flex justify-end mb-8">
+            <div className="relative bg-gradient-to-b from-blue-200 to-green-200 p-6 border-b-4 border-gray-800">
+              <div className="flex justify-end mb-6">
                 <div className="text-center">
-                  <div className="bg-white rounded-lg px-6 py-2 mb-4 border-2 border-gray-800 inline-block">
-                    <div className="font-bold text-lg">야생의 {pokemon.name}</div>
-                    <div className="text-sm text-gray-600">Lv.???</div>
+                  <div className="bg-white rounded-lg px-4 py-1 mb-3 border-2 border-gray-800 inline-block">
+                    <div className="font-bold text-base">야생의 {pokemon.name}</div>
+                    <div className="text-xs text-gray-600">Lv.???</div>
                   </div>
                   
                   {/* 포켓몬 스프라이트 (도트 애니메이션) */}
                   <div 
-                    className="w-48 h-48 mx-auto"
+                    className="w-40 h-40 mx-auto"
                     style={{
                       backgroundImage: `url(${pokemonSpriteUrl})`,
                       backgroundSize: 'contain',
@@ -160,35 +185,35 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
               </div>
 
               <div className="flex justify-end">
-                <div className="w-32 h-6 bg-black opacity-20 rounded-full blur-sm"></div>
+                <div className="w-24 h-4 bg-black opacity-20 rounded-full blur-sm"></div>
               </div>
             </div>
 
             {/* 하단 UI */}
-            <div className="bg-gray-100 p-6">
-              <div className="bg-white rounded-lg border-4 border-gray-800 p-6 mb-6">
-                <p className="text-xl font-bold text-gray-800">
+            <div className="bg-gray-100 p-4">
+              <div className="bg-white rounded-lg border-4 border-gray-800 p-4 mb-4">
+                <p className="text-lg font-bold text-gray-800">
                   야생의 {pokemon.name}이(가) 나타났다!
                 </p>
-                <p className="text-sm text-gray-600 mt-2">
-                  {pokemon.type} 타입 | HP {pokemon.hp || pokemon.baseHp} | 포획률 {Math.round(pokemon.catchRate * 100)}%
+                <p className="text-xs text-gray-600 mt-1">
+                  {pokemon.type} 타입 | HP {pokemon.hp || pokemon.baseHp}
                 </p>
               </div>
 
-              <div className="bg-white rounded-lg border-4 border-gray-800 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="font-bold text-lg">볼을 선택하세요</span>
+              <div className="bg-white rounded-lg border-4 border-gray-800 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-bold text-base">볼을 선택하세요</span>
                   <button 
                     onClick={handleCloseClick}
-                    className="text-gray-500 hover:text-gray-700 font-bold"
+                    className="text-gray-500 hover:text-gray-700 font-bold text-sm"
                   >
                     ✕ 도망치기
                   </button>
                 </div>
 
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1">
                   {pokeballs.length === 0 ? (
-                    <div className="col-span-4 text-center py-8 text-gray-500">
+                    <div className="col-span-3 text-center py-8 text-gray-500">
                       사용 가능한 볼이 없습니다!
                     </div>
                   ) : (
@@ -202,16 +227,16 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
                           key={i}
                           onClick={(e) => !disabled && handleBallSelect(e, ball)}
                           disabled={disabled}
-                          className={`relative ${ball.color} ${ball.color === 'bg-white' ? 'text-gray-800 border-gray-300' : 'text-white'} rounded-lg p-3 border-2 transition-all ${
+                          className={`flex items-center gap-2 bg-white rounded-lg p-2 border-2 transition-all ${
                             disabled 
-                              ? 'opacity-30 cursor-not-allowed border-gray-400' 
+                              ? 'opacity-30 cursor-not-allowed border-gray-300' 
                               : selectedBall?.name === ball.name 
-                                ? 'border-yellow-300 scale-105 shadow-lg ring-2 ring-yellow-400' 
-                                : 'border-gray-700 hover:scale-105'
+                                ? 'border-yellow-400 shadow-lg ring-2 ring-yellow-300' 
+                                : 'border-gray-300 hover:border-gray-400 hover:shadow-md'
                           }`}
                         >
                           <div 
-                            className="w-16 h-16 mx-auto mb-1"
+                            className="w-10 h-10 flex-shrink-0"
                             style={{
                               backgroundImage: `url(${ball.imageUrl})`,
                               backgroundSize: 'contain',
@@ -220,9 +245,10 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
                               imageRendering: 'pixelated'
                             }}
                           />
-                          <div className="font-bold text-sm truncate">{ball.name}</div>
-                          <div className="text-xs opacity-80">×{ball.multiplier === 255 ? '∞' : ball.multiplier}</div>
-                          <div className={`absolute top-1 right-1 ${ball.color === 'bg-white' ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} px-1.5 py-0.5 rounded text-xs font-bold`}>
+                          <div className="flex-1 text-left min-w-0">
+                            <div className="font-bold text-xs text-gray-800 truncate">{ball.name}</div>
+                          </div>
+                          <div className="bg-gray-800 text-white px-1.5 py-0.5 rounded text-xs font-bold flex-shrink-0">
                             {count}
                           </div>
                         </button>
@@ -234,7 +260,7 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
                 {selectedBall && (
                   <button 
                     onClick={handleCatch}
-                    className="w-full mt-6 bg-green-500 text-white py-4 rounded-lg font-bold text-xl hover:bg-green-600 border-4 border-green-700 transition-all hover:scale-105"
+                    className="w-full mt-4 bg-green-500 text-white py-3 rounded-lg font-bold text-lg hover:bg-green-600 border-4 border-green-700 transition-all hover:scale-105"
                   >
                     ▶ {selectedBall.name}을(를) 던진다!
                   </button>

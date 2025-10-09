@@ -376,6 +376,58 @@ export default function useGameState() {
     updateCurrentUser({ maxDailyWalks: newMax });
   };
 
+  // 관리자 기능: 회원에게 포켓몬 지급
+const givePokemonToMember = (memberId, pokemonData) => { // ⚠️ 변수명을 pokemonData로 변경
+  if (!currentUser?.isAdmin) return;
+  const member = members[memberId];
+  if (!member) return;
+
+  // 1. 전달받은 값이 객체라면 그 안의 number 속성을 사용
+  const targetNumber = (typeof pokemonData === 'object' && pokemonData !== null) 
+                       ? pokemonData.number 
+                       : pokemonData;
+  
+  // 2. allPokemonMaster에서 targetNumber를 사용해 찾기
+  const pokemonTemplate = allPokemonMaster.find(p => p.number === targetNumber);
+  
+  if (!pokemonTemplate) {
+    alert('해당 포켓몬 템플릿을 찾을 수 없습니다.');
+    return;
+  }
+
+  const newPokemon = {
+    uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    pokemonId: pokemonTemplate.id,
+    name: pokemonTemplate.name,
+    number: pokemonTemplate.number,
+    type: pokemonTemplate.type,
+    type2: pokemonTemplate.type2 || null,
+    level: 50, // 관리자 지급 포켓몬은 레벨 50으로 가정
+    hp: pokemonTemplate.baseHp,
+    maxHp: pokemonTemplate.baseHp,
+    exp: 0,
+    imageUrl: pokemonTemplate.imageUrl,
+    iconUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`,
+    spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/${pokemonTemplate.number}.png`
+  };
+
+  const updatedCaughtPokemon = [...member.caughtPokemon, newPokemon];
+
+  setMembers(prev => ({
+    ...prev,
+    [memberId]: { ...prev[memberId], caughtPokemon: updatedCaughtPokemon }
+  }));
+
+  alert(`${member.name}님에게 ${pokemonTemplate.name}을(를) 지급했습니다!`);
+};
+
+// 관리자 기능: 자신에게 포켓몬 추가
+const addPokemonToSelf = (pokemonNumber) => {
+  if (!currentUser?.isAdmin) return;
+  // 내부적으로 givePokemonToMember 함수를 사용하여 자신에게 지급
+  givePokemonToMember(currentUser.id, pokemonNumber); 
+};
+
   const updateRegionPokemon = (regionId, pokemonIds) => {
     if (!currentUser?.isAdmin) return;
     setRegions(prev => prev.map(region => 
@@ -730,6 +782,7 @@ export default function useGameState() {
     movePokemonToParty, movePokemonToBox, releasePokemon,
     useRareCandy, updatePokemonNickname,
     updatePokedexMemo, updateGamePokedex,
-    addItemToSelf, giveItemToMember, toggleItemManagement
+    addItemToSelf, giveItemToMember, toggleItemManagement,
+    givePokemonToMember, addPokemonToSelf
   };
 }
