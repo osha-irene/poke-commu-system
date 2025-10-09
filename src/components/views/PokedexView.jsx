@@ -270,7 +270,7 @@ export default function PokedexView({
 
               {/* 이미지 (도트 스프라이트) - 전국도감 번호 사용 */}
               <img 
-                src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/${selectedPokemon.originalNumber || selectedPokemon.number}.png`}
+                src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${selectedPokemon.originalNumber || selectedPokemon.number}.png`}
                 alt={selectedPokemon.name}
                 className="w-48 h-48 mx-auto mb-4"
                 style={{ imageRendering: 'pixelated' }}
