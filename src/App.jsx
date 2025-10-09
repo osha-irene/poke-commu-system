@@ -8,6 +8,7 @@ import ItemsView from './components/views/ItemsView';
 import ProfileView from './components/views/ProfileView';
 import AdminView from './components/views/AdminView';
 import EncounterModal from './components/modals/EncounterModal';
+import FirstCatchMemoModal from './components/modals/FirstCatchMemoModal';
 import useGameState from './hooks/useGameState';
 
 // 로그인 화면 컴포넌트
@@ -88,14 +89,21 @@ export default function App() {
     caughtPokemon,
     items,
     encounterPokemon,
+    firstCatchPokemon,
     regions,
     allPokemon,
+    allPokemonMaster,
+    allItems,
     members,
+    gamePokedex,
+    sharedPokedexData,
     handleLogin,
     handleLogout,
     handleRegionClick,
     handleCloseEncounter,
     handleCatchSuccess,
+    saveFirstCatchMemo,
+    skipFirstCatchMemo,
     updateMaxDailyWalks,
     updateRegionPokemon,
     addMember,
@@ -107,7 +115,12 @@ export default function App() {
     movePokemonToBox,
     releasePokemon,
     useRareCandy,
-    updatePokemonNickname
+    updatePokemonNickname,
+    updatePokedexMemo,
+    updateGamePokedex,
+    addItemToSelf,    
+    giveItemToMember,   
+    toggleItemManagement  
   } = useGameState();
 
   // 로그인하지 않은 경우 로그인 화면 표시
@@ -135,9 +148,18 @@ export default function App() {
               onRegionClick={handleRegionClick} 
             />
           )}
+          
           {currentTab === 'pokedex' && (
-            <PokedexView caughtPokemon={caughtPokemon.filter(p => p !== null)} />
+            <PokedexView 
+              pokedex={gamePokedex}
+              caughtPokemon={caughtPokemon.filter(p => p !== null)}
+              pokedexData={sharedPokedexData}
+              regions={regions}
+              currentUser={currentUser}
+              onUpdateMemo={updatePokedexMemo}
+            />
           )}
+          
           {currentTab === 'pokemon' && (
             <PokemonView 
               caughtPokemon={caughtPokemon}
@@ -149,39 +171,63 @@ export default function App() {
               onUpdateNickname={updatePokemonNickname}
             />
           )}
+          
           {currentTab === 'items' && (
-            <ItemsView items={items} />
+            <ItemsView 
+              items={items}
+              allItems={allItems}
+              isSuperAdmin={trainer.isSuperAdmin} 
+            />
           )}
+          
           {currentTab === 'profile' && (
             <ProfileView 
               trainer={trainer} 
               caughtCount={caughtPokemon.length} 
             />
           )}
+          
           {currentTab === 'admin' && isAdmin && (
-            <AdminView 
+            <AdminView
               trainer={trainer}
               members={members}
               updateMaxDailyWalks={updateMaxDailyWalks}
               regions={regions}
               allPokemon={allPokemon}
+              allPokemonMaster={allPokemonMaster}
+              gamePokedex={gamePokedex}
               updateRegionPokemon={updateRegionPokemon}
+              updateGamePokedex={updateGamePokedex}
               addMember={addMember}
               toggleAdminStatus={toggleAdminStatus}
               resetMemberWalkCount={resetMemberWalkCount}
               resetAllWalkCounts={resetAllWalkCounts}
               resetGameData={resetGameData}
+              allItems={allItems}
+              addItemToSelf={addItemToSelf}
+              giveItemToMember={giveItemToMember}
+              toggleItemManagement={toggleItemManagement}
             />
           )}
         </main>
       </div>
 
+      {/* 포켓몬 조우 모달 */}
       {encounterPokemon && (
         <EncounterModal 
           pokemon={encounterPokemon} 
           onClose={handleCloseEncounter}
           onCatchSuccess={handleCatchSuccess}
           items={items}
+        />
+      )}
+
+      {/* 첫 포획 메모 모달 */}
+      {firstCatchPokemon && (
+        <FirstCatchMemoModal
+          pokemon={firstCatchPokemon}
+          onSave={(memo) => saveFirstCatchMemo(firstCatchPokemon.number, memo)}
+          onSkip={() => skipFirstCatchMemo(firstCatchPokemon.number)}
         />
       )}
     </div>

@@ -13,11 +13,55 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
     return () => clearTimeout(timer);
   }, []);
 
-  const pokeballs = [
-    { name: '몬스터볼', multiplier: 1.0, color: 'bg-red-500', imageUrl: '/images/items/pokeball.png' },
-    { name: '슈퍼볼', multiplier: 1.5, color: 'bg-blue-500', imageUrl: '/images/items/greatball.png' },
-    { name: '하이퍼볼', multiplier: 2.0, color: 'bg-yellow-500', imageUrl: '/images/items/ultraball.png' },
-  ];
+  // 인벤토리에서 볼 종류만 필터링
+  const pokeballs = items
+    .filter(item => {
+      const name = item.name.toLowerCase();
+      return name.includes('볼') || name.includes('ball');
+    })
+    .filter(item => item.count > 0) // 개수가 있는 것만
+    .map(item => {
+      const name = item.name;
+      
+      // 볼별 포획률 설정
+      let multiplier = 1.0;
+      if (name.includes('마스터')) multiplier = 255; // 무조건 포획
+      else if (name.includes('하이퍼') || name.includes('울트라')) multiplier = 2.0;
+      else if (name.includes('슈퍼') || name.includes('수퍼') || name.includes('그레이트')) multiplier = 1.5;
+      else if (name.includes('넷트')) multiplier = 3.0; // 물/벌레 타입
+      else if (name.includes('다이브')) multiplier = 3.5; // 물 속
+      else if (name.includes('네스트')) multiplier = 1.5; // 약한 포켓몬
+      else if (name.includes('리피트')) multiplier = 3.0; // 잡은 적 있는 포켓몬
+      else if (name.includes('타이머')) multiplier = 1.5; // 턴 수
+      else if (name.includes('퀵')) multiplier = 5.0; // 첫 턴
+      else if (name.includes('다크')) multiplier = 3.5; // 밤/동굴
+      
+      // 색상 설정
+      let color = 'bg-red-500';
+      if (name.includes('마스터')) color = 'bg-purple-600';
+      else if (name.includes('하이퍼') || name.includes('울트라')) color = 'bg-yellow-500';
+      else if (name.includes('슈퍼') || name.includes('수퍼') || name.includes('그레이트')) color = 'bg-blue-500';
+      else if (name.includes('넷트')) color = 'bg-teal-500';
+      else if (name.includes('다이브')) color = 'bg-cyan-500';
+      else if (name.includes('네스트')) color = 'bg-green-500';
+      else if (name.includes('리피트')) color = 'bg-orange-500';
+      else if (name.includes('타이머')) color = 'bg-gray-600';
+      else if (name.includes('퀵')) color = 'bg-yellow-400';
+      else if (name.includes('다크')) color = 'bg-gray-800';
+      else if (name.includes('프리미어')) color = 'bg-white';
+      else if (name.includes('럭셔리')) color = 'bg-yellow-600';
+      
+      return { 
+        name: item.name, 
+        multiplier, 
+        color,
+        imageUrl: item.imageUrl 
+      };
+    });
+
+  // 포켓몬 스프라이트 URL (도트 정적 이미지)
+  const pokemonSpriteUrl = pokemon.spriteUrl || 
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/${pokemon.number}.png`;
 
   const handleCatch = (e) => {
     e.preventDefault();
@@ -35,7 +79,7 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
     }
 
     setCatching(true);
-    setResult(null); // 결과 초기화
+    setResult(null);
 
     setTimeout(() => {
       let shakeCount = 0;
@@ -74,7 +118,6 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
     e.preventDefault();
     e.stopPropagation();
     
-    // 모달이 완전히 준비되지 않았거나, 포획 중이거나 결과가 표시 중이면 닫기 방지
     if (!isReady || catching || result) {
       return;
     }
@@ -102,11 +145,11 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
                     <div className="text-sm text-gray-600">Lv.???</div>
                   </div>
                   
-                  {/* 포켓몬 스프라이트 */}
+                  {/* 포켓몬 스프라이트 (도트 애니메이션) */}
                   <div 
                     className="w-48 h-48 mx-auto"
                     style={{
-                      backgroundImage: `url(https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${pokemon.number}.gif)`,
+                      backgroundImage: `url(${pokemonSpriteUrl})`,
                       backgroundSize: 'contain',
                       backgroundRepeat: 'no-repeat',
                       backgroundPosition: 'center',
@@ -143,43 +186,49 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
                   </button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                  {pokeballs.map((ball, i) => {
-                    const ballItem = items.find(item => item.name === ball.name);
-                    const count = ballItem ? ballItem.count : 0;
-                    const disabled = count <= 0;
+                <div className="grid grid-cols-4 gap-3">
+                  {pokeballs.length === 0 ? (
+                    <div className="col-span-4 text-center py-8 text-gray-500">
+                      사용 가능한 볼이 없습니다!
+                    </div>
+                  ) : (
+                    pokeballs.map((ball, i) => {
+                      const ballItem = items.find(item => item.name === ball.name);
+                      const count = ballItem ? ballItem.count : 0;
+                      const disabled = count <= 0;
 
-                    return (
-                      <button
-                        key={i}
-                        onClick={(e) => !disabled && handleBallSelect(e, ball)}
-                        disabled={disabled}
-                        className={`relative ${ball.color} text-white rounded-lg p-4 border-4 transition-all ${
-                          disabled 
-                            ? 'opacity-30 cursor-not-allowed border-gray-400' 
-                            : selectedBall?.name === ball.name 
-                              ? 'border-yellow-300 scale-105 shadow-xl' 
-                              : 'border-gray-700 hover:scale-105'
-                        }`}
-                      >
-                        {/* 볼 이미지 */}
-                        <div 
-                          className="w-20 h-20 mx-auto mb-2"
-                          style={{
-                            backgroundImage: `url(${ball.imageUrl})`,
-                            backgroundSize: 'contain',
-                            backgroundRepeat: 'no-repeat',
-                            backgroundPosition: 'center'
-                          }}
-                        />
-                        <div className="font-bold">{ball.name}</div>
-                        <div className="text-xs opacity-90">×{ball.multiplier}</div>
-                        <div className="absolute top-2 right-2 bg-white text-gray-800 px-2 py-1 rounded text-xs font-bold">
-                          {count}
-                        </div>
-                      </button>
-                    );
-                  })}
+                      return (
+                        <button
+                          key={i}
+                          onClick={(e) => !disabled && handleBallSelect(e, ball)}
+                          disabled={disabled}
+                          className={`relative ${ball.color} ${ball.color === 'bg-white' ? 'text-gray-800 border-gray-300' : 'text-white'} rounded-lg p-3 border-2 transition-all ${
+                            disabled 
+                              ? 'opacity-30 cursor-not-allowed border-gray-400' 
+                              : selectedBall?.name === ball.name 
+                                ? 'border-yellow-300 scale-105 shadow-lg ring-2 ring-yellow-400' 
+                                : 'border-gray-700 hover:scale-105'
+                          }`}
+                        >
+                          <div 
+                            className="w-16 h-16 mx-auto mb-1"
+                            style={{
+                              backgroundImage: `url(${ball.imageUrl})`,
+                              backgroundSize: 'contain',
+                              backgroundRepeat: 'no-repeat',
+                              backgroundPosition: 'center',
+                              imageRendering: 'pixelated'
+                            }}
+                          />
+                          <div className="font-bold text-sm truncate">{ball.name}</div>
+                          <div className="text-xs opacity-80">×{ball.multiplier === 255 ? '∞' : ball.multiplier}</div>
+                          <div className={`absolute top-1 right-1 ${ball.color === 'bg-white' ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} px-1.5 py-0.5 rounded text-xs font-bold`}>
+                            {count}
+                          </div>
+                        </button>
+                      );
+                    })
+                  )}
                 </div>
 
                 {selectedBall && (
@@ -198,16 +247,15 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
         {catching && (
           <div className="bg-gradient-to-b from-blue-200 to-green-200 rounded-lg p-12 text-center border-4 border-gray-800">
             <div className="bg-white rounded-lg border-4 border-gray-800 p-8">
-              {/* 볼 이미지 흔들림 */}
               <div 
+                key={shaking}
                 className="w-32 h-32 mx-auto mb-6"
                 style={{
                   backgroundImage: `url(${selectedBall.imageUrl})`,
                   backgroundSize: 'contain',
                   backgroundRepeat: 'no-repeat',
                   backgroundPosition: 'center',
-                  animation: shaking > 0 ? 'shake 0.5s ease-in-out' : 'none',
-                  animationIterationCount: 1
+                  animation: shaking > 0 ? 'shake 0.5s ease-in-out' : 'none'
                 }}
               />
               

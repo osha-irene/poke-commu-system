@@ -11,7 +11,8 @@
       "baseAttack": 49,
       "baseDefense": 49,
       "baseSpeed": 45,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
+      "type2": "독"
     },
     {
       "id": 2,
@@ -24,7 +25,8 @@
       "baseAttack": 62,
       "baseDefense": 63,
       "baseSpeed": 60,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/2.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/2.png",
+      "type2": "독"
     },
     {
       "id": 3,
@@ -37,7 +39,8 @@
       "baseAttack": 82,
       "baseDefense": 83,
       "baseSpeed": 80,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/3.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/3.png",
+      "type2": "독"
     },
     {
       "id": 4,
@@ -76,7 +79,8 @@
       "baseAttack": 84,
       "baseDefense": 78,
       "baseSpeed": 100,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png",
+      "type2": "비행"
     },
     {
       "id": 7,
@@ -154,7 +158,8 @@
       "baseAttack": 45,
       "baseDefense": 50,
       "baseSpeed": 70,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/12.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/12.png",
+      "type2": "비행"
     },
     {
       "id": 13,
@@ -167,7 +172,8 @@
       "baseAttack": 35,
       "baseDefense": 30,
       "baseSpeed": 50,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/13.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/13.png",
+      "type2": "독"
     },
     {
       "id": 14,
@@ -180,7 +186,8 @@
       "baseAttack": 25,
       "baseDefense": 50,
       "baseSpeed": 35,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/14.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/14.png",
+      "type2": "독"
     },
     {
       "id": 15,
@@ -193,7 +200,8 @@
       "baseAttack": 90,
       "baseDefense": 40,
       "baseSpeed": 75,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/15.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/15.png",
+      "type2": "독"
     },
     {
       "id": 16,
@@ -206,7 +214,8 @@
       "baseAttack": 45,
       "baseDefense": 40,
       "baseSpeed": 56,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/16.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/16.png",
+      "type2": "비행"
     },
     {
       "id": 17,
@@ -219,7 +228,8 @@
       "baseAttack": 60,
       "baseDefense": 55,
       "baseSpeed": 71,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/17.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/17.png",
+      "type2": "비행"
     },
     {
       "id": 18,
@@ -232,7 +242,8 @@
       "baseAttack": 80,
       "baseDefense": 75,
       "baseSpeed": 101,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/18.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/18.png",
+      "type2": "비행"
     },
     {
       "id": 19,
@@ -271,7 +282,8 @@
       "baseAttack": 60,
       "baseDefense": 30,
       "baseSpeed": 70,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/21.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/21.png",
+      "type2": "비행"
     },
     {
       "id": 22,
@@ -284,7 +296,8 @@
       "baseAttack": 90,
       "baseDefense": 65,
       "baseSpeed": 100,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/22.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/22.png",
+      "type2": "비행"
     },
     {
       "id": 23,
@@ -401,7 +414,8 @@
       "baseAttack": 92,
       "baseDefense": 87,
       "baseSpeed": 76,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/31.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/31.png",
+      "type2": "땅"
     },
     {
       "id": 32,
@@ -440,7 +454,8 @@
       "baseAttack": 102,
       "baseDefense": 77,
       "baseSpeed": 85,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/34.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/34.png",
+      "type2": "땅"
     },
     {
       "id": 35,
@@ -505,7 +520,8 @@
       "baseAttack": 45,
       "baseDefense": 20,
       "baseSpeed": 20,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/39.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/39.png",
+      "type2": "페어리"
     },
     {
       "id": 40,
@@ -518,7 +534,8 @@
       "baseAttack": 70,
       "baseDefense": 45,
       "baseSpeed": 45,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/40.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/40.png",
+      "type2": "페어리"
     },
     {
       "id": 41,
@@ -531,7 +548,8 @@
       "baseAttack": 45,
       "baseDefense": 35,
       "baseSpeed": 55,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/41.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/41.png",
+      "type2": "비행"
     },
     {
       "id": 42,
@@ -544,7 +562,8 @@
       "baseAttack": 80,
       "baseDefense": 70,
       "baseSpeed": 90,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/42.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/42.png",
+      "type2": "비행"
     },
     {
       "id": 43,
@@ -557,7 +576,8 @@
       "baseAttack": 50,
       "baseDefense": 55,
       "baseSpeed": 30,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/43.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/43.png",
+      "type2": "독"
     },
     {
       "id": 44,
@@ -570,7 +590,8 @@
       "baseAttack": 65,
       "baseDefense": 70,
       "baseSpeed": 40,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/44.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/44.png",
+      "type2": "독"
     },
     {
       "id": 45,
@@ -583,7 +604,8 @@
       "baseAttack": 80,
       "baseDefense": 85,
       "baseSpeed": 50,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/45.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/45.png",
+      "type2": "독"
     },
     {
       "id": 46,
@@ -596,7 +618,8 @@
       "baseAttack": 70,
       "baseDefense": 55,
       "baseSpeed": 25,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/46.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/46.png",
+      "type2": "풀"
     },
     {
       "id": 47,
@@ -609,7 +632,8 @@
       "baseAttack": 95,
       "baseDefense": 80,
       "baseSpeed": 30,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/47.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/47.png",
+      "type2": "풀"
     },
     {
       "id": 48,
@@ -622,7 +646,8 @@
       "baseAttack": 55,
       "baseDefense": 50,
       "baseSpeed": 45,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/48.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/48.png",
+      "type2": "독"
     },
     {
       "id": 49,
@@ -635,7 +660,8 @@
       "baseAttack": 65,
       "baseDefense": 60,
       "baseSpeed": 90,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/49.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/49.png",
+      "type2": "독"
     },
     {
       "id": 50,
@@ -804,7 +830,8 @@
       "baseAttack": 95,
       "baseDefense": 95,
       "baseSpeed": 70,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/62.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/62.png",
+      "type2": "격투"
     },
     {
       "id": 63,
@@ -895,7 +922,8 @@
       "baseAttack": 75,
       "baseDefense": 35,
       "baseSpeed": 40,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/69.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/69.png",
+      "type2": "독"
     },
     {
       "id": 70,
@@ -908,7 +936,8 @@
       "baseAttack": 90,
       "baseDefense": 50,
       "baseSpeed": 55,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/70.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/70.png",
+      "type2": "독"
     },
     {
       "id": 71,
@@ -921,7 +950,8 @@
       "baseAttack": 105,
       "baseDefense": 65,
       "baseSpeed": 70,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/71.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/71.png",
+      "type2": "독"
     },
     {
       "id": 72,
@@ -934,7 +964,8 @@
       "baseAttack": 40,
       "baseDefense": 35,
       "baseSpeed": 70,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/72.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/72.png",
+      "type2": "독"
     },
     {
       "id": 73,
@@ -947,7 +978,8 @@
       "baseAttack": 70,
       "baseDefense": 65,
       "baseSpeed": 100,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/73.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/73.png",
+      "type2": "독"
     },
     {
       "id": 74,
@@ -960,7 +992,8 @@
       "baseAttack": 80,
       "baseDefense": 100,
       "baseSpeed": 20,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/74.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/74.png",
+      "type2": "땅"
     },
     {
       "id": 75,
@@ -973,7 +1006,8 @@
       "baseAttack": 95,
       "baseDefense": 115,
       "baseSpeed": 35,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/75.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/75.png",
+      "type2": "땅"
     },
     {
       "id": 76,
@@ -986,7 +1020,8 @@
       "baseAttack": 120,
       "baseDefense": 130,
       "baseSpeed": 45,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/76.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/76.png",
+      "type2": "땅"
     },
     {
       "id": 77,
@@ -1025,7 +1060,8 @@
       "baseAttack": 65,
       "baseDefense": 65,
       "baseSpeed": 15,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/79.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/79.png",
+      "type2": "에스퍼"
     },
     {
       "id": 80,
@@ -1038,7 +1074,8 @@
       "baseAttack": 75,
       "baseDefense": 110,
       "baseSpeed": 30,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/80.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/80.png",
+      "type2": "에스퍼"
     },
     {
       "id": 81,
@@ -1051,7 +1088,8 @@
       "baseAttack": 35,
       "baseDefense": 70,
       "baseSpeed": 45,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/81.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/81.png",
+      "type2": "강철"
     },
     {
       "id": 82,
@@ -1064,7 +1102,8 @@
       "baseAttack": 60,
       "baseDefense": 95,
       "baseSpeed": 70,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/82.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/82.png",
+      "type2": "강철"
     },
     {
       "id": 83,
@@ -1077,7 +1116,8 @@
       "baseAttack": 90,
       "baseDefense": 55,
       "baseSpeed": 60,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/83.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/83.png",
+      "type2": "비행"
     },
     {
       "id": 84,
@@ -1090,7 +1130,8 @@
       "baseAttack": 85,
       "baseDefense": 45,
       "baseSpeed": 75,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/84.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/84.png",
+      "type2": "비행"
     },
     {
       "id": 85,
@@ -1103,7 +1144,8 @@
       "baseAttack": 110,
       "baseDefense": 70,
       "baseSpeed": 110,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/85.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/85.png",
+      "type2": "비행"
     },
     {
       "id": 86,
@@ -1129,7 +1171,8 @@
       "baseAttack": 70,
       "baseDefense": 80,
       "baseSpeed": 70,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/87.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/87.png",
+      "type2": "얼음"
     },
     {
       "id": 88,
@@ -1181,7 +1224,8 @@
       "baseAttack": 95,
       "baseDefense": 180,
       "baseSpeed": 70,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/91.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/91.png",
+      "type2": "얼음"
     },
     {
       "id": 92,
@@ -1194,7 +1238,8 @@
       "baseAttack": 35,
       "baseDefense": 30,
       "baseSpeed": 80,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/92.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/92.png",
+      "type2": "독"
     },
     {
       "id": 93,
@@ -1207,7 +1252,8 @@
       "baseAttack": 50,
       "baseDefense": 45,
       "baseSpeed": 95,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/93.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/93.png",
+      "type2": "독"
     },
     {
       "id": 94,
@@ -1220,7 +1266,8 @@
       "baseAttack": 65,
       "baseDefense": 60,
       "baseSpeed": 110,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/94.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/94.png",
+      "type2": "독"
     },
     {
       "id": 95,
@@ -1233,7 +1280,8 @@
       "baseAttack": 45,
       "baseDefense": 160,
       "baseSpeed": 70,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/95.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/95.png",
+      "type2": "땅"
     },
     {
       "id": 96,
@@ -1324,7 +1372,8 @@
       "baseAttack": 40,
       "baseDefense": 80,
       "baseSpeed": 40,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/102.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/102.png",
+      "type2": "에스퍼"
     },
     {
       "id": 103,
@@ -1337,7 +1386,8 @@
       "baseAttack": 95,
       "baseDefense": 85,
       "baseSpeed": 55,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/103.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/103.png",
+      "type2": "에스퍼"
     },
     {
       "id": 104,
@@ -1441,7 +1491,8 @@
       "baseAttack": 85,
       "baseDefense": 95,
       "baseSpeed": 25,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/111.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/111.png",
+      "type2": "바위"
     },
     {
       "id": 112,
@@ -1454,7 +1505,8 @@
       "baseAttack": 130,
       "baseDefense": 120,
       "baseSpeed": 40,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/112.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/112.png",
+      "type2": "바위"
     },
     {
       "id": 113,
@@ -1571,7 +1623,8 @@
       "baseAttack": 75,
       "baseDefense": 85,
       "baseSpeed": 115,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/121.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/121.png",
+      "type2": "에스퍼"
     },
     {
       "id": 122,
@@ -1584,7 +1637,8 @@
       "baseAttack": 45,
       "baseDefense": 65,
       "baseSpeed": 90,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/122.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/122.png",
+      "type2": "페어리"
     },
     {
       "id": 123,
@@ -1597,7 +1651,8 @@
       "baseAttack": 110,
       "baseDefense": 80,
       "baseSpeed": 105,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/123.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/123.png",
+      "type2": "비행"
     },
     {
       "id": 124,
@@ -1610,7 +1665,8 @@
       "baseAttack": 50,
       "baseDefense": 35,
       "baseSpeed": 95,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/124.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/124.png",
+      "type2": "에스퍼"
     },
     {
       "id": 125,
@@ -1688,7 +1744,8 @@
       "baseAttack": 125,
       "baseDefense": 79,
       "baseSpeed": 81,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/130.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/130.png",
+      "type2": "비행"
     },
     {
       "id": 131,
@@ -1701,7 +1758,8 @@
       "baseAttack": 85,
       "baseDefense": 80,
       "baseSpeed": 60,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/131.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/131.png",
+      "type2": "얼음"
     },
     {
       "id": 132,
@@ -1792,7 +1850,8 @@
       "baseAttack": 40,
       "baseDefense": 100,
       "baseSpeed": 35,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/138.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/138.png",
+      "type2": "물"
     },
     {
       "id": 139,
@@ -1805,7 +1864,8 @@
       "baseAttack": 60,
       "baseDefense": 125,
       "baseSpeed": 55,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/139.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/139.png",
+      "type2": "물"
     },
     {
       "id": 140,
@@ -1818,7 +1878,8 @@
       "baseAttack": 80,
       "baseDefense": 90,
       "baseSpeed": 55,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/140.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/140.png",
+      "type2": "물"
     },
     {
       "id": 141,
@@ -1831,7 +1892,8 @@
       "baseAttack": 115,
       "baseDefense": 105,
       "baseSpeed": 80,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/141.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/141.png",
+      "type2": "물"
     },
     {
       "id": 142,
@@ -1844,7 +1906,8 @@
       "baseAttack": 105,
       "baseDefense": 65,
       "baseSpeed": 130,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/142.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/142.png",
+      "type2": "비행"
     },
     {
       "id": 143,
@@ -1870,7 +1933,8 @@
       "baseAttack": 85,
       "baseDefense": 100,
       "baseSpeed": 85,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/144.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/144.png",
+      "type2": "비행"
     },
     {
       "id": 145,
@@ -1883,7 +1947,8 @@
       "baseAttack": 90,
       "baseDefense": 85,
       "baseSpeed": 100,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/145.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/145.png",
+      "type2": "비행"
     },
     {
       "id": 146,
@@ -1896,7 +1961,8 @@
       "baseAttack": 100,
       "baseDefense": 90,
       "baseSpeed": 90,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/146.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/146.png",
+      "type2": "비행"
     },
     {
       "id": 147,
@@ -1935,7 +2001,8 @@
       "baseAttack": 134,
       "baseDefense": 95,
       "baseSpeed": 80,
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/149.png"
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/149.png",
+      "type2": "비행"
     },
     {
       "id": 150,

@@ -42,6 +42,15 @@ export default function PartySlot({ pokemon, index, isSelected, onDragStart, onC
     );
   }
 
+  // 디버깅 로그
+  if (index === 0) {
+    console.log('=== PartySlot 포켓몬 데이터 ===');
+    console.log('포켓몬:', pokemon);
+    console.log('type:', pokemon.type);
+    console.log('type2:', pokemon.type2);
+    console.log('============================');
+  }
+
   const hpPercent = (pokemon.hp / pokemon.maxHp) * 100;
   const hpColor = hpPercent > 50 ? 'bg-green-500' : hpPercent > 20 ? 'bg-yellow-500' : 'bg-red-500';
   const typeColors = TYPE_COLORS[pokemon.type] || { bg: '#777', text: '#FFF' };
@@ -70,15 +79,28 @@ export default function PartySlot({ pokemon, index, isSelected, onDragStart, onC
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <span className="font-bold text-lg">{pokemon.nickname || pokemon.name}</span>
-          <span 
-            className="text-xs px-2 py-1 rounded font-bold shadow-sm"
-            style={{ 
-              backgroundColor: typeColors.bg,
-              color: typeColors.text
-            }}
-          >
-            {pokemon.type}
-          </span>
+          <div className="flex gap-1">
+            <span 
+              className="text-xs px-2 py-1 rounded font-bold shadow-sm"
+              style={{ 
+                backgroundColor: typeColors.bg,
+                color: typeColors.text
+              }}
+            >
+              {pokemon.type}
+            </span>
+            {pokemon.type2 && (
+              <span 
+                className="text-xs px-2 py-1 rounded font-bold shadow-sm"
+                style={{ 
+                  backgroundColor: (TYPE_COLORS[pokemon.type2] || { bg: '#777', text: '#FFF' }).bg,
+                  color: (TYPE_COLORS[pokemon.type2] || { bg: '#777', text: '#FFF' }).text
+                }}
+              >
+                {pokemon.type2}
+              </span>
+            )}
+          </div>
         </div>
         <div className="text-sm text-gray-600">Lv.{pokemon.level}</div>
       </div>

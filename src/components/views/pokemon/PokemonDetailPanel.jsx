@@ -52,6 +52,7 @@ export default function PokemonDetailPanel({
   const hpPercent = Math.max(0, (pokemon.hp / pokemon.maxHp) * 100);
   const hpColor = hpPercent > 50 ? 'bg-green-500' : hpPercent > 20 ? 'bg-yellow-500' : 'bg-red-500';
   const typeColors = TYPE_COLORS[pokemon.type] || { bg: '#777', text: '#FFF' };
+  const type2Colors = pokemon.type2 ? (TYPE_COLORS[pokemon.type2] || { bg: '#777', text: '#FFF' }) : null;
 
   const handleSaveNickname = () => {
     if (nickname.trim()) {
@@ -79,15 +80,15 @@ export default function PokemonDetailPanel({
         {/* 포켓몬 이미지 (75% 크기 + 여백) */}
         <div className="flex-shrink-0">
           <div 
-            className="w-36 h-36 p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg"
-            style={{
-              backgroundImage: `url(${pokemon.spriteUrl || pokemon.imageUrl})`,
-              backgroundSize: '75%',
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'center',
-              imageRendering: 'pixelated'
-            }}
-          />
+  className="w-36 h-36 p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg"
+  style={{
+    backgroundImage: `url(${pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/${pokemon.number}.png`})`,
+    backgroundSize: '75%',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'center',
+    imageRendering: 'pixelated'
+  }}
+/>
         </div>
 
         {/* 오른쪽: 모든 정보 */}
@@ -105,6 +106,17 @@ export default function PokemonDetailPanel({
               >
                 {pokemon.type}
               </span>
+              {pokemon.type2 && (
+                <span 
+                  className="text-xs px-2 py-1 rounded font-bold shadow-sm"
+                  style={{ 
+                    backgroundColor: type2Colors.bg,
+                    color: type2Colors.text
+                  }}
+                >
+                  {pokemon.type2}
+                </span>
+              )}
               <span className="text-xs text-gray-500">{pokemon.name}</span>
             </div>
             

@@ -30,6 +30,7 @@ const TYPE_COLORS = {
 
 export default function BoxPokemon({ pokemon, isSelected, onDragStart, onClick }) {
   const typeColors = TYPE_COLORS[pokemon.type] || { bg: '#777', text: '#FFF' };
+  const type2Colors = pokemon.type2 ? (TYPE_COLORS[pokemon.type2] || { bg: '#777', text: '#FFF' }) : null;
 
   return (
     <div 
@@ -49,7 +50,7 @@ export default function BoxPokemon({ pokemon, isSelected, onDragStart, onClick }
         }}
       />
       <div className="text-xs font-bold text-gray-700 truncate">{pokemon.nickname || pokemon.name}</div>
-      <div className="mt-1">
+      <div className="mt-1 flex gap-1 justify-center">
         <span 
           className="text-xs px-2 py-0.5 rounded font-bold shadow-sm inline-block"
           style={{ 
@@ -59,6 +60,17 @@ export default function BoxPokemon({ pokemon, isSelected, onDragStart, onClick }
         >
           {pokemon.type}
         </span>
+        {pokemon.type2 && (
+          <span 
+            className="text-xs px-2 py-0.5 rounded font-bold shadow-sm inline-block"
+            style={{ 
+              backgroundColor: type2Colors.bg,
+              color: type2Colors.text
+            }}
+          >
+            {pokemon.type2}
+          </span>
+        )}
       </div>
       <div className="text-xs text-gray-500 mt-1">Lv.{pokemon.level}</div>
     </div>

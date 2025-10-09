@@ -1,71 +1,351 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Search, Lock, CheckCircle, Edit2, MapPin } from 'lucide-react';
 
-export default function PokedexView({ caughtPokemon = [] }) {
-  const uniquePokemon = [];
-  const seenNumbers = new Set();
-  
-  // null 체크 추가
-  caughtPokemon.forEach(pokemon => {
-    if (pokemon && !seenNumbers.has(pokemon.number)) {
-      seenNumbers.add(pokemon.number);
-      uniquePokemon.push(pokemon);
+// 타입별 색상
+const TYPE_COLORS = {
+  '노말': '#A8A878', '불꽃': '#F08030', '물': '#6890F0',
+  '전기': '#F8D030', '풀': '#78C850', '얼음': '#98D8D8',
+  '격투': '#C03028', '독': '#A040A0', '땅': '#E0C068',
+  '비행': '#A890F0', '에스퍼': '#F85888', '벌레': '#A8B820',
+  '바위': '#B8A038', '고스트': '#705898', '드래곤': '#7038F8',
+  '악': '#705848', '강철': '#B8B8D0', '페어리': '#EE99AC'
+};
+
+export default function PokedexView({ 
+  pokedex = [],
+  caughtPokemon = [],
+  pokedexData = {},
+  regions = [],
+  currentUser = null,
+  onUpdateMemo
+}) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedPokemon, setSelectedPokemon] = useState(null);
+  const [isEditingMemo, setIsEditingMemo] = useState(false);
+  const [memoText, setMemoText] = useState('');
+
+  // 잡은 포켓몬 번호 목록
+  const caughtNumbers = new Set(caughtPokemon.map(p => p?.number).filter(Boolean));
+
+  // 검색 필터
+  const filteredPokedex = pokedex.filter(pokemon => 
+    pokemon.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    pokemon.nameEn.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    pokemon.number?.toString().includes(searchTerm)
+  );
+
+  // 통계
+  const caughtCount = pokedex.filter(p => caughtNumbers.has(p.number)).length;
+  const totalCount = pokedex.length;
+  const percentage = totalCount > 0 ? Math.round((caughtCount / totalCount) * 100) : 0;
+
+  // 포켓몬이 출현하는 구역 찾기
+  const getPokemonRegions = (pokemonNumber) => {
+    if (!regions || regions.length === 0) return [];
+    
+    return regions
+      .filter(region => {
+        // region.pokemons는 포켓몬 ID 배열
+        // gamePokedex의 포켓몬과 매칭 필요
+        const pokemon = pokedex.find(p => p.number === pokemonNumber);
+        if (!pokemon) return false;
+        return region.pokemons.includes(pokemon.id) || 
+               region.pokemons.includes(pokemon.number) ||
+               region.pokemons.includes(pokemon.originalNumber);
+      })
+      .map(region => region.name);
+  };
+
+  const handlePokemonClick = (pokemon) => {
+    const pokemonNumber = pokemon.number;
+    if (!caughtNumbers.has(pokemonNumber)) return;
+    
+    setSelectedPokemon(pokemon);
+    setIsEditingMemo(false);
+    
+    const entry = pokedexData[pokemonNumber];
+    setMemoText(entry?.memo || '');
+  };
+
+  const handleSaveMemo = () => {
+    if (!selectedPokemon || !onUpdateMemo) return;
+    
+    const entry = pokedexData[selectedPokemon.number];
+    
+    // 첫 포획자만 메모 작성/수정 가능
+    if (entry && entry.firstCatcher === currentUser?.name) {
+      onUpdateMemo(selectedPokemon.number, memoText);
+      setIsEditingMemo(false);
+    } else {
+      alert('첫 포획자만 메모를 작성할 수 있습니다!');
     }
-  });
+  };
 
-  uniquePokemon.sort((a, b) => a.number - b.number);
+  const handleEditMemo = () => {
+    const entry = pokedexData[selectedPokemon.number];
+    if (entry && entry.firstCatcher === currentUser?.name) {
+      setIsEditingMemo(true);
+    } else {
+      alert('첫 포획자만 메모를 작성할 수 있습니다!');
+    }
+  };
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="bg-white rounded-lg border border-gray-200 p-8">
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-xl font-bold text-gray-800">포획 현황</h3>
-              <p className="text-gray-600">{uniquePokemon.length}/151 마리 포획</p>
-            </div>
-            <div className="bg-blue-50 px-6 py-3 rounded-lg border border-blue-200">
-              <div className="text-sm text-gray-600">완성도</div>
-              <div className="text-2xl font-bold text-blue-600">
-                {Math.round((uniquePokemon.length / 151) * 100)}%
+    <div className="h-full flex flex-col gap-4">
+      {/* 헤더 */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold text-gray-800">포켓몬 도감</h2>
+          <div className="text-right">
+            <div className="text-3xl font-bold text-indigo-600">{caughtCount}/{totalCount}</div>
+            <div className="text-sm text-gray-500">완성도 {percentage}%</div>
+          </div>
+        </div>
+
+        {/* 진행도 바 */}
+        <div className="w-full bg-gray-200 rounded-full h-3">
+          <div 
+            className="bg-indigo-600 h-3 rounded-full transition-all duration-300"
+            style={{ width: `${percentage}%` }}
+          />
+        </div>
+
+        {/* 검색 */}
+        <div className="mt-4 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <input
+            type="text"
+            placeholder="이름 또는 번호로 검색..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+      </div>
+
+      {/* 도감 그리드 */}
+      <div className="flex-1 bg-white rounded-lg border border-gray-200 p-6 overflow-y-auto">
+        <div className="grid grid-cols-6 gap-4">
+          {filteredPokedex.map((pokemon) => {
+            const isCaught = caughtNumbers.has(pokemon.number);
+            const entry = pokedexData[pokemon.number];
+            const hasNote = entry?.memo;
+
+            return (
+              <div
+                key={pokemon.number}
+                onClick={() => handlePokemonClick(pokemon)}
+                className={`relative rounded-lg border-2 p-3 text-center transition-all ${
+                  isCaught 
+                    ? 'border-indigo-300 bg-white cursor-pointer hover:shadow-lg hover:scale-105' 
+                    : 'border-gray-200 bg-gray-50 opacity-50'
+                }`}
+              >
+                {/* 도감 번호 */}
+                <div className="text-xs font-bold text-gray-500 mb-2">
+                  No.{pokemon.number.toString().padStart(3, '0')}
+                </div>
+
+                {/* 포켓몬 이미지 (도트 스프라이트) */}
+                <div 
+                  className="w-full h-24 mb-2"
+                  style={{
+                    backgroundImage: isCaught 
+                      ? `url(https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/${pokemon.number}.png)`
+                      : 'none',
+                    backgroundSize: 'contain',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'center',
+                    imageRendering: 'pixelated',
+                    filter: isCaught ? 'none' : 'brightness(0)'
+                  }}
+                >
+                  {!isCaught && (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Lock size={32} className="text-gray-400" />
+                    </div>
+                  )}
+                </div>
+
+                {/* 이름 */}
+                <div className="text-sm font-bold text-gray-700 truncate">
+                  {isCaught ? pokemon.name : '???'}
+                </div>
+
+                {/* 타입 */}
+                {isCaught && (
+                  <div className="flex gap-1 justify-center mt-2">
+                    <span 
+                      className="text-xs px-2 py-0.5 rounded font-bold text-white"
+                      style={{ backgroundColor: TYPE_COLORS[pokemon.type] || '#777' }}
+                    >
+                      {pokemon.type}
+                    </span>
+                    {pokemon.type2 && (
+                      <span 
+                        className="text-xs px-2 py-0.5 rounded font-bold text-white"
+                        style={{ backgroundColor: TYPE_COLORS[pokemon.type2] || '#777' }}
+                      >
+                        {pokemon.type2}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* 아이콘 표시 */}
+                <div className="absolute top-2 right-2 flex gap-1">
+                  {entry?.firstCatcher && (
+                    <CheckCircle size={16} className="text-yellow-500" />
+                  )}
+                  {hasNote && (
+                    <Edit2 size={14} className="text-blue-500" />
+                  )}
+                </div>
               </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 상세 정보 모달 */}
+      {selectedPokemon && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => setSelectedPokemon(null)}
+        >
+          <div 
+            className="bg-white rounded-lg p-6 max-w-lg w-full m-4 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center">
+              {/* 도감 번호 */}
+              <div className="text-sm text-gray-500 mb-2">
+                No.{selectedPokemon.number.toString().padStart(3, '0')}
+              </div>
+
+              {/* 이미지 (도트 스프라이트) */}
+              <img 
+                src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/${selectedPokemon.number}.png`}
+                alt={selectedPokemon.name}
+                className="w-48 h-48 mx-auto mb-4"
+                style={{ imageRendering: 'pixelated' }}
+              />
+
+              {/* 이름 */}
+              <h3 className="text-2xl font-bold mb-2">{selectedPokemon.name}</h3>
+              <div className="text-sm text-gray-500 mb-4">{selectedPokemon.nameEn}</div>
+              
+              {/* 타입 */}
+              <div className="flex gap-2 justify-center mb-4">
+                <span 
+                  className="px-3 py-1 rounded font-bold text-white"
+                  style={{ backgroundColor: TYPE_COLORS[selectedPokemon.type] || '#777' }}
+                >
+                  {selectedPokemon.type}
+                </span>
+                {selectedPokemon.type2 && (
+                  <span 
+                    className="px-3 py-1 rounded font-bold text-white"
+                    style={{ backgroundColor: TYPE_COLORS[selectedPokemon.type2] || '#777' }}
+                  >
+                    {selectedPokemon.type2}
+                  </span>
+                )}
+              </div>
+
+              {/* 출현 지역 */}
+              {(() => {
+                const pokemonRegions = getPokemonRegions(selectedPokemon.number);
+                if (pokemonRegions.length > 0) {
+                  return (
+                    <div className="text-left mb-4 p-3 bg-green-50 rounded border border-green-200">
+                      <div className="flex items-center gap-2 mb-1">
+                        <MapPin size={16} className="text-green-600" />
+                        <div className="text-sm font-semibold text-gray-700">출현 지역</div>
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {pokemonRegions.join(', ')}
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
+              {/* 첫 포획자 정보 & 메모 */}
+              {pokedexData[selectedPokemon.number] && (
+                <div className="text-left p-4 bg-yellow-50 rounded border border-yellow-200 mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm font-semibold text-gray-700">
+                      🏆 최초 포획: {pokedexData[selectedPokemon.number].firstCatcher}
+                    </div>
+                    {pokedexData[selectedPokemon.number].firstCatcher === currentUser?.name && !isEditingMemo && (
+                      <button
+                        onClick={handleEditMemo}
+                        className="text-indigo-600 hover:text-indigo-700"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* 메모 표시/편집 */}
+                  {isEditingMemo ? (
+                    <div>
+                      <textarea
+                        value={memoText}
+                        onChange={(e) => setMemoText(e.target.value)}
+                        placeholder="이 포켓몬에 대한 메모를 남겨보세요..."
+                        className="w-full p-2 border border-gray-300 rounded text-sm resize-none"
+                        rows="3"
+                        maxLength="200"
+                      />
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          onClick={handleSaveMemo}
+                          className="flex-1 bg-indigo-600 text-white py-1 rounded text-sm hover:bg-indigo-700"
+                        >
+                          저장
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsEditingMemo(false);
+                            setMemoText(pokedexData[selectedPokemon.number]?.memo || '');
+                          }}
+                          className="flex-1 bg-gray-300 text-gray-700 py-1 rounded text-sm hover:bg-gray-400"
+                        >
+                          취소
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    pokedexData[selectedPokemon.number].memo && (
+                      <div className="text-sm text-gray-600 italic bg-white p-2 rounded">
+                        "{pokedexData[selectedPokemon.number].memo}"
+                      </div>
+                    )
+                  )}
+
+                  {!pokedexData[selectedPokemon.number].memo && !isEditingMemo && 
+                   pokedexData[selectedPokemon.number].firstCatcher === currentUser?.name && (
+                    <div className="text-xs text-gray-500 italic">
+                      메모를 남겨보세요! ✏️
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 닫기 버튼 */}
+              <button
+                onClick={() => setSelectedPokemon(null)}
+                className="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700"
+              >
+                닫기
+              </button>
             </div>
           </div>
         </div>
-        
-        {/* 그리드 형식 - 아이콘 사용 */}
-        <div className="grid grid-cols-8 gap-3">
-          {uniquePokemon.map(pokemon => (
-            <div 
-              key={pokemon.number} 
-              className="bg-yellow-50 rounded-lg p-3 text-center hover:shadow-md transition-shadow cursor-pointer border border-yellow-200"
-            >
-              {/* Gen VIII Icon */}
-              <div 
-                className="w-full h-16 mb-1"
-                style={{
-                  backgroundImage: `url(https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemon.number}.png)`,
-                  backgroundSize: 'contain',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'center'
-                }}
-              />
-              <div className="text-xs text-gray-600 font-semibold">No.{pokemon.number}</div>
-              <div className="font-bold text-xs truncate">{pokemon.name}</div>
-            </div>
-          ))}
-          
-          {/* 미포획 포켓몬 */}
-          {[...Array(Math.max(0, 16 - uniquePokemon.length))].map((_, i) => (
-            <div key={`unknown-${i}`} className="bg-gray-50 rounded-lg p-3 text-center border border-gray-200">
-              <div className="w-full h-16 mb-1 flex items-center justify-center text-4xl opacity-20">
-                ?
-              </div>
-              <div className="text-xs text-gray-400 font-semibold">No.???</div>
-              <div className="font-bold text-xs text-gray-400">???</div>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
     </div>
   );
 }

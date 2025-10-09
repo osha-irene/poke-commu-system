@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import RegionEditModal from '../modals/RegionEditModal';
+import PokedexAdminPanel from './PokedexAdminPanel';
+import AdminItemPanel from './AdminItemPanel';
 
 export default function AdminView({ 
   trainer,
@@ -7,7 +9,14 @@ export default function AdminView({
   updateMaxDailyWalks, 
   regions, 
   allPokemon,
+  allPokemonMaster,
+  allItems,
+  addItemToSelf,
+  giveItemToMember,
+  toggleItemManagement,
+  gamePokedex,
   updateRegionPokemon,
+  updateGamePokedex,
   addMember,
   toggleAdminStatus,
   resetMemberWalkCount,
@@ -86,6 +95,16 @@ export default function AdminView({
       {/* 멤버 관리 */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h3 className="text-xl font-bold text-gray-800 mb-4">👥 멤버 관리</h3>
+
+           {/* 아이템 관리 - 새로 추가 */}
+      <AdminItemPanel
+        trainer={trainer}
+        members={members}
+        allItems={allItems}
+        onAddItemToSelf={addItemToSelf}
+        onGiveItemToMember={giveItemToMember}
+        onToggleItemManagement={toggleItemManagement}
+      />
         
         {/* 새 멤버 추가 */}
         <div className="bg-gray-50 rounded-lg p-4 mb-4">
@@ -241,6 +260,20 @@ export default function AdminView({
         </div>
       </div>
 
+      {/* 게임 도감 설정 - 새로 추가된 섹션 */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">📖 게임 도감 포켓몬 설정</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          게임에서 사용할 포켓몬을 선택하세요. 선택된 포켓몬만 구역 설정 및 도감에 표시됩니다.
+        </p>
+        
+        <PokedexAdminPanel
+          allPokemonMaster={allPokemonMaster}
+          gamePokedex={gamePokedex}
+          updateGamePokedex={updateGamePokedex}
+        />
+      </div>
+
       {/* 슈퍼 관리자 전용: 게임 데이터 초기화 */}
       {trainer.isSuperAdmin && (
         <div className="bg-red-50 rounded-lg border border-red-200 p-6">
@@ -261,7 +294,7 @@ export default function AdminView({
       {editingRegion && (
         <RegionEditModal
           region={editingRegion}
-          allPokemon={allPokemon}
+          allPokemon={gamePokedex}
           onClose={handleCloseModal}
           onSave={handleSaveRegion}
         />
