@@ -86,7 +86,7 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
 
   // 포켓몬 스프라이트 URL (도트 정적 이미지)
   const pokemonSpriteUrl = pokemon.spriteUrl || 
-    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/${pokemon.number}.png`;
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`;
 
   const handleCatch = (e) => {
     e.preventDefault();

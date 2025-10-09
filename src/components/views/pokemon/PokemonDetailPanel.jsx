@@ -82,7 +82,7 @@ export default function PokemonDetailPanel({
           <div 
   className="w-36 h-36 p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg"
   style={{
-    backgroundImage: `url(${pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/${pokemon.number}.png`})`,
+    backgroundImage: `url(${pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`})`,
     backgroundSize: '75%',
     backgroundRepeat: 'no-repeat',
     backgroundPosition: 'center',

@@ -151,7 +151,7 @@ export default function PokedexView({
                   className="w-full h-24 mb-2"
                   style={{
                     backgroundImage: isCaught 
-                      ? `url(https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/${pokemon.number}.png)`
+                      ? `url(https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png)`
                       : 'none',
                     backgroundSize: 'contain',
                     backgroundRepeat: 'no-repeat',
