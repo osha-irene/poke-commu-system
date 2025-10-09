@@ -45,6 +45,11 @@ export default function AdminPokemonPanel({
       moves: []
     };
 
+    console.log('=== 포켓몬 지급 디버깅 ===');
+    console.log('선택된 포켓몬:', selectedPokemon);
+    console.log('옵션:', options);
+    console.log('======================');
+
     onGivePokemonToMember(selectedMember, selectedPokemon, options);
     
     // 초기화
@@ -66,6 +71,11 @@ export default function AdminPokemonPanel({
       heldItem: heldItemName || null,
       moves: []
     };
+
+    console.log('=== 자신에게 포켓몬 추가 디버깅 ===');
+    console.log('선택된 포켓몬:', selectedPokemon);
+    console.log('옵션:', options);
+    console.log('==============================');
 
     onAddPokemonToSelf(selectedPokemon, options);
     

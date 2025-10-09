@@ -47,8 +47,8 @@ export default function AdminView({
     setEditingRegion(null);
   };
 
-  const handleSaveRegion = (regionId, pokemonIds) => {
-    updateRegionPokemon(regionId, pokemonIds);
+  const handleSaveRegion = (regionId, pokemonIds, pokemonRates = {}) => {
+    updateRegionPokemon(regionId, pokemonIds, pokemonRates);
     setEditingRegion(null);
     alert('구역 포켓몬이 업데이트되었습니다!');
   };

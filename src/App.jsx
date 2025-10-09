@@ -163,9 +163,11 @@ export default function App() {
           )}
           
           {currentTab === 'pokemon' && (
-            <PokemonView 
+            <PokemonView
               caughtPokemon={caughtPokemon}
               items={items}
+              allItems={allItems}
+              gamePokedex={gamePokedex}  // 이 줄 추가!
               onMoveToParty={movePokemonToParty}
               onMoveToBox={movePokemonToBox}
               onReleasePokemon={releasePokemon}
@@ -219,13 +221,14 @@ export default function App() {
 
       {/* 포켓몬 조우 모달 */}
       {encounterPokemon && (
-        <EncounterModal 
-          pokemon={encounterPokemon} 
-          onClose={handleCloseEncounter}
-          onCatchSuccess={handleCatchSuccess}
-          items={items}
-        />
-      )}
+  <EncounterModal
+    pokemon={encounterPokemon}
+    onClose={handleCloseEncounter}
+    onCatchSuccess={handleCatchSuccess}
+    items={items}
+    sharedPokedexData={sharedPokedexData}  // 이 줄 추가!
+  />
+)}
 
       {/* 첫 포획 메모 모달 */}
       {firstCatchPokemon && (

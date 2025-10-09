@@ -5,8 +5,10 @@ import BoxPokemon from './pokemon/BoxPokemon';
 import PokemonDetailPanel from './pokemon/PokemonDetailPanel';
 
 export default function PokemonView({ 
-  caughtPokemon = [], // 기본값 추가
+  caughtPokemon = [],
   items = [],
+  allItems = [],  // 전체 아이템 데이터 추가
+  gamePokedex = [],
   onMoveToParty,
   onMoveToBox,
   onReleasePokemon,
@@ -21,26 +23,21 @@ export default function PokemonView({
   while (partySlots.length < 6) partySlots.push(null);
   
   const box = caughtPokemon.slice(6).filter(p => p !== null);
-  const rareCandy = items?.find(item => item.name === '이상한사탕');
+  
+  // 이상한사탕 찾기
+  const rareCandy = items?.find(item => 
+    item.name === '이상한사탕' || 
+    item.nameEn?.toLowerCase().includes('rare candy')
+  );
   const hasRareCandy = rareCandy && rareCandy.count > 0;
+  const rareCandyImage = rareCandy?.imageUrl;
 
   // 선택된 포켓몬 찾기 (항상 최신 데이터)
   const selectedPokemon = selectedPokemonId 
     ? caughtPokemon.find(p => p && p.uniqueId === selectedPokemonId)
     : null;
 
-  // 디버깅 로그
-  useEffect(() => {
-    if (selectedPokemonId) {
-      console.log('=== 포켓몬 선택 디버깅 ===');
-      console.log('선택된 ID:', selectedPokemonId);
-      console.log('찾은 포켓몬:', selectedPokemon);
-      console.log('전체 포켓몬 목록:', caughtPokemon);
-      console.log('======================');
-    }
-  }, [selectedPokemonId, selectedPokemon, caughtPokemon]);
-
-  // 선택된 포켓몬이 엔트리에 있는지 확인
+  // 선택된 포켓몬의 인덱스
   const selectedPokemonIndex = selectedPokemon 
     ? caughtPokemon.findIndex(p => p && p.uniqueId === selectedPokemon.uniqueId)
     : -1;
@@ -93,9 +90,12 @@ export default function PokemonView({
 
   const handleMove = () => {
     if (!selectedPokemon) return;
-    isSelectedInParty 
-      ? onMoveToBox(selectedPokemon.uniqueId) 
-      : onMoveToParty(selectedPokemon.uniqueId);
+    // 엔트리가 6개 미만이어도 박스로 이동 가능하도록 수정
+    if (isSelectedInParty) {
+      onMoveToBox(selectedPokemon.uniqueId);
+    } else {
+      onMoveToParty(selectedPokemon.uniqueId);
+    }
   };
 
   const handleRelease = () => {
@@ -125,6 +125,7 @@ export default function PokemonView({
                 isSelected={selectedPokemonId === pokemon?.uniqueId}
                 onDragStart={(e) => handleDragStart(e, pokemon, true)}
                 onClick={() => handlePokemonClick(pokemon)}
+                gamePokedex={gamePokedex}
               />
             ))}
           </div>
@@ -154,6 +155,7 @@ export default function PokemonView({
                     isSelected={selectedPokemonId === pokemon.uniqueId}
                     onDragStart={(e) => handleDragStart(e, pokemon, false)}
                     onClick={() => handlePokemonClick(pokemon)}
+                    gamePokedex={gamePokedex}
                   />
                 ))}
               </div>
@@ -168,8 +170,12 @@ export default function PokemonView({
       <div className="overflow-y-auto">
         {selectedPokemon ? (
           <PokemonDetailPanel
-            pokemon={{ ...selectedPokemon, isInParty: isSelectedInParty }}
+            pokemon={selectedPokemon}
             hasRareCandy={hasRareCandy}
+            rareCandyImage={rareCandyImage}
+            isInParty={isSelectedInParty}
+            allItems={allItems}
+            gamePokedex={gamePokedex}
             onClose={() => setSelectedPokemonId(null)}
             onUseCandy={handleUseCandy}
             onMove={handleMove}

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 
-export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items }) {
+export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items, sharedPokedexData = {} }) {
   const [selectedBall, setSelectedBall] = useState(null);
   const [catching, setCatching] = useState(false);
   const [result, setResult] = useState(null);
   const [shaking, setShaking] = useState(0);
   const [isReady, setIsReady] = useState(false);
+  const [isFirstCatch, setIsFirstCatch] = useState(false);
 
   // 모달이 열린 직후 클릭 방지
   React.useEffect(() => {
@@ -105,6 +106,11 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
 
     setCatching(true);
     setResult(null);
+
+    // 최초 포획 여부 체크
+    const pokemonNumber = pokemon.number || pokemon.originalNumber;
+    const isFirst = !sharedPokedexData[pokemonNumber];
+    setIsFirstCatch(isFirst);
 
     setTimeout(() => {
       let shakeCount = 0;
@@ -314,11 +320,13 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
               <div className="text-9xl mb-6">🎉</div>
               <h3 className="text-4xl font-bold text-green-600 mb-4">잡았다!</h3>
               <p className="text-2xl text-gray-800 mb-2">{pokemon.name}을(를) 잡았다!</p>
-              <div className="inline-block bg-yellow-100 px-6 py-3 rounded-lg border-2 border-yellow-400 mt-4">
-                <p className="text-sm text-gray-600">
-                  {pokemon.name}의 데이터가 도감에 등록되었습니다
-                </p>
-              </div>
+              {isFirstCatch && (
+                <div className="inline-block bg-yellow-100 px-6 py-3 rounded-lg border-2 border-yellow-400 mt-4">
+                  <p className="text-sm text-gray-600">
+                    {pokemon.name}의 데이터가 도감에 등록되었습니다
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}

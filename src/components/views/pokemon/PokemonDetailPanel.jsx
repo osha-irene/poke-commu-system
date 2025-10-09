@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowUpCircle, ArrowDownCircle, Trash2, Heart, X, Edit2, Check } from 'lucide-react';
 
+// 이미지 URL 생성 헬퍼
+const getPokemonSpriteUrl = (number) => {
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`;
+};
+
 // 타입별 색상
 const TYPE_COLORS = {
   '노말': { bg: '#A8A878', text: '#FFF' },
@@ -26,25 +31,50 @@ const TYPE_COLORS = {
 export default function PokemonDetailPanel({ 
   pokemon, 
   hasRareCandy,
+  rareCandyImage,
+  isInParty,
+  allItems = [],
   onClose,
   onUseCandy,
   onMove,
   onRelease,
-  onUpdateNickname
+  onUpdateNickname,
+  gamePokedex
 }) {
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [nickname, setNickname] = useState(pokemon.nickname || pokemon.name);
   
+  // 게임 도감에서 이 포켓몬의 newNumber 찾기
+  const pokedexEntry = gamePokedex?.find(p => 
+    p.number === pokemon.number || p.originalNumber === pokemon.number
+  );
+  const displayNumber = pokedexEntry?.newNumber || pokemon.number;
+  const originalNumber = pokedexEntry?.originalNumber || pokemon.number;
+  
+  // 지니고 있는 도구 정보 찾기 (더 유연한 검색)
+  const heldItemData = pokemon.heldItem 
+    ? allItems.find(item => {
+        const itemName = item.name?.toLowerCase();
+        const itemNameEn = item.nameEn?.toLowerCase();
+        const heldItemName = pokemon.heldItem?.toLowerCase();
+        
+        return itemName === heldItemName || 
+               itemNameEn === heldItemName ||
+               itemName?.includes(heldItemName) ||
+               itemNameEn?.includes(heldItemName);
+      })
+    : null;
+  
+  // 디버깅 로그
+  if (pokemon.heldItem && !heldItemData) {
+    console.log('=== 도구 찾기 실패 ===');
+    console.log('찾으려는 도구:', pokemon.heldItem);
+    console.log('전체 아이템 목록:', allItems.map(i => ({ name: i.name, nameEn: i.nameEn })));
+    console.log('==================');
+  }
+  
   // pokemon이 변경될 때마다 nickname 동기화
   useEffect(() => {
-    console.log('=== PokemonDetailPanel 디버깅 ===');
-    console.log('받은 pokemon 객체:', pokemon);
-    console.log('pokemon.uniqueId:', pokemon.uniqueId);
-    console.log('pokemon.name:', pokemon.name);
-    console.log('pokemon.nickname:', pokemon.nickname);
-    console.log('설정될 nickname:', pokemon.nickname || pokemon.name);
-    console.log('================================');
-    
     setNickname(pokemon.nickname || pokemon.name);
     setIsEditingNickname(false);
   }, [pokemon.uniqueId, pokemon.nickname, pokemon.name]);
@@ -80,15 +110,15 @@ export default function PokemonDetailPanel({
         {/* 포켓몬 이미지 (75% 크기 + 여백) */}
         <div className="flex-shrink-0">
           <div 
-  className="w-36 h-36 p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg"
-  style={{
-    backgroundImage: `url(${pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`})`,
-    backgroundSize: '75%',
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: 'center',
-    imageRendering: 'pixelated'
-  }}
-/>
+            className="w-36 h-36 p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg"
+            style={{
+              backgroundImage: `url(${pokemon.spriteUrl || getPokemonSpriteUrl(originalNumber)})`,
+              backgroundSize: '75%',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center',
+              imageRendering: 'pixelated'
+            }}
+          />
         </div>
 
         {/* 오른쪽: 모든 정보 */}
@@ -96,7 +126,10 @@ export default function PokemonDetailPanel({
           {/* 기본 정보 */}
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs bg-gray-200 px-2 py-1 rounded">No.{pokemon.number}</span>
+              <span className="text-xs bg-gray-200 px-2 py-1 rounded">
+                No.{displayNumber.toString().padStart(3, '0')}
+              </span>
+    
               <span 
                 className="text-xs px-2 py-1 rounded font-bold shadow-sm"
                 style={{ 
@@ -171,11 +204,48 @@ export default function PokemonDetailPanel({
             </div>
           </div>
 
-          {/* 경험치 + 친밀도 */}
+          {/* 지니고 있는 도구 + 친밀도 */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
-              <div className="text-xs text-gray-600">경험치</div>
-              <div className="text-lg font-bold text-purple-600">{pokemon.exp || 0}</div>
+            <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+              <div className="text-xs text-gray-600 mb-2">지니고 있는 도구</div>
+              {heldItemData ? (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div 
+                      className="w-6 h-6 flex-shrink-0"
+                      style={{
+                        backgroundImage: `url(${heldItemData.spriteUrl})`,
+                        backgroundSize: 'contain',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'center',
+                        imageRendering: 'pixelated'
+                      }}
+                    />
+                    <div className="text-sm font-bold text-blue-600 truncate">
+                      {heldItemData.name}
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-600 leading-tight">
+                    {heldItemData.effect || '효과 정보 없음'}
+                  </div>
+                </div>
+              ) : pokemon.heldItem ? (
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="text-lg">🎒</div>
+                    <div className="text-sm font-bold text-blue-600 truncate">
+                      {pokemon.heldItem}
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-400 italic">
+                    정보 없음
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm text-gray-400 italic flex items-center justify-center h-full">
+                  없음
+                </div>
+              )}
             </div>
 
             <div className="bg-pink-50 rounded-lg p-3 border border-pink-200">
@@ -184,10 +254,13 @@ export default function PokemonDetailPanel({
                 <span className="text-xs font-semibold text-gray-700">친밀도</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
-                <div className="bg-pink-500 h-2 rounded-full" style={{ width: `${pokemon.friendship || 50}%` }} />
+                <div 
+                  className="bg-pink-500 h-2 rounded-full transition-all" 
+                  style={{ width: `${((pokemon.friendship || 0) / 255) * 100}%` }} 
+                />
               </div>
               <div className="text-xs text-gray-600 text-right">
-                {pokemon.friendship || 50}/100
+                {pokemon.friendship || 0}/255
               </div>
             </div>
           </div>
@@ -203,7 +276,20 @@ export default function PokemonDetailPanel({
                   : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
               }`}
             >
-              <span>🍬</span>
+              {rareCandyImage ? (
+                <div 
+                  className="w-5 h-5"
+                  style={{
+                    backgroundImage: `url(${rareCandyImage})`,
+                    backgroundSize: 'contain',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'center',
+                    imageRendering: 'pixelated'
+                  }}
+                />
+              ) : (
+                <span>🍬</span>
+              )}
               <span>이상한사탕 사용</span>
             </button>
 
@@ -211,7 +297,7 @@ export default function PokemonDetailPanel({
               onClick={onMove}
               className="w-full bg-indigo-100 text-indigo-700 py-2 rounded-lg font-semibold hover:bg-indigo-200 transition-colors flex items-center justify-center gap-2 border border-indigo-300"
             >
-              {pokemon.isInParty ? (
+              {isInParty ? (
                 <>
                   <ArrowDownCircle size={18} />
                   <span>박스로 이동</span>

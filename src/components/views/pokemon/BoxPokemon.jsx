@@ -1,4 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
+
+// 이미지 URL 생성 헬퍼
+const getPokemonIconUrl = (number) => {
+  // 기본: PokeAPI 기본 이미지
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`;
+};
+
+// Bulbagarden 폴백 URL
+const getBulbagardenIconUrl = (number) => {
+  const paddedNumber = number.toString().padStart(4, '0');
+  return `https://archives.bulbagarden.net/media/upload/Menu_HOME_${paddedNumber}.png`;
+};
 
 const STYLES = {
   card: "rounded-lg p-3 text-center border transition-all cursor-move",
@@ -28,9 +40,22 @@ const TYPE_COLORS = {
   '페어리': { bg: '#EE99AC', text: '#FFF' }
 };
 
-export default function BoxPokemon({ pokemon, isSelected, onDragStart, onClick }) {
+export default function BoxPokemon({ pokemon, isSelected, onDragStart, onClick, gamePokedex }) {
+  const [imageError, setImageError] = useState(false);
+  
   const typeColors = TYPE_COLORS[pokemon.type] || { bg: '#777', text: '#FFF' };
   const type2Colors = pokemon.type2 ? (TYPE_COLORS[pokemon.type2] || { bg: '#777', text: '#FFF' }) : null;
+
+  // 게임 도감에서 이 포켓몬의 newNumber 찾기
+  const pokedexEntry = gamePokedex?.find(p => 
+    p.number === pokemon.number || p.originalNumber === pokemon.number
+  );
+  const displayNumber = pokedexEntry?.newNumber || pokemon.number;
+  
+  // 이미지 URL 결정
+  const imageUrl = imageError 
+    ? getBulbagardenIconUrl(pokemon.number) 
+    : (pokemon.iconUrl || getPokemonIconUrl(pokemon.number));
 
   return (
     <div 
@@ -40,14 +65,17 @@ export default function BoxPokemon({ pokemon, isSelected, onDragStart, onClick }
       className={`${STYLES.card} ${isSelected ? STYLES.selected : STYLES.unselected}`}
       title={`${pokemon.name} Lv.${pokemon.level}`}
     >
-      <div 
-        className="w-full h-16 mb-2"
-        style={{
-          backgroundImage: `url(${pokemon.iconUrl})`,
-          backgroundSize: 'contain',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center'
-        }}
+      {/* 도감 번호 표시 */}
+      <div className="text-xs text-gray-500 mb-1">
+        No.{displayNumber.toString().padStart(3, '0')}
+      </div>
+      
+      <img 
+        src={imageUrl}
+        alt={pokemon.name}
+        className="w-full h-16 mb-2 object-contain"
+        onError={() => setImageError(true)}
+        style={{ imageRendering: 'pixelated' }}
       />
       <div className="text-xs font-bold text-gray-700 truncate">{pokemon.nickname || pokemon.name}</div>
       <div className="mt-1 flex gap-1 justify-center">

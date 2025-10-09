@@ -1,4 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
+
+// 이미지 URL 생성 헬퍼
+const getPokemonIconUrl = (number) => {
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`;
+};
+
+// Bulbagarden 폴백 URL
+const getBulbagardenIconUrl = (number) => {
+  const paddedNumber = number.toString().padStart(4, '0');
+  return `https://archives.bulbagarden.net/media/upload/Menu_HOME_${paddedNumber}.png`;
+};
 
 const STYLES = {
   empty: "flex items-center gap-4 bg-gray-50 rounded-lg p-3 border border-dashed border-gray-300 text-gray-400",
@@ -29,7 +40,9 @@ const TYPE_COLORS = {
   '페어리': { bg: '#EE99AC', text: '#FFF' }
 };
 
-export default function PartySlot({ pokemon, index, isSelected, onDragStart, onClick }) {
+export default function PartySlot({ pokemon, index, isSelected, onDragStart, onClick, gamePokedex }) {
+  const [imageError, setImageError] = useState(false);
+  
   if (!pokemon) {
     return (
       <div className={STYLES.empty}>
@@ -42,18 +55,20 @@ export default function PartySlot({ pokemon, index, isSelected, onDragStart, onC
     );
   }
 
-  // 디버깅 로그
-  if (index === 0) {
-    console.log('=== PartySlot 포켓몬 데이터 ===');
-    console.log('포켓몬:', pokemon);
-    console.log('type:', pokemon.type);
-    console.log('type2:', pokemon.type2);
-    console.log('============================');
-  }
+  // 게임 도감에서 이 포켓몬의 newNumber 찾기
+  const pokedexEntry = gamePokedex?.find(p => 
+    p.number === pokemon.number || p.originalNumber === pokemon.number
+  );
+  const displayNumber = pokedexEntry?.newNumber || pokemon.number;
 
   const hpPercent = (pokemon.hp / pokemon.maxHp) * 100;
   const hpColor = hpPercent > 50 ? 'bg-green-500' : hpPercent > 20 ? 'bg-yellow-500' : 'bg-red-500';
   const typeColors = TYPE_COLORS[pokemon.type] || { bg: '#777', text: '#FFF' };
+  
+  // 이미지 URL 결정
+  const imageUrl = imageError 
+    ? getBulbagardenIconUrl(pokemon.number) 
+    : (pokemon.iconUrl || getPokemonIconUrl(pokemon.number));
 
   return (
     <div 
@@ -66,18 +81,17 @@ export default function PartySlot({ pokemon, index, isSelected, onDragStart, onC
         {index + 1}
       </div>
       
-      <div 
-        className="w-12 h-12 flex-shrink-0"
-        style={{
-          backgroundImage: `url(${pokemon.iconUrl})`,
-          backgroundSize: 'contain',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center'
-        }}
+      <img 
+        src={imageUrl}
+        alt={pokemon.name}
+        className="w-12 h-12 flex-shrink-0 object-contain"
+        onError={() => setImageError(true)}
+        style={{ imageRendering: 'pixelated' }}
       />
       
       <div className="flex-1">
         <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">No.{displayNumber.toString().padStart(3, '0')}</span>
           <span className="font-bold text-lg">{pokemon.nickname || pokemon.name}</span>
           <div className="flex gap-1">
             <span 
