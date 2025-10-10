@@ -264,7 +264,7 @@ const [members, setMembers] = useState(() => {
         setCurrentUser(updatedUser);
       }
     }
-  }, [members]);
+  }, [members, currentUser]);
 
   useEffect(() => { saveToStorage('poke_regions', regions); }, [regions]);
   useEffect(() => { saveToStorage('poke_gamePokedex', gamePokedex); }, [gamePokedex]);
