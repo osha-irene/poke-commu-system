@@ -1,6 +1,7 @@
 import React from 'react';
-import { Map, BookOpen, Smile, Package, User, Settings, LogOut } from 'lucide-react';
+import { Map, BookOpen, Smile, Package, User, Settings, LogOut, ShoppingBag } from 'lucide-react';
 import NavButton from './NavButton';
+
 
 export default function Sidebar({ currentTab, setCurrentTab, isAdmin, trainer, onLogout }) {
   return (
@@ -64,6 +65,12 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin, trainer, o
           active={currentTab === 'items'}
           onClick={() => setCurrentTab('items')}
         />
+		<NavButton 
+		  icon={ShoppingBag}
+		  label="상점" 
+		  active={currentTab === 'shop'}
+		  onClick={() => setCurrentTab('shop')}
+		/>
         <NavButton 
           icon={User}
           label="프로필" 

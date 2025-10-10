@@ -277,7 +277,7 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
               </div>
             </div>
 
-            {/* 포켓몬 그리드 */}
+      {/* 포켓몬 그리드 */}
             <div className="flex-1 overflow-y-auto p-4">
               <div className="grid grid-cols-6 gap-2">
                 {filteredPokemon.map((pokemon) => {
@@ -287,7 +287,8 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
                   return (
                     <button
                       key={id}
-                      onClick={() => togglePokemon(pokemon)}
+                      type="button"
+                      onClick={(e) => togglePokemon(pokemon, e)}
                       className={`border-2 rounded-lg p-2 transition-all ${
                         isSelected
                           ? 'border-green-500 bg-green-50'

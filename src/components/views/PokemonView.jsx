@@ -7,13 +7,16 @@ import PokemonDetailPanel from './pokemon/PokemonDetailPanel';
 export default function PokemonView({ 
   caughtPokemon = [],
   items = [],
-  allItems = [],  // 전체 아이템 데이터 추가
+  allItems = [],
   gamePokedex = [],
+  allPokemonMaster = [],
   onMoveToParty,
   onMoveToBox,
   onReleasePokemon,
   onUseRareCandy,
-  onUpdateNickname
+  onUpdateNickname,
+  onGiveItem,      // ⭐ 추가
+  onTakeItem       // ⭐ 추가
 }) {
   const [selectedPokemonId, setSelectedPokemonId] = useState(null);
   const [showBox, setShowBox] = useState(false);
@@ -50,14 +53,38 @@ export default function PokemonView({
     }
   }, [selectedPokemonId, selectedPokemon]);
 
-  const handleDragStart = (e, pokemon, isInParty) => {
-    setDraggedPokemon({ pokemon, isInParty });
+  const handleDragStart = (e, pokemon, isInParty, slotIndex) => {
+    setDraggedPokemon({ pokemon, isInParty, slotIndex });
     e.dataTransfer.effectAllowed = 'move';
   };
 
   const handleDragOver = (e) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDropToPartySlot = (e, targetSlotIndex) => {
+    e.preventDefault();
+    if (!draggedPokemon) return;
+
+    // 엔트리 슬롯 내에서 순서 변경
+    if (draggedPokemon.isInParty && draggedPokemon.slotIndex !== undefined) {
+      const newCaughtPokemon = [...caughtPokemon];
+      const sourceIndex = draggedPokemon.slotIndex;
+      
+      // 슬롯 교체
+      const temp = newCaughtPokemon[sourceIndex];
+      newCaughtPokemon[sourceIndex] = newCaughtPokemon[targetSlotIndex];
+      newCaughtPokemon[targetSlotIndex] = temp;
+      
+      onMoveToParty(draggedPokemon.pokemon.uniqueId);
+      setDraggedPokemon(null);
+    } 
+    // 박스에서 엔트리로 이동
+    else if (!draggedPokemon.isInParty) {
+      onMoveToParty(draggedPokemon.pokemon.uniqueId);
+      setDraggedPokemon(null);
+    }
   };
 
   const handleDropToParty = (e) => {
@@ -90,7 +117,6 @@ export default function PokemonView({
 
   const handleMove = () => {
     if (!selectedPokemon) return;
-    // 엔트리가 6개 미만이어도 박스로 이동 가능하도록 수정
     if (isSelectedInParty) {
       onMoveToBox(selectedPokemon.uniqueId);
     } else {
@@ -123,9 +149,10 @@ export default function PokemonView({
                 pokemon={pokemon}
                 index={index}
                 isSelected={selectedPokemonId === pokemon?.uniqueId}
-                onDragStart={(e) => handleDragStart(e, pokemon, true)}
+                onDragStart={(e) => handleDragStart(e, pokemon, true, index)}
                 onClick={() => handlePokemonClick(pokemon)}
                 gamePokedex={gamePokedex}
+                allPokemonMaster={allPokemonMaster}
               />
             ))}
           </div>
@@ -156,6 +183,7 @@ export default function PokemonView({
                     onDragStart={(e) => handleDragStart(e, pokemon, false)}
                     onClick={() => handlePokemonClick(pokemon)}
                     gamePokedex={gamePokedex}
+                    allPokemonMaster={allPokemonMaster}
                   />
                 ))}
               </div>
@@ -176,11 +204,14 @@ export default function PokemonView({
             isInParty={isSelectedInParty}
             allItems={allItems}
             gamePokedex={gamePokedex}
+            items={items}
             onClose={() => setSelectedPokemonId(null)}
             onUseCandy={handleUseCandy}
             onMove={handleMove}
             onRelease={handleRelease}
             onUpdateNickname={onUpdateNickname}
+            onGiveItem={onGiveItem}
+            onTakeItem={onTakeItem}
           />
         ) : (
           <div className="bg-white rounded-lg border border-gray-200 p-6 h-full flex items-center justify-center">

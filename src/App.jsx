@@ -10,6 +10,7 @@ import AdminView from './components/views/AdminView';
 import EncounterModal from './components/modals/EncounterModal';
 import FirstCatchMemoModal from './components/modals/FirstCatchMemoModal';
 import useGameState from './hooks/useGameState';
+import ShopView from './components/views/ShopView';
 
 // 로그인 화면 컴포넌트
 function LoginScreen({ onLogin }) {
@@ -80,50 +81,55 @@ function LoginScreen({ onLogin }) {
 }
 
 export default function App() {
-  const {
-    currentTab,
-    setCurrentTab,
-    currentUser,
-    isAdmin,
-    trainer,
-    caughtPokemon,
-    items,
-    encounterPokemon,
-    firstCatchPokemon,
-    regions,
-    allPokemon,
-    allPokemonMaster,
-    allItems,
-    members,
-    gamePokedex,
-    sharedPokedexData,
-    handleLogin,
-    handleLogout,
-    handleRegionClick,
-    handleCloseEncounter,
-    handleCatchSuccess,
-    saveFirstCatchMemo,
-    skipFirstCatchMemo,
-    updateMaxDailyWalks,
-    updateRegionPokemon,
-    addMember,
-    toggleAdminStatus,
-    resetMemberWalkCount,
-    resetAllWalkCounts,
-    resetGameData,
-    movePokemonToParty,
-    movePokemonToBox,
-    releasePokemon,
-    useRareCandy,
-    updatePokemonNickname,
-    updatePokedexMemo,
-    updateGamePokedex,
-    addItemToSelf,    
-    giveItemToMember,   
-    toggleItemManagement,
-    givePokemonToMember,
-    addPokemonToSelf
-  } = useGameState();
+	const {
+	  currentTab,
+	  setCurrentTab,
+	  currentUser,
+	  isAdmin,
+	  trainer,
+	  caughtPokemon,
+	  items,
+	  encounterPokemon,
+	  firstCatchPokemon,
+	  regions,
+	  allPokemon,
+	  allPokemonMaster,
+	  allItems,
+	  members,
+	  gamePokedex,
+	  sharedPokedexData,
+	  handleLogin,
+	  handleLogout,
+	  handleRegionClick,
+	  handleCloseEncounter,
+	  handleCatchSuccess,
+	  saveFirstCatchMemo,
+	  skipFirstCatchMemo,
+	  updateMaxDailyWalks,
+	  updateRegionPokemon,
+	  addMember,
+	  toggleAdminStatus,
+	  resetMemberWalkCount,
+	  resetAllWalkCounts,
+	  resetGameData,
+	  movePokemonToParty,
+	  movePokemonToBox,
+	  releasePokemon,
+	  useRareCandy,
+	  updatePokemonNickname,
+	  updatePokedexMemo,
+	  updateGamePokedex,
+	  addItemToSelf,    
+	  giveItemToMember,   
+	  toggleItemManagement,
+	  givePokemonToMember,
+	  addPokemonToSelf,
+	  shopData,              // ⭐ 추가
+	  giveItemToPokemon,     // ⭐ 추가
+	  takeItemFromPokemon,   // ⭐ 추가
+	  handlePurchase,
+	  updateShopData
+	} = useGameState();
 
   // 로그인하지 않은 경우 로그인 화면 표시
   if (!currentUser || !currentUser.id) {
@@ -163,18 +169,21 @@ export default function App() {
           )}
           
           {currentTab === 'pokemon' && (
-            <PokemonView
-              caughtPokemon={caughtPokemon}
-              items={items}
-              allItems={allItems}
-              gamePokedex={gamePokedex}  // 이 줄 추가!
-              onMoveToParty={movePokemonToParty}
-              onMoveToBox={movePokemonToBox}
-              onReleasePokemon={releasePokemon}
-              onUseRareCandy={useRareCandy}
-              onUpdateNickname={updatePokemonNickname}
-            />
-          )}
+			  <PokemonView
+				caughtPokemon={caughtPokemon}
+				items={items}
+				allItems={allItems}
+				gamePokedex={gamePokedex}
+				onMoveToParty={movePokemonToParty}
+				onMoveToBox={movePokemonToBox}
+				onReleasePokemon={releasePokemon}
+				onUseRareCandy={useRareCandy}
+				onUpdateNickname={updatePokemonNickname}
+				allPokemonMaster={allPokemonMaster}
+				onGiveItem={giveItemToPokemon}  
+				onTakeItem={takeItemFromPokemon}     
+			  />
+			)}
           
           {currentTab === 'items' && (
             <ItemsView 
@@ -184,13 +193,23 @@ export default function App() {
             />
           )}
           
-          {currentTab === 'profile' && (
+		{currentTab === 'shop' && (
+		  <ShopView 
+			trainer={trainer}
+			allItems={allItems}
+			shopData={shopData}
+			onPurchase={handlePurchase}
+		  />
+		)}         
+
+		 {currentTab === 'profile' && (
             <ProfileView 
               trainer={trainer} 
               caughtCount={caughtPokemon.length} 
             />
           )}
           
+		 
           {currentTab === 'admin' && isAdmin && (
             <AdminView
               trainer={trainer}
@@ -213,6 +232,8 @@ export default function App() {
               toggleItemManagement={toggleItemManagement}
               givePokemonToMember={givePokemonToMember}
               addPokemonToSelf={addPokemonToSelf}
+			  shopData={shopData} 
+			  updateShopData={updateShopData}
           
             />
           )}

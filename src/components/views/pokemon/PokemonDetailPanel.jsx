@@ -34,12 +34,15 @@ export default function PokemonDetailPanel({
   rareCandyImage,
   isInParty,
   allItems = [],
+  gamePokedex,
+  items = [],        // ⭐ 추가
   onClose,
   onUseCandy,
   onMove,
   onRelease,
   onUpdateNickname,
-  gamePokedex
+  onGiveItem,        // ⭐ 추가
+  onTakeItem         // ⭐ 추가
 }) {
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [nickname, setNickname] = useState(pokemon.nickname || pokemon.name);
@@ -207,46 +210,72 @@ export default function PokemonDetailPanel({
           {/* 지니고 있는 도구 + 친밀도 */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-              <div className="text-xs text-gray-600 mb-2">지니고 있는 도구</div>
-              {heldItemData ? (
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div 
-                      className="w-6 h-6 flex-shrink-0"
-                      style={{
-                        backgroundImage: `url(${heldItemData.spriteUrl})`,
-                        backgroundSize: 'contain',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'center',
-                        imageRendering: 'pixelated'
-                      }}
-                    />
-                    <div className="text-sm font-bold text-blue-600 truncate">
-                      {heldItemData.name}
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-600 leading-tight">
-                    {heldItemData.effect || '효과 정보 없음'}
-                  </div>
-                </div>
-              ) : pokemon.heldItem ? (
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="text-lg">🎒</div>
-                    <div className="text-sm font-bold text-blue-600 truncate">
-                      {pokemon.heldItem}
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-400 italic">
-                    정보 없음
-                  </div>
-                </div>
-              ) : (
-                <div className="text-sm text-gray-400 italic flex items-center justify-center h-full">
-                  없음
-                </div>
-              )}
-            </div>
+  <div className="flex items-center justify-between mb-2">
+    <div className="text-xs text-gray-600">지니고 있는 도구</div>
+    {pokemon.heldItem && (
+      <button
+        onClick={() => onTakeItem(pokemon.uniqueId)}
+        className="text-xs text-blue-600 hover:text-blue-700 font-semibold"
+      >
+        회수
+      </button>
+    )}
+  </div>
+  
+  {heldItemData ? (
+    <div>
+      <div className="flex items-center gap-2 mb-2">
+        <div 
+          className="w-6 h-6 flex-shrink-0"
+          style={{
+            backgroundImage: `url(${heldItemData.spriteUrl})`,
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center',
+            imageRendering: 'pixelated'
+          }}
+        />
+        <div className="text-sm font-bold text-blue-600 truncate">
+          {heldItemData.name}
+        </div>
+      </div>
+      <div className="text-xs text-gray-600 leading-tight">
+        {heldItemData.effect || '효과 정보 없음'}
+      </div>
+    </div>
+  ) : pokemon.heldItem ? (
+    <div>
+      <div className="flex items-center gap-2 mb-1">
+        <div className="text-lg">🎒</div>
+        <div className="text-sm font-bold text-blue-600 truncate">
+          {pokemon.heldItem}
+        </div>
+      </div>
+      <div className="text-xs text-gray-400 italic">
+        정보 없음
+      </div>
+    </div>
+  ) : (
+    <div>
+      <select
+        onChange={(e) => {
+          if (e.target.value) {
+            onGiveItem(pokemon.uniqueId, e.target.value);
+            e.target.value = '';
+          }
+        }}
+        className="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:border-blue-500 focus:outline-none"
+      >
+        <option value="">아이템 선택...</option>
+        {items.map((item, idx) => (
+          <option key={idx} value={item.name}>
+            {item.name} (×{item.count})
+          </option>
+        ))}
+      </select>
+    </div>
+  )}
+</div>
 
             <div className="bg-pink-50 rounded-lg p-3 border border-pink-200">
               <div className="flex items-center gap-1 mb-2">
@@ -292,7 +321,6 @@ export default function PokemonDetailPanel({
               )}
               <span>이상한사탕 사용</span>
             </button>
-
             <button
               onClick={onMove}
               className="w-full bg-indigo-100 text-indigo-700 py-2 rounded-lg font-semibold hover:bg-indigo-200 transition-colors flex items-center justify-center gap-2 border border-indigo-300"

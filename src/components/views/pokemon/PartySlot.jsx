@@ -1,14 +1,29 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 // 이미지 URL 생성 헬퍼
 const getPokemonIconUrl = (number) => {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`;
 };
 
-// Bulbagarden 폴백 URL
-const getBulbagardenIconUrl = (number) => {
-  const paddedNumber = number.toString().padStart(4, '0');
-  return `https://archives.bulbagarden.net/media/upload/Menu_HOME_${paddedNumber}.png`;
+// 로컬 폴백 URL (영문 대문자 이름)
+const getLocalIconUrl = (pokemon, allPokemonMaster) => {
+  // nameEn 필드가 없으면 allPokemonMaster에서 찾기
+  let englishName = pokemon.nameEn;
+  
+  if (!englishName && allPokemonMaster) {
+    const template = allPokemonMaster.find(p => 
+      p.number === pokemon.number || p.id === pokemon.pokemonId
+    );
+    englishName = template?.nameEn;
+  }
+  
+  // 여전히 없으면 한글 이름 사용
+  englishName = englishName || pokemon.name || 'UNKNOWN';
+  
+  const fileName = englishName.toUpperCase();
+  // 현재 URL에 /poke-commu-system이 포함되어 있으면 해당 경로 사용
+  const basePath = window.location.pathname.includes('/poke-commu-system') ? '/poke-commu-system' : '';
+  return `${basePath}/img/icons/${fileName}.png`;
 };
 
 const STYLES = {
@@ -40,9 +55,7 @@ const TYPE_COLORS = {
   '페어리': { bg: '#EE99AC', text: '#FFF' }
 };
 
-export default function PartySlot({ pokemon, index, isSelected, onDragStart, onClick, gamePokedex }) {
-  const [imageError, setImageError] = useState(false);
-  
+export default function PartySlot({ pokemon, index, isSelected, onDragStart, onDrop, onClick, gamePokedex, allPokemonMaster }) {
   if (!pokemon) {
     return (
       <div className={STYLES.empty}>
@@ -65,15 +78,15 @@ export default function PartySlot({ pokemon, index, isSelected, onDragStart, onC
   const hpColor = hpPercent > 50 ? 'bg-green-500' : hpPercent > 20 ? 'bg-yellow-500' : 'bg-red-500';
   const typeColors = TYPE_COLORS[pokemon.type] || { bg: '#777', text: '#FFF' };
   
-  // 이미지 URL 결정
-  const imageUrl = imageError 
-    ? getBulbagardenIconUrl(pokemon.number) 
-    : (pokemon.iconUrl || getPokemonIconUrl(pokemon.number));
+  // 이미지 URL 결정 - 항상 로컬 이미지 사용
+  const imageUrl = getLocalIconUrl(pokemon, allPokemonMaster);
 
   return (
     <div 
       draggable
       onDragStart={onDragStart}
+	  onDragOver={(e) => e.preventDefault()} 
+      onDrop={onDrop}  
       onClick={onClick}
       className={`${STYLES.filled} ${isSelected ? STYLES.selected : STYLES.unselected}`}
     >
@@ -81,13 +94,25 @@ export default function PartySlot({ pokemon, index, isSelected, onDragStart, onC
         {index + 1}
       </div>
       
-      <img 
-        src={imageUrl}
-        alt={pokemon.name}
-        className="w-12 h-12 flex-shrink-0 object-contain"
-        onError={() => setImageError(true)}
-        style={{ imageRendering: 'pixelated' }}
-      />
+      {/* 로컬 스프라이트 이미지 - 오른쪽 64x64 영역을 50% 축소하여 표시 */}
+      <div 
+        className="w-12 h-12 flex-shrink-0 flex items-center justify-center"
+        style={{
+          padding: '4px'
+        }}
+      >
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            backgroundImage: `url(${imageUrl})`,
+            backgroundSize: '64px 32px', // 128x64를 50%로 축소
+            backgroundPosition: 'right center',
+            backgroundRepeat: 'no-repeat',
+            imageRendering: 'pixelated'
+          }}
+        />
+      </div>
       
       <div className="flex-1">
         <div className="flex items-center gap-2">

@@ -1,0 +1,49 @@
+{
+  "shop": {
+    "dailyItems": {
+      "monday": [
+        { "itemId": 4, "price": 200, "stock": 99 },
+        { "itemId": 3, "price": 600, "stock": 20 }
+      ],
+      "tuesday": [
+        { "itemId": 50, "price": 3000, "stock": 5 }
+      ],
+      "wednesday": [],
+      "thursday": [],
+      "friday": [],
+      "saturday": [],
+      "sunday": []
+    },
+    "permanentItems": [
+      { "itemId": 4, "price": 200, "stock": 99 },
+      { "itemId": 3, "price": 600, "stock": 20 },
+      { "itemId": 2, "price": 1200, "stock": 10 }
+    ],
+    "rareDailyItem": {
+      "itemId": null,
+      "price": 0,
+      "lastRefresh": "2025-01-10"
+    }
+  },
+  
+  "shopHistory": {
+    "2025-01-10": {
+      "rareItem": { "itemId": 50, "price": 2500 },
+      "sales": [
+        { "userId": "user1", "itemId": 4, "quantity": 5, "timestamp": "2025-01-10T10:30:00Z" }
+      ]
+    }
+  },
+  
+  "userPurchaseHistory": {
+    "user1": [
+      {
+        "date": "2025-01-10",
+        "itemId": 4,
+        "itemName": "몬스터볼",
+        "quantity": 5,
+        "totalPrice": 1000
+      }
+    ]
+  }
+}
