@@ -1,12 +1,9 @@
-name: Deploy to GitHub Pages
+name: Deploy React App
 
 on:
   push:
     branches:
-      - main  # main 브랜치에 push될 때마다 실행됨
-
-permissions:
-  contents: write  # gh-pages 브랜치에 푸시할 권한 부여
+      - main
 
 jobs:
   build-and-deploy:
@@ -14,21 +11,21 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Use Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: 18
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build project
-        run: CI=false npm run build  # ⚡️ 요 부분에서 CI=false 추가됨
+        run: npm run build
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build
