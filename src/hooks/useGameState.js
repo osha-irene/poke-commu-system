@@ -363,31 +363,43 @@ const [members, setMembers] = useState(() => {
     updateShopStock();
     alert(`✅ ${item.name} ${quantity}개를 구매했습니다!`);
   };
+// src/hooks/useGameState.js
 
-  // 매일 자정 산책 리셋
-  useEffect(() => {
-    if (!currentUser) return;
+// ... (다른 상태나 함수들)
 
-    const checkAndResetWalks = () => {
-      const lastReset = localStorage.getItem('poke_lastWalkReset');
-      const today = new Date().toDateString();
-      
-      if (lastReset !== today) {
-        setMembers(prev => {
-          const updated = {};
-          Object.keys(prev).forEach(id => {
-            updated[id] = { ...prev[id], dailyWalks: prev[id].maxDailyWalks };
-          });
-          return updated;
+// 매일 자정 산책 리셋
+useEffect(() => {
+  if (!currentUser) return;
+
+  // 1. checkAndResetWalks 함수를 useEffect 본문 내부에 정의합니다.
+  const checkAndResetWalks = () => {
+    const lastReset = localStorage.getItem('poke_lastWalkReset');
+    const today = new Date().toDateString();
+
+    if (lastReset !== today) {
+      setMembers(prev => {
+        const updated = {};
+        Object.keys(prev).forEach(id => {
+          updated[id] = { ...prev[id], dailyWalks: prev[id].maxDailyWalks };
         });
-        localStorage.setItem('poke_lastWalkReset', today);
-      }
-    };
+        return updated;
+      });
+      localStorage.setItem('poke_lastWalkReset', today);
+    }
+  }; // <-- checkAndResetWalks 함수 닫힘
 
-    checkAndResetWalks();
-    const interval = setInterval(checkAndResetWalks, 60 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [currentUser]);
+  // 2. 훅이 마운트될 때 한 번 즉시 실행합니다. (즉시 리셋 확인)
+  checkAndResetWalks();
+
+  // 3. 1시간마다 반복 실행할 Interval을 설정합니다. (60 * 60 * 1000ms = 1시간)
+  const interval = setInterval(checkAndResetWalks, 60 * 60 * 1000);
+
+  // 4. 클린업 함수(Cleanup Function)를 반환하여 컴포넌트 언마운트 시 Interval을 정리합니다.
+  return () => clearInterval(interval);
+
+// 5. 의존성 배열은 currentUser를 포함합니다.
+}, [currentUser]); // <-- useEffect 닫힘
+
 
   // 로그인/로그아웃
   const handleLogin = (userId, password) => {

@@ -1,10 +1,3 @@
-import React, { useState } from 'react';
-
-// 이미지 URL 생성 헬퍼
-const getPokemonIconUrl = (number) => {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`;
-};
-
 // 로컬 폴백 URL (영문 대문자 이름)
 const getLocalIconUrl = (pokemon, allPokemonMaster) => {
   // nameEn 필드가 없으면 allPokemonMaster에서 찾기

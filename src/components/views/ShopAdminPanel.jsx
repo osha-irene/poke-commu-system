@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Edit2, Star, Calendar } from 'lucide-react';
+import { Plus, Trash2, Star, Calendar } from 'lucide-react';
 
 export default function ShopAdminPanel({ 
   shopData = {},

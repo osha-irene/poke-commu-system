@@ -63,29 +63,7 @@ export default function PokemonView({
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDropToPartySlot = (e, targetSlotIndex) => {
-    e.preventDefault();
-    if (!draggedPokemon) return;
-
-    // 엔트리 슬롯 내에서 순서 변경
-    if (draggedPokemon.isInParty && draggedPokemon.slotIndex !== undefined) {
-      const newCaughtPokemon = [...caughtPokemon];
-      const sourceIndex = draggedPokemon.slotIndex;
-      
-      // 슬롯 교체
-      const temp = newCaughtPokemon[sourceIndex];
-      newCaughtPokemon[sourceIndex] = newCaughtPokemon[targetSlotIndex];
-      newCaughtPokemon[targetSlotIndex] = temp;
-      
-      onMoveToParty(draggedPokemon.pokemon.uniqueId);
-      setDraggedPokemon(null);
-    } 
-    // 박스에서 엔트리로 이동
-    else if (!draggedPokemon.isInParty) {
-      onMoveToParty(draggedPokemon.pokemon.uniqueId);
-      setDraggedPokemon(null);
-    }
-  };
+  
 
   const handleDropToParty = (e) => {
     e.preventDefault();
