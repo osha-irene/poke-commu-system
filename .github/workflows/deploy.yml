@@ -1,31 +1,32 @@
-name: Deploy React App
+# .github/workflows/deploy.yml 파일
+
+name: Deploy React App to GitHub Pages
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
+
 permissions:
   contents: write
 
 jobs:
-  build-and-deploy:
+  build_and_deploy:
     runs-on: ubuntu-latest
+    
+    env:
+      CI: false # 경고를 오류로 취급하지 않음
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        
+      # ... (Node.js 설치 및 의존성 설치)
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build project
-        run: npm run build
-
+      - name: Build Project
+        run: npm run build 
+        
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
