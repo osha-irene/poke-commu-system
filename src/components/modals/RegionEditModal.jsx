@@ -1,15 +1,20 @@
 import React, { useState, useMemo } from 'react';
 
 export default function RegionEditModal({ region, allPokemon, onClose, onSave }) {
-  const [activeTab, setActiveTab] = useState('list'); // 'list' or 'edit'
+  const [activeTab, setActiveTab] = useState('rates'); // 'rates' or 'edit'
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [minLevel, setMinLevel] = useState(region.minLevel || 5);
+  const [maxLevel, setMaxLevel] = useState(region.maxLevel || 20);
   
-  // 포켓몬별 출현 확률 (기본값 1)
+  // ⭐ 포켓몬 출현율 (0~100%)
+  const [encounterRate, setEncounterRate] = useState(region.encounterRate !== undefined ? region.encounterRate : 80);
+  
+  // ⭐ 포켓몬별 출현 확률 (퍼센트 단위)
   const [pokemonRates, setPokemonRates] = useState(() => {
     const rates = {};
     region.pokemons.forEach(id => {
-      rates[id] = region.pokemonRates?.[id] || 1;
+      rates[id] = region.pokemonRates?.[id] || 10; // 기본 10%
     });
     return rates;
   });
@@ -73,27 +78,48 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
       });
   }, [allPokemon, typeFilter, searchQuery, selectedPokemon]);
 
+  // ⭐ 전체 확률 합계 계산
+  const totalRate = useMemo(() => {
+    return Object.values(pokemonRates).reduce((sum, rate) => sum + parseFloat(rate || 0), 0);
+  }, [pokemonRates]);
+
+  // ⭐ 실제 출현 확률 계산 (출현율 × 개별 확률 비율)
+  const getActualRate = (pokemonRate) => {
+    if (totalRate === 0) return 0;
+    return (encounterRate * (pokemonRate / totalRate)).toFixed(2);
+  };
+
   const togglePokemon = (pokemon) => {
     const id = pokemon.id || pokemon.number;
     const newSelected = new Set(selectedPokemon);
     
     if (newSelected.has(id)) {
       newSelected.delete(id);
-      // 확률도 삭제
       const newRates = { ...pokemonRates };
       delete newRates[id];
       setPokemonRates(newRates);
     } else {
       newSelected.add(id);
-      // 기본 확률 1 설정
-      setPokemonRates({ ...pokemonRates, [id]: 1 });
+      setPokemonRates({ ...pokemonRates, [id]: 10 }); // 기본 10%
     }
     
     setSelectedPokemon(newSelected);
   };
 
   const updateRate = (pokemonId, rate) => {
-    setPokemonRates({ ...pokemonRates, [pokemonId]: parseFloat(rate) || 1 });
+    const newRate = parseFloat(rate) || 0;
+    
+    // ⭐ 확률 합계가 100을 넘지 않도록 제한
+    const currentTotal = Object.entries(pokemonRates)
+      .filter(([id]) => id !== String(pokemonId))
+      .reduce((sum, [, r]) => sum + parseFloat(r || 0), 0);
+    
+    if (currentTotal + newRate > 100) {
+      alert('⚠️ 모든 포켓몬 확률의 합은 100%를 넘을 수 없습니다!');
+      return;
+    }
+    
+    setPokemonRates({ ...pokemonRates, [pokemonId]: newRate });
   };
 
   const toggleAll = () => {
@@ -105,7 +131,7 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
       const newRates = {};
       allPokemon.forEach(p => {
         const id = p.id || p.number;
-        newRates[id] = pokemonRates[id] || 1;
+        newRates[id] = pokemonRates[id] || 10;
       });
       setSelectedPokemon(newSelected);
       setPokemonRates(newRates);
@@ -113,7 +139,8 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
   };
 
   const handleSave = () => {
-    onSave(region.id, Array.from(selectedPokemon), pokemonRates);
+    // ⭐ encounterRate도 함께 저장
+    onSave(region.id, Array.from(selectedPokemon), pokemonRates, encounterRate, minLevel, maxLevel);
   };
 
   return (
@@ -127,23 +154,23 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
       >
         {/* 헤더 */}
         <div className="bg-indigo-600 text-white p-6 flex-shrink-0">
-          <h2 className="text-2xl font-bold">{region.name} - 포켓몬 설정</h2>
+          <h2 className="text-2xl font-bold">{region.name} - 포켓몬 출현 설정</h2>
           <p className="text-sm text-indigo-100 mt-1">
-            등장 포켓몬: {selectedPokemon.size}종
+            등장 포켓몬: {selectedPokemon.size}종 | 포켓몬 출현율: {encounterRate}% | 미출현: {100 - encounterRate}%
           </p>
         </div>
 
         {/* 탭 */}
         <div className="flex border-b border-gray-200 flex-shrink-0">
           <button
-            onClick={() => setActiveTab('list')}
+            onClick={() => setActiveTab('rates')}
             className={`flex-1 py-3 font-semibold transition-colors ${
-              activeTab === 'list'
+              activeTab === 'rates'
                 ? 'border-b-2 border-indigo-600 text-indigo-600'
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
-            등장 포켓몬 목록 & 확률
+            🎲 출현율 & 확률 설정
           </button>
           <button
             onClick={() => setActiveTab('edit')}
@@ -153,92 +180,222 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
-            포켓몬 추가/제거
+            ➕ 포켓몬 추가/제거
           </button>
         </div>
+      
+      <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg p-6 mb-6 border-2 border-orange-200">
+  <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+    📊 야생 포켓몬 레벨 범위
+  </h3>
+  <div className="grid grid-cols-2 gap-4">
+    <div>
+      <label className="text-sm font-semibold text-gray-700 mb-2 block">최소 레벨</label>
+      <input
+        type="number"
+        min="1"
+        max="100"
+        value={minLevel}
+        onChange={(e) => {
+          const val = Math.max(1, Math.min(100, parseInt(e.target.value) || 1));
+          if (val <= maxLevel) {
+            setMinLevel(val);
+          } else {
+            alert('최소 레벨은 최대 레벨보다 작아야 합니다!');
+          }
+        }}
+        className="w-full border-2 border-orange-300 rounded-lg px-4 py-2 text-center font-bold text-lg focus:border-orange-500 focus:outline-none"
+      />
+    </div>
+    <div>
+      <label className="text-sm font-semibold text-gray-700 mb-2 block">최대 레벨</label>
+      <input
+        type="number"
+        min="1"
+        max="100"
+        value={maxLevel}
+        onChange={(e) => {
+          const val = Math.max(1, Math.min(100, parseInt(e.target.value) || 1));
+          if (val >= minLevel) {
+            setMaxLevel(val);
+          } else {
+            alert('최대 레벨은 최소 레벨보다 커야 합니다!');
+          }
+        }}
+        className="w-full border-2 border-orange-300 rounded-lg px-4 py-2 text-center font-bold text-lg focus:border-orange-500 focus:outline-none"
+      />
+    </div>
+  </div>
+  <div className="mt-3 text-sm text-gray-600 text-center">
+    💡 이 지역에서 나타나는 야생 포켓몬의 레벨: Lv.{minLevel} ~ Lv.{maxLevel}
+  </div>
+</div>
 
-        {/* 등장 포켓몬 목록 탭 */}
-        {activeTab === 'list' && (
+        {/* 출현율 & 확률 설정 탭 */}
+        {activeTab === 'rates' && (
           <div className="flex-1 overflow-y-auto p-4">
+            {/* ⭐ 전체 출현율 설정 */}
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-6 mb-6 border-2 border-purple-200">
+              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                🌟 포켓몬 출현율 설정
+              </h3>
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={encounterRate}
+                      onChange={(e) => setEncounterRate(parseFloat(e.target.value))}
+                      className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                    />
+                  </div>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={encounterRate}
+                    onChange={(e) => {
+                      const val = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0));
+                      setEncounterRate(val);
+                    }}
+                    className="w-20 border-2 border-indigo-300 rounded-lg px-3 py-2 text-center font-bold text-lg focus:border-indigo-500 focus:outline-none"
+                  />
+                  <span className="text-lg font-bold text-gray-700">%</span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="bg-green-50 rounded-lg p-3 border border-green-200">
+                    <div className="text-green-700 font-semibold mb-1">✅ 포켓몬 출현</div>
+                    <div className="text-2xl font-bold text-green-600">{encounterRate}%</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                    <div className="text-gray-700 font-semibold mb-1">❌ 미출현 (아이템만)</div>
+                    <div className="text-2xl font-bold text-gray-600">{100 - encounterRate}%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ⭐ 개별 포켓몬 확률 설정 */}
             {currentPokemonList.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-gray-400">
+              <div className="flex items-center justify-center h-64 text-gray-400">
                 등장하는 포켓몬이 없습니다. "포켓몬 추가/제거" 탭에서 추가하세요.
               </div>
             ) : (
-              <div className="space-y-2">
-                {currentPokemonList.map((pokemon) => {
-                  const id = pokemon.id || pokemon.number;
-                  const rate = pokemonRates[id] || 1;
-                  
-                  return (
-                    <div
-                      key={id}
-                      className="flex items-center gap-3 bg-white border-2 border-gray-200 rounded-lg p-3 hover:border-indigo-300 transition-colors"
-                    >
-                      {/* 포켓몬 아이콘 */}
-                      <div
-                        className="w-14 h-14 flex-shrink-0"
-                        style={{
-                          backgroundImage: `url(${pokemon.iconUrl || pokemon.imageUrl})`,
-                          backgroundSize: 'contain',
-                          backgroundRepeat: 'no-repeat',
-                          backgroundPosition: 'center'
-                        }}
-                      />
-                      
-                      {/* 포켓몬 정보 */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-bold text-sm">
-                            No.{String(pokemon.newNumber || pokemon.number).padStart(3, '0')}
-                          </span>
-                          {pokemon.newNumber && pokemon.originalNumber && (
-                            <span className="text-xs text-gray-500">
-                              (전국 No.{String(pokemon.originalNumber).padStart(3, '0')})
-                            </span>
-                          )}
-                          <span className="font-semibold">{pokemon.name}</span>
-                        </div>
-                        <div className="flex gap-1">
-                          <span className={`text-white text-xs px-2 py-0.5 rounded ${typeColors[pokemon.type] || 'bg-gray-400'}`}>
-                            {pokemon.type}
-                          </span>
-                          {pokemon.type2 && (
-                            <span className={`text-white text-xs px-2 py-0.5 rounded ${typeColors[pokemon.type2] || 'bg-gray-400'}`}>
-                              {pokemon.type2}
-                            </span>
-                          )}
-                          <span className="text-xs text-gray-600 px-2 py-0.5 bg-gray-100 rounded ml-1">
-                            포획률 {Math.round((pokemon.catchRate || 0.5) * 100)}%
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* 출현 확률 설정 */}
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <label className="text-sm font-semibold text-gray-700">출현 가중치:</label>
-                        <input
-                          type="number"
-                          min="0.1"
-                          max="100"
-                          step="0.1"
-                          value={rate}
-                          onChange={(e) => updateRate(id, e.target.value)}
-                          className="w-20 border border-gray-300 rounded px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none"
-                        />
-                      </div>
-
-                      {/* 제거 버튼 */}
-                      <button
-                        onClick={() => togglePokemon(pokemon)}
-                        className="bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200 text-sm font-semibold flex-shrink-0"
-                      >
-                        제거
-                      </button>
+              <>
+                {/* 확률 합계 표시 */}
+                <div className={`mb-4 p-4 rounded-lg border-2 ${
+                  totalRate > 100 
+                    ? 'bg-red-50 border-red-300' 
+                    : totalRate === 100 
+                    ? 'bg-green-50 border-green-300'
+                    : 'bg-yellow-50 border-yellow-300'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-gray-700">📊 전체 확률 합계:</span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-2xl font-bold ${
+                        totalRate > 100 ? 'text-red-600' : totalRate === 100 ? 'text-green-600' : 'text-yellow-600'
+                      }`}>
+                        {totalRate.toFixed(1)}%
+                      </span>
+                      {totalRate > 100 && <span className="text-red-600 text-sm font-semibold">⚠️ 100% 초과!</span>}
+                      {totalRate === 100 && <span className="text-green-600 text-sm font-semibold">✅ 완벽!</span>}
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {currentPokemonList.map((pokemon) => {
+                    const id = pokemon.id || pokemon.number;
+                    const rate = pokemonRates[id] || 0;
+                    const actualRate = getActualRate(rate);
+                    
+                    return (
+                      <div
+                        key={id}
+                        className="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-indigo-300 transition-colors"
+                      >
+                        <div className="flex items-center gap-4">
+                          {/* 포켓몬 아이콘 */}
+                          <div
+                            className="w-16 h-16 flex-shrink-0"
+                            style={{
+                              backgroundImage: `url(${pokemon.iconUrl || pokemon.imageUrl})`,
+                              backgroundSize: 'contain',
+                              backgroundRepeat: 'no-repeat',
+                              backgroundPosition: 'center'
+                            }}
+                          />
+                          
+                          {/* 포켓몬 정보 */}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="font-bold text-sm">
+                                No.{String(pokemon.newNumber || pokemon.number).padStart(3, '0')}
+                              </span>
+                              {pokemon.newNumber && pokemon.originalNumber && (
+                                <span className="text-xs text-gray-500">
+                                  (전국 No.{String(pokemon.originalNumber).padStart(3, '0')})
+                                </span>
+                              )}
+                              <span className="font-semibold text-lg">{pokemon.name}</span>
+                            </div>
+                            <div className="flex gap-1">
+                              <span className={`text-white text-xs px-2 py-0.5 rounded ${typeColors[pokemon.type] || 'bg-gray-400'}`}>
+                                {pokemon.type}
+                              </span>
+                              {pokemon.type2 && (
+                                <span className={`text-white text-xs px-2 py-0.5 rounded ${typeColors[pokemon.type2] || 'bg-gray-400'}`}>
+                                  {pokemon.type2}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* 확률 설정 */}
+                          <div className="flex items-center gap-3">
+                            <div className="text-center">
+                              <div className="text-xs text-gray-500 mb-1">상대 확률</div>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  step="0.1"
+                                  value={rate}
+                                  onChange={(e) => updateRate(id, e.target.value)}
+                                  className="w-20 border-2 border-gray-300 rounded-lg px-2 py-1 text-center font-bold focus:border-indigo-500 focus:outline-none"
+                                />
+                                <span className="font-bold text-gray-700">%</span>
+                              </div>
+                            </div>
+                            
+                            <div className="text-center">
+                              <div className="text-xs text-gray-500 mb-1">실제 출현율</div>
+                              <div className="bg-indigo-50 px-3 py-1 rounded-lg">
+                                <span className="font-bold text-indigo-600 text-lg">{actualRate}%</span>
+                              </div>
+                            </div>
+
+                            {/* 제거 버튼 */}
+                            <button
+                              onClick={() => togglePokemon(pokemon)}
+                              className="bg-red-100 text-red-700 px-3 py-2 rounded-lg hover:bg-red-200 text-sm font-semibold"
+                            >
+                              제거
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </div>
         )}
@@ -277,7 +434,7 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
               </div>
             </div>
 
-      {/* 포켓몬 그리드 */}
+            {/* 포켓몬 그리드 */}
             <div className="flex-1 overflow-y-auto p-4">
               <div className="grid grid-cols-6 gap-2">
                 {filteredPokemon.map((pokemon) => {
@@ -288,7 +445,7 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
                     <button
                       key={id}
                       type="button"
-                      onClick={(e) => togglePokemon(pokemon, e)}
+                      onClick={() => togglePokemon(pokemon)}
                       className={`border-2 rounded-lg p-2 transition-all ${
                         isSelected
                           ? 'border-green-500 bg-green-50'
@@ -326,9 +483,6 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-gray-500 mt-0.5">
-                          {Math.round((pokemon.catchRate || 0.5) * 100)}%
-                        </div>
                       </div>
                     </button>
                   );
@@ -341,7 +495,7 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
         {/* 푸터 */}
         <div className="p-4 border-t border-gray-200 flex justify-between items-center flex-shrink-0">
           <div className="text-sm text-gray-600">
-            💡 출현 가중치: 높을수록 자주 등장합니다 (기본값: 1)
+            💡 실제 출현율 = 포켓몬 출현율 × (개별 확률 ÷ 전체 확률 합계)
           </div>
           <div className="flex gap-3">
             <button
@@ -352,7 +506,12 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
             </button>
             <button
               onClick={handleSave}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold"
+              disabled={totalRate > 100}
+              className={`px-6 py-2 rounded-lg font-semibold ${
+                totalRate > 100
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-indigo-600 text-white hover:bg-indigo-700'
+              }`}
             >
               저장
             </button>

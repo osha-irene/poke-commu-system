@@ -1,5 +1,5 @@
 import React from 'react';
-import { Map, BookOpen, Smile, Package, User, Settings, LogOut, ShoppingBag } from 'lucide-react';
+import { Map, BookOpen, Smile, Package, User, Settings, LogOut, ShoppingBag, Users, Bot } from 'lucide-react';
 import NavButton from './NavButton';
 
 
@@ -47,6 +47,20 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin, trainer, o
           active={currentTab === 'map'}
           onClick={() => setCurrentTab('map')}
         />
+        <NavButton 
+          icon={Users}  // 새로운 아이콘!
+          label="멤버" 
+          active={currentTab === 'members'}
+          onClick={() => setCurrentTab('members')}
+        />
+
+        <NavButton 
+          icon={Bot}
+          label="NPC" 
+          active={currentTab === 'npcs'}
+          onClick={() => setCurrentTab('npcs')}
+        />
+
         <NavButton 
           icon={BookOpen}
           label="도감" 

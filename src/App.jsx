@@ -11,6 +11,10 @@ import EncounterModal from './components/modals/EncounterModal';
 import FirstCatchMemoModal from './components/modals/FirstCatchMemoModal';
 import useGameState from './hooks/useGameState';
 import ShopView from './components/views/ShopView';
+import MembersView from './components/views/MembersView';
+import NPCsView from './components/views/NPCsView';
+
+
 
 // 로그인 화면 컴포넌트
 function LoginScreen({ onLogin }) {
@@ -142,7 +146,10 @@ export default function App() {
     updateMemberMoney,        
     updateMemberRegionAccess,  
     maintenanceMode,           
-    setMaintenanceMode  
+    setMaintenanceMode,
+    applyLoot,
+    updateRegionLootConfig,
+    updatePokedexRegions
   } = useGameState();
 
   console.log('👤 currentUser:', currentUser);
@@ -204,9 +211,13 @@ export default function App() {
               regions={regions}
               currentUser={currentUser}
               onUpdateMemo={updatePokedexMemo}
+              onUpdatePokedexRegions={updatePokedexRegions}
             />
           )}
           
+          {currentTab === 'members' && <MembersView />}
+          {currentTab === 'npcs' && <NPCsView />}
+
           {currentTab === 'pokemon' && (
             <PokemonView
               caughtPokemon={caughtPokemon}
@@ -283,7 +294,8 @@ export default function App() {
               updateMemberMoney={updateMemberMoney}         
               updateMemberRegionAccess={updateMemberRegionAccess}  
               maintenanceMode={maintenanceMode}            
-              setMaintenanceMode={setMaintenanceMode}        
+              setMaintenanceMode={setMaintenanceMode}
+              updateRegionLootConfig={updateRegionLootConfig}        
             />
           )}
         </main>
@@ -298,6 +310,7 @@ export default function App() {
           items={items}
           sharedPokedexData={sharedPokedexData}
           caughtPokemon={caughtPokemon}
+          onApplyLoot={applyLoot}
         />
       )}
 

@@ -14,6 +14,83 @@ import { usePokemonManagement } from './usePokemonManagement';
 import { useMoves } from './useMoves';
 import { useAdminFunctions } from './useAdminFunctions';
 
+// 기본 보상 설정
+const getDefaultLootConfig = () => ({
+  money: { min: 50, max: 200 },
+  itemCount: { min: 1, max: 3 },
+  itemPool: ['potion', 'super-potion', 'pokeball', 'great-ball', 'antidote', 'paralyze-heal', 'awakening', 'burn-heal'],
+  ingredientCount: { min: 0, max: 1 },
+  ingredientPool: ['oran-berry', 'pecha-berry', 'cheri-berry', 'rawst-berry'],
+  berryCount: { min: 0, max: 1 },
+  berryPool: ['oran-berry', 'sitrus-berry', 'lum-berry']
+});
+
+const generateLoot = (lootConfig, allItems) => {
+  const loot = {
+    money: 0,
+    items: [],
+    ingredients: [],
+    berries: []
+  };
+  
+  // 돈 생성
+  const { money } = lootConfig;
+  loot.money = Math.floor(Math.random() * (money.max - money.min + 1)) + money.min;
+  
+  // 아이템 생성
+  const itemCount = Math.floor(Math.random() * (lootConfig.itemCount.max - lootConfig.itemCount.min + 1)) + lootConfig.itemCount.min;
+  for (let i = 0; i < itemCount; i++) {
+    if (lootConfig.itemPool && lootConfig.itemPool.length > 0) {
+      const randomItemId = lootConfig.itemPool[Math.floor(Math.random() * lootConfig.itemPool.length)];
+      const itemData = allItems.find(item => item.id === randomItemId);
+      if (itemData) {
+        const existing = loot.items.find(item => item.id === randomItemId);
+        if (existing) {
+          existing.count++;
+        } else {
+          loot.items.push({ id: randomItemId, name: itemData.name, count: 1 });
+        }
+      }
+    }
+  }
+  
+  // 식재료 생성
+  const ingredientCount = Math.floor(Math.random() * (lootConfig.ingredientCount.max - lootConfig.ingredientCount.min + 1)) + lootConfig.ingredientCount.min;
+  for (let i = 0; i < ingredientCount; i++) {
+    if (lootConfig.ingredientPool && lootConfig.ingredientPool.length > 0) {
+      const randomItemId = lootConfig.ingredientPool[Math.floor(Math.random() * lootConfig.ingredientPool.length)];
+      const itemData = allItems.find(item => item.id === randomItemId);
+      if (itemData) {
+        const existing = loot.ingredients.find(item => item.id === randomItemId);
+        if (existing) {
+          existing.count++;
+        } else {
+          loot.ingredients.push({ id: randomItemId, name: itemData.name, count: 1 });
+        }
+      }
+    }
+  }
+  
+  // 나무열매 생성
+  const berryCount = Math.floor(Math.random() * (lootConfig.berryCount.max - lootConfig.berryCount.min + 1)) + lootConfig.berryCount.min;
+  for (let i = 0; i < berryCount; i++) {
+    if (lootConfig.berryPool && lootConfig.berryPool.length > 0) {
+      const randomItemId = lootConfig.berryPool[Math.floor(Math.random() * lootConfig.berryPool.length)];
+      const itemData = allItems.find(item => item.id === randomItemId);
+      if (itemData) {
+        const existing = loot.berries.find(item => item.id === randomItemId);
+        if (existing) {
+          existing.count++;
+        } else {
+          loot.berries.push({ id: randomItemId, name: itemData.name, count: 1 });
+        }
+      }
+    }
+  }
+  
+  return loot;
+};
+
 export default function useGameState() {
   const [currentTab, setCurrentTab] = useState('map');
   const [encounterPokemon, setEncounterPokemon] = useState(null);
@@ -129,7 +206,7 @@ export default function useGameState() {
     return () => clearInterval(interval);
   }, [currentUser, setMembers]);
 
-  // 구역 클릭
+  // ⭐ 구역 클릭 (조우 시 도감 등록 추가)
   const handleRegionClick = (region) => {
     if (!currentUser) return;
 
@@ -140,6 +217,44 @@ export default function useGameState() {
     }
     
     if (currentUser.dailyWalks > 0) {
+      // 1단계: 포켓몬 출현 여부 결정
+      const encounterRate = region.encounterRate !== undefined ? region.encounterRate : 80;
+      const encounterRoll = Math.random() * 100;
+      
+      console.log('🎲 출현 판정:', encounterRoll.toFixed(2), '/ 출현율:', encounterRate + '%');
+      
+      // 산책 횟수 차감
+      updateCurrentUser({ dailyWalks: currentUser.dailyWalks - 1 });
+      
+      // 포켓몬이 나오지 않는 경우
+      if (encounterRoll >= encounterRate) {
+        console.log('❌ 포켓몬 출현 실패! 아이템만 지급');
+        
+        const loot = generateLoot(region.lootConfig || getDefaultLootConfig(), allItems);
+        console.log('🎁 생성된 loot:', loot);
+        
+        applyLoot(loot, null);
+        
+        const itemList = [];
+        if (loot.items.length > 0) {
+          loot.items.forEach(item => itemList.push(`${item.name} ${item.count}개`));
+        }
+        if (loot.ingredients.length > 0) {
+          loot.ingredients.forEach(item => itemList.push(`${item.name} ${item.count}개`));
+        }
+        if (loot.berries.length > 0) {
+          loot.berries.forEach(item => itemList.push(`${item.name} ${item.count}개`));
+        }
+        
+        const itemText = itemList.length > 0 ? `\n🎁 ${itemList.join(', ')}` : '';
+        
+        alert(`🌿 ${region.name}을(를) 탐험했지만 포켓몬을 발견하지 못했습니다!\n\n💰 ${loot.money}원을 획득했습니다!${itemText}`);
+        return;
+      }
+      
+      // 2단계: 포켓몬 출현
+      console.log('✅ 포켓몬 출현!');
+      
       const regionPokemonIds = region.pokemons;
       const availablePokemon = gamePokedex.filter(p => 
         regionPokemonIds.includes(p.id) || 
@@ -153,15 +268,59 @@ export default function useGameState() {
         
         availablePokemon.forEach(p => {
           const id = p.id || p.number;
-          const weight = rates[id] || 1;
-          for (let i = 0; i < weight * 10; i++) {
+          const weight = rates[id] || 10;
+          
+          for (let i = 0; i < weight; i++) {
             weightedPokemon.push(p);
           }
         });
         
         const randomPokemon = weightedPokemon[Math.floor(Math.random() * weightedPokemon.length)];
-        setEncounterPokemon(randomPokemon);
-        updateCurrentUser({ dailyWalks: currentUser.dailyWalks - 1 });
+        console.log('🎯 선택된 포켓몬:', randomPokemon.name);
+        
+        // ⭐ 조우만 해도 도감 등록
+        const pokemonNumber = randomPokemon.originalNumber || randomPokemon.number;
+        const isFirstEncounter = !sharedPokedexData[pokemonNumber];
+        
+        if (isFirstEncounter) {
+          setSharedPokedexData(prev => ({
+            ...prev,
+            [pokemonNumber]: {
+              firstEncounter: currentUser.name,
+              encounteredAt: new Date().toISOString(),
+              caughtBy: null,
+              caughtAt: null,
+              memo: null,
+              regions: [region.name]
+            }
+          }));
+        } else {
+          // 이미 등록된 포켓몬이면 출현 지역만 추가
+          setSharedPokedexData(prev => {
+            const entry = prev[pokemonNumber];
+            const currentRegions = entry?.regions || [];
+            
+            if (!currentRegions.includes(region.name)) {
+              return {
+                ...prev,
+                [pokemonNumber]: {
+                  ...entry,
+                  regions: [...currentRegions, region.name]
+                }
+              };
+            }
+            return prev;
+          });
+        }
+        
+        const loot = generateLoot(region.lootConfig || getDefaultLootConfig(), allItems);
+        
+        setEncounterPokemon({
+          ...randomPokemon,
+          loot: loot,
+          regionName: region.name,
+          isFirstEncounter: isFirstEncounter
+        });
       } else {
         alert('이 지역에 등장하는 포켓몬이 없습니다!');
       }
@@ -174,18 +333,108 @@ export default function useGameState() {
     setEncounterPokemon(null);
   };
 
- const handleCatchSuccess = (pokemon, ballUsed) => {
-  if (!currentUser) return;
-  
-  // 파트너를 제외한 포켓몬 수 계산
-  const nonPartnerCount = currentUser.caughtPokemon.filter(p => p && !p.isPartner).length;
-  
-  // 파트너 제외 20마리 제한 (총 21마리)
-  if (nonPartnerCount >= 20) {
-    alert('⚠️ 파트너를 제외한 포켓몬이 20마리입니다!\n더 이상 포켓몬을 잡을 수 없습니다.');
-    return;
-  }
+  // 보상 적용 함수
+  const applyLoot = (loot, ballUsed = null) => {
+    console.log('🎁 applyLoot 호출됨!');
+    console.log('📦 받은 loot:', loot);
+    console.log('⚾ 사용한 볼:', ballUsed);
+    console.log('👤 currentUser:', currentUser);
     
+    if (!loot || !currentUser) {
+      console.log('❌ loot 또는 currentUser가 없음');
+      return;
+    }
+    
+    const newMoney = (currentUser.money || 0) + loot.money;
+    console.log('💰 새로운 돈:', newMoney);
+    
+    let newInventory = [...currentUser.inventory];
+    console.log('🎒 현재 인벤토리:', newInventory);
+    
+    // 볼 차감
+    if (ballUsed && !currentUser.isSuperAdmin) {
+      console.log('⚾ 볼 차감 시작');
+      newInventory = newInventory.map(item => 
+        (item.itemId === ballUsed.id || item.name === ballUsed.name)
+          ? { ...item, count: Math.max(0, item.count - 1) }
+          : item
+      );
+      console.log('⚾ 볼 차감 후 인벤토리:', newInventory);
+    }
+    
+    const allLootItems = [...loot.items, ...loot.ingredients, ...loot.berries];
+    console.log('📦 추가할 아이템들:', allLootItems);
+    
+    allLootItems.forEach(lootItem => {
+      console.log('🔍 처리 중인 아이템:', lootItem);
+      
+      const existingIndex = newInventory.findIndex(i => 
+        i.itemId === lootItem.id || i.name === lootItem.name
+      );
+      
+      console.log('📍 기존 아이템 인덱스:', existingIndex);
+      
+      if (existingIndex !== -1) {
+        newInventory[existingIndex] = {
+          ...newInventory[existingIndex],
+          count: newInventory[existingIndex].count + lootItem.count
+        };
+        console.log('✅ 기존 아이템 개수 증가:', newInventory[existingIndex]);
+      } else {
+        const itemData = allItems.find(i => i.id === lootItem.id);
+        console.log('🔎 allItems에서 찾은 아이템:', itemData);
+        
+        if (itemData) {
+          const newItem = {
+            itemId: lootItem.id,
+            name: lootItem.name,
+            count: lootItem.count,
+            imageUrl: itemData.spriteUrl || itemData.imageUrl,
+            category: itemData.category
+          };
+          newInventory.push(newItem);
+          console.log('✅ 새 아이템 추가:', newItem);
+        } else {
+          console.log('❌ allItems에서 아이템을 찾을 수 없음:', lootItem.id);
+        }
+      }
+    });
+    
+    console.log('🎒 최종 인벤토리:', newInventory);
+    console.log('📊 인벤토리 길이:', newInventory.length);
+    
+    updateCurrentUser({ 
+      money: newMoney, 
+      inventory: newInventory 
+    });
+    
+    console.log('✅ updateCurrentUser 호출 완료');
+  };
+
+  // 리전 보상 설정 업데이트
+  const updateRegionLootConfig = (regionId, lootConfig) => {
+    if (!currentUser?.isAdmin) return;
+    
+    setRegions(prev => prev.map(region => 
+      region.id === regionId 
+        ? { ...region, lootConfig } 
+        : region
+    ));
+    
+    alert('보상 설정이 저장되었습니다!');
+  };
+
+  // ⭐ 포획 성공 (지역별 레벨 범위 적용)
+  const handleCatchSuccess = (pokemon, ballUsed) => {
+    if (!currentUser) return;
+    
+    const nonPartnerCount = currentUser.caughtPokemon.filter(p => p && !p.isPartner).length;
+    
+    if (nonPartnerCount >= 20) {
+      alert('⚠️ 파트너를 제외한 포켓몬이 20마리입니다!\n더 이상 포켓몬을 잡을 수 없습니다.');
+      return;
+    }
+      
     const pokemonTemplate = allPokemonMaster.find(p => 
       p.number === (pokemon.number || pokemon.originalNumber)
     );
@@ -195,7 +444,12 @@ export default function useGameState() {
       return;
     }
     
-    const level = Math.floor(Math.random() * 20) + 5;
+    // ⭐ 지역별 레벨 범위
+    const regionName = pokemon.regionName;
+    const region = regions.find(r => r.name === regionName);
+    const minLevel = region?.minLevel || 5;
+    const maxLevel = region?.maxLevel || 20;
+    const level = Math.floor(Math.random() * (maxLevel - minLevel + 1)) + minLevel;
     
     const newPokemon = {
       uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -223,31 +477,40 @@ export default function useGameState() {
       
     const updatedCaughtPokemon = [...currentUser.caughtPokemon, newPokemon];
     
-    const updatedInventory = currentUser.isSuperAdmin 
-      ? currentUser.inventory
-      : currentUser.inventory.map(item => 
-          (item.itemId === ballUsed.id || item.name === ballUsed.name)
-            ? { ...item, count: Math.max(0, item.count - 1) }
-            : item
-        );
-    
     updateCurrentUser({
-      caughtPokemon: updatedCaughtPokemon,
-      inventory: updatedInventory
+      caughtPokemon: updatedCaughtPokemon
     });
 
-    const isFirstCatch = !sharedPokedexData[pokemonTemplate.number];
-    if (isFirstCatch) {
-      setFirstCatchPokemon(pokemonTemplate);
-    }
+    // ⭐ 도감에 포획 정보 업데이트
+    const pokemonNumber = pokemonTemplate.number;
+    setSharedPokedexData(prev => {
+      const entry = prev[pokemonNumber] || {};
+      
+      // 첫 포획인 경우
+      if (!entry.caughtBy) {
+        setFirstCatchPokemon(pokemonTemplate);
+        return {
+          ...prev,
+          [pokemonNumber]: {
+            ...entry,
+            firstEncounter: entry.firstEncounter || currentUser.name,
+            encounteredAt: entry.encounteredAt || new Date().toISOString(),
+            caughtBy: currentUser.name,
+            caughtAt: new Date().toISOString(),
+            regions: entry.regions || [regionName]
+          }
+        };
+      }
+      
+      return prev;
+    });
   };
 
   const saveFirstCatchMemo = (pokemonNumber, memo) => {
     setSharedPokedexData(prev => ({
       ...prev,
       [pokemonNumber]: {
-        firstCatcher: currentUser.name,
-        caughtAt: new Date().toISOString(),
+        ...prev[pokemonNumber],
         memo: memo || null
       }
     }));
@@ -258,15 +521,31 @@ export default function useGameState() {
     setSharedPokedexData(prev => ({
       ...prev,
       [pokemonNumber]: {
-        firstCatcher: currentUser.name,
-        caughtAt: new Date().toISOString(),
+        ...prev[pokemonNumber],
         memo: null
       }
     }));
     setFirstCatchPokemon(null);
   };
 
-  // createCustomItem을 래핑해서 allItems 업데이트 포함
+  // ⭐ 관리자용 도감 지역 수동 업데이트
+  const updatePokedexRegions = (pokemonNumber, regions) => {
+    if (!currentUser?.isAdmin) return;
+    
+    setSharedPokedexData(prev => {
+      const entry = prev[pokemonNumber] || {};
+      return {
+        ...prev,
+        [pokemonNumber]: {
+          ...entry,
+          regions: regions,
+          manuallyEdited: true
+        }
+      };
+    });
+  };
+
+  // createCustomItem 래핑
   const createCustomItem = (itemData) => {
     const result = adminCreateCustomItem(itemData);
     if (result) {
@@ -385,13 +664,15 @@ export default function useGameState() {
     setPartnerPokemon: pokemonManagement.setPartnerPokemon,
     giveItemToPokemon: pokemonManagement.giveItemToPokemon,
     takeItemFromPokemon: pokemonManagement.takeItemFromPokemon,
-    // 기술 관련 (useMoves에서)
     learnMove: movesHook.learnMove,
     forgetMove: movesHook.forgetMove,
     replaceMove: movesHook.replaceMove,
     giveMoveToPokemon: movesHook.learnMove,
     getAvailableMovesForLevel: movesHook.getAvailableMovesForLevel,
     getAllLearnableMoves: movesHook.getAllLearnableMoves,
-    handlePurchase
+    handlePurchase,
+    applyLoot,
+    updateRegionLootConfig,
+    updatePokedexRegions  // ⭐ 추가
   };
 }

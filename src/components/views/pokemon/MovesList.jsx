@@ -85,11 +85,6 @@ export default function MovesList({
         <div className="text-4xl mb-2">🎯</div>
         <p className="text-gray-500 text-sm">배운 기술이 없습니다</p>
         <p className="text-gray-400 text-xs mt-1">레벨업하면 자동으로 기술을 배웁니다</p>
-        {/* ⭐ 디버깅 정보 표시 */}
-        <div className="mt-3 text-xs text-red-500">
-          <p>디버깅: moves 개수 = {moves.length}</p>
-          <p>디버깅: allMoves 개수 = {allMoves.length}</p>
-        </div>
       </div>
     );
   }

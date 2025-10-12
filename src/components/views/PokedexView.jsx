@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Lock, CheckCircle, Edit2, MapPin } from 'lucide-react';
 
-// 타입별 색상
 const TYPE_COLORS = {
   '노말': '#A8A878', '불꽃': '#F08030', '물': '#6890F0',
   '전기': '#F8D030', '풀': '#78C850', '얼음': '#98D8D8',
@@ -14,30 +13,25 @@ const TYPE_COLORS = {
 export default function PokedexView({ 
   pokedex = [],
   caughtPokemon = [],
-  pokedexData = {}, // sharedPokedexData
+  pokedexData = {},
   regions = [],
   currentUser = null,
-  onUpdateMemo
+  onUpdateMemo,
+  onUpdatePokedexRegions
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPokemon, setSelectedPokemon] = useState(null);
   const [isEditingMemo, setIsEditingMemo] = useState(false);
   const [memoText, setMemoText] = useState('');
+  const [isEditingRegions, setIsEditingRegions] = useState(false);
+  const [editableRegions, setEditableRegions] = useState([]);
 
-  // 내가 잡은 포켓몬 번호 목록 (전국도감 번호 기준)
   const myCaughtNumbers = new Set(caughtPokemon.map(p => p?.number).filter(Boolean));
-  
-  // 전체 회원이 해금한 포켓몬 번호 목록 (전국도감 번호 기준)
-  const unlockedNumbers = new Set(
-    Object.keys(pokedexData).map(num => parseInt(num))
-  );
-
-  // 해금된 포켓몬만 표시
+  const unlockedNumbers = new Set(Object.keys(pokedexData).map(num => parseInt(num)));
   const unlockedPokedex = pokedex.filter(pokemon => 
     unlockedNumbers.has(pokemon.originalNumber || pokemon.number)
   );
 
-  // 검색 필터 (해금된 포켓몬 중에서만 검색)
   const filteredPokedex = unlockedPokedex.filter(pokemon => {
     if (!searchTerm) return true;
     const query = searchTerm.toLowerCase();
@@ -49,31 +43,39 @@ export default function PokedexView({
     );
   });
 
-  // 통계 (전체 도감 기준)
   const unlockedCount = unlockedPokedex.length;
   const totalCount = pokedex.length;
   const percentage = totalCount > 0 ? Math.round((unlockedCount / totalCount) * 100) : 0;
 
-  // 포켓몬이 출현하는 구역 찾기
+  // ⭐ 출현 지역 가져오기 (자동 + 수동)
   const getPokemonRegions = (pokemon) => {
+    const pokemonOriginalNumber = pokemon.originalNumber || pokemon.number;
+    const entry = pokedexData[pokemonOriginalNumber];
+    
+    // 1. 수동 편집된 지역 우선
+    if (entry?.regions && entry.regions.length > 0) {
+      return entry.regions;
+    }
+    
+    // 2. 자동으로 regions에서 찾기
     if (!regions || regions.length === 0) return [];
     
     return regions
       .filter(region => {
         return region.pokemons.includes(pokemon.id) || 
                region.pokemons.includes(pokemon.number) ||
-               region.pokemons.includes(pokemon.originalNumber);
+               region.pokemons.includes(pokemonOriginalNumber);
       })
       .map(region => region.name);
   };
 
   const handlePokemonClick = (pokemon) => {
     const pokemonOriginalNumber = pokemon.originalNumber || pokemon.number;
-    // 해금된 포켓몬만 클릭 가능
     if (!unlockedNumbers.has(pokemonOriginalNumber)) return;
     
     setSelectedPokemon(pokemon);
     setIsEditingMemo(false);
+    setIsEditingRegions(false);
     
     const entry = pokedexData[pokemonOriginalNumber];
     setMemoText(entry?.memo || '');
@@ -85,7 +87,6 @@ export default function PokedexView({
     const pokemonOriginalNumber = selectedPokemon.originalNumber || selectedPokemon.number;
     const entry = pokedexData[pokemonOriginalNumber];
     
-    // 첫 포획자만 메모 작성/수정 가능
     if (entry && entry.firstCatcher === currentUser?.name) {
       onUpdateMemo(pokemonOriginalNumber, memoText);
       setIsEditingMemo(false);
@@ -104,6 +105,29 @@ export default function PokedexView({
     }
   };
 
+  // ⭐ 지역 편집
+  const handleStartEditRegions = () => {
+    const pokemonRegions = getPokemonRegions(selectedPokemon);
+    setEditableRegions(pokemonRegions);
+    setIsEditingRegions(true);
+  };
+
+  const toggleRegion = (regionName) => {
+    setEditableRegions(prev => 
+      prev.includes(regionName)
+        ? prev.filter(r => r !== regionName)
+        : [...prev, regionName]
+    );
+  };
+
+  const handleSaveRegions = () => {
+    const pokemonOriginalNumber = selectedPokemon.originalNumber || selectedPokemon.number;
+    if (onUpdatePokedexRegions) {
+      onUpdatePokedexRegions(pokemonOriginalNumber, editableRegions);
+    }
+    setIsEditingRegions(false);
+  };
+
   return (
     <div className="h-full flex flex-col gap-4">
       {/* 헤더 */}
@@ -119,7 +143,6 @@ export default function PokedexView({
           </div>
         </div>
 
-        {/* 진행도 바 */}
         <div className="w-full bg-gray-200 rounded-full h-3">
           <div 
             className="bg-indigo-600 h-3 rounded-full transition-all duration-300"
@@ -127,7 +150,6 @@ export default function PokedexView({
           />
         </div>
 
-        {/* 검색 */}
         <div className="mt-4 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
           <input
@@ -169,19 +191,16 @@ export default function PokedexView({
                       : 'border-gray-200 bg-gray-50 opacity-50'
                   }`}
                 >
-                  {/* 내가 잡은 표시 */}
                   {isMyCaught && (
                     <div className="absolute top-1 left-1 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded font-bold">
                       보유
                     </div>
                   )}
 
-                  {/* 도감 번호 - newNumber 우선 사용 */}
                   <div className="text-xs font-bold text-gray-500 mb-2">
                     No.{(pokemon.newNumber || pokemon.number).toString().padStart(3, '0')}
                   </div>
 
-                  {/* 포켓몬 이미지 (도트 스프라이트) - 전국도감 번호 사용 */}
                   <div 
                     className="w-full h-24 mb-2"
                     style={{
@@ -201,12 +220,10 @@ export default function PokedexView({
                     )}
                   </div>
 
-                  {/* 이름 */}
                   <div className="text-sm font-bold text-gray-700 truncate">
                     {isUnlocked ? pokemon.name : '???'}
                   </div>
 
-                  {/* 타입 */}
                   {isUnlocked && (
                     <div className="flex gap-1 justify-center mt-2">
                       <span 
@@ -226,7 +243,6 @@ export default function PokedexView({
                     </div>
                   )}
 
-                  {/* 아이콘 표시 */}
                   <div className="absolute top-2 right-2 flex gap-1">
                     {entry?.firstCatcher && (
                       <div className="relative group">
@@ -258,7 +274,6 @@ export default function PokedexView({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center">
-              {/* 도감 번호 - newNumber와 originalNumber 둘 다 표시 */}
               <div className="text-sm text-gray-500 mb-2">
                 No.{(selectedPokemon.newNumber || selectedPokemon.number).toString().padStart(3, '0')}
                 {selectedPokemon.newNumber && selectedPokemon.originalNumber && (
@@ -268,7 +283,6 @@ export default function PokedexView({
                 )}
               </div>
 
-              {/* 이미지 (도트 스프라이트) - 전국도감 번호 사용 */}
               <img 
                 src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${selectedPokemon.originalNumber || selectedPokemon.number}.png`}
                 alt={selectedPokemon.name}
@@ -276,11 +290,9 @@ export default function PokedexView({
                 style={{ imageRendering: 'pixelated' }}
               />
 
-              {/* 이름 */}
               <h3 className="text-2xl font-bold mb-2">{selectedPokemon.name}</h3>
               <div className="text-sm text-gray-500 mb-4">{selectedPokemon.nameEn}</div>
               
-              {/* 타입 */}
               <div className="flex gap-2 justify-center mb-4">
                 <span 
                   className="px-3 py-1 rounded font-bold text-white"
@@ -298,24 +310,62 @@ export default function PokedexView({
                 )}
               </div>
 
-              {/* 출현 지역 */}
-              {(() => {
-                const pokemonRegions = getPokemonRegions(selectedPokemon);
-                if (pokemonRegions.length > 0) {
-                  return (
-                    <div className="text-left mb-4 p-3 bg-green-50 rounded border border-green-200">
-                      <div className="flex items-center gap-2 mb-1">
-                        <MapPin size={16} className="text-green-600" />
-                        <div className="text-sm font-semibold text-gray-700">출현 지역</div>
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {pokemonRegions.join(', ')}
-                      </div>
+              {/* ⭐ 통합된 출현 지역 */}
+              <div className="text-left mb-4 p-3 bg-green-50 rounded border border-green-200">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <MapPin size={16} className="text-green-600" />
+                    <div className="text-sm font-semibold text-gray-700">출현 지역</div>
+                  </div>
+                  {currentUser?.isAdmin && !isEditingRegions && (
+                    <button
+                      onClick={handleStartEditRegions}
+                      className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200 font-semibold"
+                    >
+                      편집
+                    </button>
+                  )}
+                </div>
+                
+                {isEditingRegions ? (
+                  <div className="space-y-2">
+                    {regions.map(region => (
+                      <label key={region.id} className="flex items-center gap-2 cursor-pointer hover:bg-green-100 p-1 rounded">
+                        <input
+                          type="checkbox"
+                          checked={editableRegions.includes(region.name)}
+                          onChange={() => toggleRegion(region.name)}
+                          className="w-4 h-4 text-green-600"
+                        />
+                        <span className="text-sm text-gray-700">{region.name}</span>
+                      </label>
+                    ))}
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        onClick={handleSaveRegions}
+                        className="flex-1 bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 font-semibold"
+                      >
+                        저장
+                      </button>
+                      <button
+                        onClick={() => setIsEditingRegions(false)}
+                        className="flex-1 bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-400 font-semibold"
+                      >
+                        취소
+                      </button>
                     </div>
-                  );
-                }
-                return null;
-              })()}
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-600">
+                    {(() => {
+                      const pokemonRegions = getPokemonRegions(selectedPokemon);
+                      return pokemonRegions.length > 0 
+                        ? pokemonRegions.join(', ')
+                        : '출현 지역 정보가 없습니다';
+                    })()}
+                  </div>
+                )}
+              </div>
 
               {/* 첫 포획자 정보 & 메모 */}
               {(() => {
@@ -328,7 +378,7 @@ export default function PokedexView({
                   <div className="text-left p-4 bg-yellow-50 rounded border border-yellow-200 mb-4">
                     <div className="flex items-center justify-between mb-2">
                       <div className="text-sm font-semibold text-gray-700">
-                        🏆 최초 포획: {entry.firstCatcher}
+                        🏆 최초 포획: {entry.firstCatcher || entry.firstEncounter || '???'}
                       </div>
                       {entry.firstCatcher === currentUser?.name && !isEditingMemo && (
                         <button
@@ -340,21 +390,20 @@ export default function PokedexView({
                       )}
                     </div>
 
-                    {/* 메모 표시/편집 */}
                     {isEditingMemo ? (
                       <div>
                         <textarea
                           value={memoText}
                           onChange={(e) => setMemoText(e.target.value)}
                           placeholder="이 포켓몬에 대한 메모를 남겨보세요..."
-                          className="w-full p-2 border border-gray-300 rounded text-sm resize-none"
+                          className="w-full p-2 border border-gray-300 rounded text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           rows="3"
                           maxLength="200"
                         />
                         <div className="flex gap-2 mt-2">
                           <button
                             onClick={handleSaveMemo}
-                            className="flex-1 bg-indigo-600 text-white py-1 rounded text-sm hover:bg-indigo-700"
+                            className="flex-1 bg-indigo-600 text-white py-1 rounded text-sm hover:bg-indigo-700 font-semibold"
                           >
                             저장
                           </button>
@@ -363,7 +412,7 @@ export default function PokedexView({
                               setIsEditingMemo(false);
                               setMemoText(entry?.memo || '');
                             }}
-                            className="flex-1 bg-gray-300 text-gray-700 py-1 rounded text-sm hover:bg-gray-400"
+                            className="flex-1 bg-gray-300 text-gray-700 py-1 rounded text-sm hover:bg-gray-400 font-semibold"
                           >
                             취소
                           </button>
@@ -387,10 +436,9 @@ export default function PokedexView({
                 );
               })()}
 
-              {/* 닫기 버튼 */}
               <button
                 onClick={() => setSelectedPokemon(null)}
-                className="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700"
+                className="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 font-semibold"
               >
                 닫기
               </button>

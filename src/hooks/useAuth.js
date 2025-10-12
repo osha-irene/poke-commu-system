@@ -35,13 +35,34 @@ export const useAuth = (members, setMembers) => {
     window.location.reload();
   };
 
+ 
   const updateCurrentUser = (updates) => {
-    if (!currentUser) return;
-    setMembers(prev => ({
-      ...prev,
-      [currentUser.id]: { ...prev[currentUser.id], ...updates }
-    }));
-    setCurrentUser(prev => ({ ...prev, ...updates }));
+    
+    if (!currentUser) {
+
+      return;
+    }
+    
+    // ⭐ setMembers를 함수형으로 호출해서 최신 상태 보장
+    setMembers(prevMembers => {
+      const latestUser = prevMembers[currentUser.id] || currentUser;
+
+      
+      const updatedUser = {
+        ...latestUser,
+        ...updates
+      };
+      
+      
+      // ⭐ currentUser도 동일한 객체로 업데이트
+      setCurrentUser(updatedUser);
+      
+      return {
+        ...prevMembers,
+        [currentUser.id]: updatedUser
+      };
+    });
+    
   };
 
   // 사용자 정보 자동 동기화
@@ -49,6 +70,7 @@ export const useAuth = (members, setMembers) => {
     if (currentUser && currentUser.id) {
       const updatedUser = members[currentUser.id];
       if (updatedUser && JSON.stringify(updatedUser) !== JSON.stringify(currentUser)) {
+
         setCurrentUser(updatedUser);
       }
     }

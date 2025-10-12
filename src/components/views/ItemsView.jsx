@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 
 export default function ItemsView({ items = [], allItems = [], isSuperAdmin = false, onSellItem }) {
+  
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sellMode, setSellMode] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);

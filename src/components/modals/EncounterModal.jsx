@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items, sharedPokedexData = {}, caughtPokemon = [] }) {
+export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items, sharedPokedexData = {}, caughtPokemon = [], onApplyLoot}) {
   const [selectedBall, setSelectedBall] = useState(null);
   const [catching, setCatching] = useState(false);
   const [result, setResult] = useState(null);
@@ -109,6 +109,8 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
       alert('선택한 볼이 부족합니다!');
       return;
     }
+
+
   
   // 파트너를 제외한 포켓몬 수 계산
   const nonPartnerCount = caughtPokemon.filter(p => p && !p.isPartner).length;
@@ -119,9 +121,6 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
     return;
   }
   
-  // 기존 코드 계속...
-  setCatching(true);
-
     setCatching(true);
     setResult(null);
 
@@ -139,22 +138,49 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
         if (shakeCount >= 3) {
           clearInterval(shakeInterval);
           
-          setTimeout(() => {
-            const catchChance = pokemon.catchRate * selectedBall.multiplier;
-            const success = Math.random() < catchChance;
-            setResult(success ? 'success' : 'fail');
-            setCatching(false);
+        setTimeout(() => {
+  const catchChance = pokemon.catchRate * selectedBall.multiplier;
+  const success = Math.random() < catchChance;
+  setResult(success ? 'success' : 'fail');
+  setCatching(false);
 
-            setTimeout(() => {
-              if (success) {
-                onCatchSuccess(pokemon, selectedBall);
-              }
-              onClose();
-            }, 2500);
-          }, 500);
+  setTimeout(() => {
+  if (success) {
+    // ⭐ 포획 성공 시 보상 적용
+    if (pokemon.loot && onApplyLoot) {
+      onApplyLoot(pokemon.loot);
+      
+      // 보상 알림 생성
+      let lootMessage = '\n\n🎁 탐험 보상을 획득했습니다!\n';
+      lootMessage += `💰 ${pokemon.loot.money}G\n`;
+      
+      if (pokemon.loot.items.length > 0) {
+        lootMessage += `📦 아이템: ${pokemon.loot.items.map(i => `${i.name} x${i.count}`).join(', ')}\n`;
+      }
+      if (pokemon.loot.ingredients.length > 0) {
+        lootMessage += `🍎 식재료: ${pokemon.loot.ingredients.map(i => `${i.name} x${i.count}`).join(', ')}\n`;
+      }
+      if (pokemon.loot.berries.length > 0) {
+        lootMessage += `🌳 열매: ${pokemon.loot.berries.map(i => `${i.name} x${i.count}`).join(', ')}`;
+      }
+      
+      // ⭐ 이 줄을 수정!
+      setTimeout(() => {
+        alert(`${pokemon.name}을(를) 잡았습니다!${lootMessage}`);
+      }, 100);
+    }
+    
+    onCatchSuccess(pokemon, selectedBall);
+  }
+  onClose();
+}, 2500);
+}, 500);
         }
       }, 800);
     }, 1000);
+
+
+    
   };
 
   const handleBallSelect = (e, ball) => {

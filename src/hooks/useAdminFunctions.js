@@ -337,12 +337,22 @@ export const useAdminFunctions = (
   };
 
   // 지역/도감 관리
-  const updateRegionPokemon = (regionId, pokemonIds, pokemonRates = {}) => {
-    if (!currentUser?.isAdmin) return;
-    setRegions(prev => prev.map(region => 
-      region.id === regionId ? { ...region, pokemons: pokemonIds, pokemonRates } : region
-    ));
-  };
+const updateRegionPokemon = (regionId, pokemonIds, pokemonRates, encounterRate, minLevel, maxLevel) => {
+  if (!currentUser?.isAdmin) return;
+  
+  setRegions(prev => prev.map(region => 
+    region.id === regionId 
+      ? { 
+          ...region, 
+          pokemons: pokemonIds, 
+          pokemonRates: pokemonRates,
+          encounterRate: encounterRate !== undefined ? encounterRate : (region.encounterRate || 80),
+          minLevel: minLevel || 5,      // ⭐ 추가
+          maxLevel: maxLevel || 20      // ⭐ 추가
+        } 
+      : region
+  ));
+};
 
   const updateGamePokedex = (selectedPokemonNumbers) => {
     if (!currentUser?.isAdmin) return;
