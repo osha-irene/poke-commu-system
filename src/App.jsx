@@ -80,6 +80,8 @@ function LoginScreen({ onLogin }) {
   );
 }
 
+
+
 export default function App() {
 	const {
 	  currentTab,
@@ -130,8 +132,22 @@ export default function App() {
 	  handlePurchase,
 	  updateShopData,
     onSetPartner,
-    setPartnerPokemon
-	} = useGameState();
+    setPartnerPokemon,
+    forgetMove,
+    learnMove,
+    replaceMove,
+    giveMoveToPokemon,
+    allMoves,
+    pokemonLearnsets
+} = useGameState();
+
+console.log('👤 currentUser:', currentUser);
+console.log('🔑 currentUser?.isAdmin:', currentUser?.isAdmin);
+
+<PokemonView
+  isAdmin={currentUser?.isAdmin}  // ← 이게 제대로 전달되나요?
+/>
+
 
   // 로그인하지 않은 경우 로그인 화면 표시
   if (!currentUser || !currentUser.id) {
@@ -185,6 +201,11 @@ export default function App() {
 				onGiveItem={giveItemToPokemon}  
 				onTakeItem={takeItemFromPokemon}
         onSetPartner={setPartnerPokemon}
+        onForgetMove={forgetMove}  
+        onLearnMove={learnMove}   
+        isAdmin={currentUser?.isAdmin}   
+        allMoves={allMoves}             
+        pokemonLearnsets={pokemonLearnsets} 
 			  />
 			)}
           

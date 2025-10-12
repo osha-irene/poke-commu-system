@@ -17,6 +17,9 @@ import {
   ResponsiveContainer,
   Tooltip 
 } from 'recharts';
+import MovesList from './MovesList';
+import MoveSelectModal from './MoveSelectModal'; // 
+import LevelUpMoveModal from './LevelUpMoveModal';
 
 // 이미지 URL 생성 헬퍼
 const getPokemonSpriteUrl = (number) => 
@@ -74,11 +77,25 @@ export default function PokemonDetailPanel({
   onUpdateNickname,
   onGiveItem,
   onTakeItem,
-  onSetPartner
+  onSetPartner,
+  onForgetMove,
+  onLearnMove,   
+  isAdmin = false,
+  allMoves = [],      
+  pokemonLearnsets = {} 
 }) {
-  const [isEditingNickname, setIsEditingNickname] = useState(false);
-  const [nickname, setNickname] = useState(pokemon.nickname || pokemon.name);
-  const [activeTab, setActiveTab] = useState('condition');
+
+  console.log('🔍 isAdmin:', isAdmin);
+console.log('🔍 pokemon.moves:', pokemon.moves);
+console.log('🔍 pokemon.moves?.length:', pokemon.moves?.length);
+
+
+const [isEditingNickname, setIsEditingNickname] = useState(false);
+const [nickname, setNickname] = useState(pokemon.nickname || pokemon.name);
+const [showMoveSelectModal, setShowMoveSelectModal] = useState(false);
+const [showLevelUpMoveModal, setShowLevelUpMoveModal] = useState(false);  // ⭐ 추가
+const [levelUpData, setLevelUpData] = useState(null);  // ⭐ 추가
+
 
   // 컨디션 및 노력치 데이터 준비
   const conditionData = [
@@ -161,6 +178,8 @@ export default function PokemonDetailPanel({
     setIsEditingNickname(false);
   };
 
+
+  
   return (
     <div className="w-full bg-white rounded-lg border border-gray-200 p-6">
       {/* 상단 헤더 */}
@@ -324,7 +343,38 @@ export default function PokemonDetailPanel({
                 </ResponsiveContainer>
               </div>
             </div>
+         
           </div>
+
+          
+
+          {/* 기술 섹션 */}
+          <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200 mt-3">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                ⚔️ 배운 기술 ({pokemon.moves?.length || 0}/4)
+              </h3>
+                        
+              {/* ⭐ 관리자 전용 버튼 */}
+              
+              {isAdmin && (!pokemon.moves || pokemon.moves.length < 4) && (
+                     <button
+                  onClick={() => setShowMoveSelectModal(true)}
+                  className="text-xs bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700"
+                >
+                  + 기술 추가
+                </button>
+              )}
+            </div>
+            
+            <MovesList
+              moves={pokemon.moves || []}
+              onForgetMove={onForgetMove ? (moveId) => onForgetMove(pokemon.uniqueId, moveId) : undefined}
+              canEdit={!!onForgetMove}
+              allMoves={allMoves} 
+            />
+          </div>
+
 
           {/* 지니고 있는 도구 + 친밀도 */}
           <div className="grid grid-cols-2 gap-3">
@@ -415,9 +465,26 @@ export default function PokemonDetailPanel({
 
           {/* 액션 버튼 */}
           <div className="space-y-2">
-            <button
-              onClick={onUseCandy}
-              disabled={!hasRareCandy}
+           <button
+  onClick={() => {
+    if (!hasRareCandy) return;
+    
+    console.log('🍬 이상한사탕 버튼 클릭!');
+    console.log('🍬 pokemon.uniqueId:', pokemon.uniqueId);
+    console.log('🍬 onUseCandy 함수:', onUseCandy);
+    
+    // ⭐ 레벨업 콜백 전달
+    onUseCandy(pokemon.uniqueId, (pokemonId, newLevel, newMoves) => {
+      console.log('🎉 레벨업 콜백 실행!');
+      console.log('🎉 pokemonId:', pokemonId);
+      console.log('🎉 newLevel:', newLevel);
+      console.log('🎉 newMoves:', newMoves);
+      
+      setLevelUpData({ pokemonId, newLevel, newMoves });
+      setShowLevelUpMoveModal(true);
+    });
+  }}
+  disabled={!hasRareCandy}
               className={`w-full py-2 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 ${
                 hasRareCandy
                   ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 border border-yellow-300'
@@ -440,6 +507,7 @@ export default function PokemonDetailPanel({
               )}
               <span>이상한사탕 사용</span>
             </button>
+            
             <button
               onClick={() => {
                 const newStatus = !pokemon.isPartner;
@@ -462,7 +530,7 @@ export default function PokemonDetailPanel({
               <Heart size={18} fill={pokemon.isPartner ? 'currentColor' : 'none'} />
               <span>{pokemon.isPartner ? '💔 파트너 해제' : '💖 파트너 설정'}</span>
             </button>
-            
+
             <button
               onClick={onMove}
               className="w-full bg-indigo-100 text-indigo-700 py-2 rounded-lg font-semibold hover:bg-indigo-200 transition-colors flex items-center justify-center gap-2 border border-indigo-300"
@@ -503,6 +571,62 @@ export default function PokemonDetailPanel({
           </div>
         </div>
       </div>
+ 
+      {/* ⭐ 기술 선택 모달 */}
+      {showMoveSelectModal && allMoves && (
+        <MoveSelectModal
+          pokemon={pokemon}
+          allMoves={allMoves}
+          pokemonLearnsets={pokemonLearnsets}
+          currentMoves={pokemon.moves || []} 
+          onSelect={(move) => {
+            if (onLearnMove) {
+              onLearnMove(pokemon.uniqueId, move);
+            }
+            setShowMoveSelectModal(false);
+          }}
+          onClose={() => setShowMoveSelectModal(false)}
+        />
+      )}
+
+      {/* 레벨업 기술 학습 모달 */}
+{showLevelUpMoveModal && levelUpData && (
+  <LevelUpMoveModal
+    pokemon={pokemon}
+    newLevel={levelUpData.newLevel}
+    learnableMoves={levelUpData.newMoves}
+    currentMoves={pokemon.moves?.map(m => {
+      const moveData = allMoves.find(move => move.id === m.moveId);
+      return moveData ? { ...moveData, currentPp: m.currentPp, learnedAt: m.learnedAt } : null;
+    }).filter(Boolean) || []}
+onLearn={(newMove, oldMoveId) => {
+  console.log('🔥 === LevelUpMoveModal onLearn 실행 ===');
+  console.log('🔥 newMove:', newMove);
+  console.log('🔥 oldMoveId:', oldMoveId);
+  console.log('🔥 onLearnMove 함수:', onLearnMove);  // ⭐ 이미 있음
+  console.log('🔥 typeof onLearnMove:', typeof onLearnMove);  // ⭐ 추가!
+  
+  if (typeof onLearnMove !== 'function') {
+    alert('❌ onLearnMove 함수가 전달되지 않았습니다!');
+    return;
+  }
+  console.log('🚀 onLearnMove 호출 직전!');
+const result = onLearnMove(pokemon.uniqueId, newMove, oldMoveId);
+console.log('🚀 onLearnMove 호출 완료! 결과:', result);
+  
+  onLearnMove(pokemon.uniqueId, newMove, oldMoveId);
+  
+  setShowLevelUpMoveModal(false);
+  setLevelUpData(null);
+}}
+    onSkip={() => {
+      setShowLevelUpMoveModal(false);
+      setLevelUpData(null);
+      alert(`${pokemon.nickname || pokemon.name}은(는) ${levelUpData.newMoves[0]?.name}을(를) 배우지 않았습니다.`);
+    }}
+  />
+)}
     </div>
   );
+  
 }

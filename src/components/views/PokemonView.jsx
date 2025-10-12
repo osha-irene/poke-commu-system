@@ -17,7 +17,12 @@ export default function PokemonView({
   onUpdateNickname,
   onGiveItem,      // ⭐ 추가
   onTakeItem,
-  onSetPartner
+  onSetPartner,
+  onForgetMove,    // ⭐ 추가
+  onLearnMove,     // ⭐ 추가
+  isAdmin = false,
+  allMoves = [],
+  pokemonLearnsets = {}
 }) {
   const [selectedPokemonId, setSelectedPokemonId] = useState(null);
   const [showBox, setShowBox] = useState(false);
@@ -87,12 +92,20 @@ export default function PokemonView({
     setSelectedPokemonId(pokemon.uniqueId);
   };
 
-  const handleUseCandy = () => {
-    if (!hasRareCandy || !selectedPokemon) return;
-    if (window.confirm(`${selectedPokemon.nickname || selectedPokemon.name}에게 이상한사탕을 사용하시겠습니까?`)) {
-      onUseRareCandy(selectedPokemon.uniqueId);
-    }
-  };
+  const handleUseCandy = (uniqueId, onLevelUpCallback) => {
+  if (!hasRareCandy) return;
+  
+  const pokemon = caughtPokemon.find(p => p && p.uniqueId === uniqueId);
+  if (!pokemon) return;
+  
+  if (window.confirm(`${pokemon.nickname || pokemon.name}에게 이상한사탕을 사용하시겠습니까?`)) {
+    console.log('🎯 PokemonView: onUseRareCandy 호출');
+    console.log('🎯 uniqueId:', uniqueId);
+    console.log('🎯 콜백:', onLevelUpCallback);
+    
+    onUseRareCandy(uniqueId, onLevelUpCallback);  // ⭐ 콜백 전달!
+  }
+};
 
   const handleMove = () => {
     if (!selectedPokemon) return;
@@ -192,6 +205,11 @@ export default function PokemonView({
             onGiveItem={onGiveItem}
             onTakeItem={onTakeItem}
             onSetPartner={onSetPartner}
+            onForgetMove={onForgetMove}
+            isAdmin={isAdmin}
+            onLearnMove={onLearnMove}    
+            allMoves={allMoves} 
+            pokemonLearnsets={pokemonLearnsets}
           />
         ) : (
           <div className="bg-white rounded-lg border border-gray-200 p-6 h-full flex items-center justify-center">

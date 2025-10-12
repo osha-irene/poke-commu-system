@@ -4,6 +4,7 @@ import pokemonData from '../data/pokemon.json';
 import allPokemonData from '../data/allPokemon.json';
 import itemsData from '../data/items.json';
 import regionsData from '../data/regions.json';
+import movesData from '../data/moves.json';
 
 import { useAuth } from './useAuth';
 import { usePokemonManagement } from './usePokemonManagement';
@@ -63,34 +64,63 @@ export default function useGameState() {
   const [allPokemon] = useState(pokemonData.pokemon);
   const [allPokemonMaster] = useState(allPokemonData.pokemon);
   const [allItems] = useState(itemsData.items);
+  const [allMoves] = useState(movesData.moves || []);                 
+  const [pokemonLearnsets] = useState(movesData.pokemonLearnsets || {}); 
 
   // 멤버 데이터
   const [members, setMembers] = useState(() => {
-    const saved = loadFromStorage('poke_members', null);
-    
-    // 기존 데이터 마이그레이션
-    if (saved) {
-      const updated = {};
-      Object.keys(saved).forEach(userId => {
-        const member = saved[userId];
+  const saved = loadFromStorage('poke_members', null);
+  
+  // 기존 데이터 마이그레이션
+  if (saved) {
+    const updated = {};
+    Object.keys(saved).forEach(userId => {
+      const member = saved[userId];
+      
+      
+      // ⭐ 포켓몬 데이터 마이그레이션 (nameEn + 기술 하이브리드)
+      const updatedCaughtPokemon = member.caughtPokemon?.map(pokemon => {
+        if (!pokemon) return pokemon;
         
-        // 포켓몬 nameEn 필드 추가
-        const updatedCaughtPokemon = member.caughtPokemon?.map(pokemon => {
-          if (!pokemon || pokemon.nameEn) return pokemon;
-          
+        let updatedPokemon = { ...pokemon };
+        
+        // 1. nameEn 필드 추가
+        if (!updatedPokemon.nameEn) {
           const template = allPokemonData.pokemon.find(p => 
             p.number === pokemon.number || p.id === pokemon.pokemonId
           );
-          
-          return template?.nameEn ? { ...pokemon, nameEn: template.nameEn } : pokemon;
-        }) || member.caughtPokemon;
+          if (template?.nameEn) {
+            updatedPokemon.nameEn = template.nameEn;
+          }
+        }
         
-        updated[userId] = { ...member, caughtPokemon: updatedCaughtPokemon };
-      });
+        // 2. 기술 데이터를 하이브리드 형식으로 변환
+        if (updatedPokemon.moves && Array.isArray(updatedPokemon.moves)) {
+          updatedPokemon.moves = updatedPokemon.moves.map(move => {
+            if (!move) return move;
+            
+            // 이미 하이브리드 형식이면 그대로
+            if (!move.name && move.moveId) return move;
+            
+            // 기존 형식 → 하이브리드 형식
+            return {
+              moveId: move.moveId || move.id,
+              currentPp: move.currentPp !== undefined ? move.currentPp : move.pp,
+              learnedAt: move.learnedAt
+            };
+          });
+        }
+        
+        
+        return updatedPokemon;
+      }) || member.caughtPokemon;
       
-      saveToStorage('poke_members', updated);
-      return updated;
-    }
+      updated[userId] = { ...member, caughtPokemon: updatedCaughtPokemon };
+    });
+    
+    saveToStorage('poke_members', updated);
+    return updated;
+  }
 
     // 초기 데이터
     const initialMembers = {
@@ -165,7 +195,8 @@ export default function useGameState() {
     updatePokemonNickname,
     giveItemToPokemon,
     takeItemFromPokemon,
-  } = usePokemonManagement(currentUser, updateCurrentUser, allPokemonMaster, setSharedPokedexData, sharedPokedexData);
+    learnMove
+  } = usePokemonManagement(currentUser, updateCurrentUser, allPokemonMaster, setSharedPokedexData, sharedPokedexData, pokemonLearnsets, allMoves);
 
   // ===== 관리자 기능 =====
   const {
@@ -266,8 +297,8 @@ export default function useGameState() {
 
   // Wrapper for handleCatchSuccess with firstCatch callback
   const handleCatchSuccess = (pokemon, ballUsed) => {
-    catchPokemon(pokemon, ballUsed, setFirstCatchPokemon);
-  };
+    catchPokemon(pokemon, ballUsed, setFirstCatchPokemon, movesData, allPokemonMaster); // ⭐ movesData 전달
+};
 
   // ===== First Catch Memo =====
   const saveFirstCatchMemo = (pokemonNumber, memo) => {
@@ -373,6 +404,93 @@ export default function useGameState() {
     }));
   };
 
+// useGameState.js에 추가할 함수들
+// 기존 코드 아래에 추가하세요
+
+// ===== 기술 관리 함수 =====
+
+// 기술 잊기
+const forgetMove = (pokemonUniqueId, moveId) => {
+  if (!currentUser) return;
+  
+  const newCaughtPokemon = currentUser.caughtPokemon.map(p => {
+    if (p && p.uniqueId === pokemonUniqueId) {
+      return {
+        ...p,
+        moves: (p.moves || []).filter(m => m.moveId !== moveId)  // ⭐ moveId로 비교
+      };
+    }
+    return p;
+  });
+  
+  updateCurrentUser({ caughtPokemon: newCaughtPokemon });
+  alert('기술을 잊었습니다.');
+};
+
+
+// 기술 교체
+const replaceMove = (pokemonUniqueId, newMoveData, oldMoveId) => {  // ⭐ 파라미터 순서 확인!
+  if (!currentUser) return false;
+  
+  console.log('🎯 replaceMove 실행');
+  console.log('🎯 pokemonUniqueId:', pokemonUniqueId);
+  console.log('🎯 newMoveData:', newMoveData);
+  console.log('🎯 oldMoveId:', oldMoveId);
+  
+  const pokemonIndex = currentUser.caughtPokemon.findIndex(
+    p => p && p.uniqueId === pokemonUniqueId
+  );
+  
+  if (pokemonIndex === -1) return false;
+  
+  const pokemon = currentUser.caughtPokemon[pokemonIndex];
+  const currentMoves = pokemon.moves || [];
+  
+  // ⭐ 최소 정보만 저장
+  const newMove = {
+    moveId: newMoveData.id,
+    currentPp: newMoveData.pp || 0,
+    learnedAt: pokemon.level
+  };
+  
+  const updatedMoves = currentMoves.map(m => 
+    m.moveId === oldMoveId ? newMove : m
+  );
+  
+  const newCaughtPokemon = [...currentUser.caughtPokemon];
+  newCaughtPokemon[pokemonIndex] = {
+    ...pokemon,
+    moves: updatedMoves
+  };
+  
+  updateCurrentUser({ caughtPokemon: newCaughtPokemon });
+  alert(`${pokemon.nickname || pokemon.name}이(가) ${newMoveData.name}을(를) 배웠습니다!`);
+  return true;
+};
+
+// 레벨업 시 배울 수 있는 기술 확인 (movesData 필요)
+const checkLevelUpMoves = (pokemon, movesData) => {
+  if (!movesData?.pokemonLearnsets) return [];
+  
+  const learnset = movesData.pokemonLearnsets[pokemon.number.toString()];
+  if (!learnset) return [];
+  
+  return learnset.levelUpMoves
+    .filter(lm => lm.level === pokemon.level)
+    .map(lm => movesData.moves.find(m => m.id === lm.moveId))
+    .filter(Boolean);
+};
+
+// 관리자: 포켓몬에게 기술 직접 추가
+const giveMoveToPokemon = (pokemonUniqueId, moveData) => {
+  if (!currentUser?.isAdmin) {
+    alert('관리자만 사용할 수 있습니다!');
+    return false;
+  }
+  return learnMove(pokemonUniqueId, moveData);
+};
+
+
   // ===== Return Values =====
   return {
     currentTab, setCurrentTab,
@@ -432,6 +550,15 @@ export default function useGameState() {
     
     // Shop
     handlePurchase,
-    updateShopData
+    updateShopData,
+
+      // Moves (기술 관리)
+    forgetMove,
+    learnMove,
+    replaceMove,
+    giveMoveToPokemon,
+    checkLevelUpMoves,
+    allMoves,
+    pokemonLearnsets
   };
 }

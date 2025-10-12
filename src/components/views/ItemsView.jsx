@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 export default function ItemsView({ items = [], allItems = [], isSuperAdmin = false }) {
-  // items.json에서 상세 정보 가져오기
+  const [selectedCategory, setSelectedCategory] = useState('all');
+
+
+// items.json에서 상세 정보 가져오기
   const getItemDetails = (item) => {
     const itemData = allItems.find(i => 
       i.id === item.itemId || 
@@ -14,9 +17,23 @@ export default function ItemsView({ items = [], allItems = [], isSuperAdmin = fa
       description: itemData?.effect?.replace(/\n/g, ' ') || '유용한 아이템',
       imageUrl: item.imageUrl || itemData?.spriteUrl || '/images/items/default.png',
       cost: itemData?.cost || 0,
-      category: itemData?.category || 'misc'
+      sellPrice: itemData?.sellPrice || 0,
+      category: itemData?.category || 'misc',
+      canSell: itemData?.canSell ?? true
     };
   };
+
+  // 카테고리 정의
+  const categories = [
+    { id: 'all', name: '전체', icon: '📦', color: 'bg-gray-100 text-gray-700' },
+    { id: 'ball', name: '포획', icon: '⚾', color: 'bg-red-100 text-red-700' },
+    { id: 'medicine', name: '회복', icon: '💊', color: 'bg-green-100 text-green-700' },
+    { id: 'vitamin', name: '영양', icon: '💪', color: 'bg-purple-100 text-purple-700' },
+    { id: 'berry', name: '나무열매', icon: '🍇', color: 'bg-pink-100 text-pink-700' },
+    { id: 'battle', name: '배틀', icon: '⚔️', color: 'bg-orange-100 text-orange-700' },
+    { id: 'key', name: '중요', icon: '🔑', color: 'bg-yellow-100 text-yellow-700' },
+    { id: 'misc', name: '기타', icon: '✨', color: 'bg-blue-100 text-blue-700' }
+  ];
 
   // 카테고리별 색상
   const getCategoryColor = (category) => {
@@ -24,6 +41,8 @@ export default function ItemsView({ items = [], allItems = [], isSuperAdmin = fa
     if (category?.includes('medicine')) return 'bg-green-50 border-green-200';
     if (category?.includes('vitamin')) return 'bg-purple-50 border-purple-200';
     if (category?.includes('berry')) return 'bg-pink-50 border-pink-200';
+    if (category?.includes('battle')) return 'bg-orange-50 border-orange-200';
+    if (category?.includes('key')) return 'bg-yellow-50 border-yellow-200';
     return 'bg-gray-50 border-gray-200';
   };
 
@@ -32,8 +51,17 @@ export default function ItemsView({ items = [], allItems = [], isSuperAdmin = fa
     if (category?.includes('medicine')) return { text: '회복', color: 'bg-green-100 text-green-700' };
     if (category?.includes('vitamin')) return { text: '영양', color: 'bg-purple-100 text-purple-700' };
     if (category?.includes('berry')) return { text: '나무열매', color: 'bg-pink-100 text-pink-700' };
+    if (category?.includes('battle')) return { text: '배틀', color: 'bg-orange-100 text-orange-700' };
+    if (category?.includes('key')) return { text: '중요', color: 'bg-yellow-100 text-yellow-700' };
     return { text: '기타', color: 'bg-gray-100 text-gray-700' };
   };
+
+  // 카테고리별 필터링
+  const filteredItems = items.filter(item => {
+    if (selectedCategory === 'all') return true;
+    const details = getItemDetails(item);
+    return details.category?.includes(selectedCategory);
+  });
 
   return (
     <div className="max-w-4xl mx-auto">
