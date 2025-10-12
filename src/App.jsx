@@ -80,57 +80,55 @@ function LoginScreen({ onLogin }) {
   );
 }
 
-
-
 export default function App() {
-	const {
-	  currentTab,
-	  setCurrentTab,
-	  currentUser,
-	  isAdmin,
-	  trainer,
-	  caughtPokemon,
-	  items,
-	  encounterPokemon,
-	  firstCatchPokemon,
-	  regions,
-	  allPokemon,
-	  allPokemonMaster,
-	  allItems,
-	  members,
-	  gamePokedex,
-	  sharedPokedexData,
+  const {
+    currentTab,
+    setCurrentTab,
+    currentUser,
+    isAdmin,
+    trainer,
+    caughtPokemon,
+    items,
+    encounterPokemon,
+    firstCatchPokemon,
+    regions,
+    allPokemon,
+    allPokemonMaster,
+    allItems,
+    members,
+    gamePokedex,
+    sharedPokedexData,
     shopData,
     updateShopData,
-	  handleLogin,
-	  handleLogout,
-	  handleRegionClick,
-	  handleCloseEncounter,
-	  handleCatchSuccess,
-	  saveFirstCatchMemo,
-	  skipFirstCatchMemo,
-	  updateMaxDailyWalks,
-	  updateRegionPokemon,
-	  addMember,
-	  toggleAdminStatus,
-	  resetMemberWalkCount,
-	  resetAllWalkCounts,
-	  resetGameData,
-	  movePokemonToParty,
-	  movePokemonToBox,
-	  releasePokemon,
-	  useRareCandy,
-	  updatePokemonNickname,
-	  updatePokedexMemo,
-	  updateGamePokedex,
-	  addItemToSelf,    
-	  giveItemToMember,   
-	  toggleItemManagement,
-	  givePokemonToMember,
-	  addPokemonToSelf,       // ⭐ 추가
-	  giveItemToPokemon,     // ⭐ 추가
-	  takeItemFromPokemon,   // ⭐ 추가
-	  handlePurchase,
+    handleLogin,
+    handleLogout,
+    handleRegionClick,
+    handleCloseEncounter,
+    handleCatchSuccess,
+    saveFirstCatchMemo,
+    skipFirstCatchMemo,
+    updateMaxDailyWalks,
+    updateRegionPokemon,
+    addMember,
+    toggleAdminStatus,
+    resetMemberWalkCount,
+    resetAllWalkCounts,
+    resetGameData,
+    movePokemonToParty,
+    movePokemonToBox,
+    releasePokemon,
+    useRareCandy,
+    updatePokemonNickname,
+    updatePokedexMemo,
+    updateGamePokedex,
+    addItemToSelf,    
+    giveItemToMember,   
+    toggleItemManagement,
+    givePokemonToMember,
+    addPokemonToSelf,   
+    giveItemToPokemon,     
+    takeItemFromPokemon,
+    handlePurchase,
     onSetPartner,
     setPartnerPokemon,
     forgetMove,
@@ -140,20 +138,41 @@ export default function App() {
     allMoves,
     pokemonLearnsets,
     sellItem,
-    createCustomItem
-} = useGameState();
+    createCustomItem,
+    updateMemberMoney,        
+    updateMemberRegionAccess,  
+    maintenanceMode,           
+    setMaintenanceMode  
+  } = useGameState();
 
-console.log('👤 currentUser:', currentUser);
-console.log('🔑 currentUser?.isAdmin:', currentUser?.isAdmin);
-
-<PokemonView
-  isAdmin={currentUser?.isAdmin}  // ← 이게 제대로 전달되나요?
-/>
-
+  console.log('👤 currentUser:', currentUser);
+  console.log('🔑 currentUser?.isAdmin:', currentUser?.isAdmin);
 
   // 로그인하지 않은 경우 로그인 화면 표시
   if (!currentUser || !currentUser.id) {
     return <LoginScreen onLogin={handleLogin} />;
+  }
+
+  // 점검 모드 - 관리자가 아닌 경우 접근 차단
+  if (maintenanceMode && !isAdmin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
+          <div className="text-6xl mb-4">🔧</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">시스템 점검 중</h2>
+          <p className="text-gray-600 mb-6">
+            현재 시스템 점검이 진행 중입니다.<br />
+            잠시 후 다시 접속해주세요.
+          </p>
+          <button
+            onClick={handleLogout}
+            className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            로그아웃
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -189,27 +208,27 @@ console.log('🔑 currentUser?.isAdmin:', currentUser?.isAdmin);
           )}
           
           {currentTab === 'pokemon' && (
-			  <PokemonView
-				caughtPokemon={caughtPokemon}
-				items={items}
-				allItems={allItems}
-				gamePokedex={gamePokedex}
-				onMoveToParty={movePokemonToParty}
-				onMoveToBox={movePokemonToBox}
-				onReleasePokemon={releasePokemon}
-				onUseRareCandy={useRareCandy}
-				onUpdateNickname={updatePokemonNickname}
-				allPokemonMaster={allPokemonMaster}
-				onGiveItem={giveItemToPokemon}  
-				onTakeItem={takeItemFromPokemon}
-        onSetPartner={setPartnerPokemon}
-        onForgetMove={forgetMove}  
-        onLearnMove={learnMove}   
-        isAdmin={currentUser?.isAdmin}   
-        allMoves={allMoves}             
-        pokemonLearnsets={pokemonLearnsets} 
-			  />
-			)}
+            <PokemonView
+              caughtPokemon={caughtPokemon}
+              items={items}
+              allItems={allItems}
+              gamePokedex={gamePokedex}
+              onMoveToParty={movePokemonToParty}
+              onMoveToBox={movePokemonToBox}
+              onReleasePokemon={releasePokemon}
+              onUseRareCandy={useRareCandy}
+              onUpdateNickname={updatePokemonNickname}
+              allPokemonMaster={allPokemonMaster}
+              onGiveItem={giveItemToPokemon}  
+              onTakeItem={takeItemFromPokemon}
+              onSetPartner={setPartnerPokemon}
+              onForgetMove={forgetMove}  
+              onLearnMove={learnMove}   
+              isAdmin={currentUser?.isAdmin}   
+              allMoves={allMoves}             
+              pokemonLearnsets={pokemonLearnsets} 
+            />
+          )}
           
           {currentTab === 'items' && (
             <ItemsView 
@@ -219,23 +238,22 @@ console.log('🔑 currentUser?.isAdmin:', currentUser?.isAdmin);
             />
           )}
           
-        {currentTab === 'shop' && (
-          <ShopView 
-          trainer={trainer}
-          allItems={allItems}
-          shopData={shopData}
-          onPurchase={handlePurchase}
-          />
-        )}         
+          {currentTab === 'shop' && (
+            <ShopView 
+              trainer={trainer}
+              allItems={allItems}
+              shopData={shopData}
+              onPurchase={handlePurchase}
+            />
+          )}         
 
-		 {currentTab === 'profile' && (
+          {currentTab === 'profile' && (
             <ProfileView 
               trainer={trainer} 
               caughtCount={caughtPokemon.length} 
             />
           )}
           
-		 
           {currentTab === 'admin' && isAdmin && (
             <AdminView
               trainer={trainer}
@@ -262,6 +280,10 @@ console.log('🔑 currentUser?.isAdmin:', currentUser?.isAdmin);
               shopData={shopData}  
               sellItem={sellItem}
               updateShopData={updateShopData}        
+              updateMemberMoney={updateMemberMoney}         
+              updateMemberRegionAccess={updateMemberRegionAccess}  
+              maintenanceMode={maintenanceMode}            
+              setMaintenanceMode={setMaintenanceMode}        
             />
           )}
         </main>
@@ -269,14 +291,15 @@ console.log('🔑 currentUser?.isAdmin:', currentUser?.isAdmin);
 
       {/* 포켓몬 조우 모달 */}
       {encounterPokemon && (
-  <EncounterModal
-    pokemon={encounterPokemon}
-    onClose={handleCloseEncounter}
-    onCatchSuccess={handleCatchSuccess}
-    items={items}
-    sharedPokedexData={sharedPokedexData}  // 이 줄 추가!
-  />
-)}
+        <EncounterModal
+          pokemon={encounterPokemon}
+          onClose={handleCloseEncounter}
+          onCatchSuccess={handleCatchSuccess}
+          items={items}
+          sharedPokedexData={sharedPokedexData}
+          caughtPokemon={caughtPokemon}
+        />
+      )}
 
       {/* 첫 포획 메모 모달 */}
       {firstCatchPokemon && (

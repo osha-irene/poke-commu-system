@@ -27,7 +27,7 @@ export const useAdminFunctions = (
   setRegions,
   setGamePokedex,
   allPokemonMaster,
-  allPokemon,
+  allPokemon
 ) => {
 
   // 회원 관리
@@ -69,7 +69,8 @@ export const useAdminFunctions = (
         maxDailyWalks: 5,
         money: 5000,
         caughtPokemon: [],
-        inventory: getInitialInventory()
+        inventory: getInitialInventory(),
+        accessibleRegions: []
       }
     }));
     return true;
@@ -88,6 +89,27 @@ export const useAdminFunctions = (
     setMembers(prev => ({
       ...prev,
       [memberId]: { ...prev[memberId], canManageItems: !prev[memberId].canManageItems }
+    }));
+  };
+
+  // 소지금액 관리
+  const updateMemberMoney = (memberId, amount) => {
+    if (!currentUser?.isAdmin) return;
+    setMembers(prev => ({
+      ...prev,
+      [memberId]: { ...prev[memberId], money: Math.max(0, amount) }
+    }));
+  };
+
+  // 리전 접근 권한 관리
+  const updateMemberRegionAccess = (memberId, regionIds) => {
+    if (!currentUser?.isAdmin) return;
+    setMembers(prev => ({
+      ...prev,
+      [memberId]: { 
+        ...prev[memberId], 
+        accessibleRegions: regionIds
+      }
     }));
   };
 
@@ -126,6 +148,15 @@ export const useAdminFunctions = (
     
     const member = members[memberId];
     if (!member) { alert('회원을 찾을 수 없습니다!'); return; }
+
+     // 파트너를 제외한 포켓몬 수 계산
+  const nonPartnerCount = member.caughtPokemon.filter(p => p && !p.isPartner).length;
+  
+  // 파트너 제외 20마리 제한 (options.isPartner가 true면 예외)
+  if (!options.isPartner && nonPartnerCount >= 20) {
+    alert(`⚠️ ${member.name}님은 이미 파트너를 제외한 포켓몬이 20마리입니다!\n더 이상 포켓몬을 지급할 수 없습니다.`);
+    return;
+  }
 
     const {
       level = 5,
@@ -174,7 +205,6 @@ export const useAdminFunctions = (
     }));
 
     const partnerText = isPartner ? ' (파트너 💖)' : '';
-    alert(`${member.name}님에게 ${pokemonTemplate.name} (Lv.${level})${partnerText}을 지급했습니다!`);
   };
 
   const addPokemonToSelf = (pokemonTemplate, options = {}) => {
@@ -280,31 +310,31 @@ export const useAdminFunctions = (
   };
 
   // 포켓몬 편집
-const editMemberPokemon = (memberId, pokemonUniqueId, updates) => {
-  if (!currentUser?.isAdmin) return;
+  const editMemberPokemon = (memberId, pokemonUniqueId, updates) => {
+    if (!currentUser?.isAdmin) return;
 
-  const member = members[memberId];
-  if (!member) return;
+    const member = members[memberId];
+    if (!member) return;
 
-  const updatedPokemon = member.caughtPokemon.map(p => {
-    if (p && p.uniqueId === pokemonUniqueId) {
-      return {
-        ...p,
-        level: updates.level !== undefined ? updates.level : p.level,
-        friendship: updates.friendship !== undefined ? updates.friendship : p.friendship,
-        nickname: updates.nickname !== undefined ? updates.nickname : p.nickname,
-        spriteUrl: updates.spriteUrl !== undefined ? updates.spriteUrl : p.spriteUrl,
-        ballImage: updates.ballImage !== undefined ? updates.ballImage : p.ballImage
-      };
-    }
-    return p;
-  });
+    const updatedPokemon = member.caughtPokemon.map(p => {
+      if (p && p.uniqueId === pokemonUniqueId) {
+        return {
+          ...p,
+          level: updates.level !== undefined ? updates.level : p.level,
+          friendship: updates.friendship !== undefined ? updates.friendship : p.friendship,
+          nickname: updates.nickname !== undefined ? updates.nickname : p.nickname,
+          spriteUrl: updates.spriteUrl !== undefined ? updates.spriteUrl : p.spriteUrl,
+          ballImage: updates.ballImage !== undefined ? updates.ballImage : p.ballImage
+        };
+      }
+      return p;
+    });
 
-  setMembers(prev => ({
-    ...prev,
-    [memberId]: { ...prev[memberId], caughtPokemon: updatedPokemon }
-  }));
-};
+    setMembers(prev => ({
+      ...prev,
+      [memberId]: { ...prev[memberId], caughtPokemon: updatedPokemon }
+    }));
+  };
 
   // 지역/도감 관리
   const updateRegionPokemon = (regionId, pokemonIds, pokemonRates = {}) => {
@@ -364,6 +394,8 @@ const editMemberPokemon = (memberId, pokemonUniqueId, updates) => {
     updateRegionPokemon,
     updateGamePokedex,
     resetGameData,
-    editMemberPokemon
+    editMemberPokemon,
+    updateMemberMoney,
+    updateMemberRegionAccess
   };
 };

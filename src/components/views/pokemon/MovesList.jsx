@@ -2,7 +2,6 @@
 import React from 'react';
 import { Zap, Shield, Star, Trash2 } from 'lucide-react';
 
-// 타입별 색상
 const TYPE_COLORS = {
   '노말': '#A8A878',
   '불꽃': '#F08030',
@@ -24,7 +23,6 @@ const TYPE_COLORS = {
   '페어리': '#EE99AC'
 };
 
-// 카테고리 아이콘
 const getCategoryIcon = (category) => {
   switch (category) {
     case '물리': return <Zap size={14} className="text-orange-500" />;
@@ -36,20 +34,40 @@ const getCategoryIcon = (category) => {
 
 export default function MovesList({ 
   moves = [],
-  allMoves = [],  // ⭐ 이게 있어야 함!
+  allMoves = [],
   onForgetMove,
   canEdit = true 
 }) {
-  // ⭐ 동적으로 합치기
-  const displayMoves = moves.map(m => {
-    const moveData = allMoves.find(move => move.id === m.moveId);
+  // ⭐ 디버깅 로그 추가
+  console.log('🎮 === MovesList 디버깅 ===');
+  console.log('📋 moves:', moves);
+  console.log('📚 allMoves 개수:', allMoves.length);
+  console.log('📚 allMoves 샘플:', allMoves.slice(0, 3));
+  
+  const displayMoves = moves.map((m, idx) => {
+    console.log(`\n🔍 [${idx}] 처리 중:`, m);
+    console.log(`   - moveId: ${m.moveId} (타입: ${typeof m.moveId})`);
     
-    console.log('🔍 찾는 moveId:', m.moveId, '→ 찾음:', !!moveData);
+    // ⭐ 여러 방법으로 찾아보기
+    const moveData1 = allMoves.find(move => move.id === m.moveId);
+    const moveData2 = allMoves.find(move => move.id == m.moveId); // == 비교
+    const moveData3 = allMoves.find(move => move.id === String(m.moveId));
+    const moveData4 = allMoves.find(move => move.id === Number(m.moveId));
+    
+    console.log(`   - === 비교: ${!!moveData1}`);
+    console.log(`   - == 비교: ${!!moveData2}`);
+    console.log(`   - String 비교: ${!!moveData3}`);
+    console.log(`   - Number 비교: ${!!moveData4}`);
+    
+    const moveData = moveData1 || moveData2 || moveData3 || moveData4;
     
     if (!moveData) {
-      console.warn('❌ moveId', m.moveId, '에 해당하는 기술을 찾을 수 없습니다!');
+      console.error(`❌ moveId ${m.moveId}를 찾을 수 없습니다!`);
+      console.error(`   - allMoves의 id들:`, allMoves.slice(0, 10).map(move => `${move.id} (${typeof move.id})`));
       return null;
     }
+    
+    console.log(`✅ 찾음!`, moveData);
     
     return {
       ...moveData,
@@ -59,6 +77,7 @@ export default function MovesList({
   }).filter(Boolean);
 
   console.log('✅ displayMoves:', displayMoves);
+  console.log('🎮 === 디버깅 끝 ===\n');
   
   if (displayMoves.length === 0) {
     return (
@@ -66,6 +85,11 @@ export default function MovesList({
         <div className="text-4xl mb-2">🎯</div>
         <p className="text-gray-500 text-sm">배운 기술이 없습니다</p>
         <p className="text-gray-400 text-xs mt-1">레벨업하면 자동으로 기술을 배웁니다</p>
+        {/* ⭐ 디버깅 정보 표시 */}
+        <div className="mt-3 text-xs text-red-500">
+          <p>디버깅: moves 개수 = {moves.length}</p>
+          <p>디버깅: allMoves 개수 = {allMoves.length}</p>
+        </div>
       </div>
     );
   }
@@ -78,9 +102,7 @@ export default function MovesList({
           className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-all"
         >
           <div className="flex items-start justify-between gap-3">
-            {/* 왼쪽: 기술 정보 */}
             <div className="flex-1 min-w-0">
-              {/* 기술명 & 타입 */}
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-bold text-gray-800 text-sm">
                   {move.name}
@@ -97,7 +119,6 @@ export default function MovesList({
                 </span>
               </div>
 
-              {/* 기술 상세 정보 */}
               <div className="flex gap-3 text-xs text-gray-600">
                 {move.power > 0 && (
                   <span className="flex items-center gap-1">
@@ -117,7 +138,6 @@ export default function MovesList({
                 </span>
               </div>
 
-              {/* 기술 설명 */}
               {move.description && (
                 <div className="text-xs text-gray-600 mt-1 leading-tight">
                   {move.description}
@@ -125,12 +145,11 @@ export default function MovesList({
               )}
             </div>
 
-            {/* 오른쪽: 삭제 버튼 */}
             {canEdit && onForgetMove && (
               <button
                 onClick={() => {
                   if (window.confirm(`${move.name}을(를) 잊게 하시겠습니까?`)) {
-                    onForgetMove(move.id);  // ⭐ move.id로 수정
+                    onForgetMove(move.id);
                   }
                 }}
                 className="flex-shrink-0 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"

@@ -1,7 +1,8 @@
+// CustomItemCreator 컴포넌트
 import React, { useState } from 'react';
 import { Sparkles } from 'lucide-react';
 
-export default function CustomItemCreator({ onCreateItem, allItems }) {
+function CustomItemCreator({ onCreateItem, allItems, trainer }) {
   const [showModal, setShowModal] = useState(false);
   const [itemData, setItemData] = useState({
     name: '',
@@ -80,7 +81,6 @@ export default function CustomItemCreator({ onCreateItem, allItems }) {
             </div>
 
             <div className="p-6 space-y-4">
-              {/* 기본 정보 */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -109,7 +109,6 @@ export default function CustomItemCreator({ onCreateItem, allItems }) {
                 </div>
               </div>
 
-              {/* 카테고리 */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   카테고리
@@ -125,11 +124,10 @@ export default function CustomItemCreator({ onCreateItem, allItems }) {
                 </select>
               </div>
 
-              {/* 가격 정보 */}
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    구매 가격 (₽)
+                    구매 가격 (₩)
                   </label>
                   <input
                     type="number"
@@ -142,7 +140,7 @@ export default function CustomItemCreator({ onCreateItem, allItems }) {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    판매 가격 (₽)
+                    판매 가격 (₩)
                   </label>
                   <input
                     type="number"
@@ -167,7 +165,6 @@ export default function CustomItemCreator({ onCreateItem, allItems }) {
                 </div>
               </div>
 
-              {/* 효과 설명 */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   효과 설명
@@ -181,7 +178,6 @@ export default function CustomItemCreator({ onCreateItem, allItems }) {
                 />
               </div>
 
-              {/* 이미지 URL */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   이미지 URL
@@ -205,7 +201,6 @@ export default function CustomItemCreator({ onCreateItem, allItems }) {
                 )}
               </div>
 
-              {/* 버튼 */}
               <div className="flex gap-3 pt-4 border-t border-gray-200">
                 <button
                   type="button"
@@ -229,3 +224,5 @@ export default function CustomItemCreator({ onCreateItem, allItems }) {
     </>
   );
 }
+
+export default CustomItemCreator;

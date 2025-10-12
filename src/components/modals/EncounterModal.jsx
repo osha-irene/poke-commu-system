@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items, sharedPokedexData = {} }) {
+export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items, sharedPokedexData = {}, caughtPokemon = [] }) {
   const [selectedBall, setSelectedBall] = useState(null);
   const [catching, setCatching] = useState(false);
   const [result, setResult] = useState(null);
@@ -109,6 +109,18 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
       alert('선택한 볼이 부족합니다!');
       return;
     }
+  
+  // 파트너를 제외한 포켓몬 수 계산
+  const nonPartnerCount = caughtPokemon.filter(p => p && !p.isPartner).length;
+  
+  // 파트너 제외 20마리 제한 (총 21마리)
+  if (nonPartnerCount >= 20) {
+    alert('⚠️ 포켓몬이 가득 찼습니다!\n\n파트너를 제외한 포켓몬이 20마리입니다.\n박스를 정리한 후 다시 시도해주세요.');
+    return;
+  }
+  
+  // 기존 코드 계속...
+  setCatching(true);
 
     setCatching(true);
     setResult(null);
