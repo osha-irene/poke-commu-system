@@ -1,10 +1,14 @@
+
 import React, { useState } from 'react';
+import { ShoppingCart } from 'lucide-react';
 
-export default function ItemsView({ items = [], allItems = [], isSuperAdmin = false }) {
+export default function ItemsView({ items = [], allItems = [], isSuperAdmin = false, onSellItem }) {
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [sellMode, setSellMode] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [sellCount, setSellCount] = useState(1);
 
-
-// items.json에서 상세 정보 가져오기
+  // items.json에서 상세 정보 가져오기
   const getItemDetails = (item) => {
     const itemData = allItems.find(i => 
       i.id === item.itemId || 

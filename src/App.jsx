@@ -100,6 +100,8 @@ export default function App() {
 	  members,
 	  gamePokedex,
 	  sharedPokedexData,
+    shopData,
+    updateShopData,
 	  handleLogin,
 	  handleLogout,
 	  handleRegionClick,
@@ -125,12 +127,10 @@ export default function App() {
 	  giveItemToMember,   
 	  toggleItemManagement,
 	  givePokemonToMember,
-	  addPokemonToSelf,
-	  shopData,              // ⭐ 추가
+	  addPokemonToSelf,       // ⭐ 추가
 	  giveItemToPokemon,     // ⭐ 추가
 	  takeItemFromPokemon,   // ⭐ 추가
 	  handlePurchase,
-	  updateShopData,
     onSetPartner,
     setPartnerPokemon,
     forgetMove,
@@ -138,7 +138,9 @@ export default function App() {
     replaceMove,
     giveMoveToPokemon,
     allMoves,
-    pokemonLearnsets
+    pokemonLearnsets,
+    sellItem,
+    createCustomItem
 } = useGameState();
 
 console.log('👤 currentUser:', currentUser);
@@ -256,9 +258,10 @@ console.log('🔑 currentUser?.isAdmin:', currentUser?.isAdmin);
               toggleItemManagement={toggleItemManagement}
               givePokemonToMember={givePokemonToMember}
               addPokemonToSelf={addPokemonToSelf}
-			  shopData={shopData} 
-			  updateShopData={updateShopData}
-          
+              createCustomItem={createCustomItem}
+              shopData={shopData}  
+              sellItem={sellItem}
+              updateShopData={updateShopData}        
             />
           )}
         </main>

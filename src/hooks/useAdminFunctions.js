@@ -1,5 +1,24 @@
 // src/hooks/useAdminFunctions.js
 
+// LocalStorage 헬퍼 함수
+const loadFromStorage = (key, defaultValue) => {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : defaultValue;
+  } catch (error) {
+    console.error(`Error loading ${key}:`, error);
+    return defaultValue;
+  }
+};
+
+const saveToStorage = (key, value) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.error(`Error saving ${key}:`, error);
+  }
+};
+
 export const useAdminFunctions = (
   currentUser, 
   members, 
@@ -8,7 +27,7 @@ export const useAdminFunctions = (
   setRegions,
   setGamePokedex,
   allPokemonMaster,
-  allPokemon
+  allPokemon,
 ) => {
 
   // 회원 관리
@@ -163,7 +182,7 @@ export const useAdminFunctions = (
     givePokemonToMember(currentUser.id, pokemonTemplate, options);
   };
 
-  // 아이템 지급
+  // 관리자 기능: 자신에게 아이템 추가
   const addItemToSelf = (item, count) => {
     if (!currentUser?.isAdmin) return;
     if (!(currentUser.isSuperAdmin || currentUser.canManageItems)) {
@@ -175,14 +194,32 @@ export const useAdminFunctions = (
     
     const newInventory = existingItem
       ? currentUser.inventory.map(i => 
-          (i.itemId === item.id || i.name === item.name) ? { ...i, count: i.count + count } : i
+          (i.itemId === item.id || i.name === item.name)
+            ? { ...i, count: i.count + count }
+            : i
         )
-      : [...currentUser.inventory, { itemId: item.id, name: item.name, count, imageUrl: item.spriteUrl }];
+      : [
+          ...currentUser.inventory,
+          {
+            itemId: item.id,
+            name: item.name,
+            nameEn: item.nameEn,
+            count: count,
+            imageUrl: item.spriteUrl || item.imageUrl,
+            category: item.category,
+            effect: item.effect,
+            cost: item.cost,
+            sellPrice: item.sellPrice,
+            canSell: item.canSell ?? true,
+            isCustom: item.isCustom || false
+          }
+        ];
 
     updateCurrentUser({ inventory: newInventory });
     alert(`${item.name} ${count}개를 추가했습니다!`);
   };
 
+  // 관리자 기능: 회원에게 아이템 지급
   const giveItemToMember = (memberId, item, count) => {
     if (!currentUser?.isAdmin) return;
 
@@ -193,9 +230,26 @@ export const useAdminFunctions = (
     
     const newInventory = existingItem
       ? member.inventory.map(i => 
-          (i.itemId === item.id || i.name === item.name) ? { ...i, count: i.count + count } : i
+          (i.itemId === item.id || i.name === item.name)
+            ? { ...i, count: i.count + count }
+            : i
         )
-      : [...member.inventory, { itemId: item.id, name: item.name, count, imageUrl: item.spriteUrl }];
+      : [
+          ...member.inventory,
+          {
+            itemId: item.id,
+            name: item.name,
+            nameEn: item.nameEn,
+            count: count,
+            imageUrl: item.spriteUrl || item.imageUrl,
+            category: item.category,
+            effect: item.effect,
+            cost: item.cost,
+            sellPrice: item.sellPrice,
+            canSell: item.canSell ?? true,
+            isCustom: item.isCustom || false
+          }
+        ];
 
     setMembers(prev => ({
       ...prev,
@@ -204,6 +258,53 @@ export const useAdminFunctions = (
 
     alert(`${member.name}님에게 ${item.name} ${count}개를 지급했습니다!`);
   };
+  
+  // 관리자 기능: 커스텀 아이템 생성
+  const createCustomItem = (itemData) => {
+    if (!currentUser?.isAdmin) return false;
+    
+    const customItems = loadFromStorage('poke_customItems', []);
+    const newItem = {
+      ...itemData,
+      id: `custom_${Date.now()}`,
+      isCustom: true,
+      createdBy: currentUser.name,
+      createdAt: new Date().toISOString()
+    };
+    
+    customItems.push(newItem);
+    saveToStorage('poke_customItems', customItems);
+    
+    alert(`커스텀 아이템 "${itemData.name}"이 생성되었습니다!`);
+    return true;
+  };
+
+  // 포켓몬 편집
+const editMemberPokemon = (memberId, pokemonUniqueId, updates) => {
+  if (!currentUser?.isAdmin) return;
+
+  const member = members[memberId];
+  if (!member) return;
+
+  const updatedPokemon = member.caughtPokemon.map(p => {
+    if (p && p.uniqueId === pokemonUniqueId) {
+      return {
+        ...p,
+        level: updates.level !== undefined ? updates.level : p.level,
+        friendship: updates.friendship !== undefined ? updates.friendship : p.friendship,
+        nickname: updates.nickname !== undefined ? updates.nickname : p.nickname,
+        spriteUrl: updates.spriteUrl !== undefined ? updates.spriteUrl : p.spriteUrl,
+        ballImage: updates.ballImage !== undefined ? updates.ballImage : p.ballImage
+      };
+    }
+    return p;
+  });
+
+  setMembers(prev => ({
+    ...prev,
+    [memberId]: { ...prev[memberId], caughtPokemon: updatedPokemon }
+  }));
+};
 
   // 지역/도감 관리
   const updateRegionPokemon = (regionId, pokemonIds, pokemonRates = {}) => {
@@ -259,8 +360,10 @@ export const useAdminFunctions = (
     addPokemonToSelf,
     addItemToSelf,
     giveItemToMember,
+    createCustomItem,
     updateRegionPokemon,
     updateGamePokedex,
-    resetGameData
+    resetGameData,
+    editMemberPokemon
   };
 };
