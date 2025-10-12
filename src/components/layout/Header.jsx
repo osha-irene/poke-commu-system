@@ -16,7 +16,7 @@ export default function Header({ currentTab, trainer }) {
       
       <div className="bg-green-50 px-5 py-2 rounded-lg border border-green-200">
         <span className="text-sm font-bold text-green-700">
-          🚶 오늘의 산책: {trainer.dailyWalks}/{trainer.maxDailyWalks}
+          🚶 오늘의 탐험: {trainer.dailyWalks}/{trainer.maxDailyWalks}
         </span>
       </div>
     </header>

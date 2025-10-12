@@ -85,6 +85,7 @@ export default function PartySlot({ pokemon, index, isSelected, onDragStart, onD
       onClick={onClick}
       className={`${STYLES.filled} ${isSelected ? STYLES.selected : STYLES.unselected}`}
     >
+    
       <div className="flex-shrink-0 w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
         {index + 1}
       </div>
@@ -93,7 +94,7 @@ export default function PartySlot({ pokemon, index, isSelected, onDragStart, onD
       <div 
         className="w-12 h-12 flex-shrink-0 flex items-center justify-center"
         style={{
-          padding: '4px'
+          padding: '8px'
         }}
       >
         <div

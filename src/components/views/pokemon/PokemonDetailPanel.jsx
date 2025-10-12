@@ -1,10 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowUpCircle, ArrowDownCircle, Trash2, Heart, X, Edit2, Check } from 'lucide-react';
+import { 
+  ArrowUpCircle, 
+  ArrowDownCircle, 
+  Trash2, 
+  Heart, 
+  X, 
+  Edit2, 
+  Check 
+} from 'lucide-react';
+import { 
+  RadarChart, 
+  Radar, 
+  PolarGrid, 
+  PolarAngleAxis, 
+  PolarRadiusAxis, 
+  ResponsiveContainer,
+  Tooltip 
+} from 'recharts';
 
 // 이미지 URL 생성 헬퍼
-const getPokemonSpriteUrl = (number) => {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`;
-};
+const getPokemonSpriteUrl = (number) => 
+  `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`;
 
 // 타입별 색상
 const TYPE_COLORS = {
@@ -28,6 +44,21 @@ const TYPE_COLORS = {
   '페어리': { bg: '#EE99AC', text: '#FFF' }
 };
 
+// 그래프 툴팁 커스터마이징
+const CustomTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white border border-gray-300 p-3 rounded-lg shadow-lg">
+        <p className="font-bold text-gray-800 mb-1">{payload[0].payload.subject}</p>
+        <p className="text-indigo-600 text-sm">
+          수치: {payload[0].value} / {payload[0].payload.fullMark}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function PokemonDetailPanel({ 
   pokemon, 
   hasRareCandy,
@@ -35,26 +66,45 @@ export default function PokemonDetailPanel({
   isInParty,
   allItems = [],
   gamePokedex,
-  items = [],        // ⭐ 추가
+  items = [],
   onClose,
   onUseCandy,
   onMove,
   onRelease,
   onUpdateNickname,
-  onGiveItem,        // ⭐ 추가
-  onTakeItem         // ⭐ 추가
+  onGiveItem,
+  onTakeItem,
+  onSetPartner
 }) {
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [nickname, setNickname] = useState(pokemon.nickname || pokemon.name);
-  
-  // 게임 도감에서 이 포켓몬의 newNumber 찾기
+  const [activeTab, setActiveTab] = useState('condition');
+
+  // 컨디션 및 노력치 데이터 준비
+  const conditionData = [
+    { subject: '근사함', A: pokemon.condition?.elegance || 0, fullMark: 100 },
+    { subject: '아름다움', A: pokemon.condition?.beauty || 0, fullMark: 100 },
+    { subject: '귀여움', A: pokemon.condition?.cuteness || 0, fullMark: 100 },
+    { subject: '슬기로움', A: pokemon.condition?.intelligence || 0, fullMark: 100 },
+    { subject: '강인함', A: pokemon.condition?.strength || 0, fullMark: 100 }
+  ];
+
+  const effortData = [
+    { subject: 'HP', A: pokemon.effort?.hp || 0, fullMark: 255 },
+    { subject: '공격', A: pokemon.effort?.attack || 0, fullMark: 255 },
+    { subject: '방어', A: pokemon.effort?.defense || 0, fullMark: 255 },
+    { subject: '특수공격', A: pokemon.effort?.specialAttack || 0, fullMark: 255 },
+    { subject: '특수방어', A: pokemon.effort?.specialDefense || 0, fullMark: 255 },
+    { subject: '스피드', A: pokemon.effort?.speed || 0, fullMark: 255 }
+  ];
+
+  // 게임 도감 및 아이템 로직
   const pokedexEntry = gamePokedex?.find(p => 
     p.number === pokemon.number || p.originalNumber === pokemon.number
   );
   const displayNumber = pokedexEntry?.newNumber || pokemon.number;
   const originalNumber = pokedexEntry?.originalNumber || pokemon.number;
-  
-  // 지니고 있는 도구 정보 찾기 (더 유연한 검색)
+
   const heldItemData = pokemon.heldItem 
     ? allItems.find(item => {
         const itemName = item.name?.toLowerCase();
@@ -67,25 +117,37 @@ export default function PokemonDetailPanel({
                itemNameEn?.includes(heldItemName);
       })
     : null;
-  
-  // 디버깅 로그
-  if (pokemon.heldItem && !heldItemData) {
-    console.log('=== 도구 찾기 실패 ===');
-    console.log('찾으려는 도구:', pokemon.heldItem);
-    console.log('전체 아이템 목록:', allItems.map(i => ({ name: i.name, nameEn: i.nameEn })));
-    console.log('==================');
-  }
-  
-  // pokemon이 변경될 때마다 nickname 동기화
+
+  // 포획한 몬스터볼 이미지 가져오기
+  const pokeballData = pokemon.caughtWithBall 
+    ? allItems.find(item => {
+        const itemName = item.name?.toLowerCase();
+        const itemNameEn = item.nameEn?.toLowerCase();
+        const ballName = pokemon.caughtWithBall?.toLowerCase();
+        
+        return itemName === ballName || 
+               itemNameEn === ballName ||
+               itemName?.includes(ballName) ||
+               itemNameEn?.includes(ballName);
+      })
+    : null;
+
+  console.log('Pokemon data:', pokemon);
+  console.log('Caught with ball:', pokemon.caughtWithBall);
+  console.log('Pokeball data found:', pokeballData);
+
+  // 타입 색상 처리
+  const typeColors = TYPE_COLORS[pokemon.type] || { bg: '#A8A878', text: '#FFF' };
+  const type2Colors = pokemon.type2 ? (TYPE_COLORS[pokemon.type2] || { bg: '#A8A878', text: '#FFF' }) : null;
+
+  // HP 계산
+  const hpPercent = Math.min(100, Math.max(0, (pokemon.hp / pokemon.maxHp) * 100));
+  const hpColor = hpPercent > 50 ? 'bg-green-500' : hpPercent > 20 ? 'bg-yellow-500' : 'bg-red-500';
+
   useEffect(() => {
     setNickname(pokemon.nickname || pokemon.name);
     setIsEditingNickname(false);
   }, [pokemon.uniqueId, pokemon.nickname, pokemon.name]);
-  
-  const hpPercent = Math.max(0, (pokemon.hp / pokemon.maxHp) * 100);
-  const hpColor = hpPercent > 50 ? 'bg-green-500' : hpPercent > 20 ? 'bg-yellow-500' : 'bg-red-500';
-  const typeColors = TYPE_COLORS[pokemon.type] || { bg: '#777', text: '#FFF' };
-  const type2Colors = pokemon.type2 ? (TYPE_COLORS[pokemon.type2] || { bg: '#777', text: '#FFF' }) : null;
 
   const handleSaveNickname = () => {
     if (nickname.trim()) {
@@ -101,6 +163,7 @@ export default function PokemonDetailPanel({
 
   return (
     <div className="w-full bg-white rounded-lg border border-gray-200 p-6">
+      {/* 상단 헤더 */}
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-xl font-bold text-gray-800">포켓몬 정보</h3>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
@@ -108,9 +171,11 @@ export default function PokemonDetailPanel({
         </button>
       </div>
 
+
+
       {/* 왼쪽 이미지 + 오른쪽 전체 정보 */}
       <div className="flex gap-6">
-        {/* 포켓몬 이미지 (75% 크기 + 여백) */}
+        {/* 포켓몬 이미지 */}
         <div className="flex-shrink-0">
           <div 
             className="w-36 h-36 p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg"
@@ -183,7 +248,25 @@ export default function PokemonDetailPanel({
               </div>
             ) : (
               <div className="flex items-center gap-2 mb-1">
+                {/* 몬스터볼 이미지 */}
+                {pokeballData && (
+                  <div 
+                    className="w-6 h-6 flex-shrink-0"
+                    style={{
+                      backgroundImage: `url(${pokeballData.spriteUrl})`,
+                      backgroundSize: '125%',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'center',
+                      imageRendering: 'pixelated'
+                    }}
+                  />
+                )}
                 <h2 className="text-2xl font-bold">{nickname}</h2>
+                {pokemon.isPartner && (
+                    <span className="bg-pink-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                      💖 파트너
+                    </span>
+                  )}
                 <button
                   onClick={() => setIsEditingNickname(true)}
                   className="text-gray-400 hover:text-gray-600"
@@ -196,86 +279,122 @@ export default function PokemonDetailPanel({
             <div className="text-lg text-gray-600">Lv. {pokemon.level}</div>
           </div>
 
-          {/* HP 바 */}
-          <div className="bg-gray-50 rounded-lg p-3">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-semibold text-gray-700">HP</span>
-              <span className="text-sm text-gray-600">{pokemon.hp}/{pokemon.maxHp}</span>
+          {/* 컨디션 & 노력치 그래프 */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* 컨디션 그래프 */}
+            <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
+              <div className="text-xs font-semibold text-gray-700 mb-2 text-center">컨디션</div>
+              <div className="w-full h-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart data={conditionData}>
+                    <PolarGrid stroke="#E2E8F0" strokeOpacity={0.5} />
+                    <PolarAngleAxis 
+                      dataKey="subject" 
+                      tick={{ fill: '#6B7280', fontSize: 8 }}
+                    />
+                    <Radar 
+                      dataKey="A" 
+                      stroke="#A855F7"  
+                      fill="#A855F7"   
+                      fillOpacity={0.5} 
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className={`h-2 rounded-full transition-all ${hpColor}`} style={{ width: `${hpPercent}%` }} />
+
+            {/* 노력치 그래프 */}
+            <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+              <div className="text-xs font-semibold text-gray-700 mb-2 text-center">노력치</div>
+              <div className="w-full h-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart data={effortData}>
+                    <PolarGrid stroke="#E2E8F0" strokeOpacity={0.5} />
+                    <PolarAngleAxis 
+                      dataKey="subject" 
+                      tick={{ fill: '#6B7280', fontSize: 8 }}
+                    />
+                    <Radar 
+                      dataKey="A" 
+                      stroke="#3B82F6"  
+                      fill="#3B82F6"   
+                      fillOpacity={0.5} 
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
 
           {/* 지니고 있는 도구 + 친밀도 */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-  <div className="flex items-center justify-between mb-2">
-    <div className="text-xs text-gray-600">지니고 있는 도구</div>
-    {pokemon.heldItem && (
-      <button
-        onClick={() => onTakeItem(pokemon.uniqueId)}
-        className="text-xs text-blue-600 hover:text-blue-700 font-semibold"
-      >
-        회수
-      </button>
-    )}
-  </div>
-  
-  {heldItemData ? (
-    <div>
-      <div className="flex items-center gap-2 mb-2">
-        <div 
-          className="w-6 h-6 flex-shrink-0"
-          style={{
-            backgroundImage: `url(${heldItemData.spriteUrl})`,
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center',
-            imageRendering: 'pixelated'
-          }}
-        />
-        <div className="text-sm font-bold text-blue-600 truncate">
-          {heldItemData.name}
-        </div>
-      </div>
-      <div className="text-xs text-gray-600 leading-tight">
-        {heldItemData.effect || '효과 정보 없음'}
-      </div>
-    </div>
-  ) : pokemon.heldItem ? (
-    <div>
-      <div className="flex items-center gap-2 mb-1">
-        <div className="text-lg">🎒</div>
-        <div className="text-sm font-bold text-blue-600 truncate">
-          {pokemon.heldItem}
-        </div>
-      </div>
-      <div className="text-xs text-gray-400 italic">
-        정보 없음
-      </div>
-    </div>
-  ) : (
-    <div>
-      <select
-        onChange={(e) => {
-          if (e.target.value) {
-            onGiveItem(pokemon.uniqueId, e.target.value);
-            e.target.value = '';
-          }
-        }}
-        className="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:border-blue-500 focus:outline-none"
-      >
-        <option value="">아이템 선택...</option>
-        {items.map((item, idx) => (
-          <option key={idx} value={item.name}>
-            {item.name} (×{item.count})
-          </option>
-        ))}
-      </select>
-    </div>
-  )}
-</div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-xs text-gray-600">지니고 있는 도구</div>
+                {pokemon.heldItem && (
+                  <button
+                    onClick={() => onTakeItem(pokemon.uniqueId)}
+                    className="text-xs text-blue-600 hover:text-blue-700 font-semibold"
+                  >
+                    회수
+                  </button>
+                )}
+              </div>
+              
+              {heldItemData ? (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div 
+                      className="w-6 h-6 flex-shrink-0"
+                      style={{
+                        backgroundImage: `url(${heldItemData.spriteUrl})`,
+                        backgroundSize: 'contain',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'center',
+                        imageRendering: 'pixelated'
+                      }}
+                    />
+                    <div className="text-sm font-bold text-blue-600 truncate">
+                      {heldItemData.name}
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-600 leading-tight">
+                    {heldItemData.effect || '효과 정보 없음'}
+                  </div>
+                </div>
+              ) : pokemon.heldItem ? (
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="text-lg">🎒</div>
+                    <div className="text-sm font-bold text-blue-600 truncate">
+                      {pokemon.heldItem}
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-400 italic">
+                    정보 없음
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        onGiveItem(pokemon.uniqueId, e.target.value);
+                        e.target.value = '';
+                      }
+                    }}
+                    className="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:border-blue-500 focus:outline-none"
+                  >
+                    <option value="">아이템 선택...</option>
+                    {items.map((item, idx) => (
+                      <option key={idx} value={item.name}>
+                        {item.name} (×{item.count})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
 
             <div className="bg-pink-50 rounded-lg p-3 border border-pink-200">
               <div className="flex items-center gap-1 mb-2">
@@ -322,6 +441,29 @@ export default function PokemonDetailPanel({
               <span>이상한사탕 사용</span>
             </button>
             <button
+              onClick={() => {
+                const newStatus = !pokemon.isPartner;
+                if (newStatus) {
+                  if (window.confirm(`${pokemon.nickname || pokemon.name}를 파트너 포켓몬으로 설정하시겠습니까?\n\n파트너는 방생할 수 없으며, 1마리만 설정 가능합니다.`)) {
+                    onSetPartner(pokemon.uniqueId, true);
+                  }
+                } else {
+                  if (window.confirm(`${pokemon.nickname || pokemon.name}의 파트너 설정을 해제하시겠습니까?`)) {
+                    onSetPartner(pokemon.uniqueId, false);
+                  }
+                }
+              }}
+              className={`w-full py-2 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 border ${
+                pokemon.isPartner
+                  ? 'bg-pink-100 text-pink-700 hover:bg-pink-200 border-pink-300'
+                  : 'bg-pink-50 text-pink-600 hover:bg-pink-100 border-pink-200'
+              }`}
+            >
+              <Heart size={18} fill={pokemon.isPartner ? 'currentColor' : 'none'} />
+              <span>{pokemon.isPartner ? '💔 파트너 해제' : '💖 파트너 설정'}</span>
+            </button>
+            
+            <button
               onClick={onMove}
               className="w-full bg-indigo-100 text-indigo-700 py-2 rounded-lg font-semibold hover:bg-indigo-200 transition-colors flex items-center justify-center gap-2 border border-indigo-300"
             >
@@ -338,13 +480,26 @@ export default function PokemonDetailPanel({
               )}
             </button>
 
-            <button
+           <button
               onClick={onRelease}
-              className="w-full bg-red-50 text-red-600 py-2 rounded-lg font-semibold hover:bg-red-100 transition-colors flex items-center justify-center gap-2 border border-red-200"
+              disabled={pokemon.isPartner}  // ⭐ 추가
+              className={`w-full py-2 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 border ${
+                pokemon.isPartner
+                  ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'  // ⭐ 수정
+                  : 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200'
+              }`}
+              title={pokemon.isPartner ? '파트너 포켓몬은 방생할 수 없습니다' : ''}  // ⭐ 추가
             >
               <Trash2 size={18} />
-              <span>포켓몬 방생</span>
+              <span>{pokemon.isPartner ? '🔒 방생 불가' : '포켓몬 방생'}</span>  {/* ⭐ 수정 */}
             </button>
+
+            {/* ⭐ 방생 버튼 바로 아래에 경고 메시지 추가 */}
+            {pokemon.isPartner && (
+              <div className="text-xs text-pink-500 text-center mt-1">
+                💖 파트너 포켓몬은 방생할 수 없습니다
+              </div>
+            )}
           </div>
         </div>
       </div>

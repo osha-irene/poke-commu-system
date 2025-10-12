@@ -3,7 +3,7 @@ import React from 'react';
 export default function ProfileView({ trainer, caughtCount }) {
   const completion = Math.round((caughtCount / 151) * 100);
   
-  // 총 산책 횟수 계산 (maxDailyWalks - dailyWalks로 오늘 사용한 횟수 계산)
+  // 총 탐험 횟수 계산 (maxDailyWalks - dailyWalks로 오늘 사용한 횟수 계산)
   const todayWalksUsed = trainer.maxDailyWalks - trainer.dailyWalks;
   
   return (
@@ -37,7 +37,7 @@ export default function ProfileView({ trainer, caughtCount }) {
             <p className="text-gray-500 text-sm mb-6">ID: {trainer.id}</p>
             
             <div className="bg-gray-50 rounded-lg p-4 inline-block">
-              <div className="text-sm text-gray-600">일일 산책 설정</div>
+              <div className="text-sm text-gray-600">일일 탐험 설정</div>
               <div className="text-2xl font-bold text-indigo-600">
                 {trainer.maxDailyWalks}회/일
               </div>
@@ -55,7 +55,7 @@ export default function ProfileView({ trainer, caughtCount }) {
             <div className="text-4xl font-bold text-green-600">{completion}%</div>
           </div>
           <div className="bg-purple-50 rounded-lg p-6 border border-purple-200">
-            <div className="text-sm text-gray-600 mb-1">오늘 산책</div>
+            <div className="text-sm text-gray-600 mb-1">오늘 탐험</div>
             <div className="text-4xl font-bold text-purple-600">{todayWalksUsed}회</div>
           </div>
         </div>
@@ -64,7 +64,7 @@ export default function ProfileView({ trainer, caughtCount }) {
         <div className="mt-6 pt-6 border-t border-gray-200">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-600">남은 산책 횟수</span>
+              <span className="text-gray-600">남은 탐험 횟수</span>
               <span className="font-semibold">{trainer.dailyWalks}회</span>
             </div>
             <div className="flex justify-between">

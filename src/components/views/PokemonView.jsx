@@ -16,7 +16,8 @@ export default function PokemonView({
   onUseRareCandy,
   onUpdateNickname,
   onGiveItem,      // ⭐ 추가
-  onTakeItem       // ⭐ 추가
+  onTakeItem,
+  onSetPartner
 }) {
   const [selectedPokemonId, setSelectedPokemonId] = useState(null);
   const [showBox, setShowBox] = useState(false);
@@ -190,6 +191,7 @@ export default function PokemonView({
             onUpdateNickname={onUpdateNickname}
             onGiveItem={onGiveItem}
             onTakeItem={onTakeItem}
+            onSetPartner={onSetPartner}
           />
         ) : (
           <div className="bg-white rounded-lg border border-gray-200 p-6 h-full flex items-center justify-center">

@@ -29,7 +29,7 @@ function LoginScreen({ onLogin }) {
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">🐾 포켓몬 산책</h1>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">🐾 포켓몬 탐험</h1>
           <p className="text-gray-600">커뮤니티 시스템</p>
         </div>
         
@@ -128,7 +128,9 @@ export default function App() {
 	  giveItemToPokemon,     // ⭐ 추가
 	  takeItemFromPokemon,   // ⭐ 추가
 	  handlePurchase,
-	  updateShopData
+	  updateShopData,
+    onSetPartner,
+    setPartnerPokemon
 	} = useGameState();
 
   // 로그인하지 않은 경우 로그인 화면 표시
@@ -181,7 +183,8 @@ export default function App() {
 				onUpdateNickname={updatePokemonNickname}
 				allPokemonMaster={allPokemonMaster}
 				onGiveItem={giveItemToPokemon}  
-				onTakeItem={takeItemFromPokemon}     
+				onTakeItem={takeItemFromPokemon}
+        onSetPartner={setPartnerPokemon}
 			  />
 			)}
           
@@ -193,14 +196,14 @@ export default function App() {
             />
           )}
           
-		{currentTab === 'shop' && (
-		  <ShopView 
-			trainer={trainer}
-			allItems={allItems}
-			shopData={shopData}
-			onPurchase={handlePurchase}
-		  />
-		)}         
+        {currentTab === 'shop' && (
+          <ShopView 
+          trainer={trainer}
+          allItems={allItems}
+          shopData={shopData}
+          onPurchase={handlePurchase}
+          />
+        )}         
 
 		 {currentTab === 'profile' && (
             <ProfileView 

@@ -449,7 +449,7 @@ function MemberDetailPanel({ member, trainer, allItems, allPokemonMaster, onClos
                 <h3 className="font-bold mb-3">기본 정보</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between"><span className="text-gray-600">돈:</span><span className="font-bold">{member.money || 0}원</span></div>
-                  <div className="flex justify-between"><span className="text-gray-600">산책 횟수:</span><span className="font-bold">{member.dailyWalks}/{member.maxDailyWalks}회</span></div>
+                  <div className="flex justify-between"><span className="text-gray-600">탐험 횟수:</span><span className="font-bold">{member.dailyWalks}/{member.maxDailyWalks}회</span></div>
                   <div className="flex justify-between"><span className="text-gray-600">포켓몬:</span><span className="font-bold">{member.caughtPokemon.length}마리</span></div>
                 </div>
               </div>
@@ -457,7 +457,7 @@ function MemberDetailPanel({ member, trainer, allItems, allPokemonMaster, onClos
               <div className="space-y-3">
                 <h3 className="font-bold">관리 기능</h3>
                 <button onClick={() => onResetWalk(member.id, member.name)} className="w-full bg-green-100 text-green-700 py-3 rounded-lg hover:bg-green-200 font-semibold">
-                  산책 횟수 리셋
+                  탐험 횟수 리셋
                 </button>
                 
                 {trainer.isSuperAdmin && member.id !== 'admin' && (
@@ -514,9 +514,9 @@ export default function AdminView({
   };
 
   const handleResetMember = (memberId, memberName) => {
-    if (window.confirm(`${memberName}님의 산책 횟수를 리셋하시겠습니까?`)) {
+    if (window.confirm(`${memberName}님의 탐험 횟수를 리셋하시겠습니까?`)) {
       resetMemberWalkCount(memberId);
-      alert(`${memberName}님의 산책 횟수가 리셋되었습니다!`);
+      alert(`${memberName}님의 탐험 횟수가 리셋되었습니다!`);
     }
   };
 
@@ -566,8 +566,8 @@ export default function AdminView({
         <div className="space-y-2">
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-semibold text-gray-700">멤버 목록 ({Object.keys(members).length}명)</h4>
-            <button onClick={() => { if(window.confirm('⚠️ 모든 멤버의 산책 횟수를 리셋하시겠습니까?')) { resetAllWalkCounts(); alert('리셋 완료!'); }}} className="bg-orange-100 text-orange-700 px-4 py-1 rounded-lg hover:bg-orange-200 text-sm font-semibold">
-              전체 산책 횟수 리셋
+            <button onClick={() => { if(window.confirm('⚠️ 모든 멤버의 탐험 횟수를 리셋하시겠습니까?')) { resetAllWalkCounts(); alert('리셋 완료!'); }}} className="bg-orange-100 text-orange-700 px-4 py-1 rounded-lg hover:bg-orange-200 text-sm font-semibold">
+              전체 탐험 횟수 리셋
             </button>
           </div>
           
@@ -589,7 +589,7 @@ export default function AdminView({
                     {member.isAdmin && !member.isSuperAdmin && <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-semibold">관리자</span>}
                   </div>
                   <div className="text-sm text-gray-600 mt-1">
-                    산책: {member.dailyWalks}/{member.maxDailyWalks}회 | 포켓몬: {member.caughtPokemon.length}마리
+                    탐험: {member.dailyWalks}/{member.maxDailyWalks}회 | 포켓몬: {member.caughtPokemon.length}마리
                   </div>
                 </div>
               </div>
@@ -607,9 +607,9 @@ export default function AdminView({
       />
 
       {/* 나머지 패널들은 AdminItemPanel, AdminPokemonPanel 그대로 유지 */}
-      {/* 산책 설정 */}
+      {/* 탐험 설정 */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">⚙️ 내 일일 산책 횟수 설정</h3>
+        <h3 className="text-xl font-bold text-gray-800 mb-4">⚙️ 내 일일 탐험 횟수 설정</h3>
         <div className="flex items-center gap-4">
           <input type="number" value={maxWalks} onChange={(e) => setMaxWalks(parseInt(e.target.value) || 0)} min="1" max="999" className="border-2 border-gray-300 rounded-lg px-4 py-3 w-32 text-lg font-semibold focus:border-indigo-500 focus:outline-none" />
           <span className="text-gray-600 font-semibold">회</span>

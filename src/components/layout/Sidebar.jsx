@@ -8,7 +8,7 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin, trainer, o
     <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
       {/* 로고 */}
       <div className="p-6 border-b border-gray-200">
-        <h1 className="text-2xl font-bold text-indigo-600">🐾 포켓몬 산책</h1>
+        <h1 className="text-2xl font-bold text-indigo-600">🐾 포켓몬 탐험</h1>
         <p className="text-sm text-gray-500 mt-1">커뮤니티 시스템</p>
       </div>
 
@@ -31,7 +31,7 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin, trainer, o
         </div>
         <div className="mt-3 text-sm">
           <div className="flex justify-between text-gray-600">
-            <span>오늘의 산책</span>
+            <span>오늘의 탐험</span>
             <span className="font-semibold text-indigo-600">
               {trainer.dailyWalks}/{trainer.maxDailyWalks}회
             </span>

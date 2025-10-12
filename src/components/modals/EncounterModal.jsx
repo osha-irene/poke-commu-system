@@ -24,14 +24,13 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
       const name = item.name.toLowerCase();
       return name.includes('볼') || name.includes('ball');
     })
-    .filter(item => item.count > 0) // 개수가 있는 것만
+    .filter(item => item.count > 0)
     .map(item => {
       const name = item.name;
       const pokemonType = pokemon.type?.toLowerCase() || '';
       const pokemonTypes = pokemonType.split('/').map(t => t.trim());
       
-      // 볼별 포획률 설정 (조건 반영)
-      let multiplier = 1.0;
+      let multiplier = 1.0;;
       
       if (name.includes('마스터')) {
         multiplier = 255; // 무조건 포획
@@ -78,12 +77,14 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
         multiplier = 4.0;
       }
       
-      return { 
-        name: item.name, 
-        multiplier,
-        imageUrl: item.imageUrl 
-      };
-    });
+       return { 
+      name: item.name,
+      id: item.itemId,        // ⭐ 추가
+      multiplier,
+      imageUrl: item.imageUrl,
+      count: item.count       // ⭐ 추가
+    };
+  });
 
   // 포켓몬 스프라이트 URL (도트 정적 이미지)
   const pokemonSpriteUrl = pokemon.spriteUrl || 
@@ -98,7 +99,12 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
       return;
     }
 
-    const ballItem = items.find(item => item.name === selectedBall.name);
+    // ✅ 수정: itemId 또는 name으로 찾기
+    const ballItem = items.find(item => 
+      item.itemId === selectedBall.id || 
+      item.name === selectedBall.name
+    );
+    
     if (!ballItem || ballItem.count <= 0) {
       alert('선택한 볼이 부족합니다!');
       return;
