@@ -9,6 +9,8 @@ export const useGameData = (allPokemonData) => {
   const [allItems, setAllItems] = useState(() => {
     const baseItems = itemsData.items;
     const customItems = loadFromStorage('poke_customItems', customItemsData.items || []);
+    console.log('📦 전체 아이템 로딩:', baseItems.length + customItems.length, '개');
+    console.log('🎨 커스텀 아이템:', customItems);
     return [...baseItems, ...customItems];
   });
 

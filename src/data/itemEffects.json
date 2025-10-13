@@ -1,0 +1,166 @@
+{
+  "effectTypes": {
+    "effort": {
+      "name": "노력치",
+      "nameEn": "Effort Value (EV)",
+      "description": "포켓몬의 노력치를 증가시킵니다",
+      "maxValue": 255,
+      "stats": {
+        "hp": { "name": "HP", "icon": "❤️" },
+        "attack": { "name": "공격", "icon": "⚔️" },
+        "defense": { "name": "방어", "icon": "🛡️" },
+        "specialAttack": { "name": "특수공격", "icon": "✨" },
+        "specialDefense": { "name": "특수방어", "icon": "🌟" },
+        "speed": { "name": "스피드", "icon": "⚡" }
+      }
+    },
+    "condition": {
+      "name": "컨디션",
+      "nameEn": "Contest Condition",
+      "description": "포켓몬의 컨테스트 컨디션을 증가시킵니다",
+      "maxValue": 100,
+      "stats": {
+        "elegance": { "name": "근사함", "icon": "🎩", "flavor": "spicy" },
+        "beauty": { "name": "아름다움", "icon": "💎", "flavor": "dry" },
+        "cuteness": { "name": "귀여움", "icon": "🎀", "flavor": "sweet" },
+        "intelligence": { "name": "슬기로움", "icon": "🧠", "flavor": "bitter" },
+        "strength": { "name": "강인함", "icon": "💪", "flavor": "sour" }
+      }
+    },
+    "friendship": {
+      "name": "친밀도",
+      "nameEn": "Friendship",
+      "description": "포켓몬과의 친밀도를 증가시킵니다",
+      "maxValue": 255,
+      "icon": "💖"
+    },
+    "levelup": {
+      "name": "레벨업",
+      "nameEn": "Level Up",
+      "description": "포켓몬의 레벨을 올립니다",
+      "maxValue": 100,
+      "icon": "🍬"
+    }
+  },
+  
+  "officialItems": {
+    "vitamins": [
+      {
+        "names": ["맥스업", "타우린", "hp up"],
+        "effect": { "type": "effort", "stat": "hp", "amount": 10 }
+      },
+      {
+        "names": ["인파이트", "프로틴", "protein"],
+        "effect": { "type": "effort", "stat": "attack", "amount": 10 }
+      },
+      {
+        "names": ["사포닌", "아이언", "iron"],
+        "effect": { "type": "effort", "stat": "defense", "amount": 10 }
+      },
+      {
+        "names": ["리보플라빈", "칼슘", "calcium"],
+        "effect": { "type": "effort", "stat": "specialAttack", "amount": 10 }
+      },
+      {
+        "names": ["키토산", "징크", "zinc"],
+        "effect": { "type": "effort", "stat": "specialDefense", "amount": 10 }
+      },
+      {
+        "names": ["알칼로이드", "카보스", "carbos"],
+        "effect": { "type": "effort", "stat": "speed", "amount": 10 }
+      }
+    ],
+    
+    "wings": [
+      {
+        "names": ["체력날개", "health feather"],
+        "effect": { "type": "effort", "stat": "hp", "amount": 1 }
+      },
+      {
+        "names": ["근력날개", "muscle feather"],
+        "effect": { "type": "effort", "stat": "attack", "amount": 1 }
+      },
+      {
+        "names": ["저항력날개", "resist feather"],
+        "effect": { "type": "effort", "stat": "defense", "amount": 1 }
+      },
+      {
+        "names": ["지력날개", "genius feather"],
+        "effect": { "type": "effort", "stat": "specialAttack", "amount": 1 }
+      },
+      {
+        "names": ["정신력날개", "clever feather"],
+        "effect": { "type": "effort", "stat": "specialDefense", "amount": 1 }
+      },
+      {
+        "names": ["순발력날개", "swift feather"],
+        "effect": { "type": "effort", "stat": "speed", "amount": 1 }
+      }
+    ],
+    
+    "contestItems": [
+      {
+        "names": ["포핀", "poffin", "포케블록", "pokeblock"],
+        "effect": { "type": "condition", "stat": "all", "amount": 10 }
+      },
+      {
+        "names": ["빠삭한과자", "근사함과자"],
+        "effect": { "type": "condition", "stat": "elegance", "amount": 10 }
+      },
+      {
+        "names": ["달콤한과자", "아름다움과자"],
+        "effect": { "type": "condition", "stat": "beauty", "amount": 10 }
+      },
+      {
+        "names": ["부드러운과자", "귀여움과자"],
+        "effect": { "type": "condition", "stat": "cuteness", "amount": 10 }
+      },
+      {
+        "names": ["씁쓸한과자", "슬기로움과자"],
+        "effect": { "type": "condition", "stat": "intelligence", "amount": 10 }
+      },
+      {
+        "names": ["시큼한과자", "강인함과자"],
+        "effect": { "type": "condition", "stat": "strength", "amount": 10 }
+      }
+    ],
+    
+    "special": [
+      {
+        "names": ["이상한사탕", "rare candy"],
+        "effect": { "type": "levelup", "amount": 1 }
+      },
+      {
+        "names": ["친밀도증가"],
+        "effect": { "type": "friendship", "amount": 10 }
+      },
+      {
+        "names": ["친밀도대폭증가"],
+        "effect": { "type": "friendship", "amount": 50 }
+      }
+    ]
+  },
+  
+  "customEffects": [
+    {
+      "id": "custom_effort_hp_plus5",
+      "name": "HP 노력치 +5",
+      "effect": { "type": "effort", "stat": "hp", "amount": 5 }
+    },
+    {
+      "id": "custom_effort_all_plus1",
+      "name": "모든 노력치 +1",
+      "effect": { "type": "effort", "stat": "all", "amount": 1 }
+    },
+    {
+      "id": "custom_condition_all_plus20",
+      "name": "모든 컨디션 +20",
+      "effect": { "type": "condition", "stat": "all", "amount": 20 }
+    },
+    {
+      "id": "custom_friendship_plus30",
+      "name": "친밀도 +30",
+      "effect": { "type": "friendship", "amount": 30 }
+    }
+  ]
+}

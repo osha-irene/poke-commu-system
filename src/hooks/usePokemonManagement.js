@@ -1,6 +1,6 @@
 // src/hooks/usePokemonManagement.js
 
-export const usePokemonManagement = (
+const usePokemonManagement = (
   currentUser, 
   updateCurrentUser, 
   allPokemonMaster, 
@@ -299,3 +299,5 @@ export const usePokemonManagement = (
     takeItemFromPokemon
   };
 };
+
+export default usePokemonManagement;

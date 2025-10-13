@@ -4,6 +4,7 @@ import PartySlot from './pokemon/PartySlot';
 import BoxPokemon from './pokemon/BoxPokemon';
 import PokemonDetailPanel from './pokemon/PokemonDetailPanel';
 
+
 export default function PokemonView({ 
   caughtPokemon = [],
   items = [],
@@ -22,7 +23,8 @@ export default function PokemonView({
   onLearnMove,     // ⭐ 추가
   isAdmin = false,
   allMoves = [],
-  pokemonLearnsets = {}
+  pokemonLearnsets = {},
+  onUseItemOnPokemon
 }) {
   const [selectedPokemonId, setSelectedPokemonId] = useState(null);
   const [showBox, setShowBox] = useState(false);
@@ -210,6 +212,7 @@ export default function PokemonView({
             onLearnMove={onLearnMove}    
             allMoves={allMoves} 
             pokemonLearnsets={pokemonLearnsets}
+			onUseItemOnPokemon={onUseItemOnPokemon}
           />
         ) : (
           <div className="bg-white rounded-lg border border-gray-200 p-6 h-full flex items-center justify-center">

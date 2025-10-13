@@ -155,7 +155,8 @@ export default function App() {
     setMaintenanceMode,
     applyLoot,
     updateRegionLootConfig,
-    updatePokedexRegions
+    updatePokedexRegions,
+	useItemOnPokemon
   } = useGameState();
 
   // 자동 저장
@@ -273,7 +274,8 @@ export default function App() {
               onLearnMove={learnMove}   
               isAdmin={currentUser?.isAdmin}   
               allMoves={allMoves}             
-              pokemonLearnsets={pokemonLearnsets} 
+              pokemonLearnsets={pokemonLearnsets}
+  		      onUseItemOnPokemon={useItemOnPokemon} 
             />
           )}
           
