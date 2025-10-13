@@ -6,7 +6,7 @@ import customItemsData from '../data/customItems.json';
 import regionsData from '../data/regions.json';
 import movesData from '../data/moves.json';
 import usePokemonManagement from './usePokemonManagement';
-import { useEvolution } from './useEvolution';  // ⭐ 추가
+import { useEvolution } from './useEvolution';
 import { loadFromStorage, saveToStorage } from '../utils/storage';
 import { useAuth } from './useAuth';
 import { useMembers } from './useMembers';
@@ -14,6 +14,7 @@ import { useGameData } from './useGameData';
 import { useShop } from './useShop';
 import { useMoves } from './useMoves';
 import { useAdminFunctions } from './useAdminFunctions';
+import { isEVItem, applyEVItem } from '../utils/evItemUtils';
 
 const getDefaultLootConfig = () => ({
   money: { min: 50, max: 200 },
@@ -122,14 +123,14 @@ export default function useGameState() {
 
   const movesHook = useMoves(currentUser, updateCurrentUser, allMoves, pokemonLearnsets);
 
-  // ⭐ 진화 Hook 먼저 생성
+  // ⭐ 진화 Hook 생성 (한 번만!)
   const evolutionHook = useEvolution(
     currentUser,
     updateCurrentUser,
     allPokemonMaster
   );
 
-  // pokemonManagement 생성 (진화 체크 없이)
+  // pokemonManagement 생성
   const pokemonManagement = usePokemonManagement(
     currentUser,
     updateCurrentUser,
@@ -138,27 +139,26 @@ export default function useGameState() {
     sharedPokedexData,
     pokemonLearnsets,
     allMoves,
-    null  // 일단 null로 전달
+    null
   );
 
   // ⭐ useRareCandy를 래핑하여 진화 체크 추가
-  const useRareCandyWithEvolution = (uniqueId, onLevelUp) => {
+  const handleRareCandyWithEvolution = (uniqueId, onLevelUp) => {
     if (!currentUser) return;
     
     const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
     if (!pokemon) return;
     
-    console.log('🎯 useRareCandyWithEvolution 호출');
+    console.log('🎯 handleRareCandyWithEvolution 호출');
     
-    // 원래 useRareCandy 호출 - 콜백을 감싸서 진화 체크 추가
+    // 원래 useRareCandy 호출
     pokemonManagement.useRareCandy(uniqueId, (pokemonId, newLevel, newMoves) => {
       console.log('🎯 레벨업 콜백 실행, newLevel:', newLevel, 'newMoves:', newMoves);
       
-      // 약간의 딜레이 후 진화 체크 (상태 업데이트 대기)
+      // 약간의 딜레이 후 진화 체크
       setTimeout(() => {
         console.log('⏰ setTimeout 실행됨');
         
-        // localStorage에서 최신 members 데이터 가져오기
         const savedMembers = JSON.parse(localStorage.getItem('poke_members') || '{}');
         const latestUser = savedMembers[currentUser.id];
         
@@ -170,7 +170,6 @@ export default function useGameState() {
           console.log('🎯 업데이트된 포켓몬:', updatedPokemon?.name, 'Lv.', updatedPokemon?.level);
           
           if (updatedPokemon) {
-            // 진화 체크
             const shouldShowEvolutionModal = evolutionHook.checkEvolutionOnLevelUp(updatedPokemon);
             
             if (shouldShowEvolutionModal) {
@@ -580,87 +579,72 @@ export default function useGameState() {
     alert(`${item.name} ${quantity}개를 구매했습니다!`);
     return true;
   };
-
-  const useItemOnPokemon = (item, pokemon, quantity, effect) => {
-    if (!currentUser) return;
-    
-    const updatedPokemon = currentUser.caughtPokemon.map(p => {
-      if (p && p.uniqueId === pokemon.uniqueId) {
-        const updated = { ...p };
-        
-        if (!updated.condition) {
-          updated.condition = {
-            elegance: 0,
-            beauty: 0,
-            cuteness: 0,
-            intelligence: 0,
-            strength: 0
-          };
-        }
-        
-        if (!updated.effort) {
-          updated.effort = {
-            hp: 0,
-            attack: 0,
-            defense: 0,
-            specialAttack: 0,
-            specialDefense: 0,
-            speed: 0
-          };
-        }
-        
-        if (effect.type === 'condition') {
-          updated.condition = {
-            ...updated.condition,
-            [effect.stat]: Math.min(100, (updated.condition[effect.stat] || 0) + (effect.amount * quantity))
-          };
-        } else if (effect.type === 'effort') {
-          updated.effort = {
-            ...updated.effort,
-            [effect.stat]: Math.min(255, (updated.effort[effect.stat] || 0) + (effect.amount * quantity))
-          };
-        } else if (effect.type === 'friendship') {
-          updated.friendship = Math.min(255, (updated.friendship || 0) + (effect.amount * quantity));
-        }
-        
-        return updated;
-      }
-      return p;
-    });
-    
-    const updatedInventory = currentUser.inventory.map(invItem => {
-      if (invItem.itemId === item.itemId || invItem.name === item.name) {
-        const newCount = Math.max(0, invItem.count - quantity);
-        return { ...invItem, count: newCount };
-      }
-      return invItem;
-    }).filter(invItem => invItem.count > 0);
-    
-    updateCurrentUser({
-      caughtPokemon: updatedPokemon,
-      inventory: updatedInventory
-    });
-    
-    const statNames = {
-      elegance: '근사함',
-      beauty: '아름다움',
-      cuteness: '귀여움',
-      intelligence: '슬기로움',
-      strength: '강인함',
-      hp: 'HP',
-      attack: '공격',
-      defense: '방어',
-      specialAttack: '특수공격',
-      specialDefense: '특수방어',
-      speed: '스피드'
-    };
-    
-    const statName = effect.type === 'friendship' ? '친밀도' : (statNames[effect.stat] || effect.stat);
-    const increase = effect.amount * quantity;
-    
-    alert(`✨ ${item.name}을(를) 사용했습니다!\n${pokemon.nickname || pokemon.name}의 ${statName}이(가) ${increase} 증가했습니다!`);
+  
+  
+  const useItemOnPokemon = (item, pokemon) => {
+  if (!currentUser || !pokemon) return;
+  
+  const itemData = allItems.find(i => 
+    i.id === item.itemId || i.name === item.name
+  );
+  
+  // consumeItem 함수
+  const consumeItem = (item) => {
+    const newInventory = currentUser.inventory
+      .map(i => (i.itemId === item.itemId || i.name === item.name)
+        ? { ...i, count: i.count - 1 }
+        : i
+      )
+      .filter(i => i.count > 0);
+    updateCurrentUser({ inventory: newInventory });
   };
 
+  // 포켓몬 업데이트 함수 - caughtPokemon 배열에서 업데이트
+  const updatePokemonInUser = (updatedPokemon) => {
+    const updatedCaughtPokemon = currentUser.caughtPokemon.map(p => 
+      p && p.uniqueId === updatedPokemon.uniqueId ? updatedPokemon : p
+    );
+    updateCurrentUser({ caughtPokemon: updatedCaughtPokemon });
+  };
+  
+  // ⭐ EV 아이템 처리
+  if (isEVItem(itemData?.nameEn || itemData?.name)) {
+    const result = applyEVItem(
+      pokemon, 
+      itemData.nameEn || itemData.name,
+      updatePokemonInUser
+    );
+    
+    if (result.success) {
+      alert(result.message);
+      consumeItem(item);
+    } else {
+      alert(result.message);
+    }
+    return;
+  }
+  
+  // 이상한사탕 - 레벨업 + 진화 체크
+  if (itemData?.name === '이상한사탕' || 
+      itemData?.nameEn?.toLowerCase().includes('rare candy')) {
+    handleRareCandyWithEvolution(pokemon.uniqueId);
+    consumeItem(item);
+    return;
+  }
+  
+  // 진화의 돌 - 진화 처리
+  if (itemData?.category?.includes('evolution')) {
+    const success = evolutionHook.evolveWithItem(pokemon, itemData.nameEn || itemData.name);
+    if (success) consumeItem(item);
+    return;
+  }
+  
+  // ⭐ 나머지는 전부 "사용했습니다!" 메시지만
+  alert(`${pokemon.nickname || pokemon.name}에게 ${item.name}을(를) 사용했습니다!`);
+  consumeItem(item);
+};
+  
+  
   return {
     currentTab,
     setCurrentTab,
@@ -698,11 +682,11 @@ export default function useGameState() {
     resetMemberWalkCount,
     resetAllWalkCounts,
     resetGameData,
-    movePokemonToParty: pokemonManagement.movePokemonToParty,
-    movePokemonToBox: pokemonManagement.movePokemonToBox,
-    releasePokemon: pokemonManagement.releasePokemon,
-    useRareCandy: useRareCandyWithEvolution,  // ⭐ 래핑된 함수만 사용
-    updatePokemonNickname: pokemonManagement.updatePokemonNickname,
+    movePokemonToParty: restPokemonManagement.movePokemonToParty,
+    movePokemonToBox: restPokemonManagement.movePokemonToBox,
+    releasePokemon: restPokemonManagement.releasePokemon,
+    useRareCandy: handleRareCandyWithEvolution,
+    updatePokemonNickname: restPokemonManagement.updatePokemonNickname,
     updatePokedexMemo,
     updateGamePokedex,
     addItemToSelf,
@@ -715,9 +699,9 @@ export default function useGameState() {
     updateMemberMoney,
     updateMemberRegionAccess,
     editMemberPokemon,
-    setPartnerPokemon: pokemonManagement.setPartnerPokemon,
-    giveItemToPokemon: pokemonManagement.giveItemToPokemon,
-    takeItemFromPokemon: pokemonManagement.takeItemFromPokemon,
+    setPartnerPokemon: restPokemonManagement.setPartnerPokemon,
+    giveItemToPokemon: restPokemonManagement.giveItemToPokemon,
+    takeItemFromPokemon: restPokemonManagement.takeItemFromPokemon,
     learnMove: movesHook.learnMove,
     forgetMove: movesHook.forgetMove,
     replaceMove: movesHook.replaceMove,
@@ -726,10 +710,12 @@ export default function useGameState() {
     getAllLearnableMoves: movesHook.getAllLearnableMoves,
     handlePurchase,
     applyLoot,
-    ...restPokemonManagement,
     updateRegionLootConfig,
     updatePokedexRegions,
     useItemOnPokemon,
-    ...evolutionHook
+    evolutionModal: evolutionHook.evolutionModal,
+    acceptEvolution: evolutionHook.acceptEvolution,
+    cancelEvolution: evolutionHook.cancelEvolution,
+	increaseEffort: pokemonManagement.increaseEffort
   };
 }

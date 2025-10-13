@@ -190,26 +190,26 @@ export default function PokemonView({
       <div className="overflow-y-auto">
         {selectedPokemon ? (
           <PokemonDetailPanel
-            pokemon={selectedPokemon}
-            hasRareCandy={hasRareCandy}
-            rareCandyImage={rareCandyImage}
-            isInParty={isSelectedInParty}
-            allItems={allItems}
-            gamePokedex={gamePokedex}
-            items={items}
-            onClose={() => setSelectedPokemonId(null)}
-            onUseCandy={handleUseCandy}
-            onMove={handleMove}
-            onRelease={handleRelease}
-            onUpdateNickname={onUpdateNickname}
-            onGiveItem={onGiveItem}
-            onTakeItem={onTakeItem}
-            onSetPartner={onSetPartner}
-            onForgetMove={onForgetMove}
-            isAdmin={isAdmin}
-            onLearnMove={onLearnMove}    
-            allMoves={allMoves} 
-            pokemonLearnsets={pokemonLearnsets}
+             pokemon={selectedPokemon}
+			  hasRareCandy={hasRareCandy}
+			  rareCandyImage={rareCandyImage}
+			  isInParty={isSelectedInParty}
+			  allItems={allItems}
+			  gamePokedex={gamePokedex}
+			  items={items}
+			  onClose={() => setSelectedPokemonId(null)}
+			  onUseCandy={handleUseCandy}
+			  onMove={handleMove}
+			  onRelease={handleRelease}
+			  onUpdateNickname={onUpdateNickname}
+			  onGiveItem={(pokemonId, itemName) => onGiveItem(pokemonId, itemName, allItems)}  // ⭐ 수정 권장
+			  onTakeItem={(pokemonId) => onTakeItem(pokemonId, allItems)}  // ⭐ 필수 수정
+			  onSetPartner={onSetPartner}
+			  onForgetMove={onForgetMove}
+			  isAdmin={isAdmin}
+			  onLearnMove={onLearnMove}    
+			  allMoves={allMoves} 
+			  pokemonLearnsets={pokemonLearnsets}
             onUseItemOnPokemon={onUseItemOnPokemon}
             // ⭐ 진화 관련 props 전달
             checkEvolution={checkEvolution}

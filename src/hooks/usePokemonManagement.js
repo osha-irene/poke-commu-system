@@ -298,16 +298,17 @@ const usePokemonManagement = (
     alert(`${pokemon.nickname || pokemon.name}에게서 ${itemName}을(를) 회수했습니다!`);
   };
 
-  return {
-    movePokemonToParty,
-    movePokemonToBox,
-    releasePokemon,
-    setPartnerPokemon,
-    useRareCandy,
-    updatePokemonNickname,
-    giveItemToPokemon,
-    takeItemFromPokemon
-  };
+return {
+  movePokemonToParty,
+  movePokemonToBox,
+  releasePokemon,
+  setPartnerPokemon,
+  useRareCandy,
+  updatePokemonNickname,
+  giveItemToPokemon,
+  takeItemFromPokemon
+};
+
 };
 
 export default usePokemonManagement;

@@ -166,7 +166,8 @@ export default function App() {
     acceptEvolution,
     cancelEvolution,
     manualEvolve,
-    getAllEvolvablePokemon
+    getAllEvolvablePokemon,
+	increaseEffort
   } = useGameState();
 
   // 자동 저장
@@ -294,8 +295,10 @@ export default function App() {
             <ItemsView 
               items={items}
               allItems={allItems}
+			  caughtPokemon={caughtPokemon}
               isSuperAdmin={trainer.isSuperAdmin}
-              onSellItem={sellItem}
+              onUseItem={useItemOnPokemon}
+			  onSellItem={sellItem}
               trainer={currentUser}
             />
           )}

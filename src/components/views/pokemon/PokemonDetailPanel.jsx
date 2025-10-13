@@ -21,7 +21,6 @@ import { getTypeColor } from '../../../styles/theme';
 import MovesList from './MovesList';
 import MoveSelectModal from './MoveSelectModal';
 import LevelUpMoveModal from './LevelUpMoveModal';
-import UseItemOnPokemonModal from '../../modals/UseItemOnPokemonModal';
 
 const getPokemonSpriteUrl = (number) => 
   `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`;
@@ -59,8 +58,6 @@ export default function PokemonDetailPanel({
   const [showMoveSelectModal, setShowMoveSelectModal] = useState(false);
   const [showLevelUpMoveModal, setShowLevelUpMoveModal] = useState(false); 
   const [levelUpData, setLevelUpData] = useState(null);
-  const [showUseItemModal, setShowUseItemModal] = useState(false);
-  const [selectedItemForUse, setSelectedItemForUse] = useState(null);
 
   // 진화 가능 여부 체크
   const canEvolve = checkEvolution && checkEvolution(pokemon);
@@ -125,22 +122,6 @@ export default function PokemonDetailPanel({
   const hpPercent = Math.min(100, Math.max(0, (pokemon.hp / pokemon.maxHp) * 100));
   const hpColor = hpPercent > 50 ? 'bg-green-500' : hpPercent > 20 ? 'bg-yellow-500' : 'bg-red-500';
 
-  // 사용 가능한 아이템 필터링 (이상한사탕 포함)
-  const usableItems = items?.filter(item => {
-    const name = item.name?.toLowerCase() || '';
-    return (
-      name.includes('이상한사탕') ||
-      name.includes('rare candy') ||
-      name.includes('증가') ||
-      name.includes('포인') ||
-      name.includes('과자') ||
-      name.includes('vitamin') ||
-      name.includes('마하자전거') ||
-      name.includes('빠른발톱') ||
-      item.category?.includes('vitamin')
-    );
-  }) || [];
-
   // 진화 후 포켓몬 정보 가져오기
   const getEvolvedPokemon = () => {
     if (!canEvolve || !allPokemonMaster) return null;
@@ -166,32 +147,6 @@ export default function PokemonDetailPanel({
   const handleCancelEdit = () => {
     setNickname(pokemon.nickname || pokemon.name);
     setIsEditingNickname(false);
-  };
-
-  const handleUseItem = (item) => {
-    setSelectedItemForUse(item);
-    setShowUseItemModal(true);
-  };
-
-  const handleConfirmUseItem = (item, pokemon, quantity, effect) => {
-    if (onUseItemOnPokemon) {
-      onUseItemOnPokemon(item, pokemon, quantity, effect);
-    }
-    setShowUseItemModal(false);
-    setSelectedItemForUse(null);
-  };
-
-  // 이상한 사탕 사용 (레벨업 모달 표시)
-  const handleUseCandyWithModal = (item, pokemon, quantity, effect) => {
-    if (!onUseCandy) return;
-    
-    onUseCandy(pokemon.uniqueId, (pokemonId, newLevel, newMoves) => {
-      setLevelUpData({ pokemonId, newLevel, newMoves });
-      setShowLevelUpMoveModal(true);
-    });
-    
-    setShowUseItemModal(false);
-    setSelectedItemForUse(null);
   };
 
   const handleLearnMove = (newMove, oldMoveId) => {
@@ -411,45 +366,6 @@ export default function PokemonDetailPanel({
             />
           </div>
 
-          {/* 아이템 사용 섹션 */}
-          {usableItems.length > 0 && (
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border-2 border-purple-200">
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkles size={20} className="text-purple-600" />
-                <h3 className="text-sm font-semibold text-gray-700">
-                  사용 가능한 아이템 ({usableItems.length})
-                </h3>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-                {usableItems.map((item, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleUseItem(item)}
-                    className="flex items-center gap-2 bg-white p-2 rounded-lg border border-purple-200 hover:border-purple-400 hover:shadow-md transition-all text-left"
-                  >
-                    <div className="w-10 h-10 bg-gray-50 rounded flex items-center justify-center flex-shrink-0">
-                      <img 
-                        src={item.imageUrl}
-                        alt={item.name}
-                        className="w-8 h-8"
-                        style={{ imageRendering: 'pixelated' }}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-semibold text-gray-800 truncate">
-                        {item.name}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {item.count}개
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* 지니고 있는 도구 + 친밀도 */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
@@ -599,19 +515,6 @@ export default function PokemonDetailPanel({
       </div>
 
       {/* 모달들 */}
-      {showUseItemModal && selectedItemForUse && (
-        <UseItemOnPokemonModal
-          item={selectedItemForUse}
-          pokemon={pokemon}
-          onUse={handleConfirmUseItem}
-          onLevelUp={handleUseCandyWithModal}
-          onClose={() => {
-            setShowUseItemModal(false);
-            setSelectedItemForUse(null);
-          }}
-        />
-      )}
-
       {showMoveSelectModal && allMoves && (
         <MoveSelectModal
           pokemon={pokemon}

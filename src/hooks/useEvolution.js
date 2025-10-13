@@ -96,21 +96,44 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
   };
 
   // 아이템으로 진화
-  const evolveWithItem = (pokemon, itemName) => {
-    const evolution = evolutionsData.evolutions.find(
-      evo => evo.from === pokemon.number && 
-             evo.condition.type === 'item' &&
-             evo.condition.item?.replace(/-/g, '') === itemName.toLowerCase().replace(/\s+/g, '')
-    );
-
-    if (!evolution) {
-      alert('❌ 이 아이템으로는 진화할 수 없습니다!');
-      return false;
-    }
-
-    performEvolution(pokemon, evolution);
-    return true;
+const evolveWithItem = (pokemon, itemName) => {
+  console.log('🔥 evolveWithItem 호출');
+  console.log('🔥 pokemon.number:', pokemon.number);
+  console.log('🔥 itemName:', itemName);
+  
+  // 아이템 이름 정규화 (공백, 하이픈 제거, 소문자, 한글 제거)
+  const normalizeItemName = (name) => {
+    if (!name) return '';
+    return name.toLowerCase()
+      .replace(/[\s-_]/g, '')  // 공백, 하이픈, 언더스코어 제거
+      .replace(/stone/g, '')    // 'stone' 제거
+      .replace(/의돌/g, '')     // '의돌' 제거
+      .replace(/[가-힣]/g, ''); // 모든 한글 제거
   };
+  
+  const normalizedItemName = normalizeItemName(itemName);
+  console.log('🔥 normalizedItemName:', normalizedItemName);
+  
+  const evolution = evolutionsData.evolutions.find(evo => {
+    if (evo.from !== pokemon.number) return false;
+    if (evo.condition.type !== 'item') return false;
+    
+    const evolItem = normalizeItemName(evo.condition.item || '');
+    console.log('🔥 체크 중:', evo.from, '→', evo.to, '아이템:', evolItem, '===', normalizedItemName);
+    
+    return evolItem === normalizedItemName;
+  });
+
+  console.log('🔥 찾은 진화:', evolution);
+
+  if (!evolution) {
+    alert('❌ 이 아이템으로는 진화할 수 없습니다!');
+    return false;
+  }
+
+  performEvolution(pokemon, evolution);
+  return true;
+};
 
   // 진화 실행
   const performEvolution = (pokemon, evolution) => {

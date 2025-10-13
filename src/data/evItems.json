@@ -1,0 +1,166 @@
+{
+  "ev_items": {
+    "pomeg-berry": {
+      "name": "pomeg-berry",
+      "nameKo": "자몽열매",
+      "category": "effort-drop",
+      "ev_effect": {
+        "stat": "hp",
+        "change": -10
+      }
+    },
+    "kelpsy-berry": {
+      "name": "kelpsy-berry",
+      "nameKo": "네코브열매",
+      "category": "effort-drop",
+      "ev_effect": {
+        "stat": "attack",
+        "change": -10
+      }
+    },
+    "qualot-berry": {
+      "name": "qualot-berry",
+      "nameKo": "로메열매",
+      "category": "effort-drop",
+      "ev_effect": {
+        "stat": "defense",
+        "change": -10
+      }
+    },
+    "hondew-berry": {
+      "name": "hondew-berry",
+      "nameKo": "오보열매",
+      "category": "effort-drop",
+      "ev_effect": {
+        "stat": "special-attack",
+        "change": -10
+      }
+    },
+    "grepa-berry": {
+      "name": "grepa-berry",
+      "nameKo": "시아열매",
+      "category": "effort-drop",
+      "ev_effect": {
+        "stat": "special-defense",
+        "change": -10
+      }
+    },
+    "tamato-berry": {
+      "name": "tamato-berry",
+      "nameKo": "마토마열매",
+      "category": "effort-drop",
+      "ev_effect": {
+        "stat": "speed",
+        "change": -10
+      }
+    },
+    "hp-up": {
+      "name": "hp-up",
+      "nameKo": "HP증강제",
+      "category": "effort-training",
+      "ev_effect": {
+        "stat": "hp",
+        "change": 10
+      }
+    },
+    "protein": {
+      "name": "protein",
+      "nameKo": "타우린",
+      "category": "effort-training",
+      "ev_effect": {
+        "stat": "attack",
+        "change": 10
+      }
+    },
+    "iron": {
+      "name": "iron",
+      "nameKo": "브로멕신",
+      "category": "effort-training",
+      "ev_effect": {
+        "stat": "defense",
+        "change": 10
+      }
+    },
+    "calcium": {
+      "name": "calcium",
+      "nameKo": "리조챔",
+      "category": "effort-training",
+      "ev_effect": {
+        "stat": "special-attack",
+        "change": 10
+      }
+    },
+    "zinc": {
+      "name": "zinc",
+      "nameKo": "키토산",
+      "category": "effort-training",
+      "ev_effect": {
+        "stat": "special-defense",
+        "change": 10
+      }
+    },
+    "carbos": {
+      "name": "carbos",
+      "nameKo": "인도메타신",
+      "category": "effort-training",
+      "ev_effect": {
+        "stat": "speed",
+        "change": 10
+      }
+    },
+    "health-feather": {
+      "name": "health-feather",
+      "nameKo": "HP깃털",
+      "category": "effort-training",
+      "ev_effect": {
+        "stat": "hp",
+        "change": 1
+      }
+    },
+    "muscle-feather": {
+      "name": "muscle-feather",
+      "nameKo": "근력깃털",
+      "category": "effort-training",
+      "ev_effect": {
+        "stat": "attack",
+        "change": 1
+      }
+    },
+    "resist-feather": {
+      "name": "resist-feather",
+      "nameKo": "저항깃털",
+      "category": "effort-training",
+      "ev_effect": {
+        "stat": "defense",
+        "change": 1
+      }
+    },
+    "genius-feather": {
+      "name": "genius-feather",
+      "nameKo": "지력깃털",
+      "category": "effort-training",
+      "ev_effect": {
+        "stat": "special-attack",
+        "change": 1
+      }
+    },
+    "clever-feather": {
+      "name": "clever-feather",
+      "nameKo": "정신깃털",
+      "category": "effort-training",
+      "ev_effect": {
+        "stat": "special-defense",
+        "change": 1
+      }
+    },
+    "swift-feather": {
+      "name": "swift-feather",
+      "nameKo": "순발깃털",
+      "category": "effort-training",
+      "ev_effect": {
+        "stat": "speed",
+        "change": 1
+      }
+    }
+  }
+}
