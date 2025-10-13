@@ -16,15 +16,18 @@ export default function PokemonView({
   onReleasePokemon,
   onUseRareCandy,
   onUpdateNickname,
-  onGiveItem,      // ⭐ 추가
+  onGiveItem,
   onTakeItem,
   onSetPartner,
-  onForgetMove,    // ⭐ 추가
-  onLearnMove,     // ⭐ 추가
+  onForgetMove,
+  onLearnMove,
   isAdmin = false,
   allMoves = [],
   pokemonLearnsets = {},
-  onUseItemOnPokemon
+  onUseItemOnPokemon,
+  // ⭐ 진화 관련 props 추가
+  checkEvolution,
+  manualEvolve
 }) {
   const [selectedPokemonId, setSelectedPokemonId] = useState(null);
   const [showBox, setShowBox] = useState(false);
@@ -71,8 +74,6 @@ export default function PokemonView({
     e.dataTransfer.dropEffect = 'move';
   };
 
-  
-
   const handleDropToParty = (e) => {
     e.preventDefault();
     if (draggedPokemon && !draggedPokemon.isInParty) {
@@ -95,19 +96,15 @@ export default function PokemonView({
   };
 
   const handleUseCandy = (uniqueId, onLevelUpCallback) => {
-  if (!hasRareCandy) return;
-  
-  const pokemon = caughtPokemon.find(p => p && p.uniqueId === uniqueId);
-  if (!pokemon) return;
-  
-  if (window.confirm(`${pokemon.nickname || pokemon.name}에게 이상한사탕을 사용하시겠습니까?`)) {
-    console.log('🎯 PokemonView: onUseRareCandy 호출');
-    console.log('🎯 uniqueId:', uniqueId);
-    console.log('🎯 콜백:', onLevelUpCallback);
+    if (!hasRareCandy) return;
     
-    onUseRareCandy(uniqueId, onLevelUpCallback);  // ⭐ 콜백 전달!
-  }
-};
+    const pokemon = caughtPokemon.find(p => p && p.uniqueId === uniqueId);
+    if (!pokemon) return;
+    
+    if (window.confirm(`${pokemon.nickname || pokemon.name}에게 이상한사탕을 사용하시겠습니까?`)) {
+      onUseRareCandy(uniqueId, onLevelUpCallback);
+    }
+  };
 
   const handleMove = () => {
     if (!selectedPokemon) return;
@@ -142,6 +139,7 @@ export default function PokemonView({
                 key={pokemon?.uniqueId || `empty-${index}`}
                 pokemon={pokemon}
                 index={index}
+				allItems={allItems}
                 isSelected={selectedPokemonId === pokemon?.uniqueId}
                 onDragStart={(e) => handleDragStart(e, pokemon, true, index)}
                 onClick={() => handlePokemonClick(pokemon)}
@@ -212,7 +210,11 @@ export default function PokemonView({
             onLearnMove={onLearnMove}    
             allMoves={allMoves} 
             pokemonLearnsets={pokemonLearnsets}
-			onUseItemOnPokemon={onUseItemOnPokemon}
+            onUseItemOnPokemon={onUseItemOnPokemon}
+            // ⭐ 진화 관련 props 전달
+            checkEvolution={checkEvolution}
+            manualEvolve={manualEvolve}
+            allPokemonMaster={allPokemonMaster}
           />
         ) : (
           <div className="bg-white rounded-lg border border-gray-200 p-6 h-full flex items-center justify-center">

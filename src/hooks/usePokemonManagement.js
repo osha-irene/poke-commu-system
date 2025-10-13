@@ -7,7 +7,8 @@ const usePokemonManagement = (
   setSharedPokedexData, 
   sharedPokedexData,
   pokemonLearnsets,
-  allMoves
+  allMoves,
+  checkEvolutionOnLevelUp  // ⭐ 진화 체크 함수 추가
 ) => {
 
   // 엔트리 이동
@@ -44,47 +45,47 @@ const usePokemonManagement = (
   };
 
   // 박스 이동
- const movePokemonToBox = (uniqueId) => {
-  if (!currentUser) return;
-  const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === uniqueId);
-  if (pokemonIndex === -1) { 
-    alert('포켓몬을 찾을 수 없습니다!'); 
-    return; 
-  }
-  if (pokemonIndex >= 6) { 
-    alert('이미 박스에 있습니다!'); 
-    return; 
-  }
-  
-  const pokemon = currentUser.caughtPokemon[pokemonIndex];
-  
-  // 파트너 포켓몬은 박스로 이동 불가
-  if (pokemon.isPartner) {
-    alert('💖 파트너 포켓몬은 박스로 이동할 수 없습니다!');
-    return;
-  }
-  
-  const newCaughtPokemon = [...currentUser.caughtPokemon];
-  
-  // 엔트리에서 해당 포켓몬을 null로 변경
-  newCaughtPokemon[pokemonIndex] = null;
-  
-  // 엔트리(0-5)와 박스(6~) 분리
-  const party = newCaughtPokemon.slice(0, 6);
-  const box = newCaughtPokemon.slice(6);
-  
-  // 엔트리를 정렬: null이 아닌 것들을 앞으로, null을 뒤로
-  const sortedParty = [...party.filter(p => p !== null), ...party.filter(p => p === null)];
-  
-  // 박스 끝에 포켓몬 추가
-  const updatedBox = [...box, pokemon];
-  
-  // 최종 배열 생성
-  const finalPokemon = [...sortedParty, ...updatedBox];
-  
-  updateCurrentUser({ caughtPokemon: finalPokemon });
-  alert('박스로 이동했습니다!');
-};
+  const movePokemonToBox = (uniqueId) => {
+    if (!currentUser) return;
+    const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === uniqueId);
+    if (pokemonIndex === -1) { 
+      alert('포켓몬을 찾을 수 없습니다!'); 
+      return; 
+    }
+    if (pokemonIndex >= 6) { 
+      alert('이미 박스에 있습니다!'); 
+      return; 
+    }
+    
+    const pokemon = currentUser.caughtPokemon[pokemonIndex];
+    
+    // 파트너 포켓몬은 박스로 이동 불가
+    if (pokemon.isPartner) {
+      alert('💖 파트너 포켓몬은 박스로 이동할 수 없습니다!');
+      return;
+    }
+    
+    const newCaughtPokemon = [...currentUser.caughtPokemon];
+    
+    // 엔트리에서 해당 포켓몬을 null로 변경
+    newCaughtPokemon[pokemonIndex] = null;
+    
+    // 엔트리(0-5)와 박스(6~) 분리
+    const party = newCaughtPokemon.slice(0, 6);
+    const box = newCaughtPokemon.slice(6);
+    
+    // 엔트리를 정렬: null이 아닌 것들을 앞으로, null을 뒤로
+    const sortedParty = [...party.filter(p => p !== null), ...party.filter(p => p === null)];
+    
+    // 박스 끝에 포켓몬 추가
+    const updatedBox = [...box, pokemon];
+    
+    // 최종 배열 생성
+    const finalPokemon = [...sortedParty, ...updatedBox];
+    
+    updateCurrentUser({ caughtPokemon: finalPokemon });
+    alert('박스로 이동했습니다!');
+  };
 
   // 방생
   const releasePokemon = (uniqueId) => {
@@ -190,8 +191,9 @@ const usePokemonManagement = (
     
     console.log('🎯 배울 수 있는 기술:', newMoves);
     
-    if (newMoves.length > 0 && onLevelUp) {
-      console.log('✅ 모달 띄우기!');
+    // ⭐ 기술이 있든 없든 항상 콜백 실행 (진화 체크를 위해)
+    if (onLevelUp) {
+      console.log('✅ 레벨업 콜백 실행 (기술:', newMoves.length, '개)');
       onLevelUp(uniqueId, newLevel, newMoves);
     } else {
       alert(`레벨이 ${newLevel}로 올랐습니다!`);
@@ -209,7 +211,11 @@ const usePokemonManagement = (
 
   // 아이템 주기/회수
   const giveItemToPokemon = (pokemonUniqueId, itemName, allItems) => {
-    if (!currentUser) return;
+    if (!currentUser || !currentUser.inventory || !currentUser.caughtPokemon) {
+      console.error('❌ currentUser 또는 데이터가 없습니다:', currentUser);
+      alert('오류가 발생했습니다. 페이지를 새로고침해주세요.');
+      return false;
+    }
     
     const itemIndex = currentUser.inventory.findIndex(i => i.name === itemName);
     if (itemIndex === -1) { 
@@ -259,7 +265,11 @@ const usePokemonManagement = (
   };
 
   const takeItemFromPokemon = (pokemonUniqueId, allItems) => {
-    if (!currentUser) return;
+    if (!currentUser || !currentUser.caughtPokemon || !currentUser.inventory) {
+  
+      alert('오류가 발생했습니다. 페이지를 새로고침해주세요.');
+      return;
+    }
     
     const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === pokemonUniqueId);
     if (pokemonIndex === -1) return;

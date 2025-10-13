@@ -7,7 +7,8 @@ import {
   X, 
   Edit2, 
   Check,
-  Sparkles
+  Sparkles,
+  Zap
 } from 'lucide-react';
 import { 
   RadarChart, 
@@ -46,7 +47,11 @@ export default function PokemonDetailPanel({
   isAdmin = false,
   allMoves = [],      
   pokemonLearnsets = {},
-  onUseItemOnPokemon  
+  onUseItemOnPokemon,
+  // 진화 관련 props 추가
+  checkEvolution,
+  manualEvolve,
+  allPokemonMaster = []
 }) {
   // State
   const [isEditingNickname, setIsEditingNickname] = useState(false);
@@ -56,6 +61,11 @@ export default function PokemonDetailPanel({
   const [levelUpData, setLevelUpData] = useState(null);
   const [showUseItemModal, setShowUseItemModal] = useState(false);
   const [selectedItemForUse, setSelectedItemForUse] = useState(null);
+
+  // 진화 가능 여부 체크
+  const canEvolve = checkEvolution && checkEvolution(pokemon);
+  const isHoldingEverstone = pokemon.heldItem?.toLowerCase() === 'everstone' || 
+                              pokemon.heldItem?.toLowerCase() === '변함없는돌';
 
   // 컨디션 및 노력치 데이터
   const conditionData = [
@@ -122,7 +132,7 @@ export default function PokemonDetailPanel({
       name.includes('이상한사탕') ||
       name.includes('rare candy') ||
       name.includes('증가') ||
-      name.includes('포핀') ||
+      name.includes('포인') ||
       name.includes('과자') ||
       name.includes('vitamin') ||
       name.includes('마하자전거') ||
@@ -130,6 +140,14 @@ export default function PokemonDetailPanel({
       item.category?.includes('vitamin')
     );
   }) || [];
+
+  // 진화 후 포켓몬 정보 가져오기
+  const getEvolvedPokemon = () => {
+    if (!canEvolve || !allPokemonMaster) return null;
+    return allPokemonMaster.find(p => p.number === canEvolve.to);
+  };
+
+  const evolvedPokemon = getEvolvedPokemon();
 
   // Effects
   useEffect(() => {
@@ -178,13 +196,26 @@ export default function PokemonDetailPanel({
 
   const handleLearnMove = (newMove, oldMoveId) => {
     if (typeof onLearnMove !== 'function') {
-      alert('⌨ 기술을 배울 수 없습니다!');
+      alert('⚠️ 기술을 배울 수 없습니다!');
       return;
     }
     
     onLearnMove(pokemon.uniqueId, newMove, oldMoveId);
     setShowLevelUpMoveModal(false);
     setLevelUpData(null);
+  };
+
+  // 진화 버튼 클릭 핸들러
+  const handleEvolve = () => {
+    if (!manualEvolve) return;
+    
+    const confirmMessage = evolvedPokemon 
+      ? `${pokemon.nickname || pokemon.name}을(를) ${evolvedPokemon.name}(으)로 진화시키시겠습니까?`
+      : '이 포켓몬을 진화시키시겠습니까?';
+    
+    if (window.confirm(confirmMessage)) {
+      manualEvolve(pokemon);
+    }
   };
 
   return (
@@ -260,10 +291,10 @@ export default function PokemonDetailPanel({
               <div className="flex items-center gap-2 mb-1">
                 {pokeballData && (
                   <div 
-                    className="w-6 h-6 flex-shrink-0"
+                    className="w-8 h-8 flex-shrink-0"
                     style={{
                       backgroundImage: `url(${pokeballData.spriteUrl})`,
-                      backgroundSize: '125%',
+                      backgroundSize: '110%',
                       backgroundRepeat: 'no-repeat',
                       backgroundPosition: 'center',
                       imageRendering: 'pixelated'
@@ -284,6 +315,49 @@ export default function PokemonDetailPanel({
             
             <div className="text-lg text-gray-600">Lv. {pokemon.level}</div>
           </div>
+
+          {/* 진화 가능 알림 */}
+          {canEvolve && !isHoldingEverstone && evolvedPokemon && (
+            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-3 border-2 border-yellow-300">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={20} className="text-yellow-600 animate-pulse" />
+                  <div>
+                    <div className="text-sm font-bold text-yellow-800">
+                      진화 가능!
+                    </div>
+                    <div className="text-xs text-yellow-700">
+                      {evolvedPokemon.name}(으)로 진화할 수 있습니다
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={handleEvolve}
+                  className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-lg hover:from-yellow-600 hover:to-orange-600 font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                >
+                  <Zap size={16} />
+                  진화하기
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 변함없는돌 알림 */}
+          {isHoldingEverstone && (
+            <div className="bg-gray-50 rounded-lg p-3 border-2 border-gray-300">
+              <div className="flex items-center gap-2">
+                <div className="text-lg">🪨</div>
+                <div>
+                  <div className="text-sm font-bold text-gray-700">
+                    변함없는돌 착용 중
+                  </div>
+                  <div className="text-xs text-gray-600">
+                    이 포켓몬은 진화하지 않습니다
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* 컨디션 & 노력치 그래프 */}
           <div className="grid grid-cols-2 gap-3">

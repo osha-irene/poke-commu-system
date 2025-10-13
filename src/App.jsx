@@ -9,6 +9,7 @@ import ProfileView from './components/views/ProfileView';
 import AdminView from './components/views/AdminView';
 import EncounterModal from './components/modals/EncounterModal';
 import FirstCatchMemoModal from './components/modals/FirstCatchMemoModal';
+import EvolutionModal from './components/modals/EvolutionModal';  // ⭐ 추가
 import useGameState from './hooks/useGameState';
 import ShopView from './components/views/ShopView';
 import MembersView from './components/views/MembersView';
@@ -33,7 +34,7 @@ function LoginScreen({ onLogin }) {
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">🐾 포켓몬 탐험</h1>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">🾠포켓몬 탐험</h1>
           <p className="text-gray-600">커뮤니티 시스템</p>
         </div>
         
@@ -85,7 +86,7 @@ function LoginScreen({ onLogin }) {
 }
 
 export default function App() {
-  // ⭐ Hook들을 최상단에 선언
+  // ⭐ Hooks들을 최상단에 선언
   const [qnaPosts, setQnaPosts] = useState(() => {
     const saved = localStorage.getItem('poke_qnaPosts');
     return saved ? JSON.parse(saved) : [];
@@ -156,7 +157,16 @@ export default function App() {
     applyLoot,
     updateRegionLootConfig,
     updatePokedexRegions,
-	useItemOnPokemon
+    useItemOnPokemon,
+    // ⭐ 진화 관련 추가
+    evolutionModal,
+    checkEvolution,
+    checkEvolutionOnLevelUp,
+    evolveWithItem,
+    acceptEvolution,
+    cancelEvolution,
+    manualEvolve,
+    getAllEvolvablePokemon
   } = useGameState();
 
   // 자동 저장
@@ -189,8 +199,6 @@ export default function App() {
     ));
   };
 
-  console.log('👤 currentUser:', currentUser);
-  console.log('🔑 currentUser?.isAdmin:', currentUser?.isAdmin);
 
   // 로그인하지 않은 경우 로그인 화면 표시
   if (!currentUser || !currentUser.id) {
@@ -275,7 +283,10 @@ export default function App() {
               isAdmin={currentUser?.isAdmin}   
               allMoves={allMoves}             
               pokemonLearnsets={pokemonLearnsets}
-  		      onUseItemOnPokemon={useItemOnPokemon} 
+              onUseItemOnPokemon={useItemOnPokemon}
+              // ⭐ 진화 관련 props 추가
+              checkEvolution={checkEvolution}
+              manualEvolve={manualEvolve}
             />
           )}
           
@@ -371,6 +382,17 @@ export default function App() {
           pokemon={firstCatchPokemon}
           onSave={(memo) => saveFirstCatchMemo(firstCatchPokemon.number, memo)}
           onSkip={() => skipFirstCatchMemo(firstCatchPokemon.number)}
+        />
+      )}
+
+      {/* ⭐ 진화 모달 */}
+      {evolutionModal && (
+        <EvolutionModal
+          pokemon={evolutionModal.pokemon}
+          evolution={evolutionModal.evolution}
+          allPokemonMaster={allPokemonMaster}
+          onAccept={acceptEvolution}
+          onCancel={cancelEvolution}
         />
       )}
     </div>

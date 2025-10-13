@@ -164,7 +164,8 @@ export const useAdminFunctions = (
       heldItem = null,
       nickname = null,
       moves = [],
-      isPartner = false
+      isPartner = false,
+	  caughtWithBall= '몬스터볼'
     } = options;
 
     const newPokemon = {
@@ -184,6 +185,7 @@ export const useAdminFunctions = (
       heldItem,
       moves,
       isPartner,
+	  caughtWithBall,
       condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
       effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
       imageUrl: pokemonTemplate.imageUrl,

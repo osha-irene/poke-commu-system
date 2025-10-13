@@ -53,6 +53,48 @@ export const COLORS = {
   }
 };
 
+// ===== 포켓몬 볼 리스트 =====
+export const POKEBALL_LIST = [
+  // 기본 볼
+  { name: '몬스터볼', nameEn: 'poke-ball' },
+  { name: '수퍼볼', nameEn: 'great-ball' },
+  { name: '하이퍼볼', nameEn: 'ultra-ball' },
+  { name: '마스터볼', nameEn: 'master-ball' },
+  
+  // 2세대 어프리코트 볼
+  { name: '사파리볼', nameEn: 'safari-ball' },
+  { name: '레벨볼', nameEn: 'level-ball' },
+  { name: '루어볼', nameEn: 'lure-ball' },
+  { name: '문볼', nameEn: 'moon-ball' },
+  { name: '프렌드볼', nameEn: 'friend-ball' },
+  { name: '러브볼', nameEn: 'love-ball' },
+  { name: '헤비볼', nameEn: 'heavy-ball' },
+  { name: '스피드볼', nameEn: 'fast-ball' },
+  { name: '스포츠볼', nameEn: 'sport-ball' },
+  
+  // 3세대 이후
+  { name: '프리미어볼', nameEn: 'premier-ball' },
+  { name: '넷트볼', nameEn: 'net-ball' },
+  { name: '다이브볼', nameEn: 'dive-ball' },
+  { name: '네스트볼', nameEn: 'nest-ball' },
+  { name: '리피트볼', nameEn: 'repeat-ball' },
+  { name: '타이머볼', nameEn: 'timer-ball' },
+  { name: '럭셔리볼', nameEn: 'luxury-ball' },
+  
+  // 4세대 이후
+  { name: '다크볼', nameEn: 'dusk-ball' },
+  { name: '힐볼', nameEn: 'heal-ball' },
+  { name: '퀵볼', nameEn: 'quick-ball' },
+  { name: '파크볼', nameEn: 'park-ball' },
+  
+  // 5세대 이후
+  { name: '드림볼', nameEn: 'dream-ball' },
+  
+  // 특별 볼
+  { name: '프레셔스볼', nameEn: 'cherish-ball' },
+  { name: '울트라볼', nameEn: 'beast-ball' }
+];
+
 // ===== 타이포그래피 =====
 export const TYPOGRAPHY = {
   fontFamily: {
@@ -130,8 +172,7 @@ export const COMPONENT_STYLES = {
       secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300',
       danger: 'bg-red-600 text-white hover:bg-red-700',
       success: 'bg-green-600 text-white hover:bg-green-700',
-	  warning: 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-
+      warning: 'bg-orange-100 text-orange-700 hover:bg-orange-200'
     }
   },
 
@@ -201,3 +242,7 @@ export const getBadgeClass = (variant = 'default') => {
   return `${base} ${variants[variant]}`;
 };
 
+export const getInputClass = (variant = 'default') => {
+  const { base, variants } = COMPONENT_STYLES.input;
+  return `${base} ${variants[variant]}`;
+};

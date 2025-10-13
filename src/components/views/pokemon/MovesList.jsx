@@ -38,26 +38,14 @@ export default function MovesList({
   onForgetMove,
   canEdit = true 
 }) {
-  // ⭐ 디버깅 로그 추가
-  console.log('🎮 === MovesList 디버깅 ===');
-  console.log('📋 moves:', moves);
-  console.log('📚 allMoves 개수:', allMoves.length);
-  console.log('📚 allMoves 샘플:', allMoves.slice(0, 3));
   
   const displayMoves = moves.map((m, idx) => {
-    console.log(`\n🔍 [${idx}] 처리 중:`, m);
-    console.log(`   - moveId: ${m.moveId} (타입: ${typeof m.moveId})`);
-    
     // ⭐ 여러 방법으로 찾아보기
     const moveData1 = allMoves.find(move => move.id === m.moveId);
     const moveData2 = allMoves.find(move => move.id == m.moveId); // == 비교
     const moveData3 = allMoves.find(move => move.id === String(m.moveId));
     const moveData4 = allMoves.find(move => move.id === Number(m.moveId));
-    
-    console.log(`   - === 비교: ${!!moveData1}`);
-    console.log(`   - == 비교: ${!!moveData2}`);
-    console.log(`   - String 비교: ${!!moveData3}`);
-    console.log(`   - Number 비교: ${!!moveData4}`);
+
     
     const moveData = moveData1 || moveData2 || moveData3 || moveData4;
     
@@ -67,7 +55,6 @@ export default function MovesList({
       return null;
     }
     
-    console.log(`✅ 찾음!`, moveData);
     
     return {
       ...moveData,
@@ -76,8 +63,6 @@ export default function MovesList({
     };
   }).filter(Boolean);
 
-  console.log('✅ displayMoves:', displayMoves);
-  console.log('🎮 === 디버깅 끝 ===\n');
   
   if (displayMoves.length === 0) {
     return (

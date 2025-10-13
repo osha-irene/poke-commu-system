@@ -6,6 +6,7 @@ import customItemsData from '../data/customItems.json';
 import regionsData from '../data/regions.json';
 import movesData from '../data/moves.json';
 import usePokemonManagement from './usePokemonManagement';
+import { useEvolution } from './useEvolution';  // ⭐ 추가
 import { loadFromStorage, saveToStorage } from '../utils/storage';
 import { useAuth } from './useAuth';
 import { useMembers } from './useMembers';
@@ -121,6 +122,14 @@ export default function useGameState() {
 
   const movesHook = useMoves(currentUser, updateCurrentUser, allMoves, pokemonLearnsets);
 
+  // ⭐ 진화 Hook 먼저 생성
+  const evolutionHook = useEvolution(
+    currentUser,
+    updateCurrentUser,
+    allPokemonMaster
+  );
+
+  // pokemonManagement 생성 (진화 체크 없이)
   const pokemonManagement = usePokemonManagement(
     currentUser,
     updateCurrentUser,
@@ -128,8 +137,62 @@ export default function useGameState() {
     setSharedPokedexData,
     sharedPokedexData,
     pokemonLearnsets,
-    allMoves
+    allMoves,
+    null  // 일단 null로 전달
   );
+
+  // ⭐ useRareCandy를 래핑하여 진화 체크 추가
+  const useRareCandyWithEvolution = (uniqueId, onLevelUp) => {
+    if (!currentUser) return;
+    
+    const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
+    if (!pokemon) return;
+    
+    console.log('🎯 useRareCandyWithEvolution 호출');
+    
+    // 원래 useRareCandy 호출 - 콜백을 감싸서 진화 체크 추가
+    pokemonManagement.useRareCandy(uniqueId, (pokemonId, newLevel, newMoves) => {
+      console.log('🎯 레벨업 콜백 실행, newLevel:', newLevel, 'newMoves:', newMoves);
+      
+      // 약간의 딜레이 후 진화 체크 (상태 업데이트 대기)
+      setTimeout(() => {
+        console.log('⏰ setTimeout 실행됨');
+        
+        // localStorage에서 최신 members 데이터 가져오기
+        const savedMembers = JSON.parse(localStorage.getItem('poke_members') || '{}');
+        const latestUser = savedMembers[currentUser.id];
+        
+        console.log('📦 localStorage에서 가져온 유저:', latestUser?.name);
+        
+        if (latestUser) {
+          const updatedPokemon = latestUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
+          
+          console.log('🎯 업데이트된 포켓몬:', updatedPokemon?.name, 'Lv.', updatedPokemon?.level);
+          
+          if (updatedPokemon) {
+            // 진화 체크
+            const shouldShowEvolutionModal = evolutionHook.checkEvolutionOnLevelUp(updatedPokemon);
+            
+            if (shouldShowEvolutionModal) {
+              console.log('✨ 진화 모달 표시됨! 기술 배우기는 건너뜀');
+              return;
+            }
+          }
+        }
+        
+        // 진화하지 않으면 기술 배우기 모달 표시
+        if (onLevelUp && newMoves.length > 0) {
+          console.log('✅ 기술 배우기 모달 표시');
+          onLevelUp(pokemonId, newLevel, newMoves);
+        } else {
+          console.log('ℹ️ 배울 기술 없음, 레벨업만 완료');
+        }
+      }, 100);
+    });
+  };
+
+  // pokemonManagement에서 useRareCandy 제외
+  const { useRareCandy: _, ...restPokemonManagement } = pokemonManagement;
 
   const adminFunctions = useAdminFunctions(
     currentUser,
@@ -191,7 +254,7 @@ export default function useGameState() {
 
     const accessibleRegions = currentUser.accessibleRegions || [];
     if (accessibleRegions.length > 0 && !accessibleRegions.includes(region.id)) {
-      alert('❌ 이 구역에 접근할 수 없습니다!');
+      alert('⛔ 이 구역에 접근할 수 없습니다!');
       return;
     }
     
@@ -638,7 +701,7 @@ export default function useGameState() {
     movePokemonToParty: pokemonManagement.movePokemonToParty,
     movePokemonToBox: pokemonManagement.movePokemonToBox,
     releasePokemon: pokemonManagement.releasePokemon,
-    useRareCandy: pokemonManagement.useRareCandy,
+    useRareCandy: useRareCandyWithEvolution,  // ⭐ 래핑된 함수만 사용
     updatePokemonNickname: pokemonManagement.updatePokemonNickname,
     updatePokedexMemo,
     updateGamePokedex,
@@ -663,9 +726,10 @@ export default function useGameState() {
     getAllLearnableMoves: movesHook.getAllLearnableMoves,
     handlePurchase,
     applyLoot,
-    ...pokemonManagement,
+    ...restPokemonManagement,
     updateRegionLootConfig,
     updatePokedexRegions,
-    useItemOnPokemon
+    useItemOnPokemon,
+    ...evolutionHook
   };
 }
