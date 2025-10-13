@@ -13,7 +13,7 @@ import useGameState from './hooks/useGameState';
 import ShopView from './components/views/ShopView';
 import MembersView from './components/views/MembersView';
 import NPCsView from './components/views/NPCsView';
-
+import QnABoard from './components/views/QnABoard';
 
 
 // 로그인 화면 컴포넌트
@@ -85,6 +85,12 @@ function LoginScreen({ onLogin }) {
 }
 
 export default function App() {
+  // ⭐ Hook들을 최상단에 선언
+  const [qnaPosts, setQnaPosts] = useState(() => {
+    const saved = localStorage.getItem('poke_qnaPosts');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const {
     currentTab,
     setCurrentTab,
@@ -151,6 +157,36 @@ export default function App() {
     updateRegionLootConfig,
     updatePokedexRegions
   } = useGameState();
+
+  // 자동 저장
+  React.useEffect(() => {
+    localStorage.setItem('poke_qnaPosts', JSON.stringify(qnaPosts));
+  }, [qnaPosts]);
+
+  // 핸들러 함수들
+  const handleCreatePost = (post) => {
+    setQnaPosts([post, ...qnaPosts]);
+  };
+
+  const handleDeletePost = (postId) => {
+    setQnaPosts(qnaPosts.filter(p => p.id !== postId));
+  };
+
+  const handleCreateComment = (postId, comment) => {
+    setQnaPosts(qnaPosts.map(p => 
+      p.id === postId 
+        ? { ...p, comments: [...(p.comments || []), comment] }
+        : p
+    ));
+  };
+
+  const handleDeleteComment = (postId, commentId) => {
+    setQnaPosts(qnaPosts.map(p =>
+      p.id === postId
+        ? { ...p, comments: p.comments.filter(c => c.id !== commentId) }
+        : p
+    ));
+  };
 
   console.log('👤 currentUser:', currentUser);
   console.log('🔑 currentUser?.isAdmin:', currentUser?.isAdmin);
@@ -245,7 +281,9 @@ export default function App() {
             <ItemsView 
               items={items}
               allItems={allItems}
-              isSuperAdmin={trainer.isSuperAdmin} 
+              isSuperAdmin={trainer.isSuperAdmin}
+              onSellItem={sellItem}
+              trainer={currentUser}
             />
           )}
           
@@ -262,6 +300,17 @@ export default function App() {
             <ProfileView 
               trainer={trainer} 
               caughtCount={caughtPokemon.length} 
+            />
+          )}
+          
+          {currentTab === 'qna' && (
+            <QnABoard
+              currentUser={currentUser}
+              posts={qnaPosts}
+              onCreatePost={handleCreatePost}
+              onDeletePost={handleDeletePost}
+              onCreateComment={handleCreateComment}
+              onDeleteComment={handleDeleteComment}
             />
           )}
           

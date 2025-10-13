@@ -1,5 +1,5 @@
 import React from 'react';
-import { Map, BookOpen, Smile, Package, User, Settings, LogOut, ShoppingBag, Users, Bot } from 'lucide-react';
+import { Map, BookOpen, Smile, Package, User, Settings, LogOut, ShoppingBag, Users, Bot,MessageSquare } from 'lucide-react';
 import NavButton from './NavButton';
 
 
@@ -91,6 +91,7 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin, trainer, o
           active={currentTab === 'profile'}
           onClick={() => setCurrentTab('profile')}
         />
+		<NavButton icon={MessageSquare} label="Q&A" active={currentTab === 'qna'} onClick={() => setCurrentTab('qna')} />
         
         {isAdmin && (
           <>

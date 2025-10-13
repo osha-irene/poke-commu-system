@@ -2,12 +2,14 @@ import React from 'react';
 
 export default function Header({ currentTab, trainer }) {
   const titles = {
-    map: '🗺️ 지도',
-    pokedex: '📖 포켓몬 도감',
-    pokemon: '👥 내 포켓몬',
-    items: '🎒 아이템',
-    profile: '👤 프로필',
-    admin: '⚙️ 관리자 패널'
+	  map: '🗺️ 지도',
+	  pokedex: '📖 포켓몬 도감',
+	  pokemon: '👥 내 포켓몬',
+	  items: '🎒 아이템',
+	  shop: '🏪 상점',
+	  qna: '💬 Q&A',  // ← 추가
+	  profile: '👤 프로필',
+	  admin: '⚙️ 관리자 패널'
   };
 
   return (

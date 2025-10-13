@@ -6,6 +6,9 @@ import ShopAdminPanel from './admin/ShopAdminPanel';
 import MemberDetailPanel from './admin/MemberDetailPanel';
 import CustomItemCreator from './admin/CustomItemCreator';
 import LootConfigPanel from './admin/LootConfigPanel';
+import { Button } from '../ui/Button';
+import { Card } from '../ui/Card';
+import { Badge } from '../ui/Badge';
 
 export default function AdminView({ 
   trainer, members, updateMaxDailyWalks, regions, allPokemon, allPokemonMaster, allItems,
@@ -57,93 +60,60 @@ export default function AdminView({
     }
   };
 
+  // 탭 버튼 컴포넌트
+  const TabButton = ({ active, onClick, children, variant = 'default' }) => (
+    <Button
+      onClick={onClick}
+      variant={active ? 'primary' : 'secondary'}
+      size="md"
+      className={`whitespace-nowrap ${variant === 'danger' && !active ? 'bg-red-100 text-red-600 hover:bg-red-200' : ''}`}
+    >
+      {children}
+    </Button>
+  );
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* ⭐ 서브메뉴 탭 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-2 flex gap-2 overflow-x-auto">
-        <button
-          onClick={() => setAdminTab('members')}
-          className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-colors ${
-            adminTab === 'members' 
-              ? 'bg-indigo-600 text-white' 
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
-        >
+      <Card className="p-2 flex gap-2 overflow-x-auto">
+        <TabButton active={adminTab === 'members'} onClick={() => setAdminTab('members')}>
           👥 멤버 관리
-        </button>
+        </TabButton>
         
-        <button
-          onClick={() => setAdminTab('settings')}
-          className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-colors ${
-            adminTab === 'settings' 
-              ? 'bg-indigo-600 text-white' 
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
-        >
+        <TabButton active={adminTab === 'settings'} onClick={() => setAdminTab('settings')}>
           ⚙️ 시스템 설정
-        </button>
+        </TabButton>
         
-        <button
-          onClick={() => setAdminTab('regions')}
-          className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-colors ${
-            adminTab === 'regions' 
-              ? 'bg-indigo-600 text-white' 
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
-        >
+        <TabButton active={adminTab === 'regions'} onClick={() => setAdminTab('regions')}>
           🗺️ 지역 설정
-        </button>
+        </TabButton>
         
-        <button
-          onClick={() => setAdminTab('loot')}
-          className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-colors ${
-            adminTab === 'loot' 
-              ? 'bg-indigo-600 text-white' 
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
-        >
+        <TabButton active={adminTab === 'loot'} onClick={() => setAdminTab('loot')}>
           🎁 탐험 보상
-        </button>
+        </TabButton>
         
-        <button
-          onClick={() => setAdminTab('shop')}
-          className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-colors ${
-            adminTab === 'shop' 
-              ? 'bg-indigo-600 text-white' 
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
-        >
+        <TabButton active={adminTab === 'shop'} onClick={() => setAdminTab('shop')}>
           🏪 상점 관리
-        </button>
+        </TabButton>
         
-        <button
-          onClick={() => setAdminTab('pokedex')}
-          className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-colors ${
-            adminTab === 'pokedex' 
-              ? 'bg-indigo-600 text-white' 
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
-        >
+        <TabButton active={adminTab === 'pokedex'} onClick={() => setAdminTab('pokedex')}>
           📖 도감 관리
-        </button>
+        </TabButton>
         
         {trainer.isSuperAdmin && (
-          <button
+          <TabButton 
+            active={adminTab === 'danger'} 
             onClick={() => setAdminTab('danger')}
-            className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-colors ${
-              adminTab === 'danger' 
-                ? 'bg-red-600 text-white' 
-                : 'bg-red-100 text-red-600 hover:bg-red-200'
-            }`}
+            variant="danger"
           >
             ⚠️ 위험 구역
-          </button>
+          </TabButton>
         )}
-      </div>
+      </Card>
 
       {/* ⭐ 멤버 관리 탭 */}
       {adminTab === 'members' && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <Card className="p-6">
           <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
             <User size={24} /> 멤버 관리
           </h3>
@@ -173,32 +143,32 @@ export default function AdminView({
                 onChange={(e) => setNewMemberName(e.target.value)}
                 className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:border-indigo-500 focus:outline-none"
               />
-              <button
-                onClick={handleAddMember}
-                className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 font-semibold transition-colors"
-              >
+              <Button variant="primary" onClick={handleAddMember}>
                 추가
-              </button>
+              </Button>
             </div>
           </div>
 
           {/* 멤버 목록 */}
           <div className="space-y-2">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="font-semibold text-gray-700">멤버 목록 ({Object.keys(members).length}명)</h4>
-              <button 
+              <h4 className="font-semibold text-gray-700">
+                멤버 목록 ({Object.keys(members).length}명)
+              </h4>
+              <Button 
+                variant="warning"
+                size="sm"
                 onClick={() => { 
                   if(window.confirm('⚠️ 모든 멤버의 탐험 횟수를 리셋하시겠습니까?')) { 
                     resetAllWalkCounts(); 
                     alert('리셋 완료!'); 
                   }
-                }} 
-                className="bg-orange-100 text-orange-700 px-4 py-1 rounded-lg hover:bg-orange-200 text-sm font-semibold"
+                }}
               >
                 전체 탐험 횟수 리셋
-              </button>
+              </Button>
             </div>
-            
+    
             {Object.values(members).map((member) => (
               <button 
                 key={member.id} 
@@ -213,8 +183,12 @@ export default function AdminView({
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-lg">{member.name}</span>
                       <span className="text-sm text-gray-500">({member.id})</span>
-                      {member.isSuperAdmin && <span className="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full font-semibold">슈퍼관리자</span>}
-                      {member.isAdmin && !member.isSuperAdmin && <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-semibold">관리자</span>}
+                      {member.isSuperAdmin && (
+                        <Badge variant="danger">슈퍼관리자</Badge>
+                      )}
+                      {member.isAdmin && !member.isSuperAdmin && (
+                        <Badge variant="primary">관리자</Badge>
+                      )}
                     </div>
                     <div className="text-sm text-gray-600 mt-1">
                       탐험: {member.dailyWalks}/{member.maxDailyWalks}회 | 포켓몬: {member.caughtPokemon.length}마리 | 소지금: {member.money?.toLocaleString() || 0}원
@@ -225,14 +199,14 @@ export default function AdminView({
               </button>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* ⭐ 시스템 설정 탭 */}
       {adminTab === 'settings' && (
         <>
           {/* 점검 모드 */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <Card className="p-6">
             <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg border-2 border-yellow-200">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">🔧</span>
@@ -243,7 +217,9 @@ export default function AdminView({
                   </div>
                 </div>
               </div>
-              <button
+              <Button
+                variant={maintenanceMode ? 'success' : 'warning'}
+                size="md"
                 onClick={() => {
                   const newMode = !maintenanceMode;
                   if (newMode) {
@@ -256,19 +232,14 @@ export default function AdminView({
                     alert('✅ 점검 모드가 해제되었습니다.');
                   }
                 }}
-                className={`px-6 py-2 rounded-lg font-bold transition-colors ${
-                  maintenanceMode
-                    ? 'bg-green-600 text-white hover:bg-green-700'
-                    : 'bg-yellow-600 text-white hover:bg-yellow-700'
-                }`}
               >
                 {maintenanceMode ? '점검 종료' : '점검 시작'}
-              </button>
+              </Button>
             </div>
-          </div>
+          </Card>
 
           {/* 커스텀 아이템 */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <Card className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-gray-800">✨ 커스텀 아이템</h3>
@@ -280,10 +251,10 @@ export default function AdminView({
                 trainer={trainer}
               />
             </div>
-          </div>
+          </Card>
 
           {/* 탐험 횟수 설정 */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <Card className="p-6">
             <h3 className="text-xl font-bold text-gray-800 mb-4">⚙️ 내 일일 탐험 횟수 설정</h3>
             <div className="flex items-center gap-4">
               <input 
@@ -295,21 +266,24 @@ export default function AdminView({
                 className="border-2 border-gray-300 rounded-lg px-4 py-3 w-32 text-lg font-semibold focus:border-indigo-500 focus:outline-none" 
               />
               <span className="text-gray-600 font-semibold">회</span>
-              <button 
-                onClick={() => { updateMaxDailyWalks(maxWalks); alert('설정 완료!'); }} 
-                className="bg-indigo-600 text-white px-8 py-3 rounded-lg hover:bg-indigo-700 font-semibold"
+              <Button 
+                variant="primary"
+                onClick={() => { 
+                  updateMaxDailyWalks(maxWalks); 
+                  alert('설정 완료!'); 
+                }}
               >
                 적용
-              </button>
+              </Button>
               <span className="text-sm text-gray-500 ml-4">현재: {trainer.maxDailyWalks}회</span>
             </div>
-          </div>
+          </Card>
         </>
       )}
 
       {/* ⭐ 지역 설정 탭 */}
       {adminTab === 'regions' && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <Card className="p-6">
           <h3 className="text-xl font-bold text-gray-800 mb-4">🗺️ 구역별 포켓몬 설정</h3>
           <div className="space-y-3">
             {regions.map((region) => (
@@ -318,16 +292,16 @@ export default function AdminView({
                   <span className="font-semibold text-lg">{region.name}</span>
                   <div className="text-sm text-gray-600 mt-1">등장 포켓몬: {region.pokemons.length}종</div>
                 </div>
-                <button 
-                  onClick={() => setEditingRegion(region)} 
-                  className="bg-indigo-100 text-indigo-700 px-6 py-2 rounded-lg hover:bg-indigo-200 font-semibold"
+                <Button 
+                  variant="secondary"
+                  onClick={() => setEditingRegion(region)}
                 >
                   편집
-                </button>
+                </Button>
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* ⭐ 탐험 보상 탭 */}
@@ -350,37 +324,38 @@ export default function AdminView({
 
       {/* ⭐ 도감 관리 탭 */}
       {adminTab === 'pokedex' && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <Card className="p-6">
           <h3 className="text-xl font-bold text-gray-800 mb-4">📖 게임 도감 포켓몬 설정</h3>
           <PokedexAdminPanel 
             allPokemonMaster={allPokemonMaster} 
             gamePokedex={gamePokedex} 
             updateGamePokedex={updateGamePokedex} 
           />
-        </div>
+        </Card>
       )}
 
       {/* ⭐ 위험 구역 탭 */}
       {adminTab === 'danger' && trainer.isSuperAdmin && (
-        <div className="bg-red-50 rounded-lg border border-red-200 p-6">
+        <Card className="p-6 bg-red-50 border-red-200">
           <h3 className="text-xl font-bold text-red-800 mb-4">⚠️ 위험 구역</h3>
           <p className="text-red-600 mb-4">모든 게임 데이터를 초기화합니다. 되돌릴 수 없습니다!</p>
-          <button 
-            onClick={resetGameData} 
-            className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 font-semibold"
+          <Button 
+            variant="danger"
+            size="lg"
+            onClick={resetGameData}
           >
             전체 데이터 초기화
-          </button>
-        </div>
+          </Button>
+        </Card>
       )}
 
       {/* 모달들 */}
       {editingRegion && (
-       <RegionEditModal 
+        <RegionEditModal 
           region={editingRegion} 
           allPokemon={gamePokedex} 
           onClose={() => setEditingRegion(null)} 
-          onSave={(id, ids, rates, encounterRate, minLevel, maxLevel) => {  // ⭐ 파라미터 추가
+          onSave={(id, ids, rates, encounterRate, minLevel, maxLevel) => {
             updateRegionPokemon(id, ids, rates, encounterRate, minLevel, maxLevel); 
             setEditingRegion(null); 
             alert('저장 완료!'); 
@@ -388,7 +363,6 @@ export default function AdminView({
         />
       )}
 
-      
       {selectedMember && (
         <MemberDetailPanel 
           member={selectedMember} 
