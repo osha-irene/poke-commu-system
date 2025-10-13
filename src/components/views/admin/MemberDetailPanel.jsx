@@ -48,8 +48,8 @@ function MemberDetailPanel({
                 : 'text-gray-600'
             }`}
           >
-            포켓몬 ({member.caughtPokemon.length})
-          </button>
+             포켓몬 ({member.caughtPokemon?.filter(p => p && !p.isPartner).length || 0})
+</button>
           <button 
             onClick={() => setSelectedTab('items')} 
             className={`flex-1 py-3 font-semibold ${

@@ -87,7 +87,22 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
     
     if (evolution) {
       console.log('✨ 진화 가능! 모달 띄우기');
-      setEvolutionModal({ pokemon, evolution });
+      
+      const evolvedPokemonData = allPokemonMaster.find(p => p.number === evolution.to);
+      
+      if (!evolvedPokemonData) {
+        console.log('❌ 진화할 포켓몬 데이터 없음');
+        return false;
+      }
+      
+      setEvolutionModal({
+        show: true,
+        pokemon: pokemon,
+        evolution: evolution,
+        fromPokemon: pokemon,
+        toPokemon: evolvedPokemonData,
+        isItemEvolution: false
+      });
       return true;
     }
     
@@ -96,44 +111,63 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
   };
 
   // 아이템으로 진화
-const evolveWithItem = (pokemon, itemName) => {
-  console.log('🔥 evolveWithItem 호출');
-  console.log('🔥 pokemon.number:', pokemon.number);
-  console.log('🔥 itemName:', itemName);
-  
-  // 아이템 이름 정규화 (공백, 하이픈 제거, 소문자, 한글 제거)
-  const normalizeItemName = (name) => {
-    if (!name) return '';
-    return name.toLowerCase()
-      .replace(/[\s-_]/g, '')  // 공백, 하이픈, 언더스코어 제거
-      .replace(/stone/g, '')    // 'stone' 제거
-      .replace(/의돌/g, '')     // '의돌' 제거
-      .replace(/[가-힣]/g, ''); // 모든 한글 제거
+  const evolveWithItem = (pokemon, itemName) => {
+    console.log('🔥 evolveWithItem 호출');
+    console.log('🔥 pokemon.number:', pokemon.number);
+    console.log('🔥 itemName:', itemName);
+    
+    // 아이템 이름 정규화 (공백, 하이픈 제거, 소문자, 한글 제거)
+    const normalizeItemName = (name) => {
+      if (!name) return '';
+      return name.toLowerCase()
+        .replace(/[\s-_]/g, '')  // 공백, 하이픈, 언더스코어 제거
+        .replace(/stone/g, '')    // 'stone' 제거
+        .replace(/의돌/g, '')     // '의돌' 제거
+        .replace(/[가-힣]/g, ''); // 모든 한글 제거
+    };
+    
+    const normalizedItemName = normalizeItemName(itemName);
+    console.log('🔥 normalizedItemName:', normalizedItemName);
+    
+    const evolution = evolutionsData.evolutions.find(evo => {
+      if (evo.from !== pokemon.number) return false;
+      if (evo.condition.type !== 'item') return false;
+      
+      const evolItem = normalizeItemName(evo.condition.item || '');
+      console.log('🔥 체크 중:', evo.from, '→', evo.to, '아이템:', evolItem, '===', normalizedItemName);
+      
+      return evolItem === normalizedItemName;
+    });
+    
+    console.log('🔥 찾은 진화:', evolution);
+    
+    if (!evolution) {
+      alert('❌ 이 아이템으로는 진화할 수 없습니다!');
+      return false;
+    }
+    
+    // ⭐ 변경: 바로 진화하지 않고 모달 표시
+    const evolvedPokemonData = allPokemonMaster.find(p => p.number === evolution.to);
+    
+    if (!evolvedPokemonData) {
+      alert('진화할 포켓몬 데이터를 찾을 수 없습니다!');
+      return false;
+    }
+    
+    console.log('✨ 진화 모달 표시:', pokemon.name, '→', evolvedPokemonData.name);
+    
+    // 진화 모달 표시 (실제 진화는 acceptEvolution에서)
+    setEvolutionModal({
+      show: true,
+      pokemon: pokemon,
+      evolution: evolution,
+      fromPokemon: pokemon,
+      toPokemon: evolvedPokemonData,
+      isItemEvolution: true
+    });
+    
+    return true;
   };
-  
-  const normalizedItemName = normalizeItemName(itemName);
-  console.log('🔥 normalizedItemName:', normalizedItemName);
-  
-  const evolution = evolutionsData.evolutions.find(evo => {
-    if (evo.from !== pokemon.number) return false;
-    if (evo.condition.type !== 'item') return false;
-    
-    const evolItem = normalizeItemName(evo.condition.item || '');
-    console.log('🔥 체크 중:', evo.from, '→', evo.to, '아이템:', evolItem, '===', normalizedItemName);
-    
-    return evolItem === normalizedItemName;
-  });
-
-  console.log('🔥 찾은 진화:', evolution);
-
-  if (!evolution) {
-    alert('❌ 이 아이템으로는 진화할 수 없습니다!');
-    return false;
-  }
-
-  performEvolution(pokemon, evolution);
-  return true;
-};
 
   // 진화 실행
   const performEvolution = (pokemon, evolution) => {
@@ -172,7 +206,10 @@ const evolveWithItem = (pokemon, itemName) => {
 
   // 진화 수락
   const acceptEvolution = () => {
-    if (!evolutionModal) return;
+    if (!evolutionModal || !evolutionModal.pokemon || !evolutionModal.evolution) {
+      console.log('❌ 진화 모달 정보 없음');
+      return;
+    }
 
     const { pokemon, evolution } = evolutionModal;
     const success = performEvolution(pokemon, evolution);
@@ -188,7 +225,7 @@ const evolveWithItem = (pokemon, itemName) => {
   // 수동 진화 (포켓몬 상세에서 진화 버튼 클릭)
   const manualEvolve = (pokemon) => {
     // 변함없는돌을 지니고 있으면 진화 불가
-    if (pokemon.heldItem === 'everstone') {
+    if (pokemon.heldItem === 'everstone' || pokemon.heldItem === '변함없는돌') {
       alert('❌ 변함없는돌을 지니고 있어 진화할 수 없습니다!');
       return false;
     }
@@ -210,10 +247,16 @@ const evolveWithItem = (pokemon, itemName) => {
 
   // 진화 거부
   const cancelEvolution = () => {
-    if (evolutionModal) {
-      const { pokemon } = evolutionModal;
-      
-      // 진화를 거부했다는 표시를 저장
+    if (!evolutionModal || !evolutionModal.pokemon) {
+      setEvolutionModal(null);
+      return;
+    }
+    
+    const { pokemon, isItemEvolution } = evolutionModal;
+    
+    // 아이템 진화는 거부 플래그 저장하지 않음 (아이템을 다시 사용하면 다시 진화 가능)
+    if (!isItemEvolution) {
+      // 레벨업 진화만 거부 플래그 저장
       const updatedPokemon = currentUser.caughtPokemon.map(p => {
         if (p && p.uniqueId === pokemon.uniqueId) {
           return {
@@ -226,7 +269,10 @@ const evolveWithItem = (pokemon, itemName) => {
       
       updateCurrentUser({ caughtPokemon: updatedPokemon });
       alert(`${pokemon.nickname || pokemon.name}의 진화를 취소했습니다.\n포켓몬 상세 화면에서 언제든지 진화시킬 수 있습니다.`);
+    } else {
+      alert(`${pokemon.nickname || pokemon.name}의 진화를 취소했습니다.`);
     }
+    
     setEvolutionModal(null);
   };
 

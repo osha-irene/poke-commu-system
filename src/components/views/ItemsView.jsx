@@ -440,31 +440,31 @@ export default function ItemsView({
                           </div>
                         ) : (
                           <div className="grid grid-cols-3 gap-2">
-                            {caughtPokemon.map((pokemon) => (
-                              <button
-                                key={pokemon.uniqueId}
-                                onClick={() => setSelectedPokemon(pokemon)}
-                                className={`flex flex-col items-center p-3 rounded-lg border-2 transition-all ${
-                                  selectedPokemon?.uniqueId === pokemon.uniqueId
-                                    ? 'border-indigo-500 bg-indigo-50'
-                                    : 'border-gray-200 hover:border-indigo-300 bg-white'
-                                }`}
-                              >
-                                <img
-                                  src={pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`}
-                                  alt={pokemon.name}
-                                  className="w-16 h-16 mb-1"
-                                  style={{ imageRendering: 'pixelated' }}
-                                />
-                                <div className="text-xs font-bold text-gray-800 truncate w-full text-center">
-                                  {pokemon.nickname || pokemon.name}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  Lv.{pokemon.level}
-                                </div>
-                              </button>
-                            ))}
-                          </div>
+						  {caughtPokemon.filter(p => p !== null).map((pokemon) => (
+							<button
+							  key={pokemon.uniqueId}
+							  onClick={() => setSelectedPokemon(pokemon)}
+							  className={`flex flex-col items-center p-3 rounded-lg border-2 transition-all ${
+								selectedPokemon?.uniqueId === pokemon.uniqueId
+								  ? 'border-indigo-500 bg-indigo-50'
+								  : 'border-gray-200 hover:border-indigo-300 bg-white'
+							  }`}
+							>
+							  <img
+								src={pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`}
+								alt={pokemon.name}
+								className="w-16 h-16 mb-1"
+								style={{ imageRendering: 'pixelated' }}
+							  />
+							  <div className="text-xs font-bold text-gray-800 truncate w-full text-center">
+								{pokemon.nickname || pokemon.name}
+							  </div>
+							  <div className="text-xs text-gray-500">
+								Lv.{pokemon.level}
+							  </div>
+							</button>
+						  ))}
+						</div>
                         )}
                       </div>
 

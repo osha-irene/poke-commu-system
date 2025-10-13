@@ -631,13 +631,24 @@ export default function useGameState() {
     consumeItem(item);
     return;
   }
+   
   
-  // 진화의 돌 - 진화 처리
+  // ⭐ 진화의 돌 - 진화 처리
   if (itemData?.category?.includes('evolution')) {
+    console.log('🪨 진화의 돌 사용:', itemData.name, itemData.nameEn);
+    
     const success = evolutionHook.evolveWithItem(pokemon, itemData.nameEn || itemData.name);
-    if (success) consumeItem(item);
+    console.log('✅ 진화 체크 결과:', success);
+    
+    // 진화 모달이 떴다면 성공, 아니면 실패
+    if (success) {
+      consumeItem(item);
+    } else {
+      alert('이 포켓몬은 해당 아이템으로 진화할 수 없습니다.');
+    }
     return;
   }
+  
   
   // ⭐ 나머지는 전부 "사용했습니다!" 메시지만
   alert(`${pokemon.nickname || pokemon.name}에게 ${item.name}을(를) 사용했습니다!`);
