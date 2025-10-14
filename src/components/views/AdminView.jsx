@@ -6,6 +6,7 @@ import ShopAdminPanel from './admin/ShopAdminPanel';
 import MemberDetailPanel from './admin/MemberDetailPanel';
 import CustomItemCreator from './admin/CustomItemCreator';
 import LootConfigPanel from './admin/LootConfigPanel';
+import CookingAdminPanel from './admin/CookingAdminPanel';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
@@ -18,7 +19,7 @@ export default function AdminView({
   resetMemberWalkCount, resetAllWalkCounts, resetGameData, shopData, updateShopData, 
   createCustomItem, editMemberPokemon, updateMemberMoney, updateMemberRegionAccess,
   maintenanceMode, setMaintenanceMode,
-  updateRegionLootConfig
+  updateRegionLootConfig,  createRecipe, updateIngredientStats 
 }) {
   const [adminTab, setAdminTab] = useState('members');
   const [maxWalks, setMaxWalks] = useState(trainer.maxDailyWalks);
@@ -83,11 +84,7 @@ export default function AdminView({
         <TabButton active={adminTab === 'members'} onClick={() => setAdminTab('members')}>
           👥 멤버 관리
         </TabButton>
-        
-        <TabButton active={adminTab === 'settings'} onClick={() => setAdminTab('settings')}>
-          ⚙️ 시스템 설정
-        </TabButton>
-        
+                
         <TabButton active={adminTab === 'regions'} onClick={() => setAdminTab('regions')}>
           🗺️ 지역 설정
         </TabButton>
@@ -96,14 +93,22 @@ export default function AdminView({
           🎁 탐험 보상
         </TabButton>
         
-        <TabButton active={adminTab === 'shop'} onClick={() => setAdminTab('shop')}>
-          🏪 상점 관리
-        </TabButton>
-        
         <TabButton active={adminTab === 'pokedex'} onClick={() => setAdminTab('pokedex')}>
           📖 도감 관리
         </TabButton>
-        
+		
+		<TabButton active={adminTab === 'shop'} onClick={() => setAdminTab('shop')}>
+          🏪 상점 관리
+        </TabButton>
+				
+		<TabButton active={adminTab === 'cooking'} onClick={() => setAdminTab('cooking')}>
+		  🍳 요리 시스템
+		</TabButton>
+		
+        <TabButton active={adminTab === 'settings'} onClick={() => setAdminTab('settings')}>
+          ⚙️ 시스템 설정
+        </TabButton>
+				
         {trainer.isSuperAdmin && (
           <TabButton 
             active={adminTab === 'danger'} 
@@ -425,6 +430,13 @@ export default function AdminView({
           />
         </Card>
       )}
+	  
+	  {adminTab === 'cooking' && (
+		  <CookingAdminPanel 
+			onCreateRecipe={createRecipe}
+			onUpdateIngredientStats={updateIngredientStats}
+		  />
+		)}
 
       {/* ⭐ 위험 구역 탭 */}
       {adminTab === 'danger' && trainer.isSuperAdmin && (

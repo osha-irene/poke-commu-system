@@ -184,8 +184,17 @@ export default function EncounterModal({
           
           setTimeout(() => {
             const catchChance = pokemon.catchRate * selectedBall.multiplier;
-            const success = Math.random() < catchChance;
-            
+            const randomValue = Math.random();
+			const success = randomValue < catchChance;
+			
+			  // ✅ 디버깅 로그 추가
+			  console.log('🎯 포획 시도:', pokemon.name);
+			  console.log('  - 기본 포획률:', pokemon.catchRate);
+			  console.log('  - 볼 배율:', selectedBall.multiplier);
+			  console.log('  - 최종 포획 확률:', catchChance);
+			  console.log('  - 랜덤 값:', randomValue);
+			  console.log('  - 결과:', success ? '성공 ✅' : '실패 ❌');
+						
             // ✅ 볼 소모는 항상 발생
             if (onApplyLoot) {
               onApplyLoot({ money: 0, items: [], ingredients: [], berries: [] }, selectedBall);

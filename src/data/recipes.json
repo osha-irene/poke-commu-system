@@ -1,0 +1,89 @@
+{
+  "recipes": [
+    {
+      "id": "recipe_001",
+      "name": "친밀도 상승 카레",
+      "type": "fixed",
+      "description": "포켓몬과의 친밀도를 크게 높여주는 따뜻한 카레",
+      "ingredients": [
+        { "name": "오랭열매", "count": 2 },
+        { "name": "리샘열매", "count": 1 }
+      ],
+      "result": {
+        "name": "친밀도 카레",
+        "pocket": "berries",
+        "effect": "포켓몬의 친밀도를 30 증가시킨다",
+        "friendshipBoost": 30,
+        "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png"
+      }
+    },
+    {
+      "id": "recipe_002",
+      "name": "컨디션 상승 간식",
+      "type": "fixed",
+      "description": "포켓몬의 컨디션을 골고루 높여주는 맛있는 간식",
+      "ingredients": [
+        { "name": "리샘열매", "count": 1 },
+        { "name": "이상한사탕", "count": 1 }
+      ],
+      "result": {
+        "name": "컨디션 간식",
+        "pocket": "berries",
+        "effect": "포켓몬의 모든 컨디션을 10씩 증가시킨다",
+        "conditionBoost": {
+          "elegance": 10,
+          "beauty": 10,
+          "cuteness": 10,
+          "intelligence": 10,
+          "strength": 10
+        },
+        "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/potion.png"
+      }
+    }
+  ],
+  "ingredientStats": [
+    {
+      "name": "오랭열매",
+      "stats": {
+        "elegance": 10,
+        "beauty": 20,
+        "power": 5
+      }
+    },
+    {
+      "name": "리샘열매",
+      "stats": {
+        "elegance": 20,
+        "beauty": 10,
+        "power": 15
+      }
+    },
+    {
+      "name": "복슝열매",
+      "stats": {
+        "cuteness": 15,
+        "sweetness": 20
+      }
+    }
+  ],
+  "statBasedRecipes": [
+    {
+      "id": "stat_recipe_001",
+      "name": "포핀",
+      "type": "stat",
+      "description": "특정 스탯 조합으로 만들어지는 포핀",
+      "requiredStats": {
+        "beauty": 40
+      },
+      "result": {
+        "name": "아름다운 포핀",
+        "pocket": "berries",
+        "effect": "포켓몬의 아름다움을 25 증가시킨다",
+        "conditionBoost": {
+          "beauty": 25
+        },
+        "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/berry.png"
+      }
+    }
+  ]
+}

@@ -15,6 +15,7 @@ import ShopView from './components/views/ShopView';
 import MembersView from './components/views/MembersView';
 import NPCsView from './components/views/NPCsView';
 import QnABoard from './components/views/QnABoard';
+import CookingView from './components/views/CookingView';
 
 
 // 로그인 화면 컴포넌트
@@ -172,7 +173,12 @@ export default function App() {
     cancelEvolution,
     manualEvolve,
     getAllEvolvablePokemon,
-    increaseEffort
+    increaseEffort,
+	recipes,                
+    createRecipe,     
+	discoveredRecipes,	
+    cookRecipe,   
+	updateIngredientStats	
   } = useGameState();
 
   // ⭐ 전역 클릭 사운드 - 최상단에 배치!
@@ -419,9 +425,22 @@ export default function App() {
               updateMemberRegionAccess={updateMemberRegionAccess}  
               maintenanceMode={maintenanceMode}            
               setMaintenanceMode={setMaintenanceMode}
-              updateRegionLootConfig={updateRegionLootConfig}        
+              updateRegionLootConfig={updateRegionLootConfig} 
+			  createRecipe={createRecipe}
+			  updateIngredientStats={updateIngredientStats} 			  
             />
           )}
+		  
+		  {currentTab === 'cooking' && (
+			  <CookingView 
+				recipes={recipes}
+				userItems={items}
+				discoveredRecipes={discoveredRecipes[currentUser?.id] || []}
+				onCook={cookRecipe}
+			  />
+			)}
+		  
+		  
         </main>
       </div>
 
