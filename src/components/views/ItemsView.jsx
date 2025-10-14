@@ -263,7 +263,7 @@ export default function ItemsView({
 	});
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         {/* 헤더 */}
         <div className="flex items-center justify-between mb-6">
@@ -348,9 +348,10 @@ export default function ItemsView({
               
               return (
                 <div key={i} className="relative">
+                  
                   <button
                     onClick={() => handleItemClick(item)}
-                    className={`w-full flex items-start gap-4 rounded-lg p-4 border-2 transition-all text-left ${pocketColor} ${
+                    className={`w-full h-32 flex items-start gap-4 rounded-lg p-4 border-2 transition-all text-left ${pocketColor} ${
                       details.canUse 
                         ? 'cursor-pointer hover:shadow-lg hover:scale-[1.02]' 
                         : 'cursor-default'
