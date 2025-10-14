@@ -92,6 +92,12 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
+  // 사운드 ON/OFF 상태 추가
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    const saved = localStorage.getItem('poke_soundEnabled');
+    return saved !== null ? JSON.parse(saved) : true; // 기본값 true
+  });
+
   const {
     currentTab,
     setCurrentTab,
@@ -187,22 +193,27 @@ export default function App() {
 
     // 오디오 로딩 확인
     audio.addEventListener('canplaythrough', () => {
+      console.log('✅ 사운드 파일 로딩 완료!');
     });
 
     audio.addEventListener('error', (e) => {
-
+      console.error('❌ 사운드 파일 로딩 실패:', e);
+      console.error('시도한 경로:', audioPath);
     });
 
     const handleGlobalClick = (e) => {
-
+      // soundEnabled가 false면 재생 안 함
+      if (!soundEnabled) return;
+      
+      console.log('👆 클릭 감지!', e.target);
       
       audio.currentTime = 0;
       audio.play()
         .then(() => {
-       
+          console.log('🎶 사운드 재생 성공!');
         })
         .catch(err => {
-      
+          console.error('❌ 사운드 재생 실패:', err);
         });
     };
 
@@ -211,7 +222,12 @@ export default function App() {
     return () => {
       document.removeEventListener('click', handleGlobalClick);
     };
-  }, []);
+  }, [soundEnabled]); // soundEnabled 변경 시 재등록
+
+  // 사운드 설정 저장
+  useEffect(() => {
+    localStorage.setItem('poke_soundEnabled', JSON.stringify(soundEnabled));
+  }, [soundEnabled]);
 
   // 자동 저장
   useEffect(() => {
@@ -278,6 +294,8 @@ export default function App() {
         isAdmin={isAdmin}
         trainer={trainer}
         onLogout={handleLogout}
+        soundEnabled={soundEnabled}
+        onToggleSound={() => setSoundEnabled(!soundEnabled)}
       />
 
       <div className="flex-1 flex flex-col">

@@ -1,9 +1,8 @@
 import React from 'react';
-import { Map, BookOpen, Smile, Package, User, Settings, LogOut, ShoppingBag, Users, Bot,MessageSquare } from 'lucide-react';
+import { Map, BookOpen, Smile, Package, User, Settings, LogOut, ShoppingBag, Users, Bot, MessageSquare, Volume2, VolumeX } from 'lucide-react';
 import NavButton from './NavButton';
 
-
-export default function Sidebar({ currentTab, setCurrentTab, isAdmin, trainer, onLogout }) {
+export default function Sidebar({ currentTab, setCurrentTab, isAdmin, trainer, onLogout, soundEnabled, onToggleSound }) {
   return (
     <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
       {/* 로고 */}
@@ -37,6 +36,19 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin, trainer, o
             </span>
           </div>
         </div>
+
+        {/* 사운드 토글 버튼 */}
+        <button
+          onClick={onToggleSound}
+          className={`w-full mt-3 px-3 py-2 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
+            soundEnabled 
+              ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200' 
+              : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+          }`}
+        >
+          {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+          <span>{soundEnabled ? '사운드 ON' : '사운드 OFF'}</span>
+        </button>
       </div>
 
       {/* 네비게이션 */}
@@ -48,7 +60,7 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin, trainer, o
           onClick={() => setCurrentTab('map')}
         />
         <NavButton 
-          icon={Users}  // 새로운 아이콘!
+          icon={Users}
           label="멤버" 
           active={currentTab === 'members'}
           onClick={() => setCurrentTab('members')}
@@ -79,19 +91,24 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin, trainer, o
           active={currentTab === 'items'}
           onClick={() => setCurrentTab('items')}
         />
-		<NavButton 
-		  icon={ShoppingBag}
-		  label="상점" 
-		  active={currentTab === 'shop'}
-		  onClick={() => setCurrentTab('shop')}
-		/>
+        <NavButton 
+          icon={ShoppingBag}
+          label="상점" 
+          active={currentTab === 'shop'}
+          onClick={() => setCurrentTab('shop')}
+        />
         <NavButton 
           icon={User}
           label="프로필" 
           active={currentTab === 'profile'}
           onClick={() => setCurrentTab('profile')}
         />
-		<NavButton icon={MessageSquare} label="Q&A" active={currentTab === 'qna'} onClick={() => setCurrentTab('qna')} />
+        <NavButton 
+          icon={MessageSquare} 
+          label="Q&A" 
+          active={currentTab === 'qna'} 
+          onClick={() => setCurrentTab('qna')} 
+        />
         
         {isAdmin && (
           <>
