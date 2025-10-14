@@ -25,7 +25,6 @@ export default function PokemonView({
   allMoves = [],
   pokemonLearnsets = {},
   onUseItemOnPokemon,
-  // ⭐ 진화 관련 props 추가
   checkEvolution,
   manualEvolve
 }) {
@@ -33,10 +32,12 @@ export default function PokemonView({
   const [showBox, setShowBox] = useState(false);
   const [draggedPokemon, setDraggedPokemon] = useState(null);
   
-  const partySlots = caughtPokemon.slice(0, 6);
+  // ⭐ inParty 기반으로 필터링
+  const partyPokemon = caughtPokemon.filter(p => p && (p.isPartner || p.inParty));
+  const partySlots = [...partyPokemon];
   while (partySlots.length < 6) partySlots.push(null);
   
-  const box = caughtPokemon.slice(6).filter(p => p !== null);
+  const box = caughtPokemon.filter(p => p && !p.isPartner && !p.inParty);
   
   // 이상한사탕 찾기
   const rareCandy = items?.find(item => 
@@ -51,11 +52,8 @@ export default function PokemonView({
     ? caughtPokemon.find(p => p && p.uniqueId === selectedPokemonId)
     : null;
 
-  // 선택된 포켓몬의 인덱스
-  const selectedPokemonIndex = selectedPokemon 
-    ? caughtPokemon.findIndex(p => p && p.uniqueId === selectedPokemon.uniqueId)
-    : -1;
-  const isSelectedInParty = selectedPokemonIndex >= 0 && selectedPokemonIndex < 6;
+  // 선택된 포켓몬이 엔트리에 있는지 확인
+  const isSelectedInParty = selectedPokemon && (selectedPokemon.isPartner || selectedPokemon.inParty);
 
   // 포켓몬이 삭제되면 선택 해제
   useEffect(() => {
@@ -139,7 +137,7 @@ export default function PokemonView({
                 key={pokemon?.uniqueId || `empty-${index}`}
                 pokemon={pokemon}
                 index={index}
-				allItems={allItems}
+                allItems={allItems}
                 isSelected={selectedPokemonId === pokemon?.uniqueId}
                 onDragStart={(e) => handleDragStart(e, pokemon, true, index)}
                 onClick={() => handlePokemonClick(pokemon)}
@@ -190,28 +188,27 @@ export default function PokemonView({
       <div className="overflow-y-auto">
         {selectedPokemon ? (
           <PokemonDetailPanel
-             pokemon={selectedPokemon}
-			  hasRareCandy={hasRareCandy}
-			  rareCandyImage={rareCandyImage}
-			  isInParty={isSelectedInParty}
-			  allItems={allItems}
-			  gamePokedex={gamePokedex}
-			  items={items}
-			  onClose={() => setSelectedPokemonId(null)}
-			  onUseCandy={handleUseCandy}
-			  onMove={handleMove}
-			  onRelease={handleRelease}
-			  onUpdateNickname={onUpdateNickname}
-			  onGiveItem={(pokemonId, itemName) => onGiveItem(pokemonId, itemName, allItems)}  // ⭐ 수정 권장
-			  onTakeItem={(pokemonId) => onTakeItem(pokemonId, allItems)}  // ⭐ 필수 수정
-			  onSetPartner={onSetPartner}
-			  onForgetMove={onForgetMove}
-			  isAdmin={isAdmin}
-			  onLearnMove={onLearnMove}    
-			  allMoves={allMoves} 
-			  pokemonLearnsets={pokemonLearnsets}
+            pokemon={selectedPokemon}
+            hasRareCandy={hasRareCandy}
+            rareCandyImage={rareCandyImage}
+            isInParty={isSelectedInParty}
+            allItems={allItems}
+            gamePokedex={gamePokedex}
+            items={items}
+            onClose={() => setSelectedPokemonId(null)}
+            onUseCandy={handleUseCandy}
+            onMove={handleMove}
+            onRelease={handleRelease}
+            onUpdateNickname={onUpdateNickname}
+            onGiveItem={(pokemonId, itemName) => onGiveItem(pokemonId, itemName, allItems)}
+            onTakeItem={(pokemonId) => onTakeItem(pokemonId, allItems)}
+            onSetPartner={onSetPartner}
+            onForgetMove={onForgetMove}
+            isAdmin={isAdmin}
+            onLearnMove={onLearnMove}
+            allMoves={allMoves}
+            pokemonLearnsets={pokemonLearnsets}
             onUseItemOnPokemon={onUseItemOnPokemon}
-            // ⭐ 진화 관련 props 전달
             checkEvolution={checkEvolution}
             manualEvolve={manualEvolve}
             allPokemonMaster={allPokemonMaster}

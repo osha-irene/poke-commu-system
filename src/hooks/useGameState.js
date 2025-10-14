@@ -411,81 +411,97 @@ export default function useGameState() {
     ));
     alert('보상 설정이 저장되었습니다!');
   };
-
+  
+  
   const handleCatchSuccess = (pokemon, ballUsed) => {
-    if (!currentUser) return;
+  if (!currentUser) return;
+  
+  const nonPartnerCount = currentUser.caughtPokemon.filter(p => p && !p.isPartner).length;
+  
+  if (nonPartnerCount >= 20) {
+    alert('⚠️ 파트너를 제외한 포켓몬이 20마리입니다!\n더 이상 포켓몬을 잡을 수 없습니다.');
+    return;
+  }
     
-    const nonPartnerCount = currentUser.caughtPokemon.filter(p => p && !p.isPartner).length;
-    
-    if (nonPartnerCount >= 20) {
-      alert('⚠️ 파트너를 제외한 포켓몬이 20마리입니다!\n더 이상 포켓몬을 잡을 수 없습니다.');
-      return;
-    }
-      
-    const pokemonTemplate = allPokemonMaster.find(p => 
-      p.number === (pokemon.number || pokemon.originalNumber)
-    );
-    
-    if (!pokemonTemplate) {
-      alert('포켓몬 정보를 찾을 수 없습니다!');
-      return;
-    }
-    
-    const regionName = pokemon.regionName;
-    const region = regions.find(r => r.name === regionName);
-    const minLevel = region?.minLevel || 5;
-    const maxLevel = region?.maxLevel || 20;
-    const level = Math.floor(Math.random() * (maxLevel - minLevel + 1)) + minLevel;
-    
-    const newPokemon = {
-      uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      pokemonId: pokemonTemplate.id,
-      name: pokemonTemplate.name,
-      nameEn: pokemonTemplate.nameEn,
-      number: pokemonTemplate.number,
-      type: pokemonTemplate.type,
-      type2: pokemonTemplate.type2 || null,
-      level: level,
-      hp: pokemonTemplate.baseHp,
-      maxHp: pokemonTemplate.baseHp,
-      exp: 0,
-      friendship: 0,
-      heldItem: null,
-      moves: movesHook.getStartingMoves(pokemonTemplate.number, level, movesData),
-      caughtWithBall: ballUsed.name,
-      isPartner: false,
-      condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
-      effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
-      imageUrl: pokemonTemplate.imageUrl,
-      iconUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`,
-      spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`
-    };
-      
-    const updatedCaughtPokemon = [...currentUser.caughtPokemon, newPokemon];
-    updateCurrentUser({ caughtPokemon: updatedCaughtPokemon });
-
-    const pokemonNumber = pokemonTemplate.number;
-    setSharedPokedexData(prev => {
-      const entry = prev[pokemonNumber] || {};
-      
-      if (!entry.caughtBy) {
-        setFirstCatchPokemon(pokemonTemplate);
-        return {
-          ...prev,
-          [pokemonNumber]: {
-            ...entry,
-            firstEncounter: entry.firstEncounter || currentUser.name,
-            encounteredAt: entry.encounteredAt || new Date().toISOString(),
-            caughtBy: currentUser.name,
-            caughtAt: new Date().toISOString(),
-            regions: entry.regions || [regionName]
-          }
-        };
-      }
-      return prev;
-    });
+  const pokemonTemplate = allPokemonMaster.find(p => 
+    p.number === (pokemon.number || pokemon.originalNumber)
+  );
+  
+  if (!pokemonTemplate) {
+    alert('포켓몬 정보를 찾을 수 없습니다!');
+    return;
+  }
+  
+  const regionName = pokemon.regionName;
+  const region = regions.find(r => r.name === regionName);
+  const minLevel = region?.minLevel || 5;
+  const maxLevel = region?.maxLevel || 20;
+  const level = Math.floor(Math.random() * (maxLevel - minLevel + 1)) + minLevel;
+  
+  const newPokemon = {
+    uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    pokemonId: pokemonTemplate.id,
+    name: pokemonTemplate.name,
+    nameEn: pokemonTemplate.nameEn,
+    number: pokemonTemplate.number,
+    type: pokemonTemplate.type,
+    type2: pokemonTemplate.type2 || null,
+    level: level,
+    hp: pokemonTemplate.baseHp,
+    maxHp: pokemonTemplate.baseHp,
+    exp: 0,
+    friendship: 0,
+    heldItem: null,
+    moves: movesHook.getStartingMoves(pokemonTemplate.number, level, movesData),
+    caughtWithBall: ballUsed.name,
+    isPartner: false,
+    inParty: false, // 기본값
+    condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
+    effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
+    evs: { hp: 0, attack: 0, defense: 0, 'special-attack': 0, 'special-defense': 0, speed: 0 },
+    imageUrl: pokemonTemplate.imageUrl,
+    iconUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`,
+    spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`
   };
+  
+  // ⭐ 엔트리에 빈 자리가 있는지 확인 (파트너 제외, 최대 6마리)
+  const partyPokemon = currentUser.caughtPokemon.filter(p => p && !p.isPartner && p.inParty);
+  const hasPartySpace = partyPokemon.length < 6;
+  
+  if (hasPartySpace) {
+    newPokemon.inParty = true;
+    console.log('✅ 엔트리에 빈 자리 있음 - 엔트리로 추가');
+  } else {
+    newPokemon.inParty = false;
+    console.log('📦 엔트리 가득참 - 박스로 추가');
+  }
+    
+  const updatedCaughtPokemon = [...currentUser.caughtPokemon, newPokemon];
+  updateCurrentUser({ caughtPokemon: updatedCaughtPokemon });
 
+  const pokemonNumber = pokemonTemplate.number;
+  setSharedPokedexData(prev => {
+    const entry = prev[pokemonNumber] || {};
+    
+    if (!entry.caughtBy) {
+      setFirstCatchPokemon(pokemonTemplate);
+      return {
+        ...prev,
+        [pokemonNumber]: {
+          ...entry,
+          firstEncounter: entry.firstEncounter || currentUser.name,
+          encounteredAt: entry.encounteredAt || new Date().toISOString(),
+          caughtBy: currentUser.name,
+          caughtAt: new Date().toISOString(),
+          regions: entry.regions || [regionName]
+        }
+      };
+    }
+    return prev;
+  });
+};
+  
+  
   const saveFirstCatchMemo = (pokemonNumber, memo) => {
     setSharedPokedexData(prev => ({
       ...prev,

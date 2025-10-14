@@ -193,6 +193,24 @@ export const useAdminFunctions = (
       spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`
     };
 
+
+  // ⭐ 엔트리에 빈 자리가 있는지 확인
+  const partyPokemon = (member.caughtPokemon || []).filter(p => p && !p.isPartner && p.inParty);
+  const hasPartySpace = partyPokemon.length < 6;
+  
+  if (hasPartySpace) {
+    newPokemon.inParty = true;
+    console.log('✅ 엔트리에 빈 자리 있음 - 엔트리로 추가');
+  } else {
+    newPokemon.inParty = false;
+    console.log('📦 엔트리 가득참 - 박스로 추가');
+  }
+
+  const updatedMember = {
+    ...member,
+    caughtPokemon: [...(member.caughtPokemon || []), newPokemon]
+  };
+
     let updatedPokemonList = [...member.caughtPokemon];
     if (isPartner) {
       updatedPokemonList = updatedPokemonList.map(p => 

@@ -8,38 +8,36 @@ const usePokemonManagement = (
   sharedPokedexData,
   pokemonLearnsets,
   allMoves,
-  checkEvolutionOnLevelUp  // ⭐ 진화 체크 함수 추가
+  checkEvolutionOnLevelUp
 ) => {
 
   // 엔트리 이동
   const movePokemonToParty = (uniqueId) => {
     if (!currentUser) return;
-    const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === uniqueId);
-    if (pokemonIndex === -1) { 
+    
+    const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
+    if (!pokemon) { 
       alert('포켓몬을 찾을 수 없습니다!'); 
       return; 
     }
-    if (pokemonIndex < 6) { 
+    
+    if (pokemon.inParty) { 
       alert('이미 엔트리에 있습니다!'); 
       return; 
     }
     
-    let emptySlotIndex = -1;
-    for (let i = 0; i < 6; i++) {
-      if (currentUser.caughtPokemon[i] === null) { 
-        emptySlotIndex = i; 
-        break; 
-      }
-    }
-    if (emptySlotIndex === -1) { 
-      alert('엔트리가 가득 찼습니다!'); 
+    // 엔트리 포켓몬 수 확인 (파트너 제외)
+    const partyCount = currentUser.caughtPokemon.filter(p => p && !p.isPartner && p.inParty).length;
+    
+    if (partyCount >= 6) { 
+      alert('엔트리가 가득 찼습니다! (최대 6마리)'); 
       return; 
     }
     
-    const newCaughtPokemon = [...currentUser.caughtPokemon];
-    const pokemon = newCaughtPokemon[pokemonIndex];
-    newCaughtPokemon[emptySlotIndex] = pokemon;
-    newCaughtPokemon.splice(pokemonIndex, 1);
+    const newCaughtPokemon = currentUser.caughtPokemon.map(p => 
+      p && p.uniqueId === uniqueId ? { ...p, inParty: true } : p
+    );
+    
     updateCurrentUser({ caughtPokemon: newCaughtPokemon });
     alert('엔트리로 이동했습니다!');
   };
@@ -47,17 +45,17 @@ const usePokemonManagement = (
   // 박스 이동
   const movePokemonToBox = (uniqueId) => {
     if (!currentUser) return;
-    const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === uniqueId);
-    if (pokemonIndex === -1) { 
+    
+    const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
+    if (!pokemon) { 
       alert('포켓몬을 찾을 수 없습니다!'); 
       return; 
     }
-    if (pokemonIndex >= 6) { 
+    
+    if (!pokemon.inParty) { 
       alert('이미 박스에 있습니다!'); 
       return; 
     }
-    
-    const pokemon = currentUser.caughtPokemon[pokemonIndex];
     
     // 파트너 포켓몬은 박스로 이동 불가
     if (pokemon.isPartner) {
@@ -65,56 +63,32 @@ const usePokemonManagement = (
       return;
     }
     
-    const newCaughtPokemon = [...currentUser.caughtPokemon];
+    const newCaughtPokemon = currentUser.caughtPokemon.map(p => 
+      p && p.uniqueId === uniqueId ? { ...p, inParty: false } : p
+    );
     
-    // 엔트리에서 해당 포켓몬을 null로 변경
-    newCaughtPokemon[pokemonIndex] = null;
-    
-    // 엔트리(0-5)와 박스(6~) 분리
-    const party = newCaughtPokemon.slice(0, 6);
-    const box = newCaughtPokemon.slice(6);
-    
-    // 엔트리를 정렬: null이 아닌 것들을 앞으로, null을 뒤로
-    const sortedParty = [...party.filter(p => p !== null), ...party.filter(p => p === null)];
-    
-    // 박스 끝에 포켓몬 추가
-    const updatedBox = [...box, pokemon];
-    
-    // 최종 배열 생성
-    const finalPokemon = [...sortedParty, ...updatedBox];
-    
-    updateCurrentUser({ caughtPokemon: finalPokemon });
+    updateCurrentUser({ caughtPokemon: newCaughtPokemon });
     alert('박스로 이동했습니다!');
   };
 
   // 방생
   const releasePokemon = (uniqueId) => {
     if (!currentUser) return;
-    const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === uniqueId);
-    if (pokemonIndex === -1) return;
     
-    const pokemon = currentUser.caughtPokemon[pokemonIndex];
+    const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
+    if (!pokemon) return;
+    
     if (pokemon.isPartner) {
       alert('💖 파트너 포켓몬은 방생할 수 없습니다!');
       return;
     }
 
-    const newCaughtPokemon = [...currentUser.caughtPokemon];
+    const newCaughtPokemon = currentUser.caughtPokemon.filter(p => 
+      !p || p.uniqueId !== uniqueId
+    );
     
-    if (pokemonIndex < 6) {
-      newCaughtPokemon[pokemonIndex] = null;
-      const party = newCaughtPokemon.slice(0, 6);
-      const box = newCaughtPokemon.slice(6);
-      const sortedParty = [
-        ...party.filter(p => p !== null),
-        ...party.filter(p => p === null)
-      ];
-      const finalPokemon = [...sortedParty, ...box];
-      updateCurrentUser({ caughtPokemon: finalPokemon });
-    } else {
-      newCaughtPokemon.splice(pokemonIndex, 1);
-      updateCurrentUser({ caughtPokemon: newCaughtPokemon });
-    }
+    updateCurrentUser({ caughtPokemon: newCaughtPokemon });
+    alert(`${pokemon.nickname || pokemon.name}을(를) 방생했습니다.`);
   };
 
   // 파트너 설정
@@ -123,12 +97,17 @@ const usePokemonManagement = (
     
     const newCaughtPokemon = currentUser.caughtPokemon.map(p => {
       if (!p) return p;
+      
+      // 다른 포켓몬의 파트너 해제
       if (isPartner && p.isPartner && p.uniqueId !== uniqueId) {
         return { ...p, isPartner: false };
       }
+      
+      // 선택한 포켓몬 파트너 설정/해제
       if (p.uniqueId === uniqueId) {
-        return { ...p, isPartner };
+        return { ...p, isPartner, inParty: isPartner ? true : p.inParty };
       }
+      
       return p;
     });
     
@@ -167,7 +146,7 @@ const usePokemonManagement = (
       ? currentUser.inventory
       : currentUser.inventory.map(item =>
           item.name === '이상한사탕' ? { ...item, count: item.count - 1 } : item
-        );
+        ).filter(item => item.count > 0);
     
     updateCurrentUser({ 
       caughtPokemon: newCaughtPokemon, 
@@ -175,23 +154,19 @@ const usePokemonManagement = (
     });
     
     // 배울 수 있는 기술 확인
-    console.log('🎯 pokemonLearnsets:', pokemonLearnsets);
     const learnset = pokemonLearnsets[pokemon.number.toString()];
-    console.log('🎯 learnset:', learnset);
     
     const newMoves = learnset?.levelUpMoves
       ?.filter(lm => lm.level === newLevel)
       .map(lm => {
-        console.log('🎯 찾는 moveId:', lm.moveId);
         const move = allMoves.find(m => m.id === lm.moveId);
-        console.log('🎯 찾은 move:', move);
         return move;
       })
       .filter(Boolean) || [];
     
     console.log('🎯 배울 수 있는 기술:', newMoves);
     
-    // ⭐ 기술이 있든 없든 항상 콜백 실행 (진화 체크를 위해)
+    // 콜백 실행
     if (onLevelUp) {
       console.log('✅ 레벨업 콜백 실행 (기술:', newMoves.length, '개)');
       onLevelUp(uniqueId, newLevel, newMoves);
@@ -209,7 +184,7 @@ const usePokemonManagement = (
     updateCurrentUser({ caughtPokemon: newCaughtPokemon });
   };
 
-  // 아이템 주기/회수
+  // 아이템 주기
   const giveItemToPokemon = (pokemonUniqueId, itemName, allItems) => {
     if (!currentUser || !currentUser.inventory || !currentUser.caughtPokemon) {
       console.error('❌ currentUser 또는 데이터가 없습니다:', currentUser);
@@ -229,13 +204,11 @@ const usePokemonManagement = (
       return false; 
     }
     
-    const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === pokemonUniqueId);
-    if (pokemonIndex === -1) { 
+    const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === pokemonUniqueId);
+    if (!pokemon) { 
       alert('포켓몬을 찾을 수 없습니다!'); 
       return false; 
     }
-    
-    const pokemon = currentUser.caughtPokemon[pokemonIndex];
     
     if (pokemon.heldItem) {
       if (!window.confirm(`${pokemon.nickname || pokemon.name}이(가) 이미 ${pokemon.heldItem}을(를) 들고 있습니다. 교체하시겠습니까?`)) {
@@ -256,25 +229,25 @@ const usePokemonManagement = (
       newInventory.splice(itemIndex, 1);
     }
     
-    const newCaughtPokemon = [...currentUser.caughtPokemon];
-    newCaughtPokemon[pokemonIndex] = { ...pokemon, heldItem: itemName };
+    const newCaughtPokemon = currentUser.caughtPokemon.map(p =>
+      p && p.uniqueId === pokemonUniqueId ? { ...p, heldItem: itemName } : p
+    );
     
     updateCurrentUser({ inventory: newInventory, caughtPokemon: newCaughtPokemon });
     alert(`${pokemon.nickname || pokemon.name}에게 ${itemName}을(를) 주었습니다!`);
     return true;
   };
 
+  // 아이템 회수
   const takeItemFromPokemon = (pokemonUniqueId, allItems) => {
     if (!currentUser || !currentUser.caughtPokemon || !currentUser.inventory) {
-  
       alert('오류가 발생했습니다. 페이지를 새로고침해주세요.');
       return;
     }
     
-    const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === pokemonUniqueId);
-    if (pokemonIndex === -1) return;
+    const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === pokemonUniqueId);
+    if (!pokemon) return;
     
-    const pokemon = currentUser.caughtPokemon[pokemonIndex];
     if (!pokemon.heldItem) { 
       alert('이 포켓몬은 아이템을 들고 있지 않습니다!'); 
       return; 
@@ -291,24 +264,24 @@ const usePokemonManagement = (
       newInventory.push({ name: itemName, count: 1, imageUrl: itemData?.spriteUrl || '/default-item.png' });
     }
     
-    const newCaughtPokemon = [...currentUser.caughtPokemon];
-    newCaughtPokemon[pokemonIndex] = { ...pokemon, heldItem: null };
+    const newCaughtPokemon = currentUser.caughtPokemon.map(p =>
+      p && p.uniqueId === pokemonUniqueId ? { ...p, heldItem: null } : p
+    );
     
     updateCurrentUser({ inventory: newInventory, caughtPokemon: newCaughtPokemon });
     alert(`${pokemon.nickname || pokemon.name}에게서 ${itemName}을(를) 회수했습니다!`);
   };
 
-return {
-  movePokemonToParty,
-  movePokemonToBox,
-  releasePokemon,
-  setPartnerPokemon,
-  useRareCandy,
-  updatePokemonNickname,
-  giveItemToPokemon,
-  takeItemFromPokemon
-};
-
+  return {
+    movePokemonToParty,
+    movePokemonToBox,
+    releasePokemon,
+    setPartnerPokemon,
+    useRareCandy,
+    updatePokemonNickname,
+    giveItemToPokemon,
+    takeItemFromPokemon
+  };
 };
 
 export default usePokemonManagement;

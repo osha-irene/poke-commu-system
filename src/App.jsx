@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import MapView from './components/views/MapView';
@@ -9,7 +9,7 @@ import ProfileView from './components/views/ProfileView';
 import AdminView from './components/views/AdminView';
 import EncounterModal from './components/modals/EncounterModal';
 import FirstCatchMemoModal from './components/modals/FirstCatchMemoModal';
-import EvolutionModal from './components/modals/EvolutionModal';  // ⭐ 추가
+import EvolutionModal from './components/modals/EvolutionModal';
 import useGameState from './hooks/useGameState';
 import ShopView from './components/views/ShopView';
 import MembersView from './components/views/MembersView';
@@ -158,7 +158,6 @@ export default function App() {
     updateRegionLootConfig,
     updatePokedexRegions,
     useItemOnPokemon,
-    // ⭐ 진화 관련 추가
     evolutionModal,
     checkEvolution,
     checkEvolutionOnLevelUp,
@@ -167,11 +166,55 @@ export default function App() {
     cancelEvolution,
     manualEvolve,
     getAllEvolvablePokemon,
-	increaseEffort
+    increaseEffort
   } = useGameState();
 
+  // ⭐ 전역 클릭 사운드 - 최상단에 배치!
+  useEffect(() => {
+    console.log('🔊 클릭 사운드 시스템 초기화 중...');
+    
+    // 여러 경로 시도
+    const basePath = window.location.pathname.includes('/poke-commu-system') 
+      ? '/poke-commu-system' 
+      : '';
+    
+    const audioPath = `${basePath}/sound/A-button.mp3`;
+    console.log('🎵 사운드 파일 경로:', audioPath);
+    
+    const audio = new Audio(audioPath);
+    audio.preload = 'auto';
+    audio.volume = 0.5; // 볼륨 높임
+
+    // 오디오 로딩 확인
+    audio.addEventListener('canplaythrough', () => {
+    });
+
+    audio.addEventListener('error', (e) => {
+
+    });
+
+    const handleGlobalClick = (e) => {
+
+      
+      audio.currentTime = 0;
+      audio.play()
+        .then(() => {
+       
+        })
+        .catch(err => {
+      
+        });
+    };
+
+    document.addEventListener('click', handleGlobalClick);
+
+    return () => {
+      document.removeEventListener('click', handleGlobalClick);
+    };
+  }, []);
+
   // 자동 저장
-  React.useEffect(() => {
+  useEffect(() => {
     localStorage.setItem('poke_qnaPosts', JSON.stringify(qnaPosts));
   }, [qnaPosts]);
 
@@ -199,7 +242,6 @@ export default function App() {
         : p
     ));
   };
-
 
   // 로그인하지 않은 경우 로그인 화면 표시
   if (!currentUser || !currentUser.id) {
@@ -285,7 +327,6 @@ export default function App() {
               allMoves={allMoves}             
               pokemonLearnsets={pokemonLearnsets}
               onUseItemOnPokemon={useItemOnPokemon}
-              // ⭐ 진화 관련 props 추가
               checkEvolution={checkEvolution}
               manualEvolve={manualEvolve}
             />
@@ -295,10 +336,10 @@ export default function App() {
             <ItemsView 
               items={items}
               allItems={allItems}
-			  caughtPokemon={caughtPokemon}
+              caughtPokemon={caughtPokemon}
               isSuperAdmin={trainer.isSuperAdmin}
               onUseItem={useItemOnPokemon}
-			  onSellItem={sellItem}
+              onSellItem={sellItem}
               trainer={currentUser}
             />
           )}
@@ -388,7 +429,7 @@ export default function App() {
         />
       )}
 
-      {/* ⭐ 진화 모달 */}
+      {/* 진화 모달 */}
       {evolutionModal && (
         <EvolutionModal
           pokemon={evolutionModal.pokemon}
