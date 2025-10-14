@@ -20,42 +20,74 @@ export default function ItemsView({
   const [quantity, setQuantity] = useState(1);
   const [selectedPokemon, setSelectedPokemon] = useState(null);
 
-  // items.json에서 상세 정보 가져오기
-  const getItemDetails = (item) => {
-    const itemData = allItems.find(i => 
-      i.id === item.itemId || 
-      i.name === item.name || 
-      i.nameEn?.toLowerCase().includes(item.name.toLowerCase())
-    );
-    
-    // pocket 기준으로 카테고리 결정
-    const pocket = itemData?.categoryData?.pocket || 'misc';
-    const category = itemData?.category || '';
+	// items.json에서 상세 정보 가져오기
+	const getItemDetails = (item) => {
+	  if (!item || !item.name) {
+		console.warn('⚠️ Invalid item:', item);
+		return {
+		  name: '알 수 없는 아이템',
+		  description: '아이템 정보가 없습니다',
+		  imageUrl: '/images/items/default.png',
+		  cost: 0,
+		  sellPrice: 0,
+		  pocket: 'misc',
+		  category: 'misc',
+		  canSell: true,
+		  canUse: false
+		};
+	  }
 
-    // 사용 가능 여부 판단: 열매(berries), 회복(medicine/pocket), 영양(vitamins/category), 진화의돌(evolution)
-    const canUse = pocket === 'berries' || 
-                   pocket === 'medicine' || 
-                   category === 'vitamins' ||
-                   category === 'medicine' ||
-                   category?.includes('evolution') ||
-                   category?.includes('berry') ||
-                   itemData?.name?.includes('진화의돌') ||
-                   itemData?.nameEn?.includes('stone') ||
-                   itemData?.nameEn?.includes('berry');
+	  const itemData = allItems.find(i => 
+		i.id === item.itemId || 
+		i.name === item.name
+	  );
+	  
+	  // ✅ 수정: 커스텀 아이템의 pocket을 우선 사용
+	  const pocket = item.pocket || itemData?.categoryData?.pocket || 'misc';
+	  const category = item.category || itemData?.category || '';
 
-    
-    return {
-      name: item.name,
-      description: itemData?.effect?.replace(/\n/g, ' ') || '유용한 아이템',
-      imageUrl: item.imageUrl || itemData?.spriteUrl || '/images/items/default.png',
-      cost: itemData?.cost || 0,
-      sellPrice: itemData?.sellPrice || 0,
-      pocket: pocket,
-      category: category,
-      canSell: itemData?.canSell ?? true,
-      canUse: canUse
-    };
-  };
+	  // canUse 판단 로직도 커스텀 아이템 고려
+	  const canUse = item.canUse !== undefined ? item.canUse : (
+		pocket === 'berries' || 
+		pocket === 'medicine' || 
+		pocket === 'vitamins' ||  // ✅ vitamins pocket도 사용 가능하게
+		category === 'vitamins' ||
+		category === 'medicine' ||
+		category?.includes('evolution') ||
+		category?.includes('berry') ||
+		itemData?.name?.includes('진화의돌') ||
+		item.specialEffect ||
+		item.friendshipBoost ||
+		item.ivBoost ||
+		item.evBoost ||
+		 item.friendshipBoost ||  // ✅ 추가
+		 item.ivBoost ||          // ✅ 추가
+		 item.evBoost ||          // ✅ 추가
+		 item.conditionBoost ||   // ✅ 추가
+		 itemData?.friendshipBoost ||  // ✅ 추가
+		  itemData?.ivBoost ||          // ✅ 추가
+		  itemData?.evBoost ||          // ✅ 추가
+		  itemData?.conditionBoost      // ✅ 추가
+
+	  );
+
+	  return {
+		name: item.name,
+		description: itemData?.effect || item.effect?.replace(/\n/g, ' ') || item.description || '유용한 아이템',
+		imageUrl: item.imageUrl || itemData?.spriteUrl || item.spriteUrl || '/images/items/default.png',
+		cost: itemData?.cost ?? item.cost ?? 0,
+		sellPrice: itemData?.sellPrice ?? item.sellPrice ?? 0,
+		pocket: pocket,
+		category: category,
+		canSell: item.canSell !== undefined ? item.canSell : (itemData?.canSell ?? true),
+		canUse: canUse,
+		specialEffect: item.specialEffect || null,
+		ivBoost: item.ivBoost,
+		evBoost: item.evBoost,
+		friendshipBoost: item.friendshipBoost,
+		conditionBoost: item.conditionBoost
+	  };
+	};
 
   // pocket 기준 카테고리 정의
   const categories = [
@@ -205,17 +237,29 @@ export default function ItemsView({
     return true;
   });
 
-  // 정렬
-  filteredItems = [...filteredItems].sort((a, b) => {
-    if (sortBy === 'category') {
-      const pocketA = getItemDetails(a).pocket;
-      const pocketB = getItemDetails(b).pocket;
-      if (pocketA !== pocketB) return pocketA.localeCompare(pocketB);
-      return a.name.localeCompare(b.name, 'ko');
-    } else {
-      return a.name.localeCompare(b.name, 'ko');
-    }
-  });
+	// 정렬 (안전한 버전)
+	filteredItems = [...filteredItems].sort((a, b) => {
+	  if (sortBy === 'category') {
+		const detailsA = getItemDetails(a);
+		const detailsB = getItemDetails(b);
+		const pocketA = detailsA?.pocket || 'misc';
+		const pocketB = detailsB?.pocket || 'misc';
+		
+		if (pocketA !== pocketB) {
+		  return pocketA.localeCompare(pocketB);
+		}
+		
+		// pocket이 같으면 이름으로 정렬
+		const nameA = a?.name || '';
+		const nameB = b?.name || '';
+		return nameA.localeCompare(nameB, 'ko');
+	  } else {
+		// 이름순 정렬
+		const nameA = a?.name || '';
+		const nameB = b?.name || '';
+		return nameA.localeCompare(nameB, 'ko');
+	  }
+	});
 
   return (
     <div className="max-w-5xl mx-auto">

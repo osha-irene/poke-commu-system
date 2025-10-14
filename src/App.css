@@ -36,3 +36,79 @@
     transform: rotate(360deg);
   }
 }
+/* src/index.css 또는 src/App.css에 추가 */
+
+/* 포켓몬/아이템 스프라이트 이미지 통일 렌더링 */
+img[style*="pixelated"],
+.pixelated-sprite {
+  image-rendering: -moz-crisp-edges;          /* Firefox */
+  image-rendering: -webkit-crisp-edges;       /* Webkit (Safari) */
+  image-rendering: pixelated;                 /* Chrome, Edge */
+  image-rendering: crisp-edges;               /* Opera */
+  -ms-interpolation-mode: nearest-neighbor;   /* IE */
+  
+  /* 브라우저별 크기 차이 방지 */
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  
+  /* 안티앨리어싱 완전 제거 */
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 아이템 이미지 전용 클래스 */
+.item-sprite {
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
+  
+  /* 고정 크기로 통일 */
+  width: 48px !important;
+  height: 48px !important;
+  object-fit: contain;
+}
+
+/* 포켓몬 아이콘 전용 클래스 (작은 크기) */
+.pokemon-icon {
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
+  
+  /* 고정 크기로 통일 */
+  width: 56px !important;
+  height: 56px !important;
+  object-fit: contain;
+}
+
+/* 포켓몬 스프라이트 전용 클래스 (중간 크기) */
+.pokemon-sprite {
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
+  
+  /* 고정 크기로 통일 */
+  width: 96px !important;
+  height: 96px !important;
+  object-fit: contain;
+}
+
+/* 배경 이미지 방식용 (PartySlot, BoxPokemon 등) */
+.pokemon-bg-sprite {
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
+}

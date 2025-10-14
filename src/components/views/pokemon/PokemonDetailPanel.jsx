@@ -1,3 +1,4 @@
+// src/components/views/pokemon/PokemonDetailPanel.jsx
 import React, { useState, useEffect } from 'react';
 import { 
   ArrowUpCircle, 
@@ -47,7 +48,6 @@ export default function PokemonDetailPanel({
   allMoves = [],      
   pokemonLearnsets = {},
   onUseItemOnPokemon,
-  // 진화 관련 props 추가
   checkEvolution,
   manualEvolve,
   allPokemonMaster = []
@@ -187,13 +187,11 @@ export default function PokemonDetailPanel({
         {/* 포켓몬 이미지 */}
         <div className="flex-shrink-0">
           <div 
-            className="w-36 h-36 p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg border border-indigo-100"
+            className="w-36 h-36 p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg border border-indigo-100 pokemon-bg-sprite"
             style={{
               backgroundImage: `url(${pokemon.spriteUrl || getPokemonSpriteUrl(originalNumber)})`,
               backgroundSize: '75%',
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'center',
-              imageRendering: 'pixelated'
+              backgroundPosition: 'center'
             }}
           />
         </div>
@@ -202,25 +200,114 @@ export default function PokemonDetailPanel({
         <div className="flex-1 flex flex-col gap-3">
           {/* 기본 정보 */}
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs bg-gray-200 px-2 py-1 rounded font-semibold">
-                No.{displayNumber.toString().padStart(3, '0')}
-              </span>
-              <span 
-                className="text-xs px-2 py-1 rounded font-bold shadow-sm"
-                style={{ backgroundColor: typeColors.bg, color: typeColors.text }}
-              >
-                {pokemon.type}
-              </span>
-              {pokemon.type2 && (
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs bg-gray-200 px-2 py-1 rounded font-semibold">
+                  No.{displayNumber.toString().padStart(3, '0')}
+                </span>
                 <span 
                   className="text-xs px-2 py-1 rounded font-bold shadow-sm"
-                  style={{ backgroundColor: type2Colors.bg, color: type2Colors.text }}
+                  style={{ backgroundColor: typeColors.bg, color: typeColors.text }}
                 >
-                  {pokemon.type2}
+                  {pokemon.type}
                 </span>
-              )}
-              <span className="text-xs text-gray-500">{pokemon.name}</span>
+                {pokemon.type2 && (
+                  <span 
+                    className="text-xs px-2 py-1 rounded font-bold shadow-sm"
+                    style={{ backgroundColor: type2Colors.bg, color: type2Colors.text }}
+                  >
+                    {pokemon.type2}
+                  </span>
+                )}
+                <span className="text-xs text-gray-500">{pokemon.name}</span>
+              </div>
+
+              {/* 아이콘 버튼 그룹 */}
+              <div className="flex items-center gap-2">
+                {/* 이상한사탕 */}
+                <button
+                  onClick={() => {
+                    if (!hasRareCandy) return;
+                    onUseCandy(pokemon.uniqueId, (pokemonId, newLevel, newMoves) => {
+                      setLevelUpData({ pokemonId, newLevel, newMoves });
+                      setShowLevelUpMoveModal(true);
+                    });
+                  }}
+                  disabled={!hasRareCandy}
+                  className={`p-2 rounded-lg transition-colors ${
+                    hasRareCandy
+                      ? 'text-yellow-600 hover:bg-yellow-50'
+                      : 'text-gray-300 cursor-not-allowed'
+                  }`}
+                  title={hasRareCandy ? '이상한사탕 사용' : '이상한사탕이 없습니다'}
+                >
+                  {rareCandyImage ? (
+                    <div 
+                      className="w-6 h-6"
+                      style={{
+                        backgroundImage: `url(${rareCandyImage})`,
+                        backgroundSize: 'contain',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'center',
+                        imageRendering: 'pixelated'
+                      }}
+                    />
+                  ) : (
+                    <span className="text-xl">🍬</span>
+                  )}
+                </button>
+
+                {/* 파트너 설정 */}
+                <button
+                  onClick={() => {
+                    const newStatus = !pokemon.isPartner;
+                    if (newStatus) {
+                      if (window.confirm(`${pokemon.nickname || pokemon.name}를 파트너 포켓몬으로 설정하시겠습니까?\n\n파트너는 방생할 수 없으며, 1마리만 설정 가능합니다.`)) {
+                        onSetPartner(pokemon.uniqueId, true);
+                      }
+                    } else {
+                      if (window.confirm(`${pokemon.nickname || pokemon.name}의 파트너 설정을 해제하시겠습니까?`)) {
+                        onSetPartner(pokemon.uniqueId, false);
+                      }
+                    }
+                  }}
+                  className={`p-2 rounded-lg transition-colors ${
+                    pokemon.isPartner
+                      ? 'text-pink-600 hover:bg-pink-50'
+                      : 'text-gray-400 hover:bg-gray-50'
+                  }`}
+                  title={pokemon.isPartner ? '파트너 해제' : '파트너 설정'}
+                >
+                  <Heart size={20} fill={pokemon.isPartner ? 'currentColor' : 'none'} />
+                </button>
+
+                {/* 박스/엔트리 이동 */}
+                <button
+                  onClick={onMove}
+                  className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                  title={isInParty ? '박스로 이동' : '엔트리로 이동'}
+                >
+                  {isInParty ? (
+                    <ArrowDownCircle size={20} />
+                  ) : (
+                    <ArrowUpCircle size={20} />
+                  )}
+                </button>
+
+                {/* 방생 */}
+                <button
+                  onClick={onRelease}
+                  disabled={pokemon.isPartner}
+                  className={`p-2 rounded-lg transition-colors ${
+                    pokemon.isPartner
+                      ? 'text-gray-300 cursor-not-allowed'
+                      : 'text-red-600 hover:bg-red-50'
+                  }`}
+                  title={pokemon.isPartner ? '파트너 포켓몬은 방생할 수 없습니다' : '포켓몬 방생'}
+                >
+                  <Trash2 size={20} />
+                </button>
+              </div>
             </div>
             
             {/* 닉네임 편집 */}
@@ -246,13 +333,13 @@ export default function PokemonDetailPanel({
               <div className="flex items-center gap-2 mb-1">
                 {pokeballData && (
                   <div 
-                    className="w-8 h-8 flex-shrink-0"
+                    className="item-sprite"
                     style={{
+                      width: '32px',
+                      height: '32px',
                       backgroundImage: `url(${pokeballData.spriteUrl})`,
                       backgroundSize: '110%',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'center',
-                      imageRendering: 'pixelated'
+                      backgroundPosition: 'center'
                     }}
                   />
                 )}
@@ -385,13 +472,13 @@ export default function PokemonDetailPanel({
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <div 
-                      className="w-6 h-6 flex-shrink-0"
+                      className="item-sprite"
                       style={{
+                        width: '24px',
+                        height: '24px',
                         backgroundImage: `url(${heldItemData.spriteUrl})`,
                         backgroundSize: 'contain',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'center',
-                        imageRendering: 'pixelated'
+                        backgroundPosition: 'center'
                       }}
                     />
                     <div className="text-sm font-bold text-blue-600 truncate">
@@ -449,68 +536,7 @@ export default function PokemonDetailPanel({
             </div>
           </div>
 
-          {/* 액션 버튼 */}
-          <div className="space-y-2">
-            <button
-              onClick={() => {
-                const newStatus = !pokemon.isPartner;
-                if (newStatus) {
-                  if (window.confirm(`${pokemon.nickname || pokemon.name}를 파트너 포켓몬으로 설정하시겠습니까?\n\n파트너는 방생할 수 없으며, 1마리만 설정 가능합니다.`)) {
-                    onSetPartner(pokemon.uniqueId, true);
-                  }
-                } else {
-                  if (window.confirm(`${pokemon.nickname || pokemon.name}의 파트너 설정을 해제하시겠습니까?`)) {
-                    onSetPartner(pokemon.uniqueId, false);
-                  }
-                }
-              }}
-              className={`w-full py-2 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 border ${
-                pokemon.isPartner
-                  ? 'bg-pink-100 text-pink-700 hover:bg-pink-200 border-pink-300'
-                  : 'bg-pink-50 text-pink-600 hover:bg-pink-100 border-pink-200'
-              }`}
-            >
-              <Heart size={18} fill={pokemon.isPartner ? 'currentColor' : 'none'} />
-              <span>{pokemon.isPartner ? '💔 파트너 해제' : '💖 파트너 설정'}</span>
-            </button>
-
-            <button
-              onClick={onMove}
-              className="w-full bg-indigo-100 text-indigo-700 py-2 rounded-lg font-semibold hover:bg-indigo-200 transition-colors flex items-center justify-center gap-2 border border-indigo-300"
-            >
-              {isInParty ? (
-                <>
-                  <ArrowDownCircle size={18} />
-                  <span>박스로 이동</span>
-                </>
-              ) : (
-                <>
-                  <ArrowUpCircle size={18} />
-                  <span>엔트리로 이동</span>
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={onRelease}
-              disabled={pokemon.isPartner}
-              className={`w-full py-2 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 border ${
-                pokemon.isPartner
-                  ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                  : 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200'
-              }`}
-              title={pokemon.isPartner ? '파트너 포켓몬은 방생할 수 없습니다' : ''}
-            >
-              <Trash2 size={18} />
-              <span>{pokemon.isPartner ? '🔒 방생 불가' : '포켓몬 방생'}</span>
-            </button>
-
-            {pokemon.isPartner && (
-              <div className="text-xs text-pink-500 text-center">
-                💖 파트너 포켓몬은 방생할 수 없습니다
-              </div>
-            )}
-          </div>
+        
         </div>
       </div>
 

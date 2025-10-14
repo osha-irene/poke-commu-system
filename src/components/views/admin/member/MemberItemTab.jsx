@@ -9,19 +9,26 @@ function MemberItemTab({ member, allItems, onGiveItem }) {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   
+  // ItemsView와 동일한 pocket 기준 카테고리
   const categories = [
-    { id: 'all', name: '전체' },
-    { id: 'ball', name: '포획' },
-    { id: 'medicine', name: '회복' },
-    { id: 'vitamin', name: '영양' },
-    { id: 'berry', name: '나무열매' },
-    { id: 'battle', name: '배틀' },
+    { id: 'all', name: '전체', icon: '📦', color: 'bg-gray-100 text-gray-700' },
+    { id: 'pokeballs', name: '포획', icon: '⚾', color: 'bg-red-100 text-red-700' },
+    { id: 'medicine', name: '회복', icon: '💊', color: 'bg-green-100 text-green-700' },
+    { id: 'vitamins', name: '영양', icon: '💪', color: 'bg-purple-100 text-purple-700' },
+    { id: 'berries', name: '나무열매', icon: '🍇', color: 'bg-pink-100 text-pink-700' },
+    { id: 'machines', name: '기술머신', icon: '💿', color: 'bg-blue-100 text-blue-700' },
+    { id: 'held-items', name: '지니는도구', icon: '🎒', color: 'bg-orange-100 text-orange-700' },
+    { id: 'evolution', name: '진화', icon: '✨', color: 'bg-yellow-100 text-yellow-700' },
+    { id: 'misc', name: '기타', icon: '📦', color: 'bg-gray-100 text-gray-700' }
   ];
   
   const filteredItems = allItems.filter(item => {
-    // 카테고리 필터
-    if (categoryFilter !== 'all' && !item.category?.includes(categoryFilter)) {
-      return false;
+    // 카테고리 필터 (pocket 기준)
+    if (categoryFilter !== 'all') {
+      const pocket = item.categoryData?.pocket || item.pocket || 'misc';
+      if (pocket !== categoryFilter) {
+        return false;
+      }
     }
     
     // 검색 필터
@@ -45,6 +52,19 @@ function MemberItemTab({ member, allItems, onGiveItem }) {
     setSelectedItem(null);
     setItemCount(1);
     alert(`${member.name}님에게 ${selectedItem.name} ${itemCount}개를 지급했습니다!`);
+  };
+
+  // pocket별 배지 색상
+  const getPocketBadge = (item) => {
+    const pocket = item.categoryData?.pocket || item.pocket || 'misc';
+    if (pocket === 'pokeballs') return { text: '⚾ 포획', color: 'bg-red-100 text-red-700' };
+    if (pocket === 'medicine') return { text: '💊 회복', color: 'bg-green-100 text-green-700' };
+    if (pocket === 'vitamins') return { text: '💪 영양', color: 'bg-purple-100 text-purple-700' };
+    if (pocket === 'berries') return { text: '🍇 나무열매', color: 'bg-pink-100 text-pink-700' };
+    if (pocket === 'machines') return { text: '💿 기술머신', color: 'bg-blue-100 text-blue-700' };
+    if (pocket === 'held-items') return { text: '🎒 지니는도구', color: 'bg-orange-100 text-orange-700' };
+    if (pocket === 'evolution') return { text: '✨ 진화', color: 'bg-yellow-100 text-yellow-700' };
+    return { text: '📦 기타', color: 'bg-gray-100 text-gray-700' };
   };
 
   return (
@@ -114,38 +134,50 @@ function MemberItemTab({ member, allItems, onGiveItem }) {
               <button
                 key={cat.id}
                 onClick={() => setCategoryFilter(cat.id)}
-                className={getButtonClass(
-                  categoryFilter === cat.id ? 'primary' : 'secondary',
-                  'sm'
-                )}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${
+                  categoryFilter === cat.id
+                    ? cat.color
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
               >
-                {cat.name}
+                <span>{cat.icon}</span>
+                <span>{cat.name}</span>
               </button>
             ))}
           </div>
 
           {/* 아이템 그리드 */}
           <div className="grid grid-cols-5 gap-2 max-h-96 overflow-y-auto">
-            {filteredItems.map(item => (
-              <button
-                key={item.id}
-                onClick={() => setSelectedItem(item)}
-                className={`p-2 rounded-lg border-2 transition-all hover:shadow-md ${
-                  selectedItem?.id === item.id
-                    ? 'border-indigo-500 bg-indigo-50'
-                    : 'border-gray-200 hover:border-indigo-300'
-                }`}
-                title={item.name}
-              >
-                <img 
-                  src={item.spriteUrl} 
-                  alt={item.name}
-                  className="w-full h-12 object-contain"
-                  style={{ imageRendering: 'pixelated' }}
-                />
-                <div className="text-xs text-center truncate mt-1 text-gray-700">{item.name}</div>
-              </button>
-            ))}
+            {filteredItems.map(item => {
+              const badge = getPocketBadge(item);
+              
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setSelectedItem(item)}
+                  className={`p-2 rounded-lg border-2 transition-all hover:shadow-md ${
+                    selectedItem?.id === item.id
+                      ? 'border-indigo-500 bg-indigo-50'
+                      : 'border-gray-200 hover:border-indigo-300'
+                  }`}
+                  title={item.name}
+                >
+                  <div className="relative">
+                    <img 
+                      src={item.spriteUrl} 
+                      alt={item.name}
+                      className="w-full h-12 object-contain"
+                      style={{ imageRendering: 'pixelated' }}
+                    />
+                    {/* 카테고리 뱃지 */}
+                    <span className={`absolute top-0 right-0 text-[10px] px-1 py-0.5 rounded font-bold ${badge.color}`}>
+                      {badge.text.split(' ')[0]}
+                    </span>
+                  </div>
+                  <div className="text-xs text-center truncate mt-1 text-gray-700">{item.name}</div>
+                </button>
+              );
+            })}
           </div>
 
           {filteredItems.length === 0 && (
@@ -165,7 +197,12 @@ function MemberItemTab({ member, allItems, onGiveItem }) {
                   style={{ imageRendering: 'pixelated' }}
                 />
                 <div className="flex-1">
-                  <h4 className="font-bold text-lg text-gray-800">{selectedItem.name}</h4>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="font-bold text-lg text-gray-800">{selectedItem.name}</h4>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getPocketBadge(selectedItem).color}`}>
+                      {getPocketBadge(selectedItem).text}
+                    </span>
+                  </div>
                   <p className="text-sm text-gray-600 mt-1">{selectedItem.effect?.replace(/\n/g, ' ')}</p>
                 </div>
               </div>
