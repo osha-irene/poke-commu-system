@@ -169,29 +169,39 @@ export const useAdminFunctions = (
     } = options;
 
     const newPokemon = {
-      uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      pokemonId: pokemonTemplate.id,
-      name: pokemonTemplate.name,
-      nameEn: pokemonTemplate.nameEn,
-      nickname,
-      number: pokemonTemplate.number,
-      type: pokemonTemplate.type,
-      type2: pokemonTemplate.type2 || null,
-      level,
-      hp: pokemonTemplate.baseHp,
-      maxHp: pokemonTemplate.baseHp,
-      exp: 0,
-      friendship,
-      heldItem,
-      moves,
-      isPartner,
+	  uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+	  pokemonId: pokemonTemplate.id,
+	  name: pokemonTemplate.name,
+	  nameEn: pokemonTemplate.nameEn,
+	  nickname,
+	  number: pokemonTemplate.number,
+	  type: pokemonTemplate.type,
+	  type2: pokemonTemplate.type2 || null,
+	  level,
+	  hp: pokemonTemplate.baseHp,
+	  maxHp: pokemonTemplate.baseHp,
+	  exp: 0,
+	  friendship,
+	  heldItem,
+	  moves,
+	  isPartner,
 	  caughtWithBall,
-      condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
-      effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
-      imageUrl: pokemonTemplate.imageUrl,
-      iconUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`,
-      spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`
-    };
+	  condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
+	  
+	  // ✅ effort 필드 사용
+	  effort: { 
+		hp: 0, 
+		attack: 0, 
+		defense: 0, 
+		specialAttack: 0, 
+		specialDefense: 0, 
+		speed: 0 
+	  },
+  
+  imageUrl: pokemonTemplate.imageUrl,
+  iconUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`,
+  spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`
+};
 
 
   // ⭐ 엔트리에 빈 자리가 있는지 확인
@@ -319,7 +329,8 @@ export const useAdminFunctions = (
       id: `custom_${Date.now()}`,
       isCustom: true,
       createdBy: currentUser.name,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+	  pocket: itemData.pocket || itemData.category || 'misc',
     };
     
     customItems.push(newItem);

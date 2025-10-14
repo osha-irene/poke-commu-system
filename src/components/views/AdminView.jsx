@@ -10,6 +10,7 @@ import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 
+
 export default function AdminView({ 
   trainer, members, updateMaxDailyWalks, regions, allPokemon, allPokemonMaster, allItems,
   addItemToSelf, giveItemToMember, toggleItemManagement, givePokemonToMember, addPokemonToSelf,
@@ -27,6 +28,9 @@ export default function AdminView({
   const [newMemberId, setNewMemberId] = useState('');
   const [newMemberPassword, setNewMemberPassword] = useState('');
   const [newMemberName, setNewMemberName] = useState('');
+  const [escapeMode, setEscapeMode] = useState(() => 
+  localStorage.getItem('poke_escapeMode') || 'instant'
+);
 
   const handleAddMember = () => {
     if (!newMemberId || !newMemberPassword || !newMemberName) {
@@ -278,6 +282,94 @@ export default function AdminView({
               <span className="text-sm text-gray-500 ml-4">현재: {trainer.maxDailyWalks}회</span>
             </div>
           </Card>
+		  		
+			{/* 도망 시스템 설정 */}
+<Card className="p-6">
+  <h3 className="text-xl font-bold text-gray-800 mb-4">🏃 포켓몬 도망 시스템</h3>
+  
+  <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-5 border-2 border-indigo-200">
+    <div className="flex items-start justify-between gap-6">
+      {/* 왼쪽: 설명 */}
+      <div className="flex-1">
+        <div className="font-bold text-gray-800 mb-2">포획 실패 시 동작</div>
+        <div className="text-sm text-gray-600 leading-relaxed">
+          {escapeMode === 'none' && (
+            <>
+              <p className="font-semibold text-gray-700 mb-1">❌ 도망 안함 모드</p>
+              <p>포획에 실패해도 포켓몬이 계속 남아있어 무한으로 시도할 수 있습니다. 연습이나 테스트에 유용합니다.</p>
+            </>
+          )}
+          {escapeMode === 'instant' && (
+            <>
+              <p className="font-semibold text-gray-700 mb-1">⚡ 즉시 도망 모드 (기본)</p>
+              <p>포획에 실패하면 포켓몬이 즉시 도망갑니다. 원작 게임의 기본 동작입니다.</p>
+            </>
+          )}
+          {escapeMode === 'speed' && (
+            <>
+              <p className="font-semibold text-gray-700 mb-1">💨 스피드 기반 모드</p>
+              <p>파트너 포켓몬의 스피드와 야생 포켓몬의 스피드를 비교하여 확률적으로 도망갑니다. 포획 실패 횟수가 늘어날수록 도망갈 확률이 감소합니다.</p>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* 오른쪽: 컴팩트 스위치 */}
+      <div className="flex-shrink-0">
+        <div className="relative bg-white rounded-full p-0.5 border-2 border-gray-300 flex items-center w-44">
+          {/* 슬라이딩 배경 */}
+          <div 
+            className="absolute top-0.5 bottom-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300 ease-in-out"
+            style={{
+              width: 'calc(33.333% - 0.125rem)',
+              left: escapeMode === 'none' ? '0.125rem' : 
+                    escapeMode === 'instant' ? 'calc(33.333% + 0.0625rem)' : 
+                    'calc(66.666% - 0.0625rem)'
+            }}
+          />
+          
+          {/* 버튼들 */}
+          <button
+            onClick={() => {
+              setEscapeMode('none');
+              localStorage.setItem('poke_escapeMode', 'none');
+            }}
+            className={`relative z-10 flex-1 py-1.5 rounded-full font-semibold transition-colors text-center ${
+              escapeMode === 'none' ? 'text-white' : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <div className="text-base leading-none">❌</div>
+          </button>
+          
+          <button
+            onClick={() => {
+              setEscapeMode('instant');
+              localStorage.setItem('poke_escapeMode', 'instant');
+            }}
+            className={`relative z-10 flex-1 py-1.5 rounded-full font-semibold transition-colors text-center ${
+              escapeMode === 'instant' ? 'text-white' : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <div className="text-base leading-none">⚡</div>
+          </button>
+          
+          <button
+            onClick={() => {
+              setEscapeMode('speed');
+              localStorage.setItem('poke_escapeMode', 'speed');
+            }}
+            className={`relative z-10 flex-1 py-1.5 rounded-full font-semibold transition-colors text-center ${
+              escapeMode === 'speed' ? 'text-white' : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <div className="text-base leading-none">💨</div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</Card>
+		 
         </>
       )}
 

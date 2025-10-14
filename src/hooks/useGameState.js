@@ -439,31 +439,39 @@ export default function useGameState() {
   const level = Math.floor(Math.random() * (maxLevel - minLevel + 1)) + minLevel;
   
   const newPokemon = {
-    uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    pokemonId: pokemonTemplate.id,
-    name: pokemonTemplate.name,
-    nameEn: pokemonTemplate.nameEn,
-    number: pokemonTemplate.number,
-    type: pokemonTemplate.type,
-    type2: pokemonTemplate.type2 || null,
-    level: level,
-    hp: pokemonTemplate.baseHp,
-    maxHp: pokemonTemplate.baseHp,
-    exp: 0,
-    friendship: 0,
-    heldItem: null,
-    moves: movesHook.getStartingMoves(pokemonTemplate.number, level, movesData),
-    caughtWithBall: ballUsed.name,
-    isPartner: false,
-    inParty: false, // 기본값
-    condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
-    effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
-    evs: { hp: 0, attack: 0, defense: 0, 'special-attack': 0, 'special-defense': 0, speed: 0 },
-    imageUrl: pokemonTemplate.imageUrl,
-    iconUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`,
-    spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`
-  };
-  
+	  uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+	  pokemonId: pokemonTemplate.id,
+	  name: pokemonTemplate.name,
+	  nameEn: pokemonTemplate.nameEn,
+	  number: pokemonTemplate.number,
+	  type: pokemonTemplate.type,
+	  type2: pokemonTemplate.type2 || null,
+	  level: level,
+	  hp: pokemonTemplate.baseHp,
+	  maxHp: pokemonTemplate.baseHp,
+	  exp: 0,
+	  friendship: 0,
+	  heldItem: null,
+	  moves: movesHook.getStartingMoves(pokemonTemplate.number, level, movesData),
+	  caughtWithBall: ballUsed.name,
+	  isPartner: false,
+	  inParty: false,
+	  condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
+	  
+	  // ✅ effort 필드 사용 (evs 제거)
+	  effort: { 
+		hp: 0, 
+		attack: 0, 
+		defense: 0, 
+		specialAttack: 0,      // ← 하이픈 없이
+		specialDefense: 0,     // ← 하이픈 없이
+		speed: 0 
+	  },
+	  
+	  imageUrl: pokemonTemplate.imageUrl,
+	  iconUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`,
+	  spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`
+	};
   // ⭐ 엔트리에 빈 자리가 있는지 확인 (파트너 제외, 최대 6마리)
   const partyPokemon = currentUser.caughtPokemon.filter(p => p && !p.isPartner && p.inParty);
   const hasPartySpace = partyPokemon.length < 6;
@@ -556,234 +564,290 @@ export default function useGameState() {
   const updatePokedexMemo = (pokemonNumber, memo) => {
     return gameDataUpdatePokedexMemo(pokemonNumber, memo, currentUser);
   };
-
-  const handlePurchase = (item, quantity) => {
-    if (!currentUser) return false;
-    
-    const totalCost = item.cost * quantity;
-    if (currentUser.money < totalCost) {
-      alert('돈이 부족합니다!');
+	const handlePurchase = (item, quantity) => {
+  if (!currentUser) return false;
+  
+  console.log('🛒 구매 시도 - 전체 아이템 정보:', item);
+  
+  // ✅ item이 객체가 아니라 itemId인 경우 처리
+  let itemData;
+  if (typeof item === 'string' || typeof item === 'number') {
+    // itemId만 전달된 경우 - allItems에서 찾기
+    itemData = allItems.find(i => i.id === item);
+    if (!itemData) {
+      alert('아이템 정보를 찾을 수 없습니다!');
       return false;
     }
-    
-    const existingItem = currentUser.inventory.find(
-      i => i.itemId === item.id || i.name === item.name
-    );
-    
-    const newInventory = existingItem
-      ? currentUser.inventory.map(i =>
-          (i.itemId === item.id || i.name === item.name)
-            ? { ...i, count: i.count + quantity }
-            : i
-        )
-      : [
-          ...currentUser.inventory,
-          {
-            itemId: item.id,
-            name: item.name,
-            nameEn: item.nameEn,
-            count: quantity,
-            imageUrl: item.spriteUrl || item.imageUrl
-          }
-        ];
-    
-    updateCurrentUser({
-      inventory: newInventory,
-      money: currentUser.money - totalCost
-    });
-    
-    alert(`${item.name} ${quantity}개를 구매했습니다!`);
-    return true;
-  };
+  } else {
+    // 객체가 전달된 경우
+    itemData = item;
+  }
   
+  // ✅ 여러 가능한 키에서 가격 찾기
+  const itemCost = itemData.cost ?? itemData.price ?? itemData.buyPrice ?? 0;
+  const totalCost = itemCost * quantity;
   
-  const useItemOnPokemon = (item, pokemon) => {
-  if (!currentUser || !pokemon) return;
+  console.log('💰 최종 가격:', itemCost, '총액:', totalCost);
   
-  const itemData = allItems.find(i => 
-    i.id === item.itemId || i.name === item.name
+  if (totalCost <= 0) {
+    console.error('❌ 가격이 0 이하입니다! 아이템 정보:', itemData);
+    alert('아이템 가격 정보가 올바르지 않습니다!\n\n개발자 도구(F12) 콘솔을 확인해주세요.');
+    return false;
+  }
+  
+  if (currentUser.money < totalCost) {
+    alert('돈이 부족합니다!');
+    return false;
+  }
+  
+  const existingItem = currentUser.inventory.find(
+    i => i.itemId === itemData.id || i.name === itemData.name
   );
   
-  // consumeItem 함수
-  const consumeItem = (item) => {
-    if (currentUser.isSuperAdmin) return; // 슈퍼 관리자는 아이템 소모 안함
-    
-    const newInventory = currentUser.inventory
-      .map(i => (i.itemId === item.itemId || i.name === item.name)
-        ? { ...i, count: i.count - 1 }
-        : i
+  const newInventory = existingItem
+    ? currentUser.inventory.map(i =>
+        (i.itemId === itemData.id || i.name === itemData.name)
+          ? { ...i, count: i.count + quantity }
+          : i
       )
-      .filter(i => i.count > 0);
-    updateCurrentUser({ inventory: newInventory });
-  };
-
-  // 포켓몬 업데이트 함수 - caughtPokemon 배열에서 업데이트
-  const updatePokemonInUser = (updatedPokemon) => {
-    const updatedCaughtPokemon = currentUser.caughtPokemon.map(p => 
-      p && p.uniqueId === updatedPokemon.uniqueId ? updatedPokemon : p
-    );
-    updateCurrentUser({ caughtPokemon: updatedCaughtPokemon });
-  };
+    : [
+        ...currentUser.inventory,
+        {
+          itemId: itemData.id,
+          name: itemData.name,
+          nameEn: itemData.nameEn,
+          count: quantity,
+          imageUrl: itemData.spriteUrl || itemData.imageUrl,
+          cost: itemCost,
+          sellPrice: itemData.sellPrice,
+          category: itemData.category,
+          pocket: itemData.pocket,
+          effect: itemData.effect,
+          friendshipBoost: itemData.friendshipBoost,
+          ivBoost: itemData.ivBoost,
+          evBoost: itemData.evBoost,
+          conditionBoost: itemData.conditionBoost,
+          specialEffect: itemData.specialEffect
+        }
+      ];
   
-  // ✅ 커스텀 아이템 효과 처리 (친밀도, IV, EV, 컨디션)
-  let itemUsed = false;
-  let effectMessages = [];
-  const updatedPokemon = { ...pokemon };
-
-  // 1. 친밀도 부스트
-  if (item.friendshipBoost || itemData?.friendshipBoost) {
-    const boost = item.friendshipBoost || itemData.friendshipBoost;
-    const currentFriendship = updatedPokemon.friendship || 0;
-    const newFriendship = Math.min(255, currentFriendship + boost);
-    updatedPokemon.friendship = newFriendship;
-    effectMessages.push(`💖 친밀도: ${currentFriendship} → ${newFriendship} (+${boost})`);
-    itemUsed = true;
-    console.log(`💖 친밀도 증가: ${currentFriendship} → ${newFriendship}`);
-  }
-
-  // 2. IV 부스트
-  if (item.ivBoost || itemData?.ivBoost) {
-    const boost = item.ivBoost || itemData.ivBoost;
-    if (!updatedPokemon.ivs) {
-      updatedPokemon.ivs = { 
-        hp: 0, attack: 0, defense: 0, 
-        'special-attack': 0, 'special-defense': 0, speed: 0 
-      };
-    }
-    
-    Object.keys(boost).forEach(stat => {
-      const currentIV = updatedPokemon.ivs[stat] || 0;
-      const newIV = Math.min(31, currentIV + boost[stat]);
-      updatedPokemon.ivs[stat] = newIV;
-      effectMessages.push(`📊 ${stat} IV: ${currentIV} → ${newIV} (+${boost[stat]})`);
-      console.log(`📊 ${stat} IV 증가: ${currentIV} → ${newIV}`);
-    });
-    itemUsed = true;
-  }
-
-  // 3. EV 부스트
-  if (item.evBoost || itemData?.evBoost) {
-    const boost = item.evBoost || itemData.evBoost;
-    if (!updatedPokemon.evs) {
-      updatedPokemon.evs = { 
-        hp: 0, attack: 0, defense: 0, 
-        'special-attack': 0, 'special-defense': 0, speed: 0 
-      };
-    }
-    
-    Object.keys(boost).forEach(stat => {
-      const currentEV = updatedPokemon.evs[stat] || 0;
-      const totalEVs = Object.values(updatedPokemon.evs).reduce((sum, ev) => sum + ev, 0);
-      
-      // EV 제한: 개별 252, 전체 510
-      const maxIncrease = Math.min(
-        252 - currentEV,
-        510 - totalEVs,
-        boost[stat]
-      );
-      
-      if (maxIncrease > 0) {
-        updatedPokemon.evs[stat] = currentEV + maxIncrease;
-        effectMessages.push(`💪 ${stat} EV: ${currentEV} → ${updatedPokemon.evs[stat]} (+${maxIncrease})`);
-        console.log(`💪 ${stat} EV 증가: ${currentEV} → ${updatedPokemon.evs[stat]}`);
-        itemUsed = true;
-      } else if (boost[stat] > 0) {
-        effectMessages.push(`⚠️ ${stat} EV는 더 이상 올릴 수 없습니다 (상한 도달)`);
-      }
-    });
-  }
-
-  // 4. 컨디션 부스트
-  if (item.conditionBoost || itemData?.conditionBoost) {
-    const boost = item.conditionBoost || itemData.conditionBoost;
-    if (!updatedPokemon.condition) {
-      updatedPokemon.condition = { 
-        elegance: 0, beauty: 0, cuteness: 0, 
-        intelligence: 0, strength: 0 
-      };
-    }
-    
-    // conditionBoost의 키를 condition 객체의 키로 매핑
-    const conditionMapping = {
-      cool: 'elegance',
-      beauty: 'beauty',
-      cute: 'cuteness',
-      smart: 'intelligence',
-      tough: 'strength'
-    };
-    
-    Object.keys(boost).forEach(condKey => {
-      const mappedKey = conditionMapping[condKey] || condKey;
-      if (updatedPokemon.condition[mappedKey] !== undefined) {
-        const current = updatedPokemon.condition[mappedKey] || 0;
-        const newValue = Math.min(255, current + boost[condKey]);
-        updatedPokemon.condition[mappedKey] = newValue;
-        effectMessages.push(`✨ ${condKey}: ${current} → ${newValue} (+${boost[condKey]})`);
-        console.log(`✨ ${condKey} 증가: ${current} → ${newValue}`);
-        itemUsed = true;
-      }
-    });
-  }
-
-  // 5. 특수 효과 (기존 코드)
-  if (item.specialEffect || itemData?.specialEffect) {
-    effectMessages.push(`⚡ ${item.specialEffect || itemData.specialEffect}`);
-    itemUsed = true;
-  }
-
-  // 커스텀 아이템 효과가 적용되었다면
-  if (itemUsed) {
-    updatePokemonInUser(updatedPokemon);
-    const message = `${pokemon.nickname || pokemon.name}에게 ${item.name}을(를) 사용했습니다!\n\n${effectMessages.join('\n')}`;
-    alert(message);
-    consumeItem(item);
-    return;
-  }
+  const newMoney = currentUser.money - totalCost;
   
-  // ⭐ EV 아이템 처리
-  if (isEVItem(itemData?.nameEn || itemData?.name)) {
-    const result = applyEVItem(
-      pokemon, 
-      itemData.nameEn || itemData.name,
-      updatePokemonInUser
-    );
-    
-    if (result.success) {
-      alert(result.message);
-      consumeItem(item);
-    } else {
-      alert(result.message);
-    }
-    return;
-  }
+  console.log('✅ 구매 완료! 남은 금액:', newMoney);
   
-  // 이상한사탕 - 레벨업 + 진화 체크
-  if (itemData?.name === '이상한사탕' || 
-      itemData?.nameEn?.toLowerCase().includes('rare candy')) {
-    handleRareCandyWithEvolution(pokemon.uniqueId);
-    consumeItem(item);
-    return;
-  }
-   
-  // ⭐ 진화의 돌 - 진화 처리
-  if (itemData?.category?.includes('evolution')) {
-    console.log('🪨 진화의 돌 사용:', itemData.name, itemData.nameEn);
-    
-    const success = evolutionHook.evolveWithItem(pokemon, itemData.nameEn || itemData.name);
-    console.log('✅ 진화 체크 결과:', success);
-    
-    if (success) {
-      consumeItem(item);
-    } else {
-      alert('이 포켓몬은 해당 아이템으로 진화할 수 없습니다.');
-    }
-    return;
-  }
+  updateCurrentUser({
+    inventory: newInventory,
+    money: newMoney
+  });
   
-  // ⭐ 기본 동작 - 사용만 하고 효과 없음
-  alert(`${pokemon.nickname || pokemon.name}에게 ${item.name}을(를) 사용했습니다!`);
-  consumeItem(item);
+  alert(`${itemData.name} ${quantity}개를 구매했습니다!`);
+  return true;
 };
+  
+	const useItemOnPokemon = (item, pokemon) => {
+	  if (!currentUser || !pokemon) return;
+	  
+	  const itemData = allItems.find(i => 
+		i.id === item.itemId || i.name === item.name
+	  );
+	  
+	  // consumeItem 함수
+	  const consumeItem = (item) => {
+		if (currentUser.isSuperAdmin) return; // 슈퍼 관리자는 아이템 소모 안함
+		
+		const newInventory = currentUser.inventory
+		  .map(i => (i.itemId === item.itemId || i.name === item.name)
+			? { ...i, count: i.count - 1 }
+			: i
+		  )
+		  .filter(i => i.count > 0);
+		updateCurrentUser({ inventory: newInventory });
+	  };
+
+	  // 포켓몬 업데이트 함수 - caughtPokemon 배열에서 업데이트
+	  const updatePokemonInUser = (updatedPokemon) => {
+		const updatedCaughtPokemon = currentUser.caughtPokemon.map(p => 
+		  p && p.uniqueId === updatedPokemon.uniqueId ? updatedPokemon : p
+		);
+		updateCurrentUser({ caughtPokemon: updatedCaughtPokemon });
+	  };
+	  
+	  // ✅ 커스텀 아이템 효과 처리 (친밀도, IV, EV, 컨디션)
+	  let itemUsed = false;
+	  let effectMessages = [];
+	  const updatedPokemon = { ...pokemon };
+
+	  // 1. 친밀도 부스트
+	  if (item.friendshipBoost || itemData?.friendshipBoost) {
+		const boost = item.friendshipBoost || itemData.friendshipBoost;
+		const currentFriendship = updatedPokemon.friendship || 0;
+		const newFriendship = Math.min(255, currentFriendship + boost);
+		updatedPokemon.friendship = newFriendship;
+		effectMessages.push(`💖 친밀도: ${currentFriendship} → ${newFriendship} (+${boost})`);
+		itemUsed = true;
+		console.log(`💖 친밀도 증가: ${currentFriendship} → ${newFriendship}`);
+	  }
+
+	  // 2. IV 부스트
+	  if (item.ivBoost || itemData?.ivBoost) {
+		const boost = item.ivBoost || itemData.ivBoost;
+		if (!updatedPokemon.ivs) {
+		  updatedPokemon.ivs = { 
+			hp: 0, attack: 0, defense: 0, 
+			'special-attack': 0, 'special-defense': 0, speed: 0 
+		  };
+		}
+		
+		Object.keys(boost).forEach(stat => {
+		  const currentIV = updatedPokemon.ivs[stat] || 0;
+		  const newIV = Math.min(31, currentIV + boost[stat]);
+		  updatedPokemon.ivs[stat] = newIV;
+		  effectMessages.push(`📊 ${stat} IV: ${currentIV} → ${newIV} (+${boost[stat]})`);
+		  console.log(`📊 ${stat} IV 증가: ${currentIV} → ${newIV}`);
+		});
+		itemUsed = true;
+	  }
+
+	  // 3. EV 부스트 (커스텀 아이템)
+	  if (item.evBoost || itemData?.evBoost) {
+		const boost = item.evBoost || itemData.evBoost;
+		if (!updatedPokemon.effort) {
+		  updatedPokemon.effort = { 
+			hp: 0, 
+			attack: 0, 
+			defense: 0, 
+			specialAttack: 0,
+			specialDefense: 0,
+			speed: 0 
+		  };
+		}
+		
+		// ✅ 키 매핑 추가 (special-attack → specialAttack)
+		const statMapping = {
+		  'hp': 'hp',
+		  'attack': 'attack',
+		  'defense': 'defense',
+		  'special-attack': 'specialAttack',
+		  'specialAttack': 'specialAttack',
+		  'special-defense': 'specialDefense',
+		  'specialDefense': 'specialDefense',
+		  'speed': 'speed'
+		};
+		
+		Object.keys(boost).forEach(stat => {
+		  const mappedStat = statMapping[stat] || stat;
+		  const currentEV = updatedPokemon.effort[mappedStat] || 0;
+		  const totalEVs = Object.values(updatedPokemon.effort).reduce((sum, ev) => sum + ev, 0);
+		  
+		  // EV 제한: 개별 252, 전체 510
+		  const maxIncrease = Math.min(
+			252 - currentEV,
+			510 - totalEVs,
+			boost[stat]
+		  );
+		  
+		  if (maxIncrease > 0) {
+			updatedPokemon.effort[mappedStat] = currentEV + maxIncrease;
+			effectMessages.push(`💪 ${stat} EV: ${currentEV} → ${updatedPokemon.effort[mappedStat]} (+${maxIncrease})`);
+			console.log(`💪 ${stat} EV 증가: ${currentEV} → ${updatedPokemon.effort[mappedStat]}`);
+			itemUsed = true;
+		  } else if (boost[stat] > 0) {
+			effectMessages.push(`⚠️ ${stat} EV는 더 이상 올릴 수 없습니다 (상한 도달)`);
+		  }
+		});
+	  }
+
+	  // 4. 컨디션 부스트
+	  if (item.conditionBoost || itemData?.conditionBoost) {
+		const boost = item.conditionBoost || itemData.conditionBoost;
+		if (!updatedPokemon.condition) {
+		  updatedPokemon.condition = { 
+			elegance: 0, beauty: 0, cuteness: 0, 
+			intelligence: 0, strength: 0 
+		  };
+		}
+		
+		// conditionBoost의 키를 condition 객체의 키로 매핑
+		const conditionMapping = {
+		  cool: 'elegance',
+		  beauty: 'beauty',
+		  cute: 'cuteness',
+		  smart: 'intelligence',
+		  tough: 'strength'
+		};
+		
+		Object.keys(boost).forEach(condKey => {
+		  const mappedKey = conditionMapping[condKey] || condKey;
+		  if (updatedPokemon.condition[mappedKey] !== undefined) {
+			const current = updatedPokemon.condition[mappedKey] || 0;
+			const newValue = Math.min(255, current + boost[condKey]);
+			updatedPokemon.condition[mappedKey] = newValue;
+			effectMessages.push(`✨ ${condKey}: ${current} → ${newValue} (+${boost[condKey]})`);
+			console.log(`✨ ${condKey} 증가: ${current} → ${newValue}`);
+			itemUsed = true;
+		  }
+		});
+	  }
+
+	  // 5. 특수 효과 (기존 코드)
+	  if (item.specialEffect || itemData?.specialEffect) {
+		effectMessages.push(`⚡ ${item.specialEffect || itemData.specialEffect}`);
+		itemUsed = true;
+	  }
+
+	  // 커스텀 아이템 효과가 적용되었다면
+	  if (itemUsed) {
+		updatePokemonInUser(updatedPokemon);
+		const message = `${pokemon.nickname || pokemon.name}에게 ${item.name}을(를) 사용했습니다!\n\n${effectMessages.join('\n')}`;
+		alert(message);
+		consumeItem(item);
+		return;
+	  }
+	  
+	  // ⭐ EV 아이템 처리
+	  if (isEVItem(itemData?.nameEn || itemData?.name)) {
+		const result = applyEVItem(
+		  pokemon, 
+		  itemData.nameEn || itemData.name,
+		  updatePokemonInUser
+		);
+		
+		if (result.success) {
+		  alert(result.message);
+		  consumeItem(item);
+		} else {
+		  alert(result.message);
+		}
+		return;
+	  }
+	  
+	  // 이상한사탕 - 레벨업 + 진화 체크
+	  if (itemData?.name === '이상한사탕' || 
+		  itemData?.nameEn?.toLowerCase().includes('rare candy')) {
+		handleRareCandyWithEvolution(pokemon.uniqueId);
+		consumeItem(item);
+		return;
+	  }
+	   
+	  // ⭐ 진화의 돌 - 진화 처리
+	  if (itemData?.category?.includes('evolution')) {
+		console.log('🪨 진화의 돌 사용:', itemData.name, itemData.nameEn);
+		
+		const success = evolutionHook.evolveWithItem(pokemon, itemData.nameEn || itemData.name);
+		console.log('✅ 진화 체크 결과:', success);
+		
+		if (success) {
+		  consumeItem(item);
+		} else {
+		  alert('이 포켓몬은 해당 아이템으로 진화할 수 없습니다.');
+		}
+		return;
+	  }
+	  
+	  // ⭐ 기본 동작 - 사용만 하고 효과 없음
+	  alert(`${pokemon.nickname || pokemon.name}에게 ${item.name}을(를) 사용했습니다!`);
+	  consumeItem(item);
+	};
   
   return {
     currentTab,

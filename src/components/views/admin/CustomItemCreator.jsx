@@ -7,6 +7,7 @@ function CustomItemCreator({ onCreateItem, allItems, trainer }) {
   const [itemData, setItemData] = useState({
     name: '',
     category: 'misc',
+	pocket: 'misc',
     cost: 0,
     sellPrice: 0,
     canSell: true,
@@ -32,35 +33,50 @@ function CustomItemCreator({ onCreateItem, allItems, trainer }) {
     { id: 'misc', name: '기타', icon: '📦', color: 'bg-gray-100 text-gray-700' }
   ];
 
-  const handleSubmit = () => {
-    if (!itemData.name.trim()) {
-      alert('아이템 이름을 입력해주세요!');
-      return;
-    }
-    
-    const success = onCreateItem?.({
-      ...itemData,
-      sellPrice: itemData.sellPrice || Math.floor(itemData.cost * 0.5)
-    });
-    
-    if (success) {
-      setItemData({
-        name: '',
-        category: 'misc',
-        cost: 0,
-        sellPrice: 0,
-        canSell: true,
-        effect: '',
-        spriteUrl: '',
-        specialEffect: null,
-        ivBoost: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
-        evBoost: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
-        friendshipBoost: 0,
-        conditionBoost: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 }
-      });
-      setShowModal(false);
-    }
+const handleSubmit = () => {
+  if (!itemData.name.trim()) {
+    alert('아이템 이름을 입력해주세요!');
+    return;
+  }
+  
+  const itemToCreate = {
+    ...itemData,
+    pocket: itemData.pocket || itemData.category,
+    sellPrice: itemData.sellPrice || Math.floor(itemData.cost * 0.5)
   };
+  
+  console.log('🎨 생성할 아이템 데이터:', itemToCreate);
+  console.log('🎨 pocket 값:', itemToCreate.pocket);
+  console.log('🎨 category 값:', itemToCreate.category);
+  
+  const success = onCreateItem?.(itemToCreate);
+  
+  console.log('🎨 생성 결과:', success);
+  
+  if (success) {
+    // localStorage에서 바로 확인
+    const saved = JSON.parse(localStorage.getItem('poke_customItems') || '[]');
+    console.log('💾 저장된 커스텀 아이템들:', saved);
+    console.log('💾 방금 저장된 아이템:', saved[saved.length - 1]);
+    
+    setItemData({
+      name: '',
+      category: 'misc',
+      pocket: 'misc',
+      cost: 0,
+      sellPrice: 0,
+      canSell: true,
+      effect: '',
+      spriteUrl: '',
+      specialEffect: null,
+      ivBoost: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
+      evBoost: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
+      friendshipBoost: 0,
+      conditionBoost: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 }
+    });
+    setShowModal(false);
+  }
+};
 
   const selectedCategory = categories.find(c => c.id === itemData.category);
 
@@ -117,7 +133,11 @@ function CustomItemCreator({ onCreateItem, allItems, trainer }) {
                   {categories.map(cat => (
                     <button
                       key={cat.id}
-                      onClick={() => setItemData({ ...itemData, category: cat.id })}
+                      onClick={() => setItemData({ 
+									  ...itemData, 
+									  category: cat.id,
+									  pocket: cat.id  // ✅ 이 줄이 빠져있었습니다!
+									})}
                       className={`flex items-center gap-2 px-3 py-2 rounded-lg font-semibold transition-all ${
                         itemData.category === cat.id
                           ? cat.color + ' ring-2 ring-offset-2 ring-purple-500'

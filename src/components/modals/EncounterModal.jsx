@@ -1,18 +1,34 @@
 import React, { useState } from 'react';
 
-export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items, sharedPokedexData = {}, caughtPokemon = [], onApplyLoot}) {
+export default function EncounterModal({ 
+  pokemon, 
+  onClose, 
+  onCatchSuccess, 
+  items, 
+  sharedPokedexData = {}, 
+  caughtPokemon = [], 
+  onApplyLoot 
+}) {
   const [selectedBall, setSelectedBall] = useState(null);
   const [catching, setCatching] = useState(false);
   const [result, setResult] = useState(null);
   const [shaking, setShaking] = useState(0);
   const [isReady, setIsReady] = useState(false);
   const [isFirstCatch, setIsFirstCatch] = useState(false);
+  const [escapeAttempts, setEscapeAttempts] = useState(0);
+  const [message, setMessage] = useState(''); // ✅ 메시지 상태 추가
 
   // 모달이 열린 직후 클릭 방지
   React.useEffect(() => {
     const timer = setTimeout(() => setIsReady(true), 100);
     return () => clearTimeout(timer);
   }, []);
+
+  // 도망 모드 가져오기
+  const escapeMode = localStorage.getItem('poke_escapeMode') || 'instant';
+
+  // 파트너 포켓몬 찾기
+  const partnerPokemon = caughtPokemon.find(p => p && p.isPartner);
 
   // 현재 시간 (밤 판정용)
   const currentHour = new Date().getHours();
@@ -30,65 +46,98 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
       const pokemonType = pokemon.type?.toLowerCase() || '';
       const pokemonTypes = pokemonType.split('/').map(t => t.trim());
       
-      let multiplier = 1.0;;
+      let multiplier = 1.0;
       
       if (name.includes('마스터')) {
-        multiplier = 255; // 무조건 포획
+        multiplier = 255;
       } else if (name.includes('하이퍼') || name.includes('울트라')) {
         multiplier = 2.0;
       } else if (name.includes('슈퍼') || name.includes('수퍼') || name.includes('그레이트')) {
         multiplier = 1.5;
       } else if (name.includes('넷트')) {
-        // 물/벌레 타입
         const isWaterOrBug = pokemonTypes.some(t => t.includes('물') || t.includes('water') || t.includes('벌레') || t.includes('bug'));
         multiplier = isWaterOrBug ? 3.5 : 1.0;
       } else if (name.includes('다이브')) {
-        // 물 타입
         const isWater = pokemonTypes.some(t => t.includes('물') || t.includes('water'));
         multiplier = isWater ? 3.5 : 1.0;
       } else if (name.includes('네스트')) {
-        // 약한 포켓몬 (HP 40 이하)
         const hp = pokemon.hp || pokemon.baseHp || 100;
         multiplier = hp <= 40 ? 3.0 : 1.0;
-      } else if (name.includes('리피트')) {
-        // 잡은 적 있는 포켓몬 (도감에 등록되어 있으면)
-        multiplier = 1.0; // 실제 구현 시 도감 체크 필요
       } else if (name.includes('타이머')) {
-        multiplier = 1.5; // 턴 수 (실제로는 턴마다 증가)
+        multiplier = 1.5;
       } else if (name.includes('퀵')) {
-        multiplier = 5.0; // 첫 턴 (항상 첫 턴으로 가정)
+        multiplier = 5.0;
       } else if (name.includes('다크')) {
-        // 밤이거나 동굴에서
         multiplier = isNight ? 3.5 : 1.0;
       } else if (name.includes('문')) {
-        // 달의돌로 진화하는 포켓몬
         multiplier = 4.0;
       } else if (name.includes('러브')) {
-        // 같은 종족, 다른 성별
         multiplier = 8.0;
       } else if (name.includes('레벨')) {
-        // 낮은 레벨 포켓몬
         multiplier = 8.0;
-      } else if (name.includes('헤비')) {
-        // 무거운 포켓몬
-        multiplier = 1.0;
       } else if (name.includes('스피드')) {
-        // 빠른 포켓몬
         multiplier = 4.0;
       }
       
-       return { 
-      name: item.name,
-      id: item.itemId,        // ⭐ 추가
-      multiplier,
-      imageUrl: item.imageUrl,
-      count: item.count       // ⭐ 추가
-    };
-  });
+      return { 
+        name: item.name,
+        id: item.itemId,
+        multiplier,
+        imageUrl: item.imageUrl,
+        count: item.count
+      };
+    });
 
-  // 포켓몬 스프라이트 URL (도트 정적 이미지)
+  // 포켓몬 스프라이트 URL
   const pokemonSpriteUrl = pokemon.spriteUrl || 
     `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`;
+
+  // 도망 로직
+  const checkIfPokemonEscapes = () => {
+    if (escapeMode === 'none') {
+      console.log('🏃 도망 안함 모드 - 포켓몬이 남아있습니다');
+      return false;
+    }
+
+    if (escapeMode === 'instant') {
+      console.log('⚡ 즉시 도망 모드 - 포켓몬이 도망갑니다');
+      return true;
+    }
+
+    if (escapeMode === 'speed') {
+      if (!partnerPokemon) {
+        console.log('❌ 파트너 포켓몬 없음 - 즉시 도망');
+        return true;
+      }
+
+      const A = pokemon.baseSpeed || pokemon.speed || 50;
+      const B = (partnerPokemon.baseSpeed || partnerPokemon.speed || 50) / 4;
+      const C = escapeAttempts;
+
+      const F = Math.floor((A * 32) / B + 30 * C);
+
+      console.log('💨 스피드 기반 도망 계산:');
+      console.log(`  야생 ${pokemon.name} 스피드(A): ${A}`);
+      console.log(`  파트너 ${partnerPokemon.nickname || partnerPokemon.name} 스피드/4(B): ${B.toFixed(2)}`);
+      console.log(`  포획 실패 횟수(C): ${C}`);
+      console.log(`  F값: ${F}`);
+
+      if (F > 255) {
+        console.log('  → F > 255, 100% 도망!');
+        return true;
+      }
+
+      const randomValue = Math.floor(Math.random() * 256);
+      const escapes = randomValue <= F;
+
+      console.log(`  → 랜덤값: ${randomValue}, F: ${F}`);
+      console.log(`  → 결과: ${escapes ? '도망침!' : '남아있음'}`);
+
+      return escapes;
+    }
+
+    return true;
+  };
 
   const handleCatch = (e) => {
     e.preventDefault();
@@ -99,7 +148,6 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
       return;
     }
 
-    // ✅ 수정: itemId 또는 name으로 찾기
     const ballItem = items.find(item => 
       item.itemId === selectedBall.id || 
       item.name === selectedBall.name
@@ -110,21 +158,17 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
       return;
     }
 
-
-  
-  // 파트너를 제외한 포켓몬 수 계산
-  const nonPartnerCount = caughtPokemon.filter(p => p && !p.isPartner).length;
-  
-  // 파트너 제외 20마리 제한 (총 21마리)
-  if (nonPartnerCount >= 20) {
-    alert('⚠️ 포켓몬이 가득 찼습니다!\n\n파트너를 제외한 포켓몬이 20마리입니다.\n박스를 정리한 후 다시 시도해주세요.');
-    return;
-  }
+    const nonPartnerCount = caughtPokemon.filter(p => p && !p.isPartner).length;
+    
+    if (nonPartnerCount >= 20) {
+      alert('⚠️ 포켓몬이 가득 찼습니다!\n\n파트너를 제외한 포켓몬이 20마리입니다.\n박스를 정리한 후 다시 시도해주세요.');
+      return;
+    }
   
     setCatching(true);
     setResult(null);
+    setMessage(''); // ✅ 메시지 초기화
 
-    // 최초 포획 여부 체크
     const pokemonNumber = pokemon.number || pokemon.originalNumber;
     const isFirst = !sharedPokedexData[pokemonNumber];
     setIsFirstCatch(isFirst);
@@ -138,49 +182,80 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
         if (shakeCount >= 3) {
           clearInterval(shakeInterval);
           
-        setTimeout(() => {
-  const catchChance = pokemon.catchRate * selectedBall.multiplier;
-  const success = Math.random() < catchChance;
-  setResult(success ? 'success' : 'fail');
-  setCatching(false);
+          setTimeout(() => {
+            const catchChance = pokemon.catchRate * selectedBall.multiplier;
+            const success = Math.random() < catchChance;
+            
+            // ✅ 볼 소모는 항상 발생
+            if (onApplyLoot) {
+              onApplyLoot({ money: 0, items: [], ingredients: [], berries: [] }, selectedBall);
+            }
+            
+            if (success) {
+              setResult('success');
+              setCatching(false);
 
-  setTimeout(() => {
-  if (success) {
-    // ⭐ 포획 성공 시 보상 적용
-    if (pokemon.loot && onApplyLoot) {
-      onApplyLoot(pokemon.loot);
-      
-      // 보상 알림 생성
-      let lootMessage = '\n\n🎁 탐험 보상을 획득했습니다!\n';
-      lootMessage += `💰 ${pokemon.loot.money}G\n`;
-      
-      if (pokemon.loot.items.length > 0) {
-        lootMessage += `📦 아이템: ${pokemon.loot.items.map(i => `${i.name} x${i.count}`).join(', ')}\n`;
-      }
-      if (pokemon.loot.ingredients.length > 0) {
-        lootMessage += `🍎 식재료: ${pokemon.loot.ingredients.map(i => `${i.name} x${i.count}`).join(', ')}\n`;
-      }
-      if (pokemon.loot.berries.length > 0) {
-        lootMessage += `🌳 열매: ${pokemon.loot.berries.map(i => `${i.name} x${i.count}`).join(', ')}`;
-      }
-      
-      // ⭐ 이 줄을 수정!
-      setTimeout(() => {
-        alert(`${pokemon.name}을(를) 잡았습니다!${lootMessage}`);
-      }, 100);
-    }
-    
-    onCatchSuccess(pokemon, selectedBall);
-  }
-  onClose();
-}, 2500);
-}, 500);
+              setTimeout(() => {
+                if (pokemon.loot && onApplyLoot) {
+                  onApplyLoot(pokemon.loot, null); // 볼은 이미 소모했으므로 null
+                  
+                  let lootMessage = '\n\n🎁 탐험 보상을 획득했습니다!\n';
+                  lootMessage += `💰 ${pokemon.loot.money}G\n`;
+                  
+                  if (pokemon.loot.items.length > 0) {
+                    lootMessage += `📦 아이템: ${pokemon.loot.items.map(i => `${i.name} x${i.count}`).join(', ')}\n`;
+                  }
+                  if (pokemon.loot.ingredients.length > 0) {
+                    lootMessage += `🎁 식재료: ${pokemon.loot.ingredients.map(i => `${i.name} x${i.count}`).join(', ')}\n`;
+                  }
+                  if (pokemon.loot.berries.length > 0) {
+                    lootMessage += `🌳 열매: ${pokemon.loot.berries.map(i => `${i.name} x${i.count}`).join(', ')}`;
+                  }
+                  
+                  setTimeout(() => {
+                    alert(`${pokemon.name}을(를) 잡았습니다!${lootMessage}`);
+                  }, 100);
+                }
+                
+                onCatchSuccess(pokemon, selectedBall);
+                onClose();
+              }, 2500);
+            } else {
+			  // ✅ 포획 실패
+			  setEscapeAttempts(prev => prev + 1);
+			  const pokemonEscapes = checkIfPokemonEscapes();
+			  
+			  // ✅ 랜덤 메시지 선택
+			  const failMessages = [
+				`앗! 아깝다!\n${pokemon.name}이(가) 볼에서 나왔다!`,
+				`아쉽다!\n조금만 더 하면 잡을 수 있었는데!`,
+				`아깝다!\n조금만 더 하면 됐는데!`
+			  ];
+			  const randomMessage = failMessages[Math.floor(Math.random() * failMessages.length)];
+			  
+			  if (pokemonEscapes) {
+				setResult('fail');
+				setCatching(false);
+				
+				if (pokemon.loot && onApplyLoot) {
+				  onApplyLoot(pokemon.loot, null);
+				}
+				
+				setTimeout(() => {
+				  onClose();
+				}, 3000);
+			  } else {
+				// ✅ 도망가지 않음 - UI만 업데이트
+				setCatching(false);
+				setResult(null);
+				setShaking(0);
+				setMessage(randomMessage); // ✅ 랜덤 메시지 설정
+			  }
+			}
+          }, 500);
         }
       }, 800);
     }, 1000);
-
-
-    
   };
 
   const handleBallSelect = (e, ball) => {
@@ -220,7 +295,7 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
                     <div className="text-xs text-gray-600">Lv.???</div>
                   </div>
                   
-                  {/* 포켓몬 스프라이트 (도트 애니메이션) */}
+                  {/* 포켓몬 스프라이트 */}
                   <div 
                     className="w-40 h-40 mx-auto"
                     style={{
@@ -242,13 +317,27 @@ export default function EncounterModal({ pokemon, onClose, onCatchSuccess, items
             {/* 하단 UI */}
             <div className="bg-gray-100 p-4">
               <div className="bg-white rounded-lg border-4 border-gray-800 p-4 mb-4">
-                <p className="text-lg font-bold text-gray-800">
-                  야생의 {pokemon.name}이(가) 나타났다!
-                </p>
-                <p className="text-xs text-gray-600 mt-1">
-                  {pokemon.type} 타입 | HP {pokemon.hp || pokemon.baseHp}
-                </p>
-              </div>
+				  {/* ✅ 메시지 표시 (줄바꿈 지원) */}
+				  {message ? (
+					<div className="text-lg font-bold text-gray-800">
+					  {message.split('\n').map((line, i) => (
+						<p key={i}>{line}</p>
+					  ))}
+					</div>
+				  ) : (
+					<p className="text-lg font-bold text-gray-800">
+					  야생의 {pokemon.name}이(가) 나타났다!
+					</p>
+				  )}
+				  <p className="text-xs text-gray-600 mt-1">
+					{pokemon.type} 타입
+					{escapeAttempts > 0 && (
+					  <span className="ml-2 text-orange-600 font-semibold">
+						| 포획 실패 {escapeAttempts}회
+					  </span>
+					)}
+				  </p>
+				</div>
 
               <div className="bg-white rounded-lg border-4 border-gray-800 p-4">
                 <div className="flex items-center justify-between mb-3">

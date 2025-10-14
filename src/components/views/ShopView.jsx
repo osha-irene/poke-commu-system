@@ -31,26 +31,32 @@ export default function ShopView({
     };
   };
   
-  // 구매 처리
-  const handlePurchase = () => {
-    if (!selectedItem) return;
-    
-    const totalPrice = selectedItem.price * quantity;
-    
-    if (trainer.money < totalPrice) {
-      alert('💰 돈이 부족합니다!');
-      return;
-    }
-    
-    if (selectedItem.stock !== 99 && selectedItem.stock < quantity) {
-      alert(`📦 재고가 부족합니다! (남은 재고: ${selectedItem.stock}개)`);
-      return;
-    }
-    
-    onPurchase(selectedItem.itemId, quantity, totalPrice);
-    setSelectedItem(null);
-    setQuantity(1);
-  };
+	// 구매 처리
+	const handlePurchase = () => {
+	  if (!selectedItem) return;
+	  
+	  const totalPrice = selectedItem.price * quantity;
+	  
+	  if (trainer.money < totalPrice) {
+		alert('💰 돈이 부족합니다!');
+		return;
+	  }
+	  
+	  if (selectedItem.stock !== 99 && selectedItem.stock < quantity) {
+		alert(`📦 재고가 부족합니다! (남은 재고: ${selectedItem.stock}개)`);
+		return;
+	  }
+	  
+	  // ✅ 수정: 전체 아이템 객체를 전달하되, cost 필드 추가
+	  const itemToSend = {
+		...selectedItem,
+		cost: selectedItem.price  // ✅ price를 cost로 매핑
+	  };
+	  
+	  onPurchase(itemToSend, quantity);
+	  setSelectedItem(null);
+	  setQuantity(1);
+	};
   
   // 아이템 카드 렌더링
   const renderItemCard = (shopItem, isRare = false) => {

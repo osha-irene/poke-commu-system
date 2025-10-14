@@ -22,6 +22,7 @@ export default function ItemsView({
 
 	// items.json에서 상세 정보 가져오기
 	const getItemDetails = (item) => {
+	  // item이나 item.name이 없으면 기본값 반환
 	  if (!item || !item.name) {
 		console.warn('⚠️ Invalid item:', item);
 		return {
@@ -37,20 +38,23 @@ export default function ItemsView({
 		};
 	  }
 
+	  // 이름으로만 검색
 	  const itemData = allItems.find(i => 
 		i.id === item.itemId || 
 		i.name === item.name
 	  );
 	  
-	  // ✅ 수정: 커스텀 아이템의 pocket을 우선 사용
-	  const pocket = item.pocket || itemData?.categoryData?.pocket || 'misc';
+	  // ✅ 수정: 커스텀 아이템의 pocket을 최우선으로!
+	  const pocket = item.pocket || itemData?.pocket || itemData?.categoryData?.pocket || 'misc';
 	  const category = item.category || itemData?.category || '';
 
-	  // canUse 판단 로직도 커스텀 아이템 고려
+	  console.log(`📦 ${item.name} - pocket: ${pocket}, category: ${category}`);
+
+	  // 사용 가능 여부 판단
 	  const canUse = item.canUse !== undefined ? item.canUse : (
 		pocket === 'berries' || 
 		pocket === 'medicine' || 
-		pocket === 'vitamins' ||  // ✅ vitamins pocket도 사용 가능하게
+		pocket === 'vitamins' ||
 		category === 'vitamins' ||
 		category === 'medicine' ||
 		category?.includes('evolution') ||
@@ -60,15 +64,11 @@ export default function ItemsView({
 		item.friendshipBoost ||
 		item.ivBoost ||
 		item.evBoost ||
-		 item.friendshipBoost ||  // ✅ 추가
-		 item.ivBoost ||          // ✅ 추가
-		 item.evBoost ||          // ✅ 추가
-		 item.conditionBoost ||   // ✅ 추가
-		 itemData?.friendshipBoost ||  // ✅ 추가
-		  itemData?.ivBoost ||          // ✅ 추가
-		  itemData?.evBoost ||          // ✅ 추가
-		  itemData?.conditionBoost      // ✅ 추가
-
+		item.conditionBoost ||
+		itemData?.friendshipBoost ||
+		itemData?.ivBoost ||
+		itemData?.evBoost ||
+		itemData?.conditionBoost
 	  );
 
 	  return {
@@ -81,11 +81,12 @@ export default function ItemsView({
 		category: category,
 		canSell: item.canSell !== undefined ? item.canSell : (itemData?.canSell ?? true),
 		canUse: canUse,
-		specialEffect: item.specialEffect || null,
-		ivBoost: item.ivBoost,
-		evBoost: item.evBoost,
-		friendshipBoost: item.friendshipBoost,
-		conditionBoost: item.conditionBoost
+		// 커스텀 아이템 특수 효과 전달
+		specialEffect: item.specialEffect || itemData?.specialEffect || null,
+		ivBoost: item.ivBoost || itemData?.ivBoost,
+		evBoost: item.evBoost || itemData?.evBoost,
+		friendshipBoost: item.friendshipBoost || itemData?.friendshipBoost,
+		conditionBoost: item.conditionBoost || itemData?.conditionBoost
 	  };
 	};
 
