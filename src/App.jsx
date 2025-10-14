@@ -35,7 +35,7 @@ function LoginScreen({ onLogin }) {
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">🾠포켓몬 탐험</h1>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">🐾 포켓몬 탐험</h1>
           <p className="text-gray-600">커뮤니티 시스템</p>
         </div>
         
@@ -174,12 +174,57 @@ export default function App() {
     manualEvolve,
     getAllEvolvablePokemon,
     increaseEffort,
-	recipes,                
+    recipes,                
     createRecipe,     
-	discoveredRecipes,	
+    discoveredRecipes,	
     cookRecipe,   
-	updateIngredientStats	
+    updateIngredientStats,
+    updateCurrentUser  // ⭐ 추가!
   } = useGameState();
+
+  // ⭐ 엔트리 순서 변경 함수
+const reorderParty = (newPartyOrder) => {
+  if (!currentUser) return;
+  
+  console.log('🔄 App.jsx - reorderParty 호출됨');
+  console.log('새 엔트리 순서 (null 제거됨):', newPartyOrder.map(p => p.name));
+  
+  // 현재 박스 포켓몬 (6번 인덱스부터)
+  const boxPokemon = currentUser.caughtPokemon.slice(6);
+  console.log('박스 포켓몬 (변경 없음):', boxPokemon.map(p => p.name));
+  
+  // ⭐ 엔트리를 6자리로 패딩 (null 추가)
+  const paddedParty = [...newPartyOrder];
+  while (paddedParty.length < 6) {
+    paddedParty.push(null);
+  }
+  
+  // ⭐ 새로운 순서: 패딩된 엔트리(6자리) + 박스
+  const newCaughtPokemon = [...paddedParty, ...boxPokemon];
+  
+  console.log('✅ 최종 엔트리 (패딩 포함):', paddedParty.map((p, i) => 
+    `[${i}] ${p?.name || 'null'}`
+  ));
+  console.log('✅ 최종 박스:', boxPokemon.map((p, i) => 
+    `[${i + 6}] ${p.name}`
+  ));
+  
+  // ⭐ 강제로 새 객체 참조 생성
+  updateCurrentUser({ 
+    caughtPokemon: newCaughtPokemon.map(p => p ? {...p} : null)
+  });
+  
+  // ⭐ 로컬스토리지에도 강제 저장
+  const updatedUser = {
+    ...currentUser,
+    caughtPokemon: newCaughtPokemon
+  };
+  
+  const members = JSON.parse(localStorage.getItem('poke_members') || '{}');
+  members[currentUser.id] = updatedUser;
+  localStorage.setItem('poke_members', JSON.stringify(members));
+  localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+};
 
   // ⭐ 전역 클릭 사운드 - 최상단에 배치!
   useEffect(() => {
@@ -346,7 +391,8 @@ export default function App() {
               onTakeItem={takeItemFromPokemon}
               onSetPartner={setPartnerPokemon}
               onForgetMove={forgetMove}  
-              onLearnMove={learnMove}   
+              onLearnMove={learnMove}
+              onReorderParty={reorderParty}  
               isAdmin={currentUser?.isAdmin}   
               allMoves={allMoves}             
               pokemonLearnsets={pokemonLearnsets}
@@ -426,21 +472,19 @@ export default function App() {
               maintenanceMode={maintenanceMode}            
               setMaintenanceMode={setMaintenanceMode}
               updateRegionLootConfig={updateRegionLootConfig} 
-			  createRecipe={createRecipe}
-			  updateIngredientStats={updateIngredientStats} 			  
+              createRecipe={createRecipe}
+              updateIngredientStats={updateIngredientStats} 			  
             />
           )}
-		  
-		  {currentTab === 'cooking' && (
-			  <CookingView 
-				recipes={recipes}
-				userItems={items}
-				discoveredRecipes={discoveredRecipes[currentUser?.id] || []}
-				onCook={cookRecipe}
-			  />
-			)}
-		  
-		  
+          
+          {currentTab === 'cooking' && (
+            <CookingView 
+              recipes={recipes}
+              userItems={items}
+              discoveredRecipes={discoveredRecipes[currentUser?.id] || []}
+              onCook={cookRecipe}
+            />
+          )}
         </main>
       </div>
 

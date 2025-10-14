@@ -15,7 +15,8 @@ import {
   RadarChart, 
   Radar, 
   PolarGrid, 
-  PolarAngleAxis, 
+  PolarAngleAxis,
+  PolarRadiusAxis,
   ResponsiveContainer
 } from 'recharts';
 import { getTypeColor } from '../../../styles/theme';
@@ -58,6 +59,12 @@ export default function PokemonDetailPanel({
   const [showMoveSelectModal, setShowMoveSelectModal] = useState(false);
   const [showLevelUpMoveModal, setShowLevelUpMoveModal] = useState(false); 
   const [levelUpData, setLevelUpData] = useState(null);
+  
+  // 툴팁용 state 추가
+  const [hoveredCondition, setHoveredCondition] = useState(null);
+  const [hoveredEffort, setHoveredEffort] = useState(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [tooltipType, setTooltipType] = useState(''); 
 
   // 진화 가능 여부 체크
   const canEvolve = checkEvolution && checkEvolution(pokemon);
@@ -82,6 +89,80 @@ export default function PokemonDetailPanel({
     { subject: '스피드', A: pokemon.effort?.speed || 0, fullMark: 255 }
   ];
 
+  // 커스텀 Tick 렌더링 함수들
+ const renderConditionTick = (tickProps) => {
+  const { x, y, payload, textAnchor } = tickProps;
+  const item = conditionData.find(d => d.subject === payload.value);
+  
+  return (
+    <text
+      x={x}
+      y={y}
+      textAnchor={textAnchor}
+      fill="#581C87"
+      fontSize={9}
+      fontWeight={600}
+      style={{ cursor: 'pointer' }}
+      onMouseEnter={(e) => {
+        if (e && e.target) {
+          const rect = e.target.getBoundingClientRect();
+          // 다른 툴팁 먼저 제거
+          setHoveredEffort(null);
+          setHoveredCondition(item?.A || 0);
+          setTooltipType('condition');
+          setMousePos({ 
+            x: rect.left + rect.width / 2,
+            y: rect.top
+          });
+        }
+      }}
+      onMouseLeave={() => {
+        setHoveredCondition(null);
+        setTooltipType('');
+        setMousePos({ x: 0, y: 0 });
+      }}
+    >
+      {payload.value}
+    </text>
+  );
+};
+
+const renderEffortTick = (tickProps) => {
+  const { x, y, payload, textAnchor } = tickProps;
+  const item = effortData.find(d => d.subject === payload.value);
+  
+  return (
+    <text
+      x={x}
+      y={y}
+      textAnchor={textAnchor}
+      fill="#1E3A8A"
+      fontSize={9}
+      fontWeight={600}
+      style={{ cursor: 'pointer' }}
+      onMouseEnter={(e) => {
+        if (e && e.target) {
+          const rect = e.target.getBoundingClientRect();
+          // 다른 툴팁 먼저 제거
+          setHoveredCondition(null);
+          setHoveredEffort(item?.A || 0);
+          setTooltipType('effort');
+          setMousePos({ 
+            x: rect.left + rect.width / 2,
+            y: rect.top
+          });
+        }
+      }}
+      onMouseLeave={() => {
+        setHoveredEffort(null);
+        setTooltipType('');
+        setMousePos({ x: 0, y: 0 });
+      }}
+    >
+      {payload.value}
+    </text>
+  );
+};
   // 게임 도감
   const pokedexEntry = gamePokedex?.find(p => 
     p.number === pokemon.number || p.originalNumber === pokemon.number
@@ -160,7 +241,6 @@ export default function PokemonDetailPanel({
     setLevelUpData(null);
   };
 
-  // 진화 버튼 클릭 핸들러
   const handleEvolve = () => {
     if (!manualEvolve) return;
     
@@ -191,7 +271,8 @@ export default function PokemonDetailPanel({
             style={{
               backgroundImage: `url(${pokemon.spriteUrl || getPokemonSpriteUrl(originalNumber)})`,
               backgroundSize: '75%',
-              backgroundPosition: 'center'
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat' 
             }}
           />
         </div>
@@ -224,7 +305,6 @@ export default function PokemonDetailPanel({
 
               {/* 아이콘 버튼 그룹 */}
               <div className="flex items-center gap-2">
-                {/* 이상한사탕 */}
                 <button
                   onClick={() => {
                     if (!hasRareCandy) return;
@@ -257,7 +337,6 @@ export default function PokemonDetailPanel({
                   )}
                 </button>
 
-                {/* 파트너 설정 */}
                 <button
                   onClick={() => {
                     const newStatus = !pokemon.isPartner;
@@ -281,20 +360,14 @@ export default function PokemonDetailPanel({
                   <Heart size={20} fill={pokemon.isPartner ? 'currentColor' : 'none'} />
                 </button>
 
-                {/* 박스/엔트리 이동 */}
                 <button
                   onClick={onMove}
                   className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                   title={isInParty ? '박스로 이동' : '엔트리로 이동'}
                 >
-                  {isInParty ? (
-                    <ArrowDownCircle size={20} />
-                  ) : (
-                    <ArrowUpCircle size={20} />
-                  )}
+                  {isInParty ? <ArrowDownCircle size={20} /> : <ArrowUpCircle size={20} />}
                 </button>
 
-                {/* 방생 */}
                 <button
                   onClick={onRelease}
                   disabled={pokemon.isPartner}
@@ -358,16 +431,14 @@ export default function PokemonDetailPanel({
             <div className="text-lg text-gray-600">Lv. {pokemon.level}</div>
           </div>
 
-          {/* 진화 가능 알림 */}
+          {/* 진화 알림 */}
           {canEvolve && !isHoldingEverstone && evolvedPokemon && (
             <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-3 border-2 border-yellow-300">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Sparkles size={20} className="text-yellow-600 animate-pulse" />
                   <div>
-                    <div className="text-sm font-bold text-yellow-800">
-                      진화 가능!
-                    </div>
+                    <div className="text-sm font-bold text-yellow-800">진화 가능!</div>
                     <div className="text-xs text-yellow-700">
                       {evolvedPokemon.name}(으)로 진화할 수 있습니다
                     </div>
@@ -384,49 +455,151 @@ export default function PokemonDetailPanel({
             </div>
           )}
 
-          {/* 변함없는돌 알림 */}
           {isHoldingEverstone && (
             <div className="bg-gray-50 rounded-lg p-3 border-2 border-gray-300">
               <div className="flex items-center gap-2">
                 <div className="text-lg">🪨</div>
                 <div>
-                  <div className="text-sm font-bold text-gray-700">
-                    변함없는돌 착용 중
-                  </div>
-                  <div className="text-xs text-gray-600">
-                    이 포켓몬은 진화하지 않습니다
-                  </div>
+                  <div className="text-sm font-bold text-gray-700">변함없는돌 착용 중</div>
+                  <div className="text-xs text-gray-600">이 포켓몬은 진화하지 않습니다</div>
                 </div>
               </div>
             </div>
           )}
 
           {/* 컨디션 & 노력치 그래프 */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
-              <div className="text-xs font-semibold text-gray-700 mb-2 text-center">컨디션</div>
-              <div className="w-full h-32">
+          <div className="grid grid-cols-2 gap-3 focus:ring-transparent focus:ring-0">
+            <div className="bg-purple-50 rounded-lg p-3 border border-purple-200 focus:ring-transparent focus:ring-0"
+                 onMouseLeave={() => {
+                  setHoveredCondition(null);
+                  setTooltipType('');
+                }}>
+              <div className="w-full h-40 relative">
                 <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart data={conditionData}>
-                    <PolarGrid stroke="#E2E8F0" strokeOpacity={0.5} />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#6B7280', fontSize: 8 }} />
-                    <Radar dataKey="A" stroke="#A855F7" fill="#A855F7" fillOpacity={0.5} />
+                  <RadarChart data={conditionData}
+                  tabIndex={-1} >
+                    <PolarGrid 
+                      stroke="#9333EA"
+                      strokeWidth={1.5}
+                      strokeOpacity={0.3}
+                      radialLines={false}
+                    />
+                    <PolarAngleAxis 
+                      dataKey="subject" 
+                      tick={renderConditionTick}
+                    />
+                    <PolarRadiusAxis 
+                      angle={90}
+                      domain={[50, 80]}
+                      tick={false}
+                    />
+                    <Radar 
+                      dataKey="A" 
+                        stroke="#A855F7"
+                        strokeWidth={1} 
+                      fill="#A855F7" 
+                      fillOpacity={1}
+                      activeDot={false}
+                      dot={false}
+                    />
                   </RadarChart>
                 </ResponsiveContainer>
+                
+                {hoveredCondition !== null && tooltipType === 'condition' && (
+                    <div 
+                      className="fixed z-50 pointer-events-none"
+                      style={{ 
+                        left: mousePos.x,
+                        top: mousePos.y - 35,
+                        transform: 'translateX(-50%)',
+                        animation: 'none' // 애니메이션 제거로 즉시 사라짐
+                      }}
+                    >
+                      <div 
+                        className="px-2 py-1 rounded text-white text-xs font-semibold"
+                        style={{ backgroundColor: '#A855F7' }}
+                      >
+                        {hoveredCondition}
+                      </div>
+                      <div 
+                        className="w-0 h-0 mx-auto"
+                        style={{
+                          borderLeft: '5px solid transparent',
+                          borderRight: '5px solid transparent',
+                          borderTop: '5px solid #A855F7',
+                          marginTop: '-1px'
+                        }}
+                      />
+                    </div>
+                  )}
               </div>
             </div>
 
-            <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-              <div className="text-xs font-semibold text-gray-700 mb-2 text-center">노력치</div>
-              <div className="w-full h-32">
+            <div className="bg-blue-50 rounded-lg p-3 border border-blue-200 focus:outline-none focus:ring-0"
+             onMouseLeave={() => {
+                    setHoveredEffort(null);
+                    setTooltipType('');
+                  }}>
+              <div className="w-full h-40 relative">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart data={effortData}>
-                    <PolarGrid stroke="#E2E8F0" strokeOpacity={0.5} />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#6B7280', fontSize: 8 }} />
-                    <Radar dataKey="A" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.5} />
+                                        <PolarGrid 
+                      stroke="#2563EB"
+                      strokeWidth={1.5}
+                      strokeOpacity={0.3}
+                      radialLines={false}
+                      gridType="polygon"
+                    />
+                    <PolarAngleAxis 
+                      dataKey="subject" 
+                      tick={renderEffortTick}
+                    />
+                    <PolarRadiusAxis 
+                      angle={90}
+                      domain={[50, 170]}
+                      tickCount={5}
+                      tick={false}
+                    />
+                    <Radar 
+                      dataKey="A" 
+                        stroke="#3B82F6"
+                        strokeWidth={1} 
+                      fill="#3B82F6" 
+                      fillOpacity={1}
+                      activeDot={false}
+                        dot={false}
+                    />
                   </RadarChart>
                 </ResponsiveContainer>
-              </div>
+                
+                {hoveredEffort !== null && tooltipType === 'effort' && (
+                  <div 
+                    className="fixed z-50 pointer-events-none"
+                    style={{ 
+                      left: mousePos.x,
+                      top: mousePos.y - 35,
+                      transform: 'translateX(-50%)',
+                      animation: 'none' // 애니메이션 제거로 즉시 사라짐
+                    }}
+                  >
+                    <div 
+                      className="px-2 py-1 rounded text-white text-xs font-semibold"
+                      style={{ backgroundColor: '#3B82F6' }}
+                    >
+                      {hoveredEffort}
+                    </div>
+                    <div 
+                      className="w-0 h-0 mx-auto"
+                      style={{
+                        borderLeft: '5px solid transparent',
+                        borderRight: '5px solid transparent',
+                        borderTop: '5px solid #3B82F6',
+                        marginTop: '-1px'
+                      }}
+                    />
+                  </div>
+                )}
+                              </div>
             </div>
           </div>
 
@@ -535,8 +708,6 @@ export default function PokemonDetailPanel({
               </div>
             </div>
           </div>
-
-        
         </div>
       </div>
 

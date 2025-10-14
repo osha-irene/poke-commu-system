@@ -13,49 +13,79 @@ const usePokemonManagement = (
 
   // 엔트리 이동
   const movePokemonToParty = (uniqueId) => {
-    if (!currentUser) return;
+    console.log('🔥 movePokemonToParty 시작:', uniqueId);
     
-    const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
-    if (!pokemon) { 
+    if (!currentUser) {
+      console.error('❌ currentUser가 없습니다!');
+      return;
+    }
+    
+    console.log('📦 전체 포켓몬 수:', currentUser.caughtPokemon.length);
+    
+    const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === uniqueId);
+    console.log('📍 포켓몬 인덱스:', pokemonIndex);
+    
+    if (pokemonIndex === -1) { 
+      console.error('❌ 포켓몬을 찾을 수 없습니다!');
       alert('포켓몬을 찾을 수 없습니다!'); 
       return; 
     }
     
-    if (pokemon.inParty) { 
-      alert('이미 엔트리에 있습니다!'); 
+    // ⭐ 이미 엔트리에 있으면 조용히 리턴
+    if (pokemonIndex < 6) {
+      console.log('⚠️ 이미 엔트리에 있습니다 (index:', pokemonIndex, ')');
       return; 
     }
     
-    // 엔트리 포켓몬 수 확인 (파트너 제외)
-    const partyCount = currentUser.caughtPokemon.filter(p => p && !p.isPartner && p.inParty).length;
+    // 빈 슬롯 찾기
+    let emptySlotIndex = -1;
+    for (let i = 0; i < 6; i++) {
+      if (currentUser.caughtPokemon[i] === null) { 
+        emptySlotIndex = i; 
+        break; 
+      }
+    }
     
-    if (partyCount >= 6) { 
-      alert('엔트리가 가득 찼습니다! (최대 6마리)'); 
+    console.log('🎯 빈 슬롯 인덱스:', emptySlotIndex);
+    
+    if (emptySlotIndex === -1) {
+      console.error('❌ 엔트리가 가득 찼습니다!');
+      alert('엔트리가 가득 찼습니다!'); 
       return; 
     }
     
-    const newCaughtPokemon = currentUser.caughtPokemon.map(p => 
-      p && p.uniqueId === uniqueId ? { ...p, inParty: true } : p
-    );
+    // 포켓몬을 빈 슬롯으로 이동
+    const newCaughtPokemon = [...currentUser.caughtPokemon];
+    const pokemon = newCaughtPokemon[pokemonIndex];
+    
+    console.log('🎯 이동할 포켓몬:', pokemon.name);
+    
+    newCaughtPokemon[emptySlotIndex] = pokemon;
+    newCaughtPokemon.splice(pokemonIndex, 1);
+    
+    console.log('✅ 업데이트 전 엔트리:', newCaughtPokemon.slice(0, 6).map(p => p?.name || 'null'));
     
     updateCurrentUser({ caughtPokemon: newCaughtPokemon });
-    alert('엔트리로 이동했습니다!');
+    
+    console.log('✅ movePokemonToParty 완료!');
   };
 
   // 박스 이동
   const movePokemonToBox = (uniqueId) => {
     if (!currentUser) return;
     
-    const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
-    if (!pokemon) { 
+    const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === uniqueId);
+    if (pokemonIndex === -1) { 
       alert('포켓몬을 찾을 수 없습니다!'); 
       return; 
     }
     
-    if (!pokemon.inParty) { 
-      alert('이미 박스에 있습니다!'); 
+    // ⭐ 이미 박스에 있으면 조용히 리턴
+    if (pokemonIndex >= 6) { 
       return; 
     }
+    
+    const pokemon = currentUser.caughtPokemon[pokemonIndex];
     
     // 파트너 포켓몬은 박스로 이동 불가
     if (pokemon.isPartner) {
@@ -63,19 +93,35 @@ const usePokemonManagement = (
       return;
     }
     
-    const newCaughtPokemon = currentUser.caughtPokemon.map(p => 
-      p && p.uniqueId === uniqueId ? { ...p, inParty: false } : p
-    );
+    const newCaughtPokemon = [...currentUser.caughtPokemon];
     
-    updateCurrentUser({ caughtPokemon: newCaughtPokemon });
-    alert('박스로 이동했습니다!');
+    // 엔트리에서 해당 포켓몬을 null로 변경
+    newCaughtPokemon[pokemonIndex] = null;
+    
+    // 엔트리(0-5)와 박스(6~) 분리
+    const party = newCaughtPokemon.slice(0, 6);
+    const box = newCaughtPokemon.slice(6);
+    
+    // 엔트리를 정렬: null이 아닌 것들을 앞으로, null을 뒤로
+    const sortedParty = [...party.filter(p => p !== null), ...party.filter(p => p === null)];
+    
+    // 박스 끝에 포켓몬 추가
+    const updatedBox = [...box, pokemon];
+    
+    // 최종 배열 생성
+    const finalPokemon = [...sortedParty, ...updatedBox];
+    
+    updateCurrentUser({ caughtPokemon: finalPokemon });
   };
 
-  // 방생
+  // 방생 (⭐ 박스 포켓몬 자동 승격 방지)
   const releasePokemon = (uniqueId) => {
     if (!currentUser) return;
     
-    const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
+    const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === uniqueId);
+    if (pokemonIndex === -1) return;
+    
+    const pokemon = currentUser.caughtPokemon[pokemonIndex];
     if (!pokemon) return;
     
     if (pokemon.isPartner) {
@@ -83,11 +129,29 @@ const usePokemonManagement = (
       return;
     }
 
-    const newCaughtPokemon = currentUser.caughtPokemon.filter(p => 
-      !p || p.uniqueId !== uniqueId
-    );
+    const newCaughtPokemon = [...currentUser.caughtPokemon];
     
-    updateCurrentUser({ caughtPokemon: newCaughtPokemon });
+    // ⭐ 엔트리 포켓몬(0-5)을 방생하는 경우
+    if (pokemonIndex < 6) {
+      // 해당 슬롯을 null로 변경하고, 엔트리만 정렬
+      newCaughtPokemon[pokemonIndex] = null;
+      
+      const party = newCaughtPokemon.slice(0, 6);
+      const box = newCaughtPokemon.slice(6);
+      
+      // 엔트리만 정렬: null이 아닌 것들을 앞으로
+      const sortedParty = [...party.filter(p => p !== null), ...party.filter(p => p === null)];
+      
+      // 박스는 그대로 유지!
+      const finalPokemon = [...sortedParty, ...box];
+      
+      updateCurrentUser({ caughtPokemon: finalPokemon });
+    } else {
+      // ⭐ 박스 포켓몬(6~)을 방생하는 경우: 그냥 제거
+      newCaughtPokemon.splice(pokemonIndex, 1);
+      updateCurrentUser({ caughtPokemon: newCaughtPokemon });
+    }
+    
     alert(`${pokemon.nickname || pokemon.name}을(를) 방생했습니다.`);
   };
 
@@ -105,7 +169,7 @@ const usePokemonManagement = (
       
       // 선택한 포켓몬 파트너 설정/해제
       if (p.uniqueId === uniqueId) {
-        return { ...p, isPartner, inParty: isPartner ? true : p.inParty };
+        return { ...p, isPartner };
       }
       
       return p;
@@ -134,9 +198,6 @@ const usePokemonManagement = (
     
     const newLevel = pokemon.level + 1;
     
-    console.log('🎯 레벨업:', newLevel);
-    console.log('🎯 포켓몬 번호:', pokemon.number);
-    
     // 레벨업
     const newCaughtPokemon = currentUser.caughtPokemon.map(p => 
       p && p.uniqueId === uniqueId ? { ...p, level: newLevel } : p
@@ -164,11 +225,8 @@ const usePokemonManagement = (
       })
       .filter(Boolean) || [];
     
-    console.log('🎯 배울 수 있는 기술:', newMoves);
-    
     // 콜백 실행
     if (onLevelUp) {
-      console.log('✅ 레벨업 콜백 실행 (기술:', newMoves.length, '개)');
       onLevelUp(uniqueId, newLevel, newMoves);
     } else {
       alert(`레벨이 ${newLevel}로 올랐습니다!`);

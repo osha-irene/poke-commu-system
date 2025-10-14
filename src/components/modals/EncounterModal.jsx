@@ -37,6 +37,7 @@ export default function EncounterModal({
   // 인벤토리에서 볼 종류만 필터링
   const pokeballs = items
     .filter(item => {
+      if (!item || !item.name) return false;
       const name = item.name.toLowerCase();
       return name.includes('볼') || name.includes('ball');
     })

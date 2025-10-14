@@ -112,3 +112,26 @@ img[style*="pixelated"],
   image-rendering: crisp-edges;
   -ms-interpolation-mode: nearest-neighbor;
 }
+
+
+.recharts-surface:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Recharts Wrapper도 함께 적용 */
+.recharts-wrapper:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* global.css 파일에 추가 */
+.recharts-surface[tabindex="0"]:focus,
+.recharts-surface:focus {
+    /* 브라우저 기본 outline을 강제로 제거 */
+    outline: none !important;
+    /* Tailwind CSS ring 효과도 함께 제거 */
+    box-shadow: none !important; 
+    /* Webkit/Blink 기반 브라우저(Chrome, Edge)용 */
+    -webkit-tap-highlight-color: transparent !important; 
+}

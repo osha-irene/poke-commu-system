@@ -1,8 +1,7 @@
-// src/components/views/pokemon/BoxPokemon.jsx
 import React from 'react';
-import { getTypeColor } from '../../../styles/theme';
+import { getTypeColor, COLORS } from '../../../styles/theme';
 
-// 로컬 폴백 URL (영문 대문자 이름)
+// 로컬 폴백 URL
 const getLocalIconUrl = (pokemon, allPokemonMaster) => {
   let englishName = pokemon.nameEn;
   
@@ -24,6 +23,7 @@ export default function BoxPokemon({
   pokemon, 
   isSelected, 
   onDragStart, 
+  onDragEnd,
   onClick, 
   gamePokedex, 
   allPokemonMaster 
@@ -37,16 +37,18 @@ export default function BoxPokemon({
   );
   const displayNumber = pokedexEntry?.newNumber || pokemon.number;
 
+  // 타입 색상 (theme.js 사용)
   const typeColors = getTypeColor(pokemon.type);
   const type2Colors = pokemon.type2 ? getTypeColor(pokemon.type2) : null;
   
-  // 이미지 URL 결정 - 항상 로컬 이미지 사용
+  // 이미지 URL
   const imageUrl = getLocalIconUrl(pokemon, allPokemonMaster);
 
   return (
     <div 
       draggable
       onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
       onClick={onClick}
       className={`relative cursor-pointer transition-all rounded-lg border-2 ${
         isSelected 
@@ -78,14 +80,15 @@ export default function BoxPokemon({
         <div className="text-xs text-gray-500 mb-1">
           No.{displayNumber.toString().padStart(3, '0')}
         </div>
-        <div className="font-bold text-sm text-gray-800 truncate mb-1">
+        <div 
+          className="text-xs font-bold truncate"
+          style={{ color: COLORS.ui.text.primary }}
+        >
           {pokemon.nickname || pokemon.name}
         </div>
-        
-        {/* 타입 배지 */}
-        <div className="flex gap-1">
+        <div className="flex gap-1 mt-1 justify-center flex-wrap">
           <span 
-            className="text-xs px-2 py-0.5 rounded font-bold flex-1 text-center"
+            className="text-xs px-1.5 py-0.5 rounded font-bold"
             style={{ 
               backgroundColor: typeColors.bg,
               color: typeColors.text
@@ -93,9 +96,9 @@ export default function BoxPokemon({
           >
             {pokemon.type}
           </span>
-          {pokemon.type2 && (
+          {pokemon.type2 && type2Colors && (
             <span 
-              className="text-xs px-2 py-0.5 rounded font-bold flex-1 text-center"
+              className="text-xs px-1.5 py-0.5 rounded font-bold"
               style={{ 
                 backgroundColor: type2Colors.bg,
                 color: type2Colors.text
@@ -106,6 +109,13 @@ export default function BoxPokemon({
           )}
         </div>
       </div>
+      
+      {/* 파트너 표시 */}
+      {pokemon.isPartner && (
+        <div className="absolute top-1 left-1 text-pink-500 text-lg z-10">
+          💖
+        </div>
+      )}
     </div>
   );
 }

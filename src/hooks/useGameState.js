@@ -1017,6 +1017,7 @@ export default function useGameState() {
     createRecipe,
     cookRecipe,
     discoverRecipe,
-    updateIngredientStats
+    updateIngredientStats,
+    updateCurrentUser
   };
 }

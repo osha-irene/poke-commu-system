@@ -73,74 +73,60 @@ export default function MovesList({
       </div>
     );
   }
-
-  return (
-    <div className="space-y-2">
-      {displayMoves.map((move, index) => (
-        <div
-          key={`${move.id}-${index}`}
-          className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-all"
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="font-bold text-gray-800 text-sm">
-                  {move.name}
-                </span>
-                <span
-                  className="text-xs px-2 py-0.5 rounded font-bold text-white"
-                  style={{ backgroundColor: TYPE_COLORS[move.type] || '#777' }}
-                >
-                  {move.type}
-                </span>
-                <span className="flex items-center gap-1 text-xs text-gray-600">
-                  {getCategoryIcon(move.category)}
-                  {move.category}
-                </span>
-              </div>
-
-              <div className="flex gap-3 text-xs text-gray-600">
-                {move.power > 0 && (
-                  <span className="flex items-center gap-1">
-                    <span className="font-semibold">위력</span>
-                    <span className="text-orange-600 font-bold">{move.power}</span>
-                  </span>
-                )}
-                <span className="flex items-center gap-1">
-                  <span className="font-semibold">명중</span>
-                  <span className="text-blue-600 font-bold">{move.accuracy}</span>
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="font-semibold">PP</span>
-                  <span className="text-green-600 font-bold">
-                    {move.currentPp || move.pp}/{move.pp}
-                  </span>
-                </span>
-              </div>
-
-              {move.description && (
-                <div className="text-xs text-gray-600 mt-1 leading-tight">
-                  {move.description}
-                </div>
-              )}
-            </div>
-
-            {canEdit && onForgetMove && (
-              <button
-                onClick={() => {
-                  if (window.confirm(`${move.name}을(를) 잊게 하시겠습니까?`)) {
-                    onForgetMove(move.id);
-                  }
-                }}
-                className="flex-shrink-0 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                title="기술 잊기"
-              >
-                <Trash2 size={16} />
-              </button>
-            )}
-          </div>
+return (
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+    {displayMoves.map((move, index) => (
+      <div
+        key={`${move.id}-${index}`}
+        className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-all w-full"
+      >
+        <div className="flex items-center gap-2 mb-0.5">
+          <span className="font-bold text-gray-800 text-m">
+            {move.name}
+          </span>
+          <span
+            className="text-xs px-2 py-0.5 rounded font-bold text-white"
+            style={{ backgroundColor: TYPE_COLORS[move.type] || '#777' }}
+          >
+            {move.type}
+          </span>
+          {canEdit && onForgetMove && (
+            <button
+              onClick={() => {
+                if (window.confirm(`${move.name}을(를) 잊게 하시겠습니까?`)) {
+                  onForgetMove(move.id);
+                }
+              }}
+              className="ml-auto p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+              title="기술 잊기"
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
         </div>
-      ))}
-    </div>
-  );
+        <div className="flex items-center gap-2 mb-2">
+          <span className="flex items-center gap-1 text-xs text-gray-600">
+            {getCategoryIcon(move.category)}
+            {move.category}
+          </span>
+          {move.power > 0 && (
+            <span className="flex items-center gap-1 text-xs">
+              <span className="font-semibold">위력</span>
+              <span className="text-orange-600 font-bold">{move.power}</span>
+            </span>
+          )}
+          <span className="flex items-center gap-1 text-xs">
+            <span className="font-semibold">명중</span>
+            <span className="text-blue-600 font-bold">{move.accuracy}</span>
+          </span>
+        </div>
+        {move.description && (
+          <div className="text-xs text-gray-600 w-full">
+            {move.description}
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+);
 }

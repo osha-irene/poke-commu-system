@@ -1,8 +1,7 @@
-// src/components/views/pokemon/PartySlot.jsx
 import React from 'react';
 import { getTypeColor } from '../../../styles/theme';
 
-// 로컬 폴백 URL (영문 대문자 이름)
+// 로컬 폴백 URL
 const getLocalIconUrl = (pokemon, allPokemonMaster) => {
   let englishName = pokemon.nameEn;
   
@@ -32,11 +31,11 @@ export default function PartySlot({
   index, 
   isSelected, 
   onDragStart, 
-  onDrop, 
+  onDragEnd,
   onClick, 
   gamePokedex, 
-  allPokemonMaster, 
-  allItems = [] 
+  allPokemonMaster,
+  allItems = []
 }) {
   if (!pokemon) {
     return (
@@ -50,21 +49,23 @@ export default function PartySlot({
     );
   }
 
-  // 게임 도감에서 이 포켓몬의 newNumber 찾기
   const pokedexEntry = gamePokedex?.find(p => 
     p.number === pokemon.number || p.originalNumber === pokemon.number
   );
   const displayNumber = pokedexEntry?.newNumber || pokemon.number;
 
+  const hpPercent = (pokemon.hp / pokemon.maxHp) * 100;
+  const hpColor = hpPercent > 50 ? 'bg-green-500' : hpPercent > 20 ? 'bg-yellow-500' : 'bg-red-500';
+  
+  // theme.js의 getTypeColor 사용
   const typeColors = getTypeColor(pokemon.type);
   const type2Colors = pokemon.type2 ? getTypeColor(pokemon.type2) : null;
   
-  // 이미지 URL 결정 - 항상 로컬 이미지 사용
   const imageUrl = getLocalIconUrl(pokemon, allPokemonMaster);
-  
-  // 몬스터볼 데이터 찾기
+
+  // 몬스터볼 이미지 가져오기
   const pokeballData = pokemon.caughtWithBall 
-    ? allItems?.find(item => {
+    ? allItems.find(item => {
         const itemName = item.name?.toLowerCase();
         const itemNameEn = item.nameEn?.toLowerCase();
         const ballName = pokemon.caughtWithBall?.toLowerCase();
@@ -75,61 +76,60 @@ export default function PartySlot({
                itemNameEn?.includes(ballName);
       })
     : null;
-  
-  // 고유 애니메이션 ID
-  const animId = `pokemonSprite-${pokemon.uniqueId || index}`;
+
+  const ballImage = pokeballData?.spriteUrl || pokeballData?.imageUrl;
 
   return (
     <div 
       draggable
       onDragStart={onDragStart}
-      onDragOver={(e) => e.preventDefault()} 
-      onDrop={onDrop}  
+      onDragEnd={onDragEnd}
       onClick={onClick}
       className={`${STYLES.filled} ${isSelected ? STYLES.selected : STYLES.unselected}`}
     >
-      <style>{`
-        @keyframes ${animId} {
-          0%, 49% { 
-            background-position: left center; 
-          }
-          50%, 100% { 
-            background-position: right center; 
-          }
-        }
-      `}</style>
-    
-      {/* 몬스터볼 이미지 */}
-      <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
-        {pokeballData ? (
+      {/* 몬스터볼 이미지 - 원형 꽉 차게 */}
+      <div 
+        className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden flex items-center justify-center"
+        style={{ 
+          backgroundColor: ballImage ? 'transparent' : '#6366f1'
+        }}
+      >
+        {ballImage ? (
           <div
-            className="item-sprite"
+            className="w-full h-full pokemon-bg-sprite"
             style={{
-              width: '32px',
-              height: '32px',
-              backgroundImage: `url(${pokeballData.spriteUrl})`,
-              backgroundSize: '110%',
-              backgroundPosition: 'center'
+              backgroundImage: `url(${ballImage})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat'
             }}
           />
         ) : (
-          <div className="w-8 h-8 bg-gray-300 rounded-full" />
+          <span className="font-bold text-sm text-white">
+            {index + 1}
+          </span>
         )}
       </div>
       
-      {/* 로컬 스프라이트 이미지 - 선택된 포켓몬만 좌우 프레임 애니메이션 */}
+      {/* 포켓몬 아이콘 */}
       <div 
-        className="pokemon-bg-sprite"
-        style={{
-          width: '32px',
-          height: '32px',
-          backgroundImage: `url(${imageUrl})`,
-          backgroundSize: '64px 32px',
-          backgroundPosition: 'right center',
-          animation: isSelected ? `${animId} 0.8s steps(1) infinite` : 'none'
-        }}
-      />
+        className="w-12 h-12 flex-shrink-0 flex items-center justify-center"
+        style={{ padding: '8px' }}
+      >
+        <div
+          className="pokemon-bg-sprite"
+          style={{
+            width: '100%',
+            height: '100%',
+            backgroundImage: `url(${imageUrl})`,
+            backgroundSize: '64px 32px',
+            backgroundPosition: 'right center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        />
+      </div>
       
+      {/* 포켓몬 정보 */}
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500">No.{displayNumber.toString().padStart(3, '0')}</span>
@@ -144,7 +144,7 @@ export default function PartySlot({
             >
               {pokemon.type}
             </span>
-            {pokemon.type2 && (
+            {pokemon.type2 && type2Colors && (
               <span 
                 className="text-xs px-2 py-1 rounded font-bold shadow-sm"
                 style={{ 
@@ -159,6 +159,7 @@ export default function PartySlot({
         </div>
         <div className="text-sm text-gray-600">Lv.{pokemon.level}</div>
       </div>
+    
     </div>
   );
 }

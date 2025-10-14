@@ -36,34 +36,31 @@ export const useAuth = (members, setMembers) => {
   };
 
  
-  const updateCurrentUser = (updates) => {
+ const updateCurrentUser = (updates) => {
+  if (!currentUser) {
+    return;
+  }
+  
+  // ⭐ setMembers를 함수형으로 호출해서 최신 상태 보장
+  setMembers(prevMembers => {
+    const latestUser = prevMembers[currentUser.id] || currentUser;
     
-    if (!currentUser) {
-
-      return;
-    }
+    const updatedUser = {
+      ...latestUser,
+      ...updates,
+      // ⭐ caughtPokemon이 있으면 새 배열로 완전 교체
+      ...(updates.caughtPokemon ? { caughtPokemon: [...updates.caughtPokemon] } : {})
+    };
     
-    // ⭐ setMembers를 함수형으로 호출해서 최신 상태 보장
-    setMembers(prevMembers => {
-      const latestUser = prevMembers[currentUser.id] || currentUser;
-
-      
-      const updatedUser = {
-        ...latestUser,
-        ...updates
-      };
-      
-      
-      // ⭐ currentUser도 동일한 객체로 업데이트
-      setCurrentUser(updatedUser);
-      
-      return {
-        ...prevMembers,
-        [currentUser.id]: updatedUser
-      };
-    });
+    // ⭐ currentUser도 동일한 객체로 업데이트
+    setCurrentUser(updatedUser);
     
-  };
+    return {
+      ...prevMembers,
+      [currentUser.id]: updatedUser
+    };
+  });
+};
 
   // 사용자 정보 자동 동기화
   useEffect(() => {
