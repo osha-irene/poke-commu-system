@@ -23,15 +23,29 @@ import CookingView from './components/views/CookingView';
 import { PokemonProvider } from './contexts/PokemonContext';
 
 // 로그인 화면 컴포넌트
-function LoginScreen({ onLogin }) {
+function LoginScreen({ onLogin, onRegister }) {
+  const [mode, setMode] = useState('login'); // 'login' 또는 'register'
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const success = await onLogin(userId, password);
-    if (!success) {
-      alert('아이디 또는 비밀번호가 올바르지 않습니다.');
+    
+    if (mode === 'login') {
+      await onLogin(userId, password);
+    } else if (mode === 'register') {
+      if (!name) {
+        alert('이름을 입력해주세요.');
+        return;
+      }
+      const success = await onRegister(userId, password, name);
+      if (success) {
+        setMode('login');
+        setUserId('');
+        setPassword('');
+        setName('');
+      }
     }
   };
 
@@ -41,6 +55,30 @@ function LoginScreen({ onLogin }) {
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">🐾 포켓몬 탐험</h1>
           <p className="text-gray-600">커뮤니티 시스템</p>
+        </div>
+
+        {/* 탭 선택 */}
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => setMode('login')}
+            className={`flex-1 py-2 rounded-lg font-semibold transition-colors ${
+              mode === 'login'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            로그인
+          </button>
+          <button
+            onClick={() => setMode('register')}
+            className={`flex-1 py-2 rounded-lg font-semibold transition-colors ${
+              mode === 'register'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            회원가입
+          </button>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -67,24 +105,38 @@ function LoginScreen({ onLogin }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="비밀번호를 입력하세요"
+              placeholder="비밀번호 (6자 이상)"
               required
             />
           </div>
+
+          {mode === 'register' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                이름
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                placeholder="이름을 입력하세요"
+                required
+              />
+            </div>
+          )}
           
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-semibold transition-colors"
+            className={`w-full py-3 rounded-lg font-semibold transition-colors ${
+              mode === 'login'
+                ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                : 'bg-green-600 hover:bg-green-700 text-white'
+            }`}
           >
-            로그인
+            {mode === 'login' ? '로그인' : '회원가입'}
           </button>
         </form>
-
-        <div className="mt-6 text-center text-sm text-gray-600">
-          <p>기본 계정:</p>
-          <p>관리자 - admin / admin123</p>
-          <p>일반유저 - user1 / 1234</p>
-        </div>
       </div>
     </div>
   );
@@ -117,6 +169,7 @@ export default function App() {
     updateShopData,
     handleLogin,
     handleLogout,
+    isAuthLoading,
     handleRegionClick,
     handleCloseEncounter,
     handleCatchSuccess,
@@ -317,9 +370,87 @@ export default function App() {
     increaseEffort
   };
 
+  // 회원가입 핸들러 추가
+  const handleRegister = async (userId, password, name) => {
+    try {
+      const email = `${userId}@pokemon.com`;
+      const { createUserWithEmailAndPassword } = await import('firebase/auth');
+      const { auth } = await import('./firebase');
+      
+      // Firebase Auth 계정 생성
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const firebaseUid = userCredential.user.uid;
+      
+      // 기본 데이터 생성
+      const memberRef = ref(database, `members/${firebaseUid}`);
+      const newMemberData = {
+        name: name,
+        email: email,
+        isAdmin: false,
+        isSuperAdmin: false,
+        canManageItems: false,
+        dailyWalks: 10,
+        maxDailyWalks: 10,
+        money: 10000,
+        accessibleRegions: [],
+        caughtPokemon: [null, null, null, null, null, null],
+        inventory: [
+          {
+            itemId: 4,
+            name: '몬스터볼',
+            count: 15,
+            imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'
+          }
+        ]
+      };
+      
+      await set(memberRef, newMemberData);
+      
+      alert(`✅ 회원가입 완료!\n\n아이디: ${userId}\n비밀번호로 로그인해주세요.`);
+      return true;
+      
+    } catch (error) {
+      console.error('회원가입 오류:', error);
+      
+      if (error.code === 'auth/email-already-in-use') {
+        alert('이미 사용 중인 아이디입니다.');
+      } else if (error.code === 'auth/weak-password') {
+        alert('비밀번호는 6자 이상이어야 합니다.');
+      } else {
+        alert('회원가입 중 오류가 발생했습니다.');
+      }
+      
+      return false;
+    }
+  };
+
+  // 게스트 로그인 핸들러
+  const handleGuestLogin = async () => {
+    const success = await handleAnonymousLogin();
+    if (!success) {
+      alert('게스트 로그인에 실패했습니다.');
+    }
+  };
+
   // 로그인하지 않은 경우 로그인 화면 표시
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-xl text-gray-600">로딩 중...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!currentUser || !currentUser.id) {
-    return <LoginScreen onLogin={handleLogin} />;
+    return (
+      <LoginScreen 
+        onLogin={handleLogin}
+        onRegister={handleRegister}
+      />
+    );
   }
 
   // 점검 모드 - 관리자가 아닌 경우 접근 차단
