@@ -499,21 +499,25 @@ export default function AdminView() {
           <p className="text-red-600 mb-4">
             모든 게임 데이터를 초기화합니다. 이 작업은 되돌릴 수 없습니다!
           </p>
-          <Button 
-            variant="danger"
-            size="lg"
-            onClick={() => {
-              if (window.confirm('⚠️ 정말로 모든 데이터를 초기화하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다!')) {
-                if (window.confirm('⚠️⚠️ 마지막 확인입니다. 정말 초기화하시겠습니까?')) {
-                  resetGameData?.();
-                  alert('✅ 게임 데이터가 초기화되었습니다.');
+         <Button 
+              variant="danger"
+              size="lg"
+              onClick={() => {
+                console.log('🔴 버튼 클릭됨');
+                console.log('🔴 resetGameData 함수:', resetGameData);
+                console.log('🔴 trainer.isSuperAdmin:', trainer?.isSuperAdmin);
+                
+                if (window.confirm('⚠️ 정말로 모든 데이터를 초기화하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다!')) {
+                  if (window.confirm('⚠️⚠️ 마지막 확인입니다. 정말 초기화하시겠습니까?')) {
+                    console.log('🔴 resetGameData 호출 시도');
+                    resetGameData?.();
+                  }
                 }
-              }
-            }}
-            className="w-full"
-          >
-            전체 데이터 초기화
-          </Button>
+              }}
+              className="w-full"
+            >
+              전체 데이터 초기화
+            </Button>
         </Card>
       )}
 
