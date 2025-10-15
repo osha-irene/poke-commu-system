@@ -38,7 +38,7 @@ export default function ProfileView({ trainer, caughtPokemon, items }) {
               )}
             </div>
             <p className="text-gray-600 text-lg mb-2">포켓몬 트레이너</p>
-            <p className="text-gray-500 text-sm mb-6">ID: {trainer.id}</p>
+            {/* ID는 표시하지 않음 - Firebase UID는 내부용 */}
             
             <div className="bg-gray-50 rounded-lg p-4 inline-block">
               <div className="text-sm text-gray-600">일일 탐험 설정</div>
