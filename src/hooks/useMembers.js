@@ -86,11 +86,19 @@ export const useMembers = (allPokemonData) => {
       if (isLoading || Object.keys(members).length === 0) return;
 
       try {
-        // ID 필드 제거하고 저장
+        // ID 필드 제거하고, undefined를 null로 변환
         const membersToSave = {};
         Object.keys(members).forEach(userId => {
           const { id, ...memberData } = members[userId];
-          membersToSave[userId] = memberData;
+          
+          // ⭐ undefined를 null로 변환 (재귀적으로)
+          const cleanData = JSON.parse(
+            JSON.stringify(memberData, (key, value) => 
+              value === undefined ? null : value
+            )
+          );
+          
+          membersToSave[userId] = cleanData;
         });
 
         const membersRef = ref(database, 'members');

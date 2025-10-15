@@ -221,7 +221,7 @@ export default function AdminView({
                       )}
                     </div>
                     <div className="text-sm text-gray-600 mt-1">
-                      탐험: {member.dailyWalks}/{member.maxDailyWalks}회 | 포켓몬: {member.caughtPokemon.filter(p => p !== null).length}마리 | 소지금: {member.money?.toLocaleString() || 0}원
+                      탐험: {member.dailyWalks}/{member.maxDailyWalks}회 | 포켓몬: {(member.caughtPokemon || []).filter(p => p !== null && p !== undefined).length}마리 | 소지금: {member.money?.toLocaleString() || 0}원
                     </div>
                   </div>
                 </div>

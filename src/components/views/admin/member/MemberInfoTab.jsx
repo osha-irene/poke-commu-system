@@ -47,7 +47,7 @@ function MemberInfoTab({
           </div>
           <div>
             <span className="text-gray-600">포켓몬 수:</span>
-            <span className="ml-2 font-medium">{member.caughtPokemon.filter(p => p !== null).length}마리</span>
+            <span className="ml-2 font-medium">{(member.caughtPokemon || []).filter(p => p !== null && p !== undefined).length}마리</span>
           </div>
 
           {/* ⭐ 오늘의 탐험횟수 수정 */}
