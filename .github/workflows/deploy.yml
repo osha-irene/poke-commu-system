@@ -24,25 +24,28 @@ jobs:
       - name: Set up Node.js Environment
         uses: actions/setup-node@v4
         with:
-          # 프로젝트에 맞는 Node.js 버전을 지정하세요 (예: 20)
           node-version: '20' 
 
-      # 2. 의존성 설치 (sh: react-scripts: not found 오류 해결)
+      # 2. 의존성 설치
       - name: Install Dependencies
-        # package-lock.json을 사용해 더 빠르고 안정적으로 설치
         run: npm ci 
 
-      # 3. 프로젝트 빌드
+      # 3. 프로젝트 빌드 (⭐ 환경 변수 추가!)
       - name: Build Project
+        env:
+          REACT_APP_FIREBASE_API_KEY: ${{ secrets.REACT_APP_FIREBASE_API_KEY }}
+          REACT_APP_FIREBASE_AUTH_DOMAIN: ${{ secrets.REACT_APP_FIREBASE_AUTH_DOMAIN }}
+          REACT_APP_FIREBASE_PROJECT_ID: ${{ secrets.REACT_APP_FIREBASE_PROJECT_ID }}
+          REACT_APP_FIREBASE_STORAGE_BUCKET: ${{ secrets.REACT_APP_FIREBASE_STORAGE_BUCKET }}
+          REACT_APP_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.REACT_APP_FIREBASE_MESSAGING_SENDER_ID }}
+          REACT_APP_FIREBASE_APP_ID: ${{ secrets.REACT_APP_FIREBASE_APP_ID }}
+          REACT_APP_FIREBASE_DATABASE_URL: ${{ secrets.REACT_APP_FIREBASE_DATABASE_URL }}
         run: npm run build
         
       # 4. GitHub Pages 배포
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          # GitHub Actions 기본 토큰 사용 (contents: write 권한 필요)
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          # react-scripts 빌드 결과 폴더 지정
           publish_dir: ./build
-          # 배포 후 원본 커밋 메시지를 사용하도록 설정
           commit_message: Deploy site from GitHub Actions
