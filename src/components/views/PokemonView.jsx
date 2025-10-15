@@ -1,35 +1,39 @@
+// src/components/views/PokemonView.jsx
 import React, { useState, useEffect } from 'react';
 import { Package, ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
+import { useGame } from '../../contexts/GameContext';  // ← 추가
 import PartySlot from './pokemon/PartySlot';
 import BoxPokemon from './pokemon/BoxPokemon';
 import PokemonDetailPanel from './pokemon/PokemonDetailPanel';
 import { getButtonClass, getCardClass } from '../../styles/theme';
 
-export default function PokemonView({ 
-  caughtPokemon = [],
-  items = [],
-  allItems = [],
-  gamePokedex = [],
-  allPokemonMaster = [],
-  onMoveToParty,
-  onMoveToBox,
-  onReleasePokemon,
-  onUseRareCandy,
-  onUpdateNickname,
-  onGiveItem,
-  onTakeItem,
-  onSetPartner,
-  onForgetMove,
-  onLearnMove,
-  onReorderParty,
-  isAdmin = false,
-  allMoves = [],
-  pokemonLearnsets = {},
-  onUseItemOnPokemon,
-  checkEvolution,
-  manualEvolve
-}) {
-  // ⭐ 디버깅: props 변경 확인
+export default function PokemonView() {  // ← props 전부 삭제
+  // ✅ Context에서 데이터 가져오기
+  const {
+    caughtPokemon = [],
+    items = [],
+    allItems = [],
+    gamePokedex = [],
+    allPokemonMaster = [],
+    movePokemonToParty: onMoveToParty,
+    movePokemonToBox: onMoveToBox,
+    releasePokemon: onReleasePokemon,
+    useRareCandy: onUseRareCandy,
+    updatePokemonNickname: onUpdateNickname,
+    giveItemToPokemon: onGiveItem,
+    takeItemFromPokemon: onTakeItem,
+    setPartnerPokemon: onSetPartner,
+    forgetMove: onForgetMove,
+    learnMove: onLearnMove,
+    currentUser,
+    allMoves = [],
+    pokemonLearnsets = {},
+    useItemOnPokemon: onUseItemOnPokemon
+  } = useGame();
+
+  const isAdmin = currentUser?.isAdmin || false;
+  const onReorderParty = null;
+
   useEffect(() => {
     console.log('🔥🔥🔥 PokemonView 리렌더링!');
     console.log('🔥 caughtPokemon 길이:', caughtPokemon.length);

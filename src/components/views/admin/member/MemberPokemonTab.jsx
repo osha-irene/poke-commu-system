@@ -27,7 +27,11 @@ function MemberPokemonTab({
   onGivePokemon, 
   onEditPokemon 
 }) {
-   const { allPokemonMaster, allMoves, pokemonLearnsets } = usePokemonContext();
+   const { 
+    allPokemonMaster = [], 
+    allMoves = [], 
+    pokemonLearnsets = {} 
+  } = usePokemonContext() || {};
    const [pokemonMode, setPokemonMode] = useState('view');
   
   // 편집 모드 상태

@@ -1,50 +1,67 @@
-// src/components/views/admin/MemberDetailPanel.jsx - 수정 버전
+// src/components/views/admin/MemberDetailPanel.jsx - Context 버전
+
 import React, { useState } from 'react';
+import { useGame } from '../../../contexts/GameContext';
 import MemberInfoTab from './member/MemberInfoTab';
 import MemberPokemonTab from './member/MemberPokemonTab';
 import MemberItemTab from './member/MemberItemTab';
 
-function MemberDetailPanel({ 
-  member, 
-  trainer, 
-  allItems, 
-  allPokemonMaster, 
-  regions,
-  onClose, 
-  onGiveItem, 
-  onGivePokemon, 
-  onEditPokemon, 
-  onResetWalk, 
-  onToggleAdmin,
-  onUpdateMoney, 
-  onUpdateRegionAccess,
-  setMembers,
-  currentUser,
-  updateCurrentUser
-}) {
+function MemberDetailPanel({ member, onClose }) {
+  // ✅ Context에서 필요한 것들 가져오기
+  const {
+    currentUser: trainer,
+    allItems,
+    allPokemonMaster,
+    regions,
+    setMembers,
+    updateCurrentUser,
+    giveItemToMember,
+    givePokemonToMember,
+    editMemberPokemon,
+    resetMemberWalkCount,
+    toggleAdminStatus,
+    updateMemberMoney,
+    updateMemberRegionAccess,
+  } = useGame();
+
   const [selectedTab, setSelectedTab] = useState('info');
 
-  // ⭐ 탐험횟수 업데이트 함수
+  // 탐험횟수 업데이트
   const handleUpdateWalkCount = (memberId, newWalkCount) => {
     setMembers(prev => ({
       ...prev,
       [memberId]: { ...prev[memberId], dailyWalks: newWalkCount }
     }));
     
-    if (currentUser?.id === memberId) {
+    if (trainer?.id === memberId) {
       updateCurrentUser({ dailyWalks: newWalkCount });
     }
   };
 
-  // ⭐ 최대 탐험횟수 업데이트 함수 추가
+  // 최대 탐험횟수 업데이트
   const handleUpdateMaxWalkCount = (memberId, newMaxWalkCount) => {
     setMembers(prev => ({
       ...prev,
       [memberId]: { ...prev[memberId], maxDailyWalks: newMaxWalkCount }
     }));
     
-    if (currentUser?.id === memberId) {
+    if (trainer?.id === memberId) {
       updateCurrentUser({ maxDailyWalks: newMaxWalkCount });
+    }
+  };
+
+  const handleResetWalk = (memberId, memberName) => {
+    if (window.confirm(`${memberName}님의 탐험 횟수를 초기화하시겠습니까?`)) {
+      resetMemberWalkCount(memberId);
+      alert('탐험 횟수가 초기화되었습니다.');
+    }
+  };
+
+  const handleToggleAdmin = (memberId, memberName) => {
+    const action = member.isAdmin ? '해제' : '부여';
+    if (window.confirm(`${memberName}님의 관리자 권한을 ${action}하시겠습니까?`)) {
+      toggleAdminStatus(memberId);
+      alert(`관리자 권한이 ${action}되었습니다.`);
     }
   };
 
@@ -106,12 +123,12 @@ function MemberDetailPanel({
               member={member}
               trainer={trainer}
               regions={regions}
-              onResetWalk={onResetWalk}
-              onToggleAdmin={onToggleAdmin}
-              onUpdateMoney={onUpdateMoney}
-              onUpdateRegionAccess={onUpdateRegionAccess}
+              onResetWalk={handleResetWalk}
+              onToggleAdmin={handleToggleAdmin}
+              onUpdateMoney={updateMemberMoney}
+              onUpdateRegionAccess={updateMemberRegionAccess}
               onUpdateWalkCount={handleUpdateWalkCount}
-              onUpdateMaxWalkCount={handleUpdateMaxWalkCount} // ⭐ 추가
+              onUpdateMaxWalkCount={handleUpdateMaxWalkCount}
             />
           )}
 
@@ -119,8 +136,8 @@ function MemberDetailPanel({
             <MemberPokemonTab
               member={member}
               allPokemonMaster={allPokemonMaster}
-              onGivePokemon={onGivePokemon}
-              onEditPokemon={onEditPokemon}
+              onGivePokemon={givePokemonToMember}
+              onEditPokemon={editMemberPokemon}
             />
           )}
 
@@ -128,7 +145,7 @@ function MemberDetailPanel({
             <MemberItemTab
               member={member}
               allItems={allItems}
-              onGiveItem={onGiveItem}
+              onGiveItem={giveItemToMember}
             />
           )}
         </div>

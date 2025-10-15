@@ -11,7 +11,8 @@ export const useAdminFunctions = (
   setRegions,
   setGamePokedex,
   allPokemonMaster,
-  allPokemon
+  allPokemon,
+  allItems
 ) => {
 
   // 회원 관리
@@ -198,33 +199,133 @@ export const useAdminFunctions = (
     }
   };
 
-  const givePokemonToMember = async (memberId, pokemon) => {
-    if (!currentUser?.isAdmin) return;
-    const member = members[memberId];
-    if (!member) return;
-    
-    const updatedMember = {
-      ...member,
-      caughtPokemon: [...member.caughtPokemon, pokemon]
-    };
-    
-    // 🔥 Firebase 저장
-    try {
-      const { id, ...dataToSave } = updatedMember;
-      const memberRef = ref(database, `members/${memberId}`);
-      await set(memberRef, dataToSave);
-      
-      setMembers(prev => ({
-        ...prev,
-        [memberId]: updatedMember
-      }));
-      
-      console.log('✅ 포켓몬 지급:', pokemon.name, '→', member.name);
-    } catch (error) {
-      console.error('❌ 포켓몬 지급 실패:', error);
-    }
+  // useAdminFunctions.js의 givePokemonToMember 함수 완전 수정본 (방어 코드 추가)
+
+const givePokemonToMember = (memberId, pokemonTemplate, options = {}) => {
+  if (!currentUser?.isAdmin) return;
+  
+  const member = members[memberId];
+  if (!member) { 
+    alert('회원을 찾을 수 없습니다!'); 
+    return; 
+  }
+
+  // ✅ caughtPokemon 초기화 (없으면 빈 배열)
+  if (!member.caughtPokemon) {
+    member.caughtPokemon = [];
+  }
+
+  // 파트너를 제외한 포켓몬 수 계산
+  const nonPartnerCount = member.caughtPokemon.filter(p => p && !p.isPartner).length;
+  
+  // 파트너 제외 20마리 제한 (options.isPartner가 true면 예외)
+  if (!options.isPartner && nonPartnerCount >= 20) {
+    alert(`⚠️ ${member.name}님은 이미 파트너를 제외한 포켓몬이 20마리입니다!\n더 이상 포켓몬을 지급할 수 없습니다.`);
+    return;
+  }
+
+  const {
+    level = 5,
+    friendship = 0,
+    heldItem = null,
+    nickname = null,
+    moves = [],
+    isPartner = false,
+    caughtWithBall = '몬스터볼'
+  } = options;
+
+  // ✅ 볼 이미지 찾기 (allItems가 없을 경우 대비)
+  const ballItem = allItems?.find(item => 
+    item.name === caughtWithBall || 
+    item.nameEn?.toLowerCase().includes(caughtWithBall.toLowerCase())
+  ) || {
+    spriteUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png',
+    imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'
   };
 
+  // ✅ 완전한 포켓몬 데이터 생성
+  const newPokemon = {
+    uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    pokemonId: pokemonTemplate.id,
+    name: pokemonTemplate.name,
+    nameEn: pokemonTemplate.nameEn,
+    nickname,
+    number: pokemonTemplate.number,
+    type: pokemonTemplate.type,
+    type2: pokemonTemplate.type2 || null,
+    level,
+    hp: pokemonTemplate.baseHp,
+    maxHp: pokemonTemplate.baseHp,
+    exp: 0,
+    friendship,
+    heldItem,
+    moves,
+    isPartner,
+    caughtWithBall,
+    ballImageUrl: ballItem.spriteUrl || ballItem.imageUrl, // ⭐ 추가
+    condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
+    effort: { 
+      hp: 0, 
+      attack: 0, 
+      defense: 0, 
+      specialAttack: 0, 
+      specialDefense: 0, 
+      speed: 0 
+    },
+    imageUrl: pokemonTemplate.imageUrl,
+    iconUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`,
+    spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`
+  };
+
+  console.log('🎁 포켓몬 지급 데이터:', newPokemon);
+
+  // ⭐⭐⭐ 엔트리에 빈 슬롯이 있으면 그곳에 직접 배치
+  let updatedPokemonList = [...member.caughtPokemon];
+  
+  // ✅ caughtPokemon이 빈 배열이면 6칸 초기화
+  if (updatedPokemonList.length === 0) {
+    updatedPokemonList = [null, null, null, null, null, null];
+  }
+  
+  // 파트너 설정인 경우 기존 파트너 해제
+  if (isPartner) {
+    updatedPokemonList = updatedPokemonList.map(p => 
+      p && p.isPartner ? { ...p, isPartner: false } : p
+    );
+  }
+  
+  // 엔트리(0-5)와 박스(6~) 분리
+  const party = updatedPokemonList.slice(0, 6);
+  const box = updatedPokemonList.slice(6);
+  
+  // 엔트리에 빈 슬롯 찾기
+  let emptySlotIndex = -1;
+  for (let i = 0; i < 6; i++) {
+    if (!party[i] || party[i] === null) {
+      emptySlotIndex = i;
+      break;
+    }
+  }
+  
+  if (emptySlotIndex !== -1) {
+    // 엔트리에 빈 슬롯이 있으면 해당 위치에 배치
+    console.log(`✅ ${member.name}의 엔트리 ${emptySlotIndex}번 슬롯에 ${newPokemon.name} 추가`);
+    party[emptySlotIndex] = newPokemon;
+    updatedPokemonList = [...party, ...box];
+  } else {
+    // 엔트리가 가득 차면 박스에 추가
+    console.log(`📦 ${member.name}의 엔트리가 가득참 - 박스에 ${newPokemon.name} 추가`);
+    updatedPokemonList = [...party, ...box, newPokemon];
+  }
+
+  setMembers(prev => ({
+    ...prev,
+    [memberId]: { ...prev[memberId], caughtPokemon: updatedPokemonList }
+  }));
+
+  const partnerText = isPartner ? ' (파트너 💖)' : '';
+  alert(`${member.name}에게 ${newPokemon.nickname || newPokemon.name}${partnerText}을(를) 지급했습니다!`);
+};
   const addPokemonToSelf = (pokemon) => {
     console.log('🐾 addPokemonToSelf 호출');
     console.log('🐾 currentUser:', currentUser?.name);
@@ -303,102 +404,144 @@ export const useAdminFunctions = (
     alert(`${item.name} ${count}개를 추가했습니다!`);
   };
 
-  const giveItemToMember = async (memberId, item, count) => {
-    console.log('🎁 giveItemToMember 호출');
-    console.log('🎁 대상:', memberId);
-    console.log('🎁 아이템:', item.name, '×', count);
-    
-    if (!currentUser?.isAdmin) {
-      console.error('❌ 관리자 권한 없음');
-      return;
-    }
-    
-    const member = members[memberId];
-    if (!member) {
-      console.error('❌ 회원을 찾을 수 없음:', memberId);
-      return;
-    }
-    
-    const existingItem = member.inventory.find(i => 
-      i.itemId === item.id || i.name === item.name
-    );
-    
-    const newInventory = existingItem
-      ? member.inventory.map(i => 
-          (i.itemId === item.id || i.name === item.name)
-            ? { ...i, count: i.count + count }
-            : i
-        )
-      : [
-          ...member.inventory,
-          {
-            itemId: item.id,
-            name: item.name,
-            nameEn: item.nameEn,
-            count: count,
-            imageUrl: item.spriteUrl || item.imageUrl,
-            category: item.category,
-            effect: item.effect,
-            cost: item.cost,
-            sellPrice: item.sellPrice,
-            canSell: item.canSell ?? true,
-            isCustom: item.isCustom || false
-          }
-        ];
+const giveItemToMember = async (memberId, item, count) => {
+  console.log('🎁 giveItemToMember 호출');
+  console.log('🎁 대상:', memberId);
+  console.log('🎁 아이템:', item.name, '×', count);
+  
+  if (!currentUser?.isAdmin) {
+    console.error('❌ 관리자 권한 없음');
+    return;
+  }
+  
+  const member = members[memberId];
+  if (!member) {
+    console.error('❌ 회원을 찾을 수 없음:', memberId);
+    return;
+  }
+  
+  // ⭐ inventory가 없으면 빈 배열로 초기화
+  const currentInventory = member.inventory || [];
+  
+  const existingItem = currentInventory.find(i => 
+    i.itemId === item.id || i.name === item.name
+  );
+  
+  const newInventory = existingItem
+    ? currentInventory.map(i => 
+        (i.itemId === item.id || i.name === item.name)
+          ? { ...i, count: i.count + count }
+          : i
+      )
+    : [
+        ...currentInventory,
+        {
+          itemId: item.id,
+          name: item.name,
+          nameEn: item.nameEn,
+          count: count,
+          imageUrl: item.spriteUrl || item.imageUrl,
+          category: item.category,
+          effect: item.effect,
+          cost: item.cost,
+          sellPrice: item.sellPrice,
+          canSell: item.canSell ?? true,
+          isCustom: item.isCustom || false
+        }
+      ];
 
-    const updatedMember = {
-      ...member,
-      inventory: newInventory
-    };
-    
-    // 🔥 Firebase 저장
-    try {
-      const { id, ...dataToSave } = updatedMember;
-      const memberRef = ref(database, `members/${memberId}`);
-      await set(memberRef, dataToSave);
-      
-      setMembers(prev => ({
-        ...prev,
-        [memberId]: updatedMember
-      }));
-      
-      console.log('✅ 아이템 지급 완료:', item.name, '→', member.name);
-      alert(`${member.name}님에게 ${item.name} ${count}개를 지급했습니다!`);
-    } catch (error) {
-      console.error('❌ 아이템 지급 실패:', error);
-      alert('아이템 지급 중 오류가 발생했습니다!');
-    }
+  const updatedMember = {
+    ...member,
+    inventory: newInventory
   };
   
-  // 관리자 기능: 커스텀 아이템 생성
-  const createCustomItem = async (itemData) => {
-    if (!currentUser?.isAdmin) return false;
+  // 🔥 Firebase 저장
+  try {
+    const { id, email, ...dataToSave } = updatedMember;
     
-    const newItem = {
-      ...itemData,
-      id: `custom_${Date.now()}`,
-      isCustom: true,
-      createdBy: currentUser.name,
-      createdAt: new Date().toISOString(),
-      pocket: itemData.pocket || itemData.category || 'misc',
-    };
+    // ⭐ undefined 값을 null로 변환
+    const cleanData = JSON.parse(
+      JSON.stringify(dataToSave, (key, value) => 
+        value === undefined ? null : value
+      )
+    );
     
-    // 🔥 Firebase의 customItems에 추가
-    try {
-      const customItemsRef = ref(database, 'gameData/customItems');
-      const snapshot = await get(customItemsRef);
-      const customItems = snapshot.exists() ? snapshot.val() : [];
-      
-      customItems.push(newItem);
-      await set(customItemsRef, customItems);
-      
-      alert(`커스텀 아이템 "${itemData.name}"이 생성되었습니다!`);
-      return true;
-    } catch (error) {
-      console.error('❌ 커스텀 아이템 생성 실패:', error);
-      return false;
+    const memberRef = ref(database, `members/${memberId}`);
+    await set(memberRef, cleanData);
+    
+    setMembers(prev => ({
+      ...prev,
+      [memberId]: updatedMember
+    }));
+    
+    // ⭐ 만약 자신에게 지급한 경우 currentUser도 업데이트
+    if (memberId === currentUser?.id) {
+      console.log('🔄 자신에게 지급 - currentUser 업데이트');
+      updateCurrentUser({ inventory: newInventory });
     }
+    
+    console.log('✅ 아이템 지급 완료:', item.name, '→', member.name);
+    alert(`${member.name}님에게 ${item.name} ${count}개를 지급했습니다!`);
+  } catch (error) {
+    console.error('❌ 아이템 지급 실패:', error);
+    alert('아이템 지급 중 오류가 발생했습니다!');
+  }
+};
+
+  // 관리자 기능: 커스텀 아이템 생성
+const createCustomItem = async (itemData) => {
+  console.log('🎨 createCustomItem 시작');
+  console.log('🎨 itemData:', itemData);
+  console.log('🎨 currentUser:', currentUser);
+  console.log('🎨 currentUser.isAdmin:', currentUser?.isAdmin);
+  
+  if (!currentUser?.isAdmin) {
+    console.error('❌ 관리자 권한 없음');
+    return false;
+  }
+  
+  const newItem = {
+    ...itemData,
+    id: `custom_${Date.now()}`,
+    isCustom: true,
+    createdBy: currentUser.name,
+    createdAt: new Date().toISOString(),
+    pocket: itemData.pocket || itemData.category || 'misc',
   };
+  
+  console.log('🎨 생성할 newItem:', newItem);
+  
+  // 🔥 Firebase의 customItems에 추가
+  try {
+    const customItemsRef = ref(database, 'gameData/customItems');
+    const snapshot = await get(customItemsRef);
+    
+    console.log('🎨 snapshot.exists():', snapshot.exists());
+    
+    const customItems = snapshot.exists() ? snapshot.val() : [];
+    
+    console.log('🎨 기존 customItems:', customItems);
+    console.log('🎨 customItems 타입:', Array.isArray(customItems) ? 'Array' : typeof customItems);
+    
+    // ⭐ customItems가 배열이 아니면 배열로 변환
+    const itemsArray = Array.isArray(customItems) ? customItems : [];
+    itemsArray.push(newItem);
+    
+    console.log('🎨 저장할 itemsArray:', itemsArray);
+    
+    await set(customItemsRef, itemsArray);
+    
+    console.log('✅ Firebase 저장 완료');
+    alert(`커스텀 아이템 "${itemData.name}"이 생성되었습니다!`);
+    
+    return true;  // ⭐ 반드시 true 반환
+  } catch (error) {
+    console.error('❌ 커스텀 아이템 생성 실패:', error);
+    console.error('❌ 에러 상세:', error.message);
+    alert('커스텀 아이템 생성 중 오류가 발생했습니다!');
+    return false;
+  }
+};
 
   // 포켓몬 편집
   const editMemberPokemon = async (memberId, pokemonUniqueId, updates) => {

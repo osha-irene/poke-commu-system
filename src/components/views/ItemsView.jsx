@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
 import { Search, X, ShoppingCart, Trash2, Sparkles } from 'lucide-react';
 
-export default function ItemsView({ 
-  items = [], 
-  allItems = [], 
-  isSuperAdmin = false, 
-  onSellItem, 
-  onTrashItem, 
-  onUseItem,
-  trainer = {},
-  caughtPokemon = []
-}) {
+import { useGame } from '../../contexts/GameContext';
+
+export default function ItemsView() {
+  const {
+    items = [],
+    allItems = [],
+    caughtPokemon = [],
+    sellItem: onSellItem,
+    useItemOnPokemon: onUseItem,
+    currentUser: trainer,
+  } = useGame();
+  
+  const isSuperAdmin = trainer?.isSuperAdmin || false;
+  const onTrashItem = null;
   
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');

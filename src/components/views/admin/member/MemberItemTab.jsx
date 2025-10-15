@@ -51,7 +51,6 @@ function MemberItemTab({ member, allItems, onGiveItem }) {
     onGiveItem(member.id, selectedItem, itemCount);
     setSelectedItem(null);
     setItemCount(1);
-    alert(`${member.name}님에게 ${selectedItem.name} ${itemCount}개를 지급했습니다!`);
   };
 
   // pocket별 배지 색상

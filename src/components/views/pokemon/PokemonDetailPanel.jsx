@@ -490,7 +490,7 @@ const renderEffortTick = (tickProps) => {
                     />
                     <PolarRadiusAxis 
                       angle={90}
-                      domain={[50, 80]}
+                      domain={[0, 100]}
                       tick={false}
                     />
                     <Radar 

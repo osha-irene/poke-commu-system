@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
 import { ShoppingCart, Clock, Star, Coins, Sparkles } from 'lucide-react';
+import { useGame } from '../../contexts/GameContext';  // ← 추가
 
-export default function ShopView({ 
-  trainer,
-  allItems = [],
-  shopData = {},
-  onPurchase 
-}) {
+export default function ShopView() {  // ← props 삭제
+  // ✅ Context에서 데이터 가져오기
+  const {
+    currentUser: trainer,
+    allItems = [],
+    shopData = {},
+    handlePurchase: onPurchase
+  } = useGame();
+
   const [selectedItem, setSelectedItem] = useState(null);
   const [quantity, setQuantity] = useState(1);
   
-  // 오늘 요일 구하기
+  // ✅ 아래 코드는 기존과 100% 동일
   const today = new Date();
   const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   const dayNamesKo = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];

@@ -33,7 +33,7 @@ function CustomItemCreator({ onCreateItem, allItems, trainer }) {
     { id: 'misc', name: '기타', icon: '📦', color: 'bg-gray-100 text-gray-700' }
   ];
 
-const handleSubmit = () => {
+const handleSubmit = async () => {  // ⭐ async 추가
   if (!itemData.name.trim()) {
     alert('아이템 이름을 입력해주세요!');
     return;
@@ -49,15 +49,12 @@ const handleSubmit = () => {
   console.log('🎨 pocket 값:', itemToCreate.pocket);
   console.log('🎨 category 값:', itemToCreate.category);
   
-  const success = onCreateItem?.(itemToCreate);
+  const success = await onCreateItem?.(itemToCreate);  // ⭐ await 추가!
   
   console.log('🎨 생성 결과:', success);
   
   if (success) {
-    // localStorage에서 바로 확인
-    const saved = JSON.parse(localStorage.getItem('poke_customItems') || '[]');
-    console.log('💾 저장된 커스텀 아이템들:', saved);
-    console.log('💾 방금 저장된 아이템:', saved[saved.length - 1]);
+
     
     setItemData({
       name: '',
@@ -75,6 +72,8 @@ const handleSubmit = () => {
       conditionBoost: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 }
     });
     setShowModal(false);
+    
+    // ✅ 성공 메시지는 이미 createCustomItem 함수에서 alert로 표시됨
   }
 };
 

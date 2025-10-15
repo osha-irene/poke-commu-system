@@ -160,13 +160,14 @@ export default function useGameState() {
     updatePokedexMemo: gameDataUpdatePokedexMemo
   } = useGameData(allPokemonData.pokemon);
 
-  const { members, setMembers } = useMembers(allPokemonData.pokemon);
+  const { members, setMembers, isLoading: isMembersLoading } = useMembers(allPokemonData.pokemon);
 
   const {
     currentUser,
     handleLogin,
     handleLogout,
-    updateCurrentUser
+    updateCurrentUser,
+    isLoading: isAuthLoading
   } = useAuth(members, setMembers);
 
   const {
@@ -276,6 +277,12 @@ export default function useGameState() {
     updateMemberRegionAccess
   } = adminFunctions;
 
+
+// ⭐ 여기에 로그 추가!
+console.log('🔍 adminCreateCustomItem:', adminCreateCustomItem);
+console.log('🔍 adminCreateCustomItem 타입:', typeof adminCreateCustomItem);
+  
+
   // 🔥 매일 자정 산책 횟수 리셋 - Firebase 사용
   useEffect(() => {
     if (!currentUser) return;
@@ -365,58 +372,61 @@ export default function useGameState() {
         });
         
         const randomPokemon = weightedPokemon[Math.floor(Math.random() * weightedPokemon.length)];
-        const pokemonNumber = randomPokemon.originalNumber || randomPokemon.number;
+        // ✅ pokemonNumber를 문자열로 변환
+    const pokemonNumber = String(randomPokemon.originalNumber || randomPokemon.number);
+    
+    // ⭐ 조우 시: firstEncounter만 기록
+    const isFirstEncounter = !sharedPokedexData[pokemonNumber];
+    
+    if (isFirstEncounter) {
+      const newEntry = {
+        firstEncounter: currentUser.name,
+        encounteredAt: new Date().toISOString(),
+        caughtBy: null,
+        caughtAt: null,
+        memo: null,
+        regions: [region.name]
+      };
+      
+      setSharedPokedexData(prev => ({
+        ...prev,
+        [pokemonNumber]: newEntry
+      }));
+      
+      // 🔥 Firebase에 저장
+      try {
+        const pokedexRef = ref(database, `gameData/sharedPokedex/${pokemonNumber}`);
+        await set(pokedexRef, newEntry);
+        console.log('✅ 첫 조우 기록 완료:', pokemonNumber);
+      } catch (error) {
+        console.error('❌ 도감 데이터 저장 실패:', error);
+      }
+    } else {
+      // 이미 조우된 포켓몬 - 지역만 추가
+      const entry = sharedPokedexData[pokemonNumber];
+      const currentRegions = entry?.regions || [];
+      
+      if (!currentRegions.includes(region.name)) {
+        const updatedEntry = {
+          ...entry,
+          regions: [...currentRegions, region.name]
+        };
         
-        // ⭐ 조우 시: firstEncounter만 기록 (firstCatcher는 X)
-        const isFirstEncounter = !sharedPokedexData[pokemonNumber];
+        setSharedPokedexData(prev => ({
+          ...prev,
+          [pokemonNumber]: updatedEntry
+        }));
         
-        if (isFirstEncounter) {
-          const newEntry = {
-            firstEncounter: currentUser.name,
-            encounteredAt: new Date().toISOString(),
-            caughtBy: null,
-            caughtAt: null,
-            memo: null,
-            regions: [region.name]
-          };
-          
-          setSharedPokedexData(prev => ({
-            ...prev,
-            [pokemonNumber]: newEntry
-          }));
-          
-          // 🔥 Firebase에 저장
-          try {
-            const pokedexRef = ref(database, `gameData/sharedPokedex/${pokemonNumber}`);
-            await set(pokedexRef, newEntry);
-          } catch (error) {
-            console.error('도감 데이터 저장 실패:', error);
-          }
-        } else {
-          // 이미 조우된 포켓몬 - 지역만 추가
-          const entry = sharedPokedexData[pokemonNumber];
-          const currentRegions = entry?.regions || [];
-          
-          if (!currentRegions.includes(region.name)) {
-            const updatedEntry = {
-              ...entry,
-              regions: [...currentRegions, region.name]
-            };
-            
-            setSharedPokedexData(prev => ({
-              ...prev,
-              [pokemonNumber]: updatedEntry
-            }));
-            
-            // 🔥 Firebase에 저장
-            try {
-              const pokedexRef = ref(database, `gameData/sharedPokedex/${pokemonNumber}`);
-              await set(pokedexRef, updatedEntry);
-            } catch (error) {
-              console.error('도감 데이터 저장 실패:', error);
-            }
-          }
+        // 🔥 Firebase에 저장
+        try {
+          const pokedexRef = ref(database, `gameData/sharedPokedex/${pokemonNumber}`);
+          await set(pokedexRef, updatedEntry);
+          console.log('✅ 지역 추가 완료:', pokemonNumber, region.name);
+        } catch (error) {
+          console.error('❌ 도감 데이터 저장 실패:', error);
         }
+      }
+    }
         
         const loot = generateLoot(region.lootConfig || getDefaultLootConfig(), allItems);
         
@@ -593,122 +603,152 @@ export default function useGameState() {
     
     updateCurrentUser({ caughtPokemon: updatedCaughtPokemon });
 
-    // ⭐ 포획 시: firstCatcher 기록
-    const pokemonNumber = pokemonTemplate.number;
-    const entry = sharedPokedexData[pokemonNumber] || {};
-    
-    if (!entry.firstCatcher) {
-      setFirstCatchPokemon(pokemonTemplate);
-      
-      const updatedEntry = {
-        ...entry,
-        firstEncounter: entry.firstEncounter || currentUser.name,
-        encounteredAt: entry.encounteredAt || new Date().toISOString(),
-        firstCatcher: currentUser.name,
-        caughtBy: currentUser.name,
-        caughtAt: new Date().toISOString(),
-        regions: entry.regions || [regionName]
-      };
-      
-      setSharedPokedexData(prev => ({
-        ...prev,
-        [pokemonNumber]: updatedEntry
-      }));
-      
-      // 🔥 Firebase에 저장
-      try {
-        const pokedexRef = ref(database, `gameData/sharedPokedex/${pokemonNumber}`);
-        await set(pokedexRef, updatedEntry);
-      } catch (error) {
-        console.error('도감 데이터 저장 실패:', error);
-      }
-    }
-  };
+  // ⭐ 포획 시: firstCatcher 기록
+  // ✅ pokemonNumber를 문자열로 변환
+  const pokemonNumber = String(pokemonTemplate.number);
+  const entry = sharedPokedexData[pokemonNumber] || {};
   
-  const saveFirstCatchMemo = async (pokemonNumber, memo) => {
-    const updatedEntry = {
-      ...sharedPokedexData[pokemonNumber],
-      memo: memo || null
-    };
+  if (!entry.firstCatcher) {
+    setFirstCatchPokemon(pokemonTemplate);
     
-    setSharedPokedexData(prev => ({
-      ...prev,
-      [pokemonNumber]: updatedEntry
-    }));
-    
-    // 🔥 Firebase에 저장
-    try {
-      const pokedexRef = ref(database, `gameData/sharedPokedex/${pokemonNumber}`);
-      await set(pokedexRef, updatedEntry);
-    } catch (error) {
-      console.error('메모 저장 실패:', error);
-    }
-    
-    setFirstCatchPokemon(null);
-  };
-
-  const skipFirstCatchMemo = async (pokemonNumber) => {
-    const updatedEntry = {
-      ...sharedPokedexData[pokemonNumber],
-      memo: null
-    };
-    
-    setSharedPokedexData(prev => ({
-      ...prev,
-      [pokemonNumber]: updatedEntry
-    }));
-    
-    // 🔥 Firebase에 저장
-    try {
-      const pokedexRef = ref(database, `gameData/sharedPokedex/${pokemonNumber}`);
-      await set(pokedexRef, updatedEntry);
-    } catch (error) {
-      console.error('메모 저장 실패:', error);
-    }
-    
-    setFirstCatchPokemon(null);
-  };
-
-  const updatePokedexRegions = async (pokemonNumber, regions) => {
-    if (!currentUser?.isAdmin) return;
-    
-    const entry = sharedPokedexData[pokemonNumber] || {};
     const updatedEntry = {
       ...entry,
-      regions: regions,
-      manuallyEdited: true
+      firstEncounter: entry.firstEncounter || currentUser.name,
+      encounteredAt: entry.encounteredAt || new Date().toISOString(),
+      firstCatcher: currentUser.name,
+      caughtBy: currentUser.name,
+      caughtAt: new Date().toISOString(),
+      regions: entry.regions || [regionName]
     };
     
     setSharedPokedexData(prev => ({
       ...prev,
       [pokemonNumber]: updatedEntry
     }));
-    
-    // 🔥 Firebase에 저장
+      
+     // 🔥 Firebase에 저장
     try {
       const pokedexRef = ref(database, `gameData/sharedPokedex/${pokemonNumber}`);
       await set(pokedexRef, updatedEntry);
+      console.log('✅ 첫 포획 기록 완료:', pokemonNumber);
     } catch (error) {
-      console.error('도감 지역 업데이트 실패:', error);
+      console.error('❌ 도감 데이터 저장 실패:', error);
     }
-  };
+  }
+};
 
-  const createCustomItem = async (itemData) => {
-    const result = adminCreateCustomItem(itemData);
-    if (result) {
-      // 🔥 Firebase에서 커스텀 아이템 다시 로드
-      try {
-        const customItemsRef = ref(database, 'gameData/customItems');
-        const snapshot = await get(customItemsRef);
-        const customItems = snapshot.exists() ? snapshot.val() : [];
-        const baseItems = itemsData.items;
-        setAllItems([...baseItems, ...customItems]);
-      } catch (error) {
-        console.error('커스텀 아이템 로드 실패:', error);
-      }
-    }
-    return result;
+  
+  const saveFirstCatchMemo = async (pokemonNumber, memo) => {
+  // ✅ pokemonNumber를 문자열로 변환
+  const numericKey = String(pokemonNumber);
+  
+  const updatedEntry = {
+    ...sharedPokedexData[numericKey],
+    memo: memo || null
   };
+  
+  setSharedPokedexData(prev => ({
+    ...prev,
+    [numericKey]: updatedEntry
+  }));
+  
+  // 🔥 Firebase에 저장
+  try {
+    const pokedexRef = ref(database, `gameData/sharedPokedex/${numericKey}`);
+    await set(pokedexRef, updatedEntry);
+    console.log('✅ 메모 저장 완료:', numericKey);
+  } catch (error) {
+    console.error('❌ 메모 저장 실패:', error);
+  }
+  
+  setFirstCatchPokemon(null);
+};
+
+const skipFirstCatchMemo = async (pokemonNumber) => {
+  // ✅ pokemonNumber를 문자열로 변환하여 키로 사용
+  const numericKey = String(pokemonNumber);
+  
+  const updatedEntry = {
+    ...sharedPokedexData[numericKey],
+    memo: null
+  };
+  
+  setSharedPokedexData(prev => ({
+    ...prev,
+    [numericKey]: updatedEntry
+  }));
+  
+  // 🔥 Firebase에 저장 - 반드시 문자열 키 사용
+  try {
+    const pokedexRef = ref(database, `gameData/sharedPokedex/${numericKey}`);
+    await set(pokedexRef, updatedEntry);
+    console.log('✅ 메모 건너뛰기 저장 완료:', numericKey);
+  } catch (error) {
+    console.error('❌ 메모 저장 실패:', error);
+    console.error('문제가 된 pokemonNumber:', pokemonNumber, 'type:', typeof pokemonNumber);
+  }
+  
+  setFirstCatchPokemon(null);
+};
+
+  const updatePokedexRegions = async (pokemonNumber, regions) => {
+  if (!currentUser?.isAdmin) return;
+  
+  // ✅ pokemonNumber를 문자열로 변환
+  const numericKey = String(pokemonNumber);
+  
+  const entry = sharedPokedexData[numericKey] || {};
+  const updatedEntry = {
+    ...entry,
+    regions: regions,
+    manuallyEdited: true
+  };
+  
+  setSharedPokedexData(prev => ({
+    ...prev,
+    [numericKey]: updatedEntry
+  }));
+  
+  // 🔥 Firebase에 저장
+  try {
+    const pokedexRef = ref(database, `gameData/sharedPokedex/${numericKey}`);
+    await set(pokedexRef, updatedEntry);
+    console.log('✅ 도감 지역 업데이트 완료:', numericKey);
+  } catch (error) {
+    console.error('❌ 도감 지역 업데이트 실패:', error);
+  }
+};const createCustomItem = async (itemData) => {
+  console.log('🎯 useGameState createCustomItem 호출');
+  
+  const result = await adminCreateCustomItem(itemData);
+  
+  console.log('🎯 결과:', result);
+  
+  if (result) {
+    console.log('🔄 allItems 업데이트 시작');
+    
+    // 🔥 Firebase에서 커스텀 아이템 다시 로드
+    try {
+      const customItemsRef = ref(database, 'gameData/customItems');
+      const snapshot = await get(customItemsRef);
+      const customItems = snapshot.exists() ? snapshot.val() : [];
+      
+      console.log('🔄 로드된 커스텀 아이템:', customItems.length, '개');
+      
+      const baseItems = itemsData.items;
+      const updatedAllItems = [...baseItems, ...customItems];
+      
+      console.log('✅ 전체 아이템:', updatedAllItems.length, '개');
+      
+      setAllItems(updatedAllItems);
+      
+    } catch (error) {
+      console.error('❌ 커스텀 아이템 로드 실패:', error);
+    }
+  }
+  
+  return result;
+};
 
   const updateGamePokedex = (selectedPokemonNumbers) => {
     return adminUpdateGamePokedex(selectedPokemonNumbers);
@@ -1116,6 +1156,8 @@ export default function useGameState() {
     allMoves,
     pokemonLearnsets,
     maintenanceMode,
+     setMembers,
+     isMembersLoading,
     setMaintenanceMode,
     updateShopData,
     handleLogin,
@@ -1174,6 +1216,6 @@ export default function useGameState() {
     discoverRecipe,
     updateIngredientStats,
     updateCurrentUser,
-    setMembers
+     isAuthLoading, 
   };
 }

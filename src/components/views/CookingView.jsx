@@ -2,12 +2,19 @@ import React, { useState } from 'react';
 import { ChefHat, Book, Plus, Minus, Sparkles, X } from 'lucide-react';
 import recipesData from '../../data/recipes.json'; // ✅ import 추가
 
-export default function CookingView({ 
-  recipes = [],
-  userItems = [],
-  discoveredRecipes = [],
-  onCook
-}) {
+import { useGame } from '../../contexts/GameContext';
+
+export default function CookingView() {
+  const {
+    currentUser,
+    recipes,
+    discoveredRecipes,
+    cookRecipe: onCook,
+    createRecipe,
+    updateIngredientStats,
+    isAdmin,
+    items: userItems  // ← 추가
+  } = useGame();
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [selectedIngredients, setSelectedIngredients] = useState([]);
   const [showRecipeBook, setShowRecipeBook] = useState(false);

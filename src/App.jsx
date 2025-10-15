@@ -1,4 +1,4 @@
-// src/App.jsx - Firebase 완전 버전
+// src/App.jsx - 기존 코드에 Context만 추가
 
 import React, { useState, useEffect } from 'react';
 import { ref, get, set } from 'firebase/database';
@@ -21,10 +21,11 @@ import NPCsView from './components/views/NPCsView';
 import QnABoard from './components/views/QnABoard';
 import CookingView from './components/views/CookingView';
 import { PokemonProvider } from './contexts/PokemonContext';
+import { GameProvider } from './contexts/GameContext';
 
 // 로그인 화면 컴포넌트
 function LoginScreen({ onLogin, onRegister }) {
-  const [mode, setMode] = useState('login'); // 'login' 또는 'register'
+  const [mode, setMode] = useState('login');
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -57,7 +58,6 @@ function LoginScreen({ onLogin, onRegister }) {
           <p className="text-gray-600">커뮤니티 시스템</p>
         </div>
 
-        {/* 탭 선택 */}
         <div className="flex gap-2 mb-6">
           <button
             onClick={() => setMode('login')}
@@ -83,9 +83,7 @@ function LoginScreen({ onLogin, onRegister }) {
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              아이디
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">아이디</label>
             <input
               type="text"
               value={userId}
@@ -97,9 +95,7 @@ function LoginScreen({ onLogin, onRegister }) {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              비밀번호
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">비밀번호</label>
             <input
               type="password"
               value={password}
@@ -112,9 +108,7 @@ function LoginScreen({ onLogin, onRegister }) {
 
           {mode === 'register' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                이름
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">이름</label>
               <input
                 type="text"
                 value={name}
@@ -143,11 +137,13 @@ function LoginScreen({ onLogin, onRegister }) {
 }
 
 export default function App() {
-  // 🔥 Firebase 연동 - 게시판 데이터
   const [qnaPosts, setQnaPosts] = useState([]);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
 
+  // ✅ useGameState 호출 (기존과 동일)
+  const gameState = useGameState();
+  
   const {
     currentTab,
     setCurrentTab,
@@ -224,10 +220,16 @@ export default function App() {
     cookRecipe,
     updateIngredientStats,
     updateCurrentUser,
-    setMembers
-  } = useGameState();
+    setMembers,
+    isMembersLoading,
+    editMemberPokemon
+  } = gameState;
 
-  // 🔥 Firebase에서 게시판 데이터 로드
+  console.log('🎮 App.jsx - createCustomItem:', createCustomItem);
+console.log('🎮 App.jsx - createCustomItem 타입:', typeof createCustomItem);
+console.log('🎮 App.jsx - gameState.createCustomItem:', gameState.createCustomItem);
+
+  // 게시판 로드
   useEffect(() => {
     const loadQnaPosts = async () => {
       try {
@@ -236,9 +238,6 @@ export default function App() {
         
         if (snapshot.exists()) {
           setQnaPosts(snapshot.val());
-          console.log('📝 게시판 데이터 로드:', snapshot.val().length, '개 게시물');
-        } else {
-          console.log('ℹ️ 게시판 데이터 없음 (정상)');
         }
       } catch (error) {
         console.error('❌ 게시판 로드 실패:', error);
@@ -250,7 +249,7 @@ export default function App() {
     loadQnaPosts();
   }, []);
 
-  // 🔥 사운드 설정 로드
+  // 사운드 로드
   useEffect(() => {
     const loadSoundSettings = async () => {
       if (!currentUser?.id) return;
@@ -261,7 +260,6 @@ export default function App() {
         
         if (snapshot.exists()) {
           setSoundEnabled(snapshot.val());
-          console.log('🔊 사운드 설정 로드:', snapshot.val());
         }
       } catch (error) {
         console.error('사운드 설정 로드 실패:', error);
@@ -271,7 +269,7 @@ export default function App() {
     loadSoundSettings();
   }, [currentUser]);
 
-  // 🔥 게시판 데이터 자동 저장
+  // 게시판 저장
   useEffect(() => {
     const saveQnaPosts = async () => {
       if (isLoadingPosts || qnaPosts.length === 0) return;
@@ -279,7 +277,6 @@ export default function App() {
       try {
         const postsRef = ref(database, 'community/qnaPosts');
         await set(postsRef, qnaPosts);
-        console.log('💾 게시판 데이터 저장:', qnaPosts.length, '개 게시물');
       } catch (error) {
         console.error('❌ 게시판 저장 실패:', error);
       }
@@ -288,7 +285,7 @@ export default function App() {
     saveQnaPosts();
   }, [qnaPosts, isLoadingPosts]);
 
-  // 🔥 사운드 설정 자동 저장
+  // 사운드 저장
   useEffect(() => {
     const saveSoundSettings = async () => {
       if (!currentUser?.id) return;
@@ -296,7 +293,6 @@ export default function App() {
       try {
         const soundRef = ref(database, `users/${currentUser.id}/settings/soundEnabled`);
         await set(soundRef, soundEnabled);
-        console.log('💾 사운드 설정 저장:', soundEnabled);
       } catch (error) {
         console.error('❌ 사운드 설정 저장 실패:', error);
       }
@@ -305,7 +301,7 @@ export default function App() {
     saveSoundSettings();
   }, [soundEnabled, currentUser]);
 
-  // ⭐ 전역 클릭 사운드
+  // 클릭 사운드
   useEffect(() => {
     const basePath = window.location.pathname.includes('/poke-commu-system') 
       ? '/poke-commu-system' 
@@ -326,17 +322,14 @@ export default function App() {
     return () => document.removeEventListener('click', handleGlobalClick);
   }, [soundEnabled]);
 
-  // 게시글 작성
   const handleCreatePost = (post) => {
     setQnaPosts([post, ...qnaPosts]);
   };
 
-  // 게시글 삭제
   const handleDeletePost = (postId) => {
     setQnaPosts(qnaPosts.filter(p => p.id !== postId));
   };
 
-  // 댓글 작성
   const handleCreateComment = (postId, comment) => {
     setQnaPosts(qnaPosts.map(p => 
       p.id === postId 
@@ -345,7 +338,6 @@ export default function App() {
     ));
   };
 
-  // 댓글 삭제
   const handleDeleteComment = (postId, commentId) => {
     setQnaPosts(qnaPosts.map(p =>
       p.id === postId
@@ -354,7 +346,6 @@ export default function App() {
     ));
   };
 
-  // PokemonContext value
   const pokemonValue = {
     caughtPokemon,
     releasePokemon,
@@ -367,21 +358,21 @@ export default function App() {
     replaceMove,
     useRareCandy,
     useItemOnPokemon,
-    increaseEffort
+    increaseEffort,
+    allPokemonMaster,
+    allMoves,
+    pokemonLearnsets
   };
 
-  // 회원가입 핸들러 추가
   const handleRegister = async (userId, password, name) => {
     try {
       const email = `${userId}@pokemon.com`;
       const { createUserWithEmailAndPassword } = await import('firebase/auth');
       const { auth } = await import('./firebase');
       
-      // Firebase Auth 계정 생성
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUid = userCredential.user.uid;
       
-      // 기본 데이터 생성
       const memberRef = ref(database, `members/${firebaseUid}`);
       const newMemberData = {
         name: name,
@@ -405,7 +396,6 @@ export default function App() {
       };
       
       await set(memberRef, newMemberData);
-      
       alert(`✅ 회원가입 완료!\n\n아이디: ${userId}\n비밀번호로 로그인해주세요.`);
       return true;
       
@@ -424,8 +414,6 @@ export default function App() {
     }
   };
 
-  
-  // 로그인하지 않은 경우 로그인 화면 표시
   if (isAuthLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
@@ -446,7 +434,6 @@ export default function App() {
     );
   }
 
-  // 점검 모드 - 관리자가 아닌 경우 접근 차단
   if (maintenanceMode && !isAdmin) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -469,177 +456,109 @@ export default function App() {
   }
 
   return (
-    <PokemonProvider value={pokemonValue}>
-      <div className="h-screen flex bg-gray-50">
-        <Sidebar 
-          currentTab={currentTab}
-          setCurrentTab={setCurrentTab}
-          isAdmin={isAdmin}
-          trainer={trainer}
-          onLogout={handleLogout}
-          soundEnabled={soundEnabled}
-          onToggleSound={() => setSoundEnabled(!soundEnabled)}
-        />
+    <GameProvider value={gameState}>
+      <PokemonProvider value={pokemonValue}>
+        <div className="h-screen flex bg-gray-50">
+          <Sidebar 
+            currentTab={currentTab}
+            setCurrentTab={setCurrentTab}
+            isAdmin={isAdmin}
+            trainer={trainer}
+            onLogout={handleLogout}
+            soundEnabled={soundEnabled}
+            onToggleSound={() => setSoundEnabled(!soundEnabled)}
+          />
 
-        <div className="flex-1 flex flex-col">
-          <Header currentTab={currentTab} trainer={trainer} />
+          <div className="flex-1 flex flex-col">
+            <Header currentTab={currentTab} trainer={trainer} />
 
-          <main className="flex-1 overflow-auto p-8">
-            {currentTab === 'map' && (
-              <MapView 
-                regions={regions} 
-                onRegionClick={handleRegionClick} 
-              />
-            )}
-            
-            {currentTab === 'pokedex' && (
-              <PokedexView 
-                pokedex={gamePokedex}
-                caughtPokemon={caughtPokemon.filter(p => p !== null)}
-                pokedexData={sharedPokedexData}
-                regions={regions}
-                currentUser={currentUser}
-                onUpdateMemo={updatePokedexMemo}
-                onUpdatePokedexRegions={updatePokedexRegions}
-              />
-            )}
-            
-            {currentTab === 'members' && <MembersView />}
-            {currentTab === 'npcs' && <NPCsView />}
+            <main className="flex-1 overflow-auto p-8">
+              {currentTab === 'map' && (
+                <MapView 
+                  regions={regions} 
+                  onRegionClick={handleRegionClick} 
+                />
+              )}
+              
+              {currentTab === 'pokedex' && (
+                <PokedexView 
+                  pokedex={gamePokedex}
+                  caughtPokemon={caughtPokemon.filter(p => p !== null)}
+                  pokedexData={sharedPokedexData}
+                  regions={regions}
+                  currentUser={currentUser}
+                  onUpdateMemo={updatePokedexMemo}
+                  onUpdatePokedexRegions={updatePokedexRegions}
+                />
+              )}
+              
+              {currentTab === 'members' && <MembersView />}
+              {currentTab === 'npcs' && <NPCsView />}
 
-            {currentTab === 'pokemon' && (
-              <PokemonView
-                caughtPokemon={caughtPokemon}
-                items={items}
-                allItems={allItems}
-                gamePokedex={gamePokedex}
-                allMoves={allMoves}
-                pokemonLearnsets={pokemonLearnsets}
-              />
-            )}
-            
-            {currentTab === 'items' && (
-              <ItemsView 
-                items={items}
-                caughtPokemon={caughtPokemon}
-                sellItem={sellItem}
-                useItemOnPokemon={useItemOnPokemon}
-              />
-            )}
-            
-            {currentTab === 'shop' && (
-              <ShopView
-                trainer={trainer}
-                shopData={shopData}
-                updateShopData={updateShopData}
-                allItems={allItems}
-                currentUser={currentUser}
-                handlePurchase={handlePurchase}
-                isAdmin={isAdmin}
-              />
-            )}
-            
-            {currentTab === 'cooking' && (
-              <CookingView
-                currentUser={currentUser}
-                recipes={recipes}
-                discoveredRecipes={discoveredRecipes}
-                cookRecipe={cookRecipe}
-                createRecipe={createRecipe}
-                updateIngredientStats={updateIngredientStats}
-                isAdmin={isAdmin}
-              />
-            )}
-            
-            {currentTab === 'profile' && (
-              <ProfileView 
-                trainer={trainer}
-                caughtPokemon={caughtPokemon}
-                items={items}
-              />
-            )}
-            
-            {currentTab === 'qna' && (
-              <QnABoard
-                posts={qnaPosts}
-                currentUser={currentUser}
-                onCreatePost={handleCreatePost}
-                onDeletePost={handleDeletePost}
-                onCreateComment={handleCreateComment}
-                onDeleteComment={handleDeleteComment}
-              />
-            )}
-            
-            {currentTab === 'admin' && isAdmin && (
-              <AdminView
-                trainer={trainer}
-                members={members}
-                setMembers={setMembers}
-                updateCurrentUser={updateCurrentUser}
-                updateMaxDailyWalks={updateMaxDailyWalks}
-                regions={regions}
-                allPokemon={allPokemon}
-                allPokemonMaster={allPokemonMaster}
-                allItems={allItems}
-                addItemToSelf={addItemToSelf}
-                giveItemToMember={giveItemToMember}
-                toggleItemManagement={toggleItemManagement}
-                givePokemonToMember={givePokemonToMember}
-                addPokemonToSelf={addPokemonToSelf}
-                gamePokedex={gamePokedex}
-                updateRegionPokemon={updateRegionPokemon}
-                updateGamePokedex={updateGamePokedex}
-                addMember={addMember}
-                toggleAdminStatus={toggleAdminStatus}
-                resetMemberWalkCount={resetMemberWalkCount}
-                resetAllWalkCounts={resetAllWalkCounts}
-                resetGameData={resetGameData}
-                shopData={shopData}
-                updateShopData={updateShopData}
-                createCustomItem={createCustomItem}
-                editMemberPokemon={(memberId, pokemonUniqueId, updates) => {
-                  // editMemberPokemon 구현
-                }}
-                updateMemberMoney={updateMemberMoney}
-                updateMemberRegionAccess={updateMemberRegionAccess}
-                maintenanceMode={maintenanceMode}
-                setMaintenanceMode={setMaintenanceMode}
-                updateRegionLootConfig={updateRegionLootConfig}
-                createRecipe={createRecipe}
-                updateIngredientStats={updateIngredientStats}
-              />
-            )}
-          </main>
+              {currentTab === 'pokemon' && <PokemonView />}
+              
+              {currentTab === 'items' && <ItemsView />}
+              
+              {currentTab === 'shop' && <ShopView />}
+              
+              {currentTab === 'cooking' && <CookingView />}
+              
+              {currentTab === 'profile' && (
+                <ProfileView 
+                  trainer={trainer}
+                  caughtPokemon={caughtPokemon}
+                  items={items}
+                />
+              )}
+              
+              {currentTab === 'qna' && (
+                <QnABoard
+                  posts={qnaPosts}
+                  currentUser={currentUser}
+                  onCreatePost={handleCreatePost}
+                  onDeletePost={handleDeletePost}
+                  onCreateComment={handleCreateComment}
+                  onDeleteComment={handleDeleteComment}
+                />
+              )}
+              
+              {currentTab === 'admin' && isAdmin && (
+                <AdminView />
+              )}
+            </main>
+          </div>
+
+          {/* 모달들 */}
+          {encounterPokemon && (
+            <EncounterModal
+              pokemon={encounterPokemon}
+              onClose={handleCloseEncounter}
+              onCatchSuccess={handleCatchSuccess}  
+              items={items}
+              sharedPokedexData={sharedPokedexData} 
+              caughtPokemon={caughtPokemon} 
+              onApplyLoot={applyLoot} 
+              isSuperAdmin={currentUser?.isSuperAdmin}
+            />
+          )}
+
+          {firstCatchPokemon && (
+            <FirstCatchMemoModal
+              pokemon={firstCatchPokemon}
+              onSave={saveFirstCatchMemo}
+              onSkip={skipFirstCatchMemo}
+            />
+          )}
+
+          {evolutionModal && (
+            <EvolutionModal
+              evolutionData={evolutionModal}
+              onAccept={acceptEvolution}
+              onCancel={cancelEvolution}
+            />
+          )}
         </div>
-
-        {/* 모달들 */}
-        {encounterPokemon && (
-          <EncounterModal
-            pokemon={encounterPokemon}
-            onClose={handleCloseEncounter}
-            onCatch={handleCatchSuccess}
-            items={items}
-            applyLoot={applyLoot}
-            isSuperAdmin={currentUser?.isSuperAdmin}
-          />
-        )}
-
-        {firstCatchPokemon && (
-          <FirstCatchMemoModal
-            pokemon={firstCatchPokemon}
-            onSave={saveFirstCatchMemo}
-            onSkip={skipFirstCatchMemo}
-          />
-        )}
-
-        {evolutionModal && (
-          <EvolutionModal
-            evolutionData={evolutionModal}
-            onAccept={acceptEvolution}
-            onCancel={cancelEvolution}
-          />
-        )}
-      </div>
-    </PokemonProvider>
+      </PokemonProvider>
+    </GameProvider>
   );
 }
