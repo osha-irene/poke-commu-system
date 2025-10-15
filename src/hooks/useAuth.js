@@ -1,6 +1,8 @@
-// src/hooks/useAuth.js - 전체 코드
+// src/hooks/useAuth.js - Firebase 버전
 
 import { useState, useEffect } from 'react';
+import { ref, get, set } from 'firebase/database';
+import { database } from '../firebase';
 
 // ⭐⭐⭐ 엔트리를 항상 6자리로 패딩하는 헬퍼 함수
 const ensurePartyPadding = (caughtPokemon) => {
@@ -74,15 +76,31 @@ export const useAuth = (members, setMembers) => {
     }
   });
 
-  const handleLogin = (userId, password) => {
-    const member = members[userId];
-    if (member && member.password === password) {
+  const handleLogin = async (userId, password) => {
+    try {
+      // 🔥 Firebase에서 회원 데이터 가져오기
+      const memberRef = ref(database, `members/${userId}`);
+      const snapshot = await get(memberRef);
+      
+      if (!snapshot.exists()) {
+        alert('존재하지 않는 회원입니다.');
+        return false;
+      }
+      
+      const member = snapshot.val();
+      
+      if (member.password !== password) {
+        alert('비밀번호가 일치하지 않습니다.');
+        return false;
+      }
+      
       console.log('🔑 로그인 시도:', member.name);
       console.log('🔑 원본 caughtPokemon:', member.caughtPokemon?.map((p, i) => `[${i}] ${p?.name || 'null'}`));
       
       // ⭐⭐⭐ 로그인 시 엔트리 패딩 적용
       const paddedMember = {
         ...member,
+        id: userId,
         caughtPokemon: ensurePartyPadding(member.caughtPokemon || [])
       };
       
@@ -91,15 +109,18 @@ export const useAuth = (members, setMembers) => {
       setCurrentUser(paddedMember);
       localStorage.setItem('poke_currentUserId', userId);
       
-      // ⭐ localStorage에도 패딩된 버전 저장
+      // ⭐ setMembers에도 업데이트
       setMembers(prev => ({
         ...prev,
         [userId]: paddedMember
       }));
       
       return true;
+    } catch (error) {
+      console.error('로그인 오류:', error);
+      alert('로그인 중 오류가 발생했습니다.');
+      return false;
     }
-    return false;
   };
 
   const handleLogout = () => {
@@ -108,7 +129,7 @@ export const useAuth = (members, setMembers) => {
     window.location.reload();
   };
 
-  const updateCurrentUser = (updates) => {
+  const updateCurrentUser = async (updates) => {
     if (!currentUser) {
       return;
     }
@@ -117,7 +138,7 @@ export const useAuth = (members, setMembers) => {
     console.log('📝 업데이트 내용:', updates);
     
     // ⭐ setMembers를 함수형으로 호출해서 최신 상태 보장
-    setMembers(prevMembers => {
+    setMembers(async prevMembers => {
       const latestUser = prevMembers[currentUser.id] || currentUser;
       
       let updatedUser = {
@@ -139,6 +160,18 @@ export const useAuth = (members, setMembers) => {
       
       // ⭐ currentUser도 동일한 객체로 업데이트
       setCurrentUser(updatedUser);
+      
+      // 🔥 Firebase에 저장
+      try {
+        const memberRef = ref(database, `members/${currentUser.id}`);
+        await set(memberRef, {
+          ...updatedUser,
+          id: undefined // id는 키로 사용하므로 데이터에서 제외
+        });
+        console.log('✅ Firebase 저장 완료');
+      } catch (error) {
+        console.error('❌ Firebase 저장 실패:', error);
+      }
       
       return {
         ...prevMembers,
