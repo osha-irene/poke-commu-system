@@ -79,6 +79,9 @@ export default function PartySlot({
 
   const ballImage = pokeballData?.spriteUrl || pokeballData?.imageUrl;
 
+  // 고유 애니메이션 ID
+  const animId = `pokemonSprite-${pokemon.uniqueId || index}`;
+
   return (
     <div 
       draggable
@@ -87,6 +90,18 @@ export default function PartySlot({
       onClick={onClick}
       className={`${STYLES.filled} ${isSelected ? STYLES.selected : STYLES.unselected}`}
     >
+      {/* 애니메이션 정의 */}
+      <style>{`
+        @keyframes ${animId} {
+          0%, 49% { 
+            background-position: left center; 
+          }
+          50%, 100% { 
+            background-position: right center; 
+          }
+        }
+      `}</style>
+
       {/* 몬스터볼 이미지 - 원형 꽉 차게 */}
       <div 
         className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden flex items-center justify-center"
@@ -111,7 +126,7 @@ export default function PartySlot({
         )}
       </div>
       
-      {/* 포켓몬 아이콘 */}
+      {/* 포켓몬 아이콘 - 선택된 포켓몬만 좌우 프레임 애니메이션 */}
       <div 
         className="w-12 h-12 flex-shrink-0 flex items-center justify-center"
         style={{ padding: '8px' }}
@@ -124,7 +139,8 @@ export default function PartySlot({
             backgroundImage: `url(${imageUrl})`,
             backgroundSize: '64px 32px',
             backgroundPosition: 'right center',
-            backgroundRepeat: 'no-repeat'
+            backgroundRepeat: 'no-repeat',
+            animation: isSelected ? `${animId} 0.8s steps(1) infinite` : 'none'
           }}
         />
       </div>
