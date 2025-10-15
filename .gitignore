@@ -31,4 +31,8 @@ yarn-error.log*
 *.swo
 *~
 
+.env.development
+.env.production
+.env.local
+
 Generation 9 Pack v3.3.2.rar

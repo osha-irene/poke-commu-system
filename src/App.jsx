@@ -1,3 +1,6 @@
+import { db } from './firebase';
+import { collection, addDoc } from 'firebase/firestore';
+
 import React, { useState, useEffect } from 'react';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
@@ -35,6 +38,8 @@ function LoginScreen({ onLogin }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center p-4">
+      {/* Firebase 테스트 버튼 */}
+      
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">🐾 포켓몬 탐험</h1>
@@ -78,11 +83,6 @@ function LoginScreen({ onLogin }) {
           </button>
         </form>
 
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
-          <p className="font-semibold mb-1">💡 최초 관리자 계정:</p>
-          <p>아이디: <code className="bg-white px-2 py-1 rounded">admin</code></p>
-          <p>비밀번호: <code className="bg-white px-2 py-1 rounded">admin123</code></p>
-        </div>
       </div>
     </div>
   );
@@ -355,192 +355,192 @@ export default function App() {
   }
 
   return (
-        <PokemonProvider value={pokemonValue}>  {/* ← 이거 추가! */}
-    <div className="h-screen flex bg-gray-50">
-      <Sidebar 
-        currentTab={currentTab}
-        setCurrentTab={setCurrentTab}
-        isAdmin={isAdmin}
-        trainer={trainer}
-        onLogout={handleLogout}
-        soundEnabled={soundEnabled}
-        onToggleSound={() => setSoundEnabled(!soundEnabled)}
-      />
+    <PokemonProvider value={pokemonValue}>
+      <div className="h-screen flex bg-gray-50">
+        <Sidebar 
+          currentTab={currentTab}
+          setCurrentTab={setCurrentTab}
+          isAdmin={isAdmin}
+          trainer={trainer}
+          onLogout={handleLogout}
+          soundEnabled={soundEnabled}
+          onToggleSound={() => setSoundEnabled(!soundEnabled)}
+        />
 
-      <div className="flex-1 flex flex-col">
-        <Header currentTab={currentTab} trainer={trainer} />
+        <div className="flex-1 flex flex-col">
+          <Header currentTab={currentTab} trainer={trainer} />
 
-        <main className="flex-1 overflow-auto p-8">
-          {currentTab === 'map' && (
-            <MapView 
-              regions={regions} 
-              onRegionClick={handleRegionClick} 
-            />
-          )}
-          
-          {currentTab === 'pokedex' && (
-            <PokedexView 
-              pokedex={gamePokedex}
-              caughtPokemon={caughtPokemon.filter(p => p !== null)}
-              pokedexData={sharedPokedexData}
-              regions={regions}
-              currentUser={currentUser}
-              onUpdateMemo={updatePokedexMemo}
-              onUpdatePokedexRegions={updatePokedexRegions}
-            />
-          )}
-          
-          {currentTab === 'members' && <MembersView />}
-          {currentTab === 'npcs' && <NPCsView />}
+          <main className="flex-1 overflow-auto p-8">
+            {currentTab === 'map' && (
+              <MapView 
+                regions={regions} 
+                onRegionClick={handleRegionClick} 
+              />
+            )}
+            
+            {currentTab === 'pokedex' && (
+              <PokedexView 
+                pokedex={gamePokedex}
+                caughtPokemon={caughtPokemon.filter(p => p !== null)}
+                pokedexData={sharedPokedexData}
+                regions={regions}
+                currentUser={currentUser}
+                onUpdateMemo={updatePokedexMemo}
+                onUpdatePokedexRegions={updatePokedexRegions}
+              />
+            )}
+            
+            {currentTab === 'members' && <MembersView />}
+            {currentTab === 'npcs' && <NPCsView />}
 
-          {currentTab === 'pokemon' && (
-            <PokemonView
-              caughtPokemon={caughtPokemon}
-              items={items}
-              allItems={allItems}
-              gamePokedex={gamePokedex}
-              onMoveToParty={movePokemonToParty}
-              onMoveToBox={movePokemonToBox}
-              onReleasePokemon={releasePokemon}
-              onUseRareCandy={useRareCandy}
-              onUpdateNickname={updatePokemonNickname}
-              allPokemonMaster={allPokemonMaster}
-              onGiveItem={giveItemToPokemon}  
-              onTakeItem={takeItemFromPokemon}
-              onSetPartner={setPartnerPokemon}
-              onForgetMove={forgetMove}  
-              onLearnMove={learnMove}
-              onReorderParty={reorderParty}  
-              isAdmin={currentUser?.isAdmin}   
-              allMoves={allMoves}             
-              pokemonLearnsets={pokemonLearnsets}
-              onUseItemOnPokemon={useItemOnPokemon}
-              checkEvolution={checkEvolution}
-              manualEvolve={manualEvolve}
-            />
-          )}
-          
-          {currentTab === 'items' && (
-            <ItemsView 
-              items={items}
-              allItems={allItems}
-              caughtPokemon={caughtPokemon}
-              isSuperAdmin={trainer.isSuperAdmin}
-              onUseItem={useItemOnPokemon}
-              onSellItem={sellItem}
-              trainer={currentUser}
-            />
-          )}
-          
-          {currentTab === 'shop' && (
-            <ShopView 
-              trainer={trainer}
-              allItems={allItems}
-              shopData={shopData}
-              onPurchase={handlePurchase}
-            />
-          )}         
+            {currentTab === 'pokemon' && (
+              <PokemonView
+                caughtPokemon={caughtPokemon}
+                items={items}
+                allItems={allItems}
+                gamePokedex={gamePokedex}
+                onMoveToParty={movePokemonToParty}
+                onMoveToBox={movePokemonToBox}
+                onReleasePokemon={releasePokemon}
+                onUseRareCandy={useRareCandy}
+                onUpdateNickname={updatePokemonNickname}
+                allPokemonMaster={allPokemonMaster}
+                onGiveItem={giveItemToPokemon}  
+                onTakeItem={takeItemFromPokemon}
+                onSetPartner={setPartnerPokemon}
+                onForgetMove={forgetMove}  
+                onLearnMove={learnMove}
+                onReorderParty={reorderParty}  
+                isAdmin={currentUser?.isAdmin}   
+                allMoves={allMoves}             
+                pokemonLearnsets={pokemonLearnsets}
+                onUseItemOnPokemon={useItemOnPokemon}
+                checkEvolution={checkEvolution}
+                manualEvolve={manualEvolve}
+              />
+            )}
+            
+            {currentTab === 'items' && (
+              <ItemsView 
+                items={items}
+                allItems={allItems}
+                caughtPokemon={caughtPokemon}
+                isSuperAdmin={trainer.isSuperAdmin}
+                onUseItem={useItemOnPokemon}
+                onSellItem={sellItem}
+                trainer={currentUser}
+              />
+            )}
+            
+            {currentTab === 'shop' && (
+              <ShopView 
+                trainer={trainer}
+                allItems={allItems}
+                shopData={shopData}
+                onPurchase={handlePurchase}
+              />
+            )}         
 
-          {currentTab === 'profile' && (
-            <ProfileView 
-              trainer={trainer} 
-              caughtCount={caughtPokemon.length} 
-            />
-          )}
-          
-          {currentTab === 'qna' && (
-            <QnABoard
-              currentUser={currentUser}
-              posts={qnaPosts}
-              onCreatePost={handleCreatePost}
-              onDeletePost={handleDeletePost}
-              onCreateComment={handleCreateComment}
-              onDeleteComment={handleDeleteComment}
-            />
-          )}
-          
-          {currentTab === 'admin' && isAdmin && (
-            <AdminView
-              trainer={trainer}
-              members={members}
-              updateMaxDailyWalks={updateMaxDailyWalks}
-              regions={regions}
-              allPokemon={allPokemon}
-              allPokemonMaster={allPokemonMaster}
-              gamePokedex={gamePokedex}
-              updateRegionPokemon={updateRegionPokemon}
-              updateGamePokedex={updateGamePokedex}
-              addMember={addMember}
-              toggleAdminStatus={toggleAdminStatus}
-              resetMemberWalkCount={resetMemberWalkCount}
-              resetAllWalkCounts={resetAllWalkCounts}
-              resetGameData={resetGameData}
-              allItems={allItems}
-              addItemToSelf={addItemToSelf}
-              giveItemToMember={giveItemToMember}
-              toggleItemManagement={toggleItemManagement}
-              givePokemonToMember={givePokemonToMember}
-              addPokemonToSelf={addPokemonToSelf}
-              createCustomItem={createCustomItem}
-              shopData={shopData}  
-              sellItem={sellItem}
-              updateShopData={updateShopData}        
-              updateMemberMoney={updateMemberMoney}         
-              updateMemberRegionAccess={updateMemberRegionAccess}  
-              maintenanceMode={maintenanceMode}            
-              setMaintenanceMode={setMaintenanceMode}
-              updateRegionLootConfig={updateRegionLootConfig} 
-              createRecipe={createRecipe}
-              updateIngredientStats={updateIngredientStats}
-              setMembers={setMembers}      
-              updateCurrentUser={updateCurrentUser}
-            />
-          )}
-          
-          {currentTab === 'cooking' && (
-            <CookingView 
-              recipes={recipes}
-              userItems={items}
-              discoveredRecipes={discoveredRecipes[currentUser?.id] || []}
-              onCook={cookRecipe}
-            />
-          )}
-        </main>
+            {currentTab === 'profile' && (
+              <ProfileView 
+                trainer={trainer} 
+                caughtCount={caughtPokemon.length} 
+              />
+            )}
+            
+            {currentTab === 'qna' && (
+              <QnABoard
+                currentUser={currentUser}
+                posts={qnaPosts}
+                onCreatePost={handleCreatePost}
+                onDeletePost={handleDeletePost}
+                onCreateComment={handleCreateComment}
+                onDeleteComment={handleDeleteComment}
+              />
+            )}
+            
+            {currentTab === 'admin' && isAdmin && (
+              <AdminView
+                trainer={trainer}
+                members={members}
+                updateMaxDailyWalks={updateMaxDailyWalks}
+                regions={regions}
+                allPokemon={allPokemon}
+                allPokemonMaster={allPokemonMaster}
+                gamePokedex={gamePokedex}
+                updateRegionPokemon={updateRegionPokemon}
+                updateGamePokedex={updateGamePokedex}
+                addMember={addMember}
+                toggleAdminStatus={toggleAdminStatus}
+                resetMemberWalkCount={resetMemberWalkCount}
+                resetAllWalkCounts={resetAllWalkCounts}
+                resetGameData={resetGameData}
+                allItems={allItems}
+                addItemToSelf={addItemToSelf}
+                giveItemToMember={giveItemToMember}
+                toggleItemManagement={toggleItemManagement}
+                givePokemonToMember={givePokemonToMember}
+                addPokemonToSelf={addPokemonToSelf}
+                createCustomItem={createCustomItem}
+                shopData={shopData}  
+                sellItem={sellItem}
+                updateShopData={updateShopData}        
+                updateMemberMoney={updateMemberMoney}         
+                updateMemberRegionAccess={updateMemberRegionAccess}  
+                maintenanceMode={maintenanceMode}            
+                setMaintenanceMode={setMaintenanceMode}
+                updateRegionLootConfig={updateRegionLootConfig} 
+                createRecipe={createRecipe}
+                updateIngredientStats={updateIngredientStats}
+                setMembers={setMembers}      
+                updateCurrentUser={updateCurrentUser}
+              />
+            )}
+            
+            {currentTab === 'cooking' && (
+              <CookingView 
+                recipes={recipes}
+                userItems={items}
+                discoveredRecipes={discoveredRecipes[currentUser?.id] || []}
+                onCook={cookRecipe}
+              />
+            )}
+          </main>
+        </div>
+
+        {/* 포켓몬 조우 모달 */}
+        {encounterPokemon && (
+          <EncounterModal
+            pokemon={encounterPokemon}
+            onClose={handleCloseEncounter}
+            onCatchSuccess={handleCatchSuccess}
+            items={items}
+            sharedPokedexData={sharedPokedexData}
+            caughtPokemon={caughtPokemon}
+            onApplyLoot={applyLoot}
+          />
+        )}
+
+        {/* 첫 포획 메모 모달 */}
+        {firstCatchPokemon && (
+          <FirstCatchMemoModal
+            pokemon={firstCatchPokemon}
+            onSave={(memo) => saveFirstCatchMemo(firstCatchPokemon.number, memo)}
+            onSkip={() => skipFirstCatchMemo(firstCatchPokemon.number)}
+          />
+        )}
+
+        {/* 진화 모달 */}
+        {evolutionModal && (
+          <EvolutionModal
+            pokemon={evolutionModal.pokemon}
+            evolution={evolutionModal.evolution}
+            allPokemonMaster={allPokemonMaster}
+            onAccept={acceptEvolution}
+            onCancel={cancelEvolution}
+          />
+        )}
       </div>
-
-      {/* 포켓몬 조우 모달 */}
-      {encounterPokemon && (
-        <EncounterModal
-          pokemon={encounterPokemon}
-          onClose={handleCloseEncounter}
-          onCatchSuccess={handleCatchSuccess}
-          items={items}
-          sharedPokedexData={sharedPokedexData}
-          caughtPokemon={caughtPokemon}
-          onApplyLoot={applyLoot}
-        />
-      )}
-
-      {/* 첫 포획 메모 모달 */}
-      {firstCatchPokemon && (
-        <FirstCatchMemoModal
-          pokemon={firstCatchPokemon}
-          onSave={(memo) => saveFirstCatchMemo(firstCatchPokemon.number, memo)}
-          onSkip={() => skipFirstCatchMemo(firstCatchPokemon.number)}
-        />
-      )}
-
-      {/* 진화 모달 */}
-      {evolutionModal && (
-        <EvolutionModal
-          pokemon={evolutionModal.pokemon}
-          evolution={evolutionModal.evolution}
-          allPokemonMaster={allPokemonMaster}
-          onAccept={acceptEvolution}
-          onCancel={cancelEvolution}
-        />
-      )}
-    </div>
-      </PokemonProvider>  
+    </PokemonProvider>  
   );
 }

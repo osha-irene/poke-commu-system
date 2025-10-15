@@ -1,3 +1,4 @@
+import MigrationTool from '../admin/MigrationTool';
 import React, { useState } from 'react';
 import { User, ChevronRight } from 'lucide-react';
 import RegionEditModal from '../modals/RegionEditModal';
@@ -105,6 +106,7 @@ export default function AdminView({
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
+       <MigrationTool />
       {/* 서브메뉴 탭 */}
       <Card className="p-2 flex gap-2 overflow-x-auto">
         <TabButton active={adminTab === 'members'} onClick={() => setAdminTab('members')}>
