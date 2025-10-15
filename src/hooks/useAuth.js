@@ -10,7 +10,12 @@ import {
 import { auth, database } from '../firebase';
 
 const ensurePartyPadding = (caughtPokemon) => {
-  if (!caughtPokemon || caughtPokemon.length === 0) {
+  // ⭐ 객체인 경우 배열로 변환
+  if (caughtPokemon && typeof caughtPokemon === 'object' && !Array.isArray(caughtPokemon)) {
+    caughtPokemon = Object.values(caughtPokemon);
+  }
+  
+  if (!caughtPokemon || !Array.isArray(caughtPokemon) || caughtPokemon.length === 0) {
     return [null, null, null, null, null, null];
   }
   
