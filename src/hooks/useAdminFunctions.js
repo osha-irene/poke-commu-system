@@ -1,6 +1,6 @@
 // src/hooks/useAdminFunctions.js - Firebase 버전 (localStorage 제거)
 
-import { ref, set } from 'firebase/database';
+import { ref, get, set } from 'firebase/database';
 import { database } from '../firebase';
 
 export const useAdminFunctions = (

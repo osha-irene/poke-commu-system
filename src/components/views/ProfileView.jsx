@@ -1,6 +1,10 @@
+// src/components/views/ProfileView.jsx - 수정본
+
 import React from 'react';
 
-export default function ProfileView({ trainer, caughtCount }) {
+export default function ProfileView({ trainer, caughtPokemon, items }) {
+  // ⭐ null이 아닌 실제 포켓몬만 카운트
+  const caughtCount = caughtPokemon?.filter(p => p !== null && p !== undefined).length || 0;
   const completion = Math.round((caughtCount / 151) * 100);
   
   // 총 탐험 횟수 계산 (maxDailyWalks - dailyWalks로 오늘 사용한 횟수 계산)
@@ -48,7 +52,7 @@ export default function ProfileView({ trainer, caughtCount }) {
         <div className="grid grid-cols-3 gap-6">
           <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
             <div className="text-sm text-gray-600 mb-1">포획한 포켓몬</div>
-            <div className="text-4xl font-bold text-blue-600">{member.caughtPokemon.filter(p => p !== null).length}마리</div>
+            <div className="text-4xl font-bold text-blue-600">{caughtCount}마리</div>
           </div>
           <div className="bg-green-50 rounded-lg p-6 border border-green-200">
             <div className="text-sm text-gray-600 mb-1">도감 완성도</div>
@@ -70,6 +74,14 @@ export default function ProfileView({ trainer, caughtCount }) {
             <div className="flex justify-between">
               <span className="text-gray-600">보유 골드</span>
               <span className="font-semibold">{trainer.money?.toLocaleString() || 0}G</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">보유 아이템</span>
+              <span className="font-semibold">{items?.length || 0}개</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">이메일</span>
+              <span className="font-semibold">{trainer.email || '-'}</span>
             </div>
           </div>
         </div>
