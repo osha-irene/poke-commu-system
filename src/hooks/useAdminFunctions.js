@@ -1,4 +1,4 @@
-// src/hooks/useAdminFunctions.js - Firebase 버전 (localStorage 제거)
+// src/hooks/useAdminFunctions.js - Firebase 버전 (완전 수정)
 
 import { ref, get, set } from 'firebase/database';
 import { database } from '../firebase';
@@ -77,20 +77,68 @@ export const useAdminFunctions = (
     }
   };
 
-  const toggleAdminStatus = (memberId) => {
-    if (!currentUser?.isSuperAdmin) return;
-    setMembers(prev => ({
-      ...prev,
-      [memberId]: { ...prev[memberId], isAdmin: !prev[memberId].isAdmin }
-    }));
+  const toggleAdminStatus = async (memberId) => {
+    if (!currentUser?.isSuperAdmin) {
+      console.error('❌ 슈퍼 관리자 권한 필요');
+      return;
+    }
+    
+    const member = members[memberId];
+    if (!member) return;
+    
+    const updatedMember = {
+      ...member,
+      isAdmin: !member.isAdmin
+    };
+    
+    // 🔥 Firebase 저장
+    try {
+      const { id, ...dataToSave } = updatedMember;
+      const memberRef = ref(database, `members/${memberId}`);
+      await set(memberRef, dataToSave);
+      
+      // State 업데이트
+      setMembers(prev => ({
+        ...prev,
+        [memberId]: updatedMember
+      }));
+      
+      console.log('✅ 관리자 권한 토글:', member.name, updatedMember.isAdmin);
+    } catch (error) {
+      console.error('❌ 권한 업데이트 실패:', error);
+    }
   };
 
-  const toggleItemManagement = (memberId) => {
-    if (!currentUser?.isAdmin) return;
-    setMembers(prev => ({
-      ...prev,
-      [memberId]: { ...prev[memberId], canManageItems: !prev[memberId].canManageItems }
-    }));
+  const toggleItemManagement = async (memberId) => {
+    if (!currentUser?.isAdmin) {
+      console.error('❌ 관리자 권한 필요');
+      return;
+    }
+    
+    const member = members[memberId];
+    if (!member) return;
+    
+    const updatedMember = {
+      ...member,
+      canManageItems: !member.canManageItems
+    };
+    
+    // 🔥 Firebase 저장
+    try {
+      const { id, ...dataToSave } = updatedMember;
+      const memberRef = ref(database, `members/${memberId}`);
+      await set(memberRef, dataToSave);
+      
+      // State 업데이트
+      setMembers(prev => ({
+        ...prev,
+        [memberId]: updatedMember
+      }));
+      
+      console.log('✅ 아이템 관리 권한 토글:', member.name, updatedMember.canManageItems);
+    } catch (error) {
+      console.error('❌ 권한 업데이트 실패:', error);
+    }
   };
 
   const updateMaxDailyWalks = (newMax) => {
@@ -98,56 +146,127 @@ export const useAdminFunctions = (
     updateCurrentUser({ maxDailyWalks: newMax, dailyWalks: newMax });
   };
 
-  const resetMemberWalkCount = (memberId) => {
+  const resetMemberWalkCount = async (memberId) => {
     if (!currentUser?.isAdmin) return;
     const member = members[memberId];
     if (!member) return;
     
-    setMembers(prev => ({
-      ...prev,
-      [memberId]: { ...prev[memberId], dailyWalks: prev[memberId].maxDailyWalks }
-    }));
+    const updatedMember = {
+      ...member,
+      dailyWalks: member.maxDailyWalks
+    };
     
-    alert(`${member.name}님의 산책 횟수가 초기화되었습니다!`);
+    // 🔥 Firebase 저장
+    try {
+      const { id, ...dataToSave } = updatedMember;
+      const memberRef = ref(database, `members/${memberId}`);
+      await set(memberRef, dataToSave);
+      
+      setMembers(prev => ({
+        ...prev,
+        [memberId]: updatedMember
+      }));
+      
+      alert(`${member.name}님의 산책 횟수가 초기화되었습니다!`);
+    } catch (error) {
+      console.error('❌ 산책 횟수 초기화 실패:', error);
+    }
   };
 
   const resetAllWalkCounts = async () => {
     if (!currentUser?.isAdmin) return;
     
-    const updates = {};
-    Object.keys(members).forEach(id => {
-      updates[id] = { ...members[id], dailyWalks: members[id].maxDailyWalks };
-    });
-    
-    setMembers(updates);
-    alert('모든 회원의 산책 횟수가 초기화되었습니다!');
+    try {
+      const updates = {};
+      for (const [id, member] of Object.entries(members)) {
+        const updatedMember = {
+          ...member,
+          dailyWalks: member.maxDailyWalks
+        };
+        
+        const { id: _, ...dataToSave } = updatedMember;
+        const memberRef = ref(database, `members/${id}`);
+        await set(memberRef, dataToSave);
+        
+        updates[id] = updatedMember;
+      }
+      
+      setMembers(updates);
+      alert('모든 회원의 산책 횟수가 초기화되었습니다!');
+    } catch (error) {
+      console.error('❌ 전체 산책 횟수 초기화 실패:', error);
+    }
   };
 
-  const givePokemonToMember = (memberId, pokemon) => {
+  const givePokemonToMember = async (memberId, pokemon) => {
     if (!currentUser?.isAdmin) return;
     const member = members[memberId];
     if (!member) return;
     
-    setMembers(prev => ({
-      ...prev,
-      [memberId]: { 
-        ...prev[memberId], 
-        caughtPokemon: [...prev[memberId].caughtPokemon, pokemon] 
-      }
-    }));
+    const updatedMember = {
+      ...member,
+      caughtPokemon: [...member.caughtPokemon, pokemon]
+    };
+    
+    // 🔥 Firebase 저장
+    try {
+      const { id, ...dataToSave } = updatedMember;
+      const memberRef = ref(database, `members/${memberId}`);
+      await set(memberRef, dataToSave);
+      
+      setMembers(prev => ({
+        ...prev,
+        [memberId]: updatedMember
+      }));
+      
+      console.log('✅ 포켓몬 지급:', pokemon.name, '→', member.name);
+    } catch (error) {
+      console.error('❌ 포켓몬 지급 실패:', error);
+    }
   };
 
   const addPokemonToSelf = (pokemon) => {
-    if (!currentUser?.canManageItems) return;
-    updateCurrentUser({ caughtPokemon: [...currentUser.caughtPokemon, pokemon] });
+    console.log('🐾 addPokemonToSelf 호출');
+    console.log('🐾 currentUser:', currentUser?.name);
+    console.log('🐾 canManageItems:', currentUser?.canManageItems);
+    
+    if (!currentUser?.canManageItems) {
+      console.error('❌ 아이템 관리 권한 없음');
+      alert('아이템 관리 권한이 없습니다!');
+      return;
+    }
+    
+    updateCurrentUser({ 
+      caughtPokemon: [...currentUser.caughtPokemon, pokemon] 
+    });
   };
 
   const addItemToSelf = (item, count) => {
-    if (!currentUser?.canManageItems) return;
+    console.log('🎁 ========== addItemToSelf 시작 ==========');
+    console.log('🎁 currentUser:', currentUser?.name);
+    console.log('🎁 isAdmin:', currentUser?.isAdmin);
+    console.log('🎁 isSuperAdmin:', currentUser?.isSuperAdmin);
+    console.log('🎁 canManageItems:', currentUser?.canManageItems);
+    console.log('🎁 아이템:', item.name, '×', count);
+    console.log('🎁 현재 인벤토리:', currentUser?.inventory?.length, '개');
+    
+    if (!currentUser) {
+      console.error('❌ currentUser가 없음!');
+      alert('사용자 정보를 불러올 수 없습니다!');
+      return;
+    }
+    
+    if (!(currentUser.isSuperAdmin || currentUser.canManageItems)) {
+      console.error('❌ 아이템 관리 권한 없음!');
+      alert('아이템 관리 권한이 없습니다!');
+      return;
+    }
     
     const existingItem = currentUser.inventory.find(i => 
       i.itemId === item.id || i.name === item.name
     );
+    
+    console.log('🔍 기존 아이템:', existingItem);
     
     const newInventory = existingItem
       ? currentUser.inventory.map(i => 
@@ -172,14 +291,33 @@ export const useAdminFunctions = (
           }
         ];
     
+    console.log('🎁 새 인벤토리 개수:', newInventory.length);
+    console.log('🎁 새 아이템 목록:', newInventory.map(i => `${i.name} x${i.count}`));
+    console.log('🎁 updateCurrentUser 호출 직전');
+    
     updateCurrentUser({ inventory: newInventory });
+    
+    console.log('🎁 updateCurrentUser 호출 완료');
+    console.log('🎁 ========== addItemToSelf 끝 ==========');
+    
     alert(`${item.name} ${count}개를 추가했습니다!`);
   };
 
-  const giveItemToMember = (memberId, item, count) => {
-    if (!currentUser?.isAdmin) return;
+  const giveItemToMember = async (memberId, item, count) => {
+    console.log('🎁 giveItemToMember 호출');
+    console.log('🎁 대상:', memberId);
+    console.log('🎁 아이템:', item.name, '×', count);
+    
+    if (!currentUser?.isAdmin) {
+      console.error('❌ 관리자 권한 없음');
+      return;
+    }
+    
     const member = members[memberId];
-    if (!member) return;
+    if (!member) {
+      console.error('❌ 회원을 찾을 수 없음:', memberId);
+      return;
+    }
     
     const existingItem = member.inventory.find(i => 
       i.itemId === item.id || i.name === item.name
@@ -208,12 +346,28 @@ export const useAdminFunctions = (
           }
         ];
 
-    setMembers(prev => ({
-      ...prev,
-      [memberId]: { ...prev[memberId], inventory: newInventory }
-    }));
-
-    alert(`${member.name}님에게 ${item.name} ${count}개를 지급했습니다!`);
+    const updatedMember = {
+      ...member,
+      inventory: newInventory
+    };
+    
+    // 🔥 Firebase 저장
+    try {
+      const { id, ...dataToSave } = updatedMember;
+      const memberRef = ref(database, `members/${memberId}`);
+      await set(memberRef, dataToSave);
+      
+      setMembers(prev => ({
+        ...prev,
+        [memberId]: updatedMember
+      }));
+      
+      console.log('✅ 아이템 지급 완료:', item.name, '→', member.name);
+      alert(`${member.name}님에게 ${item.name} ${count}개를 지급했습니다!`);
+    } catch (error) {
+      console.error('❌ 아이템 지급 실패:', error);
+      alert('아이템 지급 중 오류가 발생했습니다!');
+    }
   };
   
   // 관리자 기능: 커스텀 아이템 생성
@@ -247,7 +401,7 @@ export const useAdminFunctions = (
   };
 
   // 포켓몬 편집
-  const editMemberPokemon = (memberId, pokemonUniqueId, updates) => {
+  const editMemberPokemon = async (memberId, pokemonUniqueId, updates) => {
     if (!currentUser?.isAdmin) return;
 
     const member = members[memberId];
@@ -267,10 +421,24 @@ export const useAdminFunctions = (
       return p;
     });
 
-    setMembers(prev => ({
-      ...prev,
-      [memberId]: { ...prev[memberId], caughtPokemon: updatedPokemon }
-    }));
+    const updatedMember = {
+      ...member,
+      caughtPokemon: updatedPokemon
+    };
+    
+    // 🔥 Firebase 저장
+    try {
+      const { id, ...dataToSave } = updatedMember;
+      const memberRef = ref(database, `members/${memberId}`);
+      await set(memberRef, dataToSave);
+      
+      setMembers(prev => ({
+        ...prev,
+        [memberId]: updatedMember
+      }));
+    } catch (error) {
+      console.error('❌ 포켓몬 편집 실패:', error);
+    }
   };
 
   // 지역/도감 관리
@@ -317,21 +485,57 @@ export const useAdminFunctions = (
   };
 
   // 회원 머니 업데이트
-  const updateMemberMoney = (memberId, amount) => {
+  const updateMemberMoney = async (memberId, amount) => {
     if (!currentUser?.isAdmin) return;
-    setMembers(prev => ({
-      ...prev,
-      [memberId]: { ...prev[memberId], money: amount }
-    }));
+    
+    const member = members[memberId];
+    if (!member) return;
+    
+    const updatedMember = {
+      ...member,
+      money: Math.max(0, amount)
+    };
+    
+    // 🔥 Firebase 저장
+    try {
+      const { id, ...dataToSave } = updatedMember;
+      const memberRef = ref(database, `members/${memberId}`);
+      await set(memberRef, dataToSave);
+      
+      setMembers(prev => ({
+        ...prev,
+        [memberId]: updatedMember
+      }));
+    } catch (error) {
+      console.error('❌ 금액 업데이트 실패:', error);
+    }
   };
 
   // 회원 지역 접근 권한 업데이트
-  const updateMemberRegionAccess = (memberId, regionIds) => {
+  const updateMemberRegionAccess = async (memberId, regionIds) => {
     if (!currentUser?.isAdmin) return;
-    setMembers(prev => ({
-      ...prev,
-      [memberId]: { ...prev[memberId], accessibleRegions: regionIds }
-    }));
+    
+    const member = members[memberId];
+    if (!member) return;
+    
+    const updatedMember = {
+      ...member,
+      accessibleRegions: regionIds
+    };
+    
+    // 🔥 Firebase 저장
+    try {
+      const { id, ...dataToSave } = updatedMember;
+      const memberRef = ref(database, `members/${memberId}`);
+      await set(memberRef, dataToSave);
+      
+      setMembers(prev => ({
+        ...prev,
+        [memberId]: updatedMember
+      }));
+    } catch (error) {
+      console.error('❌ 지역 권한 업데이트 실패:', error);
+    }
   };
 
   // 데이터 초기화
