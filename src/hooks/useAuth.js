@@ -99,6 +99,8 @@ export const useAuth = (members, setMembers) => {
     try {
       await signOut(auth);
       setCurrentUser(null);
+      // ⭐ 로그아웃 완료 후 새로고침
+      window.location.reload();
       console.log('✅ 로그아웃 완료');
     } catch (error) {
       console.error('❌ 로그아웃 오류:', error);
