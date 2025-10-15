@@ -1,7 +1,8 @@
-import { db } from './firebase';
-import { collection, addDoc } from 'firebase/firestore';
+// src/App.jsx - Firebase 완전 버전
 
 import React, { useState, useEffect } from 'react';
+import { ref, get, set } from 'firebase/database';
+import { database } from './firebase';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import MapView from './components/views/MapView';
@@ -21,16 +22,14 @@ import QnABoard from './components/views/QnABoard';
 import CookingView from './components/views/CookingView';
 import { PokemonProvider } from './contexts/PokemonContext';
 
-
-
 // 로그인 화면 컴포넌트
 function LoginScreen({ onLogin }) {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const success = onLogin(userId, password);
+    const success = await onLogin(userId, password);
     if (!success) {
       alert('아이디 또는 비밀번호가 올바르지 않습니다.');
     }
@@ -38,8 +37,6 @@ function LoginScreen({ onLogin }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center p-4">
-      {/* Firebase 테스트 버튼 */}
-      
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">🐾 포켓몬 탐험</h1>
@@ -83,23 +80,21 @@ function LoginScreen({ onLogin }) {
           </button>
         </form>
 
+        <div className="mt-6 text-center text-sm text-gray-600">
+          <p>기본 계정:</p>
+          <p>관리자 - admin / admin123</p>
+          <p>일반유저 - user1 / 1234</p>
+        </div>
       </div>
     </div>
   );
 }
 
 export default function App() {
-  // ⭐ Hooks들을 최상단에 선언
-  const [qnaPosts, setQnaPosts] = useState(() => {
-    const saved = localStorage.getItem('poke_qnaPosts');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  // 사운드 ON/OFF 상태 추가
-  const [soundEnabled, setSoundEnabled] = useState(() => {
-    const saved = localStorage.getItem('poke_soundEnabled');
-    return saved !== null ? JSON.parse(saved) : true; // 기본값 true
-  });
+  // 🔥 Firebase 연동 - 게시판 데이터
+  const [qnaPosts, setQnaPosts] = useState([]);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [isLoadingPosts, setIsLoadingPosts] = useState(true);
 
   const {
     currentTab,
@@ -141,15 +136,14 @@ export default function App() {
     updatePokemonNickname,
     updatePokedexMemo,
     updateGamePokedex,
-    addItemToSelf,    
-    giveItemToMember,   
+    addItemToSelf,
+    giveItemToMember,
     toggleItemManagement,
     givePokemonToMember,
-    addPokemonToSelf,   
-    giveItemToPokemon,     
+    addPokemonToSelf,
+    giveItemToPokemon,
     takeItemFromPokemon,
     handlePurchase,
-    onSetPartner,
     setPartnerPokemon,
     forgetMove,
     learnMove,
@@ -159,158 +153,137 @@ export default function App() {
     pokemonLearnsets,
     sellItem,
     createCustomItem,
-    updateMemberMoney,        
-    updateMemberRegionAccess,  
-    maintenanceMode,           
+    updateMemberMoney,
+    updateMemberRegionAccess,
+    maintenanceMode,
     setMaintenanceMode,
     applyLoot,
     updateRegionLootConfig,
     updatePokedexRegions,
     useItemOnPokemon,
     evolutionModal,
-    checkEvolution,
-    checkEvolutionOnLevelUp,
-    evolveWithItem,
     acceptEvolution,
     cancelEvolution,
-    manualEvolve,
-    getAllEvolvablePokemon,
     increaseEffort,
-    recipes,                
-    createRecipe,     
-    discoveredRecipes,	
-    cookRecipe,   
+    recipes,
+    createRecipe,
+    discoveredRecipes,
+    cookRecipe,
     updateIngredientStats,
     updateCurrentUser,
     setMembers
   } = useGameState();
 
-  // ⭐ 여기에 추가! (useGameState 바로 아래)
-  const pokemonValue = {
-    allPokemon,
-    allPokemonMaster,
-    caughtPokemon,
-    gamePokedex,
-    allMoves,
-    pokemonLearnsets,
-    
-    // 함수들
-    movePokemonToParty,
-    movePokemonToBox,
-    releasePokemon,
-    learnMove,
-    forgetMove,
-    updatePokemonNickname,
-    giveItemToPokemon,
-    takeItemFromPokemon,
-    useRareCandy,
-    checkEvolution,
-    manualEvolve,
-    useItemOnPokemon
-  };
-
-  // ⭐ 엔트리 순서 변경 함수
-  const reorderParty = (newPartyOrder) => {
-  if (!currentUser) return;
-  
-  console.log('🔄 App.jsx - reorderParty 호출됨');
-  console.log('새 엔트리 순서 (null 제거됨):', newPartyOrder.map(p => p.name));
-  
-  // 현재 박스 포켓몬 (6번 인덱스부터)
-  const boxPokemon = currentUser.caughtPokemon.slice(6);
-  console.log('박스 포켓몬 (변경 없음):', boxPokemon.map(p => p.name));
-  
-  // ⭐ 엔트리를 6자리로 패딩 (null 추가)
-  const paddedParty = [...newPartyOrder];
-  while (paddedParty.length < 6) {
-    paddedParty.push(null);
-  }
-  
-  // ⭐ 새로운 순서: 패딩된 엔트리(6자리) + 박스
-  const newCaughtPokemon = [...paddedParty, ...boxPokemon];
-  
-  console.log('✅ 최종 엔트리 (패딩 포함):', paddedParty.map((p, i) => 
-    `[${i}] ${p?.name || 'null'}`
-  ));
-  console.log('✅ 최종 박스:', boxPokemon.map((p, i) => 
-    `[${i + 6}] ${p.name}`
-  ));
-  
-  // ⭐ 강제로 새 객체 참조 생성
-  updateCurrentUser({ 
-    caughtPokemon: newCaughtPokemon.map(p => p ? {...p} : null)
-  });
-  
-  // ⭐ 로컬스토리지에도 강제 저장
-  const updatedUser = {
-    ...currentUser,
-    caughtPokemon: newCaughtPokemon
-  };
-  
-  const members = JSON.parse(localStorage.getItem('poke_members') || '{}');
-  members[currentUser.id] = updatedUser;
-  localStorage.setItem('poke_members', JSON.stringify(members));
-  localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-};
-
-  // ⭐ 전역 클릭 사운드 - 최상단에 배치!
+  // 🔥 Firebase에서 게시판 데이터 로드
   useEffect(() => {
-    
-    // 여러 경로 시도
+    const loadQnaPosts = async () => {
+      try {
+        const postsRef = ref(database, 'community/qnaPosts');
+        const snapshot = await get(postsRef);
+        
+        if (snapshot.exists()) {
+          setQnaPosts(snapshot.val());
+          console.log('📝 게시판 데이터 로드:', snapshot.val().length, '개 게시물');
+        } else {
+          console.log('ℹ️ 게시판 데이터 없음 (정상)');
+        }
+      } catch (error) {
+        console.error('❌ 게시판 로드 실패:', error);
+      } finally {
+        setIsLoadingPosts(false);
+      }
+    };
+
+    loadQnaPosts();
+  }, []);
+
+  // 🔥 사운드 설정 로드
+  useEffect(() => {
+    const loadSoundSettings = async () => {
+      if (!currentUser?.id) return;
+
+      try {
+        const soundRef = ref(database, `users/${currentUser.id}/settings/soundEnabled`);
+        const snapshot = await get(soundRef);
+        
+        if (snapshot.exists()) {
+          setSoundEnabled(snapshot.val());
+          console.log('🔊 사운드 설정 로드:', snapshot.val());
+        }
+      } catch (error) {
+        console.error('사운드 설정 로드 실패:', error);
+      }
+    };
+
+    loadSoundSettings();
+  }, [currentUser]);
+
+  // 🔥 게시판 데이터 자동 저장
+  useEffect(() => {
+    const saveQnaPosts = async () => {
+      if (isLoadingPosts || qnaPosts.length === 0) return;
+
+      try {
+        const postsRef = ref(database, 'community/qnaPosts');
+        await set(postsRef, qnaPosts);
+        console.log('💾 게시판 데이터 저장:', qnaPosts.length, '개 게시물');
+      } catch (error) {
+        console.error('❌ 게시판 저장 실패:', error);
+      }
+    };
+
+    saveQnaPosts();
+  }, [qnaPosts, isLoadingPosts]);
+
+  // 🔥 사운드 설정 자동 저장
+  useEffect(() => {
+    const saveSoundSettings = async () => {
+      if (!currentUser?.id) return;
+
+      try {
+        const soundRef = ref(database, `users/${currentUser.id}/settings/soundEnabled`);
+        await set(soundRef, soundEnabled);
+        console.log('💾 사운드 설정 저장:', soundEnabled);
+      } catch (error) {
+        console.error('❌ 사운드 설정 저장 실패:', error);
+      }
+    };
+
+    saveSoundSettings();
+  }, [soundEnabled, currentUser]);
+
+  // ⭐ 전역 클릭 사운드
+  useEffect(() => {
     const basePath = window.location.pathname.includes('/poke-commu-system') 
       ? '/poke-commu-system' 
       : '';
     
     const audioPath = `${basePath}/sound/A-button.mp3`;
-
-    
     const audio = new Audio(audioPath);
     audio.preload = 'auto';
-    audio.volume = 0.5; // 볼륨 높임
+    audio.volume = 0.5;
 
-    // 오디오 로딩 확인
-    audio.addEventListener('canplaythrough', () => {
-    });
-
-    audio.addEventListener('error', (e) => {
-    });
-
-    const handleGlobalClick = (e) => {
-      // soundEnabled가 false면 재생 안 함
+    const handleGlobalClick = () => {
       if (!soundEnabled) return;
-
-      
       audio.currentTime = 0;
-      audio.play()
-        
+      audio.play().catch(() => {});
     };
 
     document.addEventListener('click', handleGlobalClick);
-
-    return () => {
-      document.removeEventListener('click', handleGlobalClick);
-    };
-  }, [soundEnabled]); // soundEnabled 변경 시 재등록
-
-  // 사운드 설정 저장
-  useEffect(() => {
-    localStorage.setItem('poke_soundEnabled', JSON.stringify(soundEnabled));
+    return () => document.removeEventListener('click', handleGlobalClick);
   }, [soundEnabled]);
 
-  // 자동 저장
-  useEffect(() => {
-    localStorage.setItem('poke_qnaPosts', JSON.stringify(qnaPosts));
-  }, [qnaPosts]);
-
-  // 핸들러 함수들
+  // 게시글 작성
   const handleCreatePost = (post) => {
     setQnaPosts([post, ...qnaPosts]);
   };
 
+  // 게시글 삭제
   const handleDeletePost = (postId) => {
     setQnaPosts(qnaPosts.filter(p => p.id !== postId));
   };
 
+  // 댓글 작성
   const handleCreateComment = (postId, comment) => {
     setQnaPosts(qnaPosts.map(p => 
       p.id === postId 
@@ -319,12 +292,29 @@ export default function App() {
     ));
   };
 
+  // 댓글 삭제
   const handleDeleteComment = (postId, commentId) => {
     setQnaPosts(qnaPosts.map(p =>
       p.id === postId
         ? { ...p, comments: p.comments.filter(c => c.id !== commentId) }
         : p
     ));
+  };
+
+  // PokemonContext value
+  const pokemonValue = {
+    caughtPokemon,
+    releasePokemon,
+    updatePokemonNickname,
+    giveItemToPokemon,
+    takeItemFromPokemon,
+    setPartnerPokemon,
+    learnMove,
+    forgetMove,
+    replaceMove,
+    useRareCandy,
+    useItemOnPokemon,
+    increaseEffort
   };
 
   // 로그인하지 않은 경우 로그인 화면 표시
@@ -399,59 +389,55 @@ export default function App() {
                 items={items}
                 allItems={allItems}
                 gamePokedex={gamePokedex}
-                onMoveToParty={movePokemonToParty}
-                onMoveToBox={movePokemonToBox}
-                onReleasePokemon={releasePokemon}
-                onUseRareCandy={useRareCandy}
-                onUpdateNickname={updatePokemonNickname}
-                allPokemonMaster={allPokemonMaster}
-                onGiveItem={giveItemToPokemon}  
-                onTakeItem={takeItemFromPokemon}
-                onSetPartner={setPartnerPokemon}
-                onForgetMove={forgetMove}  
-                onLearnMove={learnMove}
-                onReorderParty={reorderParty}  
-                isAdmin={currentUser?.isAdmin}   
-                allMoves={allMoves}             
+                allMoves={allMoves}
                 pokemonLearnsets={pokemonLearnsets}
-                onUseItemOnPokemon={useItemOnPokemon}
-                checkEvolution={checkEvolution}
-                manualEvolve={manualEvolve}
               />
             )}
             
             {currentTab === 'items' && (
               <ItemsView 
                 items={items}
-                allItems={allItems}
                 caughtPokemon={caughtPokemon}
-                isSuperAdmin={trainer.isSuperAdmin}
-                onUseItem={useItemOnPokemon}
-                onSellItem={sellItem}
-                trainer={currentUser}
+                sellItem={sellItem}
+                useItemOnPokemon={useItemOnPokemon}
               />
             )}
             
             {currentTab === 'shop' && (
-              <ShopView 
-                trainer={trainer}
-                allItems={allItems}
+              <ShopView
                 shopData={shopData}
-                onPurchase={handlePurchase}
+                updateShopData={updateShopData}
+                allItems={allItems}
+                currentUser={currentUser}
+                handlePurchase={handlePurchase}
+                isAdmin={isAdmin}
               />
-            )}         
-
+            )}
+            
+            {currentTab === 'cooking' && (
+              <CookingView
+                currentUser={currentUser}
+                recipes={recipes}
+                discoveredRecipes={discoveredRecipes}
+                cookRecipe={cookRecipe}
+                createRecipe={createRecipe}
+                updateIngredientStats={updateIngredientStats}
+                isAdmin={isAdmin}
+              />
+            )}
+            
             {currentTab === 'profile' && (
               <ProfileView 
-                trainer={trainer} 
-                caughtCount={caughtPokemon.length} 
+                trainer={trainer}
+                caughtPokemon={caughtPokemon}
+                items={items}
               />
             )}
             
             {currentTab === 'qna' && (
               <QnABoard
-                currentUser={currentUser}
                 posts={qnaPosts}
+                currentUser={currentUser}
                 onCreatePost={handleCreatePost}
                 onDeletePost={handleDeletePost}
                 onCreateComment={handleCreateComment}
@@ -463,10 +449,18 @@ export default function App() {
               <AdminView
                 trainer={trainer}
                 members={members}
+                setMembers={setMembers}
+                updateCurrentUser={updateCurrentUser}
                 updateMaxDailyWalks={updateMaxDailyWalks}
                 regions={regions}
                 allPokemon={allPokemon}
                 allPokemonMaster={allPokemonMaster}
+                allItems={allItems}
+                addItemToSelf={addItemToSelf}
+                giveItemToMember={giveItemToMember}
+                toggleItemManagement={toggleItemManagement}
+                givePokemonToMember={givePokemonToMember}
+                addPokemonToSelf={addPokemonToSelf}
                 gamePokedex={gamePokedex}
                 updateRegionPokemon={updateRegionPokemon}
                 updateGamePokedex={updateGamePokedex}
@@ -475,72 +469,52 @@ export default function App() {
                 resetMemberWalkCount={resetMemberWalkCount}
                 resetAllWalkCounts={resetAllWalkCounts}
                 resetGameData={resetGameData}
-                allItems={allItems}
-                addItemToSelf={addItemToSelf}
-                giveItemToMember={giveItemToMember}
-                toggleItemManagement={toggleItemManagement}
-                givePokemonToMember={givePokemonToMember}
-                addPokemonToSelf={addPokemonToSelf}
+                shopData={shopData}
+                updateShopData={updateShopData}
                 createCustomItem={createCustomItem}
-                shopData={shopData}  
-                sellItem={sellItem}
-                updateShopData={updateShopData}        
-                updateMemberMoney={updateMemberMoney}         
-                updateMemberRegionAccess={updateMemberRegionAccess}  
-                maintenanceMode={maintenanceMode}            
+                editMemberPokemon={(memberId, pokemonUniqueId, updates) => {
+                  // editMemberPokemon 구현
+                }}
+                updateMemberMoney={updateMemberMoney}
+                updateMemberRegionAccess={updateMemberRegionAccess}
+                maintenanceMode={maintenanceMode}
                 setMaintenanceMode={setMaintenanceMode}
-                updateRegionLootConfig={updateRegionLootConfig} 
+                updateRegionLootConfig={updateRegionLootConfig}
                 createRecipe={createRecipe}
                 updateIngredientStats={updateIngredientStats}
-                setMembers={setMembers}      
-                updateCurrentUser={updateCurrentUser}
-              />
-            )}
-            
-            {currentTab === 'cooking' && (
-              <CookingView 
-                recipes={recipes}
-                userItems={items}
-                discoveredRecipes={discoveredRecipes[currentUser?.id] || []}
-                onCook={cookRecipe}
               />
             )}
           </main>
         </div>
 
-        {/* 포켓몬 조우 모달 */}
+        {/* 모달들 */}
         {encounterPokemon && (
           <EncounterModal
             pokemon={encounterPokemon}
             onClose={handleCloseEncounter}
-            onCatchSuccess={handleCatchSuccess}
+            onCatch={handleCatchSuccess}
             items={items}
-            sharedPokedexData={sharedPokedexData}
-            caughtPokemon={caughtPokemon}
-            onApplyLoot={applyLoot}
+            applyLoot={applyLoot}
+            isSuperAdmin={currentUser?.isSuperAdmin}
           />
         )}
 
-        {/* 첫 포획 메모 모달 */}
         {firstCatchPokemon && (
           <FirstCatchMemoModal
             pokemon={firstCatchPokemon}
-            onSave={(memo) => saveFirstCatchMemo(firstCatchPokemon.number, memo)}
-            onSkip={() => skipFirstCatchMemo(firstCatchPokemon.number)}
+            onSave={saveFirstCatchMemo}
+            onSkip={skipFirstCatchMemo}
           />
         )}
 
-        {/* 진화 모달 */}
         {evolutionModal && (
           <EvolutionModal
-            pokemon={evolutionModal.pokemon}
-            evolution={evolutionModal.evolution}
-            allPokemonMaster={allPokemonMaster}
+            evolutionData={evolutionModal}
             onAccept={acceptEvolution}
             onCancel={cancelEvolution}
           />
         )}
       </div>
-    </PokemonProvider>  
+    </PokemonProvider>
   );
 }

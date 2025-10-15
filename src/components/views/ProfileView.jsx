@@ -48,7 +48,7 @@ export default function ProfileView({ trainer, caughtCount }) {
         <div className="grid grid-cols-3 gap-6">
           <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
             <div className="text-sm text-gray-600 mb-1">포획한 포켓몬</div>
-            <div className="text-4xl font-bold text-blue-600">{caughtCount}마리</div>
+            <div className="text-4xl font-bold text-blue-600">{member.caughtPokemon.filter(p => p !== null).length}마리</div>
           </div>
           <div className="bg-green-50 rounded-lg p-6 border border-green-200">
             <div className="text-sm text-gray-600 mb-1">도감 완성도</div>
