@@ -20,8 +20,14 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
         const snapshot = await get(shopRef);
         
         if (snapshot.exists()) {
-          setShopData(snapshot.val());
-          console.log('🛒 상점 데이터 로드 완료:', snapshot.val().items.length, '개 아이템');
+          const loadedData = snapshot.val();
+          // ⭐ items가 없으면 빈 배열로 초기화
+          setShopData({
+            items: loadedData.items || [],
+            refreshInterval: loadedData.refreshInterval || 86400000,
+            lastRefresh: loadedData.lastRefresh || Date.now()
+          });
+          console.log('🛒 상점 데이터 로드 완료:', (loadedData.items || []).length, '개 아이템');
         } else {
           // 초기 상점 데이터 생성
           const initialShopData = {
@@ -35,6 +41,12 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
         }
       } catch (error) {
         console.error('❌ 상점 데이터 로드 실패:', error);
+        // 폴백: 기본 데이터 사용
+        setShopData({
+          items: [],
+          refreshInterval: 86400000,
+          lastRefresh: Date.now()
+        });
       } finally {
         setIsLoading(false);
       }
