@@ -529,6 +529,7 @@ export default function App() {
             
             {currentTab === 'shop' && (
               <ShopView
+                trainer={trainer}
                 shopData={shopData}
                 updateShopData={updateShopData}
                 allItems={allItems}
