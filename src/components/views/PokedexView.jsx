@@ -47,7 +47,7 @@ export default function PokedexView({
   const totalCount = pokedex.length;
   const percentage = totalCount > 0 ? Math.round((unlockedCount / totalCount) * 100) : 0;
 
-  // ⭐ 출현 지역 가져오기 (자동 + 수동)
+  // 출현 지역 가져오기 (자동 + 수동)
   const getPokemonRegions = (pokemon) => {
     const pokemonOriginalNumber = pokemon.originalNumber || pokemon.number;
     const entry = pokedexData[pokemonOriginalNumber];
@@ -105,7 +105,7 @@ export default function PokedexView({
     }
   };
 
-  // ⭐ 지역 편집
+  // 지역 편집
   const handleStartEditRegions = () => {
     const pokemonRegions = getPokemonRegions(selectedPokemon);
     setEditableRegions(pokemonRegions);
@@ -248,7 +248,7 @@ export default function PokedexView({
                       <div className="relative group">
                         <CheckCircle size={16} className="text-yellow-500" />
                         <div className="absolute bottom-full right-0 mb-1 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                          최초: {entry.firstCatcher}
+                          최초 포획: {entry.firstCatcher}
                         </div>
                       </div>
                     )}
@@ -310,7 +310,7 @@ export default function PokedexView({
                 )}
               </div>
 
-              {/* ⭐ 통합된 출현 지역 */}
+              {/* 통합된 출현 지역 */}
               <div className="text-left mb-4 p-3 bg-green-50 rounded border border-green-200">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
@@ -367,71 +367,87 @@ export default function PokedexView({
                 )}
               </div>
 
-              {/* 첫 포획자 정보 & 메모 */}
+              {/* 최초 포획자/조우자 정보 & 메모 */}
               {(() => {
                 const originalNumber = selectedPokemon.originalNumber || selectedPokemon.number;
                 const entry = pokedexData[originalNumber];
                 
-                if (!entry) return null;
+                if (!entry || (!entry.firstCatcher && !entry.firstEncounter)) return null;
                 
-                return (
-                  <div className="text-left p-4 bg-yellow-50 rounded border border-yellow-200 mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-sm font-semibold text-gray-700">
-                        🏆 최초 포획: {entry.firstCatcher || entry.firstEncounter || '???'}
+                // 포획된 경우
+                if (entry.firstCatcher) {
+                  return (
+                    <div className="text-left p-4 bg-yellow-50 rounded border border-yellow-200 mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-sm font-semibold text-gray-700">
+                          🏆 최초 포획: {entry.firstCatcher}
+                        </div>
+                        {entry.firstCatcher === currentUser?.name && !isEditingMemo && (
+                          <button
+                            onClick={handleEditMemo}
+                            className="text-indigo-600 hover:text-indigo-700"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                        )}
                       </div>
-                      {entry.firstCatcher === currentUser?.name && !isEditingMemo && (
-                        <button
-                          onClick={handleEditMemo}
-                          className="text-indigo-600 hover:text-indigo-700"
-                        >
-                          <Edit2 size={16} />
-                        </button>
+
+                      {isEditingMemo ? (
+                        <div>
+                          <textarea
+                            value={memoText}
+                            onChange={(e) => setMemoText(e.target.value)}
+                            placeholder="이 포켓몬에 대한 메모를 남겨보세요..."
+                            className="w-full p-2 border border-gray-300 rounded text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            rows="3"
+                            maxLength="200"
+                          />
+                          <div className="flex gap-2 mt-2">
+                            <button
+                              onClick={handleSaveMemo}
+                              className="flex-1 bg-indigo-600 text-white py-1 rounded text-sm hover:bg-indigo-700 font-semibold"
+                            >
+                              저장
+                            </button>
+                            <button
+                              onClick={() => {
+                                setIsEditingMemo(false);
+                                setMemoText(entry?.memo || '');
+                              }}
+                              className="flex-1 bg-gray-300 text-gray-700 py-1 rounded text-sm hover:bg-gray-400 font-semibold"
+                            >
+                              취소
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        entry.memo && (
+                          <div className="text-sm text-gray-600 italic bg-white p-2 rounded">
+                            "{entry.memo}"
+                          </div>
+                        )
+                      )}
+
+                      {!entry.memo && !isEditingMemo && 
+                       entry.firstCatcher === currentUser?.name && (
+                        <div className="text-xs text-gray-500 italic">
+                          메모를 남겨보세요! ✏️
+                        </div>
                       )}
                     </div>
-
-                    {isEditingMemo ? (
-                      <div>
-                        <textarea
-                          value={memoText}
-                          onChange={(e) => setMemoText(e.target.value)}
-                          placeholder="이 포켓몬에 대한 메모를 남겨보세요..."
-                          className="w-full p-2 border border-gray-300 rounded text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          rows="3"
-                          maxLength="200"
-                        />
-                        <div className="flex gap-2 mt-2">
-                          <button
-                            onClick={handleSaveMemo}
-                            className="flex-1 bg-indigo-600 text-white py-1 rounded text-sm hover:bg-indigo-700 font-semibold"
-                          >
-                            저장
-                          </button>
-                          <button
-                            onClick={() => {
-                              setIsEditingMemo(false);
-                              setMemoText(entry?.memo || '');
-                            }}
-                            className="flex-1 bg-gray-300 text-gray-700 py-1 rounded text-sm hover:bg-gray-400 font-semibold"
-                          >
-                            취소
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      entry.memo && (
-                        <div className="text-sm text-gray-600 italic bg-white p-2 rounded">
-                          "{entry.memo}"
-                        </div>
-                      )
-                    )}
-
-                    {!entry.memo && !isEditingMemo && 
-                     entry.firstCatcher === currentUser?.name && (
-                      <div className="text-xs text-gray-500 italic">
-                        메모를 남겨보세요! ✏️
-                      </div>
-                    )}
+                  );
+                }
+                
+                // 조우만 된 경우
+                return (
+                  <div className="text-left p-4 bg-blue-50 rounded border border-blue-200 mb-4">
+                    <div className="text-sm font-semibold text-gray-700 mb-2">
+                      👀 최초 조우: {entry.firstEncounter}
+                    </div>
+                    <div className="text-xs text-gray-600 bg-white p-2 rounded flex items-start gap-2">
+                      <span>💡</span>
+                      <span>아직 아무도 포획하지 않았습니다. 첫 포획자가 되어보세요!</span>
+                    </div>
                   </div>
                 );
               })()}

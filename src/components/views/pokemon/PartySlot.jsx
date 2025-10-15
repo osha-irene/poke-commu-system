@@ -63,21 +63,38 @@ export default function PartySlot({
   
   const imageUrl = getLocalIconUrl(pokemon, allPokemonMaster);
 
-  // 몬스터볼 이미지 가져오기
+  // ⭐⭐⭐ 몬스터볼 이미지 가져오기 - 디버깅 추가
+  console.log('🎾 포켓몬:', pokemon.name);
+  console.log('🎾 caughtWithBall:', pokemon.caughtWithBall, 'type:', typeof pokemon.caughtWithBall);
+  
   const pokeballData = pokemon.caughtWithBall 
     ? allItems.find(item => {
+        // caughtWithBall이 문자열이 아니면 null 반환
+        if (typeof pokemon.caughtWithBall !== 'string') {
+          console.log('❌ caughtWithBall이 문자열이 아님:', pokemon.caughtWithBall);
+          return false;
+        }
+        
         const itemName = item.name?.toLowerCase();
         const itemNameEn = item.nameEn?.toLowerCase();
-        const ballName = pokemon.caughtWithBall?.toLowerCase();
+        const ballName = pokemon.caughtWithBall.toLowerCase();
         
-        return itemName === ballName || 
+        const match = itemName === ballName || 
                itemNameEn === ballName ||
                itemName?.includes(ballName) ||
                itemNameEn?.includes(ballName);
+        
+        if (match) {
+          console.log('✅ 매칭된 볼:', item.name, item.nameEn);
+        }
+        
+        return match;
       })
     : null;
 
+  console.log('🎾 pokeballData:', pokeballData);
   const ballImage = pokeballData?.spriteUrl || pokeballData?.imageUrl;
+  console.log('🎾 ballImage:', ballImage);
 
   // 고유 애니메이션 ID
   const animId = `pokemonSprite-${pokemon.uniqueId || index}`;

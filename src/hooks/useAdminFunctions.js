@@ -143,13 +143,17 @@ export const useAdminFunctions = (
   };
 
   // 포켓몬 지급
-  const givePokemonToMember = (memberId, pokemonTemplate, options = {}) => {
-    if (!currentUser?.isAdmin) return;
-    
-    const member = members[memberId];
-    if (!member) { alert('회원을 찾을 수 없습니다!'); return; }
 
-     // 파트너를 제외한 포켓몬 수 계산
+const givePokemonToMember = (memberId, pokemonTemplate, options = {}) => {
+  if (!currentUser?.isAdmin) return;
+  
+  const member = members[memberId];
+  if (!member) { 
+    alert('회원을 찾을 수 없습니다!'); 
+    return; 
+  }
+
+  // 파트너를 제외한 포켓몬 수 계산
   const nonPartnerCount = member.caughtPokemon.filter(p => p && !p.isPartner).length;
   
   // 파트너 제외 20마리 제한 (options.isPartner가 true면 예외)
@@ -158,84 +162,90 @@ export const useAdminFunctions = (
     return;
   }
 
-    const {
-      level = 5,
-      friendship = 0,
-      heldItem = null,
-      nickname = null,
-      moves = [],
-      isPartner = false,
-	  caughtWithBall= '몬스터볼'
-    } = options;
+  const {
+    level = 5,
+    friendship = 0,
+    heldItem = null,
+    nickname = null,
+    moves = [],
+    isPartner = false,
+    caughtWithBall = '몬스터볼'
+  } = options;
 
-    const newPokemon = {
-	  uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-	  pokemonId: pokemonTemplate.id,
-	  name: pokemonTemplate.name,
-	  nameEn: pokemonTemplate.nameEn,
-	  nickname,
-	  number: pokemonTemplate.number,
-	  type: pokemonTemplate.type,
-	  type2: pokemonTemplate.type2 || null,
-	  level,
-	  hp: pokemonTemplate.baseHp,
-	  maxHp: pokemonTemplate.baseHp,
-	  exp: 0,
-	  friendship,
-	  heldItem,
-	  moves,
-	  isPartner,
-	  caughtWithBall,
-	  condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
-	  
-	  // ✅ effort 필드 사용
-	  effort: { 
-		hp: 0, 
-		attack: 0, 
-		defense: 0, 
-		specialAttack: 0, 
-		specialDefense: 0, 
-		speed: 0 
-	  },
+  const newPokemon = {
+    uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    pokemonId: pokemonTemplate.id,
+    name: pokemonTemplate.name,
+    nameEn: pokemonTemplate.nameEn,
+    nickname,
+    number: pokemonTemplate.number,
+    type: pokemonTemplate.type,
+    type2: pokemonTemplate.type2 || null,
+    level,
+    hp: pokemonTemplate.baseHp,
+    maxHp: pokemonTemplate.baseHp,
+    exp: 0,
+    friendship,
+    heldItem,
+    moves,
+    isPartner,
+    caughtWithBall,
+    condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
+    effort: { 
+      hp: 0, 
+      attack: 0, 
+      defense: 0, 
+      specialAttack: 0, 
+      specialDefense: 0, 
+      speed: 0 
+    },
+    imageUrl: pokemonTemplate.imageUrl,
+    iconUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`,
+    spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`
+  };
+
+  // ⭐⭐⭐ 핵심 수정: 엔트리에 빈 슬롯이 있으면 그곳에 직접 배치
+  let updatedPokemonList = [...(member.caughtPokemon || [])];
   
-  imageUrl: pokemonTemplate.imageUrl,
-  iconUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`,
-  spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`
-};
-
-
-  // ⭐ 엔트리에 빈 자리가 있는지 확인
-  const partyPokemon = (member.caughtPokemon || []).filter(p => p && !p.isPartner && p.inParty);
-  const hasPartySpace = partyPokemon.length < 6;
+  // 파트너 설정인 경우 기존 파트너 해제
+  if (isPartner) {
+    updatedPokemonList = updatedPokemonList.map(p => 
+      p && p.isPartner ? { ...p, isPartner: false } : p
+    );
+  }
   
-  if (hasPartySpace) {
-    newPokemon.inParty = true;
-    console.log('✅ 엔트리에 빈 자리 있음 - 엔트리로 추가');
+  // 엔트리(0-5)와 박스(6~) 분리
+  const party = updatedPokemonList.slice(0, 6);
+  const box = updatedPokemonList.slice(6);
+  
+  // 엔트리에 빈 슬롯 찾기
+  let emptySlotIndex = -1;
+  for (let i = 0; i < 6; i++) {
+    if (!party[i] || party[i] === null) {
+      emptySlotIndex = i;
+      break;
+    }
+  }
+  
+  if (emptySlotIndex !== -1) {
+    // 엔트리에 빈 슬롯이 있으면 해당 위치에 배치
+    console.log(`✅ ${member.name}의 엔트리 ${emptySlotIndex}번 슬롯에 ${newPokemon.name} 추가`);
+    party[emptySlotIndex] = newPokemon;
+    updatedPokemonList = [...party, ...box];
   } else {
-    newPokemon.inParty = false;
-    console.log('📦 엔트리 가득참 - 박스로 추가');
+    // 엔트리가 가득 차면 박스에 추가
+    console.log(`📦 ${member.name}의 엔트리가 가득참 - 박스에 ${newPokemon.name} 추가`);
+    updatedPokemonList = [...party, ...box, newPokemon];
   }
 
-  const updatedMember = {
-    ...member,
-    caughtPokemon: [...(member.caughtPokemon || []), newPokemon]
-  };
+  setMembers(prev => ({
+    ...prev,
+    [memberId]: { ...prev[memberId], caughtPokemon: updatedPokemonList }
+  }));
 
-    let updatedPokemonList = [...member.caughtPokemon];
-    if (isPartner) {
-      updatedPokemonList = updatedPokemonList.map(p => 
-        p && p.isPartner ? { ...p, isPartner: false } : p
-      );
-    }
-    updatedPokemonList.push(newPokemon);
-
-    setMembers(prev => ({
-      ...prev,
-      [memberId]: { ...prev[memberId], caughtPokemon: updatedPokemonList }
-    }));
-
-    const partnerText = isPartner ? ' (파트너 💖)' : '';
-  };
+  const partnerText = isPartner ? ' (파트너 💖)' : '';
+  alert(`${member.name}에게 ${newPokemon.nickname || newPokemon.name}${partnerText}을(를) 지급했습니다!`);
+};
 
   const addPokemonToSelf = (pokemonTemplate, options = {}) => {
     if (!currentUser?.isAdmin) return;

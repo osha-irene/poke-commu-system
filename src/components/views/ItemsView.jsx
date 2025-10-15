@@ -48,8 +48,6 @@ export default function ItemsView({
 	  const pocket = item.pocket || itemData?.pocket || itemData?.categoryData?.pocket || 'misc';
 	  const category = item.category || itemData?.category || '';
 
-	  console.log(`📦 ${item.name} - pocket: ${pocket}, category: ${category}`);
-
 	  // 사용 가능 여부 판단
 	  const canUse = item.canUse !== undefined ? item.canUse : (
 		pocket === 'berries' || 

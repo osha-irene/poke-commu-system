@@ -8,10 +8,14 @@ function MemberInfoTab({
   onResetWalk, 
   onToggleAdmin,
   onUpdateMoney, 
-  onUpdateRegionAccess 
+  onUpdateRegionAccess,
+  onUpdateWalkCount,
+  onUpdateMaxWalkCount  // ⭐ 최대 탐험횟수 업데이트 prop 추가
 }) {
   const [moneyInput, setMoneyInput] = useState(member.money || 0);
   const [selectedRegions, setSelectedRegions] = useState(member.accessibleRegions || []);
+  const [editWalkCount, setEditWalkCount] = useState(member.dailyWalks);
+  const [editMaxWalkCount, setEditMaxWalkCount] = useState(member.maxDailyWalks); // ⭐ 추가
 
   const handleToggleRegion = (regionId) => {
     setSelectedRegions(prev => {
@@ -42,12 +46,69 @@ function MemberInfoTab({
             <span className="ml-2 font-medium">{member.name}</span>
           </div>
           <div>
-            <span className="text-gray-600">탐험 횟수:</span>
-            <span className="ml-2 font-medium">{member.dailyWalks} / {member.maxDailyWalks}</span>
-          </div>
-          <div>
             <span className="text-gray-600">포켓몬 수:</span>
-            <span className="ml-2 font-medium">{member.caughtPokemon?.length || 0}마리</span>
+            <span className="ml-2 font-medium">{member.caughtPokemon.filter(p => p !== null).length}마리</span>
+          </div>
+
+          {/* ⭐ 오늘의 탐험횟수 수정 */}
+          <div className="col-span-2 space-y-2">
+            <label className="text-sm font-semibold text-gray-700">
+              🚶 오늘의 탐험 횟수
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min="0"
+                max="999"
+                value={editWalkCount}
+                onChange={(e) => setEditWalkCount(parseInt(e.target.value) || 0)}
+                className="w-24 px-3 py-2 border border-gray-300 rounded"
+              />
+              <span className="text-sm text-gray-600">/ {member.maxDailyWalks}회</span>
+              <button
+                onClick={() => {
+                  if (onUpdateWalkCount) {
+                    onUpdateWalkCount(member.id, editWalkCount);
+                    alert(`${member.name}님의 탐험횟수가 ${editWalkCount}회로 변경되었습니다!`);
+                  }
+                }}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold"
+              >
+                적용
+              </button>
+            </div>
+          </div>
+
+          {/* ⭐ 최대 탐험횟수 수정 */}
+          <div className="col-span-2 space-y-2">
+            <label className="text-sm font-semibold text-gray-700">
+              ⚙️ 최대 탐험 횟수 (일일 제한)
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min="1"
+                max="999"
+                value={editMaxWalkCount}
+                onChange={(e) => setEditMaxWalkCount(parseInt(e.target.value) || 5)}
+                className="w-24 px-3 py-2 border border-gray-300 rounded"
+              />
+              <span className="text-sm text-gray-600">회</span>
+              <button
+                onClick={() => {
+                  if (onUpdateMaxWalkCount) {
+                    onUpdateMaxWalkCount(member.id, editMaxWalkCount);
+                    alert(`${member.name}님의 최대 탐험횟수가 ${editMaxWalkCount}회로 변경되었습니다!`);
+                  }
+                }}
+                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors text-sm font-semibold"
+              >
+                적용
+              </button>
+            </div>
+            <p className="text-xs text-gray-500">
+              💡 이 회원이 하루에 탐험할 수 있는 최대 횟수를 설정합니다
+            </p>
           </div>
         </div>
       </div>

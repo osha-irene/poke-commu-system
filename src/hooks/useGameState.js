@@ -260,109 +260,107 @@ export default function useGameState() {
     return () => clearInterval(interval);
   }, [currentUser, setMembers]);
 
-  const handleRegionClick = (region) => {
-    if (!currentUser) return;
+const handleRegionClick = (region) => {
+  if (!currentUser) return;
 
-    const accessibleRegions = currentUser.accessibleRegions || [];
-    if (accessibleRegions.length > 0 && !accessibleRegions.includes(region.id)) {
-      alert('⛔ 이 구역에 접근할 수 없습니다!');
+  const accessibleRegions = currentUser.accessibleRegions || [];
+  if (accessibleRegions.length > 0 && !accessibleRegions.includes(region.id)) {
+    alert('⛔ 이 구역에 접근할 수 없습니다!');
+    return;
+  }
+  
+  if (currentUser.dailyWalks > 0) {
+    const encounterRate = region.encounterRate !== undefined ? region.encounterRate : 0.5;
+    const randomEncounter = Math.random();
+    
+    updateCurrentUser({ dailyWalks: currentUser.dailyWalks - 1 });
+
+    const loot = generateLoot(region.lootConfig || getDefaultLootConfig(), allItems);
+    
+    if (randomEncounter >= encounterRate) {
+      const itemList = [
+        ...loot.items.map(item => `${item.name} x${item.count}`),
+        ...loot.ingredients.map(item => `${item.name} x${item.count}`),
+        ...loot.berries.map(item => `${item.name} x${item.count}`)
+      ];
+      applyLoot(loot, null);
+      const itemText = itemList.length > 0 ? `\n🎁 ${itemList.join(', ')}` : '';
+      alert(`🌿 ${region.name}을(를) 탐험했지만 포켓몬을 발견하지 못했습니다!\n\n💰 ${loot.money}원을 획득했습니다!${itemText}`);
       return;
     }
     
-    if (currentUser.dailyWalks > 0) {
-      const encounterRate = region.encounterRate !== undefined ? region.encounterRate : 80;
-      const encounterRoll = Math.random() * 100;
+    const regionPokemonIds = region.pokemons;
+    const availablePokemon = gamePokedex.filter(p => 
+      regionPokemonIds.includes(p.id) || 
+      regionPokemonIds.includes(p.number) || 
+      regionPokemonIds.includes(p.originalNumber)
+    );
+    
+    if (availablePokemon.length > 0) {
+      const rates = region.pokemonRates || {};
+      const weightedPokemon = [];
       
-      updateCurrentUser({ dailyWalks: currentUser.dailyWalks - 1 });
-      
-      if (encounterRoll >= encounterRate) {
-        const loot = generateLoot(region.lootConfig || getDefaultLootConfig(), allItems);
-        applyLoot(loot, null);
-        
-        const itemList = [];
-        if (loot.items.length > 0) {
-          loot.items.forEach(item => itemList.push(`${item.name} ${item.count}개`));
+      availablePokemon.forEach(p => {
+        const id = p.id || p.number;
+        const weight = rates[id] || 10;
+        for (let i = 0; i < weight; i++) {
+          weightedPokemon.push(p);
         }
-        if (loot.ingredients.length > 0) {
-          loot.ingredients.forEach(item => itemList.push(`${item.name} ${item.count}개`));
-        }
-        if (loot.berries.length > 0) {
-          loot.berries.forEach(item => itemList.push(`${item.name} ${item.count}개`));
-        }
-        
-        const itemText = itemList.length > 0 ? `\n🎁 ${itemList.join(', ')}` : '';
-        alert(`🌿 ${region.name}을(를) 탐험했지만 포켓몬을 발견하지 못했습니다!\n\n💰 ${loot.money}원을 획득했습니다!${itemText}`);
-        return;
-      }
+      });
       
-      const regionPokemonIds = region.pokemons;
-      const availablePokemon = gamePokedex.filter(p => 
-        regionPokemonIds.includes(p.id) || 
-        regionPokemonIds.includes(p.number) || 
-        regionPokemonIds.includes(p.originalNumber)
-      );
+      const randomPokemon = weightedPokemon[Math.floor(Math.random() * weightedPokemon.length)];
+      const pokemonNumber = randomPokemon.originalNumber || randomPokemon.number;
       
-      if (availablePokemon.length > 0) {
-        const rates = region.pokemonRates || {};
-        const weightedPokemon = [];
-        
-        availablePokemon.forEach(p => {
-          const id = p.id || p.number;
-          const weight = rates[id] || 10;
-          for (let i = 0; i < weight; i++) {
-            weightedPokemon.push(p);
+      // ⭐ 조우 시: firstEncounter만 기록 (firstCatcher는 X)
+      const isFirstEncounter = !sharedPokedexData[pokemonNumber];
+      
+      if (isFirstEncounter) {
+        setSharedPokedexData(prev => ({
+          ...prev,
+          [pokemonNumber]: {
+            firstEncounter: currentUser.name,  // 조우자만 기록
+            encounteredAt: new Date().toISOString(),
+            // firstCatcher: 없음! (포획 시에만 기록)
+            caughtBy: null,
+            caughtAt: null,
+            memo: null,
+            regions: [region.name]
           }
-        });
-        
-        const randomPokemon = weightedPokemon[Math.floor(Math.random() * weightedPokemon.length)];
-        const pokemonNumber = randomPokemon.originalNumber || randomPokemon.number;
-        const isFirstEncounter = !sharedPokedexData[pokemonNumber];
-        
-        if (isFirstEncounter) {
-          setSharedPokedexData(prev => ({
-            ...prev,
-            [pokemonNumber]: {
-              firstEncounter: currentUser.name,
-              encounteredAt: new Date().toISOString(),
-              caughtBy: null,
-              caughtAt: null,
-              memo: null,
-              regions: [region.name]
-            }
-          }));
-        } else {
-          setSharedPokedexData(prev => {
-            const entry = prev[pokemonNumber];
-            const currentRegions = entry?.regions || [];
-            
-            if (!currentRegions.includes(region.name)) {
-              return {
-                ...prev,
-                [pokemonNumber]: {
-                  ...entry,
-                  regions: [...currentRegions, region.name]
-                }
-              };
-            }
-            return prev;
-          });
-        }
-        
-        const loot = generateLoot(region.lootConfig || getDefaultLootConfig(), allItems);
-        
-        setEncounterPokemon({
-          ...randomPokemon,
-          loot: loot,
-          regionName: region.name,
-          isFirstEncounter: isFirstEncounter
-        });
+        }));
       } else {
-        alert('이 지역에 등장하는 포켓몬이 없습니다!');
+        // 이미 조우된 포켓몬 - 지역만 추가
+        setSharedPokedexData(prev => {
+          const entry = prev[pokemonNumber];
+          const currentRegions = entry?.regions || [];
+          
+          if (!currentRegions.includes(region.name)) {
+            return {
+              ...prev,
+              [pokemonNumber]: {
+                ...entry,
+                regions: [...currentRegions, region.name]
+              }
+            };
+          }
+          return prev;
+        });
       }
+      
+      const loot = generateLoot(region.lootConfig || getDefaultLootConfig(), allItems);
+      
+      setEncounterPokemon({
+        ...randomPokemon,
+        loot: loot,
+        regionName: region.name,
+        isFirstEncounter: isFirstEncounter
+      });
     } else {
-      alert('오늘의 탐험 횟수를 모두 사용했습니다!');
+      alert('이 지역에 등장하는 포켓몬이 없습니다!');
     }
-  };
+  } else {
+    alert('오늘의 탐험 횟수를 모두 사용했습니다!');
+  }
+};
 
   const handleCloseEncounter = () => {
     setEncounterPokemon(null);
@@ -424,105 +422,130 @@ export default function useGameState() {
     alert('보상 설정이 저장되었습니다!');
   };
   
-  const handleCatchSuccess = (pokemon, ballUsed) => {
-    if (!currentUser) return;
-    
-    const nonPartnerCount = currentUser.caughtPokemon.filter(p => p && !p.isPartner).length;
-    
-    if (nonPartnerCount >= 20) {
-      alert('⚠️ 파트너를 제외한 포켓몬이 20마리입니다!\n더 이상 포켓몬을 잡을 수 없습니다.');
-      return;
-    }
-      
-    const pokemonTemplate = allPokemonMaster.find(p => 
-      p.number === (pokemon.number || pokemon.originalNumber)
-    );
-    
-    if (!pokemonTemplate) {
-      alert('포켓몬 정보를 찾을 수 없습니다!');
-      return;
-    }
-    
-    const regionName = pokemon.regionName;
-    const region = regions.find(r => r.name === regionName);
-    const minLevel = region?.minLevel || 5;
-    const maxLevel = region?.maxLevel || 20;
-    const level = Math.floor(Math.random() * (maxLevel - minLevel + 1)) + minLevel;
-    
-    // ✅ 볼 이미지 URL 찾기
-    const ballItem = allItems.find(item => 
-      item.name === ballUsed.name || 
-      item.id === ballUsed.id
-    );
-    
-    const newPokemon = {
-      uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      pokemonId: pokemonTemplate.id,
-      name: pokemonTemplate.name,
-      nameEn: pokemonTemplate.nameEn,
-      number: pokemonTemplate.number,
-      type: pokemonTemplate.type,
-      type2: pokemonTemplate.type2 || null,
-      level: level,
-      hp: pokemonTemplate.baseHp,
-      maxHp: pokemonTemplate.baseHp,
-      exp: 0,
-      friendship: 0,
-      heldItem: null,
-      moves: movesHook.getStartingMoves(pokemonTemplate.number, level, movesData),
-      caughtWithBall: ballUsed.name,
-      ballImageUrl: ballUsed.imageUrl || ballItem?.spriteUrl || ballItem?.imageUrl, // ✅ 추가
-      isPartner: false,
-      inParty: false,
-      condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
-      effort: { 
-        hp: 0, 
-        attack: 0, 
-        defense: 0, 
-        specialAttack: 0,
-        specialDefense: 0,
-        speed: 0 
-      },
-      imageUrl: pokemonTemplate.imageUrl,
-      iconUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`,
-      spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`
-    };
-    
-    const partyPokemon = currentUser.caughtPokemon.filter(p => p && !p.isPartner && p.inParty);
-    const hasPartySpace = partyPokemon.length < 6;
-    
-    if (hasPartySpace) {
-      newPokemon.inParty = true;
-      console.log('✅ 엔트리에 빈 자리 있음 - 엔트리로 추가');
-    } else {
-      newPokemon.inParty = false;
-      console.log('📦 엔트리 가득참 - 박스로 추가');
-    }
-      
-    const updatedCaughtPokemon = [...currentUser.caughtPokemon, newPokemon];
-    updateCurrentUser({ caughtPokemon: updatedCaughtPokemon });
 
-    const pokemonNumber = pokemonTemplate.number;
-    setSharedPokedexData(prev => {
-      const entry = prev[pokemonNumber] || {};
-      
-      if (!entry.caughtBy) {
-        setFirstCatchPokemon(pokemonTemplate);
-        return {
-          ...prev,
-          [pokemonNumber]: {
-            ...entry,
-            firstEncounter: entry.firstEncounter || currentUser.name,
-            encounteredAt: entry.encounteredAt || new Date().toISOString(),
-            caughtBy: currentUser.name,
-            caughtAt: new Date().toISOString(),
-            regions: entry.regions || [regionName]
-          }
-        };
-      }
-      return prev;
-    });
+
+const handleCatchSuccess = (pokemon, ballUsed) => {
+  if (!currentUser) return;
+  
+  const nonPartnerCount = currentUser.caughtPokemon.filter(p => p && !p.isPartner).length;
+  
+  if (nonPartnerCount >= 20) {
+    alert('⚠️ 파트너를 제외한 포켓몬이 20마리입니다!\n더 이상 포켓몬을 잡을 수 없습니다.');
+    return;
+  }
+    
+  const pokemonTemplate = allPokemonMaster.find(p => 
+    p.number === (pokemon.number || pokemon.originalNumber)
+  );
+  
+  if (!pokemonTemplate) {
+    alert('포켓몬 정보를 찾을 수 없습니다!');
+    return;
+  }
+  
+  const regionName = pokemon.regionName;
+  const region = regions.find(r => r.name === regionName);
+  const minLevel = region?.minLevel || 5;
+  const maxLevel = region?.maxLevel || 20;
+  const level = Math.floor(Math.random() * (maxLevel - minLevel + 1)) + minLevel;
+  
+  // ✅ 볼 이미지 URL 찾기
+  const ballItem = allItems.find(item => 
+    item.name === ballUsed.name || 
+    item.id === ballUsed.id
+  );
+  
+  const newPokemon = {
+    uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    pokemonId: pokemonTemplate.id,
+    name: pokemonTemplate.name,
+    nameEn: pokemonTemplate.nameEn,
+    number: pokemonTemplate.number,
+    type: pokemonTemplate.type,
+    type2: pokemonTemplate.type2 || null,
+    level: level,
+    hp: pokemonTemplate.baseHp,
+    maxHp: pokemonTemplate.baseHp,
+    exp: 0,
+    friendship: 0,
+    heldItem: null,
+    moves: movesHook.getStartingMoves(pokemonTemplate.number, level, movesData),
+    caughtWithBall: ballUsed.name,
+    ballImageUrl: ballUsed.imageUrl || ballItem?.spriteUrl || ballItem?.imageUrl,
+    isPartner: false,
+    condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
+    effort: { 
+      hp: 0, 
+      attack: 0, 
+      defense: 0, 
+      specialAttack: 0,
+      specialDefense: 0,
+      speed: 0 
+    },
+    imageUrl: pokemonTemplate.imageUrl,
+    iconUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`,
+    spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`
   };
+  
+  // ⭐⭐⭐ 핵심 수정: 엔트리에 빈 슬롯이 있으면 그곳에 직접 배치
+  const currentPokemon = [...currentUser.caughtPokemon];
+  
+  // 엔트리(0-5)와 박스(6~) 분리
+  const party = currentPokemon.slice(0, 6);
+  const box = currentPokemon.slice(6);
+  
+  // 엔트리에 빈 슬롯 찾기
+  let emptySlotIndex = -1;
+  for (let i = 0; i < 6; i++) {
+    if (!party[i] || party[i] === null) {
+      emptySlotIndex = i;
+      break;
+    }
+  }
+  
+  let updatedCaughtPokemon;
+  
+  if (emptySlotIndex !== -1) {
+    // 엔트리에 빈 자리가 있으면 해당 위치에 배치
+    console.log('✅ 엔트리 빈 슬롯', emptySlotIndex, '에 포켓몬 추가');
+    party[emptySlotIndex] = newPokemon;
+    updatedCaughtPokemon = [...party, ...box];
+  } else {
+    // 엔트리가 가득 차면 박스에 추가
+    console.log('📦 엔트리 가득참 - 박스에 포켓몬 추가');
+    updatedCaughtPokemon = [...party, ...box, newPokemon];
+  }
+  
+  console.log('🎉 포켓몬 잡기 완료! 최종 배열:', updatedCaughtPokemon.slice(0, 8).map((p, i) => `[${i}] ${p?.name || 'null'}`));
+  
+  updateCurrentUser({ caughtPokemon: updatedCaughtPokemon });
+
+  // ⭐ 포획 시: firstCatcher 기록 (caughtBy가 없을 때만!)
+  const pokemonNumber = pokemonTemplate.number;
+  setSharedPokedexData(prev => {
+    const entry = prev[pokemonNumber] || {};
+    
+    // ⭐ firstCatcher가 없으면 = 최초 포획!
+    if (!entry.firstCatcher) {
+      setFirstCatchPokemon(pokemonTemplate);  // 첫 포획 모달 표시
+      return {
+        ...prev,
+        [pokemonNumber]: {
+          ...entry,
+          firstEncounter: entry.firstEncounter || currentUser.name,
+          encounteredAt: entry.encounteredAt || new Date().toISOString(),
+          firstCatcher: currentUser.name,  // ⭐ 최초 포획자 기록
+          caughtBy: currentUser.name,
+          caughtAt: new Date().toISOString(),
+          regions: entry.regions || [regionName]
+        }
+      };
+    }
+    
+    // 이미 다른 사람이 포획한 경우 - 그냥 넘어감
+    return prev;
+  });
+};
   
   const saveFirstCatchMemo = (pokemonNumber, memo) => {
     setSharedPokedexData(prev => ({
@@ -1018,6 +1041,7 @@ export default function useGameState() {
     cookRecipe,
     discoverRecipe,
     updateIngredientStats,
-    updateCurrentUser
+    updateCurrentUser,
+    setMembers
   };
 }

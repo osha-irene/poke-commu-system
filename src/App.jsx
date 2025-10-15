@@ -179,7 +179,8 @@ export default function App() {
     discoveredRecipes,	
     cookRecipe,   
     updateIngredientStats,
-    updateCurrentUser  // ⭐ 추가!
+    updateCurrentUser,
+    setMembers
   } = useGameState();
 
   // ⭐ 엔트리 순서 변경 함수
@@ -228,7 +229,6 @@ const reorderParty = (newPartyOrder) => {
 
   // ⭐ 전역 클릭 사운드 - 최상단에 배치!
   useEffect(() => {
-    console.log('🔊 클릭 사운드 시스템 초기화 중...');
     
     // 여러 경로 시도
     const basePath = window.location.pathname.includes('/poke-commu-system') 
@@ -236,7 +236,7 @@ const reorderParty = (newPartyOrder) => {
       : '';
     
     const audioPath = `${basePath}/sound/A-button.mp3`;
-    console.log('🎵 사운드 파일 경로:', audioPath);
+
     
     const audio = new Audio(audioPath);
     audio.preload = 'auto';
@@ -244,28 +244,19 @@ const reorderParty = (newPartyOrder) => {
 
     // 오디오 로딩 확인
     audio.addEventListener('canplaythrough', () => {
-      console.log('✅ 사운드 파일 로딩 완료!');
     });
 
     audio.addEventListener('error', (e) => {
-      console.error('❌ 사운드 파일 로딩 실패:', e);
-      console.error('시도한 경로:', audioPath);
     });
 
     const handleGlobalClick = (e) => {
       // soundEnabled가 false면 재생 안 함
       if (!soundEnabled) return;
-      
-      console.log('👆 클릭 감지!', e.target);
+
       
       audio.currentTime = 0;
       audio.play()
-        .then(() => {
-          console.log('🎶 사운드 재생 성공!');
-        })
-        .catch(err => {
-          console.error('❌ 사운드 재생 실패:', err);
-        });
+        
     };
 
     document.addEventListener('click', handleGlobalClick);
@@ -473,7 +464,11 @@ const reorderParty = (newPartyOrder) => {
               setMaintenanceMode={setMaintenanceMode}
               updateRegionLootConfig={updateRegionLootConfig} 
               createRecipe={createRecipe}
-              updateIngredientStats={updateIngredientStats} 			  
+              updateIngredientStats={updateIngredientStats}
+              setMembers={setMembers}      
+              updateCurrentUser={updateCurrentUser}
+              allMoves={allMoves}
+              pokemonLearnsets={pokemonLearnsets}
             />
           )}
           

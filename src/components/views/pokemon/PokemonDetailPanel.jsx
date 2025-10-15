@@ -183,11 +183,11 @@ const renderEffortTick = (tickProps) => {
       })
     : null;
 
-  const pokeballData = pokemon.caughtWithBall 
-    ? allItems.find(item => {
+  const pokeballData = pokemon.caughtWithBall && typeof pokemon.caughtWithBall === 'string'
+  ? allItems.find(item => {
         const itemName = item.name?.toLowerCase();
         const itemNameEn = item.nameEn?.toLowerCase();
-        const ballName = pokemon.caughtWithBall?.toLowerCase();
+        const ballName = pokemon.caughtWithBall.toLowerCase();
         return itemName === ballName || 
                itemNameEn === ballName ||
                itemName?.includes(ballName) ||

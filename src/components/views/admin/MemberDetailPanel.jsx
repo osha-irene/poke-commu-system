@@ -1,15 +1,54 @@
-// src/components/views/admin/member/MemberDetailPanel.jsx
+// src/components/views/admin/MemberDetailPanel.jsx - 수정 버전
 import React, { useState } from 'react';
 import MemberInfoTab from './member/MemberInfoTab';
 import MemberPokemonTab from './member/MemberPokemonTab';
 import MemberItemTab from './member/MemberItemTab';
 
 function MemberDetailPanel({ 
-  member, trainer, allItems, allPokemonMaster, regions,
-  onClose, onGiveItem, onGivePokemon, onEditPokemon, onResetWalk, onToggleAdmin,
-  onUpdateMoney, onUpdateRegionAccess
+  member, 
+  trainer, 
+  allItems, 
+  allPokemonMaster, 
+  regions,
+  onClose, 
+  onGiveItem, 
+  onGivePokemon, 
+  onEditPokemon, 
+  onResetWalk, 
+  onToggleAdmin,
+  onUpdateMoney, 
+  onUpdateRegionAccess,
+  setMembers,
+  currentUser,
+  updateCurrentUser,
+  allMoves,
+  pokemonLearnsets
 }) {
   const [selectedTab, setSelectedTab] = useState('info');
+
+  // ⭐ 탐험횟수 업데이트 함수
+  const handleUpdateWalkCount = (memberId, newWalkCount) => {
+    setMembers(prev => ({
+      ...prev,
+      [memberId]: { ...prev[memberId], dailyWalks: newWalkCount }
+    }));
+    
+    if (currentUser?.id === memberId) {
+      updateCurrentUser({ dailyWalks: newWalkCount });
+    }
+  };
+
+  // ⭐ 최대 탐험횟수 업데이트 함수 추가
+  const handleUpdateMaxWalkCount = (memberId, newMaxWalkCount) => {
+    setMembers(prev => ({
+      ...prev,
+      [memberId]: { ...prev[memberId], maxDailyWalks: newMaxWalkCount }
+    }));
+    
+    if (currentUser?.id === memberId) {
+      updateCurrentUser({ maxDailyWalks: newMaxWalkCount });
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
@@ -48,8 +87,8 @@ function MemberDetailPanel({
                 : 'text-gray-600'
             }`}
           >
-             포켓몬 ({member.caughtPokemon?.filter(p => p && !p.isPartner).length || 0})
-</button>
+            포켓몬 ({member.caughtPokemon?.filter(p => p && !p.isPartner).length || 0})
+          </button>
           <button 
             onClick={() => setSelectedTab('items')} 
             className={`flex-1 py-3 font-semibold ${
@@ -73,6 +112,8 @@ function MemberDetailPanel({
               onToggleAdmin={onToggleAdmin}
               onUpdateMoney={onUpdateMoney}
               onUpdateRegionAccess={onUpdateRegionAccess}
+              onUpdateWalkCount={handleUpdateWalkCount}
+              onUpdateMaxWalkCount={handleUpdateMaxWalkCount} // ⭐ 추가
             />
           )}
 
@@ -82,6 +123,8 @@ function MemberDetailPanel({
               allPokemonMaster={allPokemonMaster}
               onGivePokemon={onGivePokemon}
               onEditPokemon={onEditPokemon}
+              allMoves={allMoves} 
+              pokemonLearnsets={pokemonLearnsets}
             />
           )}
 

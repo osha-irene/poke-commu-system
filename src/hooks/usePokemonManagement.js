@@ -12,63 +12,78 @@ const usePokemonManagement = (
 ) => {
 
   // 엔트리 이동
-  const movePokemonToParty = (uniqueId) => {
-    console.log('🔥 movePokemonToParty 시작:', uniqueId);
-    
-    if (!currentUser) {
-      console.error('❌ currentUser가 없습니다!');
-      return;
+const movePokemonToParty = (uniqueId) => {
+  console.log('🔥 movePokemonToParty 시작:', uniqueId);
+  
+  if (!currentUser) {
+    console.error('❌ currentUser가 없습니다!');
+    return;
+  }
+  
+  console.log('📦 현재 전체 배열:', currentUser.caughtPokemon.map((p, i) => `[${i}] ${p?.name || 'null'}`));
+  
+  const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === uniqueId);
+  console.log('📍 포켓몬 인덱스:', pokemonIndex);
+  
+  if (pokemonIndex === -1) { 
+    console.error('❌ 포켓몬을 찾을 수 없습니다!');
+    alert('포켓몬을 찾을 수 없습니다!'); 
+    return; 
+  }
+  
+  // ⭐ 이미 엔트리에 있으면 조용히 리턴
+  if (pokemonIndex < 6) {
+    console.log('⚠️ 이미 엔트리에 있습니다');
+    return; 
+  }
+  
+  // ⭐⭐⭐ 엔트리와 박스를 완전히 분리
+  const party = currentUser.caughtPokemon.slice(0, 6);
+  const box = currentUser.caughtPokemon.slice(6);
+  
+  console.log('📋 분리된 엔트리:', party.map((p, i) => `[${i}] ${p?.name || 'null'}`));
+  console.log('📋 분리된 박스:', box.map((p, i) => `[${i}] ${p?.name}`));
+  
+  // 빈 슬롯 찾기
+  let emptySlotIndex = -1;
+  for (let i = 0; i < 6; i++) {
+    if (party[i] === null) { 
+      emptySlotIndex = i; 
+      break; 
     }
-    
-    console.log('📦 전체 포켓몬 수:', currentUser.caughtPokemon.length);
-    
-    const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === uniqueId);
-    console.log('📍 포켓몬 인덱스:', pokemonIndex);
-    
-    if (pokemonIndex === -1) { 
-      console.error('❌ 포켓몬을 찾을 수 없습니다!');
-      alert('포켓몬을 찾을 수 없습니다!'); 
-      return; 
-    }
-    
-    // ⭐ 이미 엔트리에 있으면 조용히 리턴
-    if (pokemonIndex < 6) {
-      console.log('⚠️ 이미 엔트리에 있습니다 (index:', pokemonIndex, ')');
-      return; 
-    }
-    
-    // 빈 슬롯 찾기
-    let emptySlotIndex = -1;
-    for (let i = 0; i < 6; i++) {
-      if (currentUser.caughtPokemon[i] === null) { 
-        emptySlotIndex = i; 
-        break; 
-      }
-    }
-    
-    console.log('🎯 빈 슬롯 인덱스:', emptySlotIndex);
-    
-    if (emptySlotIndex === -1) {
-      console.error('❌ 엔트리가 가득 찼습니다!');
-      alert('엔트리가 가득 찼습니다!'); 
-      return; 
-    }
-    
-    // 포켓몬을 빈 슬롯으로 이동
-    const newCaughtPokemon = [...currentUser.caughtPokemon];
-    const pokemon = newCaughtPokemon[pokemonIndex];
-    
-    console.log('🎯 이동할 포켓몬:', pokemon.name);
-    
-    newCaughtPokemon[emptySlotIndex] = pokemon;
-    newCaughtPokemon.splice(pokemonIndex, 1);
-    
-    console.log('✅ 업데이트 전 엔트리:', newCaughtPokemon.slice(0, 6).map(p => p?.name || 'null'));
-    
-    updateCurrentUser({ caughtPokemon: newCaughtPokemon });
-    
-    console.log('✅ movePokemonToParty 완료!');
-  };
+  }
+  
+  console.log('🎯 빈 슬롯 인덱스:', emptySlotIndex);
+  
+  if (emptySlotIndex === -1) {
+    console.error('❌ 엔트리가 가득 찼습니다!');
+    alert('엔트리가 가득 찼습니다!'); 
+    return; 
+  }
+  
+  // 박스 내에서의 인덱스 계산 (전체 배열 인덱스 - 6)
+  const boxIndex = pokemonIndex - 6;
+  const pokemon = box[boxIndex];
+  
+  console.log('🎯 이동할 포켓몬:', pokemon.name, '(박스 내 인덱스:', boxIndex, ')');
+  
+  // 1. 엔트리의 빈 슬롯에 포켓몬 배치
+  party[emptySlotIndex] = pokemon;
+  
+  // 2. 박스에서 해당 포켓몬 제거
+  box.splice(boxIndex, 1);
+  
+  // 3. 최종 배열 생성: 엔트리(6자리) + 박스
+  const finalPokemon = [...party, ...box];
+  
+  console.log('✅ 최종 엔트리:', party.map((p, i) => `[${i}] ${p?.name || 'null'}`));
+  console.log('✅ 최종 박스:', box.map((p, i) => `[${i + 6}] ${p?.name}`));
+  console.log('✅ 최종 전체 배열 길이:', finalPokemon.length);
+  
+  updateCurrentUser({ caughtPokemon: finalPokemon });
+  
+  console.log('✅ movePokemonToParty 완료!');
+};
 
   // 박스 이동
   const movePokemonToBox = (uniqueId) => {

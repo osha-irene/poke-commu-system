@@ -11,18 +11,46 @@ import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 
-
 export default function AdminView({ 
-  trainer, members, updateMaxDailyWalks, regions, allPokemon, allPokemonMaster, allItems,
-  addItemToSelf, giveItemToMember, toggleItemManagement, givePokemonToMember, addPokemonToSelf,
-  gamePokedex, updateRegionPokemon, updateGamePokedex, addMember, toggleAdminStatus,
-  resetMemberWalkCount, resetAllWalkCounts, resetGameData, shopData, updateShopData, 
-  createCustomItem, editMemberPokemon, updateMemberMoney, updateMemberRegionAccess,
-  maintenanceMode, setMaintenanceMode,
-  updateRegionLootConfig,  createRecipe, updateIngredientStats 
+  trainer, 
+  members, 
+  setMembers,
+  updateCurrentUser,
+  updateMaxDailyWalks, 
+  regions, 
+  allPokemon, 
+  allPokemonMaster, 
+  allItems,
+  addItemToSelf, 
+  giveItemToMember, 
+  toggleItemManagement, 
+  givePokemonToMember, 
+  addPokemonToSelf,
+  gamePokedex, 
+  updateRegionPokemon, 
+  updateGamePokedex, 
+  addMember, 
+  toggleAdminStatus,
+  resetMemberWalkCount, 
+  resetAllWalkCounts, 
+  resetGameData, 
+  shopData, 
+  updateShopData, 
+  createCustomItem, 
+  editMemberPokemon, 
+  updateMemberMoney, 
+  updateMemberRegionAccess,
+  maintenanceMode, 
+  setMaintenanceMode,
+  updateRegionLootConfig,  
+  createRecipe, 
+  updateIngredientStats,
+  allMoves,
+  pokemonLearnsets
 }) {
   const [adminTab, setAdminTab] = useState('members');
   const [maxWalks, setMaxWalks] = useState(trainer.maxDailyWalks);
+  const [bulkWalkCount, setBulkWalkCount] = useState(5); // ⭐ 추가
   const [editingRegion, setEditingRegion] = useState(null);
   const [selectedMember, setSelectedMember] = useState(null);
   
@@ -30,8 +58,8 @@ export default function AdminView({
   const [newMemberPassword, setNewMemberPassword] = useState('');
   const [newMemberName, setNewMemberName] = useState('');
   const [escapeMode, setEscapeMode] = useState(() => 
-  localStorage.getItem('poke_escapeMode') || 'instant'
-);
+    localStorage.getItem('poke_escapeMode') || 'instant'
+  );
 
   const handleAddMember = () => {
     if (!newMemberId || !newMemberPassword || !newMemberName) {
@@ -79,36 +107,29 @@ export default function AdminView({
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      {/* ⭐ 서브메뉴 탭 */}
+      {/* 서브메뉴 탭 */}
       <Card className="p-2 flex gap-2 overflow-x-auto">
         <TabButton active={adminTab === 'members'} onClick={() => setAdminTab('members')}>
           👥 멤버 관리
         </TabButton>
-                
         <TabButton active={adminTab === 'regions'} onClick={() => setAdminTab('regions')}>
           🗺️ 지역 설정
         </TabButton>
-        
         <TabButton active={adminTab === 'loot'} onClick={() => setAdminTab('loot')}>
           🎁 탐험 보상
         </TabButton>
-        
         <TabButton active={adminTab === 'pokedex'} onClick={() => setAdminTab('pokedex')}>
           📖 도감 관리
         </TabButton>
-		
-		<TabButton active={adminTab === 'shop'} onClick={() => setAdminTab('shop')}>
+        <TabButton active={adminTab === 'shop'} onClick={() => setAdminTab('shop')}>
           🏪 상점 관리
         </TabButton>
-				
-		<TabButton active={adminTab === 'cooking'} onClick={() => setAdminTab('cooking')}>
-		  🍳 요리 시스템
-		</TabButton>
-		
+        <TabButton active={adminTab === 'cooking'} onClick={() => setAdminTab('cooking')}>
+          🍳 요리 시스템
+        </TabButton>
         <TabButton active={adminTab === 'settings'} onClick={() => setAdminTab('settings')}>
           ⚙️ 시스템 설정
         </TabButton>
-				
         {trainer.isSuperAdmin && (
           <TabButton 
             active={adminTab === 'danger'} 
@@ -120,7 +141,7 @@ export default function AdminView({
         )}
       </Card>
 
-      {/* ⭐ 멤버 관리 탭 */}
+      {/* 멤버 관리 탭 */}
       {adminTab === 'members' && (
         <Card className="p-6">
           <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -200,7 +221,7 @@ export default function AdminView({
                       )}
                     </div>
                     <div className="text-sm text-gray-600 mt-1">
-                      탐험: {member.dailyWalks}/{member.maxDailyWalks}회 | 포켓몬: {member.caughtPokemon.length}마리 | 소지금: {member.money?.toLocaleString() || 0}원
+                      탐험: {member.dailyWalks}/{member.maxDailyWalks}회 | 포켓몬: {member.caughtPokemon.filter(p => p !== null).length}마리 | 소지금: {member.money?.toLocaleString() || 0}원
                     </div>
                   </div>
                 </div>
@@ -211,7 +232,7 @@ export default function AdminView({
         </Card>
       )}
 
-      {/* ⭐ 시스템 설정 탭 */}
+      {/* 시스템 설정 탭 */}
       {adminTab === 'settings' && (
         <>
           {/* 점검 모드 */}
@@ -287,98 +308,141 @@ export default function AdminView({
               <span className="text-sm text-gray-500 ml-4">현재: {trainer.maxDailyWalks}회</span>
             </div>
           </Card>
-		  		
-			{/* 도망 시스템 설정 */}
-<Card className="p-6">
-  <h3 className="text-xl font-bold text-gray-800 mb-4">🏃 포켓몬 도망 시스템</h3>
-  
-  <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-5 border-2 border-indigo-200">
-    <div className="flex items-start justify-between gap-6">
-      {/* 왼쪽: 설명 */}
-      <div className="flex-1">
-        <div className="font-bold text-gray-800 mb-2">포획 실패 시 동작</div>
-        <div className="text-sm text-gray-600 leading-relaxed">
-          {escapeMode === 'none' && (
-            <>
-              <p className="font-semibold text-gray-700 mb-1">❌ 도망 안함 모드</p>
-              <p>포획에 실패해도 포켓몬이 계속 남아있어 무한으로 시도할 수 있습니다. 연습이나 테스트에 유용합니다.</p>
-            </>
-          )}
-          {escapeMode === 'instant' && (
-            <>
-              <p className="font-semibold text-gray-700 mb-1">⚡ 즉시 도망 모드 (기본)</p>
-              <p>포획에 실패하면 포켓몬이 즉시 도망갑니다. 원작 게임의 기본 동작입니다.</p>
-            </>
-          )}
-          {escapeMode === 'speed' && (
-            <>
-              <p className="font-semibold text-gray-700 mb-1">💨 스피드 기반 모드</p>
-              <p>파트너 포켓몬의 스피드와 야생 포켓몬의 스피드를 비교하여 확률적으로 도망갑니다. 포획 실패 횟수가 늘어날수록 도망갈 확률이 감소합니다.</p>
-            </>
-          )}
-        </div>
-      </div>
 
-      {/* 오른쪽: 컴팩트 스위치 */}
-      <div className="flex-shrink-0">
-        <div className="relative bg-white rounded-full p-0.5 border-2 border-gray-300 flex items-center w-44">
-          {/* 슬라이딩 배경 */}
-          <div 
-            className="absolute top-0.5 bottom-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300 ease-in-out"
-            style={{
-              width: 'calc(33.333% - 0.125rem)',
-              left: escapeMode === 'none' ? '0.125rem' : 
-                    escapeMode === 'instant' ? 'calc(33.333% + 0.0625rem)' : 
-                    'calc(66.666% - 0.0625rem)'
-            }}
-          />
-          
-          {/* 버튼들 */}
-          <button
-            onClick={() => {
-              setEscapeMode('none');
-              localStorage.setItem('poke_escapeMode', 'none');
-            }}
-            className={`relative z-10 flex-1 py-1.5 rounded-full font-semibold transition-colors text-center ${
-              escapeMode === 'none' ? 'text-white' : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            <div className="text-base leading-none">❌</div>
-          </button>
-          
-          <button
-            onClick={() => {
-              setEscapeMode('instant');
-              localStorage.setItem('poke_escapeMode', 'instant');
-            }}
-            className={`relative z-10 flex-1 py-1.5 rounded-full font-semibold transition-colors text-center ${
-              escapeMode === 'instant' ? 'text-white' : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            <div className="text-base leading-none">⚡</div>
-          </button>
-          
-          <button
-            onClick={() => {
-              setEscapeMode('speed');
-              localStorage.setItem('poke_escapeMode', 'speed');
-            }}
-            className={`relative z-10 flex-1 py-1.5 rounded-full font-semibold transition-colors text-center ${
-              escapeMode === 'speed' ? 'text-white' : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            <div className="text-base leading-none">💨</div>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</Card>
-		 
+          {/* ⭐ 전체 유저 탐험횟수 일괄 수정 */}
+          <Card className="p-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">🚶 전체 유저 탐험횟수 수정</h3>
+            <div className="space-y-4">
+              <div className="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
+                <div className="font-bold text-gray-800 mb-2">전체 유저 탐험횟수 일괄 수정</div>
+                <div className="text-sm text-gray-600 mb-3">
+                  모든 유저의 오늘의 탐험 횟수를 특정 값으로 설정합니다
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    min="0"
+                    max="999"
+                    value={bulkWalkCount}
+                    onChange={(e) => setBulkWalkCount(parseInt(e.target.value) || 0)}
+                    className="w-24 px-3 py-2 border border-gray-300 rounded"
+                  />
+                  <span className="text-sm text-gray-600">회</span>
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={() => {
+                      if (window.confirm(`모든 유저의 탐험횟수를 ${bulkWalkCount}회로 설정하시겠습니까?`)) {
+                        Object.keys(members).forEach(memberId => {
+                          setMembers(prev => ({
+                            ...prev,
+                            [memberId]: { ...prev[memberId], dailyWalks: bulkWalkCount }
+                          }));
+                        });
+                        if (trainer) {
+                          updateCurrentUser({ dailyWalks: bulkWalkCount });
+                        }
+                        alert(`✅ 모든 유저의 탐험횟수가 ${bulkWalkCount}회로 설정되었습니다!`);
+                      }
+                    }}
+                  >
+                    전체 적용
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* 도망 시스템 설정 */}
+          <Card className="p-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">🏃 포켓몬 도망 시스템</h3>
+            
+            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-5 border-2 border-indigo-200">
+              <div className="flex items-start justify-between gap-6">
+                {/* 왼쪽: 설명 */}
+                <div className="flex-1">
+                  <div className="font-bold text-gray-800 mb-2">포획 실패 시 동작</div>
+                  <div className="text-sm text-gray-600 leading-relaxed">
+                    {escapeMode === 'none' && (
+                      <>
+                        <p className="font-semibold text-gray-700 mb-1">❌ 도망 안함 모드</p>
+                        <p>포획에 실패해도 포켓몬이 계속 남아있어 무한으로 시도할 수 있습니다. 연습이나 테스트에 유용합니다.</p>
+                      </>
+                    )}
+                    {escapeMode === 'instant' && (
+                      <>
+                        <p className="font-semibold text-gray-700 mb-1">⚡ 즉시 도망 모드 (기본)</p>
+                        <p>포획에 실패하면 포켓몬이 즉시 도망갑니다. 원작 게임의 기본 동작입니다.</p>
+                      </>
+                    )}
+                    {escapeMode === 'speed' && (
+                      <>
+                        <p className="font-semibold text-gray-700 mb-1">💨 스피드 기반 모드</p>
+                        <p>파트너 포켓몬의 스피드와 야생 포켓몬의 스피드를 비교하여 확률적으로 도망갑니다. 포획 실패 횟수가 늘어날수록 도망갈 확률이 감소합니다.</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* 오른쪽: 컴팩트 스위치 */}
+                <div className="flex-shrink-0">
+                  <div className="relative bg-white rounded-full p-0.5 border-2 border-gray-300 flex items-center w-44">
+                    {/* 슬라이딩 배경 */}
+                    <div 
+                      className="absolute top-0.5 bottom-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300 ease-in-out"
+                      style={{
+                        width: 'calc(33.333% - 0.125rem)',
+                        left: escapeMode === 'none' ? '0.125rem' : 
+                              escapeMode === 'instant' ? 'calc(33.333% + 0.0625rem)' : 
+                              'calc(66.666% - 0.0625rem)'
+                      }}
+                    />
+                    
+                    {/* 버튼들 */}
+                    <button
+                      onClick={() => {
+                        setEscapeMode('none');
+                        localStorage.setItem('poke_escapeMode', 'none');
+                      }}
+                      className={`relative z-10 flex-1 py-1.5 rounded-full font-semibold transition-colors text-center ${
+                        escapeMode === 'none' ? 'text-white' : 'text-gray-600 hover:text-gray-800'
+                      }`}
+                    >
+                      <div className="text-base leading-none">❌</div>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setEscapeMode('instant');
+                        localStorage.setItem('poke_escapeMode', 'instant');
+                      }}
+                      className={`relative z-10 flex-1 py-1.5 rounded-full font-semibold transition-colors text-center ${
+                        escapeMode === 'instant' ? 'text-white' : 'text-gray-600 hover:text-gray-800'
+                      }`}
+                    >
+                      <div className="text-base leading-none">⚡</div>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setEscapeMode('speed');
+                        localStorage.setItem('poke_escapeMode', 'speed');
+                      }}
+                      className={`relative z-10 flex-1 py-1.5 rounded-full font-semibold transition-colors text-center ${
+                        escapeMode === 'speed' ? 'text-white' : 'text-gray-600 hover:text-gray-800'
+                      }`}
+                    >
+                      <div className="text-base leading-none">💨</div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
         </>
       )}
 
-      {/* ⭐ 지역 설정 탭 */}
+      {/* 지역 설정 탭 */}
       {adminTab === 'regions' && (
         <Card className="p-6">
           <h3 className="text-xl font-bold text-gray-800 mb-4">🗺️ 구역별 포켓몬 설정</h3>
@@ -401,7 +465,7 @@ export default function AdminView({
         </Card>
       )}
 
-      {/* ⭐ 탐험 보상 탭 */}
+      {/* 탐험 보상 탭 */}
       {adminTab === 'loot' && (
         <LootConfigPanel 
           regions={regions}
@@ -410,7 +474,7 @@ export default function AdminView({
         />
       )}
 
-      {/* ⭐ 상점 관리 탭 */}
+      {/* 상점 관리 탭 */}
       {adminTab === 'shop' && (
         <ShopAdminPanel 
           shopData={shopData}
@@ -419,7 +483,7 @@ export default function AdminView({
         />
       )}
 
-      {/* ⭐ 도감 관리 탭 */}
+      {/* 도감 관리 탭 */}
       {adminTab === 'pokedex' && (
         <Card className="p-6">
           <h3 className="text-xl font-bold text-gray-800 mb-4">📖 게임 도감 포켓몬 설정</h3>
@@ -430,15 +494,16 @@ export default function AdminView({
           />
         </Card>
       )}
-	  
-	  {adminTab === 'cooking' && (
-		  <CookingAdminPanel 
-			onCreateRecipe={createRecipe}
-			onUpdateIngredientStats={updateIngredientStats}
-		  />
-		)}
 
-      {/* ⭐ 위험 구역 탭 */}
+      {/* 요리 시스템 탭 */}
+      {adminTab === 'cooking' && (
+        <CookingAdminPanel 
+          onCreateRecipe={createRecipe}
+          onUpdateIngredientStats={updateIngredientStats}
+        />
+      )}
+
+      {/* 위험 구역 탭 */}
       {adminTab === 'danger' && trainer.isSuperAdmin && (
         <Card className="p-6 bg-red-50 border-red-200">
           <h3 className="text-xl font-bold text-red-800 mb-4">⚠️ 위험 구역</h3>
@@ -474,6 +539,8 @@ export default function AdminView({
           allItems={allItems} 
           allPokemonMaster={allPokemonMaster}
           regions={regions}
+          allMoves={allMoves} 
+          pokemonLearnsets={pokemonLearnsets} 
           onClose={() => setSelectedMember(null)} 
           onGiveItem={giveItemToMember} 
           onGivePokemon={givePokemonToMember} 
@@ -482,6 +549,9 @@ export default function AdminView({
           onToggleAdmin={handleToggleAdmin}
           onUpdateMoney={updateMemberMoney}
           onUpdateRegionAccess={updateMemberRegionAccess}
+          setMembers={setMembers}
+          currentUser={trainer}
+          updateCurrentUser={updateCurrentUser}
         />
       )}
     </div>
