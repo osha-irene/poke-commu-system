@@ -1177,6 +1177,7 @@ const skipFirstCatchMemo = async (pokemonNumber) => {
     movePokemonToParty: restPokemonManagement.movePokemonToParty,
     movePokemonToBox: restPokemonManagement.movePokemonToBox,
     releasePokemon: restPokemonManagement.releasePokemon,
+    reorderPartyPokemon: restPokemonManagement.reorderPartyPokemon,
     useRareCandy: handleRareCandyWithEvolution,
     updatePokemonNickname: restPokemonManagement.updatePokemonNickname,
     updatePokedexMemo,

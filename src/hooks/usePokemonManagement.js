@@ -345,6 +345,25 @@ const movePokemonToParty = (uniqueId) => {
     alert(`${pokemon.nickname || pokemon.name}에게서 ${itemName}을(를) 회수했습니다!`);
   };
 
+  // 엔트리 순서 변경
+const reorderPartyPokemon = (reorderedParty) => {
+  if (!currentUser) return;
+  
+  console.log('🔄 reorderPartyPokemon 호출');
+  console.log('📦 새로운 엔트리 순서:', reorderedParty.map(p => p?.name || 'null'));
+  
+  const box = currentUser.caughtPokemon.slice(6);
+  const partyWithNulls = [...reorderedParty];
+  while (partyWithNulls.length < 6) {
+    partyWithNulls.push(null);
+  }
+  
+  const finalPokemon = [...partyWithNulls.slice(0, 6), ...box];
+  console.log('✅ 최종 배열:', finalPokemon.map((p, i) => `[${i}] ${p?.name || 'null'}`));
+  
+  updateCurrentUser({ caughtPokemon: finalPokemon });
+};
+
   return {
     movePokemonToParty,
     movePokemonToBox,
@@ -353,7 +372,8 @@ const movePokemonToParty = (uniqueId) => {
     useRareCandy,
     updatePokemonNickname,
     giveItemToPokemon,
-    takeItemFromPokemon
+    takeItemFromPokemon,
+    reorderPartyPokemon
   };
 };
 

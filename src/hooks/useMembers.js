@@ -81,7 +81,7 @@ export const useMembers = (allPokemonData) => {
   }, [allPokemonData]);
 
   // 🔥 회원 데이터 변경 시 Firebase에 자동 저장
-  useEffect(() => {
+ {/* useEffect(() => {
     const saveMembers = async () => {
       if (isLoading || Object.keys(members).length === 0) return;
 
@@ -108,7 +108,7 @@ export const useMembers = (allPokemonData) => {
     };
 
     saveMembers();
-  }, [members, isLoading]);
+  }, [members, isLoading]); */}
 
   return {
     members,

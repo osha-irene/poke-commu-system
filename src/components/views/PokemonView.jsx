@@ -1,13 +1,12 @@
-// src/components/views/PokemonView.jsx
 import React, { useState, useEffect } from 'react';
-import { Package, ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
-import { useGame } from '../../contexts/GameContext';  // ← 추가
+import { Package, ArrowDown, ArrowUp } from 'lucide-react';
+import { useGame } from '../../contexts/GameContext';
 import PartySlot from './pokemon/PartySlot';
 import BoxPokemon from './pokemon/BoxPokemon';
 import PokemonDetailPanel from './pokemon/PokemonDetailPanel';
 import { getButtonClass, getCardClass } from '../../styles/theme';
 
-export default function PokemonView() {  // ← props 전부 삭제
+export default function PokemonView() {
   // ✅ Context에서 데이터 가져오기
   const {
     caughtPokemon = [],
@@ -25,6 +24,7 @@ export default function PokemonView() {  // ← props 전부 삭제
     setPartnerPokemon: onSetPartner,
     forgetMove: onForgetMove,
     learnMove: onLearnMove,
+    reorderPartyPokemon: onReorderParty,
     currentUser,
     allMoves = [],
     pokemonLearnsets = {},
@@ -32,13 +32,15 @@ export default function PokemonView() {  // ← props 전부 삭제
   } = useGame();
 
   const isAdmin = currentUser?.isAdmin || false;
-  const onReorderParty = null;
 
+  // ⭐ 디버깅: props 변경 확인
   useEffect(() => {
     console.log('🔥🔥🔥 PokemonView 리렌더링!');
+    console.log('🔥 currentUser:', currentUser?.name);
     console.log('🔥 caughtPokemon 길이:', caughtPokemon.length);
     console.log('🔥 첫 4개 포켓몬:', caughtPokemon.slice(0, 4).map(p => p?.name || 'null'));
-  }, [caughtPokemon]);
+  }, [caughtPokemon, currentUser]);
+
   const [selectedPokemonId, setSelectedPokemonId] = useState(null);
   const [showBox, setShowBox] = useState(false);
   const [draggedPokemon, setDraggedPokemon] = useState(null);
@@ -437,10 +439,8 @@ const handlePartyDrop = (e, dropIndex) => {
             </h3>
             <button
               onClick={handleOpenReorderModal}
-              className={getButtonClass('primary', 'sm') + ' flex items-center gap-2'}
-            >
-              <ArrowUpDown size={16} />
-              순서 변경
+              >
+          
             </button>
           </div>
           
