@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import ReactDOM from 'react-dom';
 import { POKEBALL_LIST, getButtonClass, getTypeColor } from '../../../../styles/theme';
 import { X, Zap, Shield, Star } from 'lucide-react';
+import { usePokemonContext } from '../../../../contexts/PokemonContext';
 
 const TYPE_COLORS = {
   '노말': '#A8A878', '불꽃': '#F08030', '물': '#6890F0', '전기': '#F8D030',
@@ -22,13 +23,12 @@ const getCategoryIcon = (category) => {
 
 function MemberPokemonTab({ 
   member, 
-  allPokemonMaster,
-  allMoves = [],
-  pokemonLearnsets = {},
+
   onGivePokemon, 
   onEditPokemon 
 }) {
-  const [pokemonMode, setPokemonMode] = useState('view');
+   const { allPokemonMaster, allMoves, pokemonLearnsets } = usePokemonContext();
+   const [pokemonMode, setPokemonMode] = useState('view');
   
   // 편집 모드 상태
   const [editingPokemon, setEditingPokemon] = useState(null);

@@ -45,8 +45,6 @@ export default function AdminView({
   updateRegionLootConfig,  
   createRecipe, 
   updateIngredientStats,
-  allMoves,
-  pokemonLearnsets
 }) {
   const [adminTab, setAdminTab] = useState('members');
   const [maxWalks, setMaxWalks] = useState(trainer.maxDailyWalks);
@@ -539,8 +537,6 @@ export default function AdminView({
           allItems={allItems} 
           allPokemonMaster={allPokemonMaster}
           regions={regions}
-          allMoves={allMoves} 
-          pokemonLearnsets={pokemonLearnsets} 
           onClose={() => setSelectedMember(null)} 
           onGiveItem={giveItemToMember} 
           onGivePokemon={givePokemonToMember} 

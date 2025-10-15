@@ -20,9 +20,7 @@ function MemberDetailPanel({
   onUpdateRegionAccess,
   setMembers,
   currentUser,
-  updateCurrentUser,
-  allMoves,
-  pokemonLearnsets
+  updateCurrentUser
 }) {
   const [selectedTab, setSelectedTab] = useState('info');
 
@@ -123,8 +121,6 @@ function MemberDetailPanel({
               allPokemonMaster={allPokemonMaster}
               onGivePokemon={onGivePokemon}
               onEditPokemon={onEditPokemon}
-              allMoves={allMoves} 
-              pokemonLearnsets={pokemonLearnsets}
             />
           )}
 

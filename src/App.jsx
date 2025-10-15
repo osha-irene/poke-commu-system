@@ -16,6 +16,8 @@ import MembersView from './components/views/MembersView';
 import NPCsView from './components/views/NPCsView';
 import QnABoard from './components/views/QnABoard';
 import CookingView from './components/views/CookingView';
+import { PokemonProvider } from './contexts/PokemonContext';
+
 
 
 // 로그인 화면 컴포넌트
@@ -183,8 +185,32 @@ export default function App() {
     setMembers
   } = useGameState();
 
+  // ⭐ 여기에 추가! (useGameState 바로 아래)
+  const pokemonValue = {
+    allPokemon,
+    allPokemonMaster,
+    caughtPokemon,
+    gamePokedex,
+    allMoves,
+    pokemonLearnsets,
+    
+    // 함수들
+    movePokemonToParty,
+    movePokemonToBox,
+    releasePokemon,
+    learnMove,
+    forgetMove,
+    updatePokemonNickname,
+    giveItemToPokemon,
+    takeItemFromPokemon,
+    useRareCandy,
+    checkEvolution,
+    manualEvolve,
+    useItemOnPokemon
+  };
+
   // ⭐ 엔트리 순서 변경 함수
-const reorderParty = (newPartyOrder) => {
+  const reorderParty = (newPartyOrder) => {
   if (!currentUser) return;
   
   console.log('🔄 App.jsx - reorderParty 호출됨');
@@ -329,6 +355,7 @@ const reorderParty = (newPartyOrder) => {
   }
 
   return (
+        <PokemonProvider value={pokemonValue}>  {/* ← 이거 추가! */}
     <div className="h-screen flex bg-gray-50">
       <Sidebar 
         currentTab={currentTab}
@@ -467,8 +494,6 @@ const reorderParty = (newPartyOrder) => {
               updateIngredientStats={updateIngredientStats}
               setMembers={setMembers}      
               updateCurrentUser={updateCurrentUser}
-              allMoves={allMoves}
-              pokemonLearnsets={pokemonLearnsets}
             />
           )}
           
@@ -516,5 +541,6 @@ const reorderParty = (newPartyOrder) => {
         />
       )}
     </div>
+      </PokemonProvider>  
   );
 }
