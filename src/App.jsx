@@ -424,14 +424,7 @@ export default function App() {
     }
   };
 
-  // 게스트 로그인 핸들러
-  const handleGuestLogin = async () => {
-    const success = await handleAnonymousLogin();
-    if (!success) {
-      alert('게스트 로그인에 실패했습니다.');
-    }
-  };
-
+  
   // 로그인하지 않은 경우 로그인 화면 표시
   if (isAuthLoading) {
     return (
