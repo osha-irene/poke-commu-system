@@ -86,23 +86,21 @@ export const useMembers = (allPokemonData) => {
       if (isLoading || Object.keys(members).length === 0) return;
 
       try {
-        // ID 필드 제거하고, undefined를 null로 변환
-        const membersToSave = {};
-        Object.keys(members).forEach(userId => {
+        // ⭐ 각 회원을 개별적으로 저장 (전체가 아님!)
+        for (const userId of Object.keys(members)) {
           const { id, ...memberData } = members[userId];
           
-          // ⭐ undefined를 null로 변환 (재귀적으로)
+          // undefined를 null로 변환
           const cleanData = JSON.parse(
             JSON.stringify(memberData, (key, value) => 
               value === undefined ? null : value
             )
           );
           
-          membersToSave[userId] = cleanData;
-        });
-
-        const membersRef = ref(database, 'members');
-        await set(membersRef, membersToSave);
+          const memberRef = ref(database, `members/${userId}`);
+          await set(memberRef, cleanData);
+        }
+        
         console.log('💾 Firebase에 회원 데이터 저장 완료');
       } catch (error) {
         console.error('❌ 회원 데이터 저장 실패:', error);
