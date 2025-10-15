@@ -1,4 +1,4 @@
-// src/hooks/useGameData.js - Firebase 완전 버전
+// src/hooks/useGameData.js - Firebase 완전 버전 (수정됨)
 
 import { useState, useEffect } from 'react';
 import { ref, get, set } from 'firebase/database';
@@ -8,7 +8,12 @@ import customItemsData from '../data/customItems.json';
 import regionsData from '../data/regions.json';
 
 export const useGameData = (allPokemonData) => {
-  const [allItems, setAllItems] = useState([]);
+  // ✅ 수정: 초기값을 JSON 데이터로 설정
+  const [allItems, setAllItems] = useState(() => {
+    console.log('📦 초기 아이템 로딩:', itemsData?.items?.length || 0, '개');
+    return itemsData?.items || [];
+  });
+  
   const [regions, setRegions] = useState([]);
   const [gamePokedex, setGamePokedex] = useState([]);
   const [sharedPokedexData, setSharedPokedexData] = useState({});
@@ -26,10 +31,15 @@ export const useGameData = (allPokemonData) => {
         const customItemsRef = ref(database, 'gameData/customItems');
         const customSnapshot = await get(customItemsRef);
         const customItems = customSnapshot.exists() ? customSnapshot.val() : [];
-        const loadedItems = [...itemsData.items, ...customItems];
+        
+        // ✅ 수정: itemsData.items가 undefined일 경우 대비
+        const baseItems = itemsData?.items || [];
+        const loadedItems = [...baseItems, ...customItems];
+        
         setAllItems(loadedItems);
         console.log('📦 전체 아이템 로딩:', loadedItems.length, '개');
-        console.log('🎨 커스텀 아이템:', customItems.length, '개');
+        console.log('  - 기본 아이템:', baseItems.length, '개');
+        console.log('  - 커스텀 아이템:', customItems.length, '개');
 
         // 2. 지역 데이터 로드
         const regionsRef = ref(database, 'gameData/regions');
@@ -99,11 +109,15 @@ export const useGameData = (allPokemonData) => {
         
         // 폴백: JSON 파일 사용
         console.log('⚠️ 폴백: JSON 파일에서 로드');
-        setAllItems([...itemsData.items, ...(customItemsData.items || [])]);
+        const baseItems = itemsData?.items || [];
+        const customItems = customItemsData?.items || [];
+        setAllItems([...baseItems, ...customItems]);
+        
         setRegions(regionsData.regions.map(region => ({
           ...region,
           pokemons: region.defaultPokemon
         })));
+        
         setGamePokedex(
           allPokemonData
             .filter(p => parseInt(p.generation) === 1)
@@ -127,7 +141,7 @@ export const useGameData = (allPokemonData) => {
       if (isLoading) return;
 
       try {
-        const baseItemCount = itemsData.items.length;
+        const baseItemCount = itemsData?.items?.length || 0;
         const customItems = allItems.slice(baseItemCount);
         
         if (customItems.length > 0) {
