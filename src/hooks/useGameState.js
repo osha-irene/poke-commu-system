@@ -1210,7 +1210,7 @@ const skipFirstCatchMemo = async (pokemonNumber) => {
     cancelEvolution: evolutionHook.cancelEvolution,
     increaseEffort: pokemonManagement.increaseEffort,
     recipes,
-    discoveredRecipes,
+    discoveredRecipes: discoveredRecipes[currentUser?.id] || [],  
     createRecipe,
     cookRecipe,
     discoverRecipe,

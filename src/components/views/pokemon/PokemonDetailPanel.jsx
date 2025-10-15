@@ -556,7 +556,7 @@ const renderEffortTick = (tickProps) => {
                     />
                     <PolarRadiusAxis 
                       angle={90}
-                      domain={[50, 170]}
+                      domain={[0, 255]}
                       tickCount={5}
                       tick={false}
                     />
