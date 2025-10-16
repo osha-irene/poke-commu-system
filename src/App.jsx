@@ -458,12 +458,12 @@ console.log('🎮 App.jsx - gameState.createCustomItem:', gameState.createCustom
       </div>
     );
   }
-
-return (
+  
+  return (
   <GameProvider value={gameState}>
     <PokemonProvider value={pokemonValue}>
       {isMobile ? (
-        /* 📱 모바일 레이아웃 */
+        // 모바일 레이아웃
         <MobileLayout
           currentTab={currentTab}
           setCurrentTab={setCurrentTab}
@@ -521,7 +521,7 @@ return (
           {currentTab === 'admin' && isAdmin && <AdminView />}
         </MobileLayout>
       ) : (
-        /* 💻 데스크톱 레이아웃 */
+        // 데스크톱 레이아웃
         <div className="h-screen flex bg-gray-50">
           <Sidebar 
             currentTab={currentTab}
@@ -588,7 +588,6 @@ return (
         </div>
       )}
 
-      {/* 모달들 - 모바일/데스크톱 공통 */}
       {encounterPokemon && (
         <EncounterModal
           pokemon={encounterPokemon}
