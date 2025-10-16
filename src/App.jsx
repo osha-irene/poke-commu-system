@@ -458,12 +458,10 @@ console.log('🎮 App.jsx - gameState.createCustomItem:', gameState.createCustom
       </div>
     );
   }
-  
-  return (
+return (
   <GameProvider value={gameState}>
     <PokemonProvider value={pokemonValue}>
       {isMobile ? (
-        // 모바일 레이아웃
         <MobileLayout
           currentTab={currentTab}
           setCurrentTab={setCurrentTab}
@@ -521,7 +519,6 @@ console.log('🎮 App.jsx - gameState.createCustomItem:', gameState.createCustom
           {currentTab === 'admin' && isAdmin && <AdminView />}
         </MobileLayout>
       ) : (
-        // 데스크톱 레이아웃
         <div className="h-screen flex bg-gray-50">
           <Sidebar 
             currentTab={currentTab}
@@ -619,3 +616,4 @@ console.log('🎮 App.jsx - gameState.createCustomItem:', gameState.createCustom
     </PokemonProvider>
   </GameProvider>
 );
+}

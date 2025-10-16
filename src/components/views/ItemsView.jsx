@@ -1,9 +1,12 @@
+import useMediaQuery from '../../hooks/useMediaQuery';
+import MobileItemsView from './_mobile/MobileItemsView';
+
 import React, { useState } from 'react';
 import { Search, X, ShoppingCart, Trash2, Sparkles } from 'lucide-react';
 
 import { useGame } from '../../contexts/GameContext';
 
-export default function ItemsView() {
+function DesktopItemsView() {
   const {
     items = [],
     allItems = [],
@@ -581,4 +584,10 @@ export default function ItemsView() {
       )}
     </div>
   );
+}
+
+export default function ItemsView() {
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  
+  return isMobile ? <MobileItemsView /> : <DesktopItemsView />;
 }

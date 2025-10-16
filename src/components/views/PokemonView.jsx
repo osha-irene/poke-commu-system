@@ -1,3 +1,6 @@
+import useMediaQuery from '../../hooks/useMediaQuery';
+import MobilePokemonView from './_mobile/MobilePokemonView';
+
 import React, { useState, useEffect } from 'react';
 import { Package, ArrowDown, ArrowUp } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
@@ -6,7 +9,7 @@ import BoxPokemon from './pokemon/BoxPokemon';
 import PokemonDetailPanel from './pokemon/PokemonDetailPanel';
 import { getButtonClass, getCardClass } from '../../styles/theme';
 
-export default function PokemonView() {
+function DesktopPokemonView() {
   // ✅ Context에서 데이터 가져오기
   const {
     caughtPokemon = [],
@@ -32,14 +35,6 @@ export default function PokemonView() {
   } = useGame();
 
   const isAdmin = currentUser?.isAdmin || false;
-
-  // ⭐ 디버깅: props 변경 확인
-  useEffect(() => {
-    console.log('🔥🔥🔥 PokemonView 리렌더링!');
-    console.log('🔥 currentUser:', currentUser?.name);
-    console.log('🔥 caughtPokemon 길이:', caughtPokemon.length);
-    console.log('🔥 첫 4개 포켓몬:', caughtPokemon.slice(0, 4).map(p => p?.name || 'null'));
-  }, [caughtPokemon, currentUser]);
 
   const [selectedPokemonId, setSelectedPokemonId] = useState(null);
   const [showBox, setShowBox] = useState(false);
@@ -786,3 +781,8 @@ const handlePartyDrop = (e, dropIndex) => {
     </div>
   );
 }
+
+   export default function PokemonView() {
+     const isMobile = useMediaQuery('(max-width: 768px)');
+     return isMobile ? <MobilePokemonView /> : <DesktopPokemonView />;
+   }
