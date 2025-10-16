@@ -1,4 +1,4 @@
-// src/hooks/useGameData.js - Firebase 완전 버전
+// src/hooks/useGameData.js - Firebase 완전 버전 + TM 통합
 
 import { useState, useEffect } from 'react';
 import { ref, get, set } from 'firebase/database';
@@ -6,6 +6,7 @@ import { database } from '../firebase';
 import itemsData from '../data/items.json';
 import customItemsData from '../data/customItems.json';
 import regionsData from '../data/regions.json';
+import technicalMachinesData from '../data/technicalMachines.json';
 
 export const useGameData = (allPokemonData) => {
   const [allItems, setAllItems] = useState([]);
@@ -23,11 +24,48 @@ export const useGameData = (allPokemonData) => {
         const customItemsRef = ref(database, 'gameData/customItems');
         const customSnapshot = await get(customItemsRef);
         const customItems = customSnapshot.exists() ? customSnapshot.val() : [];
+        
+        // 2. 기본 아이템 + TM 아이템 병합
         const baseItems = itemsData.items;
-        setAllItems([...baseItems, ...customItems]);
-        console.log('📦 전체 아이템 로딩:', baseItems.length + customItems.length, '개');
+        const tmItems = technicalMachinesData.tms.map(tm => ({
+          id: tm.id,
+          name: tm.name,
+          nameEn: tm.nameEn,
+          category: 'machines',
+          categoryData: {
+            id: 'machines',
+            nameEn: 'machines',
+            name: '기술머신',
+            pocket: 'machines'
+          },
+          cost: 10000, // 기본 가격 (필요시 조정)
+          sellPrice: 5000,
+          canSell: true,
+          effect: tm.description,
+          description: tm.description,
+          spriteUrl: tm.spriteUrl,
+          imageUrl: tm.spriteUrl,
+          // TM 전용 데이터
+          tmNumber: tm.tmNumber,
+          moveId: tm.moveId,
+          type: tm.type,
+          typeEn: tm.typeEn,
+          moveCategory: tm.category,
+          power: tm.power,
+          accuracy: tm.accuracy,
+          pp: tm.pp,
+          isTM: true,
+          generation: tm.generation
+        }));
+        
+        const allItemsCombined = [...baseItems, ...tmItems, ...customItems];
+        setAllItems(allItemsCombined);
+        console.log('📦 전체 아이템 로딩:', allItemsCombined.length, '개');
+        console.log('   - 기본 아이템:', baseItems.length, '개');
+        console.log('   - TM:', tmItems.length, '개');
+        console.log('   - 커스텀:', customItems.length, '개');
 
-        // 2. 지역 데이터 로드
+        // 3. 지역 데이터 로드
         const regionsRef = ref(database, 'gameData/regions');
         const regionsSnapshot = await get(regionsRef);
         if (regionsSnapshot.exists()) {
@@ -44,7 +82,7 @@ export const useGameData = (allPokemonData) => {
           console.log('🔧 초기 지역 데이터 생성');
         }
 
-        // 3. 게임 도감 로드
+        // 4. 게임 도감 로드
         const pokedexRef = ref(database, 'gameData/gamePokedex');
         const pokedexSnapshot = await get(pokedexRef);
         if (pokedexSnapshot.exists()) {
@@ -64,16 +102,15 @@ export const useGameData = (allPokemonData) => {
           console.log('🔧 초기 게임 도감 생성');
         }
 
-        // 4. 공유 도감 로드 (⭐ 핵심 수정)
+        // 5. 공유 도감 로드
         const sharedPokedexRef = ref(database, 'gameData/sharedPokedex');
         const sharedSnapshot = await get(sharedPokedexRef);
         if (sharedSnapshot.exists()) {
           const sharedData = sharedSnapshot.val();
           
-          // ✅ 데이터 검증 - 객체 키가 숫자인지 확인
+          // 데이터 검증
           const validatedData = {};
           Object.entries(sharedData).forEach(([key, value]) => {
-            // 키가 숫자 문자열인지 확인
             if (!isNaN(key) && typeof value === 'object' && value !== null) {
               validatedData[key] = value;
             } else {
@@ -88,7 +125,7 @@ export const useGameData = (allPokemonData) => {
           console.log('🔧 공유 도감 초기화');
         }
 
-        // 5. 점검 모드 로드
+        // 6. 점검 모드 로드
         const maintenanceRef = ref(database, 'gameData/maintenanceMode');
         const maintenanceSnapshot = await get(maintenanceRef);
         if (maintenanceSnapshot.exists()) {
@@ -103,7 +140,15 @@ export const useGameData = (allPokemonData) => {
       } catch (error) {
         console.error('❌ 게임 데이터 로드 실패:', error);
         // 폴백: JSON 파일 사용
-        setAllItems(itemsData.items);
+        const tmItems = technicalMachinesData.tms.map(tm => ({
+          id: tm.id,
+          name: tm.name,
+          nameEn: tm.nameEn,
+          category: 'machines',
+          spriteUrl: tm.spriteUrl,
+          isTM: true
+        }));
+        setAllItems([...itemsData.items, ...tmItems]);
         setRegions(regionsData.regions.map(r => ({ ...r, pokemons: r.defaultPokemon })));
         setGamePokedex(allPokemonData.filter(p => parseInt(p.generation) === 1));
         setSharedPokedexData({});
@@ -146,18 +191,16 @@ export const useGameData = (allPokemonData) => {
     saveGamePokedex();
   }, [gamePokedex, isLoading]);
 
-  // 🔥 공유 도감 변경 시 Firebase에 저장 (⭐ 핵심 수정)
+  // 🔥 공유 도감 변경 시 Firebase에 저장
   useEffect(() => {
     const saveSharedPokedex = async () => {
       if (isLoading) return;
       
       try {
-        // ✅ 저장 전 데이터 검증
         const validatedData = {};
         let hasInvalidData = false;
         
         Object.entries(sharedPokedexData).forEach(([key, value]) => {
-          // 키가 숫자 문자열인지 확인
           if (!isNaN(key) && typeof value === 'object' && value !== null) {
             validatedData[key] = value;
           } else {
@@ -199,7 +242,6 @@ export const useGameData = (allPokemonData) => {
   }, [maintenanceMode, isLoading]);
 
   const updatePokedexMemo = async (pokemonNumber, memo, currentUser) => {
-    // ✅ pokemonNumber가 숫자인지 확인
     const numericKey = String(pokemonNumber);
     
     const entry = sharedPokedexData[numericKey];

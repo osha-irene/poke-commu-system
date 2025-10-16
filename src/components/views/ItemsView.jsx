@@ -84,25 +84,28 @@ function DesktopItemsView() {
                        '유용한 아이템';
 
     // ✅ 사용 가능 여부 판단
-    const canUse = item.canUse !== undefined ? item.canUse : (
-      pocket === 'berries' || 
-      pocket === 'medicine' || 
-      pocket === 'vitamins' ||
-      category === 'vitamins' ||
-      category === 'medicine' ||
-      category?.includes('evolution') ||
-      category?.includes('berry') ||
-      itemData?.name?.includes('진화의돌') ||
-      item.specialEffect ||
-      item.friendshipBoost ||
-      item.ivBoost ||
-      item.evBoost ||
-      item.conditionBoost ||
-      itemData?.friendshipBoost ||
-      itemData?.ivBoost ||
-      itemData?.evBoost ||
-      itemData?.conditionBoost
-    );
+		const canUse = item.canUse !== undefined ? item.canUse : (
+		  pocket === 'berries' || 
+		  pocket === 'medicine' || 
+		  pocket === 'vitamins' ||
+		  pocket === 'machines' ||  // ⭐ 추가
+		  category === 'vitamins' ||
+		  category === 'medicine' ||
+		  category === 'machines' ||  // ⭐ 추가
+		  category?.includes('evolution') ||
+		  category?.includes('berry') ||
+		  itemData?.isTM ||  // ⭐ 추가
+		  itemData?.name?.includes('진화의돌') ||
+		  item.specialEffect ||
+		  item.friendshipBoost ||
+		  item.ivBoost ||
+		  item.evBoost ||
+		  item.conditionBoost ||
+		  itemData?.friendshipBoost ||
+		  itemData?.ivBoost ||
+		  itemData?.evBoost ||
+		  itemData?.conditionBoost
+		);
 
     return {
       name: item.name,
