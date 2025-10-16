@@ -1,17 +1,17 @@
 // src/components/views/pokemon/MoveSelectModal.jsx
 import React, { useState, useMemo } from 'react';
 import { X, Search, Zap, Shield, Star } from 'lucide-react';
+import { getTypeNameKr, getTypeColor, COLORS } from '../../../styles/theme';
 
-const TYPE_COLORS = {
-  '노말': '#A8A878', '불꽃': '#F08030', '물': '#6890F0', '전기': '#F8D030',
-  '풀': '#78C850', '얼음': '#98D8D8', '격투': '#C03028', '독': '#A040A0',
-  '땅': '#E0C068', '비행': '#A890F0', '에스퍼': '#F85888', '벌레': '#A8B820',
-  '바위': '#B8A038', '고스트': '#705898', '드래곤': '#7038F8', '악': '#705848',
-  '강철': '#B8B8D0', '페어리': '#EE99AC'
+const CATEGORY_NAMES_KR = {
+  'physical': '물리',
+  'special': '특수',
+  'status': '변화'
 };
 
 const getCategoryIcon = (category) => {
-  switch (category) {
+  const categoryKr = CATEGORY_NAMES_KR[category] || category;
+  switch (categoryKr) {
     case '물리': return <Zap size={14} className="text-orange-500" />;
     case '특수': return <Star size={14} className="text-purple-500" />;
     case '변화': return <Shield size={14} className="text-blue-500" />;
@@ -23,7 +23,7 @@ export default function MoveSelectModal({
   pokemon, 
   allMoves = [], 
   pokemonLearnsets = {},
-  currentMoves = [],  // 현재 배운 기술들
+  currentMoves = [],
   onSelect, 
   onClose 
 }) {
@@ -32,46 +32,46 @@ export default function MoveSelectModal({
   const [showLearnableOnly, setShowLearnableOnly] = useState(true);
   const [selectedMove, setSelectedMove] = useState(null);
 
-  // ⭐ 현재 배운 기술의 ID 목록
   const learnedMoveIds = useMemo(() => 
     currentMoves.map(m => m.moveId),
     [currentMoves]
   );
 
-  // 이 포켓몬이 배울 수 있는 기술 ID 목록
   const learnableMovesIds = useMemo(() => {
     const learnset = pokemonLearnsets[pokemon.number.toString()];
     if (!learnset) return [];
     return learnset.levelUpMoves.map(lm => lm.moveId);
   }, [pokemon.number, pokemonLearnsets]);
 
-  // 필터링된 기술 목록
   const filteredMoves = useMemo(() => {
     let moves = allMoves;
 
-    // 배울 수 있는 기술만
     if (showLearnableOnly) {
       moves = moves.filter(m => learnableMovesIds.includes(m.id));
     }
 
-    // 타입 필터
     if (filterType !== 'all') {
-      moves = moves.filter(m => m.type === filterType);
+      moves = moves.filter(m => {
+        const typeKr = getTypeNameKr(m.type) || m.type;
+        return typeKr === filterType || m.type === filterType;
+      });
     }
 
-    // 검색어 필터
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       moves = moves.filter(m => 
-        m.name.toLowerCase().includes(term) ||
-        m.nameEn.toLowerCase().includes(term)
+        m.name?.toLowerCase().includes(term) ||
+        m.nameEn?.toLowerCase().includes(term)
       );
     }
 
-    return moves;
+    return moves.map(move => ({
+      ...move,
+      type: getTypeNameKr(move.type) || move.type,
+      category: CATEGORY_NAMES_KR[move.category] || move.category
+    }));
   }, [allMoves, learnableMovesIds, showLearnableOnly, filterType, searchTerm]);
 
-  // 타입 목록
   const types = ['all', '노말', '불꽃', '물', '전기', '풀', '얼음', '격투', '독', '땅', '비행', '에스퍼', '벌레', '바위', '고스트', '드래곤', '악', '강철', '페어리'];
 
   return (
@@ -107,34 +107,41 @@ export default function MoveSelectModal({
           </div>
 
           {/* 타입 필터 */}
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {types.map(type => (
-              <button
-                key={type}
-                onClick={() => setFilterType(type)}
-                className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
-                  filterType === type
-                    ? 'text-white scale-105'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-                style={
-                  filterType === type && type !== 'all'
-                    ? { backgroundColor: TYPE_COLORS[type] }
-                    : {}
-                }
-              >
-                {type === 'all' ? '전체' : type}
-              </button>
-            ))}
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            {types.map(type => {
+              const typeColors = type !== 'all' ? getTypeColor(type) : null;
+              const isSelected = filterType === type;
+              
+              return (
+                <button
+                  key={type}
+                  onClick={() => setFilterType(type)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex-shrink-0 ${
+                    isSelected
+                      ? 'text-white scale-105 shadow-md'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                  style={
+                    isSelected && type !== 'all' && typeColors
+                      ? { backgroundColor: typeColors.bg, color: typeColors.text }
+                      : isSelected && type === 'all'
+                      ? { backgroundColor: COLORS.brand.primary }
+                      : {}
+                  }
+                >
+                  {type === 'all' ? '전체' : type}
+                </button>
+              );
+            })}
           </div>
 
           {/* 배울 수 있는 기술만 */}
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
             <input
               type="checkbox"
               checked={showLearnableOnly}
               onChange={(e) => setShowLearnableOnly(e.target.checked)}
-              className="rounded"
+              className="rounded cursor-pointer"
             />
             <span>이 포켓몬이 배울 수 있는 기술만 표시</span>
           </label>
@@ -150,48 +157,70 @@ export default function MoveSelectModal({
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {filteredMoves.map(move => {
-                const isLearned = learnedMoveIds.includes(move.id);  // ⭐ 이미 배운 기술인지
+                const isLearned = learnedMoveIds.includes(move.id);
+                const typeColors = getTypeColor(move.type);
                 
                 return (
                   <button
                     key={move.id}
                     onClick={() => !isLearned && onSelect(move)}
                     disabled={isLearned}
-                    className={`bg-white border border-gray-200 rounded-lg p-3 transition-all text-left ${
+                    className={`bg-white border-2 rounded-lg p-4 transition-all text-left ${
                       isLearned 
-                        ? 'opacity-50 cursor-not-allowed bg-gray-100' 
-                        : 'hover:border-indigo-400 hover:shadow-md'
+                        ? 'border-gray-200 opacity-50 cursor-not-allowed' 
+                        : selectedMove?.id === move.id
+                        ? 'border-indigo-400 bg-indigo-50 shadow-md'
+                        : 'border-gray-200 hover:border-indigo-300 hover:shadow-md cursor-pointer'
                     }`}
+                    onMouseEnter={() => !isLearned && setSelectedMove(move)}
+                    onMouseLeave={() => setSelectedMove(null)}
                   >
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="flex items-center gap-2 flex-1">
-                        <span className="font-bold text-gray-800">{move.name}</span>
-                        <span
-                          className="text-xs px-2 py-0.5 rounded font-bold text-white"
-                          style={{ backgroundColor: TYPE_COLORS[move.type] || '#777' }}
-                        >
-                          {move.type}
+                    {/* 기술 이름 & 타입 */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="font-bold text-gray-800 text-base">
+                        {move.name}
+                      </span>
+                      <span
+                        className="text-xs px-2 py-1 rounded font-bold flex-shrink-0 inline-flex items-center justify-center min-w-[3rem]"
+                        style={{ 
+                          backgroundColor: typeColors.bg,
+                          color: typeColors.text
+                        }}
+                      >
+                        {move.type}
+                      </span>
+                      {isLearned && (
+                        <span className="ml-auto text-xs text-gray-400 font-semibold">
+                          ✓ 습득
                         </span>
-                        {isLearned && (
-                          <span className="text-red-600 text-xs font-bold">✓ 습득됨</span>
-                        )}
-                      </div>
-                      <span className="flex items-center gap-1 text-xs text-gray-600">
+                      )}
+                    </div>
+
+                    {/* 카테고리 & 스탯 */}
+                    <div className="flex items-center gap-3 text-sm mb-2">
+                      <span className="flex items-center gap-1 text-gray-600">
                         {getCategoryIcon(move.category)}
-                        {move.category}
+                        <span className="font-medium">{move.category}</span>
+                      </span>
+                      {move.power > 0 && (
+                        <span className="text-gray-700">
+                          <span className="text-gray-500">위력</span>{' '}
+                          <span className="font-bold text-orange-600">{move.power}</span>
+                        </span>
+                      )}
+                      <span className="text-gray-700">
+                        <span className="text-gray-500">명중</span>{' '}
+                        <span className="font-bold text-blue-600">{move.accuracy}</span>
+                      </span>
+                      <span className="text-gray-700">
+                        <span className="text-gray-500">PP</span>{' '}
+                        <span className="font-bold text-green-600">{move.pp}</span>
                       </span>
                     </div>
 
-                    <div className="flex gap-3 text-xs text-gray-600 mb-2">
-                      {move.power > 0 && (
-                        <span>위력: <span className="font-bold text-orange-600">{move.power}</span></span>
-                      )}
-                      <span>명중: <span className="font-bold text-blue-600">{move.accuracy}</span></span>
-                      <span>PP: <span className="font-bold text-green-600">{move.pp}</span></span>
-                    </div>
-
+                    {/* 설명 */}
                     {move.description && (
-                      <p className="text-xs text-gray-500 line-clamp-2">
+                      <p className="text-xs text-gray-600 leading-relaxed">
                         {move.description}
                       </p>
                     )}
@@ -202,12 +231,23 @@ export default function MoveSelectModal({
           )}
         </div>
 
-        {/* 하단 정보 */}
-        <div className="p-4 border-t border-gray-200 flex-shrink-0 bg-gray-50">
-          <p className="text-sm text-gray-600 text-center">
-            총 {filteredMoves.length}개의 기술
-          </p>
-        </div>
+        {/* 푸터 */}
+        {selectedMove && !learnedMoveIds.includes(selectedMove.id) && (
+          <div className="p-4 bg-indigo-50 border-t border-indigo-200 flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">선택된 기술</p>
+                <p className="font-bold text-indigo-900">{selectedMove.name}</p>
+              </div>
+              <button
+                onClick={() => onSelect(selectedMove)}
+                className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
+              >
+                선택
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

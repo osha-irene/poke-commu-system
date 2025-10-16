@@ -862,67 +862,118 @@ const useItemOnPokemon = (item, pokemon) => {
     );
     updateCurrentUser({ caughtPokemon: updatedCaughtPokemon });
   };
-
-  // ⭐ 기술머신(TM) 사용 로직
-  if (itemData?.isTM) {
-    console.log('💿 기술머신 사용:', itemData);
-    
-    // 기술 데이터 가져오기
-    const moveData = allMoves.find(m => m.id === itemData.moveId);
-    
-    if (!moveData) {
-      alert('기술 정보를 찾을 수 없습니다!');
-      return;
-    }
-    
-    console.log('🎯 가르칠 기술:', moveData);
-    
-    // 현재 기술 확인
-    const currentMoves = pokemon.moves || [];
-    
-    // 이미 배운 기술인지 확인
-    if (currentMoves.some(m => m.moveId === moveData.id)) {
-      alert(`${pokemon.nickname || pokemon.name}은(는) 이미 ${moveData.name}을(를) 알고 있습니다!`);
-      return;
-    }
-    
-    // 기술이 4개 미만이면 바로 배우기
-    if (currentMoves.length < 4) {
-      const success = movesHook.learnMove(pokemon.uniqueId, moveData);
-      if (success) {
-        consumeItem(item);
-      }
-      return;
-    }
-    
-    // 기술이 4개 꽉 찼으면 교체 확인
-    const moveNames = currentMoves.map((m, idx) => {
-      const move = allMoves.find(mv => mv.id === m.moveId);
-      return `${idx + 1}. ${move?.name || '???'}`;
-    }).join('\n');
-    
-    const choice = window.prompt(
-      `${pokemon.nickname || pokemon.name}의 기술이 가득 찼습니다!\n\n현재 기술:\n${moveNames}\n\n교체할 기술 번호를 입력하세요 (1-4)\n취소하려면 0을 입력하세요:`
+  
+// ⭐ 기술머신(TM) 사용 로직
+if (itemData?.isTM) {
+  console.log('💿 기술머신 사용:', itemData);
+  
+  // ✅ 기술 데이터 가져오기 (여러 방법으로 시도)
+  let moveData = allMoves.find(m => m.id === itemData.moveId);
+  
+  // moveId가 숫자인 경우 (technicalMachines.json의 오래된 형식)
+  if (!moveData && typeof itemData.moveId === 'number') {
+    console.log('⚠️ moveId가 숫자입니다. nameEn으로 찾습니다:', itemData.nameEn);
+    moveData = allMoves.find(m => 
+      m.id === itemData.nameEn || 
+      m.nameEn === itemData.nameEn ||
+      m.name === itemData.name
     );
-    
-    if (choice === null || choice === '0') {
-      return; // 취소
-    }
-    
-    const choiceNum = parseInt(choice);
-    if (isNaN(choiceNum) || choiceNum < 1 || choiceNum > 4) {
-      alert('잘못된 입력입니다!');
-      return;
-    }
-    
-    const oldMoveId = currentMoves[choiceNum - 1].moveId;
-    const success = movesHook.learnMove(pokemon.uniqueId, moveData, oldMoveId);
-    
+  }
+  
+  // 여전히 못 찾았으면 이름으로 시도
+  if (!moveData) {
+    console.log('⚠️ ID로 못 찾음. 이름으로 재시도:', itemData.name, itemData.nameEn);
+    moveData = allMoves.find(m => 
+      m.name === itemData.name ||
+      m.nameEn === itemData.nameEn
+    );
+  }
+  
+  if (!moveData) {
+    console.error('❌ 기술을 찾을 수 없습니다:', {
+      tmMoveId: itemData.moveId,
+      tmName: itemData.name,
+      tmNameEn: itemData.nameEn,
+      allMovesSample: allMoves.slice(0, 5).map(m => ({ id: m.id, name: m.name }))
+    });
+    alert('기술 정보를 찾을 수 없습니다!');
+    return;
+  }
+  
+  console.log('✅ 기술 찾음:', moveData);
+  
+  // ✅ 포켓몬이 이 TM을 배울 수 있는지 확인
+  const learnset = pokemonLearnsets[pokemon.number.toString()];
+  
+  if (!learnset) {
+    console.warn('⚠️ 이 포켓몬의 학습 데이터가 없습니다:', pokemon.number);
+    alert(`${pokemon.nickname || pokemon.name}의 기술 학습 정보를 찾을 수 없습니다!`);
+    return;
+  }
+  
+  // TM으로 배울 수 있는 기술인지 확인
+  if (!learnset.tmMoves || !learnset.tmMoves.includes(moveData.id)) {
+    console.log('❌ 배울 수 없는 TM:', {
+      pokemon: pokemon.name,
+      pokemonNumber: pokemon.number,
+      move: moveData.name,
+      moveId: moveData.id,
+      tmMovesCount: learnset.tmMoves?.length || 0,
+      tmMovesSample: learnset.tmMoves?.slice(0, 10)
+    });
+    alert(`${pokemon.nickname || pokemon.name}은(는) ${moveData.name}을(를) 배울 수 없습니다!`);
+    return;
+  }
+  
+  console.log('✅ 배울 수 있는 TM 확인됨!');
+  
+  // 현재 기술 확인
+  const currentMoves = pokemon.moves || [];
+  
+  // 이미 배운 기술인지 확인
+  if (currentMoves.some(m => m.moveId === moveData.id)) {
+    alert(`${pokemon.nickname || pokemon.name}은(는) 이미 ${moveData.name}을(를) 알고 있습니다!`);
+    return;
+  }
+  
+  // 기술이 4개 미만이면 바로 배우기
+  if (currentMoves.length < 4) {
+    const success = movesHook.learnMove(pokemon.uniqueId, moveData);
     if (success) {
       consumeItem(item);
     }
     return;
   }
+  
+  // 기술이 4개 꽉 찼으면 교체 확인
+  const moveNames = currentMoves.map((m, idx) => {
+    const move = allMoves.find(mv => mv.id === m.moveId);
+    return `${idx + 1}. ${move?.name || '???'}`;
+  }).join('\n');
+  
+  const choice = window.prompt(
+    `${pokemon.nickname || pokemon.name}의 기술이 가득 찼습니다!\n\n현재 기술:\n${moveNames}\n\n교체할 기술 번호를 입력하세요 (1-4)\n취소하려면 0을 입력하세요:`
+  );
+  
+  if (choice === null || choice === '0') {
+    return; // 취소
+  }
+  
+  const choiceNum = parseInt(choice);
+  if (isNaN(choiceNum) || choiceNum < 1 || choiceNum > 4) {
+    alert('잘못된 입력입니다!');
+    return;
+  }
+  
+  const oldMoveId = currentMoves[choiceNum - 1].moveId;
+  const success = movesHook.learnMove(pokemon.uniqueId, moveData, oldMoveId);
+  
+  if (success) {
+    consumeItem(item);
+  }
+  return;
+}
+
 
   // 기존 아이템 로직들...
   const updatedPokemon = { ...pokemon };

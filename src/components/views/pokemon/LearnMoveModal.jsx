@@ -1,17 +1,53 @@
-export default function LevelUpMoveModal({
+// src/components/views/pokemon/LearnMoveModal.jsx
+import React, { useState } from 'react';
+import { X, AlertCircle, Zap, Shield, Star } from 'lucide-react';
+import { getTypeNameKr, getTypeColor } from '../../../styles/theme';
+
+const CATEGORY_NAMES_KR = {
+  'physical': '물리',
+  'special': '특수',
+  'status': '변화'
+};
+
+const getCategoryIcon = (category) => {
+  const categoryKr = CATEGORY_NAMES_KR[category] || category;
+  switch (categoryKr) {
+    case '물리': return <Zap size={14} className="text-orange-500" />;
+    case '특수': return <Star size={14} className="text-purple-500" />;
+    case '변화': return <Shield size={14} className="text-blue-500" />;
+    default: return null;
+  }
+};
+
+export default function LearnMoveModal({
   pokemon,
   newLevel,
   learnableMoves = [],
   currentMoves = [],
   onLearn,
-  onConfirm, // 호환성을 위해 추가
-  onSkip
+  onConfirm,
+  onSkip,
+  onCancel
 }) {
   const [selectedNewMove, setSelectedNewMove] = useState(learnableMoves[0]);
   const [selectedOldMove, setSelectedOldMove] = useState(null);
 
   const isFull = currentMoves.length >= 4;
   const hasSpace = currentMoves.length < 4;
+
+  // 첫 번째 배울 기술 (한글 변환)
+  const newMove = selectedNewMove ? {
+    ...selectedNewMove,
+    type: getTypeNameKr(selectedNewMove.type) || selectedNewMove.type,
+    category: CATEGORY_NAMES_KR[selectedNewMove.category] || selectedNewMove.category
+  } : null;
+
+  // 현재 기술들 (한글 변환)
+  const displayCurrentMoves = currentMoves.map(move => ({
+    ...move,
+    type: getTypeNameKr(move.type) || move.type,
+    category: CATEGORY_NAMES_KR[move.category] || move.category
+  }));
 
   const handleConfirm = () => {
     if (isFull && !selectedOldMove) {
@@ -25,7 +61,6 @@ export default function LevelUpMoveModal({
     console.log('현재 기술들:', currentMoves);
     console.log('=====================');
     
-    // onLearn과 onConfirm 둘 다 지원
     const callback = onLearn || onConfirm;
     if (callback) {
       callback(selectedNewMove, selectedOldMove);
@@ -34,6 +69,20 @@ export default function LevelUpMoveModal({
       alert('오류: 기술을 배울 수 없습니다. 콘솔을 확인해주세요.');
     }
   };
+
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else if (onSkip) {
+      onSkip();
+    }
+  };
+
+  if (!newMove) {
+    return null;
+  }
+
+  const newMoveTypeColors = getTypeColor(newMove.type);
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
@@ -48,7 +97,7 @@ export default function LevelUpMoveModal({
               </p>
             </div>
             <button
-              onClick={onCancel}
+              onClick={handleCancel}
               className="text-white/80 hover:text-white"
             >
               <X size={24} />
@@ -64,28 +113,34 @@ export default function LevelUpMoveModal({
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-lg font-bold text-gray-800">{newMove.name}</span>
                 <span
-                  className="text-xs px-2 py-1 rounded font-bold text-white"
-                  style={{ backgroundColor: TYPE_COLORS[newMove.type] || '#777' }}
+                  className="text-xs px-2 py-1 rounded font-bold inline-flex items-center justify-center min-w-[3rem]"
+                  style={{ 
+                    backgroundColor: newMoveTypeColors.bg,
+                    color: newMoveTypeColors.text
+                  }}
                 >
                   {newMove.type}
                 </span>
                 <span className="flex items-center gap-1 text-xs text-gray-600">
                   {getCategoryIcon(newMove.category)}
-                  {newMove.category}
+                  <span className="font-medium">{newMove.category}</span>
                 </span>
               </div>
               
               <div className="flex gap-4 text-sm">
                 {newMove.power > 0 && (
                   <span className="text-gray-700">
-                    <span className="font-semibold">위력:</span> {newMove.power}
+                    <span className="text-gray-500">위력</span>{' '}
+                    <span className="font-bold text-orange-600">{newMove.power}</span>
                   </span>
                 )}
                 <span className="text-gray-700">
-                  <span className="font-semibold">명중:</span> {newMove.accuracy}
+                  <span className="text-gray-500">명중</span>{' '}
+                  <span className="font-bold text-blue-600">{newMove.accuracy}</span>
                 </span>
                 <span className="text-gray-700">
-                  <span className="font-semibold">PP:</span> {newMove.pp}
+                  <span className="text-gray-500">PP</span>{' '}
+                  <span className="font-bold text-green-600">{newMove.pp}</span>
                 </span>
               </div>
 
@@ -110,41 +165,59 @@ export default function LevelUpMoveModal({
               <div>
                 <h3 className="text-sm font-semibold text-gray-600 mb-2">현재 기술 (교체할 기술 선택)</h3>
                 <div className="space-y-2">
-                  {currentMoves.map((move) => (
-                    <button
-                      key={move.moveId}
-                      onClick={() => setSelectedMoveToReplace(move.moveId)}
-                      className={`w-full text-left border-2 rounded-lg p-3 transition-all ${
-                        selectedMoveToReplace === move.moveId
-                          ? 'border-red-500 bg-red-50'
-                          : 'border-gray-200 hover:border-gray-400 bg-white'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-bold text-gray-800">{move.name}</span>
-                            <span
-                              className="text-xs px-2 py-0.5 rounded font-bold text-white"
-                              style={{ backgroundColor: TYPE_COLORS[move.type] || '#777' }}
-                            >
-                              {move.type}
-                            </span>
+                  {displayCurrentMoves.map((move) => {
+                    const moveTypeColors = getTypeColor(move.type);
+                    
+                    return (
+                      <button
+                        key={move.moveId}
+                        onClick={() => setSelectedOldMove(move.moveId)}
+                        className={`w-full text-left border-2 rounded-lg p-3 transition-all ${
+                          selectedOldMove === move.moveId
+                            ? 'border-red-500 bg-red-50'
+                            : 'border-gray-200 hover:border-gray-400 bg-white'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-bold text-gray-800">{move.name}</span>
+                              <span
+                                className="text-xs px-2 py-1 rounded font-bold inline-flex items-center justify-center min-w-[3rem]"
+                                style={{ 
+                                  backgroundColor: moveTypeColors.bg,
+                                  color: moveTypeColors.text
+                                }}
+                              >
+                                {move.type}
+                              </span>
+                            </div>
+                            <div className="flex gap-3 text-xs text-gray-600">
+                              {move.power > 0 && (
+                                <span>
+                                  <span className="text-gray-500">위력</span>{' '}
+                                  <span className="font-bold text-orange-600">{move.power}</span>
+                                </span>
+                              )}
+                              <span>
+                                <span className="text-gray-500">명중</span>{' '}
+                                <span className="font-bold text-blue-600">{move.accuracy}</span>
+                              </span>
+                              <span>
+                                <span className="text-gray-500">PP</span>{' '}
+                                <span className="font-bold text-green-600">{move.pp}</span>
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex gap-3 text-xs text-gray-600">
-                            {move.power > 0 && <span>위력: {move.power}</span>}
-                            <span>명중: {move.accuracy}</span>
-                            <span>PP: {move.pp}</span>
-                          </div>
+                          {selectedOldMove === move.moveId && (
+                            <div className="flex-shrink-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center">
+                              ✓
+                            </div>
+                          )}
                         </div>
-                        {selectedMoveToReplace === move.moveId && (
-                          <div className="flex-shrink-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center">
-                            ✓
-                          </div>
-                        )}
-                      </div>
-                    </button>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </>
@@ -157,35 +230,34 @@ export default function LevelUpMoveModal({
           )}
 
           {/* 버튼 */}
-
-            <div className="flex gap-3">
+          <div className="flex gap-3">
             <button
-                onClick={() => {
+              onClick={() => {
                 console.log('🔘 기술 교체하기 버튼 클릭!');
                 console.log('🔘 isFull:', isFull);
-                console.log('🔘 selectedMoveToReplace:', selectedMoveToReplace);
+                console.log('🔘 selectedOldMove:', selectedOldMove);
                 console.log('🔘 selectedNewMove:', selectedNewMove);
                 handleConfirm();
-                }}
-                disabled={isFull && !selectedMoveToReplace}
-                className={`flex-1 py-3 rounded-lg font-bold transition-all ${
-                isFull && !selectedMoveToReplace
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                }`}
+              }}
+              disabled={isFull && !selectedOldMove}
+              className={`flex-1 py-3 rounded-lg font-bold transition-all ${
+                isFull && !selectedOldMove
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-indigo-600 text-white hover:bg-indigo-700'
+              }`}
             >
-                {isFull ? '기술 교체하기' : '기술 배우기'}
+              {isFull ? '기술 교체하기' : '기술 배우기'}
             </button>
             <button
-                onClick={() => {
+              onClick={() => {
                 console.log('🔘 배우지 않기 버튼 클릭!');
-                onCancel();
-                }}
-                className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-lg font-bold hover:bg-gray-300 transition-all"
+                handleCancel();
+              }}
+              className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-lg font-bold hover:bg-gray-300 transition-all"
             >
-                배우지 않기
+              배우지 않기
             </button>
-            </div>
+          </div>
         </div>
       </div>
     </div>

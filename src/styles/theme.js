@@ -53,6 +53,71 @@ export const COLORS = {
   }
 };
 
+// src/styles/theme.js에 추가할 코드
+
+// ===== 타입 이름 매핑 (영문 → 한글) =====
+export const TYPE_NAMES_KR = {
+  'normal': '노말',
+  'fire': '불꽃',
+  'water': '물',
+  'electric': '전기',
+  'grass': '풀',
+  'ice': '얼음',
+  'fighting': '격투',
+  'poison': '독',
+  'ground': '땅',
+  'flying': '비행',
+  'psychic': '에스퍼',
+  'bug': '벌레',
+  'rock': '바위',
+  'ghost': '고스트',
+  'dragon': '드래곤',
+  'dark': '악',
+  'steel': '강철',
+  'fairy': '페어리'
+};
+
+// ===== 타입 이름 매핑 (한글 → 영문) =====
+export const TYPE_NAMES_EN = {
+  '노말': 'normal',
+  '불꽃': 'fire',
+  '물': 'water',
+  '전기': 'electric',
+  '풀': 'grass',
+  '얼음': 'ice',
+  '격투': 'fighting',
+  '독': 'poison',
+  '땅': 'ground',
+  '비행': 'flying',
+  '에스퍼': 'psychic',
+  '벌레': 'bug',
+  '바위': 'rock',
+  '고스트': 'ghost',
+  '드래곤': 'dragon',
+  '악': 'dark',
+  '강철': 'steel',
+  '페어리': 'fairy'
+};
+
+// ===== 헬퍼 함수 추가 =====
+
+// 영문 타입명을 한글로 변환
+export const getTypeNameKr = (typeEn) => {
+  return TYPE_NAMES_KR[typeEn?.toLowerCase()] || typeEn;
+};
+
+// 한글 타입명을 영문으로 변환
+export const getTypeNameEn = (typeKr) => {
+  return TYPE_NAMES_EN[typeKr] || typeKr;
+};
+
+// 영문 타입으로도 색상 가져오기 가능하게 수정
+export const getTypeColorByEn = (typeEn) => {
+  const typeKr = TYPE_NAMES_KR[typeEn?.toLowerCase()];
+  return COLORS.types[typeKr] || { bg: '#777', text: '#FFF' };
+};
+
+
 // ===== 포켓몬 볼 리스트 =====
 export const POKEBALL_LIST = [
   // 기본 볼
