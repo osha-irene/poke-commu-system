@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import ReactDOM from 'react-dom';
 import { POKEBALL_LIST, getButtonClass, getTypeColor } from '../../../../styles/theme';
-import { X, Zap, Shield, Star } from 'lucide-react';
+import { X, Zap, Shield, Star, Sparkles } from 'lucide-react';
 import { usePokemonContext } from '../../../../contexts/PokemonContext';
 
 const TYPE_COLORS = {
@@ -23,16 +23,16 @@ const getCategoryIcon = (category) => {
 
 function MemberPokemonTab({ 
   member, 
-
   onGivePokemon, 
   onEditPokemon 
 }) {
-   const { 
+  const { 
     allPokemonMaster = [], 
     allMoves = [], 
     pokemonLearnsets = {} 
   } = usePokemonContext() || {};
-   const [pokemonMode, setPokemonMode] = useState('view');
+  
+  const [pokemonMode, setPokemonMode] = useState('view');
   
   // 편집 모드 상태
   const [editingPokemon, setEditingPokemon] = useState(null);
@@ -50,9 +50,10 @@ function MemberPokemonTab({
   const [nickname, setNickname] = useState('');
   const [heldItemName, setHeldItemName] = useState('');
   const [caughtWithBall, setCaughtWithBall] = useState('몬스터볼');
+  const [isShiny, setIsShiny] = useState(false);
   
   // 기술 설정 상태
-  const [moveMode, setMoveMode] = useState('auto'); // 'auto' | 'manual'
+  const [moveMode, setMoveMode] = useState('auto');
   const [selectedMoves, setSelectedMoves] = useState([]);
   const [showMoveSelector, setShowMoveSelector] = useState(false);
   
@@ -67,30 +68,14 @@ function MemberPokemonTab({
 
   // 현재 레벨 이하에서 배울 수 있는 모든 기술
   const availableMoves = useMemo(() => {
-    if (!selectedPokemon) {
-      console.log('❌ selectedPokemon 없음');
-      return [];
-    }
-    
-    if (!pokemonLearnsets || Object.keys(pokemonLearnsets).length === 0) {
-      console.log('❌ pokemonLearnsets 없음');
-      return [];
-    }
-    
-    if (!allMoves || allMoves.length === 0) {
-      console.log('❌ allMoves 없음');
-      return [];
-    }
+    if (!selectedPokemon) return [];
+    if (!pokemonLearnsets || Object.keys(pokemonLearnsets).length === 0) return [];
+    if (!allMoves || allMoves.length === 0) return [];
     
     const learnset = pokemonLearnsets[selectedPokemon.number.toString()];
-    console.log('🔍 learnset 확인:', selectedPokemon.number, learnset);
+    if (!learnset || !learnset.levelUpMoves) return [];
     
-    if (!learnset || !learnset.levelUpMoves) {
-      console.log('❌ learnset 또는 levelUpMoves 없음');
-      return [];
-    }
-    
-    const moves = learnset.levelUpMoves
+    return learnset.levelUpMoves
       .filter(lm => lm.level <= level)
       .map(lm => {
         const move = allMoves.find(m => m.id === lm.moveId);
@@ -98,9 +83,6 @@ function MemberPokemonTab({
       })
       .filter(Boolean)
       .sort((a, b) => b.learnLevel - a.learnLevel);
-    
-    console.log('✅ 사용 가능한 기술:', moves.length, '개');
-    return moves;
   }, [selectedPokemon, level, pokemonLearnsets, allMoves]);
 
   // 자동 랜덤 기술 생성
@@ -140,7 +122,8 @@ function MemberPokemonTab({
       nickname: nickname || null,
       heldItem: heldItemName || null,
       caughtWithBall: caughtWithBall,
-      moves: moves
+      moves: moves,
+      isShiny: isShiny
     };
     
     onGivePokemon(member.id, selectedPokemon, options);
@@ -150,7 +133,10 @@ function MemberPokemonTab({
     setCaughtWithBall('몬스터볼');
     setSelectedMoves([]);
     setMoveMode('auto');
-    alert(`${member.name}님에게 ${selectedPokemon.name} (Lv.${level})을 지급했습니다!`);
+    setIsShiny(false);
+    
+    const shinyText = isShiny ? '반짝이 ' : '';
+    alert(`${member.name}님에게 ${shinyText}${selectedPokemon.name} (Lv.${level})을 지급했습니다!`);
   };
 
   const handleEditPokemon = (pokemon) => {
@@ -241,7 +227,10 @@ function MemberPokemonTab({
                   }}
                 />
                 <div className="flex-1">
-                  <div className="font-bold text-gray-800">{pokemon.nickname || pokemon.name}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="font-bold text-gray-800">{pokemon.nickname || pokemon.name}</div>
+                    {pokemon.isShiny && <Sparkles className="text-yellow-500" size={16} />}
+                  </div>
                   <div className="text-sm text-gray-600">Lv.{pokemon.level} | 친밀도: {pokemon.friendship || 0}</div>
                   {pokemon.heldItem && <div className="text-xs text-blue-600">도구: {pokemon.heldItem}</div>}
                 </div>
@@ -327,32 +316,52 @@ function MemberPokemonTab({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">레벨 (1-100)</label>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">레벨 (1-100)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={level}
+                      onChange={(e) => setLevel(parseInt(e.target.value) || 1)}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">친밀도 (0-255)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="255"
+                      value={friendship}
+                      onChange={(e) => setFriendship(parseInt(e.target.value) || 0)}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* ✨ 반짝이 체크박스 */}
+                <div className="flex items-center gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <input
-                    type="number"
-                    min="1"
-                    max="100"
-                    value={level}
-                    onChange={(e) => setLevel(parseInt(e.target.value) || 1)}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none transition-all"
+                    type="checkbox"
+                    id="isShiny"
+                    checked={isShiny}
+                    onChange={(e) => setIsShiny(e.target.checked)}
+                    className="w-5 h-5 cursor-pointer accent-yellow-500"
                   />
+                  <label htmlFor="isShiny" className="cursor-pointer flex items-center gap-2">
+                    <Sparkles className="text-yellow-500" size={24} />
+                    <div>
+                      <div className="font-bold text-yellow-700">반짝이 (Shiny)</div>
+                      <div className="text-xs text-yellow-600">이색 포켓몬으로 지급합니다</div>
+                    </div>
+                  </label>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">친밀도 (0-255)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="255"
-                    value={friendship}
-                    onChange={(e) => setFriendship(parseInt(e.target.value) || 0)}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none transition-all"
-                  />
-                </div>
-
-                <div className="col-span-2">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">닉네임 (선택)</label>
                   <input
                     type="text"
@@ -363,7 +372,7 @@ function MemberPokemonTab({
                   />
                 </div>
 
-                <div className="col-span-2">
+                <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">소지 도구 (선택)</label>
                   <input
                     type="text"
@@ -374,7 +383,7 @@ function MemberPokemonTab({
                   />
                 </div>
 
-                <div className="col-span-2">
+                <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">포획한 볼</label>
                   <select
                     value={caughtWithBall}
@@ -505,7 +514,10 @@ function MemberPokemonTab({
                       }}
                     />
                     <div className="flex-1">
-                      <div className="font-bold text-gray-800">{pokemon.nickname || pokemon.name}</div>
+                      <div className="flex items-center gap-2">
+                        <div className="font-bold text-gray-800">{pokemon.nickname || pokemon.name}</div>
+                        {pokemon.isShiny && <Sparkles className="text-yellow-500" size={16} />}
+                      </div>
                       <div className="text-sm text-gray-600">Lv.{pokemon.level} | 친밀도: {pokemon.friendship || 0}</div>
                     </div>
                   </button>
@@ -528,8 +540,11 @@ function MemberPokemonTab({
                   }}
                 />
                 <div>
-                  <div className="text-2xl font-bold text-gray-800">
-                    {editingPokemon.nickname || editingPokemon.name}
+                  <div className="flex items-center gap-2">
+                    <div className="text-2xl font-bold text-gray-800">
+                      {editingPokemon.nickname || editingPokemon.name}
+                    </div>
+                    {editingPokemon.isShiny && <Sparkles className="text-yellow-500" size={24} />}
                   </div>
                   <div className="text-sm text-gray-600">
                     Lv.{editLevel} | 친밀도 {editFriendship}
@@ -596,7 +611,7 @@ function MemberPokemonTab({
         </div>
       )}
 
-      {/* 기술 선택 모달 - Portal로 body에 직접 렌더링 */}
+      {/* 기술 선택 모달 */}
       {showMoveSelector && ReactDOM.createPortal(
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" 
@@ -606,7 +621,6 @@ function MemberPokemonTab({
             className="bg-white rounded-lg w-full max-w-2xl flex flex-col"
             style={{ height: '80vh', maxHeight: '600px' }}
           >
-            {/* 헤더 - 고정 */}
             <div className="bg-indigo-600 text-white p-4 flex items-center justify-between rounded-t-lg">
               <h3 className="text-xl font-bold">기술 선택 ({selectedMoves.length}/4)</h3>
               <button onClick={() => setShowMoveSelector(false)} className="hover:bg-indigo-700 rounded p-1">
@@ -614,7 +628,6 @@ function MemberPokemonTab({
               </button>
             </div>
 
-            {/* 스크롤 영역 */}
             <div className="flex-1 overflow-y-auto p-4">
               <div className="text-sm text-gray-600 mb-3">
                 Lv.{level} 이하에서 배울 수 있는 기술 ({availableMoves.length}개)
@@ -673,7 +686,6 @@ function MemberPokemonTab({
               )}
             </div>
 
-            {/* 버튼 - 고정 */}
             <div className="p-4 border-t border-gray-200 bg-white rounded-b-lg">
               <button
                 onClick={() => setShowMoveSelector(false)}

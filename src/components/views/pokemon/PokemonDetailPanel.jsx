@@ -90,79 +90,78 @@ export default function PokemonDetailPanel({
   ];
 
   // 커스텀 Tick 렌더링 함수들
- const renderConditionTick = (tickProps) => {
-  const { x, y, payload, textAnchor } = tickProps;
-  const item = conditionData.find(d => d.subject === payload.value);
-  
-  return (
-    <text
-      x={x}
-      y={y}
-      textAnchor={textAnchor}
-      fill="#581C87"
-      fontSize={9}
-      fontWeight={600}
-      style={{ cursor: 'pointer' }}
-      onMouseEnter={(e) => {
-        if (e && e.target) {
-          const rect = e.target.getBoundingClientRect();
-          // 다른 툴팁 먼저 제거
-          setHoveredEffort(null);
-          setHoveredCondition(item?.A || 0);
-          setTooltipType('condition');
-          setMousePos({ 
-            x: rect.left + rect.width / 2,
-            y: rect.top
-          });
-        }
-      }}
-      onMouseLeave={() => {
-        setHoveredCondition(null);
-        setTooltipType('');
-        setMousePos({ x: 0, y: 0 });
-      }}
-    >
-      {payload.value}
-    </text>
-  );
-};
-
-const renderEffortTick = (tickProps) => {
-  const { x, y, payload, textAnchor } = tickProps;
-  const item = effortData.find(d => d.subject === payload.value);
-  
-  return (
-    <text
-      x={x}
-      y={y}
-      textAnchor={textAnchor}
-      fill="#1E3A8A"
-      fontSize={9}
-      fontWeight={600}
-      style={{ cursor: 'pointer' }}
-      onMouseEnter={(e) => {
-        if (e && e.target) {
-          const rect = e.target.getBoundingClientRect();
-          // 다른 툴팁 먼저 제거
+  const renderConditionTick = (tickProps) => {
+    const { x, y, payload, textAnchor } = tickProps;
+    const item = conditionData.find(d => d.subject === payload.value);
+    
+    return (
+      <text
+        x={x}
+        y={y}
+        textAnchor={textAnchor}
+        fill="#581C87"
+        fontSize={9}
+        fontWeight={600}
+        style={{ cursor: 'pointer' }}
+        onMouseEnter={(e) => {
+          if (e && e.target) {
+            const rect = e.target.getBoundingClientRect();
+            setHoveredEffort(null);
+            setHoveredCondition(item?.A || 0);
+            setTooltipType('condition');
+            setMousePos({ 
+              x: rect.left + rect.width / 2,
+              y: rect.top
+            });
+          }
+        }}
+        onMouseLeave={() => {
           setHoveredCondition(null);
-          setHoveredEffort(item?.A || 0);
-          setTooltipType('effort');
-          setMousePos({ 
-            x: rect.left + rect.width / 2,
-            y: rect.top
-          });
-        }
-      }}
-      onMouseLeave={() => {
-        setHoveredEffort(null);
-        setTooltipType('');
-        setMousePos({ x: 0, y: 0 });
-      }}
-    >
-      {payload.value}
-    </text>
-  );
-};
+          setTooltipType('');
+          setMousePos({ x: 0, y: 0 });
+        }}
+      >
+        {payload.value}
+      </text>
+    );
+  };
+
+  const renderEffortTick = (tickProps) => {
+    const { x, y, payload, textAnchor } = tickProps;
+    const item = effortData.find(d => d.subject === payload.value);
+    
+    return (
+      <text
+        x={x}
+        y={y}
+        textAnchor={textAnchor}
+        fill="#1E3A8A"
+        fontSize={9}
+        fontWeight={600}
+        style={{ cursor: 'pointer' }}
+        onMouseEnter={(e) => {
+          if (e && e.target) {
+            const rect = e.target.getBoundingClientRect();
+            setHoveredCondition(null);
+            setHoveredEffort(item?.A || 0);
+            setTooltipType('effort');
+            setMousePos({ 
+              x: rect.left + rect.width / 2,
+              y: rect.top
+            });
+          }
+        }}
+        onMouseLeave={() => {
+          setHoveredEffort(null);
+          setTooltipType('');
+          setMousePos({ x: 0, y: 0 });
+        }}
+      >
+        {payload.value}
+      </text>
+    );
+  };
+
   // 게임 도감
   const pokedexEntry = gamePokedex?.find(p => 
     p.number === pokemon.number || p.originalNumber === pokemon.number
@@ -184,7 +183,7 @@ const renderEffortTick = (tickProps) => {
     : null;
 
   const pokeballData = pokemon.caughtWithBall && typeof pokemon.caughtWithBall === 'string'
-  ? allItems.find(item => {
+    ? allItems.find(item => {
         const itemName = item.name?.toLowerCase();
         const itemNameEn = item.nameEn?.toLowerCase();
         const ballName = pokemon.caughtWithBall.toLowerCase();
@@ -417,6 +416,10 @@ const renderEffortTick = (tickProps) => {
                   />
                 )}
                 <h2 className="text-2xl font-bold text-gray-800">{nickname}</h2>
+                {/* ✨ 반짝이 아이콘 */}
+                {pokemon.isShiny && (
+                  <Sparkles className="text-yellow-500 animate-pulse" size={20} />
+                )}
                 {pokemon.isPartner && (
                   <span className="bg-pink-500 text-white px-2 py-1 rounded-full text-xs font-bold">
                     💖 파트너
@@ -476,8 +479,7 @@ const renderEffortTick = (tickProps) => {
                 }}>
               <div className="w-full h-40 relative">
                 <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart data={conditionData}
-                  tabIndex={-1} >
+                  <RadarChart data={conditionData} tabIndex={-1}>
                     <PolarGrid 
                       stroke="#9333EA"
                       strokeWidth={1.5}
@@ -495,8 +497,8 @@ const renderEffortTick = (tickProps) => {
                     />
                     <Radar 
                       dataKey="A" 
-                        stroke="#A855F7"
-                        strokeWidth={1} 
+                      stroke="#A855F7"
+                      strokeWidth={1} 
                       fill="#A855F7" 
                       fillOpacity={1}
                       activeDot={false}
@@ -506,44 +508,44 @@ const renderEffortTick = (tickProps) => {
                 </ResponsiveContainer>
                 
                 {hoveredCondition !== null && tooltipType === 'condition' && (
+                  <div 
+                    className="fixed z-50 pointer-events-none"
+                    style={{ 
+                      left: mousePos.x,
+                      top: mousePos.y - 35,
+                      transform: 'translateX(-50%)',
+                      animation: 'none'
+                    }}
+                  >
                     <div 
-                      className="fixed z-50 pointer-events-none"
-                      style={{ 
-                        left: mousePos.x,
-                        top: mousePos.y - 35,
-                        transform: 'translateX(-50%)',
-                        animation: 'none' // 애니메이션 제거로 즉시 사라짐
-                      }}
+                      className="px-2 py-1 rounded text-white text-xs font-semibold"
+                      style={{ backgroundColor: '#A855F7' }}
                     >
-                      <div 
-                        className="px-2 py-1 rounded text-white text-xs font-semibold"
-                        style={{ backgroundColor: '#A855F7' }}
-                      >
-                        {hoveredCondition}
-                      </div>
-                      <div 
-                        className="w-0 h-0 mx-auto"
-                        style={{
-                          borderLeft: '5px solid transparent',
-                          borderRight: '5px solid transparent',
-                          borderTop: '5px solid #A855F7',
-                          marginTop: '-1px'
-                        }}
-                      />
+                      {hoveredCondition}
                     </div>
-                  )}
+                    <div 
+                      className="w-0 h-0 mx-auto"
+                      style={{
+                        borderLeft: '5px solid transparent',
+                        borderRight: '5px solid transparent',
+                        borderTop: '5px solid #A855F7',
+                        marginTop: '-1px'
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
             <div className="bg-blue-50 rounded-lg p-3 border border-blue-200 focus:outline-none focus:ring-0"
-             onMouseLeave={() => {
-                    setHoveredEffort(null);
-                    setTooltipType('');
-                  }}>
+                 onMouseLeave={() => {
+                  setHoveredEffort(null);
+                  setTooltipType('');
+                }}>
               <div className="w-full h-40 relative">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart data={effortData}>
-                                        <PolarGrid 
+                    <PolarGrid 
                       stroke="#2563EB"
                       strokeWidth={1.5}
                       strokeOpacity={0.3}
@@ -562,12 +564,12 @@ const renderEffortTick = (tickProps) => {
                     />
                     <Radar 
                       dataKey="A" 
-                        stroke="#3B82F6"
-                        strokeWidth={1} 
+                      stroke="#3B82F6"
+                      strokeWidth={1} 
                       fill="#3B82F6" 
                       fillOpacity={1}
                       activeDot={false}
-                        dot={false}
+                      dot={false}
                     />
                   </RadarChart>
                 </ResponsiveContainer>
@@ -579,7 +581,7 @@ const renderEffortTick = (tickProps) => {
                       left: mousePos.x,
                       top: mousePos.y - 35,
                       transform: 'translateX(-50%)',
-                      animation: 'none' // 애니메이션 제거로 즉시 사라짐
+                      animation: 'none'
                     }}
                   >
                     <div 
@@ -599,7 +601,7 @@ const renderEffortTick = (tickProps) => {
                     />
                   </div>
                 )}
-                              </div>
+              </div>
             </div>
           </div>
 

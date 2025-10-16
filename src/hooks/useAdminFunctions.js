@@ -220,7 +220,8 @@ export const useAdminFunctions = (
       nickname = null,
       moves = [],
       isPartner = false,
-      caughtWithBall = '몬스터볼'
+	  isShiny = false,
+      caughtWithBall = '몬스터볼',
     } = options;
 
     const ballItem = allItems?.find(item => 
@@ -229,86 +230,97 @@ export const useAdminFunctions = (
     ) || {
       spriteUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'
     };
+	
+	const spriteUrl = isShiny && pokemonTemplate.shinySprite 
+    ? pokemonTemplate.shinySprite 
+    : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`;
 
-    const newPokemon = {
-      uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      pokemonId: pokemonTemplate.id,
-      name: pokemonTemplate.name,
-      nameEn: pokemonTemplate.nameEn,
-      nickname,
-      number: pokemonTemplate.number,
-      type: pokemonTemplate.type,
-      type2: pokemonTemplate.type2 || null,
-      level,
-      hp: pokemonTemplate.baseHp,
-      maxHp: pokemonTemplate.baseHp,
-      exp: 0,
-      friendship,
-      heldItem,
-      moves,
-      isPartner,
-      caughtWithBall,
-      ballImageUrl: ballItem.spriteUrl,
-      condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
-      effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
-      imageUrl: pokemonTemplate.imageUrl,
-      iconUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`,
-      spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`
-    };
+  const iconUrl = isShiny && pokemonTemplate.shinySprite
+    ? pokemonTemplate.shinySprite  // 이색 아이콘도 shinySprite 사용
+    : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`;
 
-    let updatedPokemonList = [...member.caughtPokemon];
-    
-    if (updatedPokemonList.length === 0) {
-      updatedPokemonList = [null, null, null, null, null, null];
-    }
-    
-    if (isPartner) {
-      updatedPokemonList = updatedPokemonList.map(p => 
-        p && p.isPartner ? { ...p, isPartner: false } : p
-      );
-    }
-    
-    const party = updatedPokemonList.slice(0, 6);
-    const box = updatedPokemonList.slice(6);
-    
-    let emptySlotIndex = -1;
-    for (let i = 0; i < 6; i++) {
-      if (!party[i] || party[i] === null) {
-        emptySlotIndex = i;
-        break;
-      }
-    }
-    
-    if (emptySlotIndex !== -1) {
-      party[emptySlotIndex] = newPokemon;
-      updatedPokemonList = [...party, ...box];
-    } else {
-      updatedPokemonList = [...party, ...box, newPokemon];
-    }
 
-    try {
-      const { id, ...dataToSave } = { ...member, caughtPokemon: updatedPokemonList };
-      const memberRef = ref(database, `members/${memberId}`);
-      await set(memberRef, dataToSave);
-      
-      setMembers(prev => ({
-        ...prev,
-        [memberId]: { ...prev[memberId], caughtPokemon: updatedPokemonList }
-      }));
-      
-      // ⭐ 본인에게 지급한 경우 currentUser도 업데이트
-      if (memberId === currentUser.id) {
-        console.log('✅ 본인에게 지급 - updateCurrentUser 호출');
-        updateCurrentUser({ caughtPokemon: updatedPokemonList });
-      }
-      
-      const partnerText = isPartner ? ' (파트너 💖)' : '';
-      alert(`${member.name}에게 ${newPokemon.nickname || newPokemon.name}${partnerText}을(를) 지급했습니다!`);
-    } catch (error) {
-      console.error('❌ 포켓몬 지급 실패:', error);
-      alert('포켓몬 지급 중 오류가 발생했습니다.');
+      const newPokemon = {
+		uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+		pokemonId: pokemonTemplate.id,
+		name: pokemonTemplate.name,
+		nameEn: pokemonTemplate.nameEn,
+		nickname,
+		number: pokemonTemplate.number,
+		type: pokemonTemplate.type,
+		type2: pokemonTemplate.type2 || null,
+		level,
+		hp: pokemonTemplate.baseHp,
+		maxHp: pokemonTemplate.baseHp,
+		exp: 0,
+		friendship,
+		heldItem,
+		moves,
+		isPartner,
+		isShiny,  // ✨ 추가
+		caughtWithBall,
+		ballImageUrl: ballItem.spriteUrl,
+		condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
+		effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
+		imageUrl: pokemonTemplate.imageUrl,
+		iconUrl: iconUrl,  // ✨ 수정
+		spriteUrl: spriteUrl  // ✨ 수정
+	  };
+	  
+  let updatedPokemonList = [...member.caughtPokemon];
+  
+  if (updatedPokemonList.length === 0) {
+    updatedPokemonList = [null, null, null, null, null, null];
+  }
+  
+  if (isPartner) {
+    updatedPokemonList = updatedPokemonList.map(p => 
+      p && p.isPartner ? { ...p, isPartner: false } : p
+    );
+  }
+  
+  const party = updatedPokemonList.slice(0, 6);
+  const box = updatedPokemonList.slice(6);
+  
+  let emptySlotIndex = -1;
+  for (let i = 0; i < 6; i++) {
+    if (!party[i] || party[i] === null) {
+      emptySlotIndex = i;
+      break;
     }
-  };
+  }
+  
+  if (emptySlotIndex !== -1) {
+    party[emptySlotIndex] = newPokemon;
+    updatedPokemonList = [...party, ...box];
+  } else {
+    updatedPokemonList = [...party, ...box, newPokemon];
+  }
+
+  try {
+    const { id, ...dataToSave } = { ...member, caughtPokemon: updatedPokemonList };
+    const memberRef = ref(database, `members/${memberId}`);
+    await set(memberRef, dataToSave);
+    
+    setMembers(prev => ({
+      ...prev,
+      [memberId]: { ...prev[memberId], caughtPokemon: updatedPokemonList }
+    }));
+    
+    if (memberId === currentUser.id) {
+      console.log('✅ 본인에게 지급 - updateCurrentUser 호출');
+      updateCurrentUser({ caughtPokemon: updatedPokemonList });
+    }
+    
+    const partnerText = isPartner ? ' (파트너 💖)' : '';
+    const shinyText = isShiny ? ' ✨반짝이✨' : '';  // ✨ 추가
+    alert(`${member.name}에게${shinyText} ${newPokemon.nickname || newPokemon.name}${partnerText}을(를) 지급했습니다!`);
+  } catch (error) {
+    console.error('❌ 포켓몬 지급 실패:', error);
+    alert('포켓몬 지급 중 오류가 발생했습니다.');
+  }
+};
+
 
   const addPokemonToSelf = (pokemon) => {
     if (!currentUser?.canManageItems) {
