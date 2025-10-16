@@ -1,5 +1,8 @@
 // src/App.jsx - 기존 코드에 Context만 추가
 
+import useMediaQuery from './hooks/useMediaQuery';
+import MobileLayout from './components/layout/MobileLayout';
+
 import React, { useState, useEffect } from 'react';
 import { ref, get, set } from 'firebase/database';
 import { database } from './firebase';
@@ -140,6 +143,7 @@ export default function App() {
   const [qnaPosts, setQnaPosts] = useState([]);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   // ✅ useGameState 호출 (기존과 동일)
   const gameState = useGameState();
@@ -457,108 +461,157 @@ console.log('🎮 App.jsx - gameState.createCustomItem:', gameState.createCustom
 
   return (
     <GameProvider value={gameState}>
-      <PokemonProvider value={pokemonValue}>
-        <div className="h-screen flex bg-gray-50">
-          <Sidebar 
-            currentTab={currentTab}
-            setCurrentTab={setCurrentTab}
-            isAdmin={isAdmin}
-            trainer={trainer}
-            onLogout={handleLogout}
-            soundEnabled={soundEnabled}
-            onToggleSound={() => setSoundEnabled(!soundEnabled)}
-          />
-
-          <div className="flex-1 flex flex-col">
-            <Header currentTab={currentTab} trainer={trainer} />
-
-            <main className="flex-1 overflow-auto p-8">
-              {currentTab === 'map' && (
-                <MapView 
-                  regions={regions} 
-                  onRegionClick={handleRegionClick} 
-                />
-              )}
-              
-              {currentTab === 'pokedex' && (
-                <PokedexView 
-                  pokedex={gamePokedex}
-                  caughtPokemon={caughtPokemon.filter(p => p !== null)}
-                  pokedexData={sharedPokedexData}
-                  regions={regions}
-                  currentUser={currentUser}
-                  onUpdateMemo={updatePokedexMemo}
-                  onUpdatePokedexRegions={updatePokedexRegions}
-                />
-              )}
-              
-              {currentTab === 'members' && <MembersView />}
-              {currentTab === 'npcs' && <NPCsView />}
-
-              {currentTab === 'pokemon' && <PokemonView />}
-              
-              {currentTab === 'items' && <ItemsView />}
-              
-              {currentTab === 'shop' && <ShopView />}
-              
-              {currentTab === 'cooking' && <CookingView />}
-              
-              {currentTab === 'profile' && (
-                <ProfileView 
-                  trainer={trainer}
-                  caughtPokemon={caughtPokemon}
-                  items={items}
-                />
-              )}
-              
-              {currentTab === 'qna' && (
-                <QnABoard
-                  posts={qnaPosts}
-                  currentUser={currentUser}
-                  onCreatePost={handleCreatePost}
-                  onDeletePost={handleDeletePost}
-                  onCreateComment={handleCreateComment}
-                  onDeleteComment={handleDeleteComment}
-                />
-              )}
-              
-              {currentTab === 'admin' && isAdmin && (
-                <AdminView />
-              )}
-            </main>
-          </div>
-
-          {/* 모달들 */}
-          {encounterPokemon && (
-            <EncounterModal
-              pokemon={encounterPokemon}
-              onClose={handleCloseEncounter}
-              onCatchSuccess={handleCatchSuccess}  
+     <PokemonProvider value={pokemonValue}>
+  {isMobile ? (
+    // 📱 모바일 레이아웃
+    <MobileLayout
+      currentTab={currentTab}
+      setCurrentTab={setCurrentTab}
+      trainer={trainer}
+      isAdmin={isAdmin}
+      soundEnabled={soundEnabled}
+      toggleSound={() => setSoundEnabled(!soundEnabled)}
+      onLogout={handleLogout}
+    >
+      {/* 기존 View 컴포넌트들 그대로 */}
+      {currentTab === 'map' && (
+        <MapView 
+          regions={regions} 
+          onRegionClick={handleRegionClick} 
+        />
+      )}
+      
+      {currentTab === 'pokedex' && (
+        <PokedexView 
+          pokedex={gamePokedex}
+          caughtPokemon={caughtPokemon.filter(p => p !== null)}
+          pokedexData={sharedPokedexData}
+          regions={regions}
+          currentUser={currentUser}
+          onUpdateMemo={updatePokedexMemo}
+          onUpdatePokedexRegions={updatePokedexRegions}
+        />
+      )}
+      
+      {currentTab === 'members' && <MembersView />}
+      {currentTab === 'npcs' && <NPCsView />}
+      {currentTab === 'pokemon' && <PokemonView />}
+      {currentTab === 'items' && <ItemsView />}
+      {currentTab === 'shop' && <ShopView />}
+      {currentTab === 'cooking' && <CookingView />}
+      
+      {currentTab === 'profile' && (
+        <ProfileView 
+          trainer={trainer}
+          caughtPokemon={caughtPokemon}
+          items={items}
+        />
+      )}
+      
+      {currentTab === 'qna' && (
+        <QnABoard
+          posts={qnaPosts}
+          currentUser={currentUser}
+          onCreatePost={handleCreatePost}
+          onDeletePost={handleDeletePost}
+          onCreateComment={handleCreateComment}
+          onDeleteComment={handleDeleteComment}
+        />
+      )}
+      
+      {currentTab === 'admin' && isAdmin && <AdminView />}
+    </MobileLayout>
+  ) : (
+    // 💻 데스크톱 레이아웃 (기존 코드 그대로)
+    <div className="h-screen flex bg-gray-50">
+      <Sidebar 
+        currentTab={currentTab}
+        setCurrentTab={setCurrentTab}
+        isAdmin={isAdmin}
+        trainer={trainer}
+        onLogout={handleLogout}
+        soundEnabled={soundEnabled}
+        onToggleSound={() => setSoundEnabled(!soundEnabled)}
+      />
+      <div className="flex-1 flex flex-col">
+        <Header currentTab={currentTab} trainer={trainer} />
+        <main className="flex-1 overflow-auto p-8">
+          {currentTab === 'map' && (
+            <MapView 
+              regions={regions} 
+              onRegionClick={handleRegionClick} 
+            />
+          )}
+          
+          {currentTab === 'pokedex' && (
+            <PokedexView 
+              pokedex={gamePokedex}
+              caughtPokemon={caughtPokemon.filter(p => p !== null)}
+              pokedexData={sharedPokedexData}
+              regions={regions}
+              currentUser={currentUser}
+              onUpdateMemo={updatePokedexMemo}
+              onUpdatePokedexRegions={updatePokedexRegions}
+            />
+          )}
+          
+          {currentTab === 'members' && <MembersView />}
+          {currentTab === 'npcs' && <NPCsView />}
+          {currentTab === 'pokemon' && <PokemonView />}
+          {currentTab === 'items' && <ItemsView />}
+          {currentTab === 'shop' && <ShopView />}
+          {currentTab === 'cooking' && <CookingView />}
+          
+          {currentTab === 'profile' && (
+            <ProfileView 
+              trainer={trainer}
+              caughtPokemon={caughtPokemon}
               items={items}
-              sharedPokedexData={sharedPokedexData} 
-              caughtPokemon={caughtPokemon} 
-              onApplyLoot={applyLoot} 
-              isSuperAdmin={currentUser?.isSuperAdmin}
             />
           )}
+          
+          {currentTab === 'qna' && (
+            <QnABoard
+              posts={qnaPosts}
+              currentUser={currentUser}
+              onCreatePost={handleCreatePost}
+              onDeletePost={handleDeletePost}
+              onCreateComment={handleCreateComment}
+              onDeleteComment={handleDeleteComment}
+            />
+          )}
+          
+          {currentTab === 'admin' && isAdmin && <AdminView />}
+        </main>
+      </div>
+    </div>
+  )}
 
-          {firstCatchPokemon && (
-            <FirstCatchMemoModal
-              pokemon={firstCatchPokemon}
-              onSave={saveFirstCatchMemo}
-              onSkip={skipFirstCatchMemo}
-            />
-          )}
-
-          {evolutionModal && (
-            <EvolutionModal
-              evolutionData={evolutionModal}
-              onAccept={acceptEvolution}
-              onCancel={cancelEvolution}
-            />
-          )}
-        </div>
-      </PokemonProvider>
-    </GameProvider>
-  );
-}
+  {/* 모달들은 모바일/데스크톱 공통 */}
+  {encounterPokemon && (
+    <EncounterModal
+      pokemon={encounterPokemon}
+      onClose={handleCloseEncounter}
+      onCatchSuccess={handleCatchSuccess}  
+      items={items}
+      sharedPokedexData={sharedPokedexData} 
+      caughtPokemon={caughtPokemon} 
+      onApplyLoot={applyLoot} 
+      isSuperAdmin={currentUser?.isSuperAdmin}
+    />
+  )}
+  {firstCatchPokemon && (
+    <FirstCatchMemoModal
+      pokemon={firstCatchPokemon}
+      onSave={saveFirstCatchMemo}
+      onSkip={skipFirstCatchMemo}
+    />
+  )}
+  {evolutionModal && (
+    <EvolutionModal
+      evolutionData={evolutionModal}
+      onAccept={acceptEvolution}
+      onCancel={cancelEvolution}
+    />
+  )}
+</PokemonProvider>
