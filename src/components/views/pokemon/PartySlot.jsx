@@ -57,21 +57,15 @@ export default function PartySlot({
   const hpPercent = (pokemon.hp / pokemon.maxHp) * 100;
   const hpColor = hpPercent > 50 ? 'bg-green-500' : hpPercent > 20 ? 'bg-yellow-500' : 'bg-red-500';
   
-  // theme.js의 getTypeColor 사용
   const typeColors = getTypeColor(pokemon.type);
   const type2Colors = pokemon.type2 ? getTypeColor(pokemon.type2) : null;
   
   const imageUrl = getLocalIconUrl(pokemon, allPokemonMaster);
 
-  // ⭐⭐⭐ 몬스터볼 이미지 가져오기 - 디버깅 추가
-  console.log('🎾 포켓몬:', pokemon.name);
-  console.log('🎾 caughtWithBall:', pokemon.caughtWithBall, 'type:', typeof pokemon.caughtWithBall);
-  
+  // 몬스터볼 이미지 가져오기
   const pokeballData = pokemon.caughtWithBall 
     ? allItems.find(item => {
-        // caughtWithBall이 문자열이 아니면 null 반환
         if (typeof pokemon.caughtWithBall !== 'string') {
-          console.log('❌ caughtWithBall이 문자열이 아님:', pokemon.caughtWithBall);
           return false;
         }
         
@@ -79,22 +73,14 @@ export default function PartySlot({
         const itemNameEn = item.nameEn?.toLowerCase();
         const ballName = pokemon.caughtWithBall.toLowerCase();
         
-        const match = itemName === ballName || 
+        return itemName === ballName || 
                itemNameEn === ballName ||
                itemName?.includes(ballName) ||
                itemNameEn?.includes(ballName);
-        
-        if (match) {
-          console.log('✅ 매칭된 볼:', item.name, item.nameEn);
-        }
-        
-        return match;
       })
     : null;
 
-  console.log('🎾 pokeballData:', pokeballData);
   const ballImage = pokeballData?.spriteUrl || pokeballData?.imageUrl;
-  console.log('🎾 ballImage:', ballImage);
 
   // 고유 애니메이션 ID
   const animId = `pokemonSprite-${pokemon.uniqueId || index}`;
@@ -107,19 +93,56 @@ export default function PartySlot({
       onClick={onClick}
       className={`${STYLES.filled} ${isSelected ? STYLES.selected : STYLES.unselected}`}
     >
-      {/* 애니메이션 정의 */}
+      {/* 애니메이션 정의 - 브라우저 호환성 개선 */}
       <style>{`
         @keyframes ${animId} {
-          0%, 49% { 
+          0% { 
             background-position: left center; 
           }
-          50%, 100% { 
+          49.99% { 
+            background-position: left center; 
+          }
+          50% { 
+            background-position: right center; 
+          }
+          100% { 
+            background-position: right center; 
+          }
+        }
+        
+        /* 브라우저별 최적화 */
+        @-webkit-keyframes ${animId} {
+          0% { 
+            background-position: left center; 
+          }
+          49.99% { 
+            background-position: left center; 
+          }
+          50% { 
+            background-position: right center; 
+          }
+          100% { 
+            background-position: right center; 
+          }
+        }
+        
+        @-moz-keyframes ${animId} {
+          0% { 
+            background-position: left center; 
+          }
+          49.99% { 
+            background-position: left center; 
+          }
+          50% { 
+            background-position: right center; 
+          }
+          100% { 
             background-position: right center; 
           }
         }
       `}</style>
 
-      {/* 몬스터볼 이미지 - 원형 꽉 차게 */}
+      {/* 몬스터볼 이미지 */}
       <div 
         className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden flex items-center justify-center"
         style={{ 
@@ -143,21 +166,29 @@ export default function PartySlot({
         )}
       </div>
       
-      {/* 포켓몬 아이콘 - 선택된 포켓몬만 좌우 프레임 애니메이션 */}
+      {/* 포켓몬 아이콘 - 좌우 프레임 애니메이션 (브라우저 호환성 개선) */}
       <div 
         className="w-12 h-12 flex-shrink-0 flex items-center justify-center"
-        style={{ padding: '8px' }}
+        style={{ padding: '4px' }}
       >
         <div
           className="pokemon-bg-sprite"
           style={{
-            width: '100%',
-            height: '100%',
+            width: '32px',
+            height: '32px',
             backgroundImage: `url(${imageUrl})`,
             backgroundSize: '64px 32px',
             backgroundPosition: 'right center',
             backgroundRepeat: 'no-repeat',
-            animation: isSelected ? `${animId} 0.8s steps(1) infinite` : 'none'
+            /* 브라우저 호환성을 위한 접두사 추가 */
+            WebkitAnimation: isSelected ? `${animId} 0.8s steps(1) infinite` : 'none',
+            MozAnimation: isSelected ? `${animId} 0.8s steps(1) infinite` : 'none',
+            animation: isSelected ? `${animId} 0.8s steps(1) infinite` : 'none',
+            /* 이미지 렌더링 최적화 */
+            imageRendering: 'pixelated',
+            WebkitImageRendering: '-webkit-crisp-edges',
+            MozImageRendering: '-moz-crisp-edges',
+            msInterpolationMode: 'nearest-neighbor'
           }}
         />
       </div>
