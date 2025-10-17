@@ -81,6 +81,9 @@ export default function ShopAdminPanel({
   const getFilteredShopItems = () => {
     const items = getAllShopItems();
     
+    console.log('🔍 전체 상점 아이템:', items);
+    console.log('🔍 현재 필터:', filterDay);
+    
     let filtered = items;
     if (filterDay !== 'all') {
       filtered = items.filter(item => {
@@ -89,13 +92,24 @@ export default function ShopAdminPanel({
       });
     }
     
-    return filtered.sort((a, b) => {
+    const sorted = filtered.sort((a, b) => {
       const typeOrder = { rare: 0, daily: 1, permanent: 2 };
       return typeOrder[a.type] - typeOrder[b.type];
     });
+    
+    console.log('🔍 필터링 후 아이템:', sorted);
+    
+    return sorted;
   };
   
-  const handleAddItem = () => {
+  // ⭐ async로 변경
+  const handleAddItem = async () => {
+    console.log('🎯 handleAddItem 시작');
+    console.log('📦 현재 shopData:', shopData);
+    console.log('🎨 선택된 아이템:', selectedItem);
+    console.log('📌 아이템 타입:', itemType);
+    console.log('📅 선택된 요일:', selectedDay);
+    
     if (!selectedItem) {
       alert('아이템을 선택해주세요!');
       return;
@@ -107,69 +121,110 @@ export default function ShopAdminPanel({
       stock: stock
     };
     
-    let updatedShopData = { ...shopData };
+    console.log('✨ 추가할 아이템:', newItem);
+    
+    // 깊은 복사
+    let updatedShopData = JSON.parse(JSON.stringify(shopData));
+    console.log('📋 복사된 shopData:', updatedShopData);
     
     if (itemType === 'daily') {
       if (!selectedDay) {
         alert('요일을 선택해주세요!');
         return;
       }
-      const currentItems = updatedShopData.dailyItems?.[selectedDay] || [];
+      
+      // dailyItems 초기화
+      if (!updatedShopData.dailyItems) {
+        updatedShopData.dailyItems = {};
+        console.log('🔧 dailyItems 초기화');
+      }
+      
+      const currentItems = updatedShopData.dailyItems[selectedDay] || [];
+      console.log(`📅 ${selectedDay}의 현재 아이템:`, currentItems);
+      
       if (currentItems.some(i => i.itemId === newItem.itemId)) {
         alert('이미 추가된 아이템입니다!');
         return;
       }
-      updatedShopData.dailyItems = {
-        ...updatedShopData.dailyItems,
-        [selectedDay]: [...currentItems, newItem]
-      };
+      updatedShopData.dailyItems[selectedDay] = [...currentItems, newItem];
+      console.log('✅ 업데이트된 dailyItems:', updatedShopData.dailyItems);
+      
     } else if (itemType === 'permanent') {
       const currentItems = updatedShopData.permanentItems || [];
+      console.log('📦 현재 영구 아이템:', currentItems);
+      
       if (currentItems.some(i => i.itemId === newItem.itemId)) {
         alert('이미 추가된 아이템입니다!');
         return;
       }
       updatedShopData.permanentItems = [...currentItems, newItem];
+      console.log('✅ 업데이트된 permanentItems:', updatedShopData.permanentItems);
     }
     
-    onUpdateShop(updatedShopData);
-    setSelectedItem(null);
-    setPrice(0);
-    setStock(99);
-    setShowAddPanel(false);
+    console.log('💾 Firebase에 저장할 데이터:', updatedShopData);
+    
+    try {
+      console.log('🚀 onUpdateShop 호출 시작');
+      await onUpdateShop(updatedShopData);
+      console.log('✅ onUpdateShop 완료');
+      
+      // 초기화
+      setSelectedItem(null);
+      setPrice(0);
+      setStock(99);
+      setShowAddPanel(false);
+      setSearchQuery('');
+      setItemCategory('all');
+      
+      alert('아이템이 성공적으로 추가되었습니다!');
+    } catch (error) {
+      console.error('❌ 아이템 추가 실패:', error);
+      alert('아이템 추가 중 오류가 발생했습니다: ' + error.message);
+    }
   };
   
-  const handleRemoveItem = (itemId, type, day) => {
-    let updatedShopData = { ...shopData };
+  // ⭐ async로 변경
+  const handleRemoveItem = async (itemId, type, day) => {
+    let updatedShopData = JSON.parse(JSON.stringify(shopData));
     
     if (type === 'daily') {
-      updatedShopData.dailyItems = {
-        ...updatedShopData.dailyItems,
-        [day]: (updatedShopData.dailyItems?.[day] || []).filter(i => i.itemId !== itemId)
-      };
+      if (!updatedShopData.dailyItems) {
+        updatedShopData.dailyItems = {};
+      }
+      updatedShopData.dailyItems[day] = (updatedShopData.dailyItems[day] || []).filter(i => i.itemId !== itemId);
+      
     } else if (type === 'permanent') {
       updatedShopData.permanentItems = (updatedShopData.permanentItems || []).filter(i => i.itemId !== itemId);
+      
     } else if (type === 'rare') {
       updatedShopData.rareDailyItem = { itemId: null, price: 0, lastRefresh: null };
     }
     
-    onUpdateShop(updatedShopData);
+    try {
+      await onUpdateShop(updatedShopData);
+      console.log('✅ 아이템 제거 완료');
+    } catch (error) {
+      console.error('❌ 아이템 제거 실패:', error);
+    }
   };
   
-  const handleUpdateItem = (itemId, type, day, field, value) => {
-    let updatedShopData = { ...shopData };
+  // ⭐ async로 변경
+  const handleUpdateItem = async (itemId, type, day, field, value) => {
+    let updatedShopData = JSON.parse(JSON.stringify(shopData));
     
     if (type === 'daily') {
-      updatedShopData.dailyItems = {
-        ...updatedShopData.dailyItems,
-        [day]: (updatedShopData.dailyItems?.[day] || []).map(i => 
-          i.itemId === itemId ? { ...i, [field]: parseInt(value) || 0 } : i
-        )
-      };
+      if (!updatedShopData.dailyItems) {
+        updatedShopData.dailyItems = {};
+      }
+      updatedShopData.dailyItems[day] = (updatedShopData.dailyItems[day] || []).map(i => 
+        i.itemId === itemId ? { ...i, [field]: parseInt(value) || 0 } : i
+      );
+      
     } else if (type === 'permanent') {
       updatedShopData.permanentItems = (updatedShopData.permanentItems || []).map(i => 
         i.itemId === itemId ? { ...i, [field]: parseInt(value) || 0 } : i
       );
+      
     } else if (type === 'rare') {
       updatedShopData.rareDailyItem = {
         ...updatedShopData.rareDailyItem,
@@ -177,11 +232,16 @@ export default function ShopAdminPanel({
       };
     }
     
-    onUpdateShop(updatedShopData);
+    try {
+      await onUpdateShop(updatedShopData);
+    } catch (error) {
+      console.error('❌ 아이템 수정 실패:', error);
+    }
   };
 
-  const handleAddToRarePool = (item, priceValue) => {
-    let updatedShopData = { ...shopData };
+  // ⭐ async로 변경
+  const handleAddToRarePool = async (item, priceValue) => {
+    let updatedShopData = JSON.parse(JSON.stringify(shopData));
     const rarePool = updatedShopData.rareItemPool || [];
     
     if (rarePool.some(i => i.itemId === item.id)) {
@@ -190,24 +250,44 @@ export default function ShopAdminPanel({
     }
     
     updatedShopData.rareItemPool = [...rarePool, { itemId: item.id, price: priceValue }];
-    onUpdateShop(updatedShopData);
+    
+    try {
+      await onUpdateShop(updatedShopData);
+      console.log('✅ 희귀템 풀에 추가 완료');
+    } catch (error) {
+      console.error('❌ 희귀템 풀 추가 실패:', error);
+    }
   };
   
-  const handleRemoveFromRarePool = (itemId) => {
-    let updatedShopData = { ...shopData };
+  // ⭐ async로 변경
+  const handleRemoveFromRarePool = async (itemId) => {
+    let updatedShopData = JSON.parse(JSON.stringify(shopData));
     updatedShopData.rareItemPool = (updatedShopData.rareItemPool || []).filter(i => i.itemId !== itemId);
-    onUpdateShop(updatedShopData);
+    
+    try {
+      await onUpdateShop(updatedShopData);
+      console.log('✅ 희귀템 풀에서 제거 완료');
+    } catch (error) {
+      console.error('❌ 희귀템 풀 제거 실패:', error);
+    }
   };
   
-  const handleUpdateRarePoolPrice = (itemId, priceValue) => {
-    let updatedShopData = { ...shopData };
+  // ⭐ async로 변경
+  const handleUpdateRarePoolPrice = async (itemId, priceValue) => {
+    let updatedShopData = JSON.parse(JSON.stringify(shopData));
     updatedShopData.rareItemPool = (updatedShopData.rareItemPool || []).map(i => 
       i.itemId === itemId ? { ...i, price: parseInt(priceValue) || 0 } : i
     );
-    onUpdateShop(updatedShopData);
+    
+    try {
+      await onUpdateShop(updatedShopData);
+    } catch (error) {
+      console.error('❌ 희귀템 가격 수정 실패:', error);
+    }
   };
   
-  const handleRandomRareItem = () => {
+  // ⭐ async로 변경
+  const handleRandomRareItem = async () => {
     const rarePool = shopData.rareItemPool || [];
     if (rarePool.length === 0) {
       alert('희귀 아이템 풀이 비어있습니다!');
@@ -215,29 +295,50 @@ export default function ShopAdminPanel({
     }
     
     const randomItem = rarePool[Math.floor(Math.random() * rarePool.length)];
-    let updatedShopData = { ...shopData };
+    let updatedShopData = JSON.parse(JSON.stringify(shopData));
     updatedShopData.rareDailyItem = {
       itemId: randomItem.itemId,
       price: randomItem.price,
       lastRefresh: new Date().toISOString().split('T')[0]
     };
     
-    onUpdateShop(updatedShopData);
+    try {
+      await onUpdateShop(updatedShopData);
+      const item = allItems.find(i => i.id === randomItem.itemId);
+      alert(`${item?.name || '아이템'}이(가) 오늘의 희귀템으로 설정되었습니다!`);
+    } catch (error) {
+      console.error('❌ 희귀템 설정 실패:', error);
+    }
   };
 
-  const handleToggleGacha = (enabled) => {
-    let updatedShopData = { ...shopData };
+  // ⭐ async로 변경
+  const handleToggleGacha = async (enabled) => {
+    let updatedShopData = JSON.parse(JSON.stringify(shopData));
     if (!updatedShopData.gachaBall) {
       updatedShopData.gachaBall = { enabled: false, balls: [] };
     }
     updatedShopData.gachaBall.enabled = enabled;
-    onUpdateShop(updatedShopData);
+    
+    try {
+      await onUpdateShop(updatedShopData);
+      console.log('✅ 규토리볼 노출 상태 변경:', enabled);
+    } catch (error) {
+      console.error('❌ 규토리볼 노출 상태 변경 실패:', error);
+    }
   };
 
-  const handleAddGachaBall = (item) => {
-    let updatedShopData = { ...shopData };
+  // ⭐ async로 변경
+  const handleAddGachaBall = async (item) => {
+    let updatedShopData = JSON.parse(JSON.stringify(shopData));
+    
+    // gachaBall 객체 초기화
     if (!updatedShopData.gachaBall) {
       updatedShopData.gachaBall = { enabled: false, balls: [] };
+    }
+    
+    // balls 배열 초기화
+    if (!Array.isArray(updatedShopData.gachaBall.balls)) {
+      updatedShopData.gachaBall.balls = [];
     }
     
     if (updatedShopData.gachaBall.balls.length >= 2) {
@@ -251,13 +352,37 @@ export default function ShopAdminPanel({
     }
     
     updatedShopData.gachaBall.balls.push({ itemId: item.id });
-    onUpdateShop(updatedShopData);
+    
+    try {
+      await onUpdateShop(updatedShopData);
+      console.log('✅ 규토리볼 추가 완료');
+    } catch (error) {
+      console.error('❌ 규토리볼 추가 실패:', error);
+    }
   };
 
-  const handleRemoveGachaBall = (itemId) => {
-    let updatedShopData = { ...shopData };
+  // ⭐ async로 변경
+  const handleRemoveGachaBall = async (itemId) => {
+    let updatedShopData = JSON.parse(JSON.stringify(shopData));
+    
+    // gachaBall 객체 초기화
+    if (!updatedShopData.gachaBall) {
+      updatedShopData.gachaBall = { enabled: false, balls: [] };
+    }
+    
+    // balls 배열 초기화
+    if (!Array.isArray(updatedShopData.gachaBall.balls)) {
+      updatedShopData.gachaBall.balls = [];
+    }
+    
     updatedShopData.gachaBall.balls = updatedShopData.gachaBall.balls.filter(b => b.itemId !== itemId);
-    onUpdateShop(updatedShopData);
+    
+    try {
+      await onUpdateShop(updatedShopData);
+      console.log('✅ 규토리볼 제거 완료');
+    } catch (error) {
+      console.error('❌ 규토리볼 제거 실패:', error);
+    }
   };
 
   return (
@@ -295,21 +420,32 @@ export default function ShopAdminPanel({
             ))}
           </div>
           
-          <button
-            onClick={() => setShowRarePanel(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors whitespace-nowrap"
-          >
-            <Star size={18} />
-            희귀 아이템 관리
-          </button>
-          
-          <button
-            onClick={() => setShowGachaPanel(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition-colors whitespace-nowrap"
-          >
-            <CircleDot size={18} />
-            규토리볼 관리
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                console.log('🔄 현재 shopData:', shopData);
+                alert(`상점 데이터 확인:\n요일별: ${Object.values(shopData.dailyItems || {}).reduce((sum, items) => sum + items.length, 0)}개\n상시: ${(shopData.permanentItems || []).length}개`);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 transition-colors whitespace-nowrap"
+            >
+              🔍 데이터 확인
+            </button>
+            <button
+              onClick={() => setShowRarePanel(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors whitespace-nowrap"
+            >
+              <Star size={18} />
+              희귀템
+            </button>
+            
+            <button
+              onClick={() => setShowGachaPanel(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition-colors whitespace-nowrap"
+            >
+              <CircleDot size={18} />
+              규토리볼
+            </button>
+          </div>
         </div>
         
         <div className="grid grid-cols-5 gap-4">
@@ -419,6 +555,8 @@ export default function ShopAdminPanel({
                 onClick={() => {
                   setShowAddPanel(false);
                   setSelectedItem(null);
+                  setSearchQuery('');
+                  setItemCategory('all');
                 }}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
@@ -626,6 +764,8 @@ export default function ShopAdminPanel({
                 onClick={() => {
                   setShowRarePanel(false);
                   setSelectedItem(null);
+                  setSearchQuery('');
+                  setItemCategory('all');
                 }}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
@@ -842,6 +982,7 @@ export default function ShopAdminPanel({
                 onClick={() => {
                   setShowGachaPanel(false);
                   setSelectedItem(null);
+                  setSearchQuery('');
                 }}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
