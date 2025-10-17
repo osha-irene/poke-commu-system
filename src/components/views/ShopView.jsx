@@ -72,112 +72,232 @@ export default function ShopView() {
   
   // 구매 처리
   const handlePurchase = () => {
-    if (!selectedItem) return;
-    
-    const totalPrice = selectedItem.price * quantity;
-    
-    if (trainer.money < totalPrice) {
-      alert('💰 돈이 부족합니다!');
-      return;
-    }
-    
-    if (selectedItem.stock !== 99 && selectedItem.stock < quantity) {
-      alert(`📦 재고가 부족합니다! (남은 재고: ${selectedItem.stock}개)`);
-      return;
-    }
-    
-    const itemToSend = {
-      ...selectedItem,
-      cost: selectedItem.price
-    };
-    
-    onPurchase(itemToSend, quantity);
-    setSelectedItem(null);
-    setQuantity(1);
+  if (!selectedItem) return;
+  
+  const totalPrice = selectedItem.price * quantity;
+  
+  if (trainer.money < totalPrice) {
+    alert('💰 돈이 부족합니다!');
+    return;
+  }
+  
+  if (selectedItem.stock !== 99 && selectedItem.stock < quantity) {
+    alert(`📦 재고가 부족합니다! (남은 재고: ${selectedItem.stock}개)`);
+    return;
+  }
+  
+  const itemToSend = {
+    ...selectedItem,
+    cost: selectedItem.price
+    // type은 selectedItem에 이미 포함되어 있음
   };
   
+  onPurchase(itemToSend, quantity);
+  setSelectedItem(null);
+  setQuantity(1);
+};
+
   // 아이템 카드 렌더링
-  const renderItemCard = (shopItem) => {
-    const item = getItemDetails(shopItem);
-    if (!item) return null;
-    
-    const isSelected = selectedItem?.itemId === shopItem.itemId;
-    
-    const typeStyles = {
-      rare: {
-        label: '오늘의 희귀',
-        labelBg: 'bg-purple-600',
-        border: 'border-purple-300',
-        bg: 'bg-purple-50',
-        icon: Star
-      },
-      daily: {
-        label: `${todayNameKo} 한정`,
-        labelBg: 'bg-blue-600',
-        border: 'border-blue-300',
-        bg: 'bg-blue-50',
-        icon: Calendar
-      },
-      permanent: {
-        label: '상시 판매',
-        labelBg: 'bg-green-600',
-        border: 'border-green-300',
-        bg: 'bg-green-50',
-        icon: Package
-      }
-    };
-    
-    const style = typeStyles[shopItem.type];
-    const Icon = style.icon;
-    
-    return (
-      <button
-        key={`${shopItem.itemId}-${shopItem.type}`}
-        onClick={() => {
-          setSelectedItem(item);
-          setQuantity(1);
-        }}
-        className={`relative border-2 rounded-lg overflow-hidden transition-all ${
-          isSelected
-            ? 'border-yellow-500 shadow-xl scale-105 ring-4 ring-yellow-200'
-            : `${style.border} ${style.bg} hover:shadow-lg hover:scale-102`
-        }`}
-      >
-        {/* 폴더 탭 스타일 라벨 */}
-        <div className={`absolute -top-0 left-4 ${style.labelBg} text-white text-xs px-3 py-1 font-bold flex items-center gap-1 rounded-b-lg shadow-md z-10`}>
-          <Icon size={12} />
-          {style.label}
+
+// ShopView.jsx의 renderItemCard 함수 수정
+
+const renderItemCard = (shopItem) => {
+  const item = getItemDetails(shopItem);
+  if (!item) return null;
+  
+  const isSelected = selectedItem?.itemId === shopItem.itemId;
+  const isSoldOut = shopItem.stock !== 99 && shopItem.stock <= 0; // ⭐ 품절 체크
+  
+  const typeStyles = {
+    rare: {
+      label: '오늘의 희귀',
+      labelBg: 'bg-purple-600',
+      border: 'border-purple-300',
+      bg: 'bg-purple-50',
+      icon: Star
+    },
+    daily: {
+      label: `${todayNameKo} 한정`,
+      labelBg: 'bg-blue-600',
+      border: 'border-blue-300',
+      bg: 'bg-blue-50',
+      icon: Calendar
+    },
+    permanent: {
+      label: '상시 판매',
+      labelBg: 'bg-green-600',
+      border: 'border-green-300',
+      bg: 'bg-green-50',
+      icon: Package
+    }
+  };
+  
+  const style = typeStyles[shopItem.type];
+  const Icon = style.icon;
+  
+  return (
+    <button
+      key={`${shopItem.itemId}-${shopItem.type}`}
+      onClick={() => {
+        if (isSoldOut) return; // ⭐ 품절이면 클릭 무시
+        setSelectedItem({
+          ...item,
+          type: shopItem.type
+        });
+        setQuantity(1);
+      }}
+      disabled={isSoldOut} // ⭐ 품절이면 비활성화
+      className={`relative border-2 rounded-lg overflow-hidden transition-all ${
+        isSoldOut 
+          ? 'opacity-50 cursor-not-allowed grayscale border-gray-300 bg-gray-100' // ⭐ 품절 스타일
+          : isSelected
+            ? 'border-yellow-400 shadow-lg scale-105 bg-white'
+            : 'border-gray-200 hover:border-gray-300 hover:shadow-md hover:scale-102 bg-white'
+      }`}
+    >
+      {/* ⭐ 품절 오버레이 */}
+      {isSoldOut && (
+        <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center z-20">
+          <div className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg transform rotate-12 shadow-xl">
+            품절
+          </div>
+        </div>
+      )}
+      
+      {/* 폴더 탭 스타일 라벨 */}
+      <div className={`absolute -top-0 left-4 ${style.labelBg} text-white text-xs px-3 py-1 font-bold flex items-center gap-1 rounded-b-lg shadow-md z-10`}>
+        <Icon size={12} />
+        {style.label}
+      </div>
+      
+      <div className="p-4 pt-8">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-20 h-20 flex items-center justify-center bg-white rounded-lg">
+            <img 
+              src={item.spriteUrl} 
+              alt={item.name}
+              className="max-w-full max-h-full"
+              style={{ imageRendering: 'pixelated', transform: 'scale(1.8)' }}
+            />
+          </div>
+          <div className="flex-1 text-left">
+            <div className="font-bold text-lg text-gray-800">{item.name}</div>
+            <div className="text-sm text-gray-600 line-clamp-2">{item.effect?.replace(/\n/g, ' ')}</div>
+          </div>
         </div>
         
-        <div className="p-4 pt-8">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-20 h-20 flex items-center justify-center bg-white rounded-lg">
-              <img 
-                src={item.spriteUrl} 
-                alt={item.name}
-                className="max-w-full max-h-full"
-                style={{ imageRendering: 'pixelated', transform: 'scale(1.8)' }}
-              />
-            </div>
-            <div className="flex-1 text-left">
-              <div className="font-bold text-lg text-gray-800">{item.name}</div>
-              <div className="text-sm text-gray-600 line-clamp-2">{item.effect?.replace(/\n/g, ' ')}</div>
-            </div>
+        <div className="flex items-center justify-between pt-3 border-t-2 border-white">
+          <div className="flex items-center gap-1 text-yellow-600 font-bold text-xl">
+            <Coins size={20} />
+            ₽{shopItem.price.toLocaleString()}
           </div>
-          
-          <div className="flex items-center justify-between pt-3 border-t-2 border-white">
-            <div className="flex items-center gap-1 text-yellow-600 font-bold text-xl">
-              <Coins size={20} />
-              ₽{shopItem.price.toLocaleString()}
-            </div>
-            <div className="text-sm text-gray-600 font-semibold">
-              {shopItem.stock === 99 ? '무제한' : `${shopItem.stock}개`}
-            </div>
+          <div className={`text-sm font-semibold ${
+            isSoldOut ? 'text-red-600' : 'text-gray-600'
+          }`}>
+            {shopItem.stock === 99 ? '무제한' : isSoldOut ? '품절' : `${shopItem.stock}개`}
           </div>
         </div>
-      </button>
-    );
-  };
+      </div>
+    </button>
+  );
+};
+
+// ⭐ 희귀 아이템 카드도 동일하게 수정
+// 희귀 아이템 버튼 부분 (247번 줄 근처):
+
+{shopData.rareDailyItem?.itemId && (
+  <div className="relative border-2 border-purple-300 bg-purple-50 rounded-lg overflow-hidden shadow-lg">
+    <div className="absolute -top-0 left-4 bg-purple-600 text-white text-sm px-4 py-1.5 font-bold flex items-center gap-2 rounded-b-lg shadow-md z-10">
+      <Star size={14} />
+      오늘의 희귀
+    </div>
+    
+    <div className="p-4 pt-10">
+      {(() => {
+        const item = getItemDetails(shopData.rareDailyItem);
+        if (!item) return null;
+        
+        const isSelected = selectedItem?.itemId === shopData.rareDailyItem.itemId;
+        
+        // ⭐ 희귀템은 개인별 구매 이력 체크 (trainer 사용)
+        const purchaseHistory = trainer?.purchaseHistory || {};
+        const today = new Date().toISOString().split('T')[0];
+        const todayPurchases = purchaseHistory[today] || {};
+        const alreadyPurchased = (todayPurchases[shopData.rareDailyItem.itemId] || 0) >= 1;
+        
+        const isSoldOut = alreadyPurchased; // ⭐ 이미 구매했으면 품절
+        
+        console.log('🔍 희귀템 구매 체크:', {
+          itemId: shopData.rareDailyItem.itemId,
+          purchaseHistory,
+          today,
+          todayPurchases,
+          alreadyPurchased,
+          isSoldOut
+        });
+        
+        return (
+          <button
+            onClick={() => {
+              if (isSoldOut) return; // ⭐ 품절이면 클릭 무시
+              setSelectedItem({
+                ...item,
+                type: 'rare',
+                price: shopData.rareDailyItem.price,
+                stock: shopData.rareDailyItem.stock || 1
+              });
+              setQuantity(1);
+            }}
+            disabled={isSoldOut} // ⭐ 품절이면 비활성화
+            className={`w-full transition-all border-2 border-white bg-white rounded-lg p-4 relative ${
+              isSoldOut
+                ? 'opacity-50 cursor-not-allowed grayscale' // ⭐ 품절 스타일
+                : isSelected 
+                  ? 'ring-4 ring-yellow-400 scale-105' 
+                  : 'hover:shadow-md hover:scale-102'
+            }`}
+          >
+            {/* ⭐ 품절 오버레이 */}
+            {isSoldOut && (
+              <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center z-20 rounded-lg">
+                <div className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg transform rotate-12 shadow-xl">
+                  구매완료
+                </div>
+              </div>
+            )}
+            
+            <div className="flex items-start gap-3 mb-3">
+              <div className="w-20 h-20 flex items-center justify-center flex-shrink-0 bg-purple-50 rounded-lg">
+                <img 
+                  src={item.spriteUrl} 
+                  alt={item.name}
+                  className="max-w-full max-h-full"
+                  style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
+                />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="font-bold text-lg text-gray-800 mb-1">{item.name}</div>
+                <div className="text-sm text-gray-600 line-clamp-3">{item.effect?.replace(/\n/g, ' ')}</div>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between pt-3 border-t-2 border-purple-100">
+              <div className="flex items-center gap-1 text-yellow-600 font-bold text-xl">
+                <Coins size={20} />
+                ₽{shopData.rareDailyItem.price.toLocaleString()}
+              </div>
+              <div className={`text-sm font-semibold ${
+                isSoldOut ? 'text-red-600' : 'text-gray-600'
+              }`}>
+                {isSoldOut ? '구매완료' : '1인 1개'}
+              </div>
+            </div>
+          </button>
+        );
+      })()}
+    </div>
+  </div>
+)}
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -221,14 +341,19 @@ export default function ShopView() {
                   
                   return (
                     <button
-                      onClick={() => {
-                        setSelectedItem(item);
-                        setQuantity(1);
-                      }}
-                      className={`w-full transition-all border-2 border-white bg-white rounded-lg p-4 ${
-                        isSelected ? 'ring-4 ring-yellow-400 scale-105' : 'hover:shadow-md hover:scale-102'
-                      }`}
-                    >
+					  onClick={() => {
+						setSelectedItem({
+						  ...item,
+						  type: 'rare',  // ⭐ 이 줄 추가!
+						  price: shopData.rareDailyItem.price,
+						  stock: shopData.rareDailyItem.stock || 1
+						});
+						setQuantity(1);
+					  }}
+					  className={`w-full transition-all border-2 border-white bg-white rounded-lg p-4 ${
+						isSelected ? 'ring-4 ring-yellow-400 scale-105' : 'hover:shadow-md hover:scale-102'
+					  }`}
+					>
                       <div className="flex items-start gap-3 mb-3">
                         <div className="w-20 h-20 flex items-center justify-center flex-shrink-0 bg-purple-50 rounded-lg">
                           <img 

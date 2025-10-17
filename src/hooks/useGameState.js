@@ -865,6 +865,13 @@ const handlePurchase = async (item, quantity) => {
     let updatedShopData = JSON.parse(JSON.stringify(shopData));
     let needShopUpdate = false;
     
+    console.log('🔍 디버깅:', {
+      itemType,
+      itemId,
+      rareDailyItemId: updatedShopData.rareDailyItem?.itemId,
+      조건체크: itemType === 'rare' && updatedShopData.rareDailyItem?.itemId === itemId
+    });
+    
     if (itemType === 'rare' && updatedShopData.rareDailyItem?.itemId === itemId) {
       // 희귀 아이템 구매 이력 추가
       const purchaseHistory = currentUser.purchaseHistory || {};
@@ -874,6 +881,16 @@ const handlePurchase = async (item, quantity) => {
       purchaseHistory[todayStr] = todayPurchases;
       
       console.log('✅ 희귀 아이템 구매 이력 기록:', purchaseHistory);
+      
+      // ⭐ 희귀 아이템 재고도 감소시키기
+      if (updatedShopData.rareDailyItem.stock !== 99) {
+        updatedShopData.rareDailyItem = {
+          ...updatedShopData.rareDailyItem,
+          stock: Math.max(0, updatedShopData.rareDailyItem.stock - quantity)
+        };
+        needShopUpdate = true;
+        console.log('📦 희귀 아이템 재고 감소:', updatedShopData.rareDailyItem);
+      }
       
       // 유저 정보 업데이트 (구매 이력 포함)
       updateCurrentUser({
@@ -906,14 +923,14 @@ const handlePurchase = async (item, quantity) => {
       console.log('📦 상시 아이템 재고 감소:', updatedShopData.permanentItems);
     }
     
-    // 상점 데이터 업데이트 (희귀 아이템이 아닌 경우)
+    // 상점 데이터 업데이트
     if (needShopUpdate) {
       console.log('🔄 상점 데이터 Firebase 업데이트 시작');
       await updateShopData(updatedShopData);
       console.log('✅ 상점 데이터 업데이트 완료');
     }
     
-    // 희귀 아이템이 아닌 경우 유저 정보만 업데이트
+    // 희귀 아이템이 아닌 경우에만 여기서 유저 정보 업데이트
     if (itemType !== 'rare') {
       updateCurrentUser({
         inventory: newInventory,

@@ -229,10 +229,6 @@ export default function App() {
     editMemberPokemon
   } = gameState;
 
-  console.log('🎮 App.jsx - createCustomItem:', createCustomItem);
-console.log('🎮 App.jsx - createCustomItem 타입:', typeof createCustomItem);
-console.log('🎮 App.jsx - gameState.createCustomItem:', gameState.createCustomItem);
-
   // 게시판 로드
   useEffect(() => {
     const loadQnaPosts = async () => {
@@ -368,15 +364,21 @@ console.log('🎮 App.jsx - gameState.createCustomItem:', gameState.createCustom
     pokemonLearnsets
   };
 
-  const handleRegister = async (userId, password, name) => {
+ const handleRegister = async (userId, password, name) => {
     try {
+      console.log('🔐 회원가입 시작:', userId);
+      
       const email = `${userId}@pokemon.com`;
       const { createUserWithEmailAndPassword } = await import('firebase/auth');
-      const { auth } = await import('./firebase');
+      const { auth, database } = await import('./firebase');
+      const { ref, set } = await import('firebase/database');
       
+      // 1️⃣ Firebase Auth에 계정 생성
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUid = userCredential.user.uid;
+      console.log('✅ Auth 계정 생성 완료:', firebaseUid);
       
+      // 2️⃣ Realtime Database에 회원 데이터 저장
       const memberRef = ref(database, `members/${firebaseUid}`);
       const newMemberData = {
         name: name,
@@ -396,28 +398,41 @@ console.log('🎮 App.jsx - gameState.createCustomItem:', gameState.createCustom
             count: 15,
             imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'
           }
-        ]
+        ],
+        createdAt: new Date().toISOString()
       };
       
       await set(memberRef, newMemberData);
-      alert(`✅ 회원가입 완료!\n\n아이디: ${userId}\n비밀번호로 로그인해주세요.`);
+      console.log('✅ Database 저장 완료:', firebaseUid);
+      
+      // 3️⃣ members state에 추가 (즉시 반영)
+      setMembers(prev => ({
+        ...prev,
+        [firebaseUid]: {
+          ...newMemberData,
+          id: firebaseUid
+        }
+      }));
+      
+      alert(`✅ 회원가입 완료!\n\n아이디: ${userId}\n이름: ${name}\n\n로그인해주세요!`);
       return true;
       
     } catch (error) {
-      console.error('회원가입 오류:', error);
+      console.error('❌ 회원가입 오류:', error);
       
       if (error.code === 'auth/email-already-in-use') {
         alert('이미 사용 중인 아이디입니다.');
       } else if (error.code === 'auth/weak-password') {
         alert('비밀번호는 6자 이상이어야 합니다.');
+      } else if (error.code === 'auth/invalid-email') {
+        alert('유효하지 않은 이메일 형식입니다.');
       } else {
-        alert('회원가입 중 오류가 발생했습니다.');
+        alert(`회원가입 중 오류가 발생했습니다.\n${error.message}`);
       }
       
       return false;
     }
   };
-
   if (isAuthLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
