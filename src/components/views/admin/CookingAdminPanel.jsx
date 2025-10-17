@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Plus, Trash2, Save, X, Search, FileText, BarChart3, Gift, Package, Sparkles, Zap, Heart, Star, TrendingUp, ChefHat, Layers } from 'lucide-react';
+import { getItemPocket } from '../../../utils/itemUtils';
 
 const Card = ({ children, className = '' }) => (
   <div className={`bg-white rounded-lg shadow ${className}`}>{children}</div>
@@ -69,31 +70,59 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
     speed: 0
   });
 
+  // 카테고리 정의 (식재료 추가)
   const categories = [
     { id: 'all', name: '전체', icon: Package },
     { id: 'berries', name: '나무열매', icon: Sparkles },
     { id: 'medicine', name: '회복', icon: Heart },
     { id: 'vitamins', name: '영양', icon: Zap },
+    { id: 'ingredients', name: '식재료', icon: ChefHat }, // 식재료 카테고리 추가
   ];
 
-  const filteredItems = allItems.filter(item => {
-    const pocket = item.categoryData?.pocket || item.pocket || 'misc';
-    
-    if (itemCategory !== 'all' && pocket !== itemCategory) {
-      return false;
+  // itemsUtil을 사용한 필터링
+  const filteredItems = useMemo(() => {
+    let items = [];
+
+    if (itemCategory === 'all') {
+      // 전체: 나무열매, 회복, 영양, 식재료
+      items = [
+        ...getItemPocket(allItems, 'berries'),
+        ...getItemPocket(allItems, 'medicine'),
+        ...getItemPocket(allItems, 'vitamins'),
+        ...allItems.filter(item => 
+          item.cooking?.isIngredient === true ||
+          item.category?.includes('ingredient')
+        )
+      ];
+    } else if (itemCategory === 'ingredients') {
+      // 식재료만
+      items = allItems.filter(item => 
+        item.cooking?.isIngredient === true ||
+        item.category?.includes('ingredient')
+      );
+    } else {
+      // 특정 pocket
+      items = getItemPocket(allItems, itemCategory);
     }
-    
-    if (!['berries', 'medicine', 'vitamins'].includes(pocket)) {
-      return false;
-    }
-    
+
+    // 검색어 필터링
     if (itemSearch) {
       const query = itemSearch.toLowerCase();
-      return item.name?.toLowerCase().includes(query);
+      items = items.filter(item => 
+        item.name?.toLowerCase().includes(query) ||
+        item.nameEn?.toLowerCase().includes(query)
+      );
     }
-    
-    return true;
-  }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+    // 중복 제거 (id 기준)
+    const uniqueItems = Array.from(
+      new Map(items.map(item => [item.id, item])).values()
+    );
+
+    return uniqueItems.sort((a, b) => 
+      (a.name || '').localeCompare(b.name || '')
+    );
+  }, [allItems, itemCategory, itemSearch]);
 
   const removeIngredient = (index) => {
     const newIng = [...ingredients];
@@ -657,7 +686,7 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
       </Card>
 
       {/* 아이템 선택 모달 */}
-      {showItemModal && (
+        {showItemModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -699,6 +728,11 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
                   );
                 })}
               </div>
+              
+              {/* 필터링된 아이템 개수 표시 */}
+              <div className="text-sm text-gray-600">
+                {filteredItems.length}개의 아이템
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6">
@@ -714,7 +748,10 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
                         src={item.spriteUrl || item.imageUrl} 
                         alt={item.name}
                         className="max-w-full max-h-full object-contain"
-                        style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
+                        style={{ 
+                          imageRendering: 'pixelated', 
+                          transform: item.cooking?.isIngredient ? 'scale(1)' : 'scale(2)' 
+                        }}
                       />
                     </div>
                     
@@ -722,6 +759,12 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
                       <div className="text-xs font-semibold text-gray-800 text-center truncate group-hover:text-indigo-700">
                         {item.name}
                       </div>
+                      {/* 식재료 표시 */}
+                      {item.cooking?.isIngredient && (
+                        <div className="text-[10px] text-center text-indigo-600 mt-0.5">
+                          식재료
+                        </div>
+                      )}
                     </div>
                   </button>
                 ))}

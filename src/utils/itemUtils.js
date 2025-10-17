@@ -1,4 +1,5 @@
 // src/utils/itemUtils.js
+import { Package, Circle, Heart, Zap, Sparkles, Disc, ShoppingBag, Cpu, Dumbbell, Key } from 'lucide-react';
 
 export const ITEM_POCKETS = {
   POKEBALLS: 'pokeballs',
@@ -26,25 +27,110 @@ export const POCKET_LABELS = {
   [ITEM_POCKETS.MISC]: '기타'
 };
 
+// 아이콘 매핑
+export const POCKET_ICONS = {
+  'all': Package,
+  [ITEM_POCKETS.POKEBALLS]: Circle,
+  [ITEM_POCKETS.MEDICINE]: Heart,
+  [ITEM_POCKETS.BERRIES]: Sparkles,
+  [ITEM_POCKETS.MACHINES]: Disc,
+  [ITEM_POCKETS.HELD_ITEMS]: ShoppingBag,
+  [ITEM_POCKETS.EVOLUTION]: Cpu,
+  [ITEM_POCKETS.VITAMINS]: Zap,
+  [ITEM_POCKETS.BATTLE]: Dumbbell,
+  [ITEM_POCKETS.KEY]: Key,
+  [ITEM_POCKETS.MISC]: Package
+};
+
+// 색상 매핑
+export const POCKET_COLORS = {
+  'all': 'bg-purple-600 text-white',
+  [ITEM_POCKETS.POKEBALLS]: 'bg-red-600 text-white',
+  [ITEM_POCKETS.MEDICINE]: 'bg-pink-600 text-white',
+  [ITEM_POCKETS.BERRIES]: 'bg-green-600 text-white',
+  [ITEM_POCKETS.MACHINES]: 'bg-blue-600 text-white',
+  [ITEM_POCKETS.HELD_ITEMS]: 'bg-yellow-600 text-white',
+  [ITEM_POCKETS.EVOLUTION]: 'bg-indigo-600 text-white',
+  [ITEM_POCKETS.VITAMINS]: 'bg-orange-600 text-white',
+  [ITEM_POCKETS.BATTLE]: 'bg-red-700 text-white',
+  [ITEM_POCKETS.KEY]: 'bg-gray-600 text-white',
+  [ITEM_POCKETS.MISC]: 'bg-gray-500 text-white'
+};
+
+// 통합된 카테고리 배열 (아이콘과 색상 포함)
 export const CATEGORIES = [
-  { id: 'all', name: '전체' },
-  { id: ITEM_POCKETS.POKEBALLS, name: POCKET_LABELS[ITEM_POCKETS.POKEBALLS] },
-  { id: ITEM_POCKETS.MEDICINE, name: POCKET_LABELS[ITEM_POCKETS.MEDICINE] },
-  { id: ITEM_POCKETS.BERRIES, name: POCKET_LABELS[ITEM_POCKETS.BERRIES] },
-  { id: ITEM_POCKETS.MACHINES, name: POCKET_LABELS[ITEM_POCKETS.MACHINES] },
-  { id: ITEM_POCKETS.HELD_ITEMS, name: POCKET_LABELS[ITEM_POCKETS.HELD_ITEMS] },
-  { id: ITEM_POCKETS.EVOLUTION, name: POCKET_LABELS[ITEM_POCKETS.EVOLUTION] },
-  { id: ITEM_POCKETS.VITAMINS, name: POCKET_LABELS[ITEM_POCKETS.VITAMINS] },
-  { id: ITEM_POCKETS.BATTLE, name: POCKET_LABELS[ITEM_POCKETS.BATTLE] },
-  { id: ITEM_POCKETS.KEY, name: POCKET_LABELS[ITEM_POCKETS.KEY] },
-  { id: ITEM_POCKETS.MISC, name: POCKET_LABELS[ITEM_POCKETS.MISC] }
+  { 
+    id: 'all', 
+    name: '전체',
+    Icon: POCKET_ICONS['all'],
+    color: POCKET_COLORS['all']
+  },
+  { 
+    id: ITEM_POCKETS.POKEBALLS, 
+    name: POCKET_LABELS[ITEM_POCKETS.POKEBALLS],
+    Icon: POCKET_ICONS[ITEM_POCKETS.POKEBALLS],
+    color: POCKET_COLORS[ITEM_POCKETS.POKEBALLS]
+  },
+  { 
+    id: ITEM_POCKETS.MEDICINE, 
+    name: POCKET_LABELS[ITEM_POCKETS.MEDICINE],
+    Icon: POCKET_ICONS[ITEM_POCKETS.MEDICINE],
+    color: POCKET_COLORS[ITEM_POCKETS.MEDICINE]
+  },
+  { 
+    id: ITEM_POCKETS.BERRIES, 
+    name: POCKET_LABELS[ITEM_POCKETS.BERRIES],
+    Icon: POCKET_ICONS[ITEM_POCKETS.BERRIES],
+    color: POCKET_COLORS[ITEM_POCKETS.BERRIES]
+  },
+  { 
+    id: ITEM_POCKETS.MACHINES, 
+    name: POCKET_LABELS[ITEM_POCKETS.MACHINES],
+    Icon: POCKET_ICONS[ITEM_POCKETS.MACHINES],
+    color: POCKET_COLORS[ITEM_POCKETS.MACHINES]
+  },
+  { 
+    id: ITEM_POCKETS.HELD_ITEMS, 
+    name: POCKET_LABELS[ITEM_POCKETS.HELD_ITEMS],
+    Icon: POCKET_ICONS[ITEM_POCKETS.HELD_ITEMS],
+    color: POCKET_COLORS[ITEM_POCKETS.HELD_ITEMS]
+  },
+  { 
+    id: ITEM_POCKETS.EVOLUTION, 
+    name: POCKET_LABELS[ITEM_POCKETS.EVOLUTION],
+    Icon: POCKET_ICONS[ITEM_POCKETS.EVOLUTION],
+    color: POCKET_COLORS[ITEM_POCKETS.EVOLUTION]
+  },
+  { 
+    id: ITEM_POCKETS.VITAMINS, 
+    name: POCKET_LABELS[ITEM_POCKETS.VITAMINS],
+    Icon: POCKET_ICONS[ITEM_POCKETS.VITAMINS],
+    color: POCKET_COLORS[ITEM_POCKETS.VITAMINS]
+  },
+  { 
+    id: ITEM_POCKETS.BATTLE, 
+    name: POCKET_LABELS[ITEM_POCKETS.BATTLE],
+    Icon: POCKET_ICONS[ITEM_POCKETS.BATTLE],
+    color: POCKET_COLORS[ITEM_POCKETS.BATTLE]
+  },
+  { 
+    id: ITEM_POCKETS.KEY, 
+    name: POCKET_LABELS[ITEM_POCKETS.KEY],
+    Icon: POCKET_ICONS[ITEM_POCKETS.KEY],
+    color: POCKET_COLORS[ITEM_POCKETS.KEY]
+  },
+  { 
+    id: ITEM_POCKETS.MISC, 
+    name: POCKET_LABELS[ITEM_POCKETS.MISC],
+    Icon: POCKET_ICONS[ITEM_POCKETS.MISC],
+    color: POCKET_COLORS[ITEM_POCKETS.MISC]
+  }
 ];
 
 // 통일된 아이템 pocket 가져오기
 export const getItemPocket = (item) => {
   if (!item) return ITEM_POCKETS.MISC;
   
-  // ⭐ category를 pocket으로 우선 매핑
   const categoryToPocketMap = {
     'vitamins': ITEM_POCKETS.VITAMINS,
     'held-items': ITEM_POCKETS.HELD_ITEMS,
@@ -65,22 +151,18 @@ export const getItemPocket = (item) => {
     'gameplay': ITEM_POCKETS.KEY,
   };
   
-  // 1순위: category로 매핑
   if (item.category && categoryToPocketMap[item.category]) {
     return categoryToPocketMap[item.category];
   }
   
-  // 2순위: categoryData.pocket
   if (item.categoryData?.pocket) {
     return item.categoryData.pocket;
   }
   
-  // 3순위: pocket 필드
   if (item.pocket) {
     return item.pocket;
   }
   
-  // 기본값
   return ITEM_POCKETS.MISC;
 };
 
@@ -115,12 +197,6 @@ export const canUseItem = (item) => {
   );
 };
 
-// stat-boosts를 battle pocket으로 필터링
-export const normalizeCategory = (category) => {
-  if (category === 'stat-boosts') return 'battle';
-  return category;
-};
-
 // pocket ID로 아이템 필터링
 export const filterItemsByPocket = (items, pocketId) => {
   if (pocketId === 'all') return items;
@@ -129,10 +205,21 @@ export const filterItemsByPocket = (items, pocketId) => {
     const pocket = getItemPocket(item);
     const category = getItemCategory(item);
     
-    // 특수 케이스 처리
     if (pocketId === ITEM_POCKETS.MACHINES && item.isTM) return true;
     if (pocketId === ITEM_POCKETS.EVOLUTION && category.includes('evolution')) return true;
     
     return pocket === pocketId;
   });
+};
+
+// 아이템의 아이콘 가져오기
+export const getItemIcon = (item) => {
+  const pocket = getItemPocket(item);
+  return POCKET_ICONS[pocket] || Package;
+};
+
+// 아이템의 색상 가져오기
+export const getItemColor = (item) => {
+  const pocket = getItemPocket(item);
+  return POCKET_COLORS[pocket] || POCKET_COLORS[ITEM_POCKETS.MISC];
 };

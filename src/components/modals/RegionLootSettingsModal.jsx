@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Coins, Package, Apple, TreePine, X } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Coins, Package, Apple, TreePine, X, Search } from 'lucide-react';
+import { getItemPocket, getItemIcon, CATEGORIES, filterItemsByPocket } from '../../utils/itemUtils';
 
 export default function RegionLootSettingsModal({ region, allItems, onClose, onSave }) {
   const [lootConfig, setLootConfig] = useState(region.lootConfig || {
@@ -12,23 +13,37 @@ export default function RegionLootSettingsModal({ region, allItems, onClose, onS
     berryPool: []
   });
 
-  // 모든 아이템 통합
-  const availableItems = allItems.filter(i => 
-    i.category === 'misc' || 
-    i.category === 'ball' || 
-    i.category === 'medicine' || 
-    i.category === 'vitamin' ||
-    i.category === 'ingredient' ||
-    i.category === 'berry' ||
-    i.isIngredient === true
-  );
+  const [itemSearch, setItemSearch] = useState('');
+  const [itemCategory, setItemCategory] = useState('all');
+
+  // 아이템 필터링 (itemUtils 사용)
+  const filteredItems = useMemo(() => {
+    let items = filterItemsByPocket(allItems, itemCategory);
+
+    // 검색어 필터링
+    if (itemSearch) {
+      const query = itemSearch.toLowerCase();
+      items = items.filter(item => 
+        item.name?.toLowerCase().includes(query) ||
+        item.nameEn?.toLowerCase().includes(query)
+      );
+    }
+
+    // 중복 제거
+    const uniqueItems = Array.from(
+      new Map(items.map(item => [item.id, item])).values()
+    );
+
+    return uniqueItems.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  }, [allItems, itemCategory, itemSearch]);
 
   const toggleItem = (itemId, item) => {
-    // 아이템 카테고리에 따라 적절한 풀에 추가
+    const pocket = getItemPocket(item);
     let poolName = 'itemPool';
-    if (item.category === 'berry') {
+    
+    if (pocket === 'berries') {
       poolName = 'berryPool';
-    } else if (item.category === 'ingredient' || item.isIngredient) {
+    } else if (item.cooking?.isIngredient || item.category?.includes('ingredient')) {
       poolName = 'ingredientPool';
     }
 
@@ -42,9 +57,11 @@ export default function RegionLootSettingsModal({ region, allItems, onClose, onS
   };
 
   const isItemSelected = (itemId, item) => {
-    if (item.category === 'berry') {
+    const pocket = getItemPocket(item);
+    
+    if (pocket === 'berries') {
       return (lootConfig.berryPool || []).includes(itemId);
-    } else if (item.category === 'ingredient' || item.isIngredient) {
+    } else if (item.cooking?.isIngredient || item.category?.includes('ingredient')) {
       return (lootConfig.ingredientPool || []).includes(itemId);
     }
     return (lootConfig.itemPool || []).includes(itemId);
@@ -65,7 +82,7 @@ export default function RegionLootSettingsModal({ region, allItems, onClose, onS
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* 헤더 */}
         <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-5 flex items-center justify-between">
           <div>
@@ -101,7 +118,7 @@ export default function RegionLootSettingsModal({ region, allItems, onClose, onS
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-600 mb-1 block">최대 금액</label>
+                  <label className="text-xs font-semibold text-gray-600 mb-1 block">최소 금액</label>
                   <input
                     type="number"
                     value={lootConfig.money.max}
@@ -212,62 +229,115 @@ export default function RegionLootSettingsModal({ region, allItems, onClose, onS
                 {totalSelected}개 선택됨
               </span>
             </div>
+
+            {/* 검색창 */}
+            <div className="mb-4">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <input
+                  type="text"
+                  placeholder="아이템 검색..."
+                  value={itemSearch}
+                  onChange={(e) => setItemSearch(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+            </div>
+
+            {/* 카테고리 필터 */}
+            <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+              {CATEGORIES.map(cat => {
+                const Icon = cat.Icon;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setItemCategory(cat.id)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-all ${
+                      itemCategory === cat.id
+                        ? cat.color + ' shadow-lg scale-105'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    <Icon size={18} />
+                    <span>{cat.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* 필터링된 아이템 개수 */}
+            <div className="text-sm text-gray-600 mb-3">
+              {filteredItems.length}개의 아이템
+            </div>
             
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-[400px] overflow-y-auto p-2">
-              {availableItems.length > 0 ? (
-                availableItems.map(item => {
+            {/* 아이템 그리드 */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 max-h-[400px] overflow-y-auto p-2">
+              {filteredItems.length > 0 ? (
+                filteredItems.map(item => {
                   const isSelected = isItemSelected(item.id, item);
+                  const ItemIcon = getItemIcon(item);
+                  
                   return (
-                    <div
+                    <button
                       key={item.id}
                       onClick={() => toggleItem(item.id, item)}
-                      className={`relative bg-white rounded-lg border-2 p-3 cursor-pointer transition-all hover:shadow-md ${
+                      className={`flex flex-col border-2 rounded-xl transition-all group bg-white overflow-hidden ${
                         isSelected
-                          ? 'border-indigo-500 shadow-md'
-                          : 'border-gray-200 hover:border-gray-400'
+                          ? 'border-indigo-500 shadow-lg'
+                          : 'border-gray-200 hover:border-indigo-300 hover:shadow-md'
                       }`}
                     >
                       {/* 선택 표시 */}
                       {isSelected && (
-                        <div className="absolute top-2 right-2 w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center">
+                        <div className="absolute top-2 right-2 w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center z-10">
                           <span className="text-white text-xs">✓</span>
                         </div>
                       )}
-                      
+
                       {/* 아이템 이미지 */}
-                      <div className="w-full aspect-square bg-gray-100 rounded-lg mb-2 flex items-center justify-center overflow-hidden">
+                      <div className="aspect-square bg-gray-50 p-6 flex items-center justify-center relative">
                         {item.spriteUrl ? (
                           <img 
                             src={item.spriteUrl} 
                             alt={item.name}
-                            className="w-full h-full object-contain"
+                            className="max-w-full max-h-full object-contain"
+                            style={{ 
+                              imageRendering: 'pixelated',
+                              transform: item.cooking?.isIngredient ? 'scale(1)' : 'scale(2)'
+                            }}
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
                           />
-                        ) : (
-                          <Package className="text-gray-400" size={32} />
+                        ) : null}
+                        <div style={{ display: item.spriteUrl ? 'none' : 'flex' }} className="w-full h-full items-center justify-center">
+                          <ItemIcon size={48} className="text-gray-300" />
+                        </div>
+                      </div>
+                      
+                      {/* 아이템 정보 */}
+                      <div className="p-2 bg-white border-t border-gray-200">
+                        <div className={`text-xs font-semibold text-center truncate ${
+                          isSelected ? 'text-indigo-700' : 'text-gray-800 group-hover:text-indigo-700'
+                        }`}>
+                          {item.name}
+                        </div>
+                        
+                        {/* 카테고리 표시 */}
+                        {(item.cooking?.isIngredient || item.category?.includes('ingredient')) && (
+                          <div className="text-[10px] text-center text-indigo-600 mt-0.5">
+                            식재료
+                          </div>
                         )}
                       </div>
-                      
-                      {/* 아이템 이름 */}
-                      <div className="text-xs font-semibold text-gray-800 text-center truncate">
-                        {item.name}
-                      </div>
-                      
-                      {/* 카테고리 뱃지 */}
-                      <div className="mt-1 text-center">
-                        <span className="inline-block text-[10px] px-2 py-0.5 bg-gray-200 text-gray-600 rounded-full">
-                          {item.category === 'berry' ? '열매' : 
-                           item.category === 'ingredient' || item.isIngredient ? '식재료' : 
-                           item.category === 'medicine' ? '회복' :
-                           item.category === 'vitamin' ? '영양' :
-                           item.category === 'ball' ? '볼' : '기타'}
-                        </span>
-                      </div>
-                    </div>
+                    </button>
                   );
                 })
               ) : (
-                <div className="col-span-full text-center py-8 text-gray-400">
-                  선택 가능한 아이템이 없습니다
+                <div className="col-span-full text-center py-16 text-gray-400">
+                  <Search size={64} className="mx-auto mb-4 text-gray-300" />
+                  <p className="text-lg">검색 결과가 없습니다</p>
                 </div>
               )}
             </div>
