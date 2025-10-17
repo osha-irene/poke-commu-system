@@ -787,7 +787,7 @@ export default function ShopAdminPanel({
         </div>
       )}
 
-}
+
 
       {showAddPanel && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -821,25 +821,26 @@ export default function ShopAdminPanel({
                         className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
-                    div className="flex gap-2 overflow-x-auto pb-2">
-                    {CATEGORIES.map(cat => {
-                      const Icon = cat.Icon;
-                      return (
-                        <button
-                          key={cat.id}
-                          onClick={() => setItemCategory(cat.id)}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
-                            itemCategory === cat.id
-                              ? cat.color + ' shadow-lg scale-105'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`}
-                        >
-                          <Icon size={18} />
-                          <span>{cat.name}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                    <div className="flex gap-2 overflow-x-auto pb-2">
+                      {CATEGORIES.map(cat => {
+                        const Icon = cat.Icon;
+                        return (
+                          <button
+                            key={cat.id}
+                            onClick={() => setItemCategory(cat.id)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                              itemCategory === cat.id
+                                ? cat.color + ' shadow-lg scale-105'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                          >
+                            <Icon size={18} />
+                            <span>{cat.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                      </div>
 
                   <div className="flex-1 overflow-y-auto">
   <div className="grid grid-cols-4 gap-4">
@@ -1049,22 +1050,27 @@ export default function ShopAdminPanel({
                         className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                       />
                     </div>
-                    <div className="flex gap-2">
-                   <div className="flex gap-2">
-                  {CATEGORIES.map(cat => (
-                        <button
-                          key={cat.id}
-                          onClick={() => setItemCategory(cat.id)}
-                          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                            itemCategory === cat.id
-                              ? 'bg-purple-600 text-white shadow-lg scale-105'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`}
-                        >
-                          {cat.name}
-                        </button>
-                      ))}
-                    </div>  </div>  </div> 
+                 
+                  {<div className="flex gap-2 overflow-x-auto pb-2">
+                      {CATEGORIES.map(cat => {
+                        const Icon = cat.Icon;
+                        return (
+                          <button
+                            key={cat.id}
+                            onClick={() => setItemCategory(cat.id)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                              itemCategory === cat.id
+                                ? 'bg-purple-600 text-white shadow-lg scale-105'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                          >
+                            <Icon size={18} />
+                            <span>{cat.name}</span>
+                          </button>
+                       );
+                      })}
+                    </div>
+                  </div>
 
                   <div className="flex-1 overflow-y-auto">
                     <div className="grid grid-cols-4 gap-4">
