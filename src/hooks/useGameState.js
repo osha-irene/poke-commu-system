@@ -758,84 +758,169 @@ const skipFirstCatchMemo = async (pokemonNumber) => {
     return gameDataUpdatePokedexMemo(pokemonNumber, memo, currentUser);
   };
 
-  const handlePurchase = (item, quantity) => {
-    if (!currentUser) return false;
-    
-    console.log('🛒 구매 시도 - 전체 아이템 정보:', item);
-    
-    let itemData;
-    if (typeof item === 'string' || typeof item === 'number') {
-      itemData = allItems.find(i => i.id === item);
-      if (!itemData) {
-        alert('아이템 정보를 찾을 수 없습니다!');
-        return false;
-      }
-    } else {
-      itemData = item;
-    }
-    
-    const itemCost = itemData.cost ?? itemData.price ?? itemData.buyPrice ?? 0;
-    const totalCost = itemCost * quantity;
-    
-    console.log('💰 최종 가격:', itemCost, '이액:', totalCost);
-    
-    if (totalCost <= 0) {
-      console.error('❌ 가격이 0 이하입니다! 아이템 정보:', itemData);
-      alert('아이템 가격 정보가 올바르지 않습니다!\n\n개발자 도구(F12) 콘솔을 확인해주세요.');
+// useGameState.js의 handlePurchase 함수 수정본
+// 기존 handlePurchase 함수를 이 코드로 교체하세요
+
+const handlePurchase = async (item, quantity) => {
+  if (!currentUser) return false;
+  
+  console.log('🛒 구매 시도 - 전체 아이템 정보:', item);
+  
+  let itemData;
+  if (typeof item === 'string' || typeof item === 'number') {
+    itemData = allItems.find(i => i.id === item);
+    if (!itemData) {
+      alert('아이템 정보를 찾을 수 없습니다!');
       return false;
     }
+  } else {
+    itemData = item;
+  }
+  
+  const itemCost = itemData.cost ?? itemData.price ?? itemData.buyPrice ?? 0;
+  const totalCost = itemCost * quantity;
+  
+  console.log('💰 최종 가격:', itemCost, '총액:', totalCost);
+  
+  if (totalCost <= 0) {
+    console.error('❌ 가격이 0 이하입니다! 아이템 정보:', itemData);
+    alert('아이템 가격 정보가 올바르지 않습니다!\n\n개발자 도구(F12) 콘솔을 확인해주세요.');
+    return false;
+  }
+  
+  if (currentUser.money < totalCost) {
+    alert('돈이 부족합니다!');
+    return false;
+  }
+  
+  // ⭐ 재고 체크 추가
+  const itemStock = itemData.stock ?? 99;
+  if (itemStock !== 99 && itemStock < quantity) {
+    alert(`재고가 부족합니다! (남은 재고: ${itemStock}개)`);
+    return false;
+  }
+  
+  // ⭐ 희귀 아이템의 경우 1인당 구매 이력 체크
+  const itemType = itemData.type;
+  const itemId = itemData.itemId ?? itemData.id;
+  
+  if (itemType === 'rare') {
+    const purchaseHistory = currentUser.purchaseHistory || {};
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const todayPurchases = purchaseHistory[today] || {};
     
-    if (currentUser.money < totalCost) {
-      alert('돈이 부족합니다!');
+    if (todayPurchases[itemId]) {
+      alert('오늘의 희귀 아이템은 1인당 1개만 구매할 수 있습니다!');
       return false;
     }
+  }
+  
+  // 인벤토리에 아이템 추가
+  const existingItem = currentUser.inventory.find(
+    i => i.itemId === itemData.id || i.name === itemData.name
+  );
+  
+  const newInventory = existingItem
+    ? currentUser.inventory.map(i =>
+        (i.itemId === itemData.id || i.name === itemData.name)
+          ? { ...i, count: i.count + quantity }
+          : i
+      )
+    : [
+        ...currentUser.inventory,
+        {
+          itemId: itemData.id,
+          name: itemData.name,
+          nameEn: itemData.nameEn,
+          count: quantity,
+          imageUrl: itemData.spriteUrl || itemData.imageUrl,
+          cost: itemCost,
+          sellPrice: itemData.sellPrice,
+          category: itemData.category,
+          pocket: itemData.pocket,
+          effect: itemData.effect,
+          friendshipBoost: itemData.friendshipBoost,
+          ivBoost: itemData.ivBoost,
+          evBoost: itemData.evBoost,
+          conditionBoost: itemData.conditionBoost,
+          specialEffect: itemData.specialEffect
+        }
+      ];
+  
+  const newMoney = currentUser.money - totalCost;
+  
+  // ⭐ 상점 재고 감소 처리
+  try {
+    const today = new Date();
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const todayName = dayNames[today.getDay()];
     
-    const existingItem = currentUser.inventory.find(
-      i => i.itemId === itemData.id || i.name === itemData.name
-    );
+    let updatedShopData = JSON.parse(JSON.stringify(shopData));
+    let stockUpdated = false;
     
-    const newInventory = existingItem
-      ? currentUser.inventory.map(i =>
-          (i.itemId === itemData.id || i.name === itemData.name)
-            ? { ...i, count: i.count + quantity }
-            : i
-        )
-      : [
-          ...currentUser.inventory,
-          {
-            itemId: itemData.id,
-            name: itemData.name,
-            nameEn: itemData.nameEn,
-            count: quantity,
-            imageUrl: itemData.spriteUrl || itemData.imageUrl,
-            cost: itemCost,
-            sellPrice: itemData.sellPrice,
-            category: itemData.category,
-            pocket: itemData.pocket,
-            effect: itemData.effect,
-            friendshipBoost: itemData.friendshipBoost,
-            ivBoost: itemData.ivBoost,
-            evBoost: itemData.evBoost,
-            conditionBoost: itemData.conditionBoost,
-            specialEffect: itemData.specialEffect
-          }
-        ];
+    if (itemType === 'rare' && updatedShopData.rareDailyItem?.itemId === itemId) {
+      // 희귀 아이템 구매 이력 추가
+      const purchaseHistory = currentUser.purchaseHistory || {};
+      const todayStr = new Date().toISOString().split('T')[0];
+      const todayPurchases = purchaseHistory[todayStr] || {};
+      todayPurchases[itemId] = (todayPurchases[itemId] || 0) + quantity;
+      purchaseHistory[todayStr] = todayPurchases;
+      
+      // 유저 정보 업데이트 (구매 이력 포함)
+      updateCurrentUser({
+        inventory: newInventory,
+        money: newMoney,
+        purchaseHistory: purchaseHistory
+      });
+      
+      stockUpdated = true;
+    } else if (itemType === 'daily') {
+      // 요일별 아이템 재고 감소
+      const dailyItems = updatedShopData.dailyItems?.[todayName] || [];
+      updatedShopData.dailyItems[todayName] = dailyItems.map(i => 
+        i.itemId === itemId && i.stock !== 99
+          ? { ...i, stock: Math.max(0, i.stock - quantity) }
+          : i
+      );
+      stockUpdated = true;
+      
+      // 상점 데이터 업데이트
+      await updateShopData(updatedShopData);
+      
+    } else if (itemType === 'permanent') {
+      // 상시 판매 아이템 재고 감소
+      updatedShopData.permanentItems = (updatedShopData.permanentItems || []).map(i =>
+        i.itemId === itemId && i.stock !== 99
+          ? { ...i, stock: Math.max(0, i.stock - quantity) }
+          : i
+      );
+      stockUpdated = true;
+      
+      // 상점 데이터 업데이트
+      await updateShopData(updatedShopData);
+    }
     
-    const newMoney = currentUser.money - totalCost;
+    // 희귀 아이템이 아닌 경우 유저 정보만 업데이트
+    if (itemType !== 'rare') {
+      updateCurrentUser({
+        inventory: newInventory,
+        money: newMoney
+      });
+    }
     
     console.log('✅ 구매 완료! 남은 금액:', newMoney);
-    
-    updateCurrentUser({
-      inventory: newInventory,
-      money: newMoney
-    });
+    console.log('✅ 재고 업데이트:', stockUpdated);
     
     alert(`${itemData.name} ${quantity}개를 구매했습니다!`);
     return true;
-  };
+    
+  } catch (error) {
+    console.error('❌ 재고 업데이트 실패:', error);
+    alert('구매 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+    return false;
+  }
+};
   
-  // useGameState.js의 useItemOnPokemon 함수 수정본
-// 기존 함수를 이 코드로 교체하세요
 
 const useItemOnPokemon = (item, pokemon) => {
   if (!currentUser || !pokemon) return;

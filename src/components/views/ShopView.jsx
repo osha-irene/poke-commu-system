@@ -262,68 +262,70 @@ export default function ShopView() {
 
           {/* 규토리볼 */}
           {shopData.gachaBall?.enabled && shopData.gachaBall?.balls?.length === 2 && (
-            <div className={`relative border-2 border-orange-300 bg-orange-50 rounded-lg overflow-hidden shadow-lg ${
-              shopData.rareDailyItem?.itemId ? 'col-span-2' : 'col-span-3'
-            }`}>
-              <div className="absolute -top-0 left-4 bg-orange-600 text-white text-sm px-4 py-1.5 font-bold flex items-center gap-2 rounded-b-lg shadow-md z-10">
-                <Sparkles size={14} />
-                오늘의 규토리볼
-              </div>
-              <div className="absolute top-3 right-4 text-xs text-orange-700 font-semibold bg-orange-200 px-2 py-1 rounded flex items-center gap-1">
-                <Zap size={12} />
-                랜덤으로 1개가 나옵니다
-              </div>
-              
-              <div className="p-4 pt-10">
-                <div className="grid grid-cols-2 gap-4">
-                  {shopData.gachaBall.balls.map((ball, index) => {
-                    const item = allItems.find(i => i.id === ball.itemId);
-                    if (!item) return null;
-                    
-                    return (
-                      <button
-                        key={ball.itemId}
-                        onClick={() => {
-                          setSelectedItem({
-                            ...item,
-                            itemId: ball.itemId,
-                            price: 200,
-                            stock: 99,
-                            type: 'gacha'
-                          });
-                          setQuantity(1);
-                        }}
-                        className={`border-2 border-white bg-white rounded-lg p-3 transition-all hover:shadow-md hover:scale-105 ${
-                          selectedItem?.itemId === ball.itemId ? 'ring-4 ring-yellow-400 scale-105' : ''
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-16 h-16 flex items-center justify-center flex-shrink-0">
-                            <img 
-                              src={item.spriteUrl} 
-                              alt={item.name}
-                              className="max-w-full max-h-full"
-                              style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
-                            />
-                          </div>
-                          <div className="flex-1 text-left">
-                            <div className="font-bold text-gray-800 mb-1">{item.name}</div>
-                            <div className="text-xs text-gray-600 line-clamp-2">{item.effect}</div>
-                          </div>
-                          <div className="flex flex-col items-end flex-shrink-0">
-                            <div className="flex items-center gap-1 text-yellow-600 font-bold">
-                              <Coins size={16} />
-                              ₽200
-                            </div>
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
+  <div className={`relative border-2 border-orange-300 bg-orange-50 rounded-lg overflow-hidden shadow-lg ${
+    shopData.rareDailyItem?.itemId ? 'col-span-2' : 'col-span-3'
+  }`}>
+    <div className="absolute -top-0 left-4 bg-orange-600 text-white text-sm px-4 py-1.5 font-bold flex items-center gap-2 rounded-b-lg shadow-md z-10">
+      <Sparkles size={14} />
+      오늘의 규토리볼
+    </div>
+    
+    <div className="p-4 pt-10">
+      <div className="grid grid-cols-2 gap-4">
+        {shopData.gachaBall.balls.map((ball, index) => {
+          const item = allItems.find(i => i.id === ball.itemId);
+          if (!item) return null;
+          
+          const isSelected = selectedItem?.itemId === ball.itemId;
+          
+          return (
+            <button
+              key={ball.itemId}
+              onClick={() => {
+                setSelectedItem({
+                  ...item,
+                  itemId: ball.itemId,
+                  price: 200,
+                  stock: 99,
+                  type: 'gacha'
+                });
+                setQuantity(1);
+              }}
+              className={`w-full transition-all border-2 border-white bg-white rounded-lg p-4 ${
+                isSelected ? 'ring-4 ring-yellow-400 scale-105' : 'hover:shadow-md hover:scale-102'
+              }`}
+            >
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-20 h-20 flex items-center justify-center flex-shrink-0 bg-orange-50 rounded-lg">
+                  <img 
+                    src={item.spriteUrl} 
+                    alt={item.name}
+                    className="max-w-full max-h-full"
+                    style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
+                  />
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="font-bold text-lg text-gray-800 mb-1">{item.name}</div>
+                  <div className="text-sm text-gray-600 line-clamp-3">{item.effect?.replace(/\n/g, ' ')}</div>
                 </div>
               </div>
-            </div>
-          )}
+              
+              <div className="flex items-center justify-between pt-3 border-t-2 border-orange-100">
+                <div className="flex items-center gap-1 text-yellow-600 font-bold text-xl">
+                  <Coins size={20} />
+                  ₽200
+                </div>
+                <div className="text-sm text-gray-600 font-semibold">
+                  재고 무제한
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+)}
         </div>
       )}
 

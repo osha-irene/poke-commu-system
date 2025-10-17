@@ -288,29 +288,31 @@ export default function ShopAdminPanel({
   
   // ⭐ async로 변경
   const handleRandomRareItem = async () => {
-    const rarePool = shopData.rareItemPool || [];
-    if (rarePool.length === 0) {
-      alert('희귀 아이템 풀이 비어있습니다!');
-      return;
-    }
-    
-    const randomItem = rarePool[Math.floor(Math.random() * rarePool.length)];
-    let updatedShopData = JSON.parse(JSON.stringify(shopData));
-    updatedShopData.rareDailyItem = {
-      itemId: randomItem.itemId,
-      price: randomItem.price,
-      lastRefresh: new Date().toISOString().split('T')[0]
-    };
-    
-    try {
-      await onUpdateShop(updatedShopData);
-      const item = allItems.find(i => i.id === randomItem.itemId);
-      alert(`${item?.name || '아이템'}이(가) 오늘의 희귀템으로 설정되었습니다!`);
-    } catch (error) {
-      console.error('❌ 희귀템 설정 실패:', error);
-    }
+  const rarePool = shopData.rareItemPool || [];
+  if (rarePool.length === 0) {
+    alert('희귀 아이템 풀이 비어있습니다!');
+    return;
+  }
+  
+  const randomItem = rarePool[Math.floor(Math.random() * rarePool.length)];
+  let updatedShopData = JSON.parse(JSON.stringify(shopData));
+  
+  // ⭐ stock 필드 추가
+  updatedShopData.rareDailyItem = {
+    itemId: randomItem.itemId,
+    price: randomItem.price,
+    stock: 1,  // 희귀 아이템은 항상 재고 1개로 설정
+    lastRefresh: new Date().toISOString().split('T')[0]
   };
-
+  
+  try {
+    await onUpdateShop(updatedShopData);
+    const item = allItems.find(i => i.id === randomItem.itemId);
+    alert(`${item?.name || '아이템'}이(가) 오늘의 희귀템으로 설정되었습니다!`);
+  } catch (error) {
+    console.error('❌ 희귀템 설정 실패:', error);
+  }
+};
   // ⭐ async로 변경
   const handleToggleGacha = async (enabled) => {
     let updatedShopData = JSON.parse(JSON.stringify(shopData));
