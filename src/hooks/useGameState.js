@@ -173,7 +173,10 @@ export default function useGameState() {
   const {
     shopData,
     updateShopData,
-    sellItem
+    sellItem,
+    addDailyItem,
+    removeDailyItem,
+    toggleItemPersistent
   } = useShop(currentUser, updateCurrentUser, allItems);
 
   const movesHook = useMoves(currentUser, updateCurrentUser, allMoves, pokemonLearnsets);
@@ -1421,6 +1424,9 @@ if (itemData?.isTM) {
     discoverRecipe,
     updateIngredientStats,
     updateCurrentUser,
-     isAuthLoading, 
+     isAuthLoading,
+    addDailyItem, 
+   removeDailyItem, 
+    toggleItemPersistent,  
   };
 }

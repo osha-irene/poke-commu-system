@@ -26,7 +26,10 @@ export default function AdminView() {
     allItems = [],
     gamePokedex = [],
     shopData = {},
-	recipes = [],
+	  recipes = [],
+    addDailyItem,        
+    removeDailyItem,   
+    toggleItemPersistent, 
     maintenanceMode = false,
     // 함수들
     setMembers,
@@ -348,6 +351,9 @@ export default function AdminView() {
           shopData={shopData}
           allItems={allItems}
           onUpdateShop={updateShopData}
+          onAddDailyItem={addDailyItem}      
+          onRemoveDailyItem={removeDailyItem}   
+          onTogglePersistent={toggleItemPersistent}  
         />
       )}
 

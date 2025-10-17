@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Star, Calendar, Search, Package, X, Store, CircleDot, RefreshCw, Save } from 'lucide-react';
+import { Plus, Trash2, Star, Calendar, Search, Package, X, Store, CircleDot, RefreshCw, Save, Lock, Clock } from 'lucide-react';
 
 export default function ShopAdminPanel({ 
   shopData = {},
   allItems = [],
-  onUpdateShop 
+  onUpdateShop,
+  onAddDailyItem,
+  onRemoveDailyItem,
+  onTogglePersistent
 }) {
   const [activeTab, setActiveTab] = useState('current'); // 'current' | 'template' | 'rare' | 'gacha'
   const [showAddPanel, setShowAddPanel] = useState(false);
@@ -18,7 +21,8 @@ export default function ShopAdminPanel({
   const [selectedDay, setSelectedDay] = useState('monday');
   const [filterDay, setFilterDay] = useState('all');
   const [itemCategory, setItemCategory] = useState('all');
-  
+  const [isPersistent, setIsPersistent] = useState(true);
+ 
   // 템플릿 편집 상태
   const [editMode, setEditMode] = useState(false);
   const [tempTemplate, setTempTemplate] = useState(null);
@@ -34,30 +38,54 @@ export default function ShopAdminPanel({
   ];
 
   const categories = [
-    { id: 'all', name: '전체' },
-    { id: 'berries', name: '나무열매' },
-    { id: 'medicine', name: '회복' },
-    { id: 'vitamins', name: '영양' },
-    { id: 'evolution', name: '진화' },
-    { id: 'battle', name: '배틀' }
-  ];
+     { id: 'all', name: '전체' },
+  { id: 'pokeballs', name: '몬스터볼' },
+  { id: 'medicine', name: '회복' },
+  { id: 'berries', name: '나무열매' },
+  { id: 'machines', name: '기술머신' },
+  { id: 'held-items', name: '지닌물건' },
+  { id: 'evolution', name: '진화' },
+  { id: 'vitamins', name: '영양' },
+  { id: 'battle-items', name: '배틀' },
+  { id: 'key-items', name: '중요' },
+  { id: 'other', name: '기타' }
+];
   
   const filteredItems = allItems.filter(item => {
+  // 카테고리 매칭
+  if (itemCategory !== 'all') {
     const pocket = item.categoryData?.pocket || item.pocket || 'misc';
+    const category = item.category || '';
     
-    if (itemCategory !== 'all' && pocket !== itemCategory) {
-      return false;
-    }
+    // 카테고리별 매칭 로직
+    const categoryMatch = 
+      (itemCategory === 'pokeballs' && pocket === 'pokeballs') ||
+      (itemCategory === 'medicine' && pocket === 'medicine') ||
+      (itemCategory === 'berries' && pocket === 'berries') ||
+      (itemCategory === 'machines' && (pocket === 'machines' || item.isTM)) ||
+      (itemCategory === 'held-items' && pocket === 'held-items') ||
+      (itemCategory === 'evolution' && (pocket === 'evolution' || category.includes('evolution'))) ||
+      (itemCategory === 'vitamins' && pocket === 'vitamins') ||
+      (itemCategory === 'battle-items' && pocket === 'battle-items') ||
+      (itemCategory === 'key-items' && pocket === 'key-items') ||
+      (itemCategory === 'other' && pocket === 'misc');
     
-    if (!searchQuery) return itemCategory !== 'all';
-    
+    if (!categoryMatch) return false;
+  }
+  
+  // 검색어 매칭
+  if (searchQuery) {
     const query = searchQuery.toLowerCase();
     return (
       item.name.toLowerCase().includes(query) ||
       item.nameEn?.toLowerCase().includes(query) ||
       item.id.toString().includes(query)
     );
-  }).slice(0, 30);
+  }
+  
+  // 카테고리만 선택하고 검색어 없으면 표시
+  return itemCategory !== 'all';
+});
   
   // 템플릿 관리 함수들
   const startEdit = () => {
@@ -165,7 +193,8 @@ export default function ShopAdminPanel({
     const newItem = {
       itemId: selectedItem.id,
       price: price || selectedItem.cost || 100,
-      stock: stock
+      stock: stock,
+      isPersistent: isPersistent
     };
     
     let updatedShopData = JSON.parse(JSON.stringify(shopData));
@@ -536,6 +565,20 @@ export default function ShopAdminPanel({
                     </span>
                   </div>
 
+                  {/* ⭐ isPersistent 토글 버튼 추가 ⭐ */}
+                      {shopItem.type === 'daily' && (
+                      <button
+                        onClick={() => onTogglePersistent(shopItem.day, shopItem.itemId)}
+                        className={`absolute top-2 left-2 px-2 py-1 rounded text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity z-10 flex items-center gap-1 ${
+                          shopItem.isPersistent
+                            ? 'bg-green-500 text-white'
+                            : 'bg-gray-400 text-white'
+                        }`}
+                        title={shopItem.isPersistent ? '주간 유지 ON' : '일회성 아이템'}
+                      >
+                        {shopItem.isPersistent ? <Lock size={12} /> : <Clock size={12} />}
+                      </button>
+                    )}
                   <button
                     onClick={() => handleRemoveItem(shopItem.itemId, shopItem.type, shopItem.day)}
                     className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
@@ -781,7 +824,7 @@ export default function ShopAdminPanel({
 
       {showAddPanel && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full h-[700px] flex flex-col">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full h-[780px] flex flex-col">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <h3 className="text-2xl font-bold text-gray-800">상품 추가</h3>
               <button
@@ -811,12 +854,12 @@ export default function ShopAdminPanel({
                         className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 overflow-x-auto pb-2"> {/* ⭐ overflow-x-auto 추가 */}
                       {categories.map(cat => (
                         <button
                           key={cat.id}
                           onClick={() => setItemCategory(cat.id)}
-                          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
                             itemCategory === cat.id
                               ? 'bg-indigo-600 text-white shadow-lg scale-105'
                               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -826,6 +869,7 @@ export default function ShopAdminPanel({
                         </button>
                       ))}
                     </div>
+                
                   </div>
 
                   <div className="flex-1 overflow-y-auto">
@@ -959,6 +1003,27 @@ export default function ShopAdminPanel({
                             placeholder="99"
                           />
                         </div>
+                        
+                        {itemType === 'daily' && (
+                        <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
+                          <input
+                            type="checkbox"
+                            id="isPersistent"
+                            checked={isPersistent}
+                            onChange={(e) => setIsPersistent(e.target.checked)}
+                            className="w-5 h-5 cursor-pointer"
+                          />
+                          <label htmlFor="isPersistent" className="cursor-pointer select-none flex-1">
+                            <div className="font-bold text-gray-800 flex items-center gap-2">
+                              <RefreshCw size={16} className="text-blue-600" />
+                              주간 유지
+                            </div>
+                            <div className="text-xs text-gray-600 mt-1">
+                              체크 시 다음 주에도 이 아이템이 자동으로 등록됩니다
+                            </div>
+                          </label>
+                         </div>
+                      )}
 
                         <button
                           onClick={handleAddItem}
