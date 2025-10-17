@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ShoppingCart, Clock, Star, Coins, Sparkles, Calendar, Package, Zap } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
+import { getItemPocket } from '../../utils/itemUtils';
 
 export default function ShopView() {
   const {
@@ -77,7 +78,8 @@ export default function ShopView() {
     const item = allItems.find(i => i.id === shopItem.itemId);
     return {
       ...item,
-      ...shopItem
+      ...shopItem,
+      pocket: getItemPocket(item || shopItem)
     };
   };
   

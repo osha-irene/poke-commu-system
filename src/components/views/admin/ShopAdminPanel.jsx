@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Star, Calendar, Search, Package, X, Store, CircleDot, RefreshCw, Save, Lock, Clock } from 'lucide-react';
+import { CATEGORIES, getItemPocket, filterItemsByPocket } from '../../../utils/itemUtils';
 
 export default function ShopAdminPanel({ 
   shopData = {},
@@ -37,52 +38,19 @@ export default function ShopAdminPanel({
     { id: 'sunday', name: '일요일' }
   ];
 
-  const categories = [
-     { id: 'all', name: '전체' },
-  { id: 'pokeballs', name: '몬스터볼' },
-  { id: 'medicine', name: '회복' },
-  { id: 'berries', name: '나무열매' },
-  { id: 'machines', name: '기술머신' },
-  { id: 'held-items', name: '지닌물건' },
-  { id: 'evolution', name: '진화' },
-  { id: 'vitamins', name: '영양' },
-  { id: 'battle-items', name: '배틀' },
-  { id: 'key-items', name: '중요' },
-  { id: 'other', name: '기타' }
-];
   
-  const filteredItems = allItems.filter(item => {
-  // 카테고리 매칭
-  if (itemCategory !== 'all') {
-    const pocket = item.categoryData?.pocket || item.pocket || 'misc';
-    const category = item.category || '';
-    
-    // 카테고리별 매칭 로직
-    const categoryMatch = 
-      (itemCategory === 'pokeballs' && pocket === 'pokeballs') ||
-      (itemCategory === 'medicine' && pocket === 'medicine') ||
-      (itemCategory === 'berries' && pocket === 'berries') ||
-      (itemCategory === 'machines' && (pocket === 'machines' || item.isTM)) ||
-      (itemCategory === 'held-items' && pocket === 'held-items') ||
-      (itemCategory === 'evolution' && (pocket === 'evolution' || category.includes('evolution'))) ||
-      (itemCategory === 'vitamins' && pocket === 'vitamins') ||
-      (itemCategory === 'battle-items' && pocket === 'battle-items') ||
-      (itemCategory === 'key-items' && pocket === 'key-items') ||
-      (itemCategory === 'other' && pocket === 'misc');
-    
-    if (!categoryMatch) return false;
-  }
+  const filteredItems = (() => {
+  let filtered = itemCategory === 'all' ? allItems : filterItemsByPocket(allItems, itemCategory);
   
-  // 검색어 매칭
   if (searchQuery) {
     const query = searchQuery.toLowerCase();
-    return (
+    filtered = filtered.filter(item =>
       item.name.toLowerCase().includes(query) ||
       item.nameEn?.toLowerCase().includes(query) ||
       item.id.toString().includes(query)
     );
   }
-  
+    
   // 카테고리만 선택하고 검색어 없으면 표시
   return itemCategory !== 'all';
 });
@@ -855,7 +823,7 @@ export default function ShopAdminPanel({
                       />
                     </div>
                     <div className="flex gap-2 overflow-x-auto pb-2"> {/* ⭐ overflow-x-auto 추가 */}
-                      {categories.map(cat => (
+                      {CATEGORIES.map(cat => (
                         <button
                           key={cat.id}
                           onClick={() => setItemCategory(cat.id)}
@@ -1086,7 +1054,7 @@ export default function ShopAdminPanel({
                       />
                     </div>
                     <div className="flex gap-2">
-                      {categories.map(cat => (
+                  {CATEGORIES.map(cat => (
                         <button
                           key={cat.id}
                           onClick={() => setItemCategory(cat.id)}

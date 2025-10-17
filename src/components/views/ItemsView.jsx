@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { Search, X, ShoppingCart, Trash2, Sparkles } from 'lucide-react';
 
 import { useGame } from '../../contexts/GameContext';
+import { getItemPocket, canUseItem, ITEM_POCKETS } from '../../utils/itemUtils'; // ⭐ 추가
 
 function DesktopItemsView() {
   const {
@@ -69,10 +70,7 @@ function DesktopItemsView() {
     }
 
     // ✅ pocket 결정 (우선순위: item > itemData.categoryData.pocket > itemData.pocket)
-    const pocket = item.pocket || 
-                   itemData?.categoryData?.pocket || 
-                   itemData?.pocket || 
-                   'misc';
+    const pocket = getItemPocket(item) || getItemPocket(itemData);
     
     const category = item.category || itemData?.category || '';
 
@@ -84,28 +82,7 @@ function DesktopItemsView() {
                        '유용한 아이템';
 
     // ✅ 사용 가능 여부 판단
-		const canUse = item.canUse !== undefined ? item.canUse : (
-		  pocket === 'berries' || 
-		  pocket === 'medicine' || 
-		  pocket === 'vitamins' ||
-		  pocket === 'machines' ||  // ⭐ 추가
-		  category === 'vitamins' ||
-		  category === 'medicine' ||
-		  category === 'machines' ||  // ⭐ 추가
-		  category?.includes('evolution') ||
-		  category?.includes('berry') ||
-		  itemData?.isTM ||  // ⭐ 추가
-		  itemData?.name?.includes('진화의돌') ||
-		  item.specialEffect ||
-		  item.friendshipBoost ||
-		  item.ivBoost ||
-		  item.evBoost ||
-		  item.conditionBoost ||
-		  itemData?.friendshipBoost ||
-		  itemData?.ivBoost ||
-		  itemData?.evBoost ||
-		  itemData?.conditionBoost
-		);
+		const canUse = item.canUse !== undefined ? item.canUse : canUseItem(itemData || item);
 
     return {
       name: item.name,

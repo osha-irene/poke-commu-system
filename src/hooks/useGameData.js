@@ -7,6 +7,7 @@ import itemsData from '../data/items.json';
 import customItemsData from '../data/customItems.json';
 import regionsData from '../data/regions.json';
 import technicalMachinesData from '../data/technicalMachines.json';
+import { ITEM_POCKETS } from '../utils/itemUtils';
 
 export const useGameData = (allPokemonData) => {
   const [allItems, setAllItems] = useState([]);
@@ -28,16 +29,16 @@ export const useGameData = (allPokemonData) => {
         // 2. 기본 아이템 + TM 아이템 병합
         const baseItems = itemsData.items;
         const tmItems = technicalMachinesData.tms.map(tm => ({
-          id: tm.id,
-          name: tm.name,
-          nameEn: tm.nameEn,
-          category: 'machines',
-          categoryData: {
-            id: 'machines',
-            nameEn: 'machines',
-            name: '기술머신',
-            pocket: 'machines'
-          },
+            id: tm.id,
+            name: tm.name,
+            nameEn: tm.nameEn,
+            category: ITEM_POCKETS.MACHINES,
+            categoryData: {
+              id: ITEM_POCKETS.MACHINES, 
+              nameEn: 'machines',
+              name: '기술머신',
+              pocket: ITEM_POCKETS.MACHINES 
+            },
           cost: 10000, // 기본 가격 (필요시 조정)
           sellPrice: 5000,
           canSell: true,

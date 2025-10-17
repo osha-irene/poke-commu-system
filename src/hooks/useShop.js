@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ref, onValue, set } from 'firebase/database';
 import { database } from '../firebase';
+import { getItemPocket, ITEM_POCKETS } from '../utils/itemUtils';
 
 // 현재 주차 계산
 const getWeekKey = (date) => {
@@ -47,6 +48,7 @@ const enrichItemData = (itemTemplate, allItems) => {
     nameEn: fullItem.nameEn,
     imageUrl: fullItem.spriteUrl || fullItem.imageUrl,
     category: fullItem.category,
+    pocket: getItemPocket(fullItem),
     description: fullItem.effect || fullItem.description,
     cost: fullItem.cost,
     price: itemTemplate.price || fullItem.cost,
