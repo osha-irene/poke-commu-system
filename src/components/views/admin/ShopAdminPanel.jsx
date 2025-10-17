@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Star, Calendar, Search, Package, X, Store, CircleDot, RefreshCw, Save, Lock, Clock } from 'lucide-react';
-import { CATEGORIES, getItemPocket, filterItemsByPocket } from '../../../utils/itemUtils';
+import { CATEGORIES, getItemPocket, filterItemsByPocket, getItemIcon } from '../../../utils/itemUtils';
 
 export default function ShopAdminPanel({ 
   shopData = {},
@@ -557,7 +557,7 @@ export default function ShopAdminPanel({
                   <div className="p-3 flex flex-col flex-1">
                     <div className="flex items-center justify-center mb-3 h-24">
                       <img 
-                        src={item.spriteUrl} 
+                        src={item.spriteUrl || item.imageUrl}                      
                         alt={item.name}
                         className="max-w-full max-h-full object-contain"
                         style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
@@ -788,452 +788,476 @@ export default function ShopAdminPanel({
       )}
 
 
-
+{/* 상점 아이템 추가 */}
       {showAddPanel && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full h-[780px] flex flex-col">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-2xl font-bold text-gray-800">상품 추가</h3>
-              <button
-                onClick={() => {
-                  setShowAddPanel(false);
-                  setSelectedItem(null);
-                  setSearchQuery('');
-                  setItemCategory('all');
-                }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X size={24} className="text-gray-600" />
-              </button>
+  <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full h-[780px] flex flex-col">
+      <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <h3 className="text-2xl font-bold text-gray-800">상품 추가</h3>
+        <button
+          onClick={() => {
+            setShowAddPanel(false);
+            setSelectedItem(null);
+            setSearchQuery('');
+            setItemCategory('all');
+          }}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <X size={24} className="text-gray-600" />
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-hidden">
+        <div className="grid grid-cols-2 gap-6 p-6 h-full">
+          <div className="flex flex-col overflow-hidden">
+            <div className="space-y-4 mb-4 flex-shrink-0">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <input
+                  type="text"
+                  placeholder="아이템 검색..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {CATEGORIES.map(cat => {
+                  const Icon = cat.Icon;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setItemCategory(cat.id)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                        itemCategory === cat.id
+                          ? cat.color + ' shadow-lg scale-105'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      <Icon size={18} />
+                      <span>{cat.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="flex-1 overflow-hidden">
-              <div className="grid grid-cols-2 gap-6 p-6 h-full">
-                <div className="flex flex-col overflow-hidden">
-                  <div className="space-y-4 mb-4 flex-shrink-0">
-                    <div className="relative">
-                      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                      <input
-                        type="text"
-                        placeholder="아이템 검색..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      />
-                    </div>
-                    <div className="flex gap-2 overflow-x-auto pb-2">
-                      {CATEGORIES.map(cat => {
-                        const Icon = cat.Icon;
-                        return (
-                          <button
-                            key={cat.id}
-                            onClick={() => setItemCategory(cat.id)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
-                              itemCategory === cat.id
-                                ? cat.color + ' shadow-lg scale-105'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
-                          >
-                            <Icon size={18} />
-                            <span>{cat.name}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                      </div>
-
-                  <div className="flex-1 overflow-y-auto">
-  <div className="grid grid-cols-4 gap-4">
-    {filteredItems.length === 0 ? (
-      <div className="col-span-4 text-center py-16 text-gray-400">
-        <Search size={64} className="mx-auto mb-4 text-gray-300" />
-        <p className="text-lg">검색 결과가 없습니다</p>
-      </div>
-    ) : (
-      filteredItems.map(item => (
-        <button
-          key={item.id}
-          onClick={() => {
-            setSelectedItem(item);
-            setPrice(item.cost || 100);
-          }}
-          className={`flex flex-col border-2 rounded-xl hover:shadow-lg transition-all group bg-white overflow-hidden ${
-            selectedItem?.id === item.id
-              ? 'border-purple-500 shadow-lg'
-              : 'border-gray-200 hover:border-purple-400'
-          }`}
-        >
-          <div className="aspect-square bg-gray-50 p-6 flex items-center justify-center">
-            <img 
-              src={item.spriteUrl || item.imageUrl} 
-              alt={item.name}
-              className="max-w-full max-h-full object-contain"
-              style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
-            />
-          </div>
-                            
-                            <div className="p-2 bg-white border-t border-gray-200">
-                              <div className={`text-xs font-semibold text-center truncate ${
-                                selectedItem?.id === item.id ? 'text-indigo-700' : 'text-gray-800 group-hover:text-indigo-700'
-                              }`}>
-                                {item.name}
-                              </div>
-                            </div>
-                          </button>
-                        ))
-                      )}
-                    </div>
+            <div className="flex-1 overflow-y-auto">
+              <div className="grid grid-cols-4 gap-4">
+                {filteredItems.length === 0 ? (
+                  <div className="col-span-4 text-center py-16 text-gray-400">
+                    <Search size={64} className="mx-auto mb-4 text-gray-300" />
+                    <p className="text-lg">검색 결과가 없습니다</p>
                   </div>
-                </div>
-
-                <div className="border-2 border-indigo-500 rounded-2xl bg-white overflow-hidden flex flex-col h-full flex-shrink-0">
-                  {selectedItem ? (
-                    <>
-                      <div className="bg-indigo-50 p-6 border-b-2 border-indigo-200">
-                        <div className="flex items-center gap-3">
-                          <div className="w-20 h-20 bg-white rounded-lg flex items-center justify-center border-2 border-indigo-200">
+                ) : (
+                  filteredItems.map(item => {
+                    const ItemIcon = getItemIcon(item);
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setSelectedItem(item);
+                          setPrice(item.cost || 100);
+                        }}
+                        className={`flex flex-col border-2 rounded-xl hover:shadow-lg transition-all group bg-white overflow-hidden ${
+                          selectedItem?.id === item.id
+                            ? 'border-indigo-500 shadow-lg'
+                            : 'border-gray-200 hover:border-indigo-400'
+                        }`}
+                      >
+                        <div className="aspect-square bg-gray-50 p-6 flex items-center justify-center relative">
+                          {item.spriteUrl ? (
                             <img 
-                              src={selectedItem.spriteUrl || selectedItem.imageUrl}
-                              alt={selectedItem.name}
+                              src={item.spriteUrl || item.imageUrl} 
+                              alt={item.name}
                               className="max-w-full max-h-full object-contain"
                               style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
                             />
+                          ) : null}
+                          <div style={{ display: item.spriteUrl ? 'none' : 'flex' }} className="w-full h-full items-center justify-center">
+                            <ItemIcon size={48} className="text-gray-300" />
                           </div>
-                          <div className="flex-1">
-                            <h4 className="font-bold text-xl text-gray-800">{selectedItem.name}</h4>
-                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                              {selectedItem.effect || '포켓몬에게 사용하는 아이템'}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex border-b border-gray-200">
-                        <button
-                          onClick={() => setItemType('daily')}
-                          className={`flex-1 py-3 font-bold text-sm transition-colors ${
-                            itemType === 'daily'
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`}
-                        >
-                          요일별
-                        </button>
-                        <button
-                          onClick={() => setItemType('permanent')}
-                          className={`flex-1 py-3 font-bold text-sm transition-colors ${
-                            itemType === 'permanent'
-                              ? 'bg-green-600 text-white'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`}
-                        >
-                          상시
-                        </button>
-                      </div>
-
-                      <div className="p-6 space-y-4">
-                        {itemType === 'daily' && (
-                          <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">요일 선택</label>
-                            <select
-                              value={selectedDay}
-                              onChange={(e) => setSelectedDay(e.target.value)}
-                              className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 font-semibold focus:border-indigo-500 focus:outline-none"
-                            >
-                              {days.map(day => (
-                                <option key={day.id} value={day.id}>{day.name}</option>
-                              ))}
-                            </select>
-                          </div>
-                        )}
-
-                        <div>
-                          <label className="block text-sm font-bold text-gray-700 mb-2">판매 가격</label>
-                          <input
-                            type="number"
-                            value={price}
-                            onChange={(e) => setPrice(parseInt(e.target.value) || 0)}
-                            className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 font-semibold focus:border-indigo-500 focus:outline-none"
-                            placeholder="80"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-bold text-gray-700 mb-2">재고 (99=무제한)</label>
-                          <input
-                            type="number"
-                            value={stock}
-                            onChange={(e) => setStock(parseInt(e.target.value) || 0)}
-                            className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 font-semibold focus:border-indigo-500 focus:outline-none"
-                            placeholder="99"
-                          />
                         </div>
                         
-                        {itemType === 'daily' && (
-                        <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
-                          <input
-                            type="checkbox"
-                            id="isPersistent"
-                            checked={isPersistent}
-                            onChange={(e) => setIsPersistent(e.target.checked)}
-                            className="w-5 h-5 cursor-pointer"
-                          />
-                          <label htmlFor="isPersistent" className="cursor-pointer select-none flex-1">
-                            <div className="font-bold text-gray-800 flex items-center gap-2">
-                              <RefreshCw size={16} className="text-blue-600" />
-                              주간 유지
-                            </div>
-                            <div className="text-xs text-gray-600 mt-1">
-                              체크 시 다음 주에도 이 아이템이 자동으로 등록됩니다
-                            </div>
-                          </label>
-                         </div>
-                      )}
-
-                        <button
-                          onClick={handleAddItem}
-                          className="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
-                        >
-                          <Plus size={20} />
-                          추가하기
-                        </button>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-center py-12 text-gray-400">
-                      <Package size={64} className="mx-auto mb-3 text-gray-300" />
-                      <p>왼쪽에서 아이템을 선택하세요</p>
-                    </div>
-                  )}
-                </div>
+                        <div className="p-2 bg-white border-t border-gray-200">
+                          <div className={`text-xs font-semibold text-center truncate ${
+                            selectedItem?.id === item.id ? 'text-indigo-700' : 'text-gray-800 group-hover:text-indigo-700'
+                          }`}>
+                            {item.name}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
-        </div>
-      )}
 
-      {showRarePanel && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full h-[700px] flex flex-col">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <div>
-                <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                  <Star className="text-purple-600" size={24} />
-                  희귀 아이템 관리
-                </h3>
-                <p className="text-sm text-gray-600 mt-1">매일 랜덤으로 표시될 희귀 아이템 풀을 관리합니다</p>
-              </div>
-              <button
-                onClick={() => {
-                  setShowRarePanel(false);
-                  setSelectedItem(null);
-                  setSearchQuery('');
-                  setItemCategory('all');
-                }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X size={24} className="text-gray-600" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-hidden">
-              <div className="grid grid-cols-2 gap-6 p-6 h-full">
-                <div className="flex flex-col overflow-hidden">
-                  <div className="space-y-4 mb-4 flex-shrink-0">
-                    <div className="relative">
-                      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                      <input
-                        type="text"
-                        placeholder="아이템 검색..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      />
+          <div className="border-2 border-indigo-500 rounded-2xl bg-white overflow-hidden flex flex-col h-full flex-shrink-0">
+            {selectedItem ? (
+              <>
+                <div className="bg-indigo-50 p-6 border-b-2 border-indigo-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-20 h-20 bg-white rounded-lg flex items-center justify-center border-2 border-indigo-200 relative">
+                      {selectedItem.spriteUrl ? (
+                        <img 
+                          src={selectedItem.spriteUrl || selectedItem.imageUrl}
+                          alt={selectedItem.name}
+                          className="max-w-full max-h-full object-contain"
+                          style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div style={{ display: selectedItem.spriteUrl ? 'none' : 'flex' }} className="w-full h-full items-center justify-center">
+                        {(() => {
+                          const ItemIcon = getItemIcon(selectedItem);
+                          return <ItemIcon size={40} className="text-gray-300" />;
+                        })()}
+                      </div>
                     </div>
-                 
-                  {<div className="flex gap-2 overflow-x-auto pb-2">
-                      {CATEGORIES.map(cat => {
-                        const Icon = cat.Icon;
-                        return (
-                          <button
-                            key={cat.id}
-                            onClick={() => setItemCategory(cat.id)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
-                              itemCategory === cat.id
-                                ? 'bg-purple-600 text-white shadow-lg scale-105'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
-                          >
-                            <Icon size={18} />
-                            <span>{cat.name}</span>
-                          </button>
-                       );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="flex-1 overflow-y-auto">
-                    <div className="grid grid-cols-4 gap-4">
-                      {searchQuery === '' && itemCategory === 'all' ? (
-                        <div className="col-span-4 text-center py-16 text-gray-400">
-                          <Search size={64} className="mx-auto mb-4 text-gray-300" />
-                          <p className="text-lg">카테고리를 선택하거나 검색해주세요</p>
-                        </div>
-                      ) : filteredItems.length === 0 ? (
-                        <div className="col-span-4 text-center py-16 text-gray-400">
-                          <Search size={64} className="mx-auto mb-4 text-gray-300" />
-                          <p className="text-lg">검색 결과가 없습니다</p>
-                        </div>
-                      ) : (
-                        filteredItems.map(item => (
-                          <button
-                            key={item.id}
-                            onClick={() => {
-                              setSelectedItem(item);
-                              setPrice(item.cost || 100);
-                            }}
-                            className={`flex flex-col border-2 rounded-xl hover:shadow-lg transition-all group bg-white overflow-hidden ${
-                              selectedItem?.id === item.id
-                                ? 'border-purple-500 shadow-lg'
-                                : 'border-gray-200 hover:border-purple-400'
-                            }`}
-                          >
-                            <div className="aspect-square bg-gray-50 p-6 flex items-center justify-center">
-                              <img 
-                                src={item.spriteUrl || item.imageUrl} 
-                                alt={item.name}
-                                className="max-w-full max-h-full object-contain"
-                                style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
-                              />
-                            </div>
-                            
-                            <div className="p-2 bg-white border-t border-gray-200">
-                              <div className={`text-xs font-semibold text-center truncate ${
-                                selectedItem?.id === item.id ? 'text-purple-700' : 'text-gray-800 group-hover:text-purple-700'
-                              }`}>
-                                {item.name}
-                              </div>
-                            </div>
-                          </button>
-                        ))
-                      )}
+                    <div className="flex-1">
+                      <h4 className="font-bold text-xl text-gray-800">{selectedItem.name}</h4>
+                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                        {selectedItem.effect || '포켓몬에게 사용하는 아이템'}
+                      </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="border-2 border-purple-500 rounded-2xl bg-white overflow-hidden flex flex-col h-full flex-shrink-0">
-                  <div className="bg-purple-50 p-4 border-b-2 border-purple-200">
-                    <h4 className="font-bold text-lg text-gray-800 flex items-center gap-2">
-                      <Package size={20} />
-                      희귀 아이템 풀 ({(shopData.rareItemPool || []).length}개)
-                    </h4>
-                    <p className="text-xs text-gray-600 mt-1">매일 이 중에서 랜덤으로 1개가 표시됩니다</p>
+                <div className="flex border-b border-gray-200">
+                  <button
+                    onClick={() => setItemType('daily')}
+                    className={`flex-1 py-3 font-bold text-sm transition-colors ${
+                      itemType === 'daily'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    요일별
+                  </button>
+                  <button
+                    onClick={() => setItemType('permanent')}
+                    className={`flex-1 py-3 font-bold text-sm transition-colors ${
+                      itemType === 'permanent'
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    상시
+                  </button>
+                </div>
+
+                <div className="p-6 space-y-4">
+                  {itemType === 'daily' && (
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">요일 선택</label>
+                      <select
+                        value={selectedDay}
+                        onChange={(e) => setSelectedDay(e.target.value)}
+                        className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 font-semibold focus:border-indigo-500 focus:outline-none"
+                      >
+                        {days.map(day => (
+                          <option key={day.id} value={day.id}>{day.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">판매 가격</label>
+                    <input
+                      type="number"
+                      value={price}
+                      onChange={(e) => setPrice(parseInt(e.target.value) || 0)}
+                      className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 font-semibold focus:border-indigo-500 focus:outline-none"
+                      placeholder="80"
+                    />
                   </div>
 
-                  {selectedItem && (
-                    <div className="p-4 bg-purple-50 border-b-2 border-purple-200">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center border-2 border-purple-200">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">재고 (99=무제한)</label>
+                    <input
+                      type="number"
+                      value={stock}
+                      onChange={(e) => setStock(parseInt(e.target.value) || 0)}
+                      className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 font-semibold focus:border-indigo-500 focus:outline-none"
+                      placeholder="99"
+                    />
+                  </div>
+                  
+                  {itemType === 'daily' && (
+                    <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
+                      <input
+                        type="checkbox"
+                        id="isPersistent"
+                        checked={isPersistent}
+                        onChange={(e) => setIsPersistent(e.target.checked)}
+                        className="w-5 h-5 cursor-pointer"
+                      />
+                      <label htmlFor="isPersistent" className="cursor-pointer select-none flex-1">
+                        <div className="font-bold text-gray-800 flex items-center gap-2">
+                          <RefreshCw size={16} className="text-blue-600" />
+                          주간 유지
+                        </div>
+                        <div className="text-xs text-gray-600 mt-1">
+                          체크 시 다음 주에도 이 아이템이 자동으로 등록됩니다
+                        </div>
+                      </label>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={handleAddItem}
+                    className="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Plus size={20} />
+                    추가하기
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-12 text-gray-400">
+                <Package size={64} className="mx-auto mb-3 text-gray-300" />
+                <p>왼쪽에서 아이템을 선택하세요</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+  {showRarePanel && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full h-[700px] flex flex-col">
+      <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div>
+          <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <Star className="text-purple-600" size={24} />
+            희귀 아이템 관리
+          </h3>
+          <p className="text-sm text-gray-600 mt-1">매일 랜덤으로 표시될 희귀 아이템 풀을 관리합니다</p>
+        </div>
+        <button
+          onClick={() => {
+            setShowRarePanel(false);
+            setSelectedItem(null);
+            setSearchQuery('');
+            setItemCategory('all');
+          }}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <X size={24} className="text-gray-600" />
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-hidden">
+        <div className="grid grid-cols-2 gap-6 p-6 h-full">
+          <div className="flex flex-col overflow-hidden">
+            <div className="space-y-4 mb-4 flex-shrink-0">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <input
+                  type="text"
+                  placeholder="아이템 검색..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                />
+              </div>
+           
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {CATEGORIES.map(cat => {
+                  const Icon = cat.Icon;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setItemCategory(cat.id)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                        itemCategory === cat.id
+                          ? 'bg-purple-600 text-white shadow-lg scale-105'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      <Icon size={18} />
+                      <span>{cat.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              <div className="grid grid-cols-4 gap-4">
+                {searchQuery === '' && itemCategory === 'all' ? (
+                  <div className="col-span-4 text-center py-16 text-gray-400">
+                    <Search size={64} className="mx-auto mb-4 text-gray-300" />
+                    <p className="text-lg">카테고리를 선택하거나 검색해주세요</p>
+                  </div>
+                ) : filteredItems.length === 0 ? (
+                  <div className="col-span-4 text-center py-16 text-gray-400">
+                    <Search size={64} className="mx-auto mb-4 text-gray-300" />
+                    <p className="text-lg">검색 결과가 없습니다</p>
+                  </div>
+                ) : (
+                  filteredItems.map(item => (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setSelectedItem(item);
+                        setPrice(item.cost || 100);
+                      }}
+                      className={`flex flex-col border-2 rounded-xl hover:shadow-lg transition-all group bg-white overflow-hidden ${
+                        selectedItem?.id === item.id
+                          ? 'border-purple-500 shadow-lg'
+                          : 'border-gray-200 hover:border-purple-400'
+                      }`}
+                    >
+                      <div className="aspect-square bg-gray-50 p-6 flex items-center justify-center">
+                        <img 
+                          src={item.spriteUrl || item.imageUrl} 
+                          alt={item.name}
+                          className="max-w-full max-h-full object-contain"
+                          style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
+                        />
+                      </div>
+                      
+                      <div className="p-2 bg-white border-t border-gray-200">
+                        <div className={`text-xs font-semibold text-center truncate ${
+                          selectedItem?.id === item.id ? 'text-purple-700' : 'text-gray-800 group-hover:text-purple-700'
+                        }`}>
+                          {item.name}
+                        </div>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="border-2 border-purple-500 rounded-2xl bg-white overflow-hidden flex flex-col h-full flex-shrink-0">
+            <div className="bg-purple-50 p-4 border-b-2 border-purple-200">
+              <h4 className="font-bold text-lg text-gray-800 flex items-center gap-2">
+                <Package size={20} />
+                희귀 아이템 풀 ({(shopData.rareItemPool || []).length}개)
+              </h4>
+              <p className="text-xs text-gray-600 mt-1">매일 이 중에서 랜덤으로 1개가 표시됩니다</p>
+            </div>
+
+            {selectedItem && (
+              <div className="p-4 bg-purple-50 border-b-2 border-purple-200">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center border-2 border-purple-200">
+                    <img 
+                      src={selectedItem.spriteUrl || selectedItem.imageUrl}
+                      alt={selectedItem.name}
+                      className="max-w-full max-h-full object-contain"
+                      style={{ imageRendering: 'pixelated', transform: 'scale(1.5)' }}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <h5 className="font-bold text-sm text-gray-800">{selectedItem.name}</h5>
+                    <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                      {selectedItem.effect || '포켓몬에게 사용하는 아이템'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={price}
+                    onChange={(e) => setPrice(parseInt(e.target.value) || 0)}
+                    className="flex-1 border-2 border-gray-300 rounded-lg px-3 py-2 font-semibold focus:border-purple-500 focus:outline-none"
+                    placeholder="가격"
+                  />
+                  <button
+                    onClick={() => {
+                      handleAddToRarePool(selectedItem, price);
+                      setSelectedItem(null);
+                    }}
+                    className="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-purple-700 transition-colors flex items-center gap-2"
+                  >
+                    <Plus size={18} />
+                    풀에 추가
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex-1 overflow-y-auto p-4">
+              {(shopData.rareItemPool || []).length === 0 ? (
+                <div className="text-center py-12 text-gray-400">
+                  <Star size={64} className="mx-auto mb-3 text-gray-300" />
+                  <p>희귀 아이템 풀이 비어있습니다</p>
+                  <p className="text-sm mt-1">왼쪽에서 아이템을 선택해주세요</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {(shopData.rareItemPool || []).map((rareItem) => {
+                    const item = allItems.find(i => i.id === rareItem.itemId);
+                    if (!item) return null;
+                    
+                    return (
+                      <div key={rareItem.itemId} className="bg-purple-50 border-2 border-purple-200 rounded-lg p-3 flex items-center gap-3">
+                        <div className="w-12 h-12 bg-white rounded flex items-center justify-center">
                           <img 
-                            src={selectedItem.spriteUrl || selectedItem.imageUrl}
-                            alt={selectedItem.name}
+                            src={item.spriteUrl || item.imageUrl}
+                            alt={item.name}
                             className="max-w-full max-h-full object-contain"
                             style={{ imageRendering: 'pixelated', transform: 'scale(1.5)' }}
                           />
                         </div>
                         <div className="flex-1">
-                          <h5 className="font-bold text-sm text-gray-800">{selectedItem.name}</h5>
-                          <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                            {selectedItem.effect || '포켓몬에게 사용하는 아이템'}
-                          </p>
+                          <div className="font-bold text-sm text-gray-800">{item.name}</div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <input
+                              type="number"
+                              value={rareItem.price}
+                              onChange={(e) => handleUpdateRarePoolPrice(rareItem.itemId, e.target.value)}
+                              className="w-20 border border-gray-300 rounded px-2 py-1 text-xs text-center focus:border-purple-500 focus:outline-none bg-white"
+                            />
+                            <span className="text-xs text-gray-600">원</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          value={price}
-                          onChange={(e) => setPrice(parseInt(e.target.value) || 0)}
-                          className="flex-1 border-2 border-gray-300 rounded-lg px-3 py-2 font-semibold focus:border-purple-500 focus:outline-none"
-                          placeholder="가격"
-                        />
                         <button
-                          onClick={() => {
-                            handleAddToRarePool(selectedItem, price);
-                            setSelectedItem(null);
-                          }}
-                          className="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-purple-700 transition-colors flex items-center gap-2"
+                          onClick={() => handleRemoveFromRarePool(rareItem.itemId)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
                         >
-                          <Plus size={18} />
-                          풀에 추가
+                          <Trash2 size={18} />
                         </button>
                       </div>
-                    </div>
-                  )}
-
-                  <div className="flex-1 overflow-y-auto p-4">
-                    {(shopData.rareItemPool || []).length === 0 ? (
-                      <div className="text-center py-12 text-gray-400">
-                        <Star size={64} className="mx-auto mb-3 text-gray-300" />
-                        <p>희귀 아이템 풀이 비어있습니다</p>
-                        <p className="text-sm mt-1">왼쪽에서 아이템을 선택해주세요</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {(shopData.rareItemPool || []).map((rareItem) => {
-                          const item = allItems.find(i => i.id === rareItem.itemId);
-                          if (!item) return null;
-                          
-                          return (
-                            <div key={rareItem.itemId} className="bg-purple-50 border-2 border-purple-200 rounded-lg p-3 flex items-center gap-3">
-                              <div className="w-12 h-12 bg-white rounded flex items-center justify-center">
-                                <img 
-                                  src={item.spriteUrl}
-                                  alt={item.name}
-                                  className="max-w-full max-h-full object-contain"
-                                  style={{ imageRendering: 'pixelated', transform: 'scale(1.5)' }}
-                                />
-                              </div>
-                              <div className="flex-1">
-                                <div className="font-bold text-sm text-gray-800">{item.name}</div>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <input
-                                    type="number"
-                                    value={rareItem.price}
-                                    onChange={(e) => handleUpdateRarePoolPrice(rareItem.itemId, e.target.value)}
-                                    className="w-20 border border-gray-300 rounded px-2 py-1 text-xs text-center focus:border-purple-500 focus:outline-none bg-white"
-                                  />
-                                  <span className="text-xs text-gray-600">원</span>
-                                </div>
-                              </div>
-                              <button
-                                onClick={() => handleRemoveFromRarePool(rareItem.itemId)}
-                                className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
-                              >
-                                <Trash2 size={18} />
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="p-4 border-t-2 border-purple-200 bg-purple-50">
-                    <button
-                      onClick={handleRandomRareItem}
-                      disabled={(shopData.rareItemPool || []).length === 0}
-                      className="w-full bg-purple-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Star size={20} />
-                      오늘의 희귀템 랜덤 설정
-                    </button>
-                  </div>
+                    );
+                  })}
                 </div>
-              </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t-2 border-purple-200 bg-purple-50">
+              <button
+                onClick={handleRandomRareItem}
+                disabled={(shopData.rareItemPool || []).length === 0}
+                className="w-full bg-purple-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Star size={20} />
+                오늘의 희귀템 랜덤 설정
+              </button>
             </div>
           </div>
         </div>
-      )}
+      </div>
+    </div>
+  </div>
+)}
 
       {showGachaPanel && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -1345,7 +1369,7 @@ export default function ShopAdminPanel({
                           <div key={ballItem.itemId} className="bg-orange-50 border-2 border-orange-200 rounded-lg p-4 flex items-center gap-3">
                             <div className="w-16 h-16 bg-white rounded flex items-center justify-center">
                               <img 
-                                src={item.spriteUrl}
+                                sr={item.spriteUrl || item.imageUrl}
                                 alt={item.name}
                                 className="max-w-full max-h-full object-contain"
                                 style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
