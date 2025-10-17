@@ -104,10 +104,10 @@ async function createInitialMembersWithAuth() {
     ];
   };
 
-  const initialUsers = [
+   const initialUsers = [
     {
       email: 'admin@pokemon.com',
-      password: 'admin123',
+      password: 'admin123456',  // 6자 이상 확인!
       data: {
         name: '관리자',
         email: 'admin@pokemon.com',
@@ -124,7 +124,7 @@ async function createInitialMembersWithAuth() {
     },
     {
       email: 'test@pokemon.com',
-      password: '1234',
+      password: 'test123456',  // 6자 이상 확인!
       data: {
         name: '테스트유저',
         email: 'test@pokemon.com',
@@ -141,16 +141,22 @@ async function createInitialMembersWithAuth() {
     }
   ];
 
+  console.log('🚀 초기 회원 생성 함수 시작');
+  console.log('📋 생성할 회원 수:', initialUsers.length);
+
   const createdMembers = {};
 
   for (const user of initialUsers) {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log(`🔧 ${user.data.name} 처리 시작`);
+    console.log('📧 이메일:', user.email);
+    console.log('🔑 비밀번호 길이:', user.password.length);
+    
     try {
-      console.log(`🔐 ${user.data.name} 계정 처리 중...`);
-      
       let uid = null;
       
-      // 1️⃣ Authentication에 계정 생성 시도
       try {
+        console.log('1️⃣ Auth 계정 생성 시도...');
         const userCredential = await createUserWithEmailAndPassword(
           auth,
           user.email,
@@ -158,85 +164,77 @@ async function createInitialMembersWithAuth() {
         );
         
         uid = userCredential.user.uid;
-        console.log(`✅ Auth 계정 생성 완료: ${uid}`);
+        console.log(`✅ 새 UID 생성 성공: ${uid}`);
         
-        // 즉시 로그아웃
         await signOut(auth);
-        console.log(`🔓 ${user.data.name} 자동 로그아웃`);
+        console.log('🔓 로그아웃 완료');
         
       } catch (authError) {
+        console.log('⚠️ Auth 에러 발생:', authError.code);
+        console.log('📝 에러 메시지:', authError.message);
+        
         if (authError.code === 'auth/email-already-in-use') {
-       
-          // 🔥 전체 members 스캔해서 이메일로 UID 찾기
-          const membersRef = ref(database, 'members');
-          const snapshot = await get(membersRef);
+          console.log('2️⃣ 기존 계정으로 로그인 시도...');
           
-          if (snapshot.exists()) {
-            const allMembers = snapshot.val();
-            uid = Object.keys(allMembers).find(
-              id => allMembers[id].email === user.email
-            );
-            
-            if (uid) {
-              console.log(`✅ 기존 UID 발견: ${uid}`);
-              // 기존 데이터 그대로 사용
-              createdMembers[uid] = {
-                ...allMembers[uid],
-                id: uid
-              };
-              console.log(`✅ 기존 ${user.data.name} 데이터 로드 완료`);
-              continue; // 다음 사용자로
-            }
-          }
-          
-          // 3️⃣ Database에도 없으면 → 임시 로그인해서 UID 가져오기
-          console.log(`⚠️ Database에 ${user.data.name} 데이터 없음, 복구 시도...`);
+          const { signInWithEmailAndPassword } = await import('firebase/auth');
           
           try {
-            const { signInWithEmailAndPassword } = await import('firebase/auth');
-            const tempCredential = await signInWithEmailAndPassword(
+            const credential = await signInWithEmailAndPassword(
               auth,
               user.email,
               user.password
             );
             
-            uid = tempCredential.user.uid;
-            console.log(`✅ 임시 로그인으로 UID 획득: ${uid}`);
+            uid = credential.user.uid;
+            console.log(`✅ 기존 UID 획득: ${uid}`);
             
-            // 즉시 로그아웃
             await signOut(auth);
+            console.log('🔓 로그아웃 완료');
             
           } catch (loginError) {
-            console.error(`❌ ${user.data.name} 로그인 실패:`, loginError);
-            console.log(`💡 Firebase Console에서 ${user.email} 계정을 삭제하고 다시 시도하세요`);
-            continue; // 다음 사용자로
+            console.error(`❌ 로그인 실패 (${loginError.code}):`, loginError.message);
+            console.log('💡 해결방법: Firebase Console에서 이 계정을 삭제하거나 비밀번호를 확인하세요');
+            continue;
           }
-          
         } else {
-          console.error(`❌ ${user.data.name} Auth 생성 실패:`, authError);
-          continue; // 다음 사용자로
+          console.error(`❌ Auth 에러 (${authError.code}):`, authError.message);
+          continue;
         }
       }
       
-      // 4️⃣ UID가 확보되면 Database에 저장
       if (uid) {
+        console.log('3️⃣ Database 저장 시도...');
         const memberRef = ref(database, `members/${uid}`);
+        
+        console.log('📍 저장 경로:', `members/${uid}`);
+        console.log('💾 저장 데이터:', user.data);
+        
         await set(memberRef, user.data);
-        console.log(`✅ Database 저장 완료: ${user.data.name} (${uid})`);
+        console.log(`✅ Database 저장 성공`);
         
         createdMembers[uid] = {
           ...user.data,
           id: uid
         };
+        
+        console.log(`🎊 ${user.data.name} 완료!`);
+      } else {
+        console.error('❌ UID를 얻지 못했습니다');
       }
       
     } catch (error) {
-      console.error(`❌ ${user.data.name} 처리 중 오류:`, error);
+      console.error(`❌❌❌ ${user.data.name} 전체 처리 실패 ❌❌❌`);
+      console.error('에러 타입:', error.constructor.name);
+      console.error('에러 코드:', error.code);
+      console.error('에러 메시지:', error.message);
+      console.error('전체 에러:', error);
     }
   }
   
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('🎉 초기 회원 처리 완료!');
   console.log(`📊 생성/복구된 회원: ${Object.keys(createdMembers).length}명`);
+  console.log('👥 생성된 UID 목록:', Object.keys(createdMembers));
   
   return createdMembers;
 }

@@ -1122,13 +1122,25 @@ export default function ShopAdminPanel({
                           : 'border-gray-200 hover:border-purple-400'
                       }`}
                     >
-                      <div className="aspect-square bg-gray-50 p-6 flex items-center justify-center">
-                        <img 
-                          src={item.spriteUrl || item.imageUrl} 
-                          alt={item.name}
-                          className="max-w-full max-h-full object-contain"
-                          style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
-                        />
+                      <div className="aspect-square bg-gray-50 p-6 flex items-center justify-center relative">
+                        {item.spriteUrl ? (
+                          <img 
+                            src={item.spriteUrl || item.imageUrl} 
+                            alt={item.name}
+                            className="max-w-full max-h-full object-contain"
+                            style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div style={{ display: item.spriteUrl ? 'none' : 'flex' }} className="w-full h-full items-center justify-center absolute inset-0">
+                          {(() => {
+                            const ItemIcon = getItemIcon(item);
+                            return <ItemIcon size={48} className="text-gray-300" />;
+                          })()}
+                        </div>
                       </div>
                       
                       <div className="p-2 bg-white border-t border-gray-200">
@@ -1157,13 +1169,25 @@ export default function ShopAdminPanel({
             {selectedItem && (
               <div className="p-4 bg-purple-50 border-b-2 border-purple-200">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center border-2 border-purple-200">
-                    <img 
-                      src={selectedItem.spriteUrl || selectedItem.imageUrl}
-                      alt={selectedItem.name}
-                      className="max-w-full max-h-full object-contain"
-                      style={{ imageRendering: 'pixelated', transform: 'scale(1.5)' }}
-                    />
+                  <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center border-2 border-purple-200 relative">
+                    {selectedItem.spriteUrl ? (
+                      <img 
+                        src={selectedItem.spriteUrl || selectedItem.imageUrl}
+                        alt={selectedItem.name}
+                        className="max-w-full max-h-full object-contain"
+                        style={{ imageRendering: 'pixelated', transform: 'scale(1.5)' }}
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div style={{ display: selectedItem.spriteUrl ? 'none' : 'flex' }} className="w-full h-full items-center justify-center absolute inset-0">
+                      {(() => {
+                        const ItemIcon = getItemIcon(selectedItem);
+                        return <ItemIcon size={32} className="text-gray-300" />;
+                      })()}
+                    </div>
                   </div>
                   <div className="flex-1">
                     <h5 className="font-bold text-sm text-gray-800">{selectedItem.name}</h5>
@@ -1209,13 +1233,25 @@ export default function ShopAdminPanel({
                     
                     return (
                       <div key={rareItem.itemId} className="bg-purple-50 border-2 border-purple-200 rounded-lg p-3 flex items-center gap-3">
-                        <div className="w-12 h-12 bg-white rounded flex items-center justify-center">
-                          <img 
-                            src={item.spriteUrl || item.imageUrl}
-                            alt={item.name}
-                            className="max-w-full max-h-full object-contain"
-                            style={{ imageRendering: 'pixelated', transform: 'scale(1.5)' }}
-                          />
+                        <div className="w-12 h-12 bg-white rounded flex items-center justify-center relative">
+                          {item.spriteUrl ? (
+                            <img 
+                              src={item.spriteUrl || item.imageUrl}
+                              alt={item.name}
+                              className="max-w-full max-h-full object-contain"
+                              style={{ imageRendering: 'pixelated', transform: 'scale(1.5)' }}
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div style={{ display: item.spriteUrl ? 'none' : 'flex' }} className="w-full h-full items-center justify-center absolute inset-0">
+                            {(() => {
+                              const ItemIcon = getItemIcon(item);
+                              return <ItemIcon size={24} className="text-gray-300" />;
+                            })()}
+                          </div>
                         </div>
                         <div className="flex-1">
                           <div className="font-bold text-sm text-gray-800">{item.name}</div>
@@ -1252,6 +1288,191 @@ export default function ShopAdminPanel({
                 오늘의 희귀템 랜덤 설정
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div> )}
+  
+{showGachaPanel && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full h-[700px] flex flex-col">
+      <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div>
+          <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <CircleDot className="text-orange-600" size={24} />
+            규토리볼 관리
+          </h3>
+          <p className="text-sm text-gray-600 mt-1">상점에서 판매할 몬스터볼 2종을 선택합니다</p>
+        </div>
+        <button
+          onClick={() => {
+            setShowGachaPanel(false);
+            setSelectedItem(null);
+            setSearchQuery('');
+          }}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <X size={24} className="text-gray-600" />
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-hidden">
+        <div className="grid grid-cols-2 gap-6 p-6 h-full">
+          <div className="flex flex-col overflow-hidden">
+            <div className="space-y-4 mb-4 flex-shrink-0">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <input
+                  type="text"
+                  placeholder="몬스터볼 검색..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              <div className="grid grid-cols-4 gap-4">
+                {allItems
+                  .filter(item => {
+                    const pocket = item.categoryData?.pocket || item.pocket || 'misc';
+                    if (pocket !== 'pokeballs') return false;
+                    if (!searchQuery) return true;
+                    const query = searchQuery.toLowerCase();
+                    return item.name.toLowerCase().includes(query);
+                  })
+                  .slice(0, 30)
+                  .map(item => (
+                    <button
+                      key={item.id}
+                      onClick={() => handleAddGachaBall(item)}
+                      className="flex flex-col border-2 border-gray-200 rounded-xl hover:border-orange-400 hover:shadow-lg transition-all group bg-white overflow-hidden"
+                    >
+                      <div className="aspect-square bg-gray-50 p-6 flex items-center justify-center relative">
+                        {item.spriteUrl ? (
+                          <img 
+                            src={item.spriteUrl || item.imageUrl} 
+                            alt={item.name}
+                            className="max-w-full max-h-full object-contain"
+                            style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div style={{ display: item.spriteUrl ? 'none' : 'flex' }} className="w-full h-full items-center justify-center absolute inset-0">
+                          {(() => {
+                            const ItemIcon = getItemIcon(item);
+                            return <ItemIcon size={48} className="text-gray-300" />;
+                          })()}
+                        </div>
+                      </div>
+                      
+                      <div className="p-2 bg-white border-t border-gray-200">
+                        <div className="text-xs font-semibold text-center truncate text-gray-800 group-hover:text-orange-700">
+                          {item.name}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="border-2 border-orange-500 rounded-2xl bg-white overflow-hidden flex flex-col h-full flex-shrink-0">
+            <div className="bg-orange-50 p-4 border-b-2 border-orange-200">
+              <h4 className="font-bold text-lg text-gray-800 flex items-center gap-2">
+                <CircleDot size={20} />
+                규토리볼 설정
+              </h4>
+              <p className="text-xs text-gray-600 mt-1">선택한 볼 2종이 랜덤으로 나옵니다</p>
+            </div>
+
+            <div className="p-4 bg-orange-50 border-b-2 border-orange-200">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-sm text-gray-800">상점 노출</span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={shopData.gachaBall?.enabled || false}
+                    onChange={(e) => handleToggleGacha(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-3">
+                {(shopData.gachaBall?.balls || []).map((ballItem) => {
+                  const item = allItems.find(i => i.id === ballItem.itemId);
+                  if (!item) return null;
+                  
+                  return (
+                    <div key={ballItem.itemId} className="bg-orange-50 border-2 border-orange-200 rounded-lg p-4 flex items-center gap-3">
+                      <div className="w-16 h-16 bg-white rounded flex items-center justify-center relative">
+                        {item.spriteUrl ? (
+                          <img 
+                            src={item.spriteUrl || item.imageUrl}
+                            alt={item.name}
+                            className="max-w-full max-h-full object-contain"
+                            style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div style={{ display: item.spriteUrl ? 'none' : 'flex' }} className="w-full h-full items-center justify-center absolute inset-0">
+                          {(() => {
+                            const ItemIcon = getItemIcon(item);
+                            return <ItemIcon size={40} className="text-gray-300" />;
+                          })()}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-bold text-lg text-gray-800">{item.name}</div>
+                        <div className="text-sm text-gray-600 mt-1">{item.effect}</div>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveGachaBall(ballItem.itemId)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    </div>
+                  );
+                })}
+                
+                {(shopData.gachaBall?.balls || []).length === 0 && (
+                  <div className="text-center py-12 text-gray-400">
+                    <CircleDot size={64} className="mx-auto mb-3 text-gray-300" />
+                    <p>선택된 볼이 없습니다</p>
+                    <p className="text-sm mt-1">왼쪽에서 몬스터볼을 선택해주세요</p>
+                  </div>
+                )}
+                
+                {(shopData.gachaBall?.balls || []).length === 1 && (
+                  <div className="text-center py-8 text-orange-600 bg-orange-50 rounded-lg border-2 border-dashed border-orange-300">
+                    <p className="font-semibold">1개 더 선택해주세요!</p>
+                    <p className="text-sm mt-1">총 2개의 볼이 필요합니다</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {(shopData.gachaBall?.balls || []).length === 2 && (
+              <div className="p-4 border-t-2 border-orange-200 bg-orange-50">
+                <div className="bg-green-100 border-2 border-green-400 rounded-lg p-3 text-center">
+                  <p className="font-bold text-green-800">✓ 규토리볼 설정 완료!</p>
+                  <p className="text-sm text-green-700 mt-1">상점 노출 스위치를 켜면 판매가 시작됩니다</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1367,12 +1588,20 @@ export default function ShopAdminPanel({
                         
                         return (
                           <div key={ballItem.itemId} className="bg-orange-50 border-2 border-orange-200 rounded-lg p-4 flex items-center gap-3">
-                            <div className="w-16 h-16 bg-white rounded flex items-center justify-center">
+                            <div className="w-16 h-16 bg-white rounded flex items-center justify-center relative overflow-hidden">
                               <img 
-                                sr={item.spriteUrl || item.imageUrl}
-                                alt={item.name}
+                                src={item?.spriteUrl || item?.imageUrl || ''}
+                                alt={item?.name || 'Unknown'}
                                 className="max-w-full max-h-full object-contain"
                                 style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
+                                onError={(e) => {
+                                  const parent = e.target.parentElement;
+                                  e.target.remove();
+                                  const IconComponent = getItemIcon(item);
+                                  const icon = document.createElement('div');
+                                  icon.className = 'flex items-center justify-center w-full h-full';
+                                  parent.appendChild(icon);
+                                }}
                               />
                             </div>
                             <div className="flex-1">
