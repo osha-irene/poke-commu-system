@@ -758,8 +758,8 @@ const skipFirstCatchMemo = async (pokemonNumber) => {
     return gameDataUpdatePokedexMemo(pokemonNumber, memo, currentUser);
   };
 
-// useGameState.js의 handlePurchase 함수 수정본
-// 기존 handlePurchase 함수를 이 코드로 교체하세요
+// useGameState.js의 handlePurchase 함수 완전 교체본
+// 기존 handlePurchase 함수를 통째로 이 코드로 교체하세요
 
 const handlePurchase = async (item, quantity) => {
   if (!currentUser) return false;
@@ -809,8 +809,15 @@ const handlePurchase = async (item, quantity) => {
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
     const todayPurchases = purchaseHistory[today] || {};
     
-    if (todayPurchases[itemId]) {
+    const alreadyPurchased = todayPurchases[itemId] || 0;
+    if (alreadyPurchased >= 1) {
       alert('오늘의 희귀 아이템은 1인당 1개만 구매할 수 있습니다!');
+      return false;
+    }
+    
+    // 구매하려는 수량이 1개를 초과하는지 체크
+    if (quantity > 1) {
+      alert('희귀 아이템은 한 번에 1개만 구매할 수 있습니다!');
       return false;
     }
   }
@@ -856,7 +863,7 @@ const handlePurchase = async (item, quantity) => {
     const todayName = dayNames[today.getDay()];
     
     let updatedShopData = JSON.parse(JSON.stringify(shopData));
-    let stockUpdated = false;
+    let needShopUpdate = false;
     
     if (itemType === 'rare' && updatedShopData.rareDailyItem?.itemId === itemId) {
       // 희귀 아이템 구매 이력 추가
@@ -866,6 +873,8 @@ const handlePurchase = async (item, quantity) => {
       todayPurchases[itemId] = (todayPurchases[itemId] || 0) + quantity;
       purchaseHistory[todayStr] = todayPurchases;
       
+      console.log('✅ 희귀 아이템 구매 이력 기록:', purchaseHistory);
+      
       // 유저 정보 업데이트 (구매 이력 포함)
       updateCurrentUser({
         inventory: newInventory,
@@ -873,7 +882,6 @@ const handlePurchase = async (item, quantity) => {
         purchaseHistory: purchaseHistory
       });
       
-      stockUpdated = true;
     } else if (itemType === 'daily') {
       // 요일별 아이템 재고 감소
       const dailyItems = updatedShopData.dailyItems?.[todayName] || [];
@@ -882,10 +890,9 @@ const handlePurchase = async (item, quantity) => {
           ? { ...i, stock: Math.max(0, i.stock - quantity) }
           : i
       );
-      stockUpdated = true;
+      needShopUpdate = true;
       
-      // 상점 데이터 업데이트
-      await updateShopData(updatedShopData);
+      console.log('📦 요일별 아이템 재고 감소:', updatedShopData.dailyItems[todayName]);
       
     } else if (itemType === 'permanent') {
       // 상시 판매 아이템 재고 감소
@@ -894,10 +901,16 @@ const handlePurchase = async (item, quantity) => {
           ? { ...i, stock: Math.max(0, i.stock - quantity) }
           : i
       );
-      stockUpdated = true;
+      needShopUpdate = true;
       
-      // 상점 데이터 업데이트
+      console.log('📦 상시 아이템 재고 감소:', updatedShopData.permanentItems);
+    }
+    
+    // 상점 데이터 업데이트 (희귀 아이템이 아닌 경우)
+    if (needShopUpdate) {
+      console.log('🔄 상점 데이터 Firebase 업데이트 시작');
       await updateShopData(updatedShopData);
+      console.log('✅ 상점 데이터 업데이트 완료');
     }
     
     // 희귀 아이템이 아닌 경우 유저 정보만 업데이트
@@ -909,7 +922,6 @@ const handlePurchase = async (item, quantity) => {
     }
     
     console.log('✅ 구매 완료! 남은 금액:', newMoney);
-    console.log('✅ 재고 업데이트:', stockUpdated);
     
     alert(`${itemData.name} ${quantity}개를 구매했습니다!`);
     return true;
