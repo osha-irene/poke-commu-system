@@ -1,4 +1,4 @@
-// src/hooks/useAuth.js - 무한 루프 해결 버전
+// src/hooks/useAuth.js - 로그인 경로 수정 버전
 
 import { useState, useEffect } from 'react';
 import { ref, get, set } from 'firebase/database';
@@ -10,7 +10,6 @@ import {
 import { auth, database } from '../firebase';
 
 const ensurePartyPadding = (caughtPokemon) => {
-  // ⭐ 객체인 경우 배열로 변환
   if (caughtPokemon && typeof caughtPokemon === 'object' && !Array.isArray(caughtPokemon)) {
     caughtPokemon = Object.values(caughtPokemon);
   }
@@ -37,7 +36,6 @@ export const useAuth = (members, setMembers) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
-  // 🔥 Firebase Auth 상태 감지
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
@@ -81,71 +79,63 @@ export const useAuth = (members, setMembers) => {
     return () => unsubscribe();
   }, [setMembers]);
 
-  // 🔑 로그인
+  // 🔑 로그인 (수정됨!)
   const handleLogin = async (userId, password) => {
     try {
-      // 1️⃣ Firebase Database에서 회원 존재 확인
-      const memberRef = ref(database, `members/${userId}`);
+      // 1️⃣ Firebase Auth 먼저 로그인
+      const email = `${userId}@pokemon.com`;
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const firebaseUid = userCredential.user.uid;
+      
+      console.log('✅ Auth 로그인 성공, UID:', firebaseUid);
+      
+      // 2️⃣ UID로 Database에서 회원 데이터 가져오기
+      const memberRef = ref(database, `members/${firebaseUid}`);
       const snapshot = await get(memberRef);
       
       if (!snapshot.exists()) {
-        alert('존재하지 않는 회원입니다.');
+        console.error('❌ Database에 회원 데이터 없음');
+        alert('회원 데이터가 존재하지 않습니다.');
+        await signOut(auth);
         return false;
       }
       
       const member = snapshot.val();
-      console.log('🔐 로그인 시도:', member.name);
+      console.log('🔐 로그인 완료:', member.name);
       
-      // 2️⃣ Firebase Auth 로그인
-      try {
-        const email = `${userId}@pokemon.com`;
-        await signInWithEmailAndPassword(auth, email, password);
-        
-        console.log('✅ Auth 로그인 성공');
-        
-        const paddedUser = {
-          ...member,
-          id: userId,
-          email: email,
-          caughtPokemon: ensurePartyPadding(member.caughtPokemon || [])
-        };
-        
-        console.log('✅ 즉시 로그인 처리');
-        console.log('✅ isAdmin:', paddedUser.isAdmin);
-        console.log('✅ isSuperAdmin:', paddedUser.isSuperAdmin);
-        
-        setCurrentUser(paddedUser);
-        
-        setMembers(prev => ({
-          ...prev,
-          [userId]: paddedUser
-        }));
-        
-        localStorage.setItem('poke_currentUserId', userId);
-        
-        return true;
-        
-      } catch (error) {
-        console.error('❌ Auth 로그인 오류:', error);
-        
-        if (error.code === 'auth/invalid-credential' || 
-            error.code === 'auth/user-not-found' ||
-            error.code === 'auth/wrong-password') {
-          alert('아이디 또는 비밀번호가 일치하지 않습니다.');
-        } else {
-          alert('로그인 중 오류가 발생했습니다.');
-        }
-        
-        return false;
-      }
+      const paddedUser = {
+        ...member,
+        id: firebaseUid,
+        email: email,
+        caughtPokemon: ensurePartyPadding(member.caughtPokemon || [])
+      };
+      
+      setCurrentUser(paddedUser);
+      
+      setMembers(prev => ({
+        ...prev,
+        [firebaseUid]: paddedUser
+      }));
+      
+      localStorage.setItem('poke_currentUserId', firebaseUid);
+      
+      return true;
+      
     } catch (error) {
-      console.error('❌ Firebase Database 조회 실패:', error);
-      alert('로그인 중 오류가 발생했습니다.');
+      console.error('❌ 로그인 오류:', error);
+      
+      if (error.code === 'auth/invalid-credential' || 
+          error.code === 'auth/user-not-found' ||
+          error.code === 'auth/wrong-password') {
+        alert('아이디 또는 비밀번호가 일치하지 않습니다.');
+      } else {
+        alert('로그인 중 오류가 발생했습니다.');
+      }
+      
       return false;
     }
   };
 
-  // 🔓 로그아웃
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -158,7 +148,6 @@ export const useAuth = (members, setMembers) => {
     }
   };
 
-  // 회원 데이터 업데이트
   const updateCurrentUser = async (updates) => {
     if (!currentUser) {
       console.error('❌ currentUser가 없음!');
@@ -169,7 +158,6 @@ export const useAuth = (members, setMembers) => {
     console.log('📝 현재 user:', currentUser.name);
     console.log('📝 업데이트 내용:', updates);
     
-    // ⭐ members에서 최신 사용자 정보 가져오기
     const latestUser = members[currentUser.id] || currentUser;
     
     let updatedUser = {
@@ -178,7 +166,6 @@ export const useAuth = (members, setMembers) => {
       ...(updates.caughtPokemon ? { caughtPokemon: [...updates.caughtPokemon] } : {})
     };
     
-    // caughtPokemon 업데이트 시 패딩 확인
     if (updates.caughtPokemon) {
       console.log('📝 caughtPokemon 업데이트 감지');
       updatedUser.caughtPokemon = ensurePartyPadding(updates.caughtPokemon);
@@ -186,13 +173,11 @@ export const useAuth = (members, setMembers) => {
     
     setCurrentUser(updatedUser);
     
-    // ⭐ setMembers는 동기 함수로 즉시 실행 (Promise 반환 안 함!)
     setMembers(prevMembers => ({
       ...prevMembers,
       [currentUser.id]: updatedUser
     }));
     
-    // ⭐ Firebase 저장은 별도로 처리 (async 작업)
     try {
       const { id, email, ...dataToSave } = updatedUser;
       
@@ -209,9 +194,6 @@ export const useAuth = (members, setMembers) => {
       console.error('❌ Firebase 저장 실패:', error);
     }
   };
-
-  // ⭐ 자동 동기화 useEffect 제거! (무한 루프 원인)
-  // members가 업데이트되면 updateCurrentUser를 통해서만 currentUser를 업데이트하도록 함
 
   return {
     currentUser,
