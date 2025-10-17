@@ -48,6 +48,8 @@ export const getItemPocket = (item) => {
   const categoryToPocketMap = {
     'vitamins': ITEM_POCKETS.VITAMINS,
     'held-items': ITEM_POCKETS.HELD_ITEMS,
+    'species-specific': ITEM_POCKETS.HELD_ITEMS,
+    'type-enhancement': ITEM_POCKETS.HELD_ITEMS,
     'evolution': ITEM_POCKETS.EVOLUTION,
     'machines': ITEM_POCKETS.MACHINES,
     'berries': ITEM_POCKETS.BERRIES,
@@ -57,7 +59,10 @@ export const getItemPocket = (item) => {
     'special-balls': ITEM_POCKETS.POKEBALLS,
     'apricorn-balls': ITEM_POCKETS.POKEBALLS,
     'battle-items': ITEM_POCKETS.BATTLE,
-    'key-items': ITEM_POCKETS.KEY
+    'stat-boosts': ITEM_POCKETS.BATTLE,
+    'key-items': ITEM_POCKETS.KEY,
+    'event-items': ITEM_POCKETS.KEY,
+    'gameplay': ITEM_POCKETS.KEY,
   };
   
   // 1순위: category로 매핑
@@ -108,6 +113,12 @@ export const canUseItem = (item) => {
     item.evBoost ||
     item.conditionBoost
   );
+};
+
+// stat-boosts를 battle pocket으로 필터링
+export const normalizeCategory = (category) => {
+  if (category === 'stat-boosts') return 'battle';
+  return category;
 };
 
 // pocket ID로 아이템 필터링
