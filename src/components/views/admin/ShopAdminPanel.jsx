@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Star, Calendar, Search, Package, X, Store, CircleDot } from 'lucide-react';
+import { Plus, Trash2, Star, Calendar, Search, Package, X, Store, CircleDot, RefreshCw, Save } from 'lucide-react';
 
 export default function ShopAdminPanel({ 
   shopData = {},
   allItems = [],
   onUpdateShop 
 }) {
+  const [activeTab, setActiveTab] = useState('current'); // 'current' | 'template' | 'rare' | 'gacha'
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [showRarePanel, setShowRarePanel] = useState(false);
   const [showGachaPanel, setShowGachaPanel] = useState(false);
@@ -17,6 +18,10 @@ export default function ShopAdminPanel({
   const [selectedDay, setSelectedDay] = useState('monday');
   const [filterDay, setFilterDay] = useState('all');
   const [itemCategory, setItemCategory] = useState('all');
+  
+  // 템플릿 편집 상태
+  const [editMode, setEditMode] = useState(false);
+  const [tempTemplate, setTempTemplate] = useState(null);
   
   const days = [
     { id: 'monday', name: '월요일' },
@@ -54,6 +59,60 @@ export default function ShopAdminPanel({
     );
   }).slice(0, 30);
   
+  // 템플릿 관리 함수들
+  const startEdit = () => {
+    setTempTemplate(JSON.parse(JSON.stringify(shopData.initialDailyItems || {})));
+    setEditMode(true);
+  };
+
+  const cancelEdit = () => {
+    setTempTemplate(null);
+    setEditMode(false);
+  };
+
+  const saveTemplate = async () => {
+    try {
+      const updatedShopData = {
+        ...shopData,
+        initialDailyItems: tempTemplate
+      };
+      await onUpdateShop(updatedShopData);
+      alert('✅ 초기 재고 템플릿이 저장되었습니다!\n다음 주 월요일부터 이 재고로 리셋됩니다.');
+      setEditMode(false);
+      setTempTemplate(null);
+    } catch (error) {
+      console.error('❌ 템플릿 저장 실패:', error);
+      alert('템플릿 저장 중 오류가 발생했습니다.');
+    }
+  };
+
+  const updateTemplateItem = (day, itemId, field, value) => {
+    const updated = { ...tempTemplate };
+    updated[day] = (updated[day] || []).map(item => 
+      item.itemId === itemId ? { ...item, [field]: parseInt(value) || 0 } : item
+    );
+    setTempTemplate(updated);
+  };
+
+  const removeTemplateItem = (day, itemId) => {
+    const updated = { ...tempTemplate };
+    updated[day] = (updated[day] || []).filter(item => item.itemId !== itemId);
+    setTempTemplate(updated);
+  };
+
+  const addTemplateItem = (day, itemId, price, stock) => {
+    const updated = { ...tempTemplate };
+    if (!updated[day]) updated[day] = [];
+    
+    if (updated[day].some(item => item.itemId === itemId)) {
+      alert('이미 추가된 아이템입니다!');
+      return;
+    }
+    
+    updated[day].push({ itemId, price, stock });
+    setTempTemplate(updated);
+  };
+  
   const getAllShopItems = () => {
     const items = [];
     
@@ -81,9 +140,6 @@ export default function ShopAdminPanel({
   const getFilteredShopItems = () => {
     const items = getAllShopItems();
     
-    console.log('🔍 전체 상점 아이템:', items);
-    console.log('🔍 현재 필터:', filterDay);
-    
     let filtered = items;
     if (filterDay !== 'all') {
       filtered = items.filter(item => {
@@ -97,19 +153,10 @@ export default function ShopAdminPanel({
       return typeOrder[a.type] - typeOrder[b.type];
     });
     
-    console.log('🔍 필터링 후 아이템:', sorted);
-    
     return sorted;
   };
   
-  // ⭐ async로 변경
   const handleAddItem = async () => {
-    console.log('🎯 handleAddItem 시작');
-    console.log('📦 현재 shopData:', shopData);
-    console.log('🎨 선택된 아이템:', selectedItem);
-    console.log('📌 아이템 타입:', itemType);
-    console.log('📅 선택된 요일:', selectedDay);
-    
     if (!selectedItem) {
       alert('아이템을 선택해주세요!');
       return;
@@ -121,11 +168,7 @@ export default function ShopAdminPanel({
       stock: stock
     };
     
-    console.log('✨ 추가할 아이템:', newItem);
-    
-    // 깊은 복사
     let updatedShopData = JSON.parse(JSON.stringify(shopData));
-    console.log('📋 복사된 shopData:', updatedShopData);
     
     if (itemType === 'daily') {
       if (!selectedDay) {
@@ -133,42 +176,31 @@ export default function ShopAdminPanel({
         return;
       }
       
-      // dailyItems 초기화
       if (!updatedShopData.dailyItems) {
         updatedShopData.dailyItems = {};
-        console.log('🔧 dailyItems 초기화');
       }
       
       const currentItems = updatedShopData.dailyItems[selectedDay] || [];
-      console.log(`📅 ${selectedDay}의 현재 아이템:`, currentItems);
       
       if (currentItems.some(i => i.itemId === newItem.itemId)) {
         alert('이미 추가된 아이템입니다!');
         return;
       }
       updatedShopData.dailyItems[selectedDay] = [...currentItems, newItem];
-      console.log('✅ 업데이트된 dailyItems:', updatedShopData.dailyItems);
       
     } else if (itemType === 'permanent') {
       const currentItems = updatedShopData.permanentItems || [];
-      console.log('📦 현재 영구 아이템:', currentItems);
       
       if (currentItems.some(i => i.itemId === newItem.itemId)) {
         alert('이미 추가된 아이템입니다!');
         return;
       }
       updatedShopData.permanentItems = [...currentItems, newItem];
-      console.log('✅ 업데이트된 permanentItems:', updatedShopData.permanentItems);
     }
     
-    console.log('💾 Firebase에 저장할 데이터:', updatedShopData);
-    
     try {
-      console.log('🚀 onUpdateShop 호출 시작');
       await onUpdateShop(updatedShopData);
-      console.log('✅ onUpdateShop 완료');
       
-      // 초기화
       setSelectedItem(null);
       setPrice(0);
       setStock(99);
@@ -183,7 +215,6 @@ export default function ShopAdminPanel({
     }
   };
   
-  // ⭐ async로 변경
   const handleRemoveItem = async (itemId, type, day) => {
     let updatedShopData = JSON.parse(JSON.stringify(shopData));
     
@@ -208,7 +239,6 @@ export default function ShopAdminPanel({
     }
   };
   
-  // ⭐ async로 변경
   const handleUpdateItem = async (itemId, type, day, field, value) => {
     let updatedShopData = JSON.parse(JSON.stringify(shopData));
     
@@ -239,7 +269,6 @@ export default function ShopAdminPanel({
     }
   };
 
-  // ⭐ async로 변경
   const handleAddToRarePool = async (item, priceValue) => {
     let updatedShopData = JSON.parse(JSON.stringify(shopData));
     const rarePool = updatedShopData.rareItemPool || [];
@@ -259,7 +288,6 @@ export default function ShopAdminPanel({
     }
   };
   
-  // ⭐ async로 변경
   const handleRemoveFromRarePool = async (itemId) => {
     let updatedShopData = JSON.parse(JSON.stringify(shopData));
     updatedShopData.rareItemPool = (updatedShopData.rareItemPool || []).filter(i => i.itemId !== itemId);
@@ -272,7 +300,6 @@ export default function ShopAdminPanel({
     }
   };
   
-  // ⭐ async로 변경
   const handleUpdateRarePoolPrice = async (itemId, priceValue) => {
     let updatedShopData = JSON.parse(JSON.stringify(shopData));
     updatedShopData.rareItemPool = (updatedShopData.rareItemPool || []).map(i => 
@@ -286,34 +313,32 @@ export default function ShopAdminPanel({
     }
   };
   
-  // ⭐ async로 변경
   const handleRandomRareItem = async () => {
-  const rarePool = shopData.rareItemPool || [];
-  if (rarePool.length === 0) {
-    alert('희귀 아이템 풀이 비어있습니다!');
-    return;
-  }
-  
-  const randomItem = rarePool[Math.floor(Math.random() * rarePool.length)];
-  let updatedShopData = JSON.parse(JSON.stringify(shopData));
-  
-  // ⭐ stock 필드 추가
-  updatedShopData.rareDailyItem = {
-    itemId: randomItem.itemId,
-    price: randomItem.price,
-    stock: 1,  // 희귀 아이템은 항상 재고 1개로 설정
-    lastRefresh: new Date().toISOString().split('T')[0]
+    const rarePool = shopData.rareItemPool || [];
+    if (rarePool.length === 0) {
+      alert('희귀 아이템 풀이 비어있습니다!');
+      return;
+    }
+    
+    const randomItem = rarePool[Math.floor(Math.random() * rarePool.length)];
+    let updatedShopData = JSON.parse(JSON.stringify(shopData));
+    
+    updatedShopData.rareDailyItem = {
+      itemId: randomItem.itemId,
+      price: randomItem.price,
+      stock: 1,
+      lastRefresh: new Date().toISOString().split('T')[0]
+    };
+    
+    try {
+      await onUpdateShop(updatedShopData);
+      const item = allItems.find(i => i.id === randomItem.itemId);
+      alert(`${item?.name || '아이템'}이(가) 오늘의 희귀템으로 설정되었습니다!`);
+    } catch (error) {
+      console.error('❌ 희귀템 설정 실패:', error);
+    }
   };
-  
-  try {
-    await onUpdateShop(updatedShopData);
-    const item = allItems.find(i => i.id === randomItem.itemId);
-    alert(`${item?.name || '아이템'}이(가) 오늘의 희귀템으로 설정되었습니다!`);
-  } catch (error) {
-    console.error('❌ 희귀템 설정 실패:', error);
-  }
-};
-  // ⭐ async로 변경
+
   const handleToggleGacha = async (enabled) => {
     let updatedShopData = JSON.parse(JSON.stringify(shopData));
     if (!updatedShopData.gachaBall) {
@@ -329,16 +354,13 @@ export default function ShopAdminPanel({
     }
   };
 
-  // ⭐ async로 변경
   const handleAddGachaBall = async (item) => {
     let updatedShopData = JSON.parse(JSON.stringify(shopData));
     
-    // gachaBall 객체 초기화
     if (!updatedShopData.gachaBall) {
       updatedShopData.gachaBall = { enabled: false, balls: [] };
     }
     
-    // balls 배열 초기화
     if (!Array.isArray(updatedShopData.gachaBall.balls)) {
       updatedShopData.gachaBall.balls = [];
     }
@@ -363,16 +385,13 @@ export default function ShopAdminPanel({
     }
   };
 
-  // ⭐ async로 변경
   const handleRemoveGachaBall = async (itemId) => {
     let updatedShopData = JSON.parse(JSON.stringify(shopData));
     
-    // gachaBall 객체 초기화
     if (!updatedShopData.gachaBall) {
       updatedShopData.gachaBall = { enabled: false, balls: [] };
     }
     
-    // balls 배열 초기화
     if (!Array.isArray(updatedShopData.gachaBall.balls)) {
       updatedShopData.gachaBall.balls = [];
     }
@@ -389,164 +408,376 @@ export default function ShopAdminPanel({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <Store size={24} />
-          상점 관리
-        </h3>
-        
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex gap-2 overflow-x-auto">
-            <button
-              onClick={() => setFilterDay('all')}
-              className={`px-4 py-2 rounded-lg font-semibold transition-colors whitespace-nowrap ${
-                filterDay === 'all'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              전체
-            </button>
-            {days.map(day => (
+      {/* 탭 버튼 */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="flex gap-2 overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('current')}
+            className={`px-6 py-3 rounded-lg font-bold whitespace-nowrap transition-colors flex items-center gap-2 ${
+              activeTab === 'current'
+                ? 'bg-indigo-600 text-white shadow-lg'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            <Store size={20} />
+            현재 상점 관리
+          </button>
+          
+          <button
+            onClick={() => setActiveTab('template')}
+            className={`px-6 py-3 rounded-lg font-bold whitespace-nowrap transition-colors flex items-center gap-2 ${
+              activeTab === 'template'
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            <RefreshCw size={20} />
+            초기 재고 템플릿
+          </button>
+          
+          <button
+            onClick={() => setShowRarePanel(true)}
+            className={`px-6 py-3 rounded-lg font-bold whitespace-nowrap transition-colors flex items-center gap-2 bg-purple-600 text-white hover:bg-purple-700`}
+          >
+            <Star size={20} />
+            희귀템 풀
+          </button>
+          
+          <button
+            onClick={() => setShowGachaPanel(true)}
+            className={`px-6 py-3 rounded-lg font-bold whitespace-nowrap transition-colors flex items-center gap-2 bg-orange-600 text-white hover:bg-orange-700`}
+          >
+            <CircleDot size={20} />
+            규토리볼
+          </button>
+        </div>
+      </div>
+
+      {/* 현재 상점 관리 탭 */}
+      {activeTab === 'current' && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <Store size={24} />
+            현재 상점 상품
+          </h3>
+          
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex gap-2 overflow-x-auto">
               <button
-                key={day.id}
-                onClick={() => setFilterDay(day.id)}
+                onClick={() => setFilterDay('all')}
                 className={`px-4 py-2 rounded-lg font-semibold transition-colors whitespace-nowrap ${
-                  filterDay === day.id
+                  filterDay === 'all'
                     ? 'bg-indigo-600 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                {day.name}
+                전체
               </button>
-            ))}
+              {days.map(day => (
+                <button
+                  key={day.id}
+                  onClick={() => setFilterDay(day.id)}
+                  className={`px-4 py-2 rounded-lg font-semibold transition-colors whitespace-nowrap ${
+                    filterDay === day.id
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {day.name}
+                </button>
+              ))}
+            </div>
           </div>
           
-          <div className="flex gap-2">
+          <div className="grid grid-cols-5 gap-4">
             <button
-              onClick={() => {
-                console.log('🔄 현재 shopData:', shopData);
-                alert(`상점 데이터 확인:\n요일별: ${Object.values(shopData.dailyItems || {}).reduce((sum, items) => sum + items.length, 0)}개\n상시: ${(shopData.permanentItems || []).length}개`);
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 transition-colors whitespace-nowrap"
+              onClick={() => setShowAddPanel(true)}
+              className="aspect-square border-2 border-dashed border-gray-300 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 transition-all flex flex-col items-center justify-center gap-2"
             >
-              🔍 데이터 확인
+              <Plus size={48} className="text-indigo-600" />
+              <span className="text-sm font-bold text-indigo-600">새 상품 추가</span>
             </button>
-            <button
-              onClick={() => setShowRarePanel(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors whitespace-nowrap"
-            >
-              <Star size={18} />
-              희귀템
-            </button>
-            
-            <button
-              onClick={() => setShowGachaPanel(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition-colors whitespace-nowrap"
-            >
-              <CircleDot size={18} />
-              규토리볼
-            </button>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-5 gap-4">
-          <button
-            onClick={() => setShowAddPanel(true)}
-            className="aspect-square border-2 border-dashed border-gray-300 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 transition-all flex flex-col items-center justify-center gap-2"
-          >
-            <Plus size={48} className="text-indigo-600" />
-            <span className="text-sm font-bold text-indigo-600">새 상품 추가</span>
-          </button>
 
-          {getFilteredShopItems().map((shopItem, index) => {
-            const item = allItems.find(i => i.id === shopItem.itemId);
-            if (!item) return null;
-            
-            const typeStyles = {
-              daily: { 
-                border: 'border-blue-300',
-                bg: 'bg-blue-50',
-                labelBg: 'bg-blue-100',
-                labelText: 'text-blue-700'
-              },
-              permanent: { 
-                border: 'border-green-300',
-                bg: 'bg-green-50',
-                labelBg: 'bg-green-100',
-                labelText: 'text-green-700'
-              },
-              rare: { 
-                border: 'border-purple-300',
-                bg: 'bg-purple-50',
-                labelBg: 'bg-purple-100',
-                labelText: 'text-purple-700'
-              }
-            };
-            const style = typeStyles[shopItem.type];
-            
-            return (
-              <div 
-                key={`${shopItem.type}-${shopItem.itemId}-${index}`} 
-                className={`border-2 ${style.border} rounded-xl ${style.bg} flex flex-col relative group`}
-              >
-                <div className="absolute top-2 left-2 z-10">
-                  <span className={`text-xs px-2 py-1 rounded ${style.labelBg} ${style.labelText} font-semibold`}>
-                    {shopItem.type === 'daily' ? days.find(d => d.id === shopItem.day)?.name :
-                     shopItem.type === 'permanent' ? '상시' : '오늘의 희귀'}
-                  </span>
-                </div>
-
-                <button
-                  onClick={() => handleRemoveItem(shopItem.itemId, shopItem.type, shopItem.day)}
-                  className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                  title="상품 삭제"
+            {getFilteredShopItems().map((shopItem, index) => {
+              const item = allItems.find(i => i.id === shopItem.itemId);
+              if (!item) return null;
+              
+              const typeStyles = {
+                daily: { 
+                  border: 'border-blue-300',
+                  bg: 'bg-blue-50',
+                  labelBg: 'bg-blue-100',
+                  labelText: 'text-blue-700'
+                },
+                permanent: { 
+                  border: 'border-green-300',
+                  bg: 'bg-green-50',
+                  labelBg: 'bg-green-100',
+                  labelText: 'text-green-700'
+                },
+                rare: { 
+                  border: 'border-purple-300',
+                  bg: 'bg-purple-50',
+                  labelBg: 'bg-purple-100',
+                  labelText: 'text-purple-700'
+                }
+              };
+              const style = typeStyles[shopItem.type];
+              
+              return (
+                <div 
+                  key={`${shopItem.type}-${shopItem.itemId}-${index}`} 
+                  className={`border-2 ${style.border} rounded-xl ${style.bg} flex flex-col relative group`}
                 >
-                  <Trash2 size={16} />
-                </button>
-
-                <div className="p-3 flex flex-col flex-1">
-                  <div className="flex items-center justify-center mb-3 h-24">
-                    <img 
-                      src={item.spriteUrl} 
-                      alt={item.name}
-                      className="max-w-full max-h-full object-contain"
-                      style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
-                    />
+                  <div className="absolute top-2 left-2 z-10">
+                    <span className={`text-xs px-2 py-1 rounded ${style.labelBg} ${style.labelText} font-semibold`}>
+                      {shopItem.type === 'daily' ? days.find(d => d.id === shopItem.day)?.name :
+                       shopItem.type === 'permanent' ? '상시' : '오늘의 희귀'}
+                    </span>
                   </div>
-                  
-                  <div className="space-y-2 flex-1">
-                    <div className="font-bold text-sm text-gray-800 text-center">{item.name}</div>
+
+                  <button
+                    onClick={() => handleRemoveItem(shopItem.itemId, shopItem.type, shopItem.day)}
+                    className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    title="상품 삭제"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+
+                  <div className="p-3 flex flex-col flex-1">
+                    <div className="flex items-center justify-center mb-3 h-24">
+                      <img 
+                        src={item.spriteUrl} 
+                        alt={item.name}
+                        className="max-w-full max-h-full object-contain"
+                        style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
+                      />
+                    </div>
                     
-                    <div className="flex items-center justify-center gap-3">
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-gray-600 whitespace-nowrap">가격</span>
-                        <input
-                          type="number"
-                          value={shopItem.price}
-                          onChange={(e) => handleUpdateItem(shopItem.itemId, shopItem.type, shopItem.day, 'price', e.target.value)}
-                          className="w-14 border border-gray-300 rounded px-1 py-1 text-xs text-center focus:border-indigo-500 focus:outline-none bg-white"
-                        />
-                      </div>
-                      {shopItem.type !== 'rare' && (
+                    <div className="space-y-2 flex-1">
+                      <div className="font-bold text-sm text-gray-800 text-center">{item.name}</div>
+                      
+                      <div className="flex items-center justify-center gap-3">
                         <div className="flex items-center gap-1">
-                          <span className="text-xs text-gray-600 whitespace-nowrap">재고</span>
+                          <span className="text-xs text-gray-600 whitespace-nowrap">가격</span>
                           <input
                             type="number"
-                            value={shopItem.stock}
-                            onChange={(e) => handleUpdateItem(shopItem.itemId, shopItem.type, shopItem.day, 'stock', e.target.value)}
+                            value={shopItem.price}
+                            onChange={(e) => handleUpdateItem(shopItem.itemId, shopItem.type, shopItem.day, 'price', e.target.value)}
                             className="w-14 border border-gray-300 rounded px-1 py-1 text-xs text-center focus:border-indigo-500 focus:outline-none bg-white"
                           />
                         </div>
-                      )}
+                        {shopItem.type !== 'rare' && (
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-gray-600 whitespace-nowrap">재고</span>
+                            <input
+                              type="number"
+                              value={shopItem.stock}
+                              onChange={(e) => handleUpdateItem(shopItem.itemId, shopItem.type, shopItem.day, 'stock', e.target.value)}
+                              className="w-14 border border-gray-300 rounded px-1 py-1 text-xs text-center focus:border-indigo-500 focus:outline-none bg-white"
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* 초기 재고 템플릿 탭 */}
+      {activeTab === 'template' && (
+        <div className="space-y-6">
+          {/* 헤더 */}
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg p-6 shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                  <RefreshCw size={28} />
+                  초기 재고 템플릿 관리
+                </h3>
+                <p className="text-blue-100">
+                  매주 월요일 00:00에 이 템플릿으로 요일별 아이템 재고가 자동 리셋됩니다
+                </p>
+              </div>
+              <div className="flex gap-2">
+                {!editMode ? (
+                  <button
+                    onClick={startEdit}
+                    className="bg-white text-indigo-600 px-6 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors flex items-center gap-2"
+                  >
+                    <Package size={20} />
+                    편집하기
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={cancelEdit}
+                      className="bg-gray-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-gray-600 transition-colors"
+                    >
+                      취소
+                    </button>
+                    <button
+                      onClick={saveTemplate}
+                      className="bg-green-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-600 transition-colors flex items-center gap-2"
+                    >
+                      <Save size={20} />
+                      저장
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 안내 메시지 */}
+          {editMode && (
+            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">⚠️</span>
+                <div>
+                  <div className="font-bold text-gray-800 mb-1">편집 모드</div>
+                  <div className="text-sm text-gray-600">
+                    여기서 수정한 내용은 <strong>다음 주 월요일부터</strong> 적용됩니다.<br/>
+                    현재 진행 중인 이번 주 재고에는 영향을 주지 않습니다.
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 요일별 템플릿 */}
+          <div className="grid grid-cols-1 gap-4">
+            {days.map((day, index) => {
+              const displayData = editMode ? tempTemplate : (shopData.initialDailyItems || {});
+              const dayItems = displayData[day.id] || [];
+              
+              return (
+                <div key={day.id} className="bg-white rounded-lg border-2 border-gray-200 overflow-hidden">
+                  <div className="bg-blue-50 border-b-2 border-blue-200 p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Calendar size={24} className="text-blue-600" />
+                      <h4 className="font-bold text-lg text-gray-800">{day.name}</h4>
+                      <span className="text-sm text-gray-600">
+                        ({dayItems.length}개 아이템)
+                      </span>
+                    </div>
+                    
+                    {editMode && (
+                      <button
+                        onClick={() => {
+                          const itemName = prompt('아이템 이름을 입력하세요:\n(예: 상처약, 몬스터볼, 이상한사탕)');
+                          if (!itemName) return;
+                          
+                          // 이름으로 아이템 찾기
+                          const foundItem = allItems.find(i => 
+                            i.name === itemName || 
+                            i.name.includes(itemName) || 
+                            itemName.includes(i.name)
+                          );
+                          
+                          if (!foundItem) {
+                            alert(`"${itemName}" 아이템을 찾을 수 없습니다.\n정확한 이름을 입력해주세요.`);
+                            return;
+                          }
+                          
+                          const price = parseInt(prompt(`${foundItem.name}의 가격을 입력하세요:`, foundItem.cost || '100') || '0');
+                          const stock = parseInt(prompt(`${foundItem.name}의 재고를 입력하세요:`, '10') || '0');
+                          
+                          addTemplateItem(day.id, foundItem.id, price, stock);
+                          alert(`✅ ${foundItem.name}이(가) ${day.name}에 추가되었습니다!`);
+                        }}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
+                      >
+                        <Plus size={18} />
+                        아이템 추가
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="p-4">
+                    {dayItems.length === 0 ? (
+                      <div className="text-center py-8 text-gray-400">
+                        <Package size={48} className="mx-auto mb-2 opacity-50" />
+                        <p>등록된 아이템이 없습니다</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {dayItems.map((item) => {
+                          const itemData = allItems.find(i => i.id === item.itemId);
+                          
+                          return (
+                            <div
+                              key={item.itemId}
+                              className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg border border-gray-200"
+                            >
+                              <div className="w-16 h-16 flex items-center justify-center bg-white rounded-lg border border-gray-300">
+                                <img
+                                  src={itemData?.spriteUrl || itemData?.imageUrl}
+                                  alt={itemData?.name || item.itemId}
+                                  className="max-w-full max-h-full"
+                                  style={{ imageRendering: 'pixelated' }}
+                                />
+                              </div>
+
+                              <div className="flex-1">
+                                <div className="font-bold text-gray-800">
+                                  {itemData?.name || item.itemId}
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  {itemData?.effect || '설명 없음'}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs text-gray-600 whitespace-nowrap">가격</span>
+                                  <input
+                                    type="number"
+                                    value={item.price}
+                                    onChange={(e) => updateTemplateItem(day.id, item.itemId, 'price', e.target.value)}
+                                    disabled={!editMode}
+                                    className={`w-20 border ${editMode ? 'border-gray-300' : 'border-transparent'} rounded px-2 py-1 text-sm text-center focus:border-indigo-500 focus:outline-none bg-white`}
+                                  />
+                                </div>
+                                
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs text-gray-600 whitespace-nowrap">재고</span>
+                                  <input
+                                    type="number"
+                                    value={item.stock}
+                                    onChange={(e) => updateTemplateItem(day.id, item.itemId, 'stock', e.target.value)}
+                                    disabled={!editMode}
+                                    className={`w-16 border ${editMode ? 'border-gray-300' : 'border-transparent'} rounded px-2 py-1 text-sm text-center focus:border-indigo-500 focus:outline-none bg-white`}
+                                  />
+                                </div>
+
+                                {editMode && (
+                                  <button
+                                    onClick={() => removeTemplateItem(day.id, item.itemId)}
+                                    className="text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                                  >
+                                    <Trash2 size={18} />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+}
 
       {showAddPanel && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">

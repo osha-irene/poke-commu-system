@@ -910,6 +910,8 @@ const handlePurchase = async (item, quantity) => {
       needShopUpdate = true;
       
       console.log('📦 요일별 아이템 재고 감소:', updatedShopData.dailyItems[todayName]);
+	  
+	  
       
     } else if (itemType === 'permanent') {
       // 상시 판매 아이템 재고 감소
