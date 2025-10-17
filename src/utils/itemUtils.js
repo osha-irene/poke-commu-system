@@ -18,7 +18,7 @@ export const POCKET_LABELS = {
   [ITEM_POCKETS.MEDICINE]: '회복',
   [ITEM_POCKETS.BERRIES]: '나무열매',
   [ITEM_POCKETS.MACHINES]: '기술머신',
-  [ITEM_POCKETS.HELD_ITEMS]: '지닌물건',
+  [ITEM_POCKETS.HELD_ITEMS]: '도구',
   [ITEM_POCKETS.EVOLUTION]: '진화',
   [ITEM_POCKETS.VITAMINS]: '영양',
   [ITEM_POCKETS.BATTLE]: '배틀',
@@ -42,7 +42,41 @@ export const CATEGORIES = [
 
 // 통일된 아이템 pocket 가져오기
 export const getItemPocket = (item) => {
-  return item?.categoryData?.pocket || item?.pocket || ITEM_POCKETS.MISC;
+  if (!item) return ITEM_POCKETS.MISC;
+  
+  // ⭐ category를 pocket으로 우선 매핑
+  const categoryToPocketMap = {
+    'vitamins': ITEM_POCKETS.VITAMINS,
+    'held-items': ITEM_POCKETS.HELD_ITEMS,
+    'evolution': ITEM_POCKETS.EVOLUTION,
+    'machines': ITEM_POCKETS.MACHINES,
+    'berries': ITEM_POCKETS.BERRIES,
+    'medicine': ITEM_POCKETS.MEDICINE,
+    'pokeballs': ITEM_POCKETS.POKEBALLS,
+    'standard-balls': ITEM_POCKETS.POKEBALLS,
+    'special-balls': ITEM_POCKETS.POKEBALLS,
+    'apricorn-balls': ITEM_POCKETS.POKEBALLS,
+    'battle-items': ITEM_POCKETS.BATTLE,
+    'key-items': ITEM_POCKETS.KEY
+  };
+  
+  // 1순위: category로 매핑
+  if (item.category && categoryToPocketMap[item.category]) {
+    return categoryToPocketMap[item.category];
+  }
+  
+  // 2순위: categoryData.pocket
+  if (item.categoryData?.pocket) {
+    return item.categoryData.pocket;
+  }
+  
+  // 3순위: pocket 필드
+  if (item.pocket) {
+    return item.pocket;
+  }
+  
+  // 기본값
+  return ITEM_POCKETS.MISC;
 };
 
 // 아이템 category 가져오기

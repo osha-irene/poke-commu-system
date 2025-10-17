@@ -280,10 +280,6 @@ export default function useGameState() {
     updateMemberRegionAccess
   } = adminFunctions;
 
-
-// ⭐ 여기에 로그 추가!
-console.log('🔍 adminCreateCustomItem:', adminCreateCustomItem);
-console.log('🔍 adminCreateCustomItem 타입:', typeof adminCreateCustomItem);
   
 
   // 🔥 매일 자정 산책 횟수 리셋 - Firebase 사용
@@ -867,13 +863,7 @@ const handlePurchase = async (item, quantity) => {
     
     let updatedShopData = JSON.parse(JSON.stringify(shopData));
     let needShopUpdate = false;
-    
-    console.log('🔍 디버깅:', {
-      itemType,
-      itemId,
-      rareDailyItemId: updatedShopData.rareDailyItem?.itemId,
-      조건체크: itemType === 'rare' && updatedShopData.rareDailyItem?.itemId === itemId
-    });
+  
     
     if (itemType === 'rare' && updatedShopData.rareDailyItem?.itemId === itemId) {
       // 희귀 아이템 구매 이력 추가

@@ -1,7 +1,8 @@
 // src/components/views/_mobile/MobileItemsView.jsx
 import React, { useState } from 'react';
-import { Search, X, ShoppingCart, Trash2, Sparkles, ChevronRight } from 'lucide-react';
+import { Package, Circle, Heart, Dumbbell, Apple, Disc, Backpack, Sparkles, Sword, Key, Search, X,Trash2, ShoppingCart,ChevronRight } from 'lucide-react';
 import { useGame } from '../../../contexts/GameContext';
+import { getItemPocket, canUseItem, ITEM_POCKETS, CATEGORIES } from '../../../utils/itemUtils';
 
 export default function MobileItemsView() {
   const {
@@ -102,18 +103,22 @@ export default function MobileItemsView() {
       itemData: itemData
     };
   };
-
-  const categories = [
-    { id: 'all', name: '전체', icon: '📦' },
-    { id: 'pokeballs', name: '포획', icon: '⚾' },
-    { id: 'medicine', name: '회복', icon: '💊' },
-    { id: 'vitamins', name: '영양', icon: '💪' },
-    { id: 'berries', name: '나무열매', icon: '🍇' },
-    { id: 'machines', name: '기술머신', icon: '💿' },
-    { id: 'held-items', name: '지니는도구', icon: '🎒' },
-    { id: 'evolution', name: '진화', icon: '✨' },
-    { id: 'misc', name: '기타', icon: '📦' }
-  ];
+  
+  const categories = CATEGORIES.map(cat => {
+    const colorMap = {
+      'all': 'bg-gray-100 text-gray-700',
+      'pokeballs': 'bg-red-100 text-red-700',
+      'medicine': 'bg-green-100 text-green-700',
+      'vitamins': 'bg-purple-100 text-purple-700',
+      'berries': 'bg-pink-100 text-pink-700',
+      'machines': 'bg-blue-100 text-blue-700',
+      'held-items': 'bg-orange-100 text-orange-700',
+      'evolution': 'bg-yellow-100 text-yellow-700',
+      'battle-items': 'bg-red-100 text-red-700',
+      'key-items': 'bg-indigo-100 text-indigo-700',
+      'misc': 'bg-gray-100 text-gray-700'
+    };})
+    
 
   const getPocketBadge = (pocket) => {
     const badges = {
@@ -122,7 +127,7 @@ export default function MobileItemsView() {
       'vitamins': { text: '영양', color: 'bg-purple-100 text-purple-700' },
       'berries': { text: '나무열매', color: 'bg-pink-100 text-pink-700' },
       'machines': { text: '기술머신', color: 'bg-blue-100 text-blue-700' },
-      'held-items': { text: '지니는도구', color: 'bg-orange-100 text-orange-700' },
+      'held-items': { text: '도구', color: 'bg-orange-100 text-orange-700' },
       'evolution': { text: '진화', color: 'bg-yellow-100 text-yellow-700' }
     };
     return badges[pocket] || { text: '기타', color: 'bg-gray-100 text-gray-700' };

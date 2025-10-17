@@ -1,6 +1,8 @@
 // src/components/views/admin/member/MemberItemTab.jsx
 import React, { useState } from 'react';
 import { getButtonClass } from '../../../../styles/theme';
+import { getItemPocket, canUseItem, ITEM_POCKETS, CATEGORIES } from '../../../../utils/itemUtils';
+import { Package, Circle, Heart, Dumbbell, Apple, Disc, Backpack, Sparkles, Sword, Key, Search, X,Trash2, ShoppingCart } from 'lucide-react';
 
 function MemberItemTab({ member, allItems, onGiveItem }) {
   const [itemMode, setItemMode] = useState('view');
@@ -10,17 +12,21 @@ function MemberItemTab({ member, allItems, onGiveItem }) {
   const [searchQuery, setSearchQuery] = useState('');
   
   // ItemsView와 동일한 pocket 기준 카테고리
-  const categories = [
-    { id: 'all', name: '전체', icon: '📦', color: 'bg-gray-100 text-gray-700' },
-    { id: 'pokeballs', name: '포획', icon: '⚾', color: 'bg-red-100 text-red-700' },
-    { id: 'medicine', name: '회복', icon: '💊', color: 'bg-green-100 text-green-700' },
-    { id: 'vitamins', name: '영양', icon: '💪', color: 'bg-purple-100 text-purple-700' },
-    { id: 'berries', name: '나무열매', icon: '🍇', color: 'bg-pink-100 text-pink-700' },
-    { id: 'machines', name: '기술머신', icon: '💿', color: 'bg-blue-100 text-blue-700' },
-    { id: 'held-items', name: '지니는도구', icon: '🎒', color: 'bg-orange-100 text-orange-700' },
-    { id: 'evolution', name: '진화', icon: '✨', color: 'bg-yellow-100 text-yellow-700' },
-    { id: 'misc', name: '기타', icon: '📦', color: 'bg-gray-100 text-gray-700' }
-  ];
+  
+  const categories = CATEGORIES.map(cat => {
+    const colorMap = {
+      'all': 'bg-gray-100 text-gray-700',
+      'pokeballs': 'bg-red-100 text-red-700',
+      'medicine': 'bg-green-100 text-green-700',
+      'vitamins': 'bg-purple-100 text-purple-700',
+      'berries': 'bg-pink-100 text-pink-700',
+      'machines': 'bg-blue-100 text-blue-700',
+      'held-items': 'bg-orange-100 text-orange-700',
+      'evolution': 'bg-yellow-100 text-yellow-700',
+      'battle-items': 'bg-red-100 text-red-700',
+      'key-items': 'bg-indigo-100 text-indigo-700',
+      'misc': 'bg-gray-100 text-gray-700'
+    };})
   
   const filteredItems = allItems.filter(item => {
     // 카테고리 필터 (pocket 기준)
@@ -54,17 +60,20 @@ function MemberItemTab({ member, allItems, onGiveItem }) {
   };
 
   // pocket별 배지 색상
-  const getPocketBadge = (item) => {
-    const pocket = item.categoryData?.pocket || item.pocket || 'misc';
-    if (pocket === 'pokeballs') return { text: '⚾ 포획', color: 'bg-red-100 text-red-700' };
-    if (pocket === 'medicine') return { text: '💊 회복', color: 'bg-green-100 text-green-700' };
-    if (pocket === 'vitamins') return { text: '💪 영양', color: 'bg-purple-100 text-purple-700' };
-    if (pocket === 'berries') return { text: '🍇 나무열매', color: 'bg-pink-100 text-pink-700' };
-    if (pocket === 'machines') return { text: '💿 기술머신', color: 'bg-blue-100 text-blue-700' };
-    if (pocket === 'held-items') return { text: '🎒 지니는도구', color: 'bg-orange-100 text-orange-700' };
-    if (pocket === 'evolution') return { text: '✨ 진화', color: 'bg-yellow-100 text-yellow-700' };
-    return { text: '📦 기타', color: 'bg-gray-100 text-gray-700' };
+  const getPocketBadge = (pocket) => {
+  const badges = {
+    'pokeballs': { text: '포획', color: 'bg-red-100 text-red-700' },
+    'medicine': { text: '회복', color: 'bg-green-100 text-green-700' },
+    'vitamins': { text: '영양', color: 'bg-purple-100 text-purple-700' },
+    'berries': { text: '나무열매', color: 'bg-pink-100 text-pink-700' },
+    'machines': { text: '기술머신', color: 'bg-blue-100 text-blue-700' },
+    'held-items': { text: '도구', color: 'bg-orange-100 text-orange-700' },
+    'evolution': { text: '진화', color: 'bg-yellow-100 text-yellow-700' },
+    'battle-items': { text: '배틀', color: 'bg-red-100 text-red-700' },
+    'key-items': { text: '중요', color: 'bg-indigo-100 text-indigo-700' }
   };
+  return badges[pocket] || { text: '기타', color: 'bg-gray-100 text-gray-700' };
+};
 
   return (
     <div className="space-y-4">

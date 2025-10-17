@@ -166,10 +166,7 @@ async function createInitialMembersWithAuth() {
         
       } catch (authError) {
         if (authError.code === 'auth/email-already-in-use') {
-          // 2️⃣ 이미 존재하면 → 기존 UID 찾기
-          console.log(`⚠️ ${user.data.name} 계정이 Auth에 이미 존재함`);
-          console.log(`🔍 Database에서 기존 UID 찾는 중...`);
-          
+       
           // 🔥 전체 members 스캔해서 이메일로 UID 찾기
           const membersRef = ref(database, 'members');
           const snapshot = await get(membersRef);

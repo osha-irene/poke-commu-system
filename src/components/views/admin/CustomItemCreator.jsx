@@ -28,7 +28,7 @@ function CustomItemCreator({ onCreateItem, allItems, trainer }) {
     { id: 'vitamins', name: '영양', icon: '💪', color: 'bg-purple-100 text-purple-700' },
     { id: 'berries', name: '나무열매', icon: '🍇', color: 'bg-pink-100 text-pink-700' },
     { id: 'machines', name: '기술머신', icon: '💿', color: 'bg-blue-100 text-blue-700' },
-    { id: 'held-items', name: '지니는도구', icon: '🎒', color: 'bg-orange-100 text-orange-700' },
+    { id: 'held-items', name: '도구', icon: '🎒', color: 'bg-orange-100 text-orange-700' },
     { id: 'evolution', name: '진화', icon: '✨', color: 'bg-yellow-100 text-yellow-700' },
     { id: 'misc', name: '기타', icon: '📦', color: 'bg-gray-100 text-gray-700' }
   ];

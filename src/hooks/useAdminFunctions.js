@@ -434,20 +434,20 @@ export const useAdminFunctions = (
       
       // ⭐ 본인에게 지급한 경우 currentUser도 업데이트
       if (memberId === currentUser?.id) {
-        console.log('✅ 본인에게 아이템 지급 - updateCurrentUser 호출');
+        
         updateCurrentUser({ inventory: newInventory });
       }
       
       alert(`${member.name}님에게 ${item.name} ${count}개를 지급했습니다!`);
     } catch (error) {
-      console.error('❌ 아이템 지급 실패:', error);
+     
       alert('아이템 지급 중 오류가 발생했습니다!');
     }
   };
 
   const createCustomItem = async (itemData) => {
     if (!currentUser?.isAdmin) {
-      console.error('❌ 관리자 권한 없음');
+
       return false;
     }
     

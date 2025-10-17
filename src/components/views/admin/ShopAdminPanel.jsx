@@ -39,7 +39,7 @@ export default function ShopAdminPanel({
   ];
 
   
-  const filteredItems = (() => {
+   const filteredItems = (() => {
   let filtered = itemCategory === 'all' ? allItems : filterItemsByPocket(allItems, itemCategory);
   
   if (searchQuery) {
@@ -50,10 +50,9 @@ export default function ShopAdminPanel({
       item.id.toString().includes(query)
     );
   }
-    
-  // 카테고리만 선택하고 검색어 없으면 표시
-  return itemCategory !== 'all';
-});
+  
+  return filtered;  // ✅ 배열 반환
+})();
   
   // 템플릿 관리 함수들
   const startEdit = () => {
@@ -841,39 +840,34 @@ export default function ShopAdminPanel({
                   </div>
 
                   <div className="flex-1 overflow-y-auto">
-                    <div className="grid grid-cols-4 gap-4">
-                      {searchQuery === '' && itemCategory === 'all' ? (
-                        <div className="col-span-4 text-center py-16 text-gray-400">
-                          <Search size={64} className="mx-auto mb-4 text-gray-300" />
-                          <p className="text-lg">카테고리를 선택하거나 검색해주세요</p>
-                        </div>
-                      ) : filteredItems.length === 0 ? (
-                        <div className="col-span-4 text-center py-16 text-gray-400">
-                          <Search size={64} className="mx-auto mb-4 text-gray-300" />
-                          <p className="text-lg">검색 결과가 없습니다</p>
-                        </div>
-                      ) : (
-                        filteredItems.map(item => (
-                          <button
-                            key={item.id}
-                            onClick={() => {
-                              setSelectedItem(item);
-                              setPrice(item.cost || 100);
-                            }}
-                            className={`flex flex-col border-2 rounded-xl hover:shadow-lg transition-all group bg-white overflow-hidden ${
-                              selectedItem?.id === item.id
-                                ? 'border-indigo-500 shadow-lg'
-                                : 'border-gray-200 hover:border-indigo-400'
-                            }`}
-                          >
-                            <div className="aspect-square bg-gray-50 p-6 flex items-center justify-center">
-                              <img 
-                                src={item.spriteUrl || item.imageUrl} 
-                                alt={item.name}
-                                className="max-w-full max-h-full object-contain"
-                                style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
-                              />
-                            </div>
+  <div className="grid grid-cols-4 gap-4">
+    {filteredItems.length === 0 ? (
+      <div className="col-span-4 text-center py-16 text-gray-400">
+        <Search size={64} className="mx-auto mb-4 text-gray-300" />
+        <p className="text-lg">검색 결과가 없습니다</p>
+      </div>
+    ) : (
+      filteredItems.map(item => (
+        <button
+          key={item.id}
+          onClick={() => {
+            setSelectedItem(item);
+            setPrice(item.cost || 100);
+          }}
+          className={`flex flex-col border-2 rounded-xl hover:shadow-lg transition-all group bg-white overflow-hidden ${
+            selectedItem?.id === item.id
+              ? 'border-purple-500 shadow-lg'
+              : 'border-gray-200 hover:border-purple-400'
+          }`}
+        >
+          <div className="aspect-square bg-gray-50 p-6 flex items-center justify-center">
+            <img 
+              src={item.spriteUrl || item.imageUrl} 
+              alt={item.name}
+              className="max-w-full max-h-full object-contain"
+              style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
+            />
+          </div>
                             
                             <div className="p-2 bg-white border-t border-gray-200">
                               <div className={`text-xs font-semibold text-center truncate ${

@@ -1,11 +1,11 @@
 import useMediaQuery from '../../hooks/useMediaQuery';
 import MobileItemsView from './_mobile/MobileItemsView';
-
+import { getItemPocket, canUseItem, ITEM_POCKETS, CATEGORIES } from '../../utils/itemUtils';
+import { Package, Circle, Heart, Dumbbell, Apple, Disc, Backpack, Sparkles, Sword, Key, Search, X,Trash2, ShoppingCart } from 'lucide-react'; 
 import React, { useState } from 'react';
-import { Search, X, ShoppingCart, Trash2, Sparkles } from 'lucide-react';
+
 
 import { useGame } from '../../contexts/GameContext';
-import { getItemPocket, canUseItem, ITEM_POCKETS } from '../../utils/itemUtils'; // ⭐ 추가
 
 function DesktopItemsView() {
   const {
@@ -30,116 +30,132 @@ function DesktopItemsView() {
 
   // items.json에서 상세 정보 가져오기 (완전 수정)
   const getItemDetails = (item) => {
-    if (!item || !item.name) {
-      console.warn('⚠️ Invalid item:', item);
-      return {
-        name: '알 수 없는 아이템',
-        description: '아이템 정보가 없습니다',
-        imageUrl: '/images/items/default.png',
-        cost: 0,
-        sellPrice: 0,
-        pocket: 'misc',
-        category: 'misc',
-        canSell: true,
-        canUse: false
-      };
-    }
-
-    // ✅ 1단계: itemId로 찾기
-    let itemData = null;
-    if (item.itemId) {
-      itemData = allItems.find(i => i.id === item.itemId);
-    }
-    
-    // ✅ 2단계: 이름으로 찾기 (한글, 영문, nameEn)
-    if (!itemData) {
-      itemData = allItems.find(i => 
-        i.name === item.name || 
-        i.nameEn === item.name ||
-        i.id === item.name
-      );
-    }
-
-    // ✅ 디버깅
-    if (!itemData) {
-      console.warn('⚠️ 아이템 데이터 없음:', {
-        itemId: item.itemId,
-        name: item.name,
-        firstItems: allItems.slice(0, 3).map(i => ({ id: i.id, name: i.name }))
-      });
-    }
-
-    // ✅ pocket 결정 (우선순위: item > itemData.categoryData.pocket > itemData.pocket)
-    const pocket = getItemPocket(item) || getItemPocket(itemData);
-    
-    const category = item.category || itemData?.category || '';
-
-    // ✅ 설명 가져오기
-    const description = itemData?.effect || 
-                       itemData?.description || 
-                       item.effect?.replace(/\n/g, ' ') || 
-                       item.description || 
-                       '유용한 아이템';
-
-    // ✅ 사용 가능 여부 판단
-		const canUse = item.canUse !== undefined ? item.canUse : canUseItem(itemData || item);
-
+  if (!item || !item.name) {
+    console.warn('⚠️ Invalid item:', item);
     return {
-      name: item.name,
-      description: description,
-      imageUrl: item.imageUrl || itemData?.spriteUrl || itemData?.imageUrl || '/images/items/default.png',
-      cost: itemData?.cost ?? item.cost ?? 0,
-      sellPrice: itemData?.sellPrice ?? item.sellPrice ?? 0,
-      pocket: pocket,
-      category: category,
-      canSell: item.canSell !== undefined ? item.canSell : (itemData?.canSell ?? true),
-      canUse: canUse,
-      specialEffect: item.specialEffect || itemData?.specialEffect || null,
-      ivBoost: item.ivBoost || itemData?.ivBoost,
-      evBoost: item.evBoost || itemData?.evBoost,
-      friendshipBoost: item.friendshipBoost || itemData?.friendshipBoost,
-      conditionBoost: item.conditionBoost || itemData?.conditionBoost,
-      itemData: itemData
+      name: '알 수 없는 아이템',
+      description: '아이템 정보가 없습니다',
+      imageUrl: '/images/items/default.png',
+      cost: 0,
+      sellPrice: 0,
+      pocket: 'misc',
+      category: 'misc',
+      canSell: true,
+      canUse: false
     };
-  };
+  }
 
-  const categories = [
-    { id: 'all', name: '전체', icon: '📦', color: 'bg-gray-100 text-gray-700' },
-    { id: 'pokeballs', name: '포획', icon: '⚾', color: 'bg-red-100 text-red-700' },
-    { id: 'medicine', name: '회복', icon: '💊', color: 'bg-green-100 text-green-700' },
-    { id: 'vitamins', name: '영양', icon: '💪', color: 'bg-purple-100 text-purple-700' },
-    { id: 'berries', name: '나무열매', icon: '🍇', color: 'bg-pink-100 text-pink-700' },
-    { id: 'machines', name: '기술머신', icon: '💿', color: 'bg-blue-100 text-blue-700' },
-    { id: 'held-items', name: '지니는도구', icon: '🎒', color: 'bg-orange-100 text-orange-700' },
-    { id: 'evolution', name: '진화', icon: '✨', color: 'bg-yellow-100 text-yellow-700' },
-    { id: 'misc', name: '기타', icon: '📦', color: 'bg-gray-100 text-gray-700' }
-  ];
+  let itemData = null;
+  if (item.itemId) {
+    itemData = allItems.find(i => i.id === item.itemId);
+  }
+  
+  if (!itemData) {
+    itemData = allItems.find(i => 
+      i.name === item.name || 
+      i.nameEn === item.name ||
+      i.id === item.name
+    );
+  }
 
-  const getPocketColor = (pocket) => {
-    const colors = {
-      'pokeballs': 'bg-red-50 border-red-200',
-      'medicine': 'bg-green-50 border-green-200',
-      'vitamins': 'bg-purple-50 border-purple-200',
-      'berries': 'bg-pink-50 border-pink-200',
-      'machines': 'bg-blue-50 border-blue-200',
-      'held-items': 'bg-orange-50 border-orange-200',
-      'evolution': 'bg-yellow-50 border-yellow-200'
-    };
-    return colors[pocket] || 'bg-gray-50 border-gray-200';
-  };
+  // ✅ 이 줄만 수정!
+  const pocket = getItemPocket(itemData) || getItemPocket(item) || 'misc';
+  
+  const category = item.category || itemData?.category || '';
 
-  const getPocketBadge = (pocket) => {
-    const badges = {
-      'pokeballs': { text: '포획', color: 'bg-red-100 text-red-700' },
-      'medicine': { text: '회복', color: 'bg-green-100 text-green-700' },
-      'vitamins': { text: '영양', color: 'bg-purple-100 text-purple-700' },
-      'berries': { text: '나무열매', color: 'bg-pink-100 text-pink-700' },
-      'machines': { text: '기술머신', color: 'bg-blue-100 text-blue-700' },
-      'held-items': { text: '지니는도구', color: 'bg-orange-100 text-orange-700' },
-      'evolution': { text: '진화', color: 'bg-yellow-100 text-yellow-700' }
-    };
-    return badges[pocket] || { text: '기타', color: 'bg-gray-100 text-gray-700' };
+  const description = itemData?.effect || 
+                     itemData?.description || 
+                     item.effect?.replace(/\n/g, ' ') || 
+                     item.description || 
+                     '유용한 아이템';
+
+  const canUse = item.canUse !== undefined ? item.canUse : canUseItem(itemData || item);
+
+  return {
+    name: item.name,
+    description: description,
+    imageUrl: item.imageUrl || itemData?.spriteUrl || itemData?.imageUrl || '/images/items/default.png',
+    cost: itemData?.cost ?? item.cost ?? 0,
+    sellPrice: itemData?.sellPrice ?? item.sellPrice ?? 0,
+    pocket: pocket,
+    category: category,
+    canSell: item.canSell !== undefined ? item.canSell : (itemData?.canSell ?? true),
+    canUse: canUse,
+    specialEffect: item.specialEffect || itemData?.specialEffect || null,
+    ivBoost: item.ivBoost || itemData?.ivBoost,
+    evBoost: item.evBoost || itemData?.evBoost,
+    friendshipBoost: item.friendshipBoost || itemData?.friendshipBoost,
+    conditionBoost: item.conditionBoost || itemData?.conditionBoost,
+    itemData: itemData
   };
+};
+
+const getPocketColor = (pocket) => {
+  const colors = {
+    'pokeballs': 'bg-red-50 border-red-200',
+    'medicine': 'bg-green-50 border-green-200',
+    'vitamins': 'bg-purple-50 border-purple-200',
+    'berries': 'bg-pink-50 border-pink-200',
+    'machines': 'bg-blue-50 border-blue-200',
+    'held-items': 'bg-orange-50 border-orange-200',
+    'evolution': 'bg-yellow-50 border-yellow-200',
+    'battle-items': 'bg-red-50 border-red-200',
+    'key-items': 'bg-indigo-50 border-indigo-200'
+  };
+  return colors[pocket] || 'bg-gray-50 border-gray-200';
+};
+
+const getPocketBadge = (pocket) => {
+  const badges = {
+    'pokeballs': { text: '포획', color: 'bg-red-100 text-red-700' },
+    'medicine': { text: '회복', color: 'bg-green-100 text-green-700' },
+    'vitamins': { text: '영양', color: 'bg-purple-100 text-purple-700' },
+    'berries': { text: '나무열매', color: 'bg-pink-100 text-pink-700' },
+    'machines': { text: '기술머신', color: 'bg-blue-100 text-blue-700' },
+    'held-items': { text: '도구', color: 'bg-orange-100 text-orange-700' },
+    'evolution': { text: '진화', color: 'bg-yellow-100 text-yellow-700' },
+    'battle-items': { text: '배틀', color: 'bg-red-100 text-red-700' },
+    'key-items': { text: '중요', color: 'bg-indigo-100 text-indigo-700' }
+  };
+  return badges[pocket] || { text: '기타', color: 'bg-gray-100 text-gray-700' };
+};
+
+
+  const categoryIcons = {
+  'all': Package,
+  'pokeballs': Circle,
+  'medicine': Heart,
+  'vitamins': Dumbbell,
+  'berries': Apple,
+  'machines': Disc,
+  'held-items': Backpack,
+  'evolution': Sparkles,
+  'battle-items': Sword,
+  'key-items': Key,
+  'misc': Package
+};
+
+const categories = CATEGORIES.map(cat => {
+  const colorMap = {
+    'all': 'bg-gray-100 text-gray-700',
+    'pokeballs': 'bg-red-100 text-red-700',
+    'medicine': 'bg-green-100 text-green-700',
+    'vitamins': 'bg-purple-100 text-purple-700',
+    'berries': 'bg-pink-100 text-pink-700',
+    'machines': 'bg-blue-100 text-blue-700',
+    'held-items': 'bg-orange-100 text-orange-700',
+    'evolution': 'bg-yellow-100 text-yellow-700',
+    'battle-items': 'bg-red-100 text-red-700',
+    'key-items': 'bg-indigo-100 text-indigo-700',
+    'misc': 'bg-gray-100 text-gray-700'
+  };
+  
+  return {
+    ...cat,
+    Icon: categoryIcons[cat.id] || Package,
+    color: colorMap[cat.id] || 'bg-gray-100 text-gray-700'
+  };
+});
 
   const handleItemClick = (item) => {
     const details = getItemDetails(item);
@@ -301,18 +317,21 @@ function DesktopItemsView() {
         </div>
 
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {categories.map(cat => (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-colors ${
-                selectedCategory === cat.id ? cat.color : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <span>{cat.icon}</span>
-              <span>{cat.name}</span>
-            </button>
-          ))}
+          {categories.map(cat => {
+            const Icon = cat.Icon;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-colors ${
+                  selectedCategory === cat.id ? cat.color : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <Icon size={18} />
+                <span>{cat.name}</span>
+              </button>
+            );
+          })}
         </div>
         
         {filteredItems.length === 0 ? (
