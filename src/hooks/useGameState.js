@@ -1115,6 +1115,20 @@ if (itemData?.isTM) {
       return false;
     }
   };
+  
+  const deleteRecipe = (recipeId) => {
+  setRecipes(prevRecipes => {
+    const updatedRecipes = prevRecipes.filter(recipe => recipe.id !== recipeId);
+    
+    // Firebase에 저장
+    if (currentUser?.id) {
+      const recipesRef = ref(database, 'recipes');
+      set(recipesRef, updatedRecipes);
+    }
+    
+    return updatedRecipes;
+  });
+};
 
   const discoverRecipe = async (recipeId) => {
     if (!currentUser) return;
@@ -1286,6 +1300,7 @@ if (itemData?.isTM) {
     recipes,
     discoveredRecipes: discoveredRecipes[currentUser?.id] || [],  
     createRecipe,
+	deleteRecipe,
     cookRecipe,
     discoverRecipe,
     updateIngredientStats,

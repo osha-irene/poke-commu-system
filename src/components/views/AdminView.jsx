@@ -26,6 +26,7 @@ export default function AdminView() {
     allItems = [],
     gamePokedex = [],
     shopData = {},
+	recipes = [],
     maintenanceMode = false,
     // 함수들
     setMembers,
@@ -47,6 +48,7 @@ export default function AdminView() {
     setMaintenanceMode,
     updateRegionLootConfig,
     createRecipe,
+	deleteRecipe,
     updateIngredientStats,
     updateGamePokedex,
   } = gameContext;
@@ -132,6 +134,11 @@ export default function AdminView() {
       alert('✅ 점검 모드가 해제되었습니다.');
     }
   };
+  
+  const handleDeleteRecipe = (recipeId) => {
+  deleteRecipe?.(recipeId);
+	};
+
 
   const handleEscapeModeChange = (mode) => {
     setEscapeMode(mode);
@@ -344,13 +351,16 @@ export default function AdminView() {
         />
       )}
 
-      {/* 요리 시스템 탭 */}
-      {adminTab === 'cooking' && (
-        <CookingAdminPanel 
-          createRecipe={createRecipe}
-          updateIngredientStats={updateIngredientStats}
-        />
-      )}
+		{/* 요리 시스템 탭 */}
+	{adminTab === 'cooking' && (
+	  <CookingAdminPanel 
+		onCreateRecipe={createRecipe}
+		onUpdateIngredientStats={updateIngredientStats}
+		onDeleteRecipe={handleDeleteRecipe}
+		allItems={allItems}
+		recipes={recipes}
+	  />
+	)}
 
       {/* 시스템 설정 탭 */}
       {adminTab === 'settings' && (
