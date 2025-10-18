@@ -51,8 +51,13 @@ function DesktopPokemonView() {
   const dragOverTimeoutRef = React.useRef(null);
   const dropSuccessRef = React.useRef(false);
   
-  // 파트너 포켓몬은 caughtPokemon 배열에서 찾되, 엔트리/박스에서는 제외
-  const partnerPokemon = caughtPokemon.find(p => p && p.isPartner) || null;
+  // 파트너 포켓몬은 currentUser.partnerPokemon에서 가져옴 (별도 저장)
+  const partnerPokemon = currentUser?.partnerPokemon || null;
+  
+  // 디버깅용 로그
+  console.log('=== 파트너 포켓몬 디버깅 ===');
+  console.log('currentUser.partnerPokemon:', currentUser?.partnerPokemon);
+  console.log('파트너 포켓몬:', partnerPokemon);
   
   // 엔트리와 박스는 원래 배열 그대로 사용 (파트너도 포함)
   const partySlots = caughtPokemon.slice(0, 6);
@@ -71,7 +76,8 @@ function DesktopPokemonView() {
   const rareCandyImage = rareCandy?.imageUrl;
 
   const selectedPokemon = selectedPokemonId 
-    ? caughtPokemon.find(p => p && p.uniqueId === selectedPokemonId)
+    ? (caughtPokemon.find(p => p && p.uniqueId === selectedPokemonId) || 
+       (partnerPokemon?.uniqueId === selectedPokemonId ? partnerPokemon : null))
     : null;
 
   const selectedPokemonIndex = selectedPokemon 

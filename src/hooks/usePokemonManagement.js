@@ -224,50 +224,133 @@ const usePokemonManagement = (
   };
 
   // 레벨업
-  const useRareCandy = (uniqueId, onLevelUp) => {
-    if (!currentUser) return;
-    const candyItem = currentUser.inventory.find(item => item.name === '이상한사탕');
-    if (!candyItem || candyItem.count <= 0) { 
-      alert('이상한사탕이 없습니다!'); 
-      return; 
+const useRareCandy = async (uniqueId, onLevelUp) => {
+  if (!currentUser) return;
+  
+  const candyItem = currentUser.inventory.find(item => item.name === '이상한사탕');
+  if (!candyItem || candyItem.count <= 0) { 
+    alert('이상한사탕이 없습니다!'); 
+    return; 
+  }
+  
+  // 파트너 포켓몬 체크
+  let pokemon;
+  if (currentUser.partnerPokemon?.uniqueId === uniqueId) {
+    pokemon = currentUser.partnerPokemon;
+  } else {
+    pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
+  }
+  
+  if (!pokemon) return;
+  
+  // ⭐ 레벨 제한 확인
+  try {
+    const { ref, get } = await import('firebase/database');
+    const { database } = await import('../firebase');
+    
+    const levelRestrictionRef = ref(database, 'gameData/levelRestriction');
+    const snapshot = await get(levelRestrictionRef);
+    
+    if (snapshot.exists()) {
+      const restriction = snapshot.val();
+      
+      if (restriction.enabled) {
+        const { maxLevel } = restriction;
+        
+        // 이미 최대 레벨이면 사용 불가
+        if (pokemon.level >= maxLevel) {
+          alert(`⚠️ 레벨 제한으로 인해 더 이상 레벨업할 수 없습니다!\n현재 최대 레벨: ${maxLevel}`);
+          return;
+        }
+      }
     }
-    
-    const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
-    if (!pokemon) return;
-    
-    const newLevel = pokemon.level + 1;
-    
-    const newCaughtPokemon = currentUser.caughtPokemon.map(p => 
-      p && p.uniqueId === uniqueId ? { ...p, level: newLevel } : p
-    );
+  } catch (error) {
+    console.error('레벨 제한 확인 실패:', error);
+  }
+  
+  const newLevel = pokemon.level + 1;
+  
+  // 파트너 포켓몬 업데이트
+  if (currentUser.partnerPokemon?.uniqueId === uniqueId) {
+    const updatedPartner = { ...pokemon, level: newLevel };
     
     const newInventory = currentUser.isSuperAdmin
       ? currentUser.inventory
       : currentUser.inventory.map(item =>
-          item.name === '이상한사탕' ? { ...item, count: item.count - 1 } : item
+          item.name === '이상한사탕' 
+            ? { ...item, count: item.count - 1 }
+            : item
         ).filter(item => item.count > 0);
     
     updateCurrentUser({ 
-      caughtPokemon: newCaughtPokemon, 
+      partnerPokemon: updatedPartner,
       inventory: newInventory 
     });
     
-    const learnset = pokemonLearnsets[pokemon.number.toString()];
+    alert(`${pokemon.nickname || pokemon.name}의 레벨이 올랐다!\nLv.${pokemon.level} → Lv.${newLevel}`);
     
-    const newMoves = learnset?.levelUpMoves
-      ?.filter(lm => lm.level === newLevel)
-      .map(lm => {
-        const move = allMoves.find(m => m.id === lm.moveId);
-        return move;
-      })
-      .filter(Boolean) || [];
-    
-    if (onLevelUp) {
-      onLevelUp(uniqueId, newLevel, newMoves);
-    } else {
-      alert(`레벨이 ${newLevel}로 올랐습니다!`);
+    if (onLevelUp && pokemonLearnsets && allMoves) {
+      const learnset = pokemonLearnsets[pokemon.number];
+      if (learnset) {
+        const newMoves = learnset
+          .filter(entry => entry.level === newLevel)
+          .map(entry => allMoves.find(move => move.id === entry.moveId))
+          .filter(Boolean);
+        
+        if (newMoves.length > 0) {
+          onLevelUp(uniqueId, newLevel, newMoves);
+        }
+      }
     }
-  };
+    return;
+  }
+  
+  // 일반 포켓몬 업데이트
+  const newCaughtPokemon = currentUser.caughtPokemon.map(p => 
+    p && p.uniqueId === uniqueId ? { ...p, level: newLevel } : p
+  );
+  
+  const newInventory = currentUser.isSuperAdmin
+    ? currentUser.inventory
+    : currentUser.inventory.map(item =>
+        item.name === '이상한사탕' 
+          ? { ...item, count: item.count - 1 }
+          : item
+      ).filter(item => item.count > 0);
+  
+  updateCurrentUser({ 
+    caughtPokemon: newCaughtPokemon, 
+    inventory: newInventory 
+  });
+  
+  alert(`${pokemon.nickname || pokemon.name}의 레벨이 올랐다!\nLv.${pokemon.level} → Lv.${newLevel}`);
+  
+  if (onLevelUp && pokemonLearnsets && allMoves) {
+    const learnset = pokemonLearnsets[pokemon.number.toString()];
+    if (learnset && learnset.levelUpMoves) {
+      const newMoves = learnset.levelUpMoves
+        .filter(entry => entry.level === newLevel)
+        .map(entry => allMoves.find(move => move.id === entry.moveId))
+        .filter(Boolean);
+      
+      if (newMoves.length > 0) {
+        onLevelUp(uniqueId, newLevel, newMoves);
+      }
+    }
+  }
+  
+  // 진화 체크
+  if (checkEvolutionOnLevelUp) {
+    const evolutionResult = checkEvolutionOnLevelUp(
+      newCaughtPokemon.find(p => p && p.uniqueId === uniqueId) || 
+      (currentUser.partnerPokemon?.uniqueId === uniqueId ? currentUser.partnerPokemon : null)
+    );
+    
+    if (evolutionResult) {
+      console.log('레벨업 진화 가능:', evolutionResult);
+    }
+  }
+};
 
   // 닉네임 변경
   const updatePokemonNickname = (uniqueId, nickname) => {

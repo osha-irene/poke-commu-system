@@ -195,7 +195,8 @@ export default function useGameState() {
     sharedPokedexData,
     pokemonLearnsets,
     allMoves,
-    null
+    null,
+    evolutionHook.checkEvolutionOnLevelUp 
   );
 
   const handleRareCandyWithEvolution = (uniqueId, onLevelUp) => {

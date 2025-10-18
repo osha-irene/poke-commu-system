@@ -9,6 +9,7 @@ import MemberDetailPanel from './admin/MemberDetailPanel';
 import CustomItemCreator from './admin/CustomItemCreator';
 import RegionExplorePanel from './admin/RegionExplorePanel';
 import CookingAdminPanel from './admin/CookingAdminPanel';
+import LevelRestrictionPanel from './admin/LevelRestrictionPanel';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
@@ -207,6 +208,8 @@ export default function AdminView() {
         )}
       </Card>
 
+      
+
       {/* 멤버 관리 탭 */}
       {adminTab === 'members' && (
         <Card className="p-6">
@@ -398,6 +401,7 @@ export default function AdminView() {
               </Button>
             </div>
           </Card>
+        <LevelRestrictionPanel />
 
           {/* 도망 시스템 설정 */}
           <Card className="p-6">
