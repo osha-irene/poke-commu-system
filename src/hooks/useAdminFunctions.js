@@ -622,29 +622,83 @@ const updateRegionPokemon = async (regionId, updatedData) => {
   }
 };
 
-// 마을 생성
+// 마을 생성 (수정 완료)
 const createTown = async (townData) => {
   if (!currentUser?.isAdmin) return;
+    
+   
+  // 안전한 배열 체크 추가
+  let updatedRegions = Array.isArray(regions) ? [...regions] : [];
   
-  // 기본 마을이 이미 있는지 확인
+  // 기본 마을 설정 시 기존 기본 마을 해제
   if (townData.isDefaultTown) {
-    // 기존 기본 마을의 기본 설정 해제
-    const updatedRegions = regions.map(r => 
+    updatedRegions = updatedRegions.map(r => 
       r.isDefaultTown ? { ...r, isDefaultTown: false } : r
     );
-    setRegions(updatedRegions);
   }
   
-  console.log('✅ 마을 생성:', townData);
-  alert(`마을 "${townData.groupName}"이(가) 생성되었습니다!`);
+  
+  // 마을 메타데이터 지역 생성
+  const townMetaRegion = {
+    id: `town_meta_${townData.groupId}`,
+    name: `[마을] ${townData.groupName}`,
+    groupId: townData.groupId,
+    groupName: townData.groupName,
+    x: townData.x,
+    y: townData.y,
+    color: townData.color,
+    isDefaultTown: townData.isDefaultTown,
+    groupVisible: true,
+    isTownMeta: true,
+    pokemons: [],
+    encounterRate: 0,
+    minLevel: 1,
+    maxLevel: 1,
+    description: '마을 정보 (탐험 불가)'
+  };
+  
+  // 로컬 state에 추가
+  updatedRegions.push(townMetaRegion);
+  setRegions(updatedRegions);
+  
+  // Firebase 저장
+  try {
+    const configRef = ref(database, 'gameData/config');
+    const snapshot = await get(configRef);
+    const currentConfig = snapshot.val() || {};
+    
+    await set(configRef, {
+      ...currentConfig,
+      regions: updatedRegions
+    });
+    
+    // 마을 정보를 towns 배열에도 저장
+    const townsRef = ref(database, 'gameData/towns');
+    const townsSnapshot = await get(townsRef);
+    const currentTowns = townsSnapshot.exists() ? townsSnapshot.val() : [];
+    
+    const newTowns = [...currentTowns, townData];
+    await set(townsRef, newTowns);
+    
+    console.log('✅ 마을 생성 완료:', townData);
+    alert(`마을 "${townData.groupName}"이(가) 생성되었습니다!\n\n이제 지역 관리에서 구역을 이 마을에 연결할 수 있습니다.`);
+  } catch (error) {
+    console.error('❌ 마을 생성 실패:', error);
+    alert('마을 생성 중 오류가 발생했습니다.');
+  }
 };
 
+
 // 마을 수정
+// useAdminFunctions.js
 const updateTown = async (groupId, townData) => {
   if (!currentUser?.isAdmin) return;
   
+  let updatedRegions = Array.isArray(regions) ? [...regions] : [];
+  
   // 해당 마을에 속한 모든 지역 업데이트
-  const updatedRegions = regions.map(region => {
+  updatedRegions = updatedRegions.map(region => {
+    // 마을 메타데이터 업데이트
     if (region.groupId === groupId) {
       return {
         ...region,
@@ -652,7 +706,8 @@ const updateTown = async (groupId, townData) => {
         x: townData.x,
         y: townData.y,
         color: townData.color,
-        isDefaultTown: townData.isDefaultTown
+        isDefaultTown: townData.isDefaultTown,
+        groupVisible: townData.visible !== undefined ? townData.visible : region.groupVisible
       };
     }
     // 다른 마을의 기본 설정 해제
@@ -676,7 +731,6 @@ const updateTown = async (groupId, townData) => {
     });
     
     console.log('✅ 마을 수정 완료:', groupId);
-    alert(`마을 "${townData.groupName}"이(가) 수정되었습니다!`);
   } catch (error) {
     console.error('❌ 마을 수정 실패:', error);
   }
@@ -719,31 +773,57 @@ const deleteTown = async (groupId) => {
     console.error('❌ 마을 삭제 실패:', error);
   }
 };
-
-  const updateGamePokedex = (selectedPokemonNumbers) => {
-    if (!currentUser?.isAdmin) return;
+const updateGamePokedex = async (selectedPokemonNumbers) => {
+  if (!currentUser?.isAdmin) return;
+  
+  // 선택된 포켓몬으로 새 도감 생성
+  const newPokedex = selectedPokemonNumbers
+    .map(num => allPokemonMaster.find(p => p.number === num))
+    .filter(Boolean)
+    .sort((a, b) => a.number - b.number)
+    .map((p, index) => ({ 
+      ...p, 
+      originalNumber: p.number, 
+      newNumber: index + 1 
+    }));
+  
+  // 로컬 state 업데이트
+  setGamePokedex(newPokedex);
+  
+  // 유효한 포켓몬 번호 Set
+  const validPokemonNumbers = new Set(selectedPokemonNumbers);
+  
+  // 지역에서 도감에 없는 포켓몬 제거
+  const updatedRegions = regions.map(region => ({
+    ...region,
+    pokemons: (region.pokemons || []).filter(pokemonId => {
+      const pokemon = allPokemon.find(p => p.id === pokemonId);
+      if (pokemon) return validPokemonNumbers.has(pokemon.number);
+      return validPokemonNumbers.has(pokemonId);
+    })
+  }));
+  
+  setRegions(updatedRegions);
+  
+  // Firebase에 저장
+  try {
+    const configRef = ref(database, 'gameData/config');
+    const snapshot = await get(configRef);
+    const currentConfig = snapshot.val() || {};
     
-    const newPokedex = selectedPokemonNumbers
-      .map(num => allPokemonMaster.find(p => p.number === num))
-      .filter(Boolean)
-      .sort((a, b) => a.number - b.number)
-      .map((p, index) => ({ ...p, originalNumber: p.number, newNumber: index + 1 }));
+    await set(configRef, {
+      ...currentConfig,
+      pokedex: newPokedex,
+      regions: updatedRegions
+    });
     
-    setGamePokedex(newPokedex);
-    
-    const validPokemonNumbers = new Set(selectedPokemonNumbers);
-    
-    setRegions(prev => prev.map(region => ({
-      ...region,
-      pokemons: region.pokemons.filter(pokemonId => {
-        const pokemon = allPokemon.find(p => p.id === pokemonId);
-        if (pokemon) return validPokemonNumbers.has(pokemon.number);
-        return validPokemonNumbers.has(pokemonId);
-      })
-    })));
-    
-    alert('✅ 게임 도감이 업데이트되었습니다!\n도감에서 제거된 포켓몬만 구역에서 삭제되었습니다.');
-  };
+    console.log('✅ 게임 도감 업데이트 완료');
+    alert('✅ 게임 도감이 업데이트되었습니다!\n도감에서 제거된 포켓몬은 구역에서도 삭제되었습니다.');
+  } catch (error) {
+    console.error('❌ 도감 업데이트 실패:', error);
+    alert('도감 업데이트 중 오류가 발생했습니다.');
+  }
+};
 
   const updateMemberMoney = async (memberId, amount) => {
     if (!currentUser?.isAdmin) return;

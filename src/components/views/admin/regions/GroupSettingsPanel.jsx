@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Trash2, MapPin } from 'lucide-react';
 
-export default function GroupSettingsPanel({ region, towns, onUpdateRegion }) {
+export default function GroupSettingsPanel({ region, towns = [], onUpdateRegion }) {
   const [groupForm, setGroupForm] = useState({
     groupId: region.groupId || '',
     areaName: region.areaName || ''
@@ -15,7 +15,10 @@ export default function GroupSettingsPanel({ region, towns, onUpdateRegion }) {
     });
   }, [region]);
 
-  const selectedTown = towns.find(t => t.groupId === groupForm.groupId);
+  // 안전한 체크 추가
+  const selectedTown = Array.isArray(towns) 
+    ? towns.find(t => t.groupId === groupForm.groupId) 
+    : null;
 
   const handleSave = async () => {
     if (!groupForm.groupId) {
@@ -23,7 +26,11 @@ export default function GroupSettingsPanel({ region, towns, onUpdateRegion }) {
       return;
     }
 
-    const town = towns.find(t => t.groupId === groupForm.groupId);
+    // 안전한 체크 추가
+    const town = Array.isArray(towns) 
+      ? towns.find(t => t.groupId === groupForm.groupId)
+      : null;
+      
     if (!town) {
       alert('선택한 마을을 찾을 수 없습니다!');
       return;
@@ -80,13 +87,13 @@ export default function GroupSettingsPanel({ region, towns, onUpdateRegion }) {
             className="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
           >
             <option value="">마을 선택...</option>
-            {towns.map(town => (
+            {Array.isArray(towns) && towns.map(town => (
               <option key={town.groupId} value={town.groupId}>
                 {town.groupName} {town.isDefaultTown ? '⭐' : ''}
               </option>
             ))}
           </select>
-          {towns.length === 0 && (
+          {(!towns || towns.length === 0) && (
             <p className="text-xs text-red-600 mt-1">
               마을을 먼저 생성해주세요
             </p>
@@ -130,7 +137,7 @@ export default function GroupSettingsPanel({ region, towns, onUpdateRegion }) {
               </p>
               <p className="text-xs text-gray-600 mt-1">
                 좌표: ({selectedTown.x}%, {selectedTown.y}%) | 
-                구역: {selectedTown.areaCount}개 | 
+                구역: {selectedTown.areaCount || 0}개 | 
                 {selectedTown.visible ? '지도 표시 중' : '지도에서 숨김'}
               </p>
             </div>

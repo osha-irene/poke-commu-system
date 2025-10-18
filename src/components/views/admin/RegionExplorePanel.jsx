@@ -1,11 +1,14 @@
 // src/components/views/admin/RegionExplorePanel.jsx
 import React, { useState, useMemo } from 'react';
+import { ref, get, set } from 'firebase/database';
+import { database } from '../../../firebase';
 import { MapPin } from 'lucide-react';
 import TownManagementPanel from './regions/TownManagementPanel';
 import RegionManagementPanel from './regions/RegionManagementPanel';
 
 export default function RegionExplorePanel({ 
   regions = [],
+  setRegions,
   allItems = [],
   onUpdateRegion,
   onUpdateRegionLootConfig,
@@ -29,15 +32,21 @@ export default function RegionExplorePanel({
   };
 
   const groupedRegions = useMemo(() => {
-    return regions.reduce((acc, region) => {
-      const group = region.groupName || '미분류';
-      if (!acc[group]) acc[group] = [];
-      acc[group].push(region);
-      return acc;
-    }, {});
+    if (!regions || !Array.isArray(regions)) return {};
+    
+    return regions
+      .filter(r => !r.isTownMeta)
+      .reduce((acc, region) => {
+        const group = region.groupName || '미분류';
+        if (!acc[group]) acc[group] = [];
+        acc[group].push(region);
+        return acc;
+      }, {});
   }, [regions]);
 
   const towns = useMemo(() => {
+    if (!regions || !Array.isArray(regions)) return [];
+    
     const townMap = new Map();
     regions.forEach(region => {
       if (region.groupId && region.groupName) {
@@ -49,10 +58,13 @@ export default function RegionExplorePanel({
             areaCount: 0,
             x: region.x,
             y: region.y,
-            color: region.color
+            color: region.color,
+            isDefaultTown: region.isDefaultTown || false
           });
         }
-        townMap.get(region.groupId).areaCount++;
+        if (!region.isTownMeta) {
+          townMap.get(region.groupId).areaCount++;
+        }
       }
     });
     return Array.from(townMap.values());
@@ -60,14 +72,33 @@ export default function RegionExplorePanel({
 
   const handleToggleTownVisibility = async (groupId) => {
     const town = towns.find(t => t.groupId === groupId);
-    const newVisibility = !town.visible;
-
-    const townRegions = regions.filter(r => r.groupId === groupId);
-    for (const region of townRegions) {
-      await onUpdateRegion(region.id, {
-        ...region,
-        groupVisible: newVisibility
+    if (!town) return;
+    
+    const updatedRegions = regions.map(region => {
+      if (region.groupId === groupId) {
+        return {
+          ...region,
+          groupVisible: !town.visible
+        };
+      }
+      return region;
+    });
+    
+    setRegions(updatedRegions);
+    
+    try {
+      const configRef = ref(database, 'gameData/config');
+      const snapshot = await get(configRef);
+      const currentConfig = snapshot.val() || {};
+      
+      await set(configRef, {
+        ...currentConfig,
+        regions: updatedRegions
       });
+      
+      console.log('✅ 마을 표시 토글:', groupId, !town.visible);
+    } catch (error) {
+      console.error('❌ 마을 표시 토글 실패:', error);
     }
   };
 
@@ -113,7 +144,11 @@ export default function RegionExplorePanel({
       {viewMode === 'towns' ? (
         <TownManagementPanel 
           towns={towns}
+          regions={regions}
           onToggleVisibility={handleToggleTownVisibility}
+          onCreateTown={onCreateTown}      
+          onUpdateTown={onUpdateTown}   
+          onDeleteTown={onDeleteTown}  
         />
       ) : (
         <RegionManagementPanel
@@ -128,9 +163,6 @@ export default function RegionExplorePanel({
           onAddRegion={onAddRegion}
           onDeleteRegion={onDeleteRegion}
           setEditMode={setEditMode}
-          nCreateTown={onCreateTown}      
-            onUpdateTown={onUpdateTown}   
-            onDeleteTown={onDeleteTown}  
         />
       )}
     </div>
