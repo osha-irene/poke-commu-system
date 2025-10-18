@@ -517,24 +517,25 @@ export const useAdminFunctions = (
       console.error('❌ 포켓몬 편집 실패:', error);
     }
   };
-
-  const updateRegionPokemon = (regionId, pokemonIds, pokemonRates, encounterRate, minLevel, maxLevel) => {
-    if (!currentUser?.isAdmin) return;
-    
-    setRegions(prev => prev.map(region => 
-      region.id === regionId 
-        ? { 
-            ...region, 
-            pokemons: pokemonIds, 
-            pokemonRates: pokemonRates,
-            encounterRate: encounterRate !== undefined ? encounterRate : (region.encounterRate || 80),
-            minLevel: minLevel || 5,
-            maxLevel: maxLevel || 20
-          } 
-        : region
-    ));
+const updateRegionPokemon = (regionId, updatedData) => {
+  if (!currentUser?.isAdmin) return;
+  
+  // ✅ 객체 형태로 업데이트 데이터 받기
+  const updateObj = {
+    pokemons: Array.isArray(updatedData.pokemons) ? updatedData.pokemons : [],
+    pokemonRates: updatedData.pokemonRates || {},
+    encounterRate: updatedData.encounterRate !== undefined ? updatedData.encounterRate : 0.5,
+    minLevel: updatedData.minLevel || 5,
+    maxLevel: updatedData.maxLevel || 20,
+    shinyRate: updatedData.shinyRate || 4096
   };
-
+  
+  setRegions(prev => prev.map(region => 
+    region.id === regionId 
+      ? { ...region, ...updateObj } 
+      : region
+  ));
+};
   const updateGamePokedex = (selectedPokemonNumbers) => {
     if (!currentUser?.isAdmin) return;
     

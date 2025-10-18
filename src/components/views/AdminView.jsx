@@ -7,7 +7,7 @@ import PokedexAdminPanel from './admin/PokedexAdminPanel';
 import ShopAdminPanel from './admin/ShopAdminPanel';
 import MemberDetailPanel from './admin/MemberDetailPanel';
 import CustomItemCreator from './admin/CustomItemCreator';
-import LootConfigPanel from './admin/LootConfigPanel';
+import RegionExplorePanel from './admin/RegionExplorePanel';
 import CookingAdminPanel from './admin/CookingAdminPanel';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
@@ -184,9 +184,6 @@ export default function AdminView() {
         <TabButton active={adminTab === 'regions'} onClick={() => setAdminTab('regions')}>
           🗺️ 지역 설정
         </TabButton>
-        <TabButton active={adminTab === 'loot'} onClick={() => setAdminTab('loot')}>
-          🎁 탐험 보상
-        </TabButton>
         <TabButton active={adminTab === 'pokedex'} onClick={() => setAdminTab('pokedex')}>
           📖 도감 관리
         </TabButton>
@@ -299,39 +296,13 @@ export default function AdminView() {
 
       {/* 지역 설정 탭 */}
       {adminTab === 'regions' && (
-        <Card className="p-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">🗺️ 구역별 포켓몬 설정</h3>
-          <div className="space-y-3">
-            {regions.map((region) => (
-              <div key={region.id} className="flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-indigo-300 transition-colors">
-                <div>
-                  <span className="font-semibold text-lg">{region.name}</span>
-                  <div className="text-sm text-gray-600 mt-1">
-                    등장 포켓몬: {region.pokemons?.length || 0}종 | 
-                    조우율: {(region.encounterRate || 0.5) * 100}% | 
-                    레벨: {region.minLevel || 5} ~ {region.maxLevel || 20}
-                  </div>
-                </div>
-                <Button 
-                  variant="secondary"
-                  onClick={() => setEditingRegion(region)}
-                >
-                  편집
-                </Button>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* 탐험 보상 탭 */}
-      {adminTab === 'loot' && (
-        <LootConfigPanel 
-          regions={regions}
-          allItems={allItems}
-          updateRegionLootConfig={updateRegionLootConfig}
-        />
-      )}
+      <RegionExplorePanel
+        regions={regions}
+        allItems={allItems}
+        allPokemonMaster={allPokemonMaster}
+        onUpdateRegion={updateRegionPokemon} 
+      />
+    )}
 
       {/* 도감 관리 탭 */}
       {adminTab === 'pokedex' && (
