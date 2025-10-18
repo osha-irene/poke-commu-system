@@ -22,6 +22,7 @@ export default function AdminView() {
     currentUser: trainer,
     members = {},  // ⭐ 기본값 추가
     regions = [],
+    setRegions,
     allPokemon = [],
     allPokemonMaster = [],
     allItems = [],
@@ -315,6 +316,7 @@ export default function AdminView() {
     onCreateTown={createTown} 
     onUpdateTown={updateTown}  
     onDeleteTown={deleteTown}
+    setRegions={setRegions}
     />
   </>
 )}

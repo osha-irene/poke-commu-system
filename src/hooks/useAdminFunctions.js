@@ -776,10 +776,11 @@ const deleteTown = async (groupId) => {
 const updateGamePokedex = async (selectedPokemonNumbers) => {
   if (!currentUser?.isAdmin) return;
   
-  // 선택된 포켓몬으로 새 도감 생성
+  // 선택된 포켓몬으로 새 도감 생성 (마을 메타데이터 제외)
   const newPokedex = selectedPokemonNumbers
     .map(num => allPokemonMaster.find(p => p.number === num))
     .filter(Boolean)
+    .filter(p => !p.isTownMeta && !p.groupId && p.name && p.number) // 포켓몬만 필터링
     .sort((a, b) => a.number - b.number)
     .map((p, index) => ({ 
       ...p, 

@@ -249,15 +249,17 @@ export default function useGameState() {
 
   const { useRareCandy: _, ...restPokemonManagement } = pokemonManagement;
 
-  const adminFunctions = useAdminFunctions(
+   const adminFunctions = useAdminFunctions(
     currentUser,
     members,
     setMembers,
     updateCurrentUser,
+    regions,
     setRegions,
     setGamePokedex,
     allPokemonData.pokemon,
-    pokemonData.pokemon
+    pokemonData.pokemon,
+    allItems
   );
 
   const {
@@ -1420,6 +1422,7 @@ if (itemData?.isTM) {
     encounterPokemon,
     firstCatchPokemon,
     regions,
+    setRegions,
     allPokemon,
     allPokemonMaster,
     allItems,
