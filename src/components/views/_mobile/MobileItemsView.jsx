@@ -1,8 +1,8 @@
 // src/components/views/_mobile/MobileItemsView.jsx
 import React, { useState } from 'react';
-import { Package, Circle, Heart, Dumbbell, Apple, Disc, Backpack, Sparkles, Sword, Key, Search, X,Trash2, ShoppingCart,ChevronRight } from 'lucide-react';
+import { ChevronRight, X, Sparkles, ShoppingCart, Trash2, Search } from 'lucide-react';
 import { useGame } from '../../../contexts/GameContext';
-import { getItemPocket, canUseItem, ITEM_POCKETS, CATEGORIES } from '../../../utils/itemUtils';
+import { getItemPocket, canUseItem, CATEGORIES, getItemIcon, getItemColor, filterItemsByPocket, POCKET_LABELS } from '../../../utils/itemUtils';
 
 export default function MobileItemsView() {
   const {
@@ -52,11 +52,7 @@ export default function MobileItemsView() {
       );
     }
 
-    const pocket = item.pocket || 
-                   itemData?.categoryData?.pocket || 
-                   itemData?.pocket || 
-                   'misc';
-    
+    const pocket = getItemPocket(itemData || item);
     const category = item.category || itemData?.category || '';
 
     const description = itemData?.effect || 
@@ -65,25 +61,7 @@ export default function MobileItemsView() {
                        item.description || 
                        '유용한 아이템';
 
-    const canUse = item.canUse !== undefined ? item.canUse : (
-      pocket === 'berries' || 
-      pocket === 'medicine' || 
-      pocket === 'vitamins' ||
-      category === 'vitamins' ||
-      category === 'medicine' ||
-      category?.includes('evolution') ||
-      category?.includes('berry') ||
-      itemData?.name?.includes('진화의돌') ||
-      item.specialEffect ||
-      item.friendshipBoost ||
-      item.ivBoost ||
-      item.evBoost ||
-      item.conditionBoost ||
-      itemData?.friendshipBoost ||
-      itemData?.ivBoost ||
-      itemData?.evBoost ||
-      itemData?.conditionBoost
-    );
+    const canUse = canUseItem(itemData || item);
 
     return {
       name: item.name,
@@ -102,35 +80,6 @@ export default function MobileItemsView() {
       conditionBoost: item.conditionBoost || itemData?.conditionBoost,
       itemData: itemData
     };
-  };
-  
-  const categories = CATEGORIES.map(cat => {
-    const colorMap = {
-      'all': 'bg-gray-100 text-gray-700',
-      'pokeballs': 'bg-red-100 text-red-700',
-      'medicine': 'bg-green-100 text-green-700',
-      'vitamins': 'bg-purple-100 text-purple-700',
-      'berries': 'bg-pink-100 text-pink-700',
-      'machines': 'bg-blue-100 text-blue-700',
-      'held-items': 'bg-orange-100 text-orange-700',
-      'evolution': 'bg-yellow-100 text-yellow-700',
-      'battle-items': 'bg-red-100 text-red-700',
-      'key-items': 'bg-indigo-100 text-indigo-700',
-      'misc': 'bg-gray-100 text-gray-700'
-    };})
-    
-
-  const getPocketBadge = (pocket) => {
-    const badges = {
-      'pokeballs': { text: '포획', color: 'bg-red-100 text-red-700' },
-      'medicine': { text: '회복', color: 'bg-green-100 text-green-700' },
-      'vitamins': { text: '영양', color: 'bg-purple-100 text-purple-700' },
-      'berries': { text: '나무열매', color: 'bg-pink-100 text-pink-700' },
-      'machines': { text: '기술머신', color: 'bg-blue-100 text-blue-700' },
-      'held-items': { text: '도구', color: 'bg-orange-100 text-orange-700' },
-      'evolution': { text: '진화', color: 'bg-yellow-100 text-yellow-700' }
-    };
-    return badges[pocket] || { text: '기타', color: 'bg-gray-100 text-gray-700' };
   };
 
   const handleItemClick = (item) => {
@@ -265,24 +214,24 @@ export default function MobileItemsView() {
       </div>
 
       {/* 카테고리 드롭다운 */}
-		<div className="px-4 mb-4">
-		  <select
-			value={selectedCategory}
-			onChange={(e) => setSelectedCategory(e.target.value)}
-			className="w-full px-4 py-3 text-base font-bold border-2 border-gray-300 rounded-lg bg-white focus:border-indigo-500 focus:outline-none appearance-none bg-no-repeat bg-right pr-10"
-			style={{
-			  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-			  backgroundSize: '1.5rem',
-			  backgroundPosition: 'right 0.75rem center'
-			}}
-		  >
-			{categories.map(cat => (
-			  <option key={cat.id} value={cat.id}>
-				{cat.icon} {cat.name}
-			  </option>
-			))}
-		  </select>
-		</div>
+      <div className="px-4 mb-4">
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          className="w-full px-4 py-3 text-base font-bold border-2 border-gray-300 rounded-lg bg-white focus:border-indigo-500 focus:outline-none appearance-none bg-no-repeat bg-right pr-10"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+            backgroundSize: '1.5rem',
+            backgroundPosition: 'right 0.75rem center'
+          }}
+        >
+          {CATEGORIES.map(cat => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {/* 아이템 리스트 */}
       <div className="px-4">
@@ -295,7 +244,9 @@ export default function MobileItemsView() {
           <div className="space-y-3">
             {filteredItems.map((item, i) => {
               const details = getItemDetails(item);
-              const badge = getPocketBadge(details.pocket);
+              const ItemIcon = getItemIcon(details.itemData || item);
+              const itemColor = getItemColor(details.itemData || item);
+              const pocketName = POCKET_LABELS[details.pocket] || '기타';
               
               return (
                 <button
@@ -305,21 +256,31 @@ export default function MobileItemsView() {
                 >
                   <div className="flex items-center gap-4">
                     {/* 아이템 이미지 */}
-                    <div className="w-16 h-16 flex-shrink-0 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center p-2">
-                      <img 
-                        src={details.imageUrl}
-                        alt={details.name}
-                        className="max-w-full max-h-full object-contain"
-                        style={{ imageRendering: 'pixelated' }}
-                      />
+                    <div className="w-16 h-16 flex-shrink-0 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center p-2 relative">
+                      {details.imageUrl ? (
+                        <img 
+                          src={details.imageUrl}
+                          alt={details.name}
+                          className="max-w-full max-h-full object-contain"
+                          style={{ imageRendering: 'pixelated' }}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div style={{ display: details.imageUrl ? 'none' : 'flex' }} className="w-full h-full items-center justify-center absolute inset-0">
+                        <ItemIcon size={32} className="text-gray-300" />
+                      </div>
                     </div>
                     
                     {/* 아이템 정보 */}
                     <div className="flex-1 min-w-0 text-left">
                       <div className="flex items-center gap-2 mb-1">
                         <div className="font-bold text-gray-800 truncate">{details.name}</div>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0 ${badge.color}`}>
-                          {badge.text}
+                        <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0 ${itemColor}`}>
+                          <ItemIcon size={12} />
+                          {pocketName}
                         </span>
                       </div>
                       
@@ -361,6 +322,7 @@ export default function MobileItemsView() {
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex flex-col">
           {(() => {
             const details = getItemDetails(selectedItem);
+            const ItemIcon = getItemIcon(details.itemData || selectedItem);
             const isDetail = actionMode === 'detail';
             const isUse = actionMode === 'use';
             const isSell = actionMode === 'sell';
@@ -395,13 +357,22 @@ export default function MobileItemsView() {
                     <>
                       {/* 아이템 정보 */}
                       <div className="flex items-start gap-4 mb-6">
-                        <div className="w-24 h-24 bg-gray-50 rounded-lg border-2 border-gray-200 flex items-center justify-center p-3">
-                          <img 
-                            src={details.imageUrl}
-                            alt={details.name}
-                            className="max-w-full max-h-full object-contain"
-                            style={{ imageRendering: 'pixelated' }}
-                          />
+                        <div className="w-24 h-24 bg-gray-50 rounded-lg border-2 border-gray-200 flex items-center justify-center p-3 relative">
+                          {details.imageUrl ? (
+                            <img 
+                              src={details.imageUrl}
+                              alt={details.name}
+                              className="max-w-full max-h-full object-contain"
+                              style={{ imageRendering: 'pixelated' }}
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div style={{ display: details.imageUrl ? 'none' : 'flex' }} className="w-full h-full items-center justify-center absolute inset-0">
+                            <ItemIcon size={48} className="text-gray-300" />
+                          </div>
                         </div>
                         <div className="flex-1">
                           <h4 className="text-xl font-bold text-gray-800 mb-2">{details.name}</h4>

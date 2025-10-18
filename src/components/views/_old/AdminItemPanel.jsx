@@ -24,9 +24,27 @@ export default function AdminItemPanel({
     { id: 'berry', name: '나무열매' },
   ];
 
-  const filteredItems = allItems.filter(item => {
-    if (categoryFilter === 'all') return true;
-    return item.category?.includes(categoryFilter);
+  const filteredItems = (allItems || [])
+  .filter(item => item && item.id)  // ✅ undefined 항목 제거
+  .filter(item => {
+    // 카테고리 필터 (pocket 기준)
+    if (categoryFilter !== 'all') {
+      const pocket = item.categoryData?.pocket || item.pocket || 'misc';
+      if (pocket !== categoryFilter) {
+        return false;
+      }
+    }
+    
+    // 검색 필터
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const itemName = item.name?.toLowerCase() || '';
+      const itemNameEn = item.nameEn?.toLowerCase() || '';
+      
+      return itemName.includes(query) || itemNameEn.includes(query);
+    }
+    
+    return true;
   });
 
   const handleAddToSelf = () => {
@@ -125,7 +143,9 @@ export default function AdminItemPanel({
 
               {/* 아이템 선택 */}
               <div className="grid grid-cols-6 gap-2 mb-4 max-h-60 overflow-y-auto p-2">
-                {filteredItems.map(item => (
+                {filteredItems
+                .filter(item => item && item.id) 
+                .map(item => (
                   <button
                     key={item.id}
                     onClick={() => setSelectedItem(item)}

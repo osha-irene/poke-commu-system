@@ -1,8 +1,7 @@
 // src/components/views/admin/member/MemberItemTab.jsx
 import React, { useState } from 'react';
 import { getButtonClass } from '../../../../styles/theme';
-import { getItemPocket, canUseItem, ITEM_POCKETS, CATEGORIES } from '../../../../utils/itemUtils';
-import { Package, Circle, Heart, Dumbbell, Apple, Disc, Backpack, Sparkles, Sword, Key, Search, X,Trash2, ShoppingCart } from 'lucide-react';
+import { getItemPocket, CATEGORIES, getItemIcon, getItemColor, filterItemsByPocket } from '../../../../utils/itemUtils';
 
 function MemberItemTab({ member, allItems, onGiveItem }) {
   const [itemMode, setItemMode] = useState('view');
@@ -11,43 +10,25 @@ function MemberItemTab({ member, allItems, onGiveItem }) {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   
-  // ItemsView와 동일한 pocket 기준 카테고리
+  // ✅ allItems 안전 처리
+  const safeAllItems = Array.isArray(allItems) ? allItems : [];
   
-  const categories = CATEGORIES.map(cat => {
-    const colorMap = {
-      'all': 'bg-gray-100 text-gray-700',
-      'pokeballs': 'bg-red-100 text-red-700',
-      'medicine': 'bg-green-100 text-green-700',
-      'vitamins': 'bg-purple-100 text-purple-700',
-      'berries': 'bg-pink-100 text-pink-700',
-      'machines': 'bg-blue-100 text-blue-700',
-      'held-items': 'bg-orange-100 text-orange-700',
-      'evolution': 'bg-yellow-100 text-yellow-700',
-      'battle-items': 'bg-red-100 text-red-700',
-      'key-items': 'bg-indigo-100 text-indigo-700',
-      'misc': 'bg-gray-100 text-gray-700'
-    };})
-  
-  const filteredItems = allItems.filter(item => {
-    // 카테고리 필터 (pocket 기준)
-    if (categoryFilter !== 'all') {
-      const pocket = item.categoryData?.pocket || item.pocket || 'misc';
-      if (pocket !== categoryFilter) {
-        return false;
-      }
-    }
+  // ✅ filteredItems - itemUtils의 filterItemsByPocket 사용
+  const filteredItems = (() => {
+    let items = filterItemsByPocket(safeAllItems, categoryFilter);
     
-    // 검색 필터
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      const itemName = item.name?.toLowerCase() || '';
-      const itemNameEn = item.nameEn?.toLowerCase() || '';
-      
-      return itemName.includes(query) || itemNameEn.includes(query);
+      items = items.filter(item => {
+        if (!item || !item.id) return false;
+        const itemName = item.name?.toLowerCase() || '';
+        const itemNameEn = item.nameEn?.toLowerCase() || '';
+        return itemName.includes(query) || itemNameEn.includes(query);
+      });
     }
     
-    return true;
-  });
+    return items.filter(item => item && item.id);
+  })();
 
   const handleGiveItem = () => {
     if (!selectedItem || itemCount < 1) {
@@ -58,22 +39,6 @@ function MemberItemTab({ member, allItems, onGiveItem }) {
     setSelectedItem(null);
     setItemCount(1);
   };
-
-  // pocket별 배지 색상
-  const getPocketBadge = (pocket) => {
-  const badges = {
-    'pokeballs': { text: '포획', color: 'bg-red-100 text-red-700' },
-    'medicine': { text: '회복', color: 'bg-green-100 text-green-700' },
-    'vitamins': { text: '영양', color: 'bg-purple-100 text-purple-700' },
-    'berries': { text: '나무열매', color: 'bg-pink-100 text-pink-700' },
-    'machines': { text: '기술머신', color: 'bg-blue-100 text-blue-700' },
-    'held-items': { text: '도구', color: 'bg-orange-100 text-orange-700' },
-    'evolution': { text: '진화', color: 'bg-yellow-100 text-yellow-700' },
-    'battle-items': { text: '배틀', color: 'bg-red-100 text-red-700' },
-    'key-items': { text: '중요', color: 'bg-indigo-100 text-indigo-700' }
-  };
-  return badges[pocket] || { text: '기타', color: 'bg-gray-100 text-gray-700' };
-};
 
   return (
     <div className="space-y-4">
@@ -105,20 +70,37 @@ function MemberItemTab({ member, allItems, onGiveItem }) {
             <div className="text-center py-12 text-gray-400">보유한 아이템이 없습니다</div>
           ) : (
             <div className="space-y-2">
-              {member.inventory.map((item, idx) => (
-                <div key={idx} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <img 
-                      src={item.imageUrl} 
-                      alt={item.name} 
-                      className="w-10 h-10" 
-                      style={{ imageRendering: 'pixelated' }} 
-                    />
-                    <span className="font-semibold text-gray-800">{item.name}</span>
-                  </div>
-                  <span className="font-bold text-lg text-gray-700">{item.count}개</span>
-                </div>
-              ))}
+              {member.inventory
+                .filter(item => item && item.name)
+                .map((item, idx) => {
+                  const ItemIcon = getItemIcon(item);
+                  
+                  return (
+                    <div key={item.itemId || idx} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 flex items-center justify-center relative">
+                          {item.imageUrl || item.spriteUrl ? (
+                            <img 
+                              src={item.imageUrl || item.spriteUrl} 
+                              alt={item.name || 'Item'} 
+                              className="w-10 h-10" 
+                              style={{ imageRendering: 'pixelated' }}
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div style={{ display: (item.imageUrl || item.spriteUrl) ? 'none' : 'flex' }} className="w-full h-full items-center justify-center absolute inset-0">
+                            <ItemIcon size={24} className="text-gray-400" />
+                          </div>
+                        </div>
+                        <span className="font-semibold text-gray-800">{item.name}</span>
+                      </div>
+                      <span className="font-bold text-lg text-gray-700">{item.count || 0}개</span>
+                    </div>
+                  );
+                })}
             </div>
           )}
         </>
@@ -138,26 +120,32 @@ function MemberItemTab({ member, allItems, onGiveItem }) {
 
           {/* 카테고리 필터 */}
           <div className="flex gap-2 flex-wrap">
-            {categories.map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => setCategoryFilter(cat.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${
-                  categoryFilter === cat.id
-                    ? cat.color
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                <span>{cat.icon}</span>
-                <span>{cat.name}</span>
-              </button>
-            ))}
+            {CATEGORIES.map(cat => {
+              const Icon = cat.Icon;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setCategoryFilter(cat.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${
+                    categoryFilter === cat.id
+                      ? cat.color
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <Icon size={16} />
+                  <span>{cat.name}</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* 아이템 그리드 */}
           <div className="grid grid-cols-5 gap-2 max-h-96 overflow-y-auto">
             {filteredItems.map(item => {
-              const badge = getPocketBadge(item);
+              if (!item || !item.id) return null;
+              
+              const ItemIcon = getItemIcon(item);
+              const itemColor = getItemColor(item);
               
               return (
                 <button
@@ -168,21 +156,33 @@ function MemberItemTab({ member, allItems, onGiveItem }) {
                       ? 'border-indigo-500 bg-indigo-50'
                       : 'border-gray-200 hover:border-indigo-300'
                   }`}
-                  title={item.name}
+                  title={item.name || 'Unknown'}
                 >
                   <div className="relative">
-                    <img 
-                      src={item.spriteUrl} 
-                      alt={item.name}
-                      className="w-full h-12 object-contain"
-                      style={{ imageRendering: 'pixelated' }}
-                    />
-                    {/* 카테고리 뱃지 */}
-                    <span className={`absolute top-0 right-0 text-[10px] px-1 py-0.5 rounded font-bold ${badge.color}`}>
-                      {badge.text.split(' ')[0]}
-                    </span>
+                    <div className="w-full h-12 flex items-center justify-center relative">
+                      {item.spriteUrl || item.imageUrl ? (
+                        <img 
+                          src={item.spriteUrl || item.imageUrl} 
+                          alt={item.name || 'Item'}
+                          className="max-w-full max-h-full object-contain"
+                          style={{ imageRendering: 'pixelated' }}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div style={{ display: (item.spriteUrl || item.imageUrl) ? 'none' : 'flex' }} className="w-full h-full items-center justify-center absolute inset-0">
+                        <ItemIcon size={32} className="text-gray-300" />
+                      </div>
+                    </div>
+                    
+                    {/* 카테고리 아이콘 뱃지 */}
+                    <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ${itemColor}`}>
+                      <ItemIcon size={12} />
+                    </div>
                   </div>
-                  <div className="text-xs text-center truncate mt-1 text-gray-700">{item.name}</div>
+                  <div className="text-xs text-center truncate mt-1 text-gray-700">{item.name || 'Unknown'}</div>
                 </button>
               );
             })}
@@ -198,17 +198,41 @@ function MemberItemTab({ member, allItems, onGiveItem }) {
           {selectedItem && (
             <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-4 border-2 border-indigo-200">
               <div className="flex items-center gap-4 mb-3">
-                <img 
-                  src={selectedItem.spriteUrl} 
-                  alt={selectedItem.name}
-                  className="w-20 h-20"
-                  style={{ imageRendering: 'pixelated' }}
-                />
+                <div className="w-20 h-20 flex items-center justify-center relative bg-white rounded-lg">
+                  {selectedItem.spriteUrl || selectedItem.imageUrl ? (
+                    <img 
+                      src={selectedItem.spriteUrl || selectedItem.imageUrl} 
+                      alt={selectedItem.name || 'Item'}
+                      className="max-w-full max-h-full"
+                      style={{ imageRendering: 'pixelated' }}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div style={{ display: (selectedItem.spriteUrl || selectedItem.imageUrl) ? 'none' : 'flex' }} className="w-full h-full items-center justify-center absolute inset-0">
+                    {(() => {
+                      const SelectedIcon = getItemIcon(selectedItem);
+                      return <SelectedIcon size={48} className="text-gray-300" />;
+                    })()}
+                  </div>
+                </div>
+                
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="font-bold text-lg text-gray-800">{selectedItem.name}</h4>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getPocketBadge(selectedItem).color}`}>
-                      {getPocketBadge(selectedItem).text}
+                    <span className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full font-semibold ${getItemColor(selectedItem)}`}>
+                      {(() => {
+                        const SelectedIcon = getItemIcon(selectedItem);
+                        const category = CATEGORIES.find(c => c.id === getItemPocket(selectedItem));
+                        return (
+                          <>
+                            <SelectedIcon size={12} />
+                            <span>{category?.name || '기타'}</span>
+                          </>
+                        );
+                      })()}
                     </span>
                   </div>
                   <p className="text-sm text-gray-600 mt-1">{selectedItem.effect?.replace(/\n/g, ' ')}</p>
