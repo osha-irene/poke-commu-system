@@ -90,8 +90,9 @@ export default function EncounterModal({
     });
 
   // 포켓몬 스프라이트 URL
-  const pokemonSpriteUrl = pokemon.spriteUrl || 
-    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`;
+const pokemonSpriteUrl = pokemon.isShiny 
+  ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${pokemon.number}.png`
+  : (pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`);
 
   // 도망 로직
   const checkIfPokemonEscapes = () => {
@@ -296,33 +297,115 @@ export default function EncounterModal({
       >
         {!result && !catching && (
           <div className="bg-white rounded-lg overflow-hidden border-4 border-gray-800">
-            {/* 상단 배틀 필드 */}
-            <div className="relative bg-gradient-to-b from-blue-200 to-green-200 p-6 border-b-4 border-gray-800">
-              <div className="flex justify-end mb-6">
-                <div className="text-center">
-                  <div className="bg-white rounded-lg px-4 py-1 mb-3 border-2 border-gray-800 inline-block">
-                    <div className="font-bold text-base">야생의 {pokemon.name}</div>
-                    <div className="text-xs text-gray-600">Lv.???</div>
+                          {/* 상단 배틀 필드 */}
+              <div className="relative bg-gradient-to-b from-blue-200 to-green-200 p-6 border-b-4 border-gray-800">
+                <div className="flex justify-end mb-6">
+                  <div className="text-center relative">
+                    <div className="bg-white rounded-lg px-4 py-1 mb-3 border-2 border-gray-800 inline-block">
+                      <div className="font-bold text-base">야생의 {pokemon.name}</div>
+                      <div className="text-xs text-gray-600">Lv.???</div>
+                    </div>
+                    
+                    {/* ✅ 이로치 반짝임 효과 */}
+                    {pokemon.isShiny && (
+                      <>
+                        <div className="sparkle sparkle-1"></div>
+                        <div className="sparkle sparkle-2"></div>
+                        <div className="sparkle sparkle-3"></div>
+                        <div className="sparkle sparkle-4"></div>
+                      </>
+                    )}
+                    
+                    {/* 포켓몬 스프라이트 */}
+                    <div 
+                      className="w-40 h-40 mx-auto"
+                      style={{
+                        backgroundImage: `url(${pokemonSpriteUrl})`,
+                        backgroundSize: 'contain',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'center',
+                        imageRendering: 'pixelated'
+                      }}
+                    />
                   </div>
-                  
-                  {/* 포켓몬 스프라이트 */}
-                  <div 
-                    className="w-40 h-40 mx-auto"
-                    style={{
-                      backgroundImage: `url(${pokemonSpriteUrl})`,
-                      backgroundSize: 'contain',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'center',
-                      imageRendering: 'pixelated'
-                    }}
-                  />
+                </div>
+
+                <div className="flex justify-end">
+                  <div className="w-24 h-4 bg-black opacity-20 rounded-full blur-sm"></div>
                 </div>
               </div>
 
-              <div className="flex justify-end">
-                <div className="w-24 h-4 bg-black opacity-20 rounded-full blur-sm"></div>
-              </div>
-            </div>
+              {/* ✅ 스타일 추가 */}
+              <style>{`
+                @keyframes shake {
+                  0%, 100% { transform: rotate(0deg); }
+                  25% { transform: rotate(-15deg); }
+                  75% { transform: rotate(15deg); }
+                }
+                
+                @keyframes sparkle {
+                  0%, 100% { 
+                    opacity: 0;
+                    transform: scale(0) rotate(0deg);
+                  }
+                  50% { 
+                    opacity: 1;
+                    transform: scale(1) rotate(180deg);
+                  }
+                }
+                
+                .sparkle {
+                  position: absolute;
+                  width: 0;
+                  height: 0;
+                  pointer-events: none;
+                  animation: sparkle 2s ease-in-out infinite;
+                }
+
+                .sparkle::before {
+                  content: '★';
+                  position: absolute;
+                  font-size: 24px;
+                  color: #ffffffff;
+                  text-shadow: 0 0 10px #ffff00, 0 0 20px #ffd700;
+                }
+                
+                  .sparkle-1 {
+                    top: 45%;
+                    left: 5%;
+                    animation-delay: 0s;
+                  }
+                  
+                  .sparkle-2 {
+                    top: 55%;
+                    right: 10%;
+                    animation-delay: 0.4s;
+                  }
+                  
+                  .sparkle-3 {
+                    bottom: 10%;
+                    left: 15%;
+                    animation-delay: 0.8s;
+                  }
+                  
+                  .sparkle-4 {
+                    bottom: 5%;
+                    right: 5%;
+                    animation-delay: 1.2s;
+                  }
+                  
+                  .sparkle-5 {
+                    top: 65%;
+                    left: -5%;
+                    animation-delay: 0.6s;
+                  }
+                  
+                  .sparkle-6 {
+                    top: 70%;
+                    right: 0%;
+                    animation-delay: 1s;
+                  }
+                `}</style>
 
             {/* 하단 UI */}
             <div className="bg-gray-100 p-4">

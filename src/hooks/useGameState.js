@@ -330,16 +330,35 @@ export default function useGameState() {
       alert('⛔ 이 구역에 접근할 수 없습니다!');
       return;
     }
+
     
-    if (currentUser.dailyWalks > 0) {
-      const encounterRate = region.encounterRate !== undefined ? region.encounterRate : 0.5;
+    
+          if (currentUser.dailyWalks > 0) {
+      // ✅ encounterRate가 1 미만이면 이미 확률값 (0~1), 아니면 퍼센트 값 (0~100)
+      let encounterRatePercent = region.encounterRate !== undefined ? region.encounterRate : 80;
+      
+      // ✅ 1보다 작으면 이미 소수점 확률이므로 100 곱하기
+      if (encounterRatePercent < 1) {
+        encounterRatePercent = encounterRatePercent * 100;  // 0.9 → 90
+      }
+      
+      const encounterRate = encounterRatePercent / 100;  // 90 → 0.9
+      
+      console.log('🎲 조우 확률:', {
+        원본값: region.encounterRate,
+        설정값: encounterRatePercent + '%',
+        실제확률: encounterRate,
+        랜덤값: Math.random()
+      });
+      
       const randomEncounter = Math.random();
       
       updateCurrentUser({ dailyWalks: currentUser.dailyWalks - 1 });
 
-      const loot = generateLoot(region.lootConfig || getDefaultLootConfig(), allItems);
-      
+
+      // ✅ 포켓몬 미조우 시
       if (randomEncounter >= encounterRate) {
+        const loot = generateLoot(region.lootConfig || getDefaultLootConfig(), allItems);
         const itemList = [
           ...loot.items.map(item => `${item.name} x${item.count}`),
           ...loot.ingredients.map(item => `${item.name} x${item.count}`),
@@ -351,16 +370,22 @@ export default function useGameState() {
         return;
       }
       
+      // ✅ 포켓몬 조우 시
       const regionPokemonIds = region.pokemons;
-      const availablePokemon = gamePokedex.filter(p => 
+
+      // ✅ 전국도감 설정에 따라 검색 대상 변경
+      const searchPokedex = region.allowNationalPokedex ? allPokemonMaster : gamePokedex;
+
+
+      const availablePokemon = searchPokedex.filter(p => 
         regionPokemonIds.includes(p.id) || 
         regionPokemonIds.includes(p.number) || 
         regionPokemonIds.includes(p.originalNumber)
       );
-      
-      if (availablePokemon.length > 0) {
-        const rates = region.pokemonRates || {};
-        const weightedPokemon = [];
+
+          if (availablePokemon.length > 0) {
+            const rates = region.pokemonRates || {};
+            const weightedPokemon = [];
         
         availablePokemon.forEach(p => {
           const id = p.id || p.number;
@@ -370,71 +395,84 @@ export default function useGameState() {
           }
         });
         
+        // ✅ 랜덤 포켓몬 선택
         const randomPokemon = weightedPokemon[Math.floor(Math.random() * weightedPokemon.length)];
+        
+        // ✅ 이로치 판정
+        const shinyRate = region.shinyRate || 4096;
+        const isShiny = Math.random() < (1 / shinyRate);
+        
+        console.log('✨ 이로치 판정:', {
+          pokemon: randomPokemon.name,
+          shinyRate: shinyRate,
+          probability: `1/${shinyRate}`,
+          isShiny: isShiny
+        });
+        
         // ✅ pokemonNumber를 문자열로 변환
-    const pokemonNumber = String(randomPokemon.originalNumber || randomPokemon.number);
-    
-    // ⭐ 조우 시: firstEncounter만 기록
-    const isFirstEncounter = !sharedPokedexData[pokemonNumber];
-    
-    if (isFirstEncounter) {
-      const newEntry = {
-        firstEncounter: currentUser.name,
-        encounteredAt: new Date().toISOString(),
-        caughtBy: null,
-        caughtAt: null,
-        memo: null,
-        regions: [region.name]
-      };
-      
-      setSharedPokedexData(prev => ({
-        ...prev,
-        [pokemonNumber]: newEntry
-      }));
-      
-      // 🔥 Firebase에 저장
-      try {
-        const pokedexRef = ref(database, `gameData/sharedPokedex/${pokemonNumber}`);
-        await set(pokedexRef, newEntry);
-        console.log('✅ 첫 조우 기록 완료:', pokemonNumber);
-      } catch (error) {
-        console.error('❌ 도감 데이터 저장 실패:', error);
-      }
-    } else {
-      // 이미 조우된 포켓몬 - 지역만 추가
-      const entry = sharedPokedexData[pokemonNumber];
-      const currentRegions = entry?.regions || [];
-      
-      if (!currentRegions.includes(region.name)) {
-        const updatedEntry = {
-          ...entry,
-          regions: [...currentRegions, region.name]
-        };
+        const pokemonNumber = String(randomPokemon.originalNumber || randomPokemon.number);
         
-        setSharedPokedexData(prev => ({
-          ...prev,
-          [pokemonNumber]: updatedEntry
-        }));
+        // ⭐ 조우 시: firstEncounter만 기록
+        const isFirstEncounter = !sharedPokedexData[pokemonNumber];
         
-        // 🔥 Firebase에 저장
-        try {
-          const pokedexRef = ref(database, `gameData/sharedPokedex/${pokemonNumber}`);
-          await set(pokedexRef, updatedEntry);
-          console.log('✅ 지역 추가 완료:', pokemonNumber, region.name);
-        } catch (error) {
-          console.error('❌ 도감 데이터 저장 실패:', error);
+        if (isFirstEncounter) {
+          const newEntry = {
+            firstEncounter: currentUser.name,
+            encounteredAt: new Date().toISOString(),
+            caughtBy: null,
+            caughtAt: null,
+            memo: null,
+            regions: [region.name]
+          };
+          
+          setSharedPokedexData(prev => ({
+            ...prev,
+            [pokemonNumber]: newEntry
+          }));
+          
+          try {
+            const pokedexRef = ref(database, `gameData/sharedPokedex/${pokemonNumber}`);
+            await set(pokedexRef, newEntry);
+            console.log('✅ 첫 조우 기록 완료:', pokemonNumber);
+          } catch (error) {
+            console.error('❌ 도감 데이터 저장 실패:', error);
+          }
+        } else {
+          const entry = sharedPokedexData[pokemonNumber];
+          const currentRegions = entry?.regions || [];
+          
+          if (!currentRegions.includes(region.name)) {
+            const updatedEntry = {
+              ...entry,
+              regions: [...currentRegions, region.name]
+            };
+            
+            setSharedPokedexData(prev => ({
+              ...prev,
+              [pokemonNumber]: updatedEntry
+            }));
+            
+            try {
+              const pokedexRef = ref(database, `gameData/sharedPokedex/${pokemonNumber}`);
+              await set(pokedexRef, updatedEntry);
+              console.log('✅ 지역 추가 완료:', pokemonNumber, region.name);
+            } catch (error) {
+              console.error('❌ 도감 데이터 저장 실패:', error);
+            }
+          }
         }
-      }
-    }
         
+        // ✅ 여기서 loot 생성!
         const loot = generateLoot(region.lootConfig || getDefaultLootConfig(), allItems);
         
         setEncounterPokemon({
           ...randomPokemon,
           loot: loot,
           regionName: region.name,
-          isFirstEncounter: isFirstEncounter
+          isFirstEncounter: isFirstEncounter,
+          isShiny: isShiny
         });
+        
       } else {
         alert('이 지역에 등장하는 포켓몬이 없습니다!');
       }
@@ -442,7 +480,7 @@ export default function useGameState() {
       alert('오늘의 탐험 횟수를 모두 사용했습니다!');
     }
   };
-
+  
   const handleCloseEncounter = () => {
     setEncounterPokemon(null);
   };
@@ -561,6 +599,7 @@ export default function useGameState() {
       caughtWithBall: ballUsed.name,
       ballImageUrl: ballUsed.imageUrl || ballItem?.spriteUrl || ballItem?.imageUrl,
       isPartner: false,
+       isShiny: pokemon.isShiny || false,
       condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
       effort: { 
         hp: 0, 
@@ -571,10 +610,14 @@ export default function useGameState() {
         speed: 0 
       },
       imageUrl: pokemonTemplate.imageUrl,
-      iconUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`,
-      spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`
-    };
-    
+  iconUrl: pokemon.isShiny 
+    ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/shiny/${pokemonTemplate.number}.png`
+    : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`,
+  spriteUrl: pokemon.isShiny
+    ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${pokemonTemplate.number}.png`
+    : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`
+};
+
     const currentPokemon = [...currentUser.caughtPokemon];
     const party = currentPokemon.slice(0, 6);
     const box = currentPokemon.slice(6);

@@ -123,7 +123,7 @@ export default function RegionExplorePanel({
                       조우율
                     </div>
                     <div className="text-2xl font-bold text-gray-800">
-                      {((selectedRegion.encounterRate || 0.5) * 100).toFixed(0)}%
+                      {((selectedRegion.encounterRate || 0.5)).toFixed(0)}%
                     </div>
                   </div>
                   
@@ -189,12 +189,15 @@ export default function RegionExplorePanel({
   );
 }
 
+
 // 포켓몬 설정 패널
 function PokemonSettingsPanel({ region, onUpdateRegion }) {
   // ✅ GameContext에서 포켓몬 데이터 가져오기
-  const { allPokemonMaster } = useGame();
+  const { allPokemonMaster, gamePokedex } = useGame();
   
-  const [encounterRate, setEncounterRate] = useState(region.encounterRate || 0.5);
+  const [encounterRate, setEncounterRate] = useState(
+    region.encounterRate !== undefined ? region.encounterRate : 90
+  );
   const [minLevel, setMinLevel] = useState(region.minLevel || 5);
   const [maxLevel, setMaxLevel] = useState(region.maxLevel || 20);
   const [searchQuery, setSearchQuery] = useState('');
@@ -205,33 +208,64 @@ function PokemonSettingsPanel({ region, onUpdateRegion }) {
   const [pokemonRates, setPokemonRates] = useState(region.pokemonRates || {});
   const [shinyRate, setShinyRate] = useState(region.shinyRate || 4096);
   const [typeFilter, setTypeFilter] = useState('all');
+  const [pokedexTab, setPokedexTab] = useState('game');
+  const [allowNationalPokedex, setAllowNationalPokedex] = useState(
+    region.allowNationalPokedex !== undefined ? region.allowNationalPokedex : false
+  );
 
-  // ✅ 타입 목록 (theme.js 사용)
+  // ✅ 타입 목록
   const pokemonTypes = [
-    { id: 'all', name: '전체', bgColor: '#777' },
+    { id: 'all', name: '전체' },
     ...Object.entries(TYPE_NAMES_EN).map(([nameKr, nameEn]) => ({
       id: nameEn,
-      name: nameKr,
-      ...getTypeColor(nameKr)
+      name: nameKr
     }))
   ];
 
+  // ✅ 실제 출현 가능한 포켓몬 필터링
+  const getAvailablePokemonForEncounter = () => {
+    const targetPokedex = allowNationalPokedex ? allPokemonMaster : gamePokedex;
+    
+    return selectedPokemon.filter(pokemonId => {
+      return targetPokedex.some(p => 
+        p.id === pokemonId || 
+        p.number === pokemonId || 
+        p.originalNumber === pokemonId
+      );
+    });
+  };
+
+  const availableEncounterPokemon = getAvailablePokemonForEncounter();
+
   const calculateProbabilities = () => {
-    const totalWeight = selectedPokemon.reduce((sum, pokemonId) => {
+    const totalWeight = availableEncounterPokemon.reduce((sum, pokemonId) => {
       return sum + (pokemonRates[pokemonId] || 10);
     }, 0);
 
-    return selectedPokemon.map(pokemonId => {
+    return availableEncounterPokemon.map(pokemonId => {
       const weight = pokemonRates[pokemonId] || 10;
       const relativeProb = totalWeight > 0 ? (weight / totalWeight) * 100 : 0;
-      const actualProb = relativeProb * encounterRate;
+      const actualProb = (relativeProb / 100) * encounterRate;
       return { pokemonId, weight, relativeProb, actualProb };
     });
   };
 
   const probabilities = calculateProbabilities();
-  const totalWeight = selectedPokemon.reduce((sum, id) => sum + (pokemonRates[id] || 10), 0);
-  const noEncounterProb = (1 - encounterRate) * 100;
+  const totalWeight = availableEncounterPokemon.reduce((sum, id) => sum + (pokemonRates[id] || 10), 0);
+
+  // ✅ 색상 팔레트
+  const colorPalette = [
+    '#6366f1', // indigo
+    '#ec4899', // pink
+    '#8b5cf6', // purple
+    '#f59e0b', // amber
+    '#10b981', // emerald
+    '#3b82f6', // blue
+    '#ef4444', // red
+    '#06b6d4', // cyan
+    '#f97316', // orange
+    '#84cc16', // lime
+  ];
 
   const handleSave = async () => {
     const updatedRegion = {
@@ -241,14 +275,17 @@ function PokemonSettingsPanel({ region, onUpdateRegion }) {
       encounterRate: parseFloat(encounterRate),
       minLevel: parseInt(minLevel),
       maxLevel: parseInt(maxLevel),
-      shinyRate: parseInt(shinyRate)
+      shinyRate: parseInt(shinyRate),
+      allowNationalPokedex: allowNationalPokedex
     };
 
     await onUpdateRegion(region.id, updatedRegion);
     alert('✅ 지역 설정이 저장되었습니다!');
   };
 
-  const togglePokemon = (pokemonId) => {
+  const togglePokemon = (pokemon) => {
+    const pokemonId = pokemon.number;
+    
     setSelectedPokemon(prev => {
       if (prev.includes(pokemonId)) {
         const newRates = { ...pokemonRates };
@@ -266,37 +303,79 @@ function PokemonSettingsPanel({ region, onUpdateRegion }) {
     setPokemonRates(prev => ({ ...prev, [pokemonId]: parseInt(rate) || 1 }));
   };
 
-  // ✅ 타입 필터링 (포켓몬의 types 배열 확인)
-  const filteredPokemon = useMemo(() => {
-    if (!allPokemonMaster) return [];
+  const currentPokedex = pokedexTab === 'game' ? gamePokedex : allPokemonMaster;
+
+  // ✅ useMemo 밖에 함수 선언
+const getKoreanTypeName = (englishType) => {
+  const entry = Object.entries(TYPE_NAMES_EN).find(([kr, en]) => 
+    en.toLowerCase() === englishType.toLowerCase()
+  );
+  return entry ? entry[0] : null;
+};
+
+const filteredPokemon = useMemo(() => {
+  if (!currentPokedex) return [];
+  
+  return currentPokedex.filter(p => {
+    // 이름 검색
+    if (searchQuery && !p.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
     
-    return allPokemonMaster.filter(p => {
-      // 이름 검색
-      if (searchQuery && !p.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-        return false;
-      }
+    // 타입 필터
+    if (typeFilter !== 'all') {
+      // ✅ 영어 타입을 한글로 변환
+      const targetTypeKr = getKoreanTypeName(typeFilter);
       
-      // 타입 필터
-      if (typeFilter !== 'all') {
-        const types = p.types || [];
-        const hasType = types.some(t => {
-          const typeName = t.type?.name || t.name || '';
-          return typeName.toLowerCase() === typeFilter.toLowerCase();
+      let pokemonTypes = [];
+      
+      if (Array.isArray(p.types)) {
+        pokemonTypes = p.types.map(t => {
+          if (typeof t === 'string') return t;
+          if (t.type?.name) return t.type.name;
+          if (t.name) return t.name;
+          return '';
         });
-        
-        if (!hasType) return false;
+      } else {
+        if (p.type) pokemonTypes.push(p.type);
+        if (p.type2) pokemonTypes.push(p.type2);
       }
       
-      return true;
-    });
-  }, [allPokemonMaster, searchQuery, typeFilter]);
+      // ✅ 한글 타입으로 비교
+      const hasType = pokemonTypes.some(t => t === targetTypeKr);
+      
+      if (!hasType) return false;
+    }
+    
+    return true;
+  });
+}, [currentPokedex, searchQuery, typeFilter, pokedexTab]);
 
   return (
     <div className="bg-white rounded-lg border-2 border-indigo-200 p-6 space-y-6">
-      <h4 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-        <Settings size={24} />
-        포켓몬 출현 설정
-      </h4>
+      {/* ✅ 제목 + 전국도감 스위치 */}
+      <div className="flex items-center justify-between">
+        <h4 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+          <Settings size={24} />
+          포켓몬 출현 설정
+        </h4>
+        
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-gray-700">전국도감</span>
+          <button
+            onClick={() => setAllowNationalPokedex(!allowNationalPokedex)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              allowNationalPokedex ? 'bg-green-500' : 'bg-gray-300'
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                allowNationalPokedex ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+      </div>
 
       {/* 기본 설정 */}
       <div className="grid grid-cols-4 gap-4">
@@ -307,16 +386,13 @@ function PokemonSettingsPanel({ region, onUpdateRegion }) {
           </label>
           <input
             type="number"
-            value={encounterRate * 100}
-            onChange={(e) => setEncounterRate(parseFloat(e.target.value) / 100)}
+            value={encounterRate}
+            onChange={(e) => setEncounterRate(parseFloat(e.target.value))}
             min="0"
             max="100"
             step="5"
             className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-indigo-500 focus:outline-none"
           />
-          <div className="mt-1 text-xs text-gray-600">
-            조우 실패: {noEncounterProb.toFixed(1)}%
-          </div>
         </div>
 
         <div>
@@ -368,218 +444,256 @@ function PokemonSettingsPanel({ region, onUpdateRegion }) {
         </div>
       </div>
 
-      {/* 확률 요약 */}
-      {selectedPokemon.length > 0 && (
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Percent size={20} className="text-indigo-600" />
-            <h5 className="font-bold text-gray-800">확률 요약</h5>
-          </div>
-          <div className="grid grid-cols-4 gap-4 text-sm">
-            <div>
-              <div className="text-gray-600">조우율</div>
-              <div className="text-2xl font-bold text-indigo-600">
-                {(encounterRate * 100).toFixed(1)}%
-              </div>
-            </div>
-            <div>
-              <div className="text-gray-600">조우 실패</div>
-              <div className="text-2xl font-bold text-gray-600">
-                {noEncounterProb.toFixed(1)}%
-              </div>
-            </div>
-            <div>
-              <div className="text-gray-600">총 가중치</div>
-              <div className="text-2xl font-bold text-purple-600">
-                {totalWeight}
-              </div>
-            </div>
-            <div>
-              <div className="text-gray-600 flex items-center gap-1">
-                <Sparkles size={12} />
-                이로치 확률
-              </div>
-              <div className="text-2xl font-bold text-yellow-600">
-                1/{shinyRate}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 선택된 포켓몬 & 확률 */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h5 className="font-bold text-gray-800 flex items-center gap-2">
-            <Package size={20} />
-            선택된 포켓몬 ({selectedPokemon.length}종)
-          </h5>
-        </div>
-        
-        {selectedPokemon.length === 0 ? (
-          <div className="bg-gray-50 rounded-lg p-6 text-center text-gray-500">
-            <Package size={48} className="mx-auto mb-2 text-gray-300" />
-            <p>선택된 포켓몬이 없습니다</p>
-          </div>
-        ) : (
-          <div className="space-y-2 max-h-96 overflow-y-auto">
-            {probabilities
-              .sort((a, b) => b.actualProb - a.actualProb)
-              .map(({ pokemonId, weight, relativeProb, actualProb }) => {
-                const pokemon = allPokemonMaster?.find(p => p.id === pokemonId || p.number === pokemonId);
-                if (!pokemon) return null;
-
-                return (
-                  <div key={pokemonId} className="flex items-center gap-3 bg-indigo-50 border-2 border-indigo-200 rounded-lg p-3 hover:bg-indigo-100 transition-colors">
-                    <img
-                      src={pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`}
-                      alt={pokemon.name}
-                      className="w-12 h-12"
-                      style={{ imageRendering: 'pixelated' }}
-                    />
-                    <div className="flex-1">
-                      <div className="font-bold text-gray-800">{pokemon.name}</div>
-                      <div className="text-xs text-gray-600">No.{pokemon.number}</div>
-                    </div>
-                    
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <div className="text-xs text-gray-500 mb-0.5">실제 조우율:</div>
-                        <div className="text-2xl font-bold text-indigo-600 flex items-center gap-1">
-                          <Percent size={16} />
-                          {actualProb.toFixed(2)}%
-                        </div>
-                      </div>
-                      
-                      <div className="text-right">
-                        <div className="text-xs text-gray-500 mb-0.5">조우 시:</div>
-                        <div className="text-lg font-semibold text-gray-600">
-                          {relativeProb.toFixed(1)}%
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <div className="text-xs text-gray-600">가중치</div>
-                      <input
-                        type="number"
-                        value={weight}
-                        onChange={(e) => updateRate(pokemonId, e.target.value)}
-                        min="1"
-                        max="100"
-                        className="w-16 border-2 border-indigo-300 rounded px-2 py-1 text-center text-sm focus:border-indigo-500 focus:outline-none"
-                      />
-                    </div>
-                    
-                    <button
-                      onClick={() => togglePokemon(pokemonId)}
-                      className="text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors"
-                    >
-                      <X size={18} />
-                    </button>
-                  </div>
-                );
-              })}
-          </div>
-        )}
-      </div>
-
-      {/* 확률 분포 시각화 */}
-      {selectedPokemon.length > 0 && (
+      {/* ✅ 확률 분포 바 */}
+      {availableEncounterPokemon.length > 0 && (
         <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
           <h5 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
             <TrendingUp size={18} />
             확률 분포
           </h5>
-          <div className="space-y-2">
-            <div>
-              <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-gray-600">포켓몬 미조우</span>
-                <span className="font-bold text-gray-700">{noEncounterProb.toFixed(1)}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-gray-400 h-2 rounded-full transition-all"
-                  style={{ width: `${noEncounterProb}%` }}
-                />
-              </div>
+          
+          {/* ✅ 통합 확률 바 */}
+          <div className="w-full h-8 flex rounded-lg overflow-hidden border-2 border-gray-300">
+            {/* 미조우 */}
+            <div
+              className="bg-gray-400 flex items-center justify-center text-white text-xs font-bold transition-all"
+              style={{ width: `${100 - encounterRate}%` }}
+              title={`미조우: ${(100 - encounterRate).toFixed(1)}%`}
+            >
+              {(100 - encounterRate) >= 5 && '미조우'}
+            </div>
+            
+            {/* 각 포켓몬 */}
+            {probabilities
+              .sort((a, b) => b.actualProb - a.actualProb)
+              .map(({ pokemonId, actualProb }, index) => {
+                const pokemon = allPokemonMaster?.find(p => p.id === pokemonId || p.number === pokemonId);
+                if (!pokemon) return null;
+                
+                const color = colorPalette[index % colorPalette.length];
+                
+                return (
+                  <div
+                    key={pokemonId}
+                    className="flex items-center justify-center text-white text-xs font-bold transition-all hover:brightness-110"
+                    style={{ 
+                      width: `${actualProb}%`,
+                      backgroundColor: color
+                    }}
+                    title={`${pokemon.name}: ${actualProb.toFixed(2)}%`}
+                  >
+                    {actualProb >= 5 && pokemon.name}
+                  </div>
+                );
+              })}
+          </div>
+          
+          {/* ✅ 범례 */}
+          <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-gray-400 rounded"></div>
+              <span className="text-gray-700">
+                미조우: <span className="font-bold">{(100 - encounterRate).toFixed(1)}%</span>
+              </span>
             </div>
             
             {probabilities
               .sort((a, b) => b.actualProb - a.actualProb)
-              .map(({ pokemonId, actualProb }) => {
+              .map(({ pokemonId, actualProb }, index) => {
                 const pokemon = allPokemonMaster?.find(p => p.id === pokemonId || p.number === pokemonId);
                 if (!pokemon) return null;
                 
+                const color = colorPalette[index % colorPalette.length];
+                
                 return (
-                  <div key={pokemonId}>
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="text-gray-600 truncate">{pokemon.name}</span>
-                      <span className="font-bold text-indigo-600">{actualProb.toFixed(2)}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-indigo-500 h-2 rounded-full transition-all"
-                        style={{ width: `${Math.min(actualProb, 100)}%` }}
-                      />
-                    </div>
+                  <div key={pokemonId} className="flex items-center gap-2">
+                    <div 
+                      className="w-4 h-4 rounded" 
+                      style={{ backgroundColor: color }}
+                    ></div>
+                    <span className="text-gray-700 truncate">
+                      {pokemon.name}: <span className="font-bold">{actualProb.toFixed(2)}%</span>
+                    </span>
                   </div>
                 );
               })}
-            
-            {probabilities.length > 5 && (
-              <div className="text-xs text-gray-500 text-center pt-2">
-                ...외 {probabilities.length - 5}종
-              </div>
-            )}
           </div>
         </div>
       )}
 
+   {/* 선택된 포켓몬 리스트 */}
+<div>
+  <div className="flex items-center justify-between mb-3">
+    <h5 className="font-bold text-gray-800 flex items-center gap-2">
+      <Package size={20} />
+      선택된 포켓몬 ({availableEncounterPokemon.length}/{selectedPokemon.length}종 출현)
+    </h5>
+  </div>
+  
+  {selectedPokemon.length === 0 ? (
+    <div className="bg-gray-50 rounded-lg p-6 text-center text-gray-500">
+      <Package size={48} className="mx-auto mb-2 text-gray-300" />
+      <p>선택된 포켓몬이 없습니다</p>
+    </div>
+  ) : (
+    <div className="space-y-2 max-h-96 overflow-y-auto">
+      {/* ✅ 출현 가능 여부로 정렬 */}
+      {selectedPokemon
+        .map(pokemonId => {
+          const pokemon = allPokemonMaster?.find(p => p.id === pokemonId || p.number === pokemonId);
+          if (!pokemon) return null;
+          
+          const canEncounter = availableEncounterPokemon.includes(pokemonId);
+          const prob = probabilities.find(p => p.pokemonId === pokemonId);
+          
+          return {
+            pokemonId,
+            pokemon,
+            canEncounter,
+            prob
+          };
+        })
+        .filter(item => item !== null)
+        // ✅ 출현 가능한 포켓몬 먼저, 그 다음 이름순
+        .sort((a, b) => {
+          if (a.canEncounter && !b.canEncounter) return -1;
+          if (!a.canEncounter && b.canEncounter) return 1;
+          // 둘 다 같은 상태면 확률 높은 순
+          if (a.canEncounter && b.canEncounter) {
+            return (b.prob?.actualProb || 0) - (a.prob?.actualProb || 0);
+          }
+          // 둘 다 출현 불가면 이름순
+          return a.pokemon.name.localeCompare(b.pokemon.name);
+        })
+        .map(({ pokemonId, pokemon, canEncounter, prob }) => {
+          const weight = pokemonRates[pokemonId] || 10;
+          const relativeProb = prob?.relativeProb || 0;
+          const actualProb = prob?.actualProb || 0;
+
+          return (
+            <div
+              key={pokemonId}
+              className={`flex items-center gap-3 border-2 rounded-lg p-3 transition-colors ${
+                canEncounter
+                  ? 'bg-indigo-50 border-indigo-200 hover:bg-indigo-100'
+                  : 'bg-red-50 border-red-200 opacity-60'
+              }`}
+            >
+              <img
+                src={pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`}
+                alt={pokemon.name}
+                className="w-12 h-12"
+                style={{ imageRendering: 'pixelated' }}
+              />
+              <div className="flex-1">
+                <div className="font-bold text-gray-800 flex items-center gap-2">
+                  {pokemon.name}
+                  {!canEncounter && (
+                    <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full">
+                      출현불가
+                    </span>
+                  )}
+                </div>
+                <div className="text-xs text-gray-600">No.{pokemon.number}</div>
+              </div>
+              
+              {canEncounter && (
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <div className="text-xs text-gray-500 mb-0.5">실제 조우율:</div>
+                    <div className="text-xl font-bold text-indigo-600">
+                      {actualProb.toFixed(2)}%
+                    </div>
+                  </div>
+                  
+                  <div className="text-right">
+                    <div className="text-xs text-gray-500 mb-0.5">조우 시:</div>
+                    <div className="text-lg font-semibold text-gray-600">
+                      {relativeProb.toFixed(1)}%
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex items-center gap-2">
+                <div className="text-xs text-gray-600">가중치</div>
+                <input
+                  type="number"
+                  value={weight}
+                  onChange={(e) => updateRate(pokemonId, e.target.value)}
+                  min="1"
+                  max="100"
+                  className="w-16 border-2 border-indigo-300 rounded px-2 py-1 text-center text-sm focus:border-indigo-500 focus:outline-none"
+                  disabled={!canEncounter}
+                />
+              </div>
+              
+              <button
+                onClick={() => togglePokemon(pokemon)}
+                className="text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          );
+        })}
+    </div>
+  )}
+</div>
+
       {/* 포켓몬 추가 */}
       <div>
-        <h5 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
+        <h5 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
           <Plus size={20} />
           포켓몬 추가
         </h5>
         
-        {/* ✅ 타입 드롭다운 */}
-        <div className="mb-3">
-          <label className="block text-xs font-semibold text-gray-600 mb-2">타입 필터</label>
-          <div className="relative">
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 pr-10 focus:border-indigo-500 focus:outline-none appearance-none bg-white cursor-pointer"
-              style={{
-                backgroundColor: typeFilter !== 'all' 
-                  ? pokemonTypes.find(t => t.id === typeFilter)?.bg || '#fff'
-                  : '#fff',
-                color: typeFilter !== 'all' 
-                  ? pokemonTypes.find(t => t.id === typeFilter)?.text || '#000'
-                  : '#000'
-              }}
-            >
-              {pokemonTypes.map(type => (
-                <option key={type.id} value={type.id}>
-                  {type.name}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" size={18} />
-          </div>
+        <div className="flex gap-2 mb-3">
+          <button
+            onClick={() => setPokedexTab('game')}
+            className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-colors ${
+              pokedexTab === 'game'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            게임 도감 ({gamePokedex?.length || 0})
+          </button>
+          <button
+            onClick={() => setPokedexTab('national')}
+            className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-colors ${
+              pokedexTab === 'national'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            전국 도감 ({allPokemonMaster?.length || 0})
+          </button>
         </div>
         
-        {/* 검색창 */}
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-          <input
-            type="text"
-            placeholder="포켓몬 이름 검색..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
-          />
+        <div className="flex gap-2 mb-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              placeholder="포켓몬 이름 검색..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
+            />
+          </div>
+          
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="w-40 border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-indigo-500 focus:outline-none bg-white cursor-pointer"
+          >
+            {pokemonTypes.map(type => (
+              <option key={type.id} value={type.id}>
+                {type.name}
+              </option>
+            ))}
+          </select>
         </div>
         
         <div className="text-xs text-gray-600 mb-2 flex items-center gap-1">
@@ -589,12 +703,12 @@ function PokemonSettingsPanel({ region, onUpdateRegion }) {
         
         <div className="grid grid-cols-6 gap-2 max-h-80 overflow-y-auto p-2 bg-gray-50 rounded-lg border border-gray-200">
           {filteredPokemon.map(pokemon => {
-            const isSelected = selectedPokemon.includes(pokemon.id) || selectedPokemon.includes(pokemon.number);
+            const isSelected = selectedPokemon.includes(pokemon.number);
             
             return (
               <button
-                key={pokemon.id}
-                onClick={() => togglePokemon(pokemon.id)}
+                key={pokemon.id || pokemon.number}
+                onClick={() => togglePokemon(pokemon)}
                 className={`p-2 rounded-lg border-2 transition-all ${
                   isSelected
                     ? 'border-indigo-500 bg-indigo-100'
@@ -625,7 +739,6 @@ function PokemonSettingsPanel({ region, onUpdateRegion }) {
     </div>
   );
 }
-
 
 
 // 탐험 보상 설정 패널
