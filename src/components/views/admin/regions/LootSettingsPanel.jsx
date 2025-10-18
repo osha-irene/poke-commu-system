@@ -1,6 +1,6 @@
-// src/components/views/admin/panels/LootSettingsPanel.jsx
+
 import React, { useState, useMemo } from 'react';
-import { Gift, Package, Coins, Apple, TreePine, Search, TrendingUp, Save } from 'lucide-react';
+import { Gift, Package, Coins, Apple, TreePine, Search, TrendingUp, Save, Check } from 'lucide-react';
 import { getItemPocket, getItemIcon, CATEGORIES, filterItemsByPocket } from '../../../../utils/itemUtils';
 
 export default function LootSettingsPanel({ region, allItems, onUpdateRegionLootConfig }) {
@@ -85,7 +85,7 @@ export default function LootSettingsPanel({ region, allItems, onUpdateRegionLoot
 
   const handleSave = async () => {
     await onUpdateRegionLootConfig(region.id, lootConfig);
-    alert('✅ 탐험 보상이 저장되었습니다!');
+    alert('탐험 보상이 저장되었습니다!');
   };
 
   return (
@@ -360,7 +360,7 @@ export default function LootSettingsPanel({ region, allItems, onUpdateRegionLoot
                 >
                   {isSelected && (
                     <div className="absolute top-2 right-2 w-5 h-5 bg-green-600 rounded-full flex items-center justify-center z-10">
-                      <span className="text-white text-xs font-bold">✓</span>
+                      <Check size={14} className="text-white" />
                     </div>
                   )}
 

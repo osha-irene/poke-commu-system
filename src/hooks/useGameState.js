@@ -329,7 +329,11 @@ export default function useGameState() {
 const handleRegionClick = async (region) => {
   if (!currentUser) return;
 
-  const accessibleRegions = currentUser.accessibleRegions || [];
+  // ⭐ 안전하게 배열로 변환
+  const accessibleRegions = Array.isArray(currentUser.accessibleRegions) 
+    ? currentUser.accessibleRegions 
+    : [];
+    
   if (accessibleRegions.length > 0 && !accessibleRegions.includes(region.id)) {
     alert('⛔ 이 구역에 접근할 수 없습니다!');
     return;
@@ -373,7 +377,7 @@ const handleRegionClick = async (region) => {
     }
     
     // 포켓몬 조우 시
-    const regionPokemonIds = region.pokemons;
+    const regionPokemonIds = region.pokemons || []; 
     const searchPokedex = region.allowNationalPokedex ? allPokemonMaster : gamePokedex;
 
     const availablePokemon = searchPokedex.filter(p => 
@@ -1494,5 +1498,10 @@ if (itemData?.isTM) {
     addDailyItem, 
    removeDailyItem, 
     toggleItemPersistent,  
+ addRegion: adminFunctions.addRegion, 
+  deleteRegion: adminFunctions.deleteRegion,
+  createTown: adminFunctions.createTown,    
+  updateTown: adminFunctions.updateTown,    
+  deleteTown: adminFunctions.deleteTown,   
   };
 }

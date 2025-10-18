@@ -8,6 +8,7 @@ export const useAdminFunctions = (
   members, 
   setMembers, 
   updateCurrentUser, 
+  regions,
   setRegions,
   setGamePokedex,
   allPokemonMaster,
@@ -571,12 +572,9 @@ const deleteRegion = async (regionId) => {
   }
 };
 
-
-
-const updateRegionPokemon = (regionId, updatedData) => {
+const updateRegionPokemon = async (regionId, updatedData) => {
   if (!currentUser?.isAdmin) return;
   
-  // ✅ 모든 필드를 포함하도록 수정
   const updateObj = {
     pokemons: Array.isArray(updatedData.pokemons) 
       ? updatedData.pokemons 
@@ -588,23 +586,138 @@ const updateRegionPokemon = (regionId, updatedData) => {
     minLevel: updatedData.minLevel || 5,
     maxLevel: updatedData.maxLevel || 20,
     shinyRate: updatedData.shinyRate || 4096,
-    
-    // ✅ 그룹 정보 추가
     groupId: updatedData.groupId !== undefined ? updatedData.groupId : null,
     groupName: updatedData.groupName !== undefined ? updatedData.groupName : null,
     areaName: updatedData.areaName !== undefined ? updatedData.areaName : null,
-    
-    // ✅ 이름도 업데이트 (그룹 설정 시)
+    groupVisible: updatedData.groupVisible !== undefined ? updatedData.groupVisible : true,
+    isDefaultTown: updatedData.isDefaultTown !== undefined ? updatedData.isDefaultTown : false,  // ⭐ 추가
     name: updatedData.name || updatedData.name
   };
   
+  // 로컬 state 업데이트
   setRegions(prev => prev.map(region => 
     region.id === regionId 
       ? { ...region, ...updateObj } 
       : region
   ));
   
-  console.log('✅ 지역 업데이트:', regionId, updateObj);
+  // Firebase에 저장
+  try {
+    const configRef = ref(database, 'gameData/config');
+    const snapshot = await get(configRef);
+    const currentConfig = snapshot.val() || {};
+    
+    const updatedRegions = (currentConfig.regions || []).map(r =>
+      r.id === regionId ? { ...r, ...updateObj } : r
+    );
+    
+    await set(configRef, {
+      ...currentConfig,
+      regions: updatedRegions
+    });
+    
+    console.log('✅ 지역 업데이트 완료:', regionId);
+  } catch (error) {
+    console.error('❌ 지역 업데이트 실패:', error);
+  }
+};
+
+// 마을 생성
+const createTown = async (townData) => {
+  if (!currentUser?.isAdmin) return;
+  
+  // 기본 마을이 이미 있는지 확인
+  if (townData.isDefaultTown) {
+    // 기존 기본 마을의 기본 설정 해제
+    const updatedRegions = regions.map(r => 
+      r.isDefaultTown ? { ...r, isDefaultTown: false } : r
+    );
+    setRegions(updatedRegions);
+  }
+  
+  console.log('✅ 마을 생성:', townData);
+  alert(`마을 "${townData.groupName}"이(가) 생성되었습니다!`);
+};
+
+// 마을 수정
+const updateTown = async (groupId, townData) => {
+  if (!currentUser?.isAdmin) return;
+  
+  // 해당 마을에 속한 모든 지역 업데이트
+  const updatedRegions = regions.map(region => {
+    if (region.groupId === groupId) {
+      return {
+        ...region,
+        groupName: townData.groupName,
+        x: townData.x,
+        y: townData.y,
+        color: townData.color,
+        isDefaultTown: townData.isDefaultTown
+      };
+    }
+    // 다른 마을의 기본 설정 해제
+    if (townData.isDefaultTown && region.isDefaultTown && region.groupId !== groupId) {
+      return { ...region, isDefaultTown: false };
+    }
+    return region;
+  });
+  
+  setRegions(updatedRegions);
+  
+  // Firebase 저장
+  try {
+    const configRef = ref(database, 'gameData/config');
+    const snapshot = await get(configRef);
+    const currentConfig = snapshot.val() || {};
+    
+    await set(configRef, {
+      ...currentConfig,
+      regions: updatedRegions
+    });
+    
+    console.log('✅ 마을 수정 완료:', groupId);
+    alert(`마을 "${townData.groupName}"이(가) 수정되었습니다!`);
+  } catch (error) {
+    console.error('❌ 마을 수정 실패:', error);
+  }
+};
+
+// 마을 삭제
+const deleteTown = async (groupId) => {
+  if (!currentUser?.isAdmin) return;
+  
+  // 해당 마을에 속한 모든 지역의 연결 해제
+  const updatedRegions = regions.map(region => {
+    if (region.groupId === groupId) {
+      return {
+        ...region,
+        groupId: null,
+        groupName: null,
+        areaName: null,
+        isDefaultTown: false
+      };
+    }
+    return region;
+  });
+  
+  setRegions(updatedRegions);
+  
+  // Firebase 저장
+  try {
+    const configRef = ref(database, 'gameData/config');
+    const snapshot = await get(configRef);
+    const currentConfig = snapshot.val() || {};
+    
+    await set(configRef, {
+      ...currentConfig,
+      regions: updatedRegions
+    });
+    
+    console.log('✅ 마을 삭제 완료:', groupId);
+    alert('마을이 삭제되었습니다!');
+  } catch (error) {
+    console.error('❌ 마을 삭제 실패:', error);
+  }
 };
 
   const updateGamePokedex = (selectedPokemonNumbers) => {
@@ -730,6 +843,9 @@ const updateRegionPokemon = (regionId, updatedData) => {
     updateMemberMoney,
     updateMemberRegionAccess,
     addRegion,
-    deleteRegion
+    deleteRegion,
+    createTown,
+    updateTown,
+    deleteTown,
   };
 };

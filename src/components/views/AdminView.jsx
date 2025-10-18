@@ -32,7 +32,9 @@ export default function AdminView() {
     removeDailyItem,   
     toggleItemPersistent, 
     maintenanceMode = false,
-    // 함수들
+    createTown,
+    updateTown,
+    deleteTown,
     setMembers,
     updateCurrentUser,
     updateMaxDailyWalks,
@@ -301,15 +303,21 @@ export default function AdminView() {
 
       {/* 지역 설정 탭 */}
       {adminTab === 'regions' && (
-      <RegionExplorePanel
-        regions={regions}
-        allItems={allItems}
-        onUpdateRegion={updateRegionPokemon}
-        onUpdateRegionLootConfig={updateRegionLootConfig}
-        onAddRegion={addRegion}          // 추가
-        onDeleteRegion={deleteRegion}    // 추가
-      />
-    )}
+  <>
+    {console.log('🔍 addRegion:', addRegion, 'deleteRegion:', deleteRegion)}
+    <RegionExplorePanel
+      regions={regions}
+      allItems={allItems}
+      onUpdateRegion={updateRegionPokemon}
+      onUpdateRegionLootConfig={updateRegionLootConfig}
+      onAddRegion={addRegion}
+     onDeleteRegion={deleteRegion}
+    onCreateTown={createTown} 
+    onUpdateTown={updateTown}  
+    onDeleteTown={deleteTown}
+    />
+  </>
+)}
 
       {/* 도감 관리 탭 */}
       {adminTab === 'pokedex' && (

@@ -1,4 +1,4 @@
-// src/components/views/admin/panels/PokemonSettingsPanel.jsx
+
 import React, { useState, useMemo } from 'react';
 import { Settings, Percent, TrendingUp, Sparkles, Package, Plus, Search, X, Save } from 'lucide-react';
 import { useGame } from '../../../../contexts/GameContext';

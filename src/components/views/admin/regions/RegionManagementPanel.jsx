@@ -1,4 +1,4 @@
-// src/components/views/admin/panels/RegionManagementPanel.jsx
+// src/components/views/admin/regions/RegionManagementPanel.jsx
 import React, { useState } from 'react';
 import { MapPin, Settings, Gift, Package, ChevronRight, Percent, TrendingUp, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import GroupSettingsPanel from './GroupSettingsPanel';
@@ -75,7 +75,7 @@ export default function RegionManagementPanel({
   };
 
   return (
-    <>
+    <React.Fragment>
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-4">
           <div className="bg-white rounded-lg border-2 border-gray-200 overflow-hidden">
@@ -407,6 +407,6 @@ export default function RegionManagementPanel({
           </div>
         </div>
       )}
-    </>
+    </React.Fragment>
   );
 }
