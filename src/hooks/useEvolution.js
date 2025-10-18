@@ -4,28 +4,46 @@ import evolutionsData from '../data/evolutions.json';
 export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) => {
   const [evolutionModal, setEvolutionModal] = useState(null);
 
-  // 진화 가능 여부 확인
+ // 진화 가능 여부 확인
   const checkEvolution = (pokemon) => {
-    if (!pokemon) return null;
+    console.log('🔍 checkEvolution 호출:', pokemon.name, pokemon.number, 'Lv.', pokemon.level);
+    
+    if (!pokemon) {
+      console.log('❌ pokemon이 없음');
+      return null;
+    }
 
     // 해당 포켓몬의 진화 정보 찾기
     const evolution = evolutionsData.evolutions.find(
       evo => evo.from === pokemon.number
     );
+    
+    console.log('📋 찾은 진화 정보:', evolution);
 
-    if (!evolution) return null;
+    if (!evolution) {
+      console.log('❌ 진화 정보 없음 (이 포켓몬은 진화하지 않거나 최종 진화형)');
+      return null;
+    }
 
     const { condition } = evolution;
+    console.log('📝 진화 조건:', condition);
 
     // 레벨 진화
     if (condition.type === 'level') {
+      console.log('🎚️ 레벨 진화 체크:', pokemon.level, '>=', condition.level);
+      
       if (pokemon.level >= condition.level) {
+        console.log('✅ 레벨 조건 충족!');
+        
         // 추가 조건 확인
         if (condition.timeOfDay) {
-          // 시간대 조건은 현재 시뮬레이션
           const hour = new Date().getHours();
           const currentTime = hour >= 6 && hour < 18 ? 'day' : 'night';
-          if (currentTime !== condition.timeOfDay) return null;
+          console.log('⏰ 시간 조건:', currentTime, '필요:', condition.timeOfDay);
+          if (currentTime !== condition.timeOfDay) {
+            console.log('❌ 시간 조건 미충족');
+            return null;
+          }
         }
 
         if (condition.partyType) {
@@ -33,7 +51,11 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
           const hasType = currentUser.caughtPokemon
             .slice(0, 6)
             .some(p => p && (p.type === condition.partyType || p.type2 === condition.partyType));
-          if (!hasType) return null;
+          console.log('🎭 파티 타입 조건:', condition.partyType, '보유:', hasType);
+          if (!hasType) {
+            console.log('❌ 파티 타입 조건 미충족');
+            return null;
+          }
         }
 
         if (condition.knownMove) {
@@ -41,28 +63,48 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
           const hasMove = pokemon.moves?.some(
             m => m.moveId === condition.knownMove || m.name?.toLowerCase() === condition.knownMove
           );
-          if (!hasMove) return null;
+          console.log('⚔️ 기술 조건:', condition.knownMove, '보유:', hasMove);
+          if (!hasMove) {
+            console.log('❌ 기술 조건 미충족');
+            return null;
+          }
         }
 
+        console.log('🎉 모든 조건 충족! 진화 가능!');
         return evolution;
+      } else {
+        console.log('❌ 레벨 조건 미충족');
       }
     }
 
     // 친밀도 진화
     if (condition.type === 'friendship') {
+      console.log('💖 친밀도 진화 체크:', pokemon.friendship || 0, '>=', condition.friendship);
+      
       if ((pokemon.friendship || 0) >= condition.friendship) {
+        console.log('✅ 친밀도 조건 충족!');
+        
         if (condition.timeOfDay) {
           const hour = new Date().getHours();
           const currentTime = hour >= 6 && hour < 18 ? 'day' : 'night';
-          if (currentTime !== condition.timeOfDay) return null;
+          console.log('⏰ 시간 조건:', currentTime, '필요:', condition.timeOfDay);
+          if (currentTime !== condition.timeOfDay) {
+            console.log('❌ 시간 조건 미충족');
+            return null;
+          }
         }
+        
+        console.log('🎉 모든 조건 충족! 진화 가능!');
         return evolution;
+      } else {
+        console.log('❌ 친밀도 조건 미충족');
       }
     }
 
     // 아이템 진화는 별도 함수에서 처리
     // 교환 진화는 나중에 구현
 
+    console.log('❌ 최종: 진화 조건 미충족');
     return null;
   };
 
@@ -222,28 +264,45 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
     setEvolutionModal(null);
   };
   
-  // 수동 진화 (포켓몬 상세에서 진화 버튼 클릭)
-  const manualEvolve = (pokemon) => {
-    // 변함없는돌을 지니고 있으면 진화 불가
-    if (pokemon.heldItem === 'everstone' || pokemon.heldItem === '변함없는돌') {
-      alert('❌ 변함없는돌을 지니고 있어 진화할 수 없습니다!');
-      return false;
-    }
-    
-    const evolution = checkEvolution(pokemon);
-    if (!evolution) {
-      alert('❌ 아직 진화 조건을 충족하지 못했습니다!');
-      return false;
-    }
-    
-    const success = performEvolution(pokemon, evolution);
-    if (success) {
-      const evolvedTemplate = allPokemonMaster.find(p => p.number === evolution.to);
-      alert(`🎉 축하합니다!\n${pokemon.nickname || pokemon.name}이(가) ${evolvedTemplate.name}(으)로 진화했습니다!`);
-    }
-    
-    return success;
-  };
+// 수동 진화 (포켓몬 상세에서 진화 버튼 클릭)
+const manualEvolve = (pokemon) => {
+  console.log('🎯 manualEvolve 호출:', pokemon.name, 'Lv.', pokemon.level);
+  
+  // 변함없는돌을 지니고 있으면 진화 불가
+  if (pokemon.heldItem === 'everstone' || pokemon.heldItem === '변함없는돌') {
+    alert('변함없는돌을 지니고 있어 진화할 수 없습니다!');
+    return false;
+  }
+  
+  const evolution = checkEvolution(pokemon);
+  console.log('🎯 진화 정보:', evolution);
+  
+  if (!evolution) {
+    alert('아직 진화 조건을 충족하지 못했습니다!');
+    return false;
+  }
+  
+  // 모달 표시 (실제 진화는 acceptEvolution에서)
+  const evolvedPokemonData = allPokemonMaster.find(p => p.number === evolution.to);
+  
+  if (!evolvedPokemonData) {
+    alert('진화할 포켓몬 데이터를 찾을 수 없습니다!');
+    return false;
+  }
+  
+  console.log('✨ 진화 모달 표시:', pokemon.name, '→', evolvedPokemonData.name);
+  
+  setEvolutionModal({
+    show: true,
+    pokemon: pokemon,
+    evolution: evolution,
+    fromPokemon: pokemon,
+    toPokemon: evolvedPokemonData,
+    isItemEvolution: false
+  });
+  
+  return true;
+};
 
   // 진화 거부
   const cancelEvolution = () => {

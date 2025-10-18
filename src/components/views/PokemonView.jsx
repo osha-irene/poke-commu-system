@@ -31,7 +31,9 @@ function DesktopPokemonView() {
     currentUser,
     allMoves = [],
     pokemonLearnsets = {},
-    useItemOnPokemon: onUseItemOnPokemon
+    useItemOnPokemon: onUseItemOnPokemon,
+    checkEvolution,
+    manualEvolve
   } = useGame();
 
   const isAdmin = currentUser?.isAdmin || false;
@@ -649,6 +651,9 @@ function DesktopPokemonView() {
             onUseCandy={handleUseCandy}
             onMove={handleMove}
             onRelease={handleRelease}
+            checkEvolution={checkEvolution}
+            manualEvolve={manualEvolve}
+            allPokemonMaster={allPokemonMaster}
             onUpdateNickname={onUpdateNickname}
             onGiveItem={onGiveItem}
             onTakeItem={onTakeItem}

@@ -621,13 +621,15 @@ return (
         />
       )}
 
-      {evolutionModal && (
-        <EvolutionModal
-          evolutionData={evolutionModal}
-          onAccept={acceptEvolution}
-          onCancel={cancelEvolution}
-        />
-      )}
+      {evolutionModal && evolutionModal.show && (
+  <EvolutionModal
+        pokemon={evolutionModal.pokemon}
+        evolution={evolutionModal.evolution}
+        allPokemonMaster={allPokemonMaster}
+        onAccept={acceptEvolution}
+        onCancel={cancelEvolution}
+      />
+    )}
     </PokemonProvider>
   </GameProvider>
 );

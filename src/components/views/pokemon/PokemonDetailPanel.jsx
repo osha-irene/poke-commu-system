@@ -69,8 +69,8 @@ export default function PokemonDetailPanel({
 
   // 진화 가능 여부 체크
   const canEvolve = checkEvolution && checkEvolution(pokemon);
-  const isHoldingEverstone = pokemon.heldItem?.toLowerCase() === 'everstone' || 
-                              pokemon.heldItem?.toLowerCase() === '변함없는돌';
+const isHoldingEverstone = pokemon.heldItem?.toLowerCase() === 'everstone' || 
+                            pokemon.heldItem?.toLowerCase() === '변함없는돌';
 
   // 파트너 여부 확인 (파일 상단 어딘가에 추가)
 const isThisPartner = currentUser?.partnerPokemon?.uniqueId === pokemon.uniqueId;

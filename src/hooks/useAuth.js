@@ -1,4 +1,5 @@
-// src/hooks/useAuth.js - 로그인 경로 수정 버전
+// src/hooks/useAuth.js - 실시간 리스너 제거 버전
+// onValue 리스너를 제거하고 로그인 시에만 데이터 로드
 
 import { useState, useEffect } from 'react';
 import { ref, get, set } from 'firebase/database';
@@ -37,15 +38,20 @@ export const useAuth = (members, setMembers) => {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   useEffect(() => {
+    let isSubscribed = true;
+    
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!isSubscribed) return;
+      
       if (firebaseUser) {
         console.log('🔐 Auth 상태 변경 감지:', firebaseUser.uid);
         
+        // ⭐ 로그인 시 한 번만 데이터 로드 (실시간 리스너 제거)
         try {
           const memberRef = ref(database, `members/${firebaseUser.uid}`);
           const snapshot = await get(memberRef);
           
-          if (snapshot.exists()) {
+          if (snapshot.exists() && isSubscribed) {
             const memberData = snapshot.val();
             const paddedUser = {
               ...memberData,
@@ -55,8 +61,6 @@ export const useAuth = (members, setMembers) => {
             };
             
             console.log('✅ 회원 데이터 로드:', paddedUser.name);
-            console.log('✅ isAdmin:', paddedUser.isAdmin);
-            console.log('✅ isSuperAdmin:', paddedUser.isSuperAdmin);
             
             setCurrentUser(paddedUser);
             
@@ -73,49 +77,24 @@ export const useAuth = (members, setMembers) => {
         setCurrentUser(null);
       }
       
-      setIsAuthLoading(false);
+      if (isSubscribed) {
+        setIsAuthLoading(false);
+      }
     });
 
-    return () => unsubscribe();
+    return () => {
+      isSubscribed = false;
+      unsubscribe();
+    };
   }, [setMembers]);
 
-  // 🔑 로그인 (수정됨!)
   const handleLogin = async (userId, password) => {
     try {
-      // 1️⃣ Firebase Auth 먼저 로그인
       const email = `${userId}@pokemon.com`;
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUid = userCredential.user.uid;
       
       console.log('✅ Auth 로그인 성공, UID:', firebaseUid);
-      
-      // 2️⃣ UID로 Database에서 회원 데이터 가져오기
-      const memberRef = ref(database, `members/${firebaseUid}`);
-      const snapshot = await get(memberRef);
-      
-      if (!snapshot.exists()) {
-        console.error('❌ Database에 회원 데이터 없음');
-        alert('회원 데이터가 존재하지 않습니다.');
-        await signOut(auth);
-        return false;
-      }
-      
-      const member = snapshot.val();
-      console.log('🔐 로그인 완료:', member.name);
-      
-      const paddedUser = {
-        ...member,
-        id: firebaseUid,
-        email: email,
-        caughtPokemon: ensurePartyPadding(member.caughtPokemon || [])
-      };
-      
-      setCurrentUser(paddedUser);
-      
-      setMembers(prev => ({
-        ...prev,
-        [firebaseUid]: paddedUser
-      }));
       
       localStorage.setItem('poke_currentUserId', firebaseUid);
       
@@ -155,7 +134,6 @@ export const useAuth = (members, setMembers) => {
     }
     
     console.log('📝 updateCurrentUser 호출됨');
-    console.log('📝 현재 user:', currentUser.name);
     console.log('📝 업데이트 내용:', updates);
     
     const latestUser = members[currentUser.id] || currentUser;
@@ -167,10 +145,10 @@ export const useAuth = (members, setMembers) => {
     };
     
     if (updates.caughtPokemon) {
-      console.log('📝 caughtPokemon 업데이트 감지');
       updatedUser.caughtPokemon = ensurePartyPadding(updates.caughtPokemon);
     }
     
+    // ⭐ 로컬 상태 먼저 업데이트
     setCurrentUser(updatedUser);
     
     setMembers(prevMembers => ({
@@ -178,6 +156,7 @@ export const useAuth = (members, setMembers) => {
       [currentUser.id]: updatedUser
     }));
     
+    // ⭐ 그 다음 Firebase에 저장
     try {
       const { id, email, ...dataToSave } = updatedUser;
       

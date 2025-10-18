@@ -223,7 +223,8 @@ const usePokemonManagement = (
     }
   };
 
-  // 레벨업
+  // 레벨업// usePokemonManagement.js의 useRareCandy 함수를 이렇게 수정하세요
+
 const useRareCandy = async (uniqueId, onLevelUp) => {
   if (!currentUser) return;
   

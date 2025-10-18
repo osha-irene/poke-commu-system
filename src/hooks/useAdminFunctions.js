@@ -517,17 +517,85 @@ export const useAdminFunctions = (
       console.error('❌ 포켓몬 편집 실패:', error);
     }
   };
+
+  
+// ========== 지역 추가 함수 ==========
+const addRegion = async (newRegion) => {
+  if (!currentUser?.isAdmin) return;
+  
+  // 1. 로컬 상태 업데이트
+  setRegions(prev => [...prev, newRegion]);
+  
+  // 2. Firebase에 저장
+  try {
+    const configRef = ref(database, 'gameData/config');
+    const snapshot = await get(configRef);
+    const currentConfig = snapshot.val() || {};
+    
+    const updatedRegions = [...(currentConfig.regions || []), newRegion];
+    
+    await set(configRef, {
+      ...currentConfig,
+      regions: updatedRegions
+    });
+    
+    console.log('✅ 지역 추가 완료:', newRegion.id);
+  } catch (error) {
+    console.error('❌ 지역 추가 실패:', error);
+  }
+};
+
+// ========== 지역 삭제 함수 ==========
+const deleteRegion = async (regionId) => {
+  if (!currentUser?.isAdmin) return;
+  
+  // 1. 로컬 상태 업데이트
+  setRegions(prev => prev.filter(r => r.id !== regionId));
+  
+  // 2. Firebase에서 삭제
+  try {
+    const configRef = ref(database, 'gameData/config');
+    const snapshot = await get(configRef);
+    const currentConfig = snapshot.val() || {};
+    
+    const updatedRegions = (currentConfig.regions || []).filter(r => r.id !== regionId);
+    
+    await set(configRef, {
+      ...currentConfig,
+      regions: updatedRegions
+    });
+    
+    console.log('✅ 지역 삭제 완료:', regionId);
+  } catch (error) {
+    console.error('❌ 지역 삭제 실패:', error);
+  }
+};
+
+
+
 const updateRegionPokemon = (regionId, updatedData) => {
   if (!currentUser?.isAdmin) return;
   
-  // ✅ 객체 형태로 업데이트 데이터 받기
+  // ✅ 모든 필드를 포함하도록 수정
   const updateObj = {
-    pokemons: Array.isArray(updatedData.pokemons) ? updatedData.pokemons : [],
+    pokemons: Array.isArray(updatedData.pokemons) 
+      ? updatedData.pokemons 
+      : [],
     pokemonRates: updatedData.pokemonRates || {},
-    encounterRate: updatedData.encounterRate !== undefined ? updatedData.encounterRate : 0.5,
+    encounterRate: updatedData.encounterRate !== undefined 
+      ? updatedData.encounterRate 
+      : 0.5,
     minLevel: updatedData.minLevel || 5,
     maxLevel: updatedData.maxLevel || 20,
-    shinyRate: updatedData.shinyRate || 4096
+    shinyRate: updatedData.shinyRate || 4096,
+    
+    // ✅ 그룹 정보 추가
+    groupId: updatedData.groupId !== undefined ? updatedData.groupId : null,
+    groupName: updatedData.groupName !== undefined ? updatedData.groupName : null,
+    areaName: updatedData.areaName !== undefined ? updatedData.areaName : null,
+    
+    // ✅ 이름도 업데이트 (그룹 설정 시)
+    name: updatedData.name || updatedData.name
   };
   
   setRegions(prev => prev.map(region => 
@@ -535,7 +603,10 @@ const updateRegionPokemon = (regionId, updatedData) => {
       ? { ...region, ...updateObj } 
       : region
   ));
+  
+  console.log('✅ 지역 업데이트:', regionId, updateObj);
 };
+
   const updateGamePokedex = (selectedPokemonNumbers) => {
     if (!currentUser?.isAdmin) return;
     
@@ -657,6 +728,8 @@ const updateRegionPokemon = (regionId, updatedData) => {
     resetGameData,
     editMemberPokemon,
     updateMemberMoney,
-    updateMemberRegionAccess
+    updateMemberRegionAccess,
+    addRegion,
+    deleteRegion
   };
 };

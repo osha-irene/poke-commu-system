@@ -37,6 +37,8 @@ export default function AdminView() {
     updateCurrentUser,
     updateMaxDailyWalks,
     updateRegionPokemon,
+    addRegion,    
+    deleteRegion,  
     addMember,
     toggleAdminStatus,
     resetMemberWalkCount,
@@ -302,8 +304,10 @@ export default function AdminView() {
       <RegionExplorePanel
         regions={regions}
         allItems={allItems}
-        allPokemonMaster={allPokemonMaster}
-        onUpdateRegion={updateRegionPokemon} 
+        onUpdateRegion={updateRegionPokemon}
+        onUpdateRegionLootConfig={updateRegionLootConfig}
+        onAddRegion={addRegion}          // 추가
+        onDeleteRegion={deleteRegion}    // 추가
       />
     )}
 
@@ -401,6 +405,7 @@ export default function AdminView() {
               </Button>
             </div>
           </Card>
+
         <LevelRestrictionPanel />
 
           {/* 도망 시스템 설정 */}
