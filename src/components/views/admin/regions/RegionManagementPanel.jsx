@@ -1,4 +1,3 @@
-// src/components/views/admin/regions/RegionManagementPanel.jsx
 import React, { useState } from 'react';
 import { MapPin, Settings, Gift, Package, ChevronRight, Percent, TrendingUp, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import GroupSettingsPanel from './GroupSettingsPanel';
@@ -8,6 +7,7 @@ import LootSettingsPanel from './LootSettingsPanel';
 export default function RegionManagementPanel({ 
   regions,
   groupedRegions, 
+  towns = [],
   selectedRegion, 
   editMode,
   allItems,
@@ -117,28 +117,32 @@ export default function RegionManagementPanel({
                         <div
                           key={region.id}
                           className={`relative group ${
-                            isSelected ? 'bg-indigo-50 border-l-4 border-indigo-600' : ''
+                            isSelected 
+                              ? 'bg-indigo-50 border-l-4 border-indigo-600' 
+                              : 'hover:bg-gray-50'
                           }`}
                         >
                           <button
                             onClick={() => onRegionClick(region)}
-                            className="w-full p-4 text-left hover:bg-gray-50 transition-colors"
+                            className="w-full px-4 py-3 text-left transition-colors"
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
-                                <div className="font-bold text-gray-800 mb-1">{region.name}</div>
-                                <div className="text-xs text-gray-600 space-y-1">
+                                <div className="font-semibold text-gray-800 mb-1">
+                                  {region.name}
+                                </div>
+                                <div className="flex items-center gap-3 text-xs text-gray-500">
                                   <div className="flex items-center gap-1">
                                     <Package size={12} />
-                                    포켓몬: {Array.isArray(region.pokemons) ? region.pokemons.length : 0}종
+                                    {region.pokemons?.length || 0}종
                                   </div>
                                   <div className="flex items-center gap-1">
                                     <Percent size={12} />
-                                    조우율: {region.encounterRate || 0}%
+                                    {region.encounterRate || 0}%
                                   </div>
                                   <div className="flex items-center gap-1">
                                     <TrendingUp size={12} />
-                                    레벨: Lv.{region.minLevel || 5}~{region.maxLevel || 20}
+                                    {region.minLevel || 5}~{region.maxLevel || 20}
                                   </div>
                                   {hasLootConfig && (
                                     <div className="flex items-center gap-1 text-green-600">
@@ -199,6 +203,7 @@ export default function RegionManagementPanel({
                   </h4>
                   <GroupSettingsPanel
                     region={selectedRegion}
+                    towns={towns}
                     onUpdateRegion={onUpdateRegion}
                   />
                 </div>
@@ -257,24 +262,28 @@ export default function RegionManagementPanel({
                     }`}
                   >
                     <Gift size={20} />
-                    탐험 보상
+                    탐험 보상 설정
                   </button>
                 </div>
               </div>
 
               {editMode === 'pokemon' && (
-                <PokemonSettingsPanel
-                  region={selectedRegion}
-                  onUpdateRegion={onUpdateRegion}
-                />
+                <div className="bg-white rounded-lg border-2 border-indigo-200 p-6">
+                  <PokemonSettingsPanel
+                    region={selectedRegion}
+                    onUpdateRegion={onUpdateRegion}
+                  />
+                </div>
               )}
 
               {editMode === 'loot' && (
-                <LootSettingsPanel
-                  region={selectedRegion}
-                  allItems={allItems}
-                  onUpdateRegionLootConfig={onUpdateRegionLootConfig}
-                />
+                <div className="bg-white rounded-lg border-2 border-green-200 p-6">
+                  <LootSettingsPanel
+                    region={selectedRegion}
+                    allItems={allItems}
+                    onUpdateRegionLootConfig={onUpdateRegionLootConfig}
+                  />
+                </div>
               )}
             </div>
           )}
@@ -283,32 +292,29 @@ export default function RegionManagementPanel({
 
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <Plus size={24} />
-              새 지역 추가
-            </h3>
+          <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-2xl font-bold mb-6">새 지역 추가</h3>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold mb-2">지역 이름 *</label>
+                <label className="block text-sm font-semibold mb-2">지역 이름</label>
                 <input
                   type="text"
                   value={newRegionForm.name}
                   onChange={(e) => setNewRegionForm({...newRegionForm, name: e.target.value})}
                   className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
-                  placeholder="예: 상록숲"
+                  placeholder="예: 상록 숲"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2">설명</label>
+                <label className="block text-sm font-semibold mb-2">설명 (선택)</label>
                 <input
                   type="text"
                   value={newRegionForm.description}
                   onChange={(e) => setNewRegionForm({...newRegionForm, description: e.target.value})}
                   className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
-                  placeholder="예: 울창한 숲"
+                  placeholder="예: 초보 트레이너를 위한 숲"
                 />
               </div>
 
@@ -331,7 +337,7 @@ export default function RegionManagementPanel({
                     type="color"
                     value={newRegionForm.color}
                     onChange={(e) => setNewRegionForm({...newRegionForm, color: e.target.value})}
-                    className="w-full h-10 border-2 border-gray-300 rounded-lg cursor-pointer"
+                    className="w-full h-10 px-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none cursor-pointer"
                   />
                 </div>
               </div>

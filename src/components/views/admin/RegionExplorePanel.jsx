@@ -153,6 +153,7 @@ export default function RegionExplorePanel({
       ) : (
         <RegionManagementPanel
           regions={regions}
+            towns={towns}
           groupedRegions={groupedRegions}
           selectedRegion={selectedRegion}
           editMode={editMode}
