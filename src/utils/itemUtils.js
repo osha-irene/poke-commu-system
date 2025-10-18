@@ -1,5 +1,5 @@
 // src/utils/itemUtils.js
-import { Package, Circle, Heart, Zap, Sparkles, Disc, ShoppingBag, Cpu, Dumbbell, Key } from 'lucide-react';
+import { Package, Circle, Heart, Zap, Sparkles, Disc, ShoppingBag, Cpu, Dumbbell, Key, ChefHat } from 'lucide-react';
 
 export const ITEM_POCKETS = {
   POKEBALLS: 'pokeballs',
@@ -10,6 +10,7 @@ export const ITEM_POCKETS = {
   EVOLUTION: 'evolution',
   VITAMINS: 'vitamins',
   BATTLE: 'battle-items',
+  INGREDIENTS: 'ingredients', 
   KEY: 'key-items',
   MISC: 'misc'
 };
@@ -23,6 +24,7 @@ export const POCKET_LABELS = {
   [ITEM_POCKETS.EVOLUTION]: '진화',
   [ITEM_POCKETS.VITAMINS]: '영양',
   [ITEM_POCKETS.BATTLE]: '배틀',
+  [ITEM_POCKETS.INGREDIENTS]: '식재료', 
   [ITEM_POCKETS.KEY]: '중요',
   [ITEM_POCKETS.MISC]: '기타'
 };
@@ -38,6 +40,7 @@ export const POCKET_ICONS = {
   [ITEM_POCKETS.EVOLUTION]: Cpu,
   [ITEM_POCKETS.VITAMINS]: Zap,
   [ITEM_POCKETS.BATTLE]: Dumbbell,
+  [ITEM_POCKETS.INGREDIENTS]: ChefHat, 
   [ITEM_POCKETS.KEY]: Key,
   [ITEM_POCKETS.MISC]: Package
 };
@@ -53,6 +56,7 @@ export const POCKET_COLORS = {
   [ITEM_POCKETS.EVOLUTION]: 'bg-indigo-600 text-white',
   [ITEM_POCKETS.VITAMINS]: 'bg-orange-600 text-white',
   [ITEM_POCKETS.BATTLE]: 'bg-red-700 text-white',
+  [ITEM_POCKETS.INGREDIENTS]: 'bg-amber-600 text-white', 
   [ITEM_POCKETS.KEY]: 'bg-gray-600 text-white',
   [ITEM_POCKETS.MISC]: 'bg-gray-500 text-white'
 };
@@ -114,6 +118,12 @@ export const CATEGORIES = [
     color: POCKET_COLORS[ITEM_POCKETS.BATTLE]
   },
   { 
+    id: ITEM_POCKETS.INGREDIENTS, 
+    name: POCKET_LABELS[ITEM_POCKETS.INGREDIENTS],
+    Icon: POCKET_ICONS[ITEM_POCKETS.INGREDIENTS],
+    color: POCKET_COLORS[ITEM_POCKETS.INGREDIENTS]
+  },
+  { 
     id: ITEM_POCKETS.KEY, 
     name: POCKET_LABELS[ITEM_POCKETS.KEY],
     Icon: POCKET_ICONS[ITEM_POCKETS.KEY],
@@ -131,6 +141,22 @@ export const CATEGORIES = [
 export const getItemPocket = (item) => {
   if (!item) return ITEM_POCKETS.MISC;
   
+  // 예외: 나무열매가 이름에 포함되어 있어도 실제로는 다른 포켓인 아이템들
+  const berryNameExceptions = ['나무열매쥬스', 'berry-juice', 'berry juice','딸기사탕공예','베리사탕공예','strawberry'];
+  const isException = berryNameExceptions.some(ex => 
+    item.name?.includes(ex) || item.nameEn?.toLowerCase().includes(ex.toLowerCase())
+  );
+  
+  // 나무열매 체크 (예외 제외)
+  if (!isException && (item.name?.includes('열매') || item.nameEn?.toLowerCase().includes('berry'))) {
+    return ITEM_POCKETS.BERRIES;
+  }
+  
+  // 식재료 체크
+  if (item.cooking?.isIngredient || item.category?.includes('ingredient')) {
+    return ITEM_POCKETS.INGREDIENTS;
+  }
+
   const categoryToPocketMap = {
     'vitamins': ITEM_POCKETS.VITAMINS,
     'held-items': ITEM_POCKETS.HELD_ITEMS,
@@ -140,6 +166,7 @@ export const getItemPocket = (item) => {
     'machines': ITEM_POCKETS.MACHINES,
     'berries': ITEM_POCKETS.BERRIES,
     'medicine': ITEM_POCKETS.MEDICINE,
+    'healing': ITEM_POCKETS.MEDICINE,
     'pokeballs': ITEM_POCKETS.POKEBALLS,
     'standard-balls': ITEM_POCKETS.POKEBALLS,
     'special-balls': ITEM_POCKETS.POKEBALLS,

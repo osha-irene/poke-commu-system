@@ -1,7 +1,7 @@
 import React from 'react';
+import { Heart, Egg } from 'lucide-react';
 import { getTypeColor } from '../../../styles/theme';
 
-// 로컬 폴백 URL
 const getLocalIconUrl = (pokemon, allPokemonMaster) => {
   let englishName = pokemon.nameEn;
   
@@ -23,9 +23,211 @@ const STYLES = {
   empty: "flex items-center gap-4 bg-gray-50 rounded-lg p-3 border border-dashed border-gray-300 text-gray-400",
   filled: "flex items-center gap-4 rounded-lg p-3 border transition-all cursor-move",
   selected: "bg-indigo-100 border-indigo-400 shadow-md",
-  unselected: "bg-indigo-50 border-indigo-200 hover:shadow-md hover:border-indigo-300"
+  unselected: "bg-indigo-50 border-indigo-200 hover:shadow-md hover:border-indigo-300",
+  partner: "bg-gradient-to-r from-pink-50 to-rose-50 border-pink-300 shadow-md",
+  partnerEmpty: "bg-gradient-to-r from-pink-50 to-rose-50 border-2 border-dashed border-pink-300",
+  egg: "bg-gradient-to-r from-yellow-50 to-amber-50 border-amber-300 shadow-md",
+  eggEmpty: "bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-dashed border-amber-300"
 };
 
+// 파트너 포켓몬 슬롯
+export function PartnerSlot({ 
+  pokemon, 
+  onClick, 
+  gamePokedex, 
+  allPokemonMaster,
+  allItems = []
+}) {
+  if (!pokemon) {
+    return (
+      <div className={`flex items-center gap-4 rounded-lg p-4 ${STYLES.partnerEmpty}`}>
+        <div className="w-12 h-12 bg-pink-200 rounded-full flex items-center justify-center">
+          <Heart size={24} className="text-pink-500" />
+        </div>
+        <div className="flex-1">
+          <div className="font-bold text-pink-700 flex items-center gap-2">
+            <Heart size={16} />
+            파트너 포켓몬
+          </div>
+          <div className="text-sm text-pink-600">파트너를 설정해주세요</div>
+        </div>
+      </div>
+    );
+  }
+
+  const pokedexEntry = gamePokedex?.find(p => 
+    p.number === pokemon.number || p.originalNumber === pokemon.number
+  );
+  const displayNumber = pokedexEntry?.newNumber || pokemon.number;
+
+  const typeColors = getTypeColor(pokemon.type);
+  const type2Colors = pokemon.type2 ? getTypeColor(pokemon.type2) : null;
+  
+  const imageUrl = getLocalIconUrl(pokemon, allPokemonMaster);
+
+  const pokeballData = pokemon.caughtWithBall 
+    ? allItems.find(item => {
+        if (typeof pokemon.caughtWithBall !== 'string') {
+          return false;
+        }
+        
+        const itemName = item.name?.toLowerCase();
+        const itemNameEn = item.nameEn?.toLowerCase();
+        const ballName = pokemon.caughtWithBall.toLowerCase();
+        
+        return itemName === ballName || 
+               itemNameEn === ballName ||
+               itemName?.includes(ballName) ||
+               itemNameEn?.includes(ballName);
+      })
+    : null;
+
+  const ballImage = pokeballData?.spriteUrl || pokeballData?.imageUrl;
+  const animId = `partnerSprite-${pokemon.uniqueId}`;
+
+  return (
+    <div 
+      onClick={onClick}
+      className={`flex items-center gap-4 rounded-lg p-4 ${STYLES.partner} cursor-pointer hover:shadow-lg transition-all`}
+    >
+      <style>{`
+        @keyframes ${animId} {
+          0% { background-position: left center; }
+          49.99% { background-position: left center; }
+          50% { background-position: right center; }
+          100% { background-position: right center; }
+        }
+      `}</style>
+
+      <div 
+        className="flex-shrink-0 w-10 h-10 rounded-full overflow-hidden flex items-center justify-center"
+        style={{ backgroundColor: ballImage ? 'transparent' : '#ec4899' }}
+      >
+        {ballImage ? (
+          <div
+            className="w-full h-full"
+            style={{
+              backgroundImage: `url(${ballImage})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat'
+            }}
+          />
+        ) : (
+          <Heart size={20} className="text-white" />
+        )}
+      </div>
+      
+      <div 
+        className="w-14 h-14 flex-shrink-0 flex items-center justify-center"
+        style={{ padding: '4px' }}
+      >
+        <div
+          className="pokemon-bg-sprite"
+          style={{
+            width: '40px',
+            height: '40px',
+            backgroundImage: `url(${imageUrl})`,
+            backgroundSize: '80px 40px',
+            backgroundPosition: 'right center',
+            backgroundRepeat: 'no-repeat',
+            animation: `${animId} 0.8s steps(1) infinite`,
+            imageRendering: 'pixelated'
+          }}
+        />
+      </div>
+      
+      <div className="flex-1">
+        <div className="flex items-center gap-2 mb-1">
+          <Heart size={14} className="text-pink-500" />
+          <span className="text-xs text-pink-600 font-semibold">파트너 포켓몬</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">No.{displayNumber.toString().padStart(3, '0')}</span>
+          <span className="font-bold text-lg">{pokemon.nickname || pokemon.name}</span>
+          <div className="flex gap-1">
+            <span 
+              className="text-xs px-2 py-1 rounded font-bold shadow-sm"
+              style={{ 
+                backgroundColor: typeColors.bg,
+                color: typeColors.text
+              }}
+            >
+              {pokemon.type}
+            </span>
+            {pokemon.type2 && type2Colors && (
+              <span 
+                className="text-xs px-2 py-1 rounded font-bold shadow-sm"
+                style={{ 
+                  backgroundColor: type2Colors.bg,
+                  color: type2Colors.text
+                }}
+              >
+                {pokemon.type2}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="text-sm text-gray-600">Lv.{pokemon.level}</div>
+      </div>
+    </div>
+  );
+}
+
+// 알 슬롯
+export function EggSlot({ 
+  egg,
+  onClick
+}) {
+  if (!egg) {
+    return (
+      <div className={`flex items-center gap-4 rounded-lg p-4 ${STYLES.eggEmpty}`}>
+        <div className="w-12 h-12 bg-amber-200 rounded-full flex items-center justify-center">
+          <Egg size={24} className="text-amber-600" />
+        </div>
+        <div className="flex-1">
+          <div className="font-bold text-amber-700 flex items-center gap-2">
+            <Egg size={16} />
+            포켓몬 알
+          </div>
+          <div className="text-sm text-amber-600">알이 없습니다</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      onClick={onClick}
+      className={`flex items-center gap-4 rounded-lg p-4 ${STYLES.egg} cursor-pointer hover:shadow-lg transition-all`}
+    >
+      <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+        <Egg size={32} className="text-amber-600" />
+      </div>
+      
+      <div className="flex-1">
+        <div className="flex items-center gap-2 mb-1">
+          <Egg size={14} className="text-amber-600" />
+          <span className="text-xs text-amber-700 font-semibold">포켓몬 알</span>
+        </div>
+        <div className="font-bold text-lg text-gray-800">{egg.name || '???의 알'}</div>
+        <div className="text-sm text-gray-600">
+          부화까지 {egg.stepsRemaining || egg.steps || 0}보
+        </div>
+        {egg.hatchProgress !== undefined && (
+          <div className="mt-2 w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+            <div 
+              className="bg-gradient-to-r from-yellow-400 to-amber-500 h-full transition-all duration-300"
+              style={{ width: `${egg.hatchProgress}%` }}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// 기본 파티 슬롯
 export default function PartySlot({ 
   pokemon, 
   index, 
@@ -62,7 +264,6 @@ export default function PartySlot({
   
   const imageUrl = getLocalIconUrl(pokemon, allPokemonMaster);
 
-  // 몬스터볼 이미지 가져오기
   const pokeballData = pokemon.caughtWithBall 
     ? allItems.find(item => {
         if (typeof pokemon.caughtWithBall !== 'string') {
@@ -74,15 +275,13 @@ export default function PartySlot({
         const ballName = pokemon.caughtWithBall.toLowerCase();
         
         return itemName === ballName || 
-               itemNameEn === ballName ||
+               itemNameEn === itemName ||
                itemName?.includes(ballName) ||
                itemNameEn?.includes(ballName);
       })
     : null;
 
   const ballImage = pokeballData?.spriteUrl || pokeballData?.imageUrl;
-
-  // 고유 애니메이션 ID
   const animId = `pokemonSprite-${pokemon.uniqueId || index}`;
 
   return (
@@ -93,7 +292,6 @@ export default function PartySlot({
       onClick={onClick}
       className={`${STYLES.filled} ${isSelected ? STYLES.selected : STYLES.unselected}`}
     >
-      {/* 애니메이션 정의 - 브라우저 호환성 개선 */}
       <style>{`
         @keyframes ${animId} {
           0% { 
@@ -110,7 +308,6 @@ export default function PartySlot({
           }
         }
         
-        /* 브라우저별 최적화 */
         @-webkit-keyframes ${animId} {
           0% { 
             background-position: left center; 
@@ -142,7 +339,6 @@ export default function PartySlot({
         }
       `}</style>
 
-      {/* 몬스터볼 이미지 */}
       <div 
         className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden flex items-center justify-center"
         style={{ 
@@ -166,7 +362,6 @@ export default function PartySlot({
         )}
       </div>
       
-      {/* 포켓몬 아이콘 - 좌우 프레임 애니메이션 (브라우저 호환성 개선) */}
       <div 
         className="w-12 h-12 flex-shrink-0 flex items-center justify-center"
         style={{ padding: '4px' }}
@@ -180,11 +375,9 @@ export default function PartySlot({
             backgroundSize: '64px 32px',
             backgroundPosition: 'right center',
             backgroundRepeat: 'no-repeat',
-            /* 브라우저 호환성을 위한 접두사 추가 */
             WebkitAnimation: isSelected ? `${animId} 0.8s steps(1) infinite` : 'none',
             MozAnimation: isSelected ? `${animId} 0.8s steps(1) infinite` : 'none',
             animation: isSelected ? `${animId} 0.8s steps(1) infinite` : 'none',
-            /* 이미지 렌더링 최적화 */
             imageRendering: 'pixelated',
             WebkitImageRendering: '-webkit-crisp-edges',
             MozImageRendering: '-moz-crisp-edges',
@@ -193,7 +386,6 @@ export default function PartySlot({
         />
       </div>
       
-      {/* 포켓몬 정보 */}
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500">No.{displayNumber.toString().padStart(3, '0')}</span>
@@ -227,3 +419,4 @@ export default function PartySlot({
     </div>
   );
 }
+

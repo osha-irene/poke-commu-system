@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
-import { Plus, Trash2, Save, X, Search, FileText, BarChart3, Gift, Package, Sparkles, Zap, Heart, Star, TrendingUp, ChefHat, Layers } from 'lucide-react';
-import { getItemPocket } from '../../../utils/itemUtils';
+// src/components/views/admin/CookingAdminPanel.jsx
+import React, { useState } from 'react';
+import { Plus, Trash2, Save, FileText, BarChart3, Gift, Package, Star, TrendingUp, ChefHat, Layers } from 'lucide-react';
+import ItemSelectorModal from '../../modals/ItemSelectorModal';
 
 const Card = ({ children, className = '' }) => (
   <div className={`bg-white rounded-lg shadow ${className}`}>{children}</div>
@@ -30,12 +31,15 @@ const Button = ({ children, variant = 'primary', size = 'md', onClick, disabled,
 };
 
 export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allItems = [], recipes = [] }) {
+  // 레시피 설정 상태
   const [recipeType, setRecipeType] = useState('fixed');
   const [ingredients, setIngredients] = useState([
     { name: '', count: 1 },
     { name: '', count: 1 },
     { name: '', count: 1 }
   ]);
+  
+  // 결과 아이템 상태
   const [resultItem, setResultItem] = useState({
     name: '',
     pocket: 'berries',
@@ -46,11 +50,7 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
     spriteUrl: ''
   });
   
-  const [showItemModal, setShowItemModal] = useState(false);
-  const [selectingIndex, setSelectingIndex] = useState(null);
-  const [itemSearch, setItemSearch] = useState('');
-  const [itemCategory, setItemCategory] = useState('all');
-  
+  // 스탯 기반 레시피 상태
   const [requiredStats, setRequiredStats] = useState({
     elegance: 0,
     beauty: 0,
@@ -70,59 +70,21 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
     speed: 0
   });
 
-  // 카테고리 정의 (식재료 추가)
-  const categories = [
-    { id: 'all', name: '전체', icon: Package },
-    { id: 'berries', name: '나무열매', icon: Sparkles },
-    { id: 'medicine', name: '회복', icon: Heart },
-    { id: 'vitamins', name: '영양', icon: Zap },
-    { id: 'ingredients', name: '식재료', icon: ChefHat }, // 식재료 카테고리 추가
-  ];
+  // 아이템 선택 모달 상태
+  const [showItemModal, setShowItemModal] = useState(false);
+  const [selectingIndex, setSelectingIndex] = useState(null);
 
-  // itemsUtil을 사용한 필터링
-  const filteredItems = useMemo(() => {
-    let items = [];
+  // 재료 관리 함수
+  const openItemSelector = (index) => {
+    setSelectingIndex(index);
+    setShowItemModal(true);
+  };
 
-    if (itemCategory === 'all') {
-      // 전체: 나무열매, 회복, 영양, 식재료
-      items = [
-        ...getItemPocket(allItems, 'berries'),
-        ...getItemPocket(allItems, 'medicine'),
-        ...getItemPocket(allItems, 'vitamins'),
-        ...allItems.filter(item => 
-          item.cooking?.isIngredient === true ||
-          item.category?.includes('ingredient')
-        )
-      ];
-    } else if (itemCategory === 'ingredients') {
-      // 식재료만
-      items = allItems.filter(item => 
-        item.cooking?.isIngredient === true ||
-        item.category?.includes('ingredient')
-      );
-    } else {
-      // 특정 pocket
-      items = getItemPocket(allItems, itemCategory);
-    }
-
-    // 검색어 필터링
-    if (itemSearch) {
-      const query = itemSearch.toLowerCase();
-      items = items.filter(item => 
-        item.name?.toLowerCase().includes(query) ||
-        item.nameEn?.toLowerCase().includes(query)
-      );
-    }
-
-    // 중복 제거 (id 기준)
-    const uniqueItems = Array.from(
-      new Map(items.map(item => [item.id, item])).values()
-    );
-
-    return uniqueItems.sort((a, b) => 
-      (a.name || '').localeCompare(b.name || '')
-    );
-  }, [allItems, itemCategory, itemSearch]);
+  const handleSelectIngredient = (item) => {
+    const newIng = [...ingredients];
+    newIng[selectingIndex].name = item.name;
+    setIngredients(newIng);
+  };
 
   const removeIngredient = (index) => {
     const newIng = [...ingredients];
@@ -130,25 +92,10 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
     setIngredients(newIng);
   };
 
-  const openItemSelector = (index) => {
-    setSelectingIndex(index);
-    setShowItemModal(true);
-    setItemSearch('');
-    setItemCategory('all');
-  };
-
-  const selectItem = (item) => {
-    const newIng = [...ingredients];
-    newIng[selectingIndex].name = item.name;
-    setIngredients(newIng);
-    setShowItemModal(false);
-  };
-
+  // 레시피 관리 함수
   const handleDeleteRecipe = (recipeId) => {
     if (window.confirm('정말로 이 레시피를 삭제하시겠습니까?')) {
-      if (onDeleteRecipe) {
-        onDeleteRecipe(recipeId);
-      }
+      onDeleteRecipe?.(recipeId);
     }
   };
 
@@ -184,6 +131,7 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
 
     onCreateRecipe(recipe);
     
+    // 초기화
     setIngredients([
       { name: '', count: 1 },
       { name: '', count: 1 },
@@ -219,6 +167,7 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
 
   return (
     <div className="space-y-6">
+      {/* 레시피 등록 카드 */}
       <Card className="p-6">
         <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
           <ChefHat size={24} /> 레시피 등록
@@ -265,7 +214,7 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
         <div className={`border-2 rounded-b-lg bg-white relative ${
           recipeType === 'fixed' ? 'border-gray-300 rounded-tr-lg border-t-gray-300' : 'border-gray-300 rounded-tl-lg border-t-gray-300'
         }`}>
-          {/* 선택된 탭 아래 흰색 덮개 - 테두리 완전히 가리기 */}
+          {/* 선택된 탭 아래 흰색 덮개 */}
           <div 
             className="absolute bg-white z-30"
             style={{
@@ -274,7 +223,7 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
               width: '49.8%',
               height: '4px'
             }}
-          ></div>
+          />
           
           <div className="p-6">
             {/* 2열 그리드 */}
@@ -407,7 +356,7 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
                         ))}
                       </div>
                       <p className="text-xs text-gray-600 mt-2 flex items-center gap-1">
-                        <Star size={12} /> 재료들의 컨디션&노력치이 값 이상이면 레시피 완성
+                        <Star size={12} /> 재료들의 컨디션&노력치가 이 값 이상이면 레시피 완성
                       </p>
                     </div>
                   </div>
@@ -563,10 +512,9 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
                 key={recipe.id}
                 className="border-2 border-gray-200 rounded-xl bg-white flex flex-col relative group"
               >
-                {/* 호버 시 휴지통 아이콘 */}
                 <button
                   onClick={() => handleDeleteRecipe(recipe.id)}
-                  className="absolute top-2 right-2 p-2 bg-gray-300 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
                   title="레시피 삭제"
                 >
                   <Trash2 size={20} />
@@ -686,100 +634,15 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
       </Card>
 
       {/* 아이템 선택 모달 */}
-        {showItemModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-2xl font-bold text-gray-800">재료 선택</h3>
-              <button
-                onClick={() => setShowItemModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X size={24} className="text-gray-600" />
-              </button>
-            </div>
-
-            <div className="p-6 border-b border-gray-200 space-y-4">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                <input
-                  type="text"
-                  placeholder="아이템 검색..."
-                  value={itemSearch}
-                  onChange={(e) => setItemSearch(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-              <div className="flex gap-2">
-                {categories.map(cat => {
-                  const IconComponent = cat.icon;
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => setItemCategory(cat.id)}
-                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${
-                        itemCategory === cat.id
-                          ? 'bg-indigo-600 text-white shadow-lg scale-105'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                    >
-                      <IconComponent size={16} /> {cat.name}
-                    </button>
-                  );
-                })}
-              </div>
-              
-              {/* 필터링된 아이템 개수 표시 */}
-              <div className="text-sm text-gray-600">
-                {filteredItems.length}개의 아이템
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="grid grid-cols-6 gap-4">
-                {filteredItems.map(item => (
-                  <button
-                    key={item.id}
-                    onClick={() => selectItem(item)}
-                    className="flex flex-col border-2 border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-lg transition-all group bg-white overflow-hidden"
-                  >
-                    <div className="aspect-square bg-gray-50 p-6 flex items-center justify-center">
-                      <img 
-                        src={item.spriteUrl || item.imageUrl} 
-                        alt={item.name}
-                        className="max-w-full max-h-full object-contain"
-                        style={{ 
-                          imageRendering: 'pixelated', 
-                          transform: item.cooking?.isIngredient ? 'scale(1)' : 'scale(2)' 
-                        }}
-                      />
-                    </div>
-                    
-                    <div className="p-2 bg-white border-t border-gray-200">
-                      <div className="text-xs font-semibold text-gray-800 text-center truncate group-hover:text-indigo-700">
-                        {item.name}
-                      </div>
-                      {/* 식재료 표시 */}
-                      {item.cooking?.isIngredient && (
-                        <div className="text-[10px] text-center text-indigo-600 mt-0.5">
-                          식재료
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
-              
-              {filteredItems.length === 0 && (
-                <div className="text-center py-16 text-gray-400">
-                  <Search size={64} className="mx-auto mb-4 text-gray-300" />
-                  <p className="text-lg">검색 결과가 없습니다</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <ItemSelectorModal
+        show={showItemModal}
+        onClose={() => setShowItemModal(false)}
+        onSelect={handleSelectIngredient}
+        items={allItems}
+        title="재료 선택"
+        multiSelect={false}
+        pockets={['ingredients', 'berries', 'medicine', 'vitamins']}
+      />
     </div>
   );
 }

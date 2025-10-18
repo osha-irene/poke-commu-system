@@ -70,7 +70,7 @@ export default function RegionExplorePanel({
                           </div>
                           <div className="flex items-center gap-1">
                             <Percent size={12} />
-                            조우율: {((region.encounterRate || 0.5) * 100).toFixed(0)}%
+                            조우율: {((region.encounterRate || 0.5)).toFixed(0)}%
                           </div>
                           <div className="flex items-center gap-1">
                             <TrendingUp size={12} />

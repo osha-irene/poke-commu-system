@@ -29,6 +29,7 @@ const getPokemonSpriteUrl = (number) =>
 
 export default function PokemonDetailPanel({ 
   pokemon, 
+  currentUser,
   hasRareCandy,
   rareCandyImage,
   isInParty,
@@ -70,6 +71,9 @@ export default function PokemonDetailPanel({
   const canEvolve = checkEvolution && checkEvolution(pokemon);
   const isHoldingEverstone = pokemon.heldItem?.toLowerCase() === 'everstone' || 
                               pokemon.heldItem?.toLowerCase() === '변함없는돌';
+
+  // 파트너 여부 확인 (파일 상단 어딘가에 추가)
+const isThisPartner = currentUser?.partnerPokemon?.uniqueId === pokemon.uniqueId;
 
   // 컨디션 및 노력치 데이터
   const conditionData = [
@@ -338,7 +342,7 @@ export default function PokemonDetailPanel({
 
                 <button
                   onClick={() => {
-                    const newStatus = !pokemon.isPartner;
+                    const newStatus = !isThisPartner;
                     if (newStatus) {
                       if (window.confirm(`${pokemon.nickname || pokemon.name}를 파트너 포켓몬으로 설정하시겠습니까?\n\n파트너는 방생할 수 없으며, 1마리만 설정 가능합니다.`)) {
                         onSetPartner(pokemon.uniqueId, true);
@@ -350,11 +354,11 @@ export default function PokemonDetailPanel({
                     }
                   }}
                   className={`p-2 rounded-lg transition-colors ${
-                    pokemon.isPartner
+                    isThisPartner
                       ? 'text-pink-600 hover:bg-pink-50'
                       : 'text-gray-400 hover:bg-gray-50'
                   }`}
-                  title={pokemon.isPartner ? '파트너 해제' : '파트너 설정'}
+                  title={isThisPartner ? '파트너 해제' : '파트너 설정'}
                 >
                   <Heart size={20} fill={pokemon.isPartner ? 'currentColor' : 'none'} />
                 </button>

@@ -5,12 +5,12 @@ import React, { useState, useEffect } from 'react';
 import { Package, ArrowDown, ArrowUp } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
 import PartySlot from './pokemon/PartySlot';
+import { PartnerSlot, EggSlot } from './pokemon/PartySlot';
 import BoxPokemon from './pokemon/BoxPokemon';
 import PokemonDetailPanel from './pokemon/PokemonDetailPanel';
 import { getButtonClass, getCardClass } from '../../styles/theme';
 
 function DesktopPokemonView() {
-  // ✅ Context에서 데이터 가져오기
   const {
     caughtPokemon = [],
     items = [],
@@ -45,18 +45,23 @@ function DesktopPokemonView() {
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [hoverIndex, setHoverIndex] = useState(null);
   
-  // ⭐ 엔트리 내부 드래그 상태 추가
   const [isDraggingInParty, setIsDraggingInParty] = useState(false);
   const [partyDraggedIndex, setPartyDraggedIndex] = useState(null);
   const [partyHoverIndex, setPartyHoverIndex] = useState(null);
-  const dragOverTimeoutRef = React.useRef(null); // ⭐ throttle용
-  const dropSuccessRef = React.useRef(false); // ⭐ 드롭 성공 여부
+  const dragOverTimeoutRef = React.useRef(null);
+  const dropSuccessRef = React.useRef(false);
   
-  // ⭐ 인덱스 기반: 0-5는 엔트리, 6~는 박스
+  // 파트너 포켓몬은 caughtPokemon 배열에서 찾되, 엔트리/박스에서는 제외
+  const partnerPokemon = caughtPokemon.find(p => p && p.isPartner) || null;
+  
+  // 엔트리와 박스는 원래 배열 그대로 사용 (파트너도 포함)
   const partySlots = caughtPokemon.slice(0, 6);
   while (partySlots.length < 6) partySlots.push(null);
   
   const box = caughtPokemon.slice(6).filter(p => p !== null);
+  
+  // 알 찾기 (임시 데이터)
+  const currentEgg = null;
   
   const rareCandy = items?.find(item => 
     item.name === '이상한사탕' || 
@@ -81,71 +86,64 @@ function DesktopPokemonView() {
   }, [selectedPokemonId, selectedPokemon]);
 
   useEffect(() => {
-  const resetDragState = () => {
-    setDraggedPokemon(null);
-    setDropTarget(null);
-    setIsDraggingInParty(false);
-    setPartyDraggedIndex(null);
-    setPartyHoverIndex(null);
+    const resetDragState = () => {
+      setDraggedPokemon(null);
+      setDropTarget(null);
+      setIsDraggingInParty(false);
+      setPartyDraggedIndex(null);
+      setPartyHoverIndex(null);
+      dropSuccessRef.current = false;
+      dragEndExecutedRef.current = false;
+    };
+    
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        console.log('ESC - 드래그 상태 리셋');
+        resetDragState();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const dragEndExecutedRef = React.useRef(false);
+
+  const handleDragStart = (e, pokemon, isInParty, slotIndex) => {
+    if (!pokemon) return;
+    
+    console.log('드래그 시작!', {
+      pokemonName: pokemon.name,
+      slotIndex,
+      isInParty,
+      totalPartyPokemon: partySlots.filter(p => p !== null).length,
+      partySlots: partySlots.map((p, i) => `[${i}] ${p?.name || 'null'}`)
+    });
+    
+    e.stopPropagation();
+    
     dropSuccessRef.current = false;
     dragEndExecutedRef.current = false;
-  };
-  
-  // ESC 키로 드래그 취소
-  const handleKeyDown = (e) => {
-    if (e.key === 'Escape') {
-      console.log('🚫 ESC - 드래그 상태 리셋');
-      resetDragState();
+    console.log('드래그 시작, 플래그 리셋');
+    
+    const actualIndex = caughtPokemon.findIndex(p => p && p.uniqueId === pokemon.uniqueId);
+    const actualIsInParty = actualIndex >= 0 && actualIndex < 6;
+    
+    if (actualIsInParty && slotIndex !== undefined) {
+      setIsDraggingInParty(true);
+      setPartyDraggedIndex(slotIndex);
+    } else {
+      setIsDraggingInParty(false);
+      setPartyDraggedIndex(null);
     }
+    
+    setDraggedPokemon({ pokemon, isInParty: actualIsInParty, slotIndex: actualIndex });
+    e.dataTransfer.effectAllowed = 'move';
+    
+    const dragImage = new Image();
+    dragImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
+    e.dataTransfer.setDragImage(dragImage, 0, 0);
   };
-  
-  window.addEventListener('keydown', handleKeyDown);
-  return () => window.removeEventListener('keydown', handleKeyDown);
-}, []);
-
-
-  const dragEndExecutedRef = React.useRef(false); // ⭐ dragEnd 실행 여부 추적
-
-const handleDragStart = (e, pokemon, isInParty, slotIndex) => {
-  if (!pokemon) return;
-  
-  console.log('🚀🚀🚀 드래그 시작!', {
-    pokemonName: pokemon.name,
-    slotIndex,
-    isInParty,
-    totalPartyPokemon: partySlots.filter(p => p !== null).length,
-    partySlots: partySlots.map((p, i) => `[${i}] ${p?.name || 'null'}`)
-  });
-  
-  e.stopPropagation();
-  
-  // ⭐ "이미 드래그 중" 체크 삭제! 무조건 새로 시작!
-  
-  // ⭐ 플래그 리셋
-  dropSuccessRef.current = false;
-  dragEndExecutedRef.current = false;
-  console.log('🎬 드래그 시작, 플래그 리셋');
-  
-  const actualIndex = caughtPokemon.findIndex(p => p && p.uniqueId === pokemon.uniqueId);
-  const actualIsInParty = actualIndex >= 0 && actualIndex < 6;
-  
-  // ⭐ 엔트리 내부 드래그인 경우
-  if (actualIsInParty && slotIndex !== undefined) {
-    setIsDraggingInParty(true);
-    setPartyDraggedIndex(slotIndex);
-  } else {
-    // ⭐ 아니면 초기화
-    setIsDraggingInParty(false);
-    setPartyDraggedIndex(null);
-  }
-  
-  setDraggedPokemon({ pokemon, isInParty: actualIsInParty, slotIndex: actualIndex });
-  e.dataTransfer.effectAllowed = 'move';
-  
-  const dragImage = new Image();
-  dragImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
-  e.dataTransfer.setDragImage(dragImage, 0, 0);
-};
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -176,7 +174,6 @@ const handleDragStart = (e, pokemon, isInParty, slotIndex) => {
   const handleDropToParty = (e) => {
     e.preventDefault();
     
-    // ⭐ 엔트리 내부 드래그는 handlePartyDrop에서 처리
     if (isDraggingInParty) {
       return;
     }
@@ -197,34 +194,45 @@ const handleDragStart = (e, pokemon, isInParty, slotIndex) => {
     }
   };
 
-const handleDragEnd = () => {
-  // ⭐ 이미 실행됐으면 무시
-  if (dragEndExecutedRef.current) {
-    console.log('⚠️ handleDragEnd 이미 실행됨 - 무시');
-    return;
-  }
-  
-  dragEndExecutedRef.current = true;
-  
-  console.log('🏁 handleDragEnd 호출, dropSuccess:', dropSuccessRef.current);
-  
-  const wasSuccessful = dropSuccessRef.current;
-  
-  if (wasSuccessful) {
-    console.log('✅ 드롭 성공 - 정리 중');
-  } else {
-    console.log('❌ 드롭 실패 - 정리 중');
-  }
-  
-  // ⭐ 짧은 딜레이 후 정리 (새 드래그가 시작되지 않았을 때만!)
-  setTimeout(() => {
-    // ⭐⭐⭐ 핵심: dragEndExecutedRef가 false면 새 드래그가 시작된 것!
-    if (!dragEndExecutedRef.current) {
-      console.log('⚠️ 새 드래그 시작됨 - 정리 취소');
+  const handleDragEnd = () => {
+    if (dragEndExecutedRef.current) {
+      console.log('handleDragEnd 이미 실행됨 - 무시');
       return;
     }
     
-    console.log('🧹 최종 정리!');
+    dragEndExecutedRef.current = true;
+    
+    console.log('handleDragEnd 호출, dropSuccess:', dropSuccessRef.current);
+    
+    const wasSuccessful = dropSuccessRef.current;
+    
+    if (wasSuccessful) {
+      console.log('드롭 성공 - 정리 중');
+    } else {
+      console.log('드롭 실패 - 정리 중');
+    }
+    
+    setTimeout(() => {
+      if (!dragEndExecutedRef.current) {
+        console.log('새 드래그 시작됨 - 정리 취소');
+        return;
+      }
+      
+      console.log('최종 정리!');
+      setDraggedPokemon(null);
+      setDropTarget(null);
+      setIsDraggingInParty(false);
+      setPartyDraggedIndex(null);
+      setPartyHoverIndex(null);
+      dropSuccessRef.current = false;
+      dragEndExecutedRef.current = false;
+    }, 50);
+  };
+
+  const handlePokemonClick = (pokemon) => {
+    if (!pokemon) return;
+    
+    console.log('포켓몬 클릭 - 드래그 상태 초기화');
     setDraggedPokemon(null);
     setDropTarget(null);
     setIsDraggingInParty(false);
@@ -232,26 +240,10 @@ const handleDragEnd = () => {
     setPartyHoverIndex(null);
     dropSuccessRef.current = false;
     dragEndExecutedRef.current = false;
-  }, 50);
-};
-
-
-
-  const handlePokemonClick = (pokemon) => {
-  if (!pokemon) return;
-  
-  // ⭐ 클릭 시 모든 드래그 관련 상태 강제 초기화!
-  console.log('🖱️ 포켓몬 클릭 - 드래그 상태 초기화');
-  setDraggedPokemon(null);
-  setDropTarget(null);
-  setIsDraggingInParty(false);
-  setPartyDraggedIndex(null);
-  setPartyHoverIndex(null);
-  dropSuccessRef.current = false;
-  dragEndExecutedRef.current = false;
-  
-  setSelectedPokemonId(pokemon.uniqueId);
-};
+    
+    console.log('선택된 포켓몬:', pokemon.nickname || pokemon.name, 'uniqueId:', pokemon.uniqueId);
+    setSelectedPokemonId(pokemon.uniqueId);
+  };
 
   const handleUseCandy = (uniqueId, onLevelUpCallback) => {
     if (!hasRareCandy) return;
@@ -331,11 +323,9 @@ const handleDragEnd = () => {
     setShowReorderModal(false);
   };
 
-  // ⭐ 엔트리 내부 순서 변경 핸들러
   const handlePartyDragOver = (e, index) => {
     e.preventDefault();
     e.stopPropagation();
-    
     
     if (!isDraggingInParty || partyDraggedIndex === null) return;
     if (partyDraggedIndex === index) return;
@@ -345,98 +335,104 @@ const handleDragEnd = () => {
     }
   };
 
-const handlePartyDragLeave = (e) => {
-  e.stopPropagation();
-  
-  // ⭐ 자식 요소로 이동하는 경우 무시 (매우 중요!)
-  const rect = e.currentTarget.getBoundingClientRect();
-  const x = e.clientX;
-  const y = e.clientY;
-  
-  // 마우스가 여전히 현재 요소 안에 있으면 무시
-  if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-    return;
-  }
-  
-  setPartyHoverIndex(null);
-};
-
-const handlePartyDrop = (e, dropIndex) => {
-  e.preventDefault();
-  e.stopPropagation();
-  
-  console.log('💧💧💧 handlePartyDrop 호출:', { 
-    isDraggingInParty, 
-    partyDraggedIndex, 
-    dropIndex,
-    draggedPokemon: partySlots[partyDraggedIndex]?.name,
-    targetPokemon: partySlots[dropIndex]?.name
-  });
-  
-  if (!isDraggingInParty || partyDraggedIndex === null) {
-    console.log('❌ 조건 불충족');
-    return;
-  }
-  
-  if (partyDraggedIndex === dropIndex) {
-    console.log('❌ 같은 위치');
-    setPartyHoverIndex(null);
-    return;
-  }
-
-  dropSuccessRef.current = true;
-  
-  console.log('✅ 순서 변경 시작:', partyDraggedIndex, '->', dropIndex);
-
-  // ⭐ 심플한 방법: 배열 순서 직접 변경
-  const actualPokemon = partySlots.filter(p => p !== null);
-  
-  // 실제 포켓몬만의 인덱스 매핑
-  let fromIdx = -1, toIdx = -1;
-  let count = 0;
-  
-  for (let i = 0; i < 6; i++) {
-    if (partySlots[i] !== null) {
-      if (i === partyDraggedIndex) fromIdx = count;
-      if (i === dropIndex) toIdx = count;
-      count++;
+  const handlePartyDragLeave = (e) => {
+    e.stopPropagation();
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+    
+    if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+      return;
     }
-  }
-  
-  // 빈 슬롯으로 이동하는 경우
-  if (dropIndex >= actualPokemon.length) {
-    toIdx = actualPokemon.length - 1;
-  }
-  
-  console.log('🎯 실제 이동:', fromIdx, '->', toIdx);
-  
-  // 배열 재정렬 (array-move 알고리즘)
-  const result = [...actualPokemon];
-  const [removed] = result.splice(fromIdx, 1);
-  result.splice(toIdx, 0, removed);
-  
-  console.log('🔄 새 순서:', result.map(p => p.name));
-  
-  if (onReorderParty) {
-    console.log('✅ onReorderParty 호출!');
-    onReorderParty(result);
-  }
-};
+    
+    setPartyHoverIndex(null);
+  };
+
+  const handlePartyDrop = (e, dropIndex) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log('handlePartyDrop 호출:', { 
+      isDraggingInParty, 
+      partyDraggedIndex, 
+      dropIndex,
+      draggedPokemon: partySlots[partyDraggedIndex]?.name,
+      targetPokemon: partySlots[dropIndex]?.name
+    });
+    
+    if (!isDraggingInParty || partyDraggedIndex === null) {
+      console.log('조건 불충족');
+      return;
+    }
+    
+    if (partyDraggedIndex === dropIndex) {
+      console.log('같은 위치');
+      setPartyHoverIndex(null);
+      return;
+    }
+
+    dropSuccessRef.current = true;
+    
+    console.log('순서 변경 시작:', partyDraggedIndex, '->', dropIndex);
+
+    const actualPokemon = partySlots.filter(p => p !== null);
+    
+    let fromIdx = -1, toIdx = -1;
+    let count = 0;
+    
+    for (let i = 0; i < 6; i++) {
+      if (partySlots[i] !== null) {
+        if (i === partyDraggedIndex) fromIdx = count;
+        if (i === dropIndex) toIdx = count;
+        count++;
+      }
+    }
+    
+    if (dropIndex >= actualPokemon.length) {
+      toIdx = actualPokemon.length - 1;
+    }
+    
+    console.log('실제 이동:', fromIdx, '->', toIdx);
+    
+    const result = [...actualPokemon];
+    const [removed] = result.splice(fromIdx, 1);
+    result.splice(toIdx, 0, removed);
+    
+    console.log('새 순서:', result.map(p => p.name));
+    
+    if (onReorderParty) {
+      console.log('onReorderParty 호출!');
+      onReorderParty(result);
+    }
+  };
+
   return (
     <div className="grid grid-cols-2 gap-6 h-full">
-      {/* 왼쪽: 포켓몬 리스트 */}
       <div className="space-y-6 overflow-y-auto">
+        {/* 파트너 포켓몬 슬롯 */}
+        <div className={getCardClass('default') + ' p-6'}>
+          <PartnerSlot
+            pokemon={partnerPokemon}
+            onClick={() => {
+              if (partnerPokemon) {
+                console.log('파트너 포켓몬 클릭:', partnerPokemon.nickname || partnerPokemon.name);
+                handlePokemonClick(partnerPokemon);
+              }
+            }}
+            gamePokedex={gamePokedex}
+            allPokemonMaster={allPokemonMaster}
+            allItems={allItems}
+          />
+        </div>
+
         {/* 엔트리 */}
         <div className={getCardClass('default') + ' p-6'}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold text-gray-800">
               엔트리 ({partySlots.filter(p => p !== null).length}/6)
             </h3>
-            <button
-              onClick={handleOpenReorderModal}
-              >
-          
-            </button>
+            <button onClick={handleOpenReorderModal}></button>
           </div>
           
           <div 
@@ -462,120 +458,115 @@ const handlePartyDrop = (e, dropIndex) => {
               </div>
             )}
 
-
-{partySlots.map((pokemon, index) => {
-  const isDragging = partyDraggedIndex === index && isDraggingInParty;
-  const isHovering = partyHoverIndex === index && isDraggingInParty;
-  
-  const draggedPokemonData = isDraggingInParty && partyDraggedIndex !== null
-    ? partySlots[partyDraggedIndex]
-    : null;
-  
-  const shouldShowPlaceholderAbove = isHovering && draggedPokemonData && pokemon !== null && partyDraggedIndex > index;
-  const shouldShowPlaceholderBelow = isHovering && draggedPokemonData && pokemon !== null && partyDraggedIndex < index;
-  
-  return (
-    <div 
-      key={`slot-${index}`}  // ⭐ key를 슬롯 인덱스로 고정
-
-      onDragOver={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        e.dataTransfer.dropEffect = 'move';
-        
-         // 엔트리 내부 드래그
-        if (isDraggingInParty && partyDraggedIndex !== index) {
-          setPartyHoverIndex(index);
-        }
-        // ⭐ 박스에서 드래그 중일 때도 처리
-        if (draggedPokemon && !draggedPokemon.isInParty) {
-          setDropTarget('party');
-        }
-      }}
-      onDrop={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (dropSuccessRef.current) return;
-        
-        // 엔트리 내부 드래그
-        if (isDraggingInParty && partyDraggedIndex !== index) {
-          console.log('✅ 슬롯', index, '에 드롭!');
-          handlePartyDrop(e, index);
-        }
-        // ⭐ 박스에서 엔트리로 드롭
-        else if (draggedPokemon && !draggedPokemon.isInParty) {
-          handleDropToParty(e);
-        }
-      }}
-    >
-      {/* 위쪽 플레이스홀더 */}
-      {shouldShowPlaceholderAbove && (
-        <div className="mb-2 bg-indigo-50 border-2 border-dashed border-indigo-300 rounded-lg p-3 opacity-70 pointer-events-none">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 flex-shrink-0 bg-white rounded-lg flex items-center justify-center">
-              <img 
-                src={draggedPokemonData.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${draggedPokemonData.number}.png`}
-                alt={draggedPokemonData.name}
-                className="w-10 h-10 object-contain pokemon-sprite"
-              />
-            </div>
-            <div className="flex-1">
-              <div className="font-bold text-indigo-600 text-sm">
-                {draggedPokemonData.nickname || draggedPokemonData.name}
-              </div>
-              <div className="text-xs text-indigo-500">여기로 이동</div>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* 실제 슬롯 */}
-      <div 
-        className={pokemon ? `transition-opacity duration-150 ${isDragging ? 'opacity-30' : ''}` : ''}
-      >
-        <PartySlot
-          pokemon={pokemon}
-          index={index}
-          isSelected={selectedPokemonId === pokemon?.uniqueId}
-          onDragStart={(e) => pokemon && handleDragStart(e, pokemon, true, index)}
-          onDragEnd={handleDragEnd}
-          onClick={() => handlePokemonClick(pokemon)}
-          isDragging={isDragging}
-          gamePokedex={gamePokedex}
-          allPokemonMaster={allPokemonMaster}
-          allItems={allItems}
-        />
-      </div>
-      
-      {/* 아래쪽 플레이스홀더 */}
-      {shouldShowPlaceholderBelow && (
-        <div className="mt-2 bg-indigo-50 border-2 border-dashed border-indigo-300 rounded-lg p-3 opacity-70 pointer-events-none">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 flex-shrink-0 bg-white rounded-lg flex items-center justify-center">
-              <img 
-                src={draggedPokemonData.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${draggedPokemonData.number}.png`}
-                alt={draggedPokemonData.name}
-                className="w-10 h-10 object-contain pokemon-sprite"
-              />
-            </div>
-            <div className="flex-1">
-              <div className="font-bold text-indigo-600 text-sm">
-                {draggedPokemonData.nickname || draggedPokemonData.name}
-              </div>
-              <div className="text-xs text-indigo-500">여기로 이동</div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-})}
-
+            {partySlots.map((pokemon, index) => {
+              const isDragging = partyDraggedIndex === index && isDraggingInParty;
+              const isHovering = partyHoverIndex === index && isDraggingInParty;
+              
+              const draggedPokemonData = isDraggingInParty && partyDraggedIndex !== null
+                ? partySlots[partyDraggedIndex]
+                : null;
+              
+              const shouldShowPlaceholderAbove = isHovering && draggedPokemonData && pokemon !== null && partyDraggedIndex > index;
+              const shouldShowPlaceholderBelow = isHovering && draggedPokemonData && pokemon !== null && partyDraggedIndex < index;
+              
+              return (
+                <div 
+                  key={`slot-${index}`}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.dataTransfer.dropEffect = 'move';
+                    
+                    if (isDraggingInParty && partyDraggedIndex !== index) {
+                      setPartyHoverIndex(index);
+                    }
+                    if (draggedPokemon && !draggedPokemon.isInParty) {
+                      setDropTarget('party');
+                    }
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    if (dropSuccessRef.current) return;
+                    
+                    if (isDraggingInParty && partyDraggedIndex !== index) {
+                      console.log('슬롯', index, '에 드롭!');
+                      handlePartyDrop(e, index);
+                    }
+                    else if (draggedPokemon && !draggedPokemon.isInParty) {
+                      handleDropToParty(e);
+                    }
+                  }}
+                >
+                  {shouldShowPlaceholderAbove && (
+                    <div className="mb-2 bg-indigo-50 border-2 border-dashed border-indigo-300 rounded-lg p-3 opacity-70 pointer-events-none">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 flex-shrink-0 bg-white rounded-lg flex items-center justify-center">
+                          <img 
+                            src={draggedPokemonData.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${draggedPokemonData.number}.png`}
+                            alt={draggedPokemonData.name}
+                            className="w-10 h-10 object-contain pokemon-sprite"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-bold text-indigo-600 text-sm">
+                            {draggedPokemonData.nickname || draggedPokemonData.name}
+                          </div>
+                          <div className="text-xs text-indigo-500">여기로 이동</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className={pokemon ? `transition-opacity duration-150 ${isDragging ? 'opacity-30' : ''}` : ''}>
+                    <PartySlot
+                      pokemon={pokemon}
+                      index={index}
+                      isSelected={selectedPokemonId === pokemon?.uniqueId}
+                      onDragStart={(e) => pokemon && handleDragStart(e, pokemon, true, index)}
+                      onDragEnd={handleDragEnd}
+                      onClick={() => handlePokemonClick(pokemon)}
+                      isDragging={isDragging}
+                      gamePokedex={gamePokedex}
+                      allPokemonMaster={allPokemonMaster}
+                      allItems={allItems}
+                    />
+                  </div>
+                  
+                  {shouldShowPlaceholderBelow && (
+                    <div className="mt-2 bg-indigo-50 border-2 border-dashed border-indigo-300 rounded-lg p-3 opacity-70 pointer-events-none">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 flex-shrink-0 bg-white rounded-lg flex items-center justify-center">
+                          <img 
+                            src={draggedPokemonData.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${draggedPokemonData.number}.png`}
+                            alt={draggedPokemonData.name}
+                            className="w-10 h-10 object-contain pokemon-sprite"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-bold text-indigo-600 text-sm">
+                            {draggedPokemonData.nickname || draggedPokemonData.name}
+                          </div>
+                          <div className="text-xs text-indigo-500">여기로 이동</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* 박스 토글 */}
+        {/* 알 슬롯 */}
+        <div className={getCardClass('default') + ' p-6'}>
+          <EggSlot
+            egg={currentEgg}
+            onClick={() => currentEgg && console.log('알 클릭')}
+          />
+        </div>
+
         <button
           onClick={() => setShowBox(!showBox)}
           className={getCardClass('interactive') + ' w-full p-4 flex items-center justify-between'}
@@ -587,7 +578,6 @@ const handlePartyDrop = (e, dropIndex) => {
           <span className="text-gray-500">{showBox ? '▲ 닫기' : '▼ 열기'}</span>
         </button>
 
-        {/* 박스 */}
         {showBox && (
           <div className={getCardClass('default') + ' p-6'}>
             <div 
@@ -639,7 +629,6 @@ const handlePartyDrop = (e, dropIndex) => {
         )}
       </div>
 
-      {/* 오른쪽: 상세 정보 */}
       <div className="overflow-y-auto">
         {selectedPokemon ? (
           <PokemonDetailPanel
@@ -663,6 +652,7 @@ const handlePartyDrop = (e, dropIndex) => {
             onLearnMove={onLearnMove}    
             allMoves={allMoves} 
             pokemonLearnsets={pokemonLearnsets}
+            currentUser={currentUser}
           />
         ) : (
           <div className={getCardClass('default') + ' p-6 h-full flex items-center justify-center'}>
@@ -674,7 +664,6 @@ const handlePartyDrop = (e, dropIndex) => {
         )}
       </div>
 
-      {/* 순서 변경 모달 */}
       {showReorderModal && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
@@ -706,9 +695,9 @@ const handlePartyDrop = (e, dropIndex) => {
                       onDragLeave={handleReorderDragLeave}
                       onDrop={(e) => handleReorderDrop(e, index)}
                       onDragEnd={handleReorderDragEnd}
-                       style={{
-    pointerEvents: isDragging ? 'none' : 'auto'  // ⭐ 드래그 중일 때 이벤트 비활성화
-  }}
+                      style={{
+                        pointerEvents: isDragging ? 'none' : 'auto'
+                      }}
                       className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-all ${
                         isDragging 
                           ? 'opacity-40 border-dashed border-gray-400'
@@ -742,7 +731,7 @@ const handlePartyDrop = (e, dropIndex) => {
 
                           {pokemon.isPartner && (
                             <div className="text-pink-500 font-bold text-sm">
-                              💖 파트너
+                              파트너
                             </div>
                           )}
                         </>
@@ -782,7 +771,7 @@ const handlePartyDrop = (e, dropIndex) => {
   );
 }
 
-   export default function PokemonView() {
-     const isMobile = useMediaQuery('(max-width: 768px)');
-     return isMobile ? <MobilePokemonView /> : <DesktopPokemonView />;
-   }
+export default function PokemonView() {
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  return isMobile ? <MobilePokemonView /> : <DesktopPokemonView />;
+}
