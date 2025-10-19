@@ -265,19 +265,18 @@ const {
 
   const { useRareCandy: _, ...restPokemonManagement } = pokemonManagement;
 
-   const adminFunctions = useAdminFunctions(
-    currentUser,
-    members,
-    setMembers,
-    updateCurrentUser,
-    regions,
-    setRegions,
-    setGamePokedex,
-    allPokemonDataParsed,
-    allPokemonData.pokemon,
-    pokemonData.pokemon,
-    allItems
-  );
+  const adminFunctions = useAdminFunctions(
+  currentUser,
+  members,
+  setMembers,
+  updateCurrentUser,
+  regions,
+  setRegions,
+  setGamePokedex,
+  allPokemonMaster,        // 8번째: 이렇게만 하면 됩니다!
+  pokemonData.pokemon,     // 9번째: allPokemon
+  allItems                 // 10번째
+);
 
   const {
     addMember,

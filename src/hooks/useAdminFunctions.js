@@ -12,8 +12,9 @@ export const useAdminFunctions = (
   setRegions,
   setGamePokedex,
   allPokemonMaster,
+  allPokemonDataParsed,
   allPokemon,
-  allItems
+  allItems,
 ) => {
 
   // 회원 관리
