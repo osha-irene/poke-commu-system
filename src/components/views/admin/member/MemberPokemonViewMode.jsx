@@ -69,16 +69,16 @@ export default function MemberPokemonViewMode({
                   편집
                 </button>
                 <button
-                  onClick={() => {
-                    if (window.confirm(`${pokemon.nickname || pokemon.name}을(를) 삭제하시겠습니까?`)) {
-                      onDelete(member.id, pokemon.uniqueId);
-                    }
-                  }}
-                  className="flex-1 bg-red-50 text-red-600 px-2 py-1 rounded text-xs font-semibold hover:bg-red-100"
-                >
-                  <Trash2 size={12} className="inline mr-1" />
-                  삭제
-                </button>
+                onClick={() => {
+                  if (window.confirm(`${pokemon.nickname || pokemon.name}을(를) 삭제하시겠습니까?`)) {
+                    onDelete(pokemon.uniqueId);  // ⭐ member.id 제거
+                  }
+                }}
+                className="flex-1 bg-red-50 text-red-600 px-2 py-1 rounded text-xs font-semibold hover:bg-red-100"
+              >
+                <Trash2 size={12} className="inline mr-1" />
+                삭제
+              </button>
               </div>
             </div>
           ))}

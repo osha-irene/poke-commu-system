@@ -36,20 +36,48 @@ function MemberPokemonTab({
     condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 }
   });
 
-  const [giveData, setGiveData] = useState({
-    searchQuery: '',
-    selectedPokemon: null,
-    level: 5,
-    nickname: '',
-    caughtWithBall: '몬스터볼',
-    isShiny: false,
-    heldItem: null,
-    selectedMoves: [],
-    randomMoves: false,
-    ivs: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
-    effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
-    condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 }
-  });
+  const [giveData, setGiveData] = useState({ 
+  searchQuery: '', 
+  selectedPokemon: null, 
+  level: 5, 
+  nickname: '', 
+  caughtWithBall: '몬스터볼',
+  customBallImage: null, // 추가
+  isShiny: false, 
+  friendship: 0, 
+  heldItem: null, 
+  selectedMoves: [], 
+  randomMoves: false,
+  // ⭐ 여기부터 새로 추가된 필드들
+  gender: 'random', 
+  ability: '', 
+  sizeRank: 'M', 
+  heightVariation: 100, 
+  weightVariation: 100, 
+  ivs: { 
+    hp: 0, 
+    attack: 0, 
+    defense: 0, 
+    specialAttack: 0, 
+    specialDefense: 0, 
+    speed: 0 
+  }, 
+  effort: { 
+    hp: 0, 
+    attack: 0, 
+    defense: 0, 
+    specialAttack: 0, 
+    specialDefense: 0, 
+    speed: 0 
+  }, 
+  condition: { 
+    elegance: 0, 
+    beauty: 0, 
+    cuteness: 0, 
+    intelligence: 0, 
+    strength: 0 
+  } 
+});
 
   // 지급용 기술 목록
   const giveAvailableMoves = useMemo(() => {
@@ -70,10 +98,18 @@ function MemberPokemonTab({
   }, [giveData.selectedPokemon, giveData.level, pokemonLearnsets, allMoves]);
 
   const getRandomMoves = () => {
-    if (giveAvailableMoves.length === 0) return [];
-    const shuffled = [...giveAvailableMoves].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, Math.min(4, shuffled.length));
-  };
+  if (giveAvailableMoves.length === 0) {
+    console.log('⚠️ 배울 수 있는 기술이 없습니다');
+    return [];
+  }
+  
+  const shuffled = [...giveAvailableMoves].sort(() => Math.random() - 0.5);
+  const selected = shuffled.slice(0, Math.min(4, shuffled.length));
+  
+  console.log('🎲 랜덤 기술 생성:', selected.map(m => m.name));
+  
+  return selected;
+};
 
   const handleStartEdit = (pokemon) => {
     setShowMoveModal(false);
@@ -85,8 +121,14 @@ function MemberPokemonTab({
       nickname: pokemon.nickname || pokemon.name,
       spriteUrl: pokemon.spriteUrl || pokemon.sprite,
       ballImage: pokemon.ballImageUrl || '',
+      caughtWithBall: pokemon.caughtWithBall || '몬스터볼',
       isShiny: pokemon.isShiny || false,
       heldItem: pokemon.heldItem || null,
+      friendship: pokemon.friendship || 0,
+     gender: pokemon.gender || 'random', 
+    sizeRank: pokemon.sizeRank || 'M', 
+    heightVariation: pokemon.heightVariation || 100, 
+    weightVariation: pokemon.weightVariation || 100, 
       moves: pokemon.moves || [],
       ivs: pokemon.ivs || { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
       effort: pokemon.effort || { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
@@ -113,8 +155,14 @@ function MemberPokemonTab({
       nickname: editData.nickname,
       spriteUrl: finalSpriteUrl,
       ballImage: editData.ballImage,
+      caughtWithBall: editData.caughtWithBall, 
       isShiny: editData.isShiny,
       heldItem: editData.heldItem,
+      friendship: editData.friendship,
+       gender: editData.gender, 
+    sizeRank: editData.sizeRank,  
+    heightVariation: editData.heightVariation,
+    weightVariation: editData.weightVariation,  
       moves: editData.moves,
       ivs: editData.ivs,
       effort: editData.effort,
@@ -137,49 +185,69 @@ function MemberPokemonTab({
   };
 
   const handleGivePokemon = () => {
-    if (!giveData.selectedPokemon) {
-      alert('포켓몬을 선택해주세요!');
-      return;
-    }
+  if (!giveData.selectedPokemon) {
+    alert('포켓몬을 선택해주세요!');
+    return;
+  }
 
-    const moves = giveData.randomMoves ? getRandomMoves() : giveData.selectedMoves;
+  // ⭐ 랜덤 기술 생성
+  const moves = giveData.randomMoves ? getRandomMoves() : giveData.selectedMoves;
 
-    const pokemonData = {
-      pokemon: giveData.selectedPokemon,
-      level: giveData.level,
-      nickname: giveData.nickname || giveData.selectedPokemon.name,
-      caughtWithBall: giveData.caughtWithBall,
-      isShiny: giveData.isShiny,
-      heldItem: giveData.heldItem,
-      ivs: giveData.ivs,
-      effort: giveData.effort,
-      condition: giveData.condition,
-      moves: moves.map(m => ({
-        moveId: m.id,
-        currentPp: m.pp,
-        learnedAt: giveData.level
-      }))
-    };
+console.log('📋 최종 기술:', {
+  randomMoves: giveData.randomMoves,
+  moves: moves.map(m => m.name || m.id)
+});
 
-    onGivePokemon(member.id, pokemonData.pokemon, pokemonData);
-    
-    // 초기화
-    setGiveData({
-      searchQuery: '',
-      selectedPokemon: null,
-      level: 5,
-      nickname: '',
-      caughtWithBall: '몬스터볼',
-      isShiny: false,
-      heldItem: null,
-      selectedMoves: [],
-      randomMoves: false,
-      ivs: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
-      effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
-      condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 }
-    });
-    setMode('view');
+  const pokemonData = {
+    level: giveData.level,
+    nickname: giveData.nickname || giveData.selectedPokemon.name,
+    caughtWithBall: giveData.caughtWithBall,
+    customBallImage: giveData.customBallImage,
+    isShiny: giveData.isShiny,
+    isPartner: giveData.isPartner,  // ⭐ 추가
+    friendship: giveData.friendship,
+    heldItem: giveData.heldItem,
+    gender: giveData.gender,
+    ability: giveData.ability,
+    sizeRank: giveData.sizeRank,
+    heightVariation: giveData.heightVariation,
+    weightVariation: giveData.weightVariation,
+    ivs: giveData.ivs,
+    effort: giveData.effort,
+    condition: giveData.condition,
+    moves: moves.map(m => ({
+      moveId: m.id,
+      currentPp: m.pp,
+      learnedAt: giveData.level
+    }))
   };
+
+  onGivePokemon(member.id, giveData.selectedPokemon, pokemonData);
+  
+  // 초기화
+  setGiveData({
+    searchQuery: '',
+    selectedPokemon: null,
+    level: 5,
+    nickname: '',
+    caughtWithBall: '몬스터볼',
+    customBallImage: null,
+    isShiny: false,
+    isPartner: false,  // ⭐ 추가
+    heldItem: null,
+    selectedMoves: [],
+    randomMoves: false,
+    gender: 'random',
+    ability: '',
+    sizeRank: 'M',
+    heightVariation: 100,
+    weightVariation: 100,
+    ivs: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
+    effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
+    condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 }
+  });
+  setMode('view');
+};
 
   return (
     <div className="space-y-4">
@@ -269,7 +337,7 @@ function MemberPokemonTab({
         <MemberPokemonViewMode
           member={member}
           onStartEdit={handleStartEdit}
-          onDelete={onDeletePokemon}
+          onDelete={(uniqueId) => onDeletePokemon(uniqueId)}
           onStartGive={() => {
             setShowGiveMoveModal(false);
             setShowGiveItemModal(false);
@@ -286,6 +354,11 @@ function MemberPokemonTab({
           allMoves={allMoves}
           onSave={handleSaveEdit}
           onCancel={handleCancelEdit}
+            onDelete={(uniqueId) => {  // ⭐ 수정
+              onDeletePokemon(uniqueId);
+              setMode('view');  // ⭐ 삭제 후 목록으로
+              setSelectedPokemon(null);
+    }}
           onOpenItemModal={() => setShowEditItemModal(true)}
           onOpenMoveModal={() => setShowMoveModal(true)}
         />

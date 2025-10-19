@@ -279,25 +279,30 @@ const {
 );
 
   const {
-    addMember,
-    toggleAdminStatus,
-    toggleItemManagement,
-    updateMaxDailyWalks,
-    resetMemberWalkCount,
-    resetAllWalkCounts,
-    givePokemonToMember,
-    addPokemonToSelf,
-    addItemToSelf,
-    giveItemToMember,
-    createCustomItem: adminCreateCustomItem,
-    updateRegionPokemon,
-    updateGamePokedex: adminUpdateGamePokedex,
-    resetGameData,
-    editMemberPokemon,
-    updateMemberMoney,
-    updateMemberRegionAccess
-  } = adminFunctions;
-
+  addMember,
+  toggleAdminStatus,
+  toggleItemManagement,
+  updateMaxDailyWalks,
+  resetMemberWalkCount,
+  resetAllWalkCounts,
+  givePokemonToMember,
+  addPokemonToSelf,
+  addItemToSelf,
+  giveItemToMember,
+  createCustomItem: adminCreateCustomItem,
+  updateRegionPokemon,
+  updateGamePokedex: adminUpdateGamePokedex,
+  resetGameData,
+  editMemberPokemon,
+  deleteMemberPokemon,  // ⭐ 이 줄 추가
+  updateMemberMoney,
+  updateMemberRegionAccess,
+  addRegion,            // ⭐ 추가 (return에서 사용 중)
+  deleteRegion,         // ⭐ 추가
+  createTown,           // ⭐ 추가
+  updateTown,           // ⭐ 추가
+  deleteTown            // ⭐ 추가
+} = adminFunctions;
   
 
   // 🔥 매일 자정 산책 횟수 리셋 - Firebase 사용
@@ -1569,6 +1574,7 @@ if (itemData?.isTM) {
     updateMemberMoney,
     updateMemberRegionAccess,
     editMemberPokemon,
+    deleteMemberPokemon, 
     setPartnerPokemon: restPokemonManagement.setPartnerPokemon,
     giveItemToPokemon: restPokemonManagement.giveItemToPokemon,
     takeItemFromPokemon: restPokemonManagement.takeItemFromPokemon,

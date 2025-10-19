@@ -12,13 +12,14 @@ function MemberDetailPanel({ member, onClose }) {
     allItems,
     allPokemonMaster,
     regions,
-    allMoves,           // ✅ 추가
-    pokemonLearnsets,   // ✅ 추가
+    allMoves,
+    pokemonLearnsets,
     setMembers,
     updateCurrentUser,
     giveItemToMember,
     givePokemonToMember,
     editMemberPokemon,
+    deleteMemberPokemon, // ⭐ 추가
     resetMemberWalkCount,
     toggleAdminStatus,
     updateMemberMoney,
@@ -27,16 +28,11 @@ function MemberDetailPanel({ member, onClose }) {
 
   const [selectedTab, setSelectedTab] = useState('info');
 
-  // 포켓몬 삭제 핸들러 추가
-  const handleDeletePokemon = async (memberId, pokemonUniqueId) => {
-    const updatedPokemon = member.caughtPokemon.filter(
-      p => p && p.uniqueId !== pokemonUniqueId
-    );
-    
-    // editMemberPokemon을 이용해서 전체 포켓몬 배열 업데이트
-    await editMemberPokemon(memberId, pokemonUniqueId, { 
-      caughtPokemon: updatedPokemon 
-    });
+  // ⭐ 포켓몬 삭제 핸들러 (완전히 새로 작성)
+  const handleDeletePokemon = (pokemonUniqueId) => {
+    if (window.confirm('정말 이 포켓몬을 삭제하시겠습니까?')) {
+      deleteMemberPokemon(member.id, pokemonUniqueId);
+    }
   };
 
   const handleUpdateWalkCount = (memberId, newWalkCount) => {
@@ -148,11 +144,11 @@ function MemberDetailPanel({ member, onClose }) {
               trainer={trainer}
               allItems={allItems}  
               allPokemonMaster={allPokemonMaster}
-              allMoves={allMoves}                    // ✅ 전달
-              pokemonLearnsets={pokemonLearnsets}    // ✅ 전달
+              allMoves={allMoves}
+              pokemonLearnsets={pokemonLearnsets}
               onGivePokemon={givePokemonToMember}
               onEditPokemon={editMemberPokemon}
-              onDeletePokemon={handleDeletePokemon}  // ✅ 전달
+              onDeletePokemon={handleDeletePokemon}
             />
           )}
 

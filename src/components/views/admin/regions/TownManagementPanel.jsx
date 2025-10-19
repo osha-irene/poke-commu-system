@@ -87,21 +87,7 @@ export default function TownManagementPanel({ towns, regions, onToggleVisibility
     onDeleteTown(town.groupId);
   };
 
-  // TownManagePanel.jsx
-const handleToggleVisible = async (groupId) => {
-  if (!onUpdateTown) return;
   
-  const town = towns.find(t => t.groupId === groupId);
-  if (!town) return;
-  
-  const updatedTownData = {
-    ...town,
-    visible: !town.visible,
-    groupVisible: !town.visible  // 이것도 함께 업데이트
-  };
-  
-  await onUpdateTown(groupId, updatedTownData);
-};
 
   return (
     <>

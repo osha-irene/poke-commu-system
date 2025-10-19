@@ -12,6 +12,7 @@ export default function MemberPokemonEditMode({
   allMoves,
   onSave,
   onCancel,
+  onDelete,
   onOpenItemModal,
   onOpenMoveModal
 }) {
@@ -82,7 +83,7 @@ export default function MemberPokemonEditMode({
             <div>
               <label className="block text-sm font-semibold mb-1">포획볼</label>
               <select
-                value={editData.caughtWithBall}
+                 value={editData.caughtWithBall || '몬스터볼'}  // ⭐ 추가
                 onChange={(e) => setEditData(prev => ({ ...prev, caughtWithBall: e.target.value }))}
                 className="w-full px-3 py-2 border rounded"
               >
@@ -109,6 +110,80 @@ export default function MemberPokemonEditMode({
               </div>
             )}
           </div>
+
+              {/* ⭐ 성별 선택 */}
+              <div>
+                <label className="block text-sm font-semibold mb-2">성별</label>
+                <select
+                  value={editData.gender || 'random'}
+                  onChange={(e) => setEditData(prev => ({ ...prev, gender: e.target.value }))}
+                  className="w-full px-3 py-2 border rounded"
+                >
+                  <option value="random">랜덤</option>
+                  <option value="male">수컷 (♂)</option>
+                  <option value="female">암컷 (♀)</option>
+                  <option value="none">무성</option>
+                </select>
+              </div>
+
+              {/* ⭐ 체구 등급 */}
+              <div>
+                <label className="block text-sm font-semibold mb-2">체구 등급</label>
+                <div className="grid grid-cols-7 gap-2">
+                  {['XXXS', 'XXS', 'XS', 'M', 'XL', 'XXL', 'XXXL'].map(size => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => setEditData(prev => ({ ...prev, sizeRank: size }))}
+                      className={`px-3 py-2 rounded font-semibold text-xs transition-all ${
+                        editData.sizeRank === size
+                          ? 'bg-indigo-600 text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* ⭐ 키 변동률 */}
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  키 변동률 (%)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="200"
+                  step="0.1"
+                  value={editData.heightVariation || 100}
+                  onChange={(e) => setEditData(prev => ({ 
+                    ...prev, 
+                    heightVariation: parseFloat(e.target.value) || 100
+                  }))}
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
+
+              {/* ⭐ 무게 변동률 */}
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  무게 변동률 (%)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="200"
+                  step="0.1"
+                  value={editData.weightVariation || 100}
+                  onChange={(e) => setEditData(prev => ({ 
+                    ...prev, 
+                    weightVariation: parseFloat(e.target.value) || 100
+                  }))}
+                  className="w-full px-3 py-2 border rounded"
+                />
+              </div>
 
           <div>
             <label className="block text-sm font-semibold mb-2 flex items-center gap-2">
@@ -154,8 +229,35 @@ export default function MemberPokemonEditMode({
           </div>
         </div>
 
-        {/* 오른쪽 컬럼 */}
-        <div className="space-y-4">
+       {/* 오른쪽 컬럼 */}
+          <div className="space-y-4">
+            {/* ⭐ 친밀도 입력 필드 추가 */}
+            <div>
+              <label className="block text-sm font-semibold mb-2 flex items-center gap-2">
+                <Heart size={14} />
+                친밀도
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="255"
+                value={editData.friendship || 0}
+                onChange={(e) => setEditData(prev => ({ 
+                  ...prev, 
+                  friendship: Math.min(255, Math.max(0, parseInt(e.target.value) || 0))
+                }))}
+                className="w-full px-3 py-2 border rounded"
+                placeholder="0-255"
+              />
+              <div className="mt-1 w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-pink-500 h-2 rounded-full transition-all" 
+                  style={{ width: `${((editData.friendship || 0) / 255) * 100}%` }} 
+                />
+              </div>
+            </div>
+
+  
           <div>
             <label className="block text-sm font-semibold mb-2 flex items-center gap-2">
               <Gift size={14} />
@@ -283,21 +385,32 @@ export default function MemberPokemonEditMode({
       </div>
 
       <div className="flex gap-2 pt-4 border-t">
-        <button
-          onClick={onSave}
-          className="flex-1 bg-blue-500 text-white px-4 py-2 rounded font-semibold hover:bg-blue-600"
-        >
-          <Save size={16} className="inline mr-2" />
-          저장
-        </button>
-        <button
-          onClick={onCancel}
-          className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded font-semibold hover:bg-gray-400"
-        >
-          <X size={16} className="inline mr-2" />
-          취소
-        </button>
-      </div>
+          <button
+            onClick={onSave}
+            className="flex-1 bg-blue-500 text-white px-4 py-2 rounded font-semibold hover:bg-blue-600"
+          >
+            <Save size={16} className="inline mr-2" />
+            저장
+          </button>
+          <button
+            onClick={onCancel}
+            className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded font-semibold hover:bg-gray-400"
+          >
+            <X size={16} className="inline mr-2" />
+            취소
+          </button>
+          <button
+            onClick={() => {
+              if (window.confirm(`정말 ${pokemon.nickname || pokemon.name}을(를) 삭제하시겠습니까?`)) {
+                onDelete?.(pokemon.uniqueId);
+              }
+            }}
+            className="bg-red-500 text-white px-4 py-2 rounded font-semibold hover:bg-red-600"
+          >
+            <Trash2 size={16} className="inline mr-2" />
+            삭제
+          </button>
+        </div>
     </div>
   );
 }

@@ -19,7 +19,7 @@ import {
   PolarRadiusAxis,
   ResponsiveContainer
 } from 'recharts';
-import { getTypeColor } from '../../../styles/theme';
+import { getTypeColor, POKEBALL_LIST } from '../../../styles/theme';
 import MovesList from './MovesList';
 import MoveSelectModal from './MoveSelectModal';
 import LevelUpMoveModal from './LevelUpMoveModal';
@@ -220,17 +220,57 @@ const isThisPartner = currentUser?.partnerPokemon?.uniqueId === pokemon.uniqueId
       })
     : null;
 
-  const pokeballData = pokemon.caughtWithBall && typeof pokemon.caughtWithBall === 'string'
-    ? allItems.find(item => {
-        const itemName = item.name?.toLowerCase();
-        const itemNameEn = item.nameEn?.toLowerCase();
-        const ballName = pokemon.caughtWithBall.toLowerCase();
-        return itemName === ballName || 
-               itemNameEn === ballName ||
-               itemName?.includes(ballName) ||
-               itemNameEn?.includes(ballName);
-      })
-    : null;
+ const pokeballData = pokemon.caughtWithBall && typeof pokemon.caughtWithBall === 'string'
+  ? allItems.find(item => {
+      const itemName = item.name?.toLowerCase();
+      const itemNameEn = item.nameEn?.toLowerCase();
+      const ballName = pokemon.caughtWithBall.toLowerCase();
+      return itemName === ballName || 
+             itemNameEn === ballName ||
+             itemName?.includes(ballName) ||
+             itemNameEn?.includes(ballName);
+    })
+  : null;
+
+const getBallImage = () => {
+  // 1순위: allItems
+  if (pokemon.caughtWithBall && allItems && allItems.length > 0) {
+    const pokeballItem = allItems.find(item => {
+      const itemName = item.name?.toLowerCase();
+      const itemNameEn = item.nameEn?.toLowerCase();
+      const ballName = pokemon.caughtWithBall.toLowerCase();
+      
+      return itemName === ballName || 
+             itemNameEn === ballName ||
+             itemName?.includes(ballName) ||
+             itemNameEn?.includes(ballName);
+    });
+    
+    if (pokeballItem) {
+      return pokeballItem.spriteUrl || pokeballItem.imageUrl;
+    }
+  }
+  
+  // 2순위: POKEBALL_LIST
+  if (pokemon.caughtWithBall) {
+    const ballInfo = POKEBALL_LIST.find(ball => 
+      ball.name === pokemon.caughtWithBall || 
+      ball.nameEn === pokemon.caughtWithBall.toLowerCase()
+    );
+    
+    if (ballInfo) {
+      return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${ballInfo.nameEn}.png`;
+    }
+  }
+  
+  // 3순위: ballImageUrl
+  if (pokemon.ballImageUrl) {
+    return pokemon.ballImageUrl;
+  }
+  
+  return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
+};
+const ballImage = getBallImage();
 
   // 타입 색상
   const typeColors = getTypeColor(pokemon.type);
@@ -375,27 +415,28 @@ const isThisPartner = currentUser?.partnerPokemon?.uniqueId === pokemon.uniqueId
                 </button>
 
                 <button
-                  onClick={() => {
-                    const newStatus = !isThisPartner;
-                    if (newStatus) {
-                      if (window.confirm(`${pokemon.nickname || pokemon.name}를 파트너 포켓몬으로 설정하시겠습니까?\n\n파트너는 방생할 수 없으며, 1마리만 설정 가능합니다.`)) {
-                        onSetPartner(pokemon.uniqueId, true);
+                    onClick={() => {
+                      if (isThisPartner) {
+                        // 파트너 해제
+                        if (window.confirm(`${pokemon.nickname || pokemon.name}의 파트너 설정을 해제하시겠습니까?`)) {
+                          onSetPartner(null);  // ⭐ null 전달하여 파트너 해제
+                        }
+                      } else {
+                        // 파트너 설정
+                        if (window.confirm(`${pokemon.nickname || pokemon.name}를 파트너 포켓몬으로 설정하시겠습니까?\n\n파트너는 방생할 수 없으며, 1마리만 설정 가능합니다.`)) {
+                          onSetPartner(pokemon.uniqueId);  // ⭐ uniqueId 전달
+                        }
                       }
-                    } else {
-                      if (window.confirm(`${pokemon.nickname || pokemon.name}의 파트너 설정을 해제하시겠습니까?`)) {
-                        onSetPartner(pokemon.uniqueId, false);
-                      }
-                    }
-                  }}
-                  className={`p-2 rounded-lg transition-colors ${
-                    isThisPartner
-                      ? 'text-pink-600 hover:bg-pink-50'
-                      : 'text-gray-400 hover:bg-gray-50'
-                  }`}
-                  title={isThisPartner ? '파트너 해제' : '파트너 설정'}
-                >
-                  <Heart size={20} fill={pokemon.isPartner ? 'currentColor' : 'none'} />
-                </button>
+                    }}
+                    className={`p-2 rounded-lg transition-colors ${
+                      isThisPartner
+                        ? 'text-pink-600 hover:bg-pink-50'
+                        : 'text-gray-400 hover:bg-gray-50'
+                    }`}
+                    title={isThisPartner ? '파트너 해제' : '파트너 설정'}
+                  >
+                    <Heart size={20} fill={isThisPartner ? 'currentColor' : 'none'} />
+                  </button>
 
                 <button
                   onClick={onMove}
@@ -441,19 +482,20 @@ const isThisPartner = currentUser?.partnerPokemon?.uniqueId === pokemon.uniqueId
               </div>
             ) : (
               <div className="flex items-center gap-2 mb-1">
-                {pokeballData && (
-                  <div 
-                    className="item-sprite"
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      backgroundImage: `url(${pokeballData.spriteUrl})`,
-                      backgroundSize: '110%',
-                      backgroundPosition: 'center'
-                    }}
-                  />
-                )}
-                <h2 className="text-2xl font-bold text-gray-800">{nickname}</h2>
+                {ballImage && (
+                    <div 
+                      className="item-sprite"
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        backgroundImage: `url(${ballImage})`,
+                        backgroundSize: '110%',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat'
+                      }}
+                    />
+                  )}
+                  <h2 className="text-2xl font-bold text-gray-800">{nickname}</h2>
 
                   {/* ⭐ 성별 아이콘 추가 */}
                   {pokemon.gender && pokemon.gender !== 'none' && (

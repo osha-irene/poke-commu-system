@@ -147,81 +147,86 @@ const usePokemonManagement = (
   };
 
   // 파트너 설정
-  const setPartnerPokemon = (uniqueId, isPartner) => {
-    if (!currentUser) return;
-    
-    const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
-    if (!pokemon) {
-      alert('포켓몬을 찾을 수 없습니다!');
+const setPartnerPokemon = (uniqueId) => {
+  if (!currentUser) return;
+  
+  // ⭐ null을 전달받으면 파트너 해제
+  if (uniqueId === null) {
+    if (!currentUser.partnerPokemon) {
+      alert('설정된 파트너 포켓몬이 없습니다.');
       return;
     }
     
-    if (isPartner) {
-      const newPartnerPokemon = { ...pokemon, isPartner: true };
-      const newCaughtPokemon = currentUser.caughtPokemon.filter(p => p && p.uniqueId !== uniqueId);
-      
-      let finalCaughtPokemon = newCaughtPokemon;
-      if (currentUser.partnerPokemon) {
-        const oldPartner = { ...currentUser.partnerPokemon, isPartner: false };
-        const party = finalCaughtPokemon.slice(0, 6);
-        const box = finalCaughtPokemon.slice(6);
-        
-        let emptySlotIndex = -1;
-        for (let i = 0; i < 6; i++) {
-          if (party[i] === null) {
-            emptySlotIndex = i;
-            break;
-          }
-        }
-        
-        if (emptySlotIndex !== -1) {
-          party[emptySlotIndex] = oldPartner;
-          finalCaughtPokemon = [...party, ...box];
-        } else {
-          finalCaughtPokemon = [...party, ...box, oldPartner];
-        }
+    const unsetPartner = { ...currentUser.partnerPokemon, isPartner: false };
+    const party = currentUser.caughtPokemon.slice(0, 6);
+    const box = currentUser.caughtPokemon.slice(6);
+    
+    let emptySlotIndex = -1;
+    for (let i = 0; i < 6; i++) {
+      if (party[i] === null) {
+        emptySlotIndex = i;
+        break;
       }
-      
-      updateCurrentUser({ 
-        partnerPokemon: newPartnerPokemon,
-        caughtPokemon: finalCaughtPokemon
-      });
-      
-      alert('💖 파트너 포켓몬으로 설정되었습니다!');
-      
-    } else {
-      if (!currentUser.partnerPokemon || currentUser.partnerPokemon.uniqueId !== uniqueId) {
-        return;
-      }
-      
-      const unsetPartner = { ...currentUser.partnerPokemon, isPartner: false };
-      const party = currentUser.caughtPokemon.slice(0, 6);
-      const box = currentUser.caughtPokemon.slice(6);
-      
-      let emptySlotIndex = -1;
-      for (let i = 0; i < 6; i++) {
-        if (party[i] === null) {
-          emptySlotIndex = i;
-          break;
-        }
-      }
-      
-      let finalCaughtPokemon;
-      if (emptySlotIndex !== -1) {
-        party[emptySlotIndex] = unsetPartner;
-        finalCaughtPokemon = [...party, ...box];
-      } else {
-        finalCaughtPokemon = [...party, ...box, unsetPartner];
-      }
-      
-      updateCurrentUser({ 
-        partnerPokemon: null,
-        caughtPokemon: finalCaughtPokemon
-      });
-      
-      alert('파트너 설정이 해제되었습니다.');
     }
-  };
+    
+    let finalCaughtPokemon;
+    if (emptySlotIndex !== -1) {
+      party[emptySlotIndex] = unsetPartner;
+      finalCaughtPokemon = [...party, ...box];
+    } else {
+      finalCaughtPokemon = [...party, ...box, unsetPartner];
+    }
+    
+    updateCurrentUser({ 
+      partnerPokemon: null,
+      caughtPokemon: finalCaughtPokemon
+    });
+    
+    alert('파트너 설정이 해제되었습니다.');
+    return;
+  }
+  
+  // ⭐ 파트너 설정
+  const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
+  if (!pokemon) {
+    alert('포켓몬을 찾을 수 없습니다!');
+    return;
+  }
+  
+  const newPartnerPokemon = { ...pokemon, isPartner: true };
+  const newCaughtPokemon = currentUser.caughtPokemon.filter(p => p && p.uniqueId !== uniqueId);
+  
+  let finalCaughtPokemon = newCaughtPokemon;
+  
+  // 기존 파트너가 있으면 엔트리로 돌려보내기
+  if (currentUser.partnerPokemon) {
+    const oldPartner = { ...currentUser.partnerPokemon, isPartner: false };
+    const party = finalCaughtPokemon.slice(0, 6);
+    const box = finalCaughtPokemon.slice(6);
+    
+    let emptySlotIndex = -1;
+    for (let i = 0; i < 6; i++) {
+      if (party[i] === null) {
+        emptySlotIndex = i;
+        break;
+      }
+    }
+    
+    if (emptySlotIndex !== -1) {
+      party[emptySlotIndex] = oldPartner;
+      finalCaughtPokemon = [...party, ...box];
+    } else {
+      finalCaughtPokemon = [...party, ...box, oldPartner];
+    }
+  }
+  
+  updateCurrentUser({ 
+    partnerPokemon: newPartnerPokemon,
+    caughtPokemon: finalCaughtPokemon
+  });
+  
+  alert('💖 파트너 포켓몬으로 설정되었습니다!');
+};
 
   // 레벨업// usePokemonManagement.js의 useRareCandy 함수를 이렇게 수정하세요
 

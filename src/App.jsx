@@ -226,7 +226,8 @@ export default function App() {
     updateCurrentUser,
     setMembers,
     isMembersLoading,
-    editMemberPokemon
+    editMemberPokemon,
+    deleteMemberPokemon,
   } = gameState;
 
   // 게시판 로드

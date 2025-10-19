@@ -1,7 +1,8 @@
+
 // src/components/views/admin/member/MemberPokemonGiveMode.jsx
 import React, { useMemo } from 'react';
 import { 
-  X, Gift, Sparkles, Plus, Trash2, Award, Zap, Heart, Star, Check, Image as ImageIcon
+  X, Gift, Sparkles, Plus, Trash2, Award, Zap, Heart, Star, Check, User, Ruler, Scale, Image as ImageIcon
 } from 'lucide-react';
 import { POKEBALL_LIST } from '../../../../styles/theme';
 
@@ -105,6 +106,18 @@ export default function MemberPokemonGiveMode({
                   />
                 </div>
               </div>
+              {/* ⭐ 파트너 체크박스 추가 */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="givePartner"
+                  checked={giveData.isPartner || false}
+                  onChange={(e) => setGiveData(prev => ({ ...prev, isPartner: e.target.checked }))}
+                />
+                <label htmlFor="givePartner" className="text-sm font-semibold flex items-center gap-1">
+                  💖 파트너 포켓몬으로 설정
+                </label>
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -166,6 +179,105 @@ export default function MemberPokemonGiveMode({
                 </div>
               )}
 
+                        {/* 성별/특성/체구 설정 */}
+          <div className="space-y-4 bg-blue-50 p-4 rounded-lg">
+            <div className="grid grid-cols-3 gap-4">
+              {/* 성별 */}
+              <div>
+                <label className="block text-sm font-semibold mb-1 flex items-center gap-1">
+                  <User size={14} />
+                  성별
+                </label>
+                <select
+                  value={giveData.gender}
+                  onChange={(e) => setGiveData(prev => ({ ...prev, gender: e.target.value }))}
+                  className="w-full px-3 py-2 border rounded text-sm"
+                >
+                  <option value="random">랜덤</option>
+                  <option value="male">♂ 수컷</option>
+                  <option value="female">♀ 암컷</option>
+                  <option value="none">⚪ 무성</option>
+                </select>
+              </div>
+
+              {/* 특성 */}
+              <div className="col-span-2">
+                <label className="block text-sm font-semibold mb-1 flex items-center gap-1">
+                  <Zap size={14} />
+                  특성
+                </label>
+                <select
+                  value={giveData.ability}
+                  onChange={(e) => setGiveData(prev => ({ ...prev, ability: e.target.value }))}
+                  className="w-full px-3 py-2 border rounded text-sm"
+                >
+                  <option value="">기본 특성 (랜덤)</option>
+                  {giveData.selectedPokemon?.abilities?.map((ab, idx) => (
+                    <option key={idx} value={ab}>{ab}</option>
+                  ))}
+                  {giveData.selectedPokemon?.hiddenAbility && (
+                    <option value={giveData.selectedPokemon.hiddenAbility}>
+                      {giveData.selectedPokemon.hiddenAbility} (숨특)
+                    </option>
+                  )}
+                </select>
+              </div>
+            </div>
+
+              {/* 체구 설정 */}
+              <div>
+                <label className="block text-sm font-semibold mb-2">체구 등급</label>
+                <div className="flex gap-2">
+                  {['XXXS', 'XXS', 'XS', 'M', 'XL', 'XXL', 'XXXL'].map(size => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => setGiveData(prev => ({ ...prev, sizeRank: size }))}
+                      className={`flex-1 px-2 py-1 rounded text-xs font-bold ${
+                        giveData.sizeRank === size 
+                          ? 'bg-indigo-600 text-white' 
+                          : 'bg-gray-200 text-gray-700'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 키/몸무게 변동률 */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-1 flex items-center gap-1">
+                    <Ruler size={14} />
+                    키 변동률 (%)
+                  </label>
+                  <input
+                    type="number"
+                    min="70"
+                    max="130"
+                    value={giveData.heightVariation}
+                    onChange={(e) => setGiveData(prev => ({ ...prev, heightVariation: parseFloat(e.target.value) || 100 }))}
+                    className="w-full px-3 py-2 border rounded text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1 flex items-center gap-1">
+                    <Scale size={14} />
+                    몸무게 변동률 (%)
+                  </label>
+                  <input
+                    type="number"
+                    min="70"
+                    max="130"
+                    value={giveData.weightVariation}
+                    onChange={(e) => setGiveData(prev => ({ ...prev, weightVariation: parseFloat(e.target.value) || 100 }))}
+                    className="w-full px-3 py-2 border rounded text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-sm font-semibold flex items-center gap-2">
@@ -224,8 +336,33 @@ export default function MemberPokemonGiveMode({
               </div>
             </div>
 
-            {/* 오른쪽 컬럼 */}
+           {/* 오른쪽 컬럼 */}
             <div className="space-y-4">
+              {/* ⭐ 친밀도 입력 필드 추가 */}
+              <div>
+                <label className="block text-sm font-semibold mb-2 flex items-center gap-2">
+                  <Heart size={14} />
+                  친밀도
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="255"
+                  value={giveData.friendship || 0}
+                  onChange={(e) => setGiveData(prev => ({ 
+                    ...prev, 
+                    friendship: Math.min(255, Math.max(0, parseInt(e.target.value) || 0))
+                  }))}
+                  className="w-full px-3 py-2 border rounded"
+                  placeholder="0-255"
+                />
+                <div className="mt-1 w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-pink-500 h-2 rounded-full transition-all" 
+                    style={{ width: `${((giveData.friendship || 0) / 255) * 100}%` }} 
+                  />
+                </div>
+              </div>
               <div>
                 <label className="block text-sm font-semibold mb-2 flex items-center gap-2">
                   <Gift size={14} />

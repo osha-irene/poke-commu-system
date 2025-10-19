@@ -2,6 +2,7 @@
 
 import { ref, get, set } from 'firebase/database';
 import { database } from '../firebase';
+import { POKEBALL_LIST } from '../styles/theme'; 
 
 export const useAdminFunctions = (
   currentUser, 
@@ -194,136 +195,231 @@ export const useAdminFunctions = (
     }
   };
 
-  // 포켓몬 지급
-  const givePokemonToMember = async (memberId, pokemonTemplate, options = {}) => {
-    if (!currentUser?.isAdmin) return;
-    
-    const member = members[memberId];
-    if (!member) { 
-      alert('회원을 찾을 수 없습니다!'); 
-      return; 
-    }
+  //포켓몬 지급
+ const givePokemonToMember = async (memberId, pokemonTemplate, options = {}) => {
+  if (!currentUser?.isAdmin) return;
+  
+  const member = members[memberId];
+  if (!member) { 
+    alert('회원을 찾을 수 없습니다!'); 
+    return; 
+  }
 
-    if (!member.caughtPokemon) {
-      member.caughtPokemon = [];
-    }
+  if (!member.caughtPokemon) {
+    member.caughtPokemon = [];
+  }
 
+  const {
+    level = 5,
+    friendship = 0,
+    heldItem = null,
+    nickname = null,
+    moves = [],
+    isPartner = false,
+    isShiny = false,
+    caughtWithBall = '몬스터볼',
+    customBallImage = null,
+    gender = null,
+    ability = null,
+    height = null,
+    weight = null,
+    sizeRank = 'M',
+    heightVariation = 100,
+    weightVariation = 100,
+    ivs = null,
+    effort = null,
+    condition = null,
+  } = options;
+
+  // 파트너가 아닌 경우에만 20마리 체크
+  if (!isPartner) {
     const nonPartnerCount = member.caughtPokemon.filter(p => p && !p.isPartner).length;
-    
-    if (!options.isPartner && nonPartnerCount >= 20) {
+    if (nonPartnerCount >= 20) {
       alert(`⚠️ ${member.name}님은 이미 파트너를 제외한 포켓몬이 20마리입니다!\n더 이상 포켓몬을 지급할 수 없습니다.`);
       return;
     }
+  }
 
-    const {
-      level = 5,
-      friendship = 0,
-      heldItem = null,
-      nickname = null,
-      moves = [],
-      isPartner = false,
-	  isShiny = false,
-      caughtWithBall = '몬스터볼',
-    } = options;
+  // POKEBALL_LIST에서 볼 찾기 (더 관대한 매칭)
+const ballInfo = POKEBALL_LIST.find(ball => {
+  const nameMatch = ball.name === caughtWithBall;
+  const nameEnMatch = ball.nameEn === caughtWithBall.toLowerCase().replace(/\s/g, '-');
+  const nameKoLower = ball.name.toLowerCase();
+  const searchLower = caughtWithBall.toLowerCase();
+  
+  return nameMatch || nameEnMatch || nameKoLower === searchLower;
+});
 
-    const ballItem = allItems?.find(item => 
-      item.name === caughtWithBall || 
-      item.nameEn?.toLowerCase().includes(caughtWithBall.toLowerCase())
-    ) || {
-      spriteUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'
-    };
-	
-	const spriteUrl = isShiny && pokemonTemplate.shinySprite 
+if (!ballInfo) {
+  console.warn('⚠️ 볼을 찾을 수 없음:', caughtWithBall);
+  console.log('📋 POKEBALL_LIST:', POKEBALL_LIST.map(b => ({ name: b.name, nameEn: b.nameEn })));
+}
+
+const ballImageUrl = customBallImage || 
+  (ballInfo ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${ballInfo.nameEn}.png` : 
+  'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png');
+  
+  const spriteUrl = isShiny && pokemonTemplate.shinySprite 
     ? pokemonTemplate.shinySprite 
     : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`;
 
   const iconUrl = isShiny && pokemonTemplate.shinySprite
-    ? pokemonTemplate.shinySprite  // 이색 아이콘도 shinySprite 사용
+    ? pokemonTemplate.shinySprite
     : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`;
 
+  // 기본값 설정
+  const finalGender = gender || (pokemonTemplate.genderRatio ? 
+    (Math.random() * 100 < pokemonTemplate.genderRatio.male ? 'male' : 'female') : 'none');
+  
+  const finalAbility = ability || (pokemonTemplate.abilities && pokemonTemplate.abilities.length > 0 ? 
+    pokemonTemplate.abilities[0] : '없음');
+  
+  const baseHeight = pokemonTemplate.height || 10;
+  const baseWeight = pokemonTemplate.weight || 100;
+  
+  const finalHeight = height || (baseHeight * (heightVariation / 100));
+  const finalWeight = weight || (baseWeight * (weightVariation / 100));
 
-      const newPokemon = {
-		uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-		pokemonId: pokemonTemplate.id,
-		name: pokemonTemplate.name,
-		nameEn: pokemonTemplate.nameEn,
-		nickname,
-		number: pokemonTemplate.number,
-		type: pokemonTemplate.type,
-		type2: pokemonTemplate.type2 || null,
-		level,
-		hp: pokemonTemplate.baseHp,
-		maxHp: pokemonTemplate.baseHp,
-		exp: 0,
-		friendship,
-		heldItem,
-		moves,
-		isPartner,
-		isShiny,  // ✨ 추가
-		caughtWithBall,
-		ballImageUrl: ballItem.spriteUrl,
-		condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
-		effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
-		imageUrl: pokemonTemplate.imageUrl,
-		iconUrl: iconUrl,  // ✨ 수정
-		spriteUrl: spriteUrl  // ✨ 수정
-	  };
-	  
+  const newPokemon = {
+    uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    pokemonId: pokemonTemplate.id,
+    name: pokemonTemplate.name,
+    nameEn: pokemonTemplate.nameEn,
+    nickname,
+    number: pokemonTemplate.number,
+    type: pokemonTemplate.type,
+    type2: pokemonTemplate.type2 || null,
+    level,
+    hp: pokemonTemplate.baseHp,
+    maxHp: pokemonTemplate.baseHp,
+    exp: 0,
+    friendship,
+    heldItem,
+    moves,
+    isPartner,
+    isShiny,
+    caughtWithBall,
+    ballImageUrl,
+    gender: finalGender,
+    ability: finalAbility,
+    isHiddenAbility: false,
+    height: parseFloat(finalHeight.toFixed(1)),
+    weight: parseFloat(finalWeight.toFixed(1)),
+    sizeRank,
+    heightVariation: parseFloat(heightVariation.toFixed(1)),
+    weightVariation: parseFloat(weightVariation.toFixed(1)),
+    ivs: ivs || { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
+    condition: condition || { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
+    effort: effort || { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
+    imageUrl: pokemonTemplate.imageUrl,
+    iconUrl,
+    spriteUrl
+  };
+
   let updatedPokemonList = [...member.caughtPokemon];
-  
-  if (updatedPokemonList.length === 0) {
-    updatedPokemonList = [null, null, null, null, null, null];
-  }
-  
+  let newPartnerPokemon = member.partnerPokemon;
+
+  // ⭐ 파트너로 지급하는 경우
   if (isPartner) {
-    updatedPokemonList = updatedPokemonList.map(p => 
-      p && p.isPartner ? { ...p, isPartner: false } : p
-    );
-  }
-  
-  const party = updatedPokemonList.slice(0, 6);
-  const box = updatedPokemonList.slice(6);
-  
-  let emptySlotIndex = -1;
-  for (let i = 0; i < 6; i++) {
-    if (!party[i] || party[i] === null) {
-      emptySlotIndex = i;
-      break;
+    console.log('💖 파트너 포켓몬으로 지급');
+    
+    // 기존 파트너가 있으면 엔트리로 돌려보내기
+    if (member.partnerPokemon) {
+      const oldPartner = { ...member.partnerPokemon, isPartner: false };
+      
+      // 엔트리에 빈 슬롯 찾기
+      if (updatedPokemonList.length === 0) {
+        updatedPokemonList = [null, null, null, null, null, null];
+      }
+      
+      const party = updatedPokemonList.slice(0, 6);
+      const box = updatedPokemonList.slice(6);
+      
+      let emptySlotIndex = -1;
+      for (let i = 0; i < 6; i++) {
+        if (!party[i] || party[i] === null) {
+          emptySlotIndex = i;
+          break;
+        }
+      }
+      
+      if (emptySlotIndex !== -1) {
+        party[emptySlotIndex] = oldPartner;
+        updatedPokemonList = [...party, ...box];
+      } else {
+        // 엔트리가 가득 찼으면 박스로
+        updatedPokemonList = [...party, ...box, oldPartner];
+      }
+      
+      console.log('✅ 기존 파트너를 엔트리/박스로 이동');
+    }
+    
+    // 새 파트너 설정
+    newPartnerPokemon = newPokemon;
+    
+  } else {
+    // ⭐ 일반 포켓몬 지급 - 엔트리/박스로
+    console.log('📦 일반 포켓몬 지급');
+    
+    if (updatedPokemonList.length === 0) {
+      updatedPokemonList = [null, null, null, null, null, null];
+    }
+    
+    const party = updatedPokemonList.slice(0, 6);
+    const box = updatedPokemonList.slice(6);
+    
+    let emptySlotIndex = -1;
+    for (let i = 0; i < 6; i++) {
+      if (!party[i] || party[i] === null) {
+        emptySlotIndex = i;
+        break;
+      }
+    }
+    
+    if (emptySlotIndex !== -1) {
+      party[emptySlotIndex] = newPokemon;
+      updatedPokemonList = [...party, ...box];
+    } else {
+      updatedPokemonList = [...party, ...box, newPokemon];
     }
   }
-  
-  if (emptySlotIndex !== -1) {
-    party[emptySlotIndex] = newPokemon;
-    updatedPokemonList = [...party, ...box];
-  } else {
-    updatedPokemonList = [...party, ...box, newPokemon];
-  }
 
+  // Firebase 저장
   try {
-    const { id, ...dataToSave } = { ...member, caughtPokemon: updatedPokemonList };
+    const { id, ...dataToSave } = { 
+      ...member, 
+      caughtPokemon: updatedPokemonList,
+      partnerPokemon: newPartnerPokemon
+    };
+    
     const memberRef = ref(database, `members/${memberId}`);
     await set(memberRef, dataToSave);
     
     setMembers(prev => ({
       ...prev,
-      [memberId]: { ...prev[memberId], caughtPokemon: updatedPokemonList }
+      [memberId]: { 
+        ...prev[memberId], 
+        caughtPokemon: updatedPokemonList,
+        partnerPokemon: newPartnerPokemon
+      }
     }));
-    
+      
     if (memberId === currentUser.id) {
       console.log('✅ 본인에게 지급 - updateCurrentUser 호출');
-      updateCurrentUser({ caughtPokemon: updatedPokemonList });
+      updateCurrentUser({ 
+        caughtPokemon: updatedPokemonList,
+        partnerPokemon: newPartnerPokemon
+      });
     }
     
     const partnerText = isPartner ? ' (파트너 💖)' : '';
-    const shinyText = isShiny ? ' ✨반짝이✨' : '';  // ✨ 추가
+    const shinyText = isShiny ? ' ✨반짝이✨' : '';
     alert(`${member.name}에게${shinyText} ${newPokemon.nickname || newPokemon.name}${partnerText}을(를) 지급했습니다!`);
   } catch (error) {
     console.error('❌ 포켓몬 지급 실패:', error);
     alert('포켓몬 지급 중 오류가 발생했습니다.');
   }
 };
-
-
 
 const deleteMemberPokemon = async (memberId, pokemonUniqueId) => {
   if (!currentUser?.isAdmin) return;
@@ -555,6 +651,20 @@ const editMemberPokemon = async (memberId, pokemonUniqueId, updates) => {
         level: updates.level !== undefined 
           ? Math.min(100, Math.max(1, updates.level)) 
           : p.level,
+         friendship: safeValue(updates.friendship, p.friendship || 0), 
+
+        caughtWithBall: safeValue(updates.caughtWithBall, p.caughtWithBall),
+        ballImageUrl: safeValue(updates.ballImage, p.ballImageUrl),
+
+         // ⭐ 성별/체구 정보 추가
+      gender: safeValue(updates.gender, p.gender),
+      sizeRank: safeValue(updates.sizeRank, p.sizeRank),
+      heightVariation: updates.heightVariation !== undefined 
+        ? parseFloat(updates.heightVariation) 
+        : (p.heightVariation || 100),
+      weightVariation: updates.weightVariation !== undefined 
+        ? parseFloat(updates.weightVariation) 
+        : (p.weightVariation || 100),
         
         // 개체값
         ivs: updates.ivs !== undefined ? {

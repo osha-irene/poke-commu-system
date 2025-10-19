@@ -473,6 +473,10 @@ function DesktopPokemonView() {
               const draggedPokemonData = isDraggingInParty && partyDraggedIndex !== null
                 ? partySlots[partyDraggedIndex]
                 : null;
+
+                 if (index === 0) {
+    console.log('🔍 [PokemonView] allItems:', allItems?.length, allItems?.slice(0, 3));
+  } 
               
               const shouldShowPlaceholderAbove = isHovering && draggedPokemonData && pokemon !== null && partyDraggedIndex > index;
               const shouldShowPlaceholderBelow = isHovering && draggedPokemonData && pokemon !== null && partyDraggedIndex < index;
@@ -527,8 +531,9 @@ function DesktopPokemonView() {
                     </div>
                   )}
                   
+                  
                   <div className={pokemon ? `transition-opacity duration-150 ${isDragging ? 'opacity-30' : ''}` : ''}>
-                    <PartySlot
+                   <PartySlot
                       pokemon={pokemon}
                       index={index}
                       isSelected={selectedPokemonId === pokemon?.uniqueId}
