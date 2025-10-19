@@ -35972,6 +35972,1980 @@
       "hiddenAbilityEn": null,
       "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/1025.png",
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1025.png"
+    },
+    {
+      "id": 10091,
+      "number": 10091,
+      "originalNumber": 19,
+      "displayNumber": 19,
+      "name": "꼬렛 (알로라)",
+      "nameEn": "rattata-alola",
+      "type": "악",
+      "type2": "노말",
+      "catchRate": "1.00",
+      "baseHp": 30,
+      "baseAttack": 56,
+      "baseDefense": 35,
+      "baseSpeed": 72,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10091.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10091.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 3,
+      "weight": 38,
+      "abilities": [
+        "먹보",
+        "의욕"
+      ],
+      "abilitiesEn": [
+        "gluttony",
+        "hustle"
+      ],
+      "hiddenAbility": "두꺼운지방",
+      "hiddenAbilityEn": "thick-fat",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10091.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10091.png",
+      "isRegionalForm": true,
+      "regionalForm": "alola",
+      "formVariant": "rattata-alola"
+    },
+    {
+      "id": 10092,
+      "number": 10092,
+      "originalNumber": 20,
+      "displayNumber": 20,
+      "name": "레트라 (알로라)",
+      "nameEn": "raticate-alola",
+      "type": "악",
+      "type2": "노말",
+      "catchRate": "0.50",
+      "baseHp": 75,
+      "baseAttack": 71,
+      "baseDefense": 70,
+      "baseSpeed": 77,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10092.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10092.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 7,
+      "weight": 255,
+      "abilities": [
+        "먹보",
+        "의욕"
+      ],
+      "abilitiesEn": [
+        "gluttony",
+        "hustle"
+      ],
+      "hiddenAbility": "두꺼운지방",
+      "hiddenAbilityEn": "thick-fat",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10092.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10092.png",
+      "isRegionalForm": true,
+      "regionalForm": "alola",
+      "formVariant": "raticate-alola"
+    },
+    {
+      "id": 10107,
+      "number": 10107,
+      "originalNumber": 50,
+      "displayNumber": 50,
+      "name": "디그다 (알로라)",
+      "nameEn": "diglett-alola",
+      "type": "땅",
+      "type2": "강철",
+      "catchRate": "1.00",
+      "baseHp": 10,
+      "baseAttack": 55,
+      "baseDefense": 30,
+      "baseSpeed": 90,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10105.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10105.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 2,
+      "weight": 10,
+      "abilities": [
+        "모래숨기",
+        "얽히는머리카락"
+      ],
+      "abilitiesEn": [
+        "sand-veil",
+        "tangling-hair"
+      ],
+      "hiddenAbility": "모래의힘",
+      "hiddenAbilityEn": "sand-force",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10105.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10105.png",
+      "isRegionalForm": true,
+      "regionalForm": "alola",
+      "formVariant": "diglett-alola"
+    },
+    {
+      "id": 10108,
+      "number": 10108,
+      "originalNumber": 51,
+      "displayNumber": 51,
+      "name": "닥트리오 (알로라)",
+      "nameEn": "dugtrio-alola",
+      "type": "땅",
+      "type2": "강철",
+      "catchRate": "0.20",
+      "baseHp": 35,
+      "baseAttack": 100,
+      "baseDefense": 60,
+      "baseSpeed": 110,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10106.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10106.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 7,
+      "weight": 666,
+      "abilities": [
+        "모래숨기",
+        "얽히는머리카락"
+      ],
+      "abilitiesEn": [
+        "sand-veil",
+        "tangling-hair"
+      ],
+      "hiddenAbility": "모래의힘",
+      "hiddenAbilityEn": "sand-force",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10106.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10106.png",
+      "isRegionalForm": true,
+      "regionalForm": "alola",
+      "formVariant": "dugtrio-alola"
+    },
+    {
+      "id": 10109,
+      "number": 10109,
+      "originalNumber": 52,
+      "displayNumber": 52,
+      "name": "나옹 (알로라)",
+      "nameEn": "meowth-alola",
+      "type": "악",
+      "type2": null,
+      "catchRate": "1.00",
+      "baseHp": 40,
+      "baseAttack": 35,
+      "baseDefense": 35,
+      "baseSpeed": 90,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10107.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10107.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 4,
+      "weight": 42,
+      "abilities": [
+        "픽업",
+        "테크니션"
+      ],
+      "abilitiesEn": [
+        "pickup",
+        "technician"
+      ],
+      "hiddenAbility": "주눅",
+      "hiddenAbilityEn": "rattled",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10107.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10107.png",
+      "isRegionalForm": true,
+      "regionalForm": "alola",
+      "formVariant": "meowth-alola"
+    },
+    {
+      "id": 10110,
+      "number": 10110,
+      "originalNumber": 53,
+      "displayNumber": 53,
+      "name": "페르시온 (알로라)",
+      "nameEn": "persian-alola",
+      "type": "악",
+      "type2": null,
+      "catchRate": "0.35",
+      "baseHp": 65,
+      "baseAttack": 60,
+      "baseDefense": 60,
+      "baseSpeed": 115,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10108.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10108.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 11,
+      "weight": 330,
+      "abilities": [
+        "fur-coat",
+        "테크니션"
+      ],
+      "abilitiesEn": [
+        "fur-coat",
+        "technician"
+      ],
+      "hiddenAbility": "주눅",
+      "hiddenAbilityEn": "rattled",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10108.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10108.png",
+      "isRegionalForm": true,
+      "regionalForm": "alola",
+      "formVariant": "persian-alola"
+    },
+    {
+      "id": 10111,
+      "number": 10111,
+      "originalNumber": 74,
+      "displayNumber": 74,
+      "name": "꼬마돌 (알로라)",
+      "nameEn": "geodude-alola",
+      "type": "바위",
+      "type2": "전기",
+      "catchRate": "1.00",
+      "baseHp": 40,
+      "baseAttack": 80,
+      "baseDefense": 100,
+      "baseSpeed": 20,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10109.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10109.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 4,
+      "weight": 203,
+      "abilities": [
+        "자력",
+        "옹골참"
+      ],
+      "abilitiesEn": [
+        "magnet-pull",
+        "sturdy"
+      ],
+      "hiddenAbility": "일렉트릭스킨",
+      "hiddenAbilityEn": "galvanize",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10109.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10109.png",
+      "isRegionalForm": true,
+      "regionalForm": "alola",
+      "formVariant": "geodude-alola"
+    },
+    {
+      "id": 10112,
+      "number": 10112,
+      "originalNumber": 75,
+      "displayNumber": 75,
+      "name": "데구리 (알로라)",
+      "nameEn": "graveler-alola",
+      "type": "바위",
+      "type2": "전기",
+      "catchRate": "0.47",
+      "baseHp": 55,
+      "baseAttack": 95,
+      "baseDefense": 115,
+      "baseSpeed": 35,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10110.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10110.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 10,
+      "weight": 1100,
+      "abilities": [
+        "자력",
+        "옹골참"
+      ],
+      "abilitiesEn": [
+        "magnet-pull",
+        "sturdy"
+      ],
+      "hiddenAbility": "일렉트릭스킨",
+      "hiddenAbilityEn": "galvanize",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10110.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10110.png",
+      "isRegionalForm": true,
+      "regionalForm": "alola",
+      "formVariant": "graveler-alola"
+    },
+    {
+      "id": 10113,
+      "number": 10113,
+      "originalNumber": 76,
+      "displayNumber": 76,
+      "name": "딱구리 (알로라)",
+      "nameEn": "golem-alola",
+      "type": "바위",
+      "type2": "전기",
+      "catchRate": "0.18",
+      "baseHp": 80,
+      "baseAttack": 120,
+      "baseDefense": 130,
+      "baseSpeed": 45,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10111.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10111.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 17,
+      "weight": 3160,
+      "abilities": [
+        "자력",
+        "옹골참"
+      ],
+      "abilitiesEn": [
+        "magnet-pull",
+        "sturdy"
+      ],
+      "hiddenAbility": "일렉트릭스킨",
+      "hiddenAbilityEn": "galvanize",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10111.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10111.png",
+      "isRegionalForm": true,
+      "regionalForm": "alola",
+      "formVariant": "golem-alola"
+    },
+    {
+      "id": 10114,
+      "number": 10114,
+      "originalNumber": 88,
+      "displayNumber": 88,
+      "name": "질퍽이 (알로라)",
+      "nameEn": "grimer-alola",
+      "type": "독",
+      "type2": "악",
+      "catchRate": "0.75",
+      "baseHp": 80,
+      "baseAttack": 80,
+      "baseDefense": 50,
+      "baseSpeed": 25,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10112.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10112.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 7,
+      "weight": 420,
+      "abilities": [
+        "독수",
+        "먹보"
+      ],
+      "abilitiesEn": [
+        "poison-touch",
+        "gluttony"
+      ],
+      "hiddenAbility": "power-of-alchemy",
+      "hiddenAbilityEn": "power-of-alchemy",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10112.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10112.png",
+      "isRegionalForm": true,
+      "regionalForm": "alola",
+      "formVariant": "grimer-alola"
+    },
+    {
+      "id": 10115,
+      "number": 10115,
+      "originalNumber": 89,
+      "displayNumber": 89,
+      "name": "질뻐기 (알로라)",
+      "nameEn": "muk-alola",
+      "type": "독",
+      "type2": "악",
+      "catchRate": "0.29",
+      "baseHp": 105,
+      "baseAttack": 105,
+      "baseDefense": 75,
+      "baseSpeed": 50,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10113.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10113.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 10,
+      "weight": 520,
+      "abilities": [
+        "독수",
+        "먹보"
+      ],
+      "abilitiesEn": [
+        "poison-touch",
+        "gluttony"
+      ],
+      "hiddenAbility": "power-of-alchemy",
+      "hiddenAbilityEn": "power-of-alchemy",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10113.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10113.png",
+      "isRegionalForm": true,
+      "regionalForm": "alola",
+      "formVariant": "muk-alola"
+    },
+    {
+      "id": 10116,
+      "number": 10116,
+      "originalNumber": 103,
+      "displayNumber": 103,
+      "name": "나시 (알로라)",
+      "nameEn": "exeggutor-alola",
+      "type": "풀",
+      "type2": "드래곤",
+      "catchRate": "0.18",
+      "baseHp": 95,
+      "baseAttack": 105,
+      "baseDefense": 85,
+      "baseSpeed": 45,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10114.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10114.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 109,
+      "weight": 4156,
+      "abilities": [
+        "통찰"
+      ],
+      "abilitiesEn": [
+        "frisk"
+      ],
+      "hiddenAbility": "수확",
+      "hiddenAbilityEn": "harvest",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10114.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10114.png",
+      "isRegionalForm": true,
+      "regionalForm": "alola",
+      "formVariant": "exeggutor-alola"
+    },
+    {
+      "id": 10117,
+      "number": 10117,
+      "originalNumber": 105,
+      "displayNumber": 105,
+      "name": "텅구리 (알로라)",
+      "nameEn": "marowak-alola",
+      "type": "불꽃",
+      "type2": "고스트",
+      "catchRate": "0.29",
+      "baseHp": 60,
+      "baseAttack": 80,
+      "baseDefense": 110,
+      "baseSpeed": 45,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10115.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10115.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 10,
+      "weight": 340,
+      "abilities": [
+        "저주받은바디",
+        "피뢰침"
+      ],
+      "abilitiesEn": [
+        "cursed-body",
+        "lightning-rod"
+      ],
+      "hiddenAbility": "돌머리",
+      "hiddenAbilityEn": "rock-head",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10115.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10115.png",
+      "isRegionalForm": true,
+      "regionalForm": "alola",
+      "formVariant": "marowak-alola"
+    },
+    {
+      "id": 10118,
+      "number": 10118,
+      "originalNumber": 52,
+      "displayNumber": 52,
+      "name": "나옹 (가라르)",
+      "nameEn": "meowth-galar",
+      "type": "강철",
+      "type2": null,
+      "catchRate": "1.00",
+      "baseHp": 50,
+      "baseAttack": 65,
+      "baseDefense": 55,
+      "baseSpeed": 40,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10161.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10161.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 4,
+      "weight": 75,
+      "abilities": [
+        "픽업",
+        "tough-claws"
+      ],
+      "abilitiesEn": [
+        "pickup",
+        "tough-claws"
+      ],
+      "hiddenAbility": "긴장감",
+      "hiddenAbilityEn": "unnerve",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10161.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10161.png",
+      "isRegionalForm": true,
+      "regionalForm": "galar",
+      "formVariant": "meowth-galar"
+    },
+    {
+      "id": 10119,
+      "number": 10119,
+      "originalNumber": 77,
+      "displayNumber": 77,
+      "name": "포니타 (가라르)",
+      "nameEn": "ponyta-galar",
+      "type": "에스퍼",
+      "type2": null,
+      "catchRate": "0.75",
+      "baseHp": 50,
+      "baseAttack": 85,
+      "baseDefense": 55,
+      "baseSpeed": 90,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10162.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10162.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 8,
+      "weight": 240,
+      "abilities": [
+        "도주",
+        "파스텔베일"
+      ],
+      "abilitiesEn": [
+        "run-away",
+        "pastel-veil"
+      ],
+      "hiddenAbility": "위험예지",
+      "hiddenAbilityEn": "anticipation",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10162.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10162.png",
+      "isRegionalForm": true,
+      "regionalForm": "galar",
+      "formVariant": "ponyta-galar"
+    },
+    {
+      "id": 10120,
+      "number": 10120,
+      "originalNumber": 78,
+      "displayNumber": 78,
+      "name": "날쌩마 (가라르)",
+      "nameEn": "rapidash-galar",
+      "type": "에스퍼",
+      "type2": "페어리",
+      "catchRate": "0.24",
+      "baseHp": 65,
+      "baseAttack": 100,
+      "baseDefense": 70,
+      "baseSpeed": 105,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10163.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10163.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 17,
+      "weight": 800,
+      "abilities": [
+        "도주",
+        "파스텔베일"
+      ],
+      "abilitiesEn": [
+        "run-away",
+        "pastel-veil"
+      ],
+      "hiddenAbility": "위험예지",
+      "hiddenAbilityEn": "anticipation",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10163.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10163.png",
+      "isRegionalForm": true,
+      "regionalForm": "galar",
+      "formVariant": "rapidash-galar"
+    },
+    {
+      "id": 10121,
+      "number": 10121,
+      "originalNumber": 79,
+      "displayNumber": 79,
+      "name": "야돈 (가라르)",
+      "nameEn": "slowpoke-galar",
+      "type": "에스퍼",
+      "type2": null,
+      "catchRate": "0.75",
+      "baseHp": 90,
+      "baseAttack": 65,
+      "baseDefense": 65,
+      "baseSpeed": 15,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10164.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10164.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 12,
+      "weight": 360,
+      "abilities": [
+        "먹보",
+        "마이페이스"
+      ],
+      "abilitiesEn": [
+        "gluttony",
+        "own-tempo"
+      ],
+      "hiddenAbility": "재생력",
+      "hiddenAbilityEn": "regenerator",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10164.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10164.png",
+      "isRegionalForm": true,
+      "regionalForm": "galar",
+      "formVariant": "slowpoke-galar"
+    },
+    {
+      "id": 10122,
+      "number": 10122,
+      "originalNumber": 80,
+      "displayNumber": 80,
+      "name": "야도란 (가라르)",
+      "nameEn": "slowbro-galar",
+      "type": "독",
+      "type2": "에스퍼",
+      "catchRate": "0.29",
+      "baseHp": 95,
+      "baseAttack": 100,
+      "baseDefense": 95,
+      "baseSpeed": 30,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10165.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10165.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 16,
+      "weight": 705,
+      "abilities": [
+        "퀵드로우",
+        "마이페이스"
+      ],
+      "abilitiesEn": [
+        "quick-draw",
+        "own-tempo"
+      ],
+      "hiddenAbility": "재생력",
+      "hiddenAbilityEn": "regenerator",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10165.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10165.png",
+      "isRegionalForm": true,
+      "regionalForm": "galar",
+      "formVariant": "slowbro-galar"
+    },
+    {
+      "id": 10123,
+      "number": 10123,
+      "originalNumber": 83,
+      "displayNumber": 83,
+      "name": "파오리 (가라르)",
+      "nameEn": "farfetchd-galar",
+      "type": "격투",
+      "type2": null,
+      "catchRate": "0.18",
+      "baseHp": 52,
+      "baseAttack": 95,
+      "baseDefense": 55,
+      "baseSpeed": 55,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10166.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10166.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 8,
+      "weight": 420,
+      "abilities": [
+        "불굴의마음"
+      ],
+      "abilitiesEn": [
+        "steadfast"
+      ],
+      "hiddenAbility": "배짱",
+      "hiddenAbilityEn": "scrappy",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10166.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10166.png",
+      "isRegionalForm": true,
+      "regionalForm": "galar",
+      "formVariant": "farfetchd-galar"
+    },
+    {
+      "id": 10124,
+      "number": 10124,
+      "originalNumber": 110,
+      "displayNumber": 110,
+      "name": "또도가스 (가라르)",
+      "nameEn": "weezing-galar",
+      "type": "독",
+      "type2": "페어리",
+      "catchRate": "0.24",
+      "baseHp": 65,
+      "baseAttack": 90,
+      "baseDefense": 120,
+      "baseSpeed": 60,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10167.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10167.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 30,
+      "weight": 160,
+      "abilities": [
+        "부유",
+        "화학변화가스"
+      ],
+      "abilitiesEn": [
+        "levitate",
+        "neutralizing-gas"
+      ],
+      "hiddenAbility": "misty-surge",
+      "hiddenAbilityEn": "misty-surge",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10167.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10167.png",
+      "isRegionalForm": true,
+      "regionalForm": "galar",
+      "formVariant": "weezing-galar"
+    },
+    {
+      "id": 10125,
+      "number": 10125,
+      "originalNumber": 122,
+      "displayNumber": 122,
+      "name": "마임맨 (가라르)",
+      "nameEn": "mr-mime-galar",
+      "type": "얼음",
+      "type2": "에스퍼",
+      "catchRate": "0.18",
+      "baseHp": 50,
+      "baseAttack": 65,
+      "baseDefense": 65,
+      "baseSpeed": 100,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10168.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10168.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 14,
+      "weight": 568,
+      "abilities": [
+        "의기양양",
+        "screen-cleaner"
+      ],
+      "abilitiesEn": [
+        "vital-spirit",
+        "screen-cleaner"
+      ],
+      "hiddenAbility": "아이스바디",
+      "hiddenAbilityEn": "ice-body",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10168.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10168.png",
+      "isRegionalForm": true,
+      "regionalForm": "galar",
+      "formVariant": "mr-mime-galar"
+    },
+    {
+      "id": 10126,
+      "number": 10126,
+      "originalNumber": 144,
+      "displayNumber": 144,
+      "name": "프리져 (가라르)",
+      "nameEn": "articuno-galar",
+      "type": "에스퍼",
+      "type2": "비행",
+      "catchRate": "0.01",
+      "baseHp": 90,
+      "baseAttack": 85,
+      "baseDefense": 85,
+      "baseSpeed": 95,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10169.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10169.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 0,
+        "female": 0
+      },
+      "height": 17,
+      "weight": 509,
+      "abilities": [
+        "competitive"
+      ],
+      "abilitiesEn": [
+        "competitive"
+      ],
+      "hiddenAbility": null,
+      "hiddenAbilityEn": null,
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10169.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10169.png",
+      "isRegionalForm": true,
+      "regionalForm": "galar",
+      "formVariant": "articuno-galar"
+    },
+    {
+      "id": 10127,
+      "number": 10127,
+      "originalNumber": 145,
+      "displayNumber": 145,
+      "name": "썬더 (가라르)",
+      "nameEn": "zapdos-galar",
+      "type": "격투",
+      "type2": "비행",
+      "catchRate": "0.01",
+      "baseHp": 90,
+      "baseAttack": 125,
+      "baseDefense": 90,
+      "baseSpeed": 100,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10170.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10170.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 0,
+        "female": 0
+      },
+      "height": 16,
+      "weight": 582,
+      "abilities": [
+        "오기"
+      ],
+      "abilitiesEn": [
+        "defiant"
+      ],
+      "hiddenAbility": null,
+      "hiddenAbilityEn": null,
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10170.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10170.png",
+      "isRegionalForm": true,
+      "regionalForm": "galar",
+      "formVariant": "zapdos-galar"
+    },
+    {
+      "id": 10128,
+      "number": 10128,
+      "originalNumber": 146,
+      "displayNumber": 146,
+      "name": "파이어 (가라르)",
+      "nameEn": "moltres-galar",
+      "type": "악",
+      "type2": "비행",
+      "catchRate": "0.01",
+      "baseHp": 90,
+      "baseAttack": 85,
+      "baseDefense": 90,
+      "baseSpeed": 90,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10171.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10171.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 0,
+        "female": 0
+      },
+      "height": 20,
+      "weight": 660,
+      "abilities": [
+        "폭주"
+      ],
+      "abilitiesEn": [
+        "berserk"
+      ],
+      "hiddenAbility": null,
+      "hiddenAbilityEn": null,
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10171.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10171.png",
+      "isRegionalForm": true,
+      "regionalForm": "galar",
+      "formVariant": "moltres-galar"
+    },
+    {
+      "id": 10129,
+      "number": 10129,
+      "originalNumber": 199,
+      "displayNumber": 199,
+      "name": "야도킹 (가라르)",
+      "nameEn": "slowking-galar",
+      "type": "독",
+      "type2": "에스퍼",
+      "catchRate": "0.27",
+      "baseHp": 95,
+      "baseAttack": 65,
+      "baseDefense": 80,
+      "baseSpeed": 30,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10172.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10172.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 18,
+      "weight": 795,
+      "abilities": [
+        "이상한약",
+        "마이페이스"
+      ],
+      "abilitiesEn": [
+        "curious-medicine",
+        "own-tempo"
+      ],
+      "hiddenAbility": "재생력",
+      "hiddenAbilityEn": "regenerator",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10172.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10172.png",
+      "isRegionalForm": true,
+      "regionalForm": "galar",
+      "formVariant": "slowking-galar"
+    },
+    {
+      "id": 10130,
+      "number": 10130,
+      "originalNumber": 222,
+      "displayNumber": 222,
+      "name": "코산호 (가라르)",
+      "nameEn": "corsola-galar",
+      "type": "고스트",
+      "type2": null,
+      "catchRate": "0.24",
+      "baseHp": 60,
+      "baseAttack": 55,
+      "baseDefense": 100,
+      "baseSpeed": 30,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10173.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10173.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 25,
+        "female": 75
+      },
+      "height": 6,
+      "weight": 5,
+      "abilities": [
+        "깨어진갑옷"
+      ],
+      "abilitiesEn": [
+        "weak-armor"
+      ],
+      "hiddenAbility": "저주받은바디",
+      "hiddenAbilityEn": "cursed-body",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10173.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10173.png",
+      "isRegionalForm": true,
+      "regionalForm": "galar",
+      "formVariant": "corsola-galar"
+    },
+    {
+      "id": 10131,
+      "number": 10131,
+      "originalNumber": 263,
+      "displayNumber": 263,
+      "name": "지그제구리 (가라르)",
+      "nameEn": "zigzagoon-galar",
+      "type": "악",
+      "type2": "노말",
+      "catchRate": "1.00",
+      "baseHp": 38,
+      "baseAttack": 30,
+      "baseDefense": 41,
+      "baseSpeed": 60,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10174.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10174.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 4,
+      "weight": 175,
+      "abilities": [
+        "픽업",
+        "먹보"
+      ],
+      "abilitiesEn": [
+        "pickup",
+        "gluttony"
+      ],
+      "hiddenAbility": "속보",
+      "hiddenAbilityEn": "quick-feet",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10174.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10174.png",
+      "isRegionalForm": true,
+      "regionalForm": "galar",
+      "formVariant": "zigzagoon-galar"
+    },
+    {
+      "id": 10132,
+      "number": 10132,
+      "originalNumber": 264,
+      "displayNumber": 264,
+      "name": "직구리 (가라르)",
+      "nameEn": "linoone-galar",
+      "type": "악",
+      "type2": "노말",
+      "catchRate": "0.35",
+      "baseHp": 78,
+      "baseAttack": 70,
+      "baseDefense": 61,
+      "baseSpeed": 100,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10175.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10175.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 5,
+      "weight": 325,
+      "abilities": [
+        "픽업",
+        "먹보"
+      ],
+      "abilitiesEn": [
+        "pickup",
+        "gluttony"
+      ],
+      "hiddenAbility": "속보",
+      "hiddenAbilityEn": "quick-feet",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10175.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10175.png",
+      "isRegionalForm": true,
+      "regionalForm": "galar",
+      "formVariant": "linoone-galar"
+    },
+    {
+      "id": 10133,
+      "number": 10133,
+      "originalNumber": 554,
+      "displayNumber": 554,
+      "name": "달막화 (가라르)",
+      "nameEn": "darumaka-galar",
+      "type": "얼음",
+      "type2": null,
+      "catchRate": "0.47",
+      "baseHp": 70,
+      "baseAttack": 90,
+      "baseDefense": 45,
+      "baseSpeed": 50,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10176.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10176.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 7,
+      "weight": 400,
+      "abilities": [
+        "의욕"
+      ],
+      "abilitiesEn": [
+        "hustle"
+      ],
+      "hiddenAbility": "정신력",
+      "hiddenAbilityEn": "inner-focus",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10176.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10176.png",
+      "isRegionalForm": true,
+      "regionalForm": "galar",
+      "formVariant": "darumaka-galar"
+    },
+    {
+      "id": 10135,
+      "number": 10135,
+      "originalNumber": 562,
+      "displayNumber": 562,
+      "name": "데스마스 (가라르)",
+      "nameEn": "yamask-galar",
+      "type": "땅",
+      "type2": "고스트",
+      "catchRate": "0.75",
+      "baseHp": 38,
+      "baseAttack": 55,
+      "baseDefense": 85,
+      "baseSpeed": 30,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10179.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10179.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 5,
+      "weight": 15,
+      "abilities": [
+        "wandering-spirit"
+      ],
+      "abilitiesEn": [
+        "wandering-spirit"
+      ],
+      "hiddenAbility": null,
+      "hiddenAbilityEn": null,
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10179.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10179.png",
+      "isRegionalForm": true,
+      "regionalForm": "galar",
+      "formVariant": "yamask-galar"
+    },
+    {
+      "id": 10136,
+      "number": 10136,
+      "originalNumber": 618,
+      "displayNumber": 618,
+      "name": "메더 (가라르)",
+      "nameEn": "stunfisk-galar",
+      "type": "땅",
+      "type2": "강철",
+      "catchRate": "0.29",
+      "baseHp": 109,
+      "baseAttack": 81,
+      "baseDefense": 99,
+      "baseSpeed": 32,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10180.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10180.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 7,
+      "weight": 205,
+      "abilities": [
+        "mimicry"
+      ],
+      "abilitiesEn": [
+        "mimicry"
+      ],
+      "hiddenAbility": null,
+      "hiddenAbilityEn": null,
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10180.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10180.png",
+      "isRegionalForm": true,
+      "regionalForm": "galar",
+      "formVariant": "stunfisk-galar"
+    },
+    {
+      "id": 10137,
+      "number": 10137,
+      "originalNumber": 58,
+      "displayNumber": 58,
+      "name": "가디 (히스이)",
+      "nameEn": "growlithe-hisui",
+      "type": "불꽃",
+      "type2": "바위",
+      "catchRate": "0.75",
+      "baseHp": 60,
+      "baseAttack": 75,
+      "baseDefense": 45,
+      "baseSpeed": 55,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10229.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10229.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 75,
+        "female": 25
+      },
+      "height": 8,
+      "weight": 227,
+      "abilities": [
+        "위협",
+        "타오르는불꽃"
+      ],
+      "abilitiesEn": [
+        "intimidate",
+        "flash-fire"
+      ],
+      "hiddenAbility": "돌머리",
+      "hiddenAbilityEn": "rock-head",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10229.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10229.png",
+      "isRegionalForm": true,
+      "regionalForm": "hisui",
+      "formVariant": "growlithe-hisui"
+    },
+    {
+      "id": 10138,
+      "number": 10138,
+      "originalNumber": 59,
+      "displayNumber": 59,
+      "name": "윈디 (히스이)",
+      "nameEn": "arcanine-hisui",
+      "type": "불꽃",
+      "type2": "바위",
+      "catchRate": "0.29",
+      "baseHp": 95,
+      "baseAttack": 115,
+      "baseDefense": 80,
+      "baseSpeed": 90,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10230.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10230.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 75,
+        "female": 25
+      },
+      "height": 20,
+      "weight": 1680,
+      "abilities": [
+        "위협",
+        "타오르는불꽃"
+      ],
+      "abilitiesEn": [
+        "intimidate",
+        "flash-fire"
+      ],
+      "hiddenAbility": "돌머리",
+      "hiddenAbilityEn": "rock-head",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10230.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10230.png",
+      "isRegionalForm": true,
+      "regionalForm": "hisui",
+      "formVariant": "arcanine-hisui"
+    },
+    {
+      "id": 10139,
+      "number": 10139,
+      "originalNumber": 100,
+      "displayNumber": 100,
+      "name": "찌리리공 (히스이)",
+      "nameEn": "voltorb-hisui",
+      "type": "전기",
+      "type2": "풀",
+      "catchRate": "0.75",
+      "baseHp": 40,
+      "baseAttack": 30,
+      "baseDefense": 50,
+      "baseSpeed": 100,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10231.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10231.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 0,
+        "female": 0
+      },
+      "height": 5,
+      "weight": 130,
+      "abilities": [
+        "방음",
+        "정전기"
+      ],
+      "abilitiesEn": [
+        "soundproof",
+        "static"
+      ],
+      "hiddenAbility": "유폭",
+      "hiddenAbilityEn": "aftermath",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10231.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10231.png",
+      "isRegionalForm": true,
+      "regionalForm": "hisui",
+      "formVariant": "voltorb-hisui"
+    },
+    {
+      "id": 10140,
+      "number": 10140,
+      "originalNumber": 101,
+      "displayNumber": 101,
+      "name": "붐볼 (히스이)",
+      "nameEn": "electrode-hisui",
+      "type": "전기",
+      "type2": "풀",
+      "catchRate": "0.24",
+      "baseHp": 60,
+      "baseAttack": 50,
+      "baseDefense": 70,
+      "baseSpeed": 150,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10232.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10232.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 0,
+        "female": 0
+      },
+      "height": 12,
+      "weight": 710,
+      "abilities": [
+        "방음",
+        "정전기"
+      ],
+      "abilitiesEn": [
+        "soundproof",
+        "static"
+      ],
+      "hiddenAbility": "유폭",
+      "hiddenAbilityEn": "aftermath",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10232.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10232.png",
+      "isRegionalForm": true,
+      "regionalForm": "hisui",
+      "formVariant": "electrode-hisui"
+    },
+    {
+      "id": 10141,
+      "number": 10141,
+      "originalNumber": 157,
+      "displayNumber": 157,
+      "name": "블레이범 (히스이)",
+      "nameEn": "typhlosion-hisui",
+      "type": "불꽃",
+      "type2": "고스트",
+      "catchRate": "0.18",
+      "baseHp": 73,
+      "baseAttack": 84,
+      "baseDefense": 78,
+      "baseSpeed": 95,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10233.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10233.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 87.5,
+        "female": 12.5
+      },
+      "height": 16,
+      "weight": 698,
+      "abilities": [
+        "맹화"
+      ],
+      "abilitiesEn": [
+        "blaze"
+      ],
+      "hiddenAbility": "통찰",
+      "hiddenAbilityEn": "frisk",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10233.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10233.png",
+      "isRegionalForm": true,
+      "regionalForm": "hisui",
+      "formVariant": "typhlosion-hisui"
+    },
+    {
+      "id": 10142,
+      "number": 10142,
+      "originalNumber": 211,
+      "displayNumber": 211,
+      "name": "침바루 (히스이)",
+      "nameEn": "qwilfish-hisui",
+      "type": "악",
+      "type2": "독",
+      "catchRate": "0.18",
+      "baseHp": 65,
+      "baseAttack": 95,
+      "baseDefense": 85,
+      "baseSpeed": 85,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10234.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10234.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 5,
+      "weight": 39,
+      "abilities": [
+        "독침",
+        "쓱쓱"
+      ],
+      "abilitiesEn": [
+        "poison-point",
+        "swift-swim"
+      ],
+      "hiddenAbility": "위협",
+      "hiddenAbilityEn": "intimidate",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10234.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10234.png",
+      "isRegionalForm": true,
+      "regionalForm": "hisui",
+      "formVariant": "qwilfish-hisui"
+    },
+    {
+      "id": 10143,
+      "number": 10143,
+      "originalNumber": 215,
+      "displayNumber": 215,
+      "name": "포푸니 (히스이)",
+      "nameEn": "sneasel-hisui",
+      "type": "격투",
+      "type2": "독",
+      "catchRate": "0.24",
+      "baseHp": 55,
+      "baseAttack": 95,
+      "baseDefense": 55,
+      "baseSpeed": 115,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10235.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10235.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 9,
+      "weight": 270,
+      "abilities": [
+        "정신력",
+        "날카로운눈"
+      ],
+      "abilitiesEn": [
+        "inner-focus",
+        "keen-eye"
+      ],
+      "hiddenAbility": "나쁜손버릇",
+      "hiddenAbilityEn": "pickpocket",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10235.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10235.png",
+      "isRegionalForm": true,
+      "regionalForm": "hisui",
+      "formVariant": "sneasel-hisui"
+    },
+    {
+      "id": 10144,
+      "number": 10144,
+      "originalNumber": 503,
+      "displayNumber": 503,
+      "name": "대검귀 (히스이)",
+      "nameEn": "samurott-hisui",
+      "type": "물",
+      "type2": "악",
+      "catchRate": "0.18",
+      "baseHp": 90,
+      "baseAttack": 108,
+      "baseDefense": 80,
+      "baseSpeed": 85,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10236.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10236.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 87.5,
+        "female": 12.5
+      },
+      "height": 15,
+      "weight": 582,
+      "abilities": [
+        "급류"
+      ],
+      "abilitiesEn": [
+        "torrent"
+      ],
+      "hiddenAbility": "sharpness",
+      "hiddenAbilityEn": "sharpness",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10236.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10236.png",
+      "isRegionalForm": true,
+      "regionalForm": "hisui",
+      "formVariant": "samurott-hisui"
+    },
+    {
+      "id": 10145,
+      "number": 10145,
+      "originalNumber": 549,
+      "displayNumber": 549,
+      "name": "드레디어 (히스이)",
+      "nameEn": "lilligant-hisui",
+      "type": "풀",
+      "type2": "격투",
+      "catchRate": "0.29",
+      "baseHp": 70,
+      "baseAttack": 105,
+      "baseDefense": 75,
+      "baseSpeed": 105,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10237.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10237.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 0,
+        "female": 100
+      },
+      "height": 12,
+      "weight": 192,
+      "abilities": [
+        "엽록소",
+        "의욕"
+      ],
+      "abilitiesEn": [
+        "chlorophyll",
+        "hustle"
+      ],
+      "hiddenAbility": "리프가드",
+      "hiddenAbilityEn": "leaf-guard",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10237.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10237.png",
+      "isRegionalForm": true,
+      "regionalForm": "hisui",
+      "formVariant": "lilligant-hisui"
+    },
+    {
+      "id": 10147,
+      "number": 10147,
+      "originalNumber": 571,
+      "displayNumber": 571,
+      "name": "조로아크 (히스이)",
+      "nameEn": "zoroark-hisui",
+      "type": "노말",
+      "type2": "고스트",
+      "catchRate": "0.18",
+      "baseHp": 55,
+      "baseAttack": 100,
+      "baseDefense": 60,
+      "baseSpeed": 110,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10239.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10239.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 87.5,
+        "female": 12.5
+      },
+      "height": 16,
+      "weight": 730,
+      "abilities": [
+        "일루전"
+      ],
+      "abilitiesEn": [
+        "illusion"
+      ],
+      "hiddenAbility": null,
+      "hiddenAbilityEn": null,
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10239.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10239.png",
+      "isRegionalForm": true,
+      "regionalForm": "hisui",
+      "formVariant": "zoroark-hisui"
+    },
+    {
+      "id": 10148,
+      "number": 10148,
+      "originalNumber": 628,
+      "displayNumber": 628,
+      "name": "워글 (히스이)",
+      "nameEn": "braviary-hisui",
+      "type": "에스퍼",
+      "type2": "비행",
+      "catchRate": "0.24",
+      "baseHp": 110,
+      "baseAttack": 83,
+      "baseDefense": 70,
+      "baseSpeed": 65,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10240.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10240.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 100,
+        "female": 0
+      },
+      "height": 17,
+      "weight": 434,
+      "abilities": [
+        "날카로운눈",
+        "우격다짐"
+      ],
+      "abilitiesEn": [
+        "keen-eye",
+        "sheer-force"
+      ],
+      "hiddenAbility": "색안경",
+      "hiddenAbilityEn": "tinted-lens",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10240.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10240.png",
+      "isRegionalForm": true,
+      "regionalForm": "hisui",
+      "formVariant": "braviary-hisui"
+    },
+    {
+      "id": 10149,
+      "number": 10149,
+      "originalNumber": 704,
+      "displayNumber": 704,
+      "name": "미끄메라 (히스이)",
+      "nameEn": "sliggoo-hisui",
+      "type": "강철",
+      "type2": "드래곤",
+      "catchRate": "0.18",
+      "baseHp": 58,
+      "baseAttack": 75,
+      "baseDefense": 83,
+      "baseSpeed": 40,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10241.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10241.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 7,
+      "weight": 685,
+      "abilities": [
+        "초식",
+        "조가비갑옷"
+      ],
+      "abilitiesEn": [
+        "sap-sipper",
+        "shell-armor"
+      ],
+      "hiddenAbility": "gooey",
+      "hiddenAbilityEn": "gooey",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10241.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10241.png",
+      "isRegionalForm": true,
+      "regionalForm": "hisui",
+      "formVariant": "sliggoo-hisui"
+    },
+    {
+      "id": 10150,
+      "number": 10150,
+      "originalNumber": 705,
+      "displayNumber": 705,
+      "name": "미끄래곤 (히스이)",
+      "nameEn": "goodra-hisui",
+      "type": "강철",
+      "type2": "드래곤",
+      "catchRate": "0.18",
+      "baseHp": 80,
+      "baseAttack": 100,
+      "baseDefense": 100,
+      "baseSpeed": 60,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10242.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10242.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 17,
+      "weight": 3341,
+      "abilities": [
+        "초식",
+        "조가비갑옷"
+      ],
+      "abilitiesEn": [
+        "sap-sipper",
+        "shell-armor"
+      ],
+      "hiddenAbility": "gooey",
+      "hiddenAbilityEn": "gooey",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10242.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10242.png",
+      "isRegionalForm": true,
+      "regionalForm": "hisui",
+      "formVariant": "goodra-hisui"
+    },
+    {
+      "id": 10151,
+      "number": 10151,
+      "originalNumber": 713,
+      "displayNumber": 713,
+      "name": "크레베이스 (히스이)",
+      "nameEn": "avalugg-hisui",
+      "type": "얼음",
+      "type2": "바위",
+      "catchRate": "0.22",
+      "baseHp": 95,
+      "baseAttack": 127,
+      "baseDefense": 184,
+      "baseSpeed": 38,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10243.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10243.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 14,
+      "weight": 2624,
+      "abilities": [
+        "strong-jaw",
+        "아이스바디"
+      ],
+      "abilitiesEn": [
+        "strong-jaw",
+        "ice-body"
+      ],
+      "hiddenAbility": "옹골참",
+      "hiddenAbilityEn": "sturdy",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10243.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10243.png",
+      "isRegionalForm": true,
+      "regionalForm": "hisui",
+      "formVariant": "avalugg-hisui"
+    },
+    {
+      "id": 10152,
+      "number": 10152,
+      "originalNumber": 724,
+      "displayNumber": 724,
+      "name": "모크나이퍼 (히스이)",
+      "nameEn": "decidueye-hisui",
+      "type": "풀",
+      "type2": "격투",
+      "catchRate": "0.18",
+      "baseHp": 88,
+      "baseAttack": 112,
+      "baseDefense": 80,
+      "baseSpeed": 60,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10244.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10244.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 87.5,
+        "female": 12.5
+      },
+      "height": 16,
+      "weight": 370,
+      "abilities": [
+        "심록"
+      ],
+      "abilitiesEn": [
+        "overgrow"
+      ],
+      "hiddenAbility": "배짱",
+      "hiddenAbilityEn": "scrappy",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10244.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10244.png",
+      "isRegionalForm": true,
+      "regionalForm": "hisui",
+      "formVariant": "decidueye-hisui"
+    },
+    {
+      "id": 10153,
+      "number": 10153,
+      "originalNumber": 194,
+      "displayNumber": 194,
+      "name": "우파 (팔데아)",
+      "nameEn": "wooper-paldea",
+      "type": "독",
+      "type2": "땅",
+      "catchRate": "1.00",
+      "baseHp": 55,
+      "baseAttack": 45,
+      "baseDefense": 45,
+      "baseSpeed": 15,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10253.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10253.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 50,
+        "female": 50
+      },
+      "height": 4,
+      "weight": 110,
+      "abilities": [
+        "독침",
+        "저수"
+      ],
+      "abilitiesEn": [
+        "poison-point",
+        "water-absorb"
+      ],
+      "hiddenAbility": "천연",
+      "hiddenAbilityEn": "unaware",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10253.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10253.png",
+      "isRegionalForm": true,
+      "regionalForm": "paldea",
+      "formVariant": "wooper-paldea"
+    },
+    {
+      "id": 10167,
+      "number": 10167,
+      "originalNumber": 128,
+      "displayNumber": 128,
+      "name": "켄타로스 (팔데아) (투쟁종)",
+      "nameEn": "tauros-paldea-combat-breed",
+      "type": "격투",
+      "type2": null,
+      "catchRate": "0.18",
+      "baseHp": 75,
+      "baseAttack": 110,
+      "baseDefense": 105,
+      "baseSpeed": 100,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10250.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10250.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 100,
+        "female": 0
+      },
+      "height": 14,
+      "weight": 1150,
+      "abilities": [
+        "위협",
+        "분노의경혈"
+      ],
+      "abilitiesEn": [
+        "intimidate",
+        "anger-point"
+      ],
+      "hiddenAbility": "되새김질",
+      "hiddenAbilityEn": "cud-chew",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10250.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10250.png",
+      "isRegionalForm": true,
+      "regionalForm": "paldea",
+      "formVariant": "tauros-paldea-combat-breed"
+    },
+    {
+      "id": 10168,
+      "number": 10168,
+      "originalNumber": 128,
+      "displayNumber": 128,
+      "name": "켄타로스 (팔데아) (화염종)",
+      "nameEn": "tauros-paldea-blaze-breed",
+      "type": "격투",
+      "type2": "불꽃",
+      "catchRate": "0.18",
+      "baseHp": 75,
+      "baseAttack": 110,
+      "baseDefense": 105,
+      "baseSpeed": 100,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10251.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10251.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 100,
+        "female": 0
+      },
+      "height": 14,
+      "weight": 850,
+      "abilities": [
+        "위협",
+        "분노의경혈"
+      ],
+      "abilitiesEn": [
+        "intimidate",
+        "anger-point"
+      ],
+      "hiddenAbility": "되새김질",
+      "hiddenAbilityEn": "cud-chew",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10251.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10251.png",
+      "isRegionalForm": true,
+      "regionalForm": "paldea",
+      "formVariant": "tauros-paldea-blaze-breed"
+    },
+    {
+      "id": 10169,
+      "number": 10169,
+      "originalNumber": 128,
+      "displayNumber": 128,
+      "name": "켄타로스 (팔데아) (수련종)",
+      "nameEn": "tauros-paldea-aqua-breed",
+      "type": "격투",
+      "type2": "물",
+      "catchRate": "0.18",
+      "baseHp": 75,
+      "baseAttack": 110,
+      "baseDefense": 105,
+      "baseSpeed": 100,
+      "generation": 1,
+      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10252.png",
+      "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10252.png",
+      "isShiny": false,
+      "genderRatio": {
+        "male": 100,
+        "female": 0
+      },
+      "height": 14,
+      "weight": 1100,
+      "abilities": [
+        "위협",
+        "분노의경혈"
+      ],
+      "abilitiesEn": [
+        "intimidate",
+        "anger-point"
+      ],
+      "hiddenAbility": "되새김질",
+      "hiddenAbilityEn": "cud-chew",
+      "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10252.png",
+      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10252.png",
+      "isRegionalForm": true,
+      "regionalForm": "paldea",
+      "formVariant": "tauros-paldea-aqua-breed"
     }
   ],
   "metadata": {

@@ -20,6 +20,8 @@ import { useShop } from './useShop';
 import { useMoves } from './useMoves';
 import { useAdminFunctions } from './useAdminFunctions';
 import { isEVItem, applyEVItem } from '../utils/evItemUtils';
+import allPokemonDataRaw from '../data/allPokemon.json';
+
 
 
 
@@ -35,6 +37,12 @@ const getDefaultLootConfig = () => ({
 
 const generateLoot = (lootConfig, allItems) => {
   const loot = { money: 0, items: [], ingredients: [], berries: [] };
+  
+  if (!allItems || !Array.isArray(allItems) || allItems.length === 0) {
+    console.warn('allItems가 아직 로드되지 않았습니다');
+    return loot;
+  }
+  
   const { money } = lootConfig;
   loot.money = Math.floor(Math.random() * (money.max - money.min + 1)) + money.min;
   
@@ -93,16 +101,14 @@ export default function useGameState() {
   const [currentTab, setCurrentTab] = useState('map');
   const [encounterPokemon, setEncounterPokemon] = useState(null);
   const [firstCatchPokemon, setFirstCatchPokemon] = useState(null);
-
+  
   const [allPokemon] = useState(pokemonData.pokemon);
-console.log('🔍 allPokemonData.pokemon 원본:', allPokemonData.pokemon.length);
-console.log('🔍 리전폼 수:', allPokemonData.pokemon.filter(p => p.isRegionalForm).length);
-console.log('🔍 10000번 이상:', allPokemonData.pokemon.filter(p => p.number >= 10000).length);
 
-const [allPokemonMaster] = useState(allPokemonData.pokemon);
+  const allPokemonDataParsed = Array.isArray(allPokemonDataRaw) 
+  ? allPokemonDataRaw 
+  : (allPokemonDataRaw.pokemon || []);
 
-console.log('🔍 useState 후 allPokemonMaster:', allPokemonMaster.length);
-console.log('🔍 리전폼 수:', allPokemonMaster.filter(p => p.isRegionalForm).length);
+const [allPokemonMaster] = useState(allPokemonDataParsed);
   const [allMoves] = useState(movesData.moves || []);
   const [pokemonLearnsets] = useState(movesData.pokemonLearnsets || {});
 
@@ -156,38 +162,38 @@ console.log('🔍 리전폼 수:', allPokemonMaster.filter(p => p.isRegionalForm
     loadDiscoveredRecipes();
   }, []);
 
-  const {
-    allItems,
-    setAllItems,
-    regions,
-    setRegions,
-    gamePokedex,
-    setGamePokedex,
-    sharedPokedexData,
-    setSharedPokedexData,
-    maintenanceMode,
-    setMaintenanceMode,
-    updatePokedexMemo: gameDataUpdatePokedexMemo
-  } = useGameData(allPokemonData.pokemon);
+ const {
+  allItems,
+  setAllItems,
+  regions,
+  setRegions,
+  gamePokedex,
+  setGamePokedex,
+  sharedPokedexData,
+  setSharedPokedexData,
+  maintenanceMode,
+  setMaintenanceMode,
+  updatePokedexMemo: gameDataUpdatePokedexMemo
+} = useGameData(allPokemonDataParsed);  // 여기 수정!
 
-  const { members, setMembers, isLoading: isMembersLoading } = useMembers(allPokemonData.pokemon);
+const { members, setMembers, isLoading: isMembersLoading } = useMembers(allPokemonDataParsed);  // 여기 수정!
 
-  const {
-    currentUser,
-    handleLogin,
-    handleLogout,
-    updateCurrentUser,
-    isLoading: isAuthLoading
-  } = useAuth(members, setMembers);
+const {
+  currentUser,
+  handleLogin,
+  handleLogout,
+  updateCurrentUser,
+  isLoading: isAuthLoading
+} = useAuth(members, setMembers);
 
-  const {
-    shopData,
-    updateShopData,
-    sellItem,
-    addDailyItem,
-    removeDailyItem,
-    toggleItemPersistent
-  } = useShop(currentUser, updateCurrentUser, allItems);
+const {
+  shopData,
+  updateShopData,
+  sellItem,
+  addDailyItem,
+  removeDailyItem,
+  toggleItemPersistent
+} = useShop(currentUser, updateCurrentUser, allItems);
 
   const movesHook = useMoves(currentUser, updateCurrentUser, allMoves, pokemonLearnsets);
 
@@ -267,6 +273,7 @@ console.log('🔍 리전폼 수:', allPokemonMaster.filter(p => p.isRegionalForm
     regions,
     setRegions,
     setGamePokedex,
+    allPokemonDataParsed,
     allPokemonData.pokemon,
     pokemonData.pokemon,
     allItems

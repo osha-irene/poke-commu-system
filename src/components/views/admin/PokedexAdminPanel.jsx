@@ -13,10 +13,8 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
   const currentPokemonNumbers = useMemo(() => {
     const numbers = new Set();
     gamePokedex.forEach(p => {
-      // ⭐ 실제 포켓몬의 고유 번호만 추가 (number)
       numbers.add(p.number);
     });
-    console.log('🔍 currentPokemonNumbers:', Array.from(numbers));
     return numbers;
   }, [gamePokedex]);
 
@@ -26,13 +24,7 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
   );
 
   const availableToAdd = useMemo(() => {
-    console.log('🔍 availableToAdd 계산 시작');
-    console.log('  - allPokemonMaster 수:', allPokemonMaster.length);
-    console.log('  - showRegionalForms:', showRegionalForms);
-    console.log('  - currentPokemonNumbers 크기:', currentPokemonNumbers.size);
-    
     const filtered = allPokemonMaster.filter(p => {
-      // ⭐ number로만 체크 (리전폼은 고유한 number를 가짐)
       if (currentPokemonNumbers.has(p.number)) {
         return false;
       }
@@ -56,10 +48,23 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
         const name = p.name?.toLowerCase() || '';
         const nameEn = p.nameEn?.toLowerCase() || '';
         
-        return number.includes(query) ||
+        const matches = number.includes(query) ||
                originalNumber.includes(query) ||
                name.includes(query) ||
                nameEn.includes(query);
+        
+        // 🔍 디버그: "라이" 검색 시 어떤 포켓몬들이 걸리는지 확인
+        if (query === '라이' && matches) {
+          console.log('🔍 [ADD TAB] 검색 매칭:', {
+            name: p.name,
+            nameEn: p.nameEn,
+            number: p.number,
+            originalNumber: p.originalNumber,
+            query: query
+          });
+        }
+        
+        return matches;
       }
       
       return true;
@@ -71,24 +76,46 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
       return aDisplay - bDisplay;
     });
     
-    console.log('✅ availableToAdd 최종:', sorted.length, '개');
-    
     return sorted;
   }, [allPokemonMaster, currentPokemonNumbers, generationFilter, typeFilter, searchQuery, showRegionalForms]);
 
   const filteredCurrent = useMemo(() => {
-    return currentPokedex.filter(p => {
+    const result = currentPokedex.filter(p => {
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        return (
+        const matches = (
           p.name.toLowerCase().includes(query) ||
           p.nameEn?.toLowerCase().includes(query) ||
           p.number.toString().includes(query) ||
           (p.newNumber && p.newNumber.toString().includes(query))
         );
+        
+        // 🔍 디버그: "라이" 검색 시 어떤 포켓몬들이 걸리는지 확인
+        if (query === '라이') {
+          console.log('🔍 [CURRENT TAB] 검색 확인:', {
+            name: p.name,
+            nameEn: p.nameEn,
+            number: p.number,
+            newNumber: p.newNumber,
+            matches: matches,
+            query: query
+          });
+        }
+        
+        return matches;
       }
       return true;
     });
+    
+    // 🔍 디버그: 최종 필터 결과 출력
+    if (searchQuery === '라이') {
+      console.log('🔍 [CURRENT TAB] 최종 필터 결과:', result.map(p => ({
+        name: p.name,
+        number: p.number
+      })));
+    }
+    
+    return result;
   }, [currentPokedex, searchQuery]);
 
   const toggleTempSelect = (pokemon) => {
@@ -107,19 +134,10 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
       return;
     }
     
-    console.log('🔍 추가 버튼 클릭');
-    console.log('  - tempSelected:', Array.from(tempSelected));
-    
-    // ⭐ 선택된 포켓몬의 number를 그대로 사용
     const newNumbers = Array.from(tempSelected);
-    console.log('  - 추가할 번호들:', newNumbers);
-    
     const existingNumbers = gamePokedex.map(p => p.number);
-    console.log('  - 기존 도감 번호들:', existingNumbers);
-    
     const combined = [...existingNumbers, ...newNumbers];
     const uniqueNumbers = Array.from(new Set(combined)).sort((a, b) => a - b);
-    console.log('  - 최종 번호 배열:', uniqueNumbers);
     
     updateGamePokedex(uniqueNumbers);
     setTempSelected(new Set());
@@ -127,7 +145,6 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
 
   const handleRemovePokemon = (pokemon) => {
     if (window.confirm(`${pokemon.name}을(를) 도감에서 제거하시겠습니까?`)) {
-      // 제거할 포켓몬의 number를 찾아서 제거
       const numbersToRemove = new Set([pokemon.number]);
       if (pokemon.originalNumber) numbersToRemove.add(pokemon.originalNumber);
       
@@ -194,7 +211,11 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
     <div className="space-y-4">
       <div className="flex gap-2 border-b border-gray-300">
         <button
-          onClick={() => { setActiveTab('current'); setTempSelected(new Set()); }}
+          onClick={() => { 
+            console.log('🔄 현재 도감 탭으로 전환');
+            setActiveTab('current'); 
+            setTempSelected(new Set()); 
+          }}
           className={`px-6 py-3 font-semibold transition-colors ${
             activeTab === 'current'
               ? 'border-b-2 border-indigo-600 text-indigo-600'
@@ -204,7 +225,11 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
           현재 도감 ({currentPokedex.length}종)
         </button>
         <button
-          onClick={() => { setActiveTab('add'); setSearchQuery(''); }}
+          onClick={() => { 
+            console.log('🔄 포켓몬 추가 탭으로 전환, 검색어 초기화');
+            setActiveTab('add'); 
+            setSearchQuery(''); 
+          }}
           className={`px-6 py-3 font-semibold transition-colors ${
             activeTab === 'add'
               ? 'border-b-2 border-indigo-600 text-indigo-600'
@@ -220,7 +245,11 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
           type="text"
           placeholder="이름 또는 번호로 검색..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => {
+            const newValue = e.target.value;
+            console.log('🔍 검색어 변경:', newValue);
+            setSearchQuery(newValue);
+          }}
           className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:border-indigo-500 focus:outline-none"
         />
         
