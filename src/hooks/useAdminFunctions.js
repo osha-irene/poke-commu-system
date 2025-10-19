@@ -514,45 +514,90 @@ const deleteMemberPokemon = async (memberId, pokemonUniqueId) => {
     }
   };
 
- const editMemberPokemon = async (memberId, pokemonUniqueId, updates) => {
-  if (!currentUser?.isAdmin) return;
+// src/hooks/useAdminFunctions.js 내부
 
+const editMemberPokemon = async (memberId, pokemonUniqueId, updates) => {
+  if (!currentUser?.isAdmin) {
+    console.error('권한이 없습니다');
+    return;
+  }
+  
   const member = members[memberId];
-  if (!member) return;
+  if (!member) {
+    console.error('멤버를 찾을 수 없습니다:', memberId);
+    return;
+  }
+
+  console.log('포켓몬 수정 시작:', { memberId, pokemonUniqueId, updates });
+
+  // undefined를 안전하게 처리하는 헬퍼 함수
+  const safeValue = (newValue, oldValue) => {
+    return newValue !== undefined ? newValue : oldValue;
+  };
 
   const updatedPokemon = member.caughtPokemon.map(p => {
     if (p && p.uniqueId === pokemonUniqueId) {
+      // 기존 컨디션 값 가져오기
+      const currentCondition = p.condition || {
+        elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0
+      };
+      
+      // 기존 노력치 값 가져오기
+      const currentEffort = p.effort || {
+        hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0
+      };
+
       return {
         ...p,
         // 기본 정보
-        level: updates.level !== undefined ? updates.level : p.level,
-        friendship: updates.friendship !== undefined ? updates.friendship : p.friendship,
-        nickname: updates.nickname !== undefined ? updates.nickname : p.nickname,
+        nickname: safeValue(updates.nickname, p.nickname),
+        level: updates.level !== undefined 
+          ? Math.min(100, Math.max(1, updates.level)) 
+          : p.level,
         
-        // 이미지 URL
-        spriteUrl: updates.spriteUrl !== undefined ? updates.spriteUrl : p.spriteUrl,
-        iconUrl: updates.iconUrl !== undefined ? updates.iconUrl : p.iconUrl,
-        ballImage: updates.ballImage !== undefined ? updates.ballImage : p.ballImage,
-        ballImageUrl: updates.ballImage !== undefined ? updates.ballImage : p.ballImageUrl,
+        // 개체값
+        ivs: updates.ivs !== undefined ? {
+          hp: Math.min(31, Math.max(0, updates.ivs.hp ?? p.ivs?.hp ?? 0)),
+          attack: Math.min(31, Math.max(0, updates.ivs.attack ?? p.ivs?.attack ?? 0)),
+          defense: Math.min(31, Math.max(0, updates.ivs.defense ?? p.ivs?.defense ?? 0)),
+          specialAttack: Math.min(31, Math.max(0, updates.ivs.specialAttack ?? p.ivs?.specialAttack ?? 0)),
+          specialDefense: Math.min(31, Math.max(0, updates.ivs.specialDefense ?? p.ivs?.specialDefense ?? 0)),
+          speed: Math.min(31, Math.max(0, updates.ivs.speed ?? p.ivs?.speed ?? 0))
+        } : (p.ivs || {
+          hp: 0, attack: 0, defense: 0, 
+          specialAttack: 0, specialDefense: 0, speed: 0
+        }),
+        
+        // 이미지 URL들
+        spriteUrl: safeValue(updates.spriteUrl, p.spriteUrl || p.sprite),
+        iconUrl: safeValue(updates.iconUrl, p.iconUrl),
+        ballImageUrl: safeValue(updates.ballImage, p.ballImageUrl),
         
         // 특수 속성
-        isShiny: updates.isShiny !== undefined ? updates.isShiny : p.isShiny,
-        heldItem: updates.heldItem !== undefined ? updates.heldItem : p.heldItem,
+        isShiny: safeValue(updates.isShiny, p.isShiny || false),
+        heldItem: safeValue(updates.heldItem, p.heldItem || null),
         
         // 기술
-        moves: updates.moves !== undefined ? updates.moves : p.moves,
+        moves: safeValue(updates.moves, p.moves || []),
         
-        // 노력치 (개별 필드 업데이트)
+        // 노력치 (기존 값 유지하면서 업데이트)
         effort: updates.effort !== undefined ? {
-          ...p.effort,
-          ...updates.effort
-        } : p.effort,
+          hp: updates.effort.hp ?? currentEffort.hp,
+          attack: updates.effort.attack ?? currentEffort.attack,
+          defense: updates.effort.defense ?? currentEffort.defense,
+          specialAttack: updates.effort.specialAttack ?? currentEffort.specialAttack,
+          specialDefense: updates.effort.specialDefense ?? currentEffort.specialDefense,
+          speed: updates.effort.speed ?? currentEffort.speed
+        } : currentEffort,
         
-        // 컨디션 (개별 필드 업데이트)
+        // 컨디션 (기존 값 유지하면서 업데이트)
         condition: updates.condition !== undefined ? {
-          ...p.condition,
-          ...updates.condition
-        } : p.condition,
+          elegance: updates.condition.elegance ?? currentCondition.elegance,
+          beauty: updates.condition.beauty ?? currentCondition.beauty,
+          cuteness: updates.condition.cuteness ?? currentCondition.cuteness,
+          intelligence: updates.condition.intelligence ?? currentCondition.intelligence,
+          strength: updates.condition.strength ?? currentCondition.strength
+        } : currentCondition
       };
     }
     return p;
@@ -564,26 +609,47 @@ const deleteMemberPokemon = async (memberId, pokemonUniqueId) => {
   };
   
   try {
+    // 1. undefined를 null로 변환하여 Firebase 저장
     const { id, ...dataToSave } = updatedMember;
+    
+    // undefined를 null로 변환하는 함수 (Firebase는 undefined 허용 안함)
+    const cleanData = JSON.parse(
+      JSON.stringify(dataToSave, (key, value) => 
+        value === undefined ? null : value
+      )
+    );
+    
     const memberRef = ref(database, `members/${memberId}`);
-    await set(memberRef, dataToSave);
+    await set(memberRef, cleanData);
     
-    setMembers(prev => ({
-      ...prev,
-      [memberId]: updatedMember
-    }));
+    console.log('Firebase 저장 완료');
     
-    // 본인 수정 시 currentUser도 업데이트
+    // 2. members state 업데이트
+    setMembers(prev => {
+      const newMembers = {
+        ...prev,
+        [memberId]: updatedMember
+      };
+      console.log('setMembers 호출:', newMembers[memberId].caughtPokemon.find(p => p?.uniqueId === pokemonUniqueId));
+      return newMembers;
+    });
+    
+    // 3. 본인 수정 시 currentUser도 강제 업데이트
     if (memberId === currentUser?.id) {
-      updateCurrentUser({ caughtPokemon: updatedPokemon });
+      console.log('본인 포켓몬 수정 - currentUser 업데이트');
+      updateCurrentUser({ 
+        caughtPokemon: updatedPokemon 
+      });
     }
     
-    console.log('✅ 포켓몬 편집 완료:', pokemonUniqueId);
+    console.log('포켓몬 편집 완료:', pokemonUniqueId);
+    alert('포켓몬이 수정되었습니다!');
+    
   } catch (error) {
-    console.error('❌ 포켓몬 편집 실패:', error);
+    console.error('포켓몬 편집 실패:', error);
+    alert('포켓몬 수정 중 오류가 발생했습니다: ' + error.message);
   }
 };
-  
 
 // ========== 지역 추가 함수 ==========
 const addRegion = async (newRegion) => {

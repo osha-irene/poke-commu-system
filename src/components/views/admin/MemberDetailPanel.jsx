@@ -146,6 +146,7 @@ function MemberDetailPanel({ member, onClose }) {
             <MemberPokemonTab
               member={member}
               trainer={trainer}
+              allItems={allItems}  
               allPokemonMaster={allPokemonMaster}
               allMoves={allMoves}                    // ✅ 전달
               pokemonLearnsets={pokemonLearnsets}    // ✅ 전달
