@@ -323,6 +323,40 @@ export const useAdminFunctions = (
 };
 
 
+
+const deleteMemberPokemon = async (memberId, pokemonUniqueId) => {
+  if (!currentUser?.isAdmin) return;
+  
+  const member = members[memberId];
+  if (!member) return;
+  
+  const updatedPokemon = member.caughtPokemon.filter(
+    p => p && p.uniqueId !== pokemonUniqueId
+  );
+  
+  const updatedMember = {
+    ...member,
+    caughtPokemon: updatedPokemon
+  };
+  
+  try {
+    const { id, ...dataToSave } = updatedMember;
+    const memberRef = ref(database, `members/${memberId}`);
+    await set(memberRef, dataToSave);
+    
+    setMembers(prev => ({
+      ...prev,
+      [memberId]: updatedMember
+    }));
+    
+    alert('포켓몬이 삭제되었습니다.');
+  } catch (error) {
+    console.error('❌ 포켓몬 삭제 실패:', error);
+  }
+};
+
+
+
   const addPokemonToSelf = (pokemon) => {
     if (!currentUser?.canManageItems) {
       alert('아이템 관리 권한이 없습니다!');
@@ -480,46 +514,77 @@ export const useAdminFunctions = (
     }
   };
 
-  const editMemberPokemon = async (memberId, pokemonUniqueId, updates) => {
-    if (!currentUser?.isAdmin) return;
+ const editMemberPokemon = async (memberId, pokemonUniqueId, updates) => {
+  if (!currentUser?.isAdmin) return;
 
-    const member = members[memberId];
-    if (!member) return;
+  const member = members[memberId];
+  if (!member) return;
 
-    const updatedPokemon = member.caughtPokemon.map(p => {
-      if (p && p.uniqueId === pokemonUniqueId) {
-        return {
-          ...p,
-          level: updates.level !== undefined ? updates.level : p.level,
-          friendship: updates.friendship !== undefined ? updates.friendship : p.friendship,
-          nickname: updates.nickname !== undefined ? updates.nickname : p.nickname,
-          spriteUrl: updates.spriteUrl !== undefined ? updates.spriteUrl : p.spriteUrl,
-          ballImage: updates.ballImage !== undefined ? updates.ballImage : p.ballImage
-        };
-      }
-      return p;
-    });
-
-    const updatedMember = {
-      ...member,
-      caughtPokemon: updatedPokemon
-    };
-    
-    try {
-      const { id, ...dataToSave } = updatedMember;
-      const memberRef = ref(database, `members/${memberId}`);
-      await set(memberRef, dataToSave);
-      
-      setMembers(prev => ({
-        ...prev,
-        [memberId]: updatedMember
-      }));
-    } catch (error) {
-      console.error('❌ 포켓몬 편집 실패:', error);
+  const updatedPokemon = member.caughtPokemon.map(p => {
+    if (p && p.uniqueId === pokemonUniqueId) {
+      return {
+        ...p,
+        // 기본 정보
+        level: updates.level !== undefined ? updates.level : p.level,
+        friendship: updates.friendship !== undefined ? updates.friendship : p.friendship,
+        nickname: updates.nickname !== undefined ? updates.nickname : p.nickname,
+        
+        // 이미지 URL
+        spriteUrl: updates.spriteUrl !== undefined ? updates.spriteUrl : p.spriteUrl,
+        iconUrl: updates.iconUrl !== undefined ? updates.iconUrl : p.iconUrl,
+        ballImage: updates.ballImage !== undefined ? updates.ballImage : p.ballImage,
+        ballImageUrl: updates.ballImage !== undefined ? updates.ballImage : p.ballImageUrl,
+        
+        // 특수 속성
+        isShiny: updates.isShiny !== undefined ? updates.isShiny : p.isShiny,
+        heldItem: updates.heldItem !== undefined ? updates.heldItem : p.heldItem,
+        
+        // 기술
+        moves: updates.moves !== undefined ? updates.moves : p.moves,
+        
+        // 노력치 (개별 필드 업데이트)
+        effort: updates.effort !== undefined ? {
+          ...p.effort,
+          ...updates.effort
+        } : p.effort,
+        
+        // 컨디션 (개별 필드 업데이트)
+        condition: updates.condition !== undefined ? {
+          ...p.condition,
+          ...updates.condition
+        } : p.condition,
+      };
     }
-  };
+    return p;
+  });
 
+  const updatedMember = {
+    ...member,
+    caughtPokemon: updatedPokemon
+  };
   
+  try {
+    const { id, ...dataToSave } = updatedMember;
+    const memberRef = ref(database, `members/${memberId}`);
+    await set(memberRef, dataToSave);
+    
+    setMembers(prev => ({
+      ...prev,
+      [memberId]: updatedMember
+    }));
+    
+    // 본인 수정 시 currentUser도 업데이트
+    if (memberId === currentUser?.id) {
+      updateCurrentUser({ caughtPokemon: updatedPokemon });
+    }
+    
+    console.log('✅ 포켓몬 편집 완료:', pokemonUniqueId);
+  } catch (error) {
+    console.error('❌ 포켓몬 편집 실패:', error);
+  }
+};
+  
+
 // ========== 지역 추가 함수 ==========
 const addRegion = async (newRegion) => {
   if (!currentUser?.isAdmin) return;
@@ -921,6 +986,7 @@ const updateGamePokedex = async (selectedPokemonNumbers) => {
     updateGamePokedex,
     resetGameData,
     editMemberPokemon,
+    deleteMemberPokemon, 
     updateMemberMoney,
     updateMemberRegionAccess,
     addRegion,

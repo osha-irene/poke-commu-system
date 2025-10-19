@@ -1,18 +1,19 @@
-// src/components/views/admin/MemberDetailPanel.jsx - Context 버전
-
+// src/components/views/admin/MemberDetailPanel.jsx
 import React, { useState } from 'react';
 import { useGame } from '../../../contexts/GameContext';
+import { usePokemonContext } from '../../../contexts/PokemonContext';
 import MemberInfoTab from './member/MemberInfoTab';
 import MemberPokemonTab from './member/MemberPokemonTab';
 import MemberItemTab from './member/MemberItemTab';
 
 function MemberDetailPanel({ member, onClose }) {
-  // ✅ Context에서 필요한 것들 가져오기
   const {
     currentUser: trainer,
     allItems,
     allPokemonMaster,
     regions,
+    allMoves,           // ✅ 추가
+    pokemonLearnsets,   // ✅ 추가
     setMembers,
     updateCurrentUser,
     giveItemToMember,
@@ -26,7 +27,18 @@ function MemberDetailPanel({ member, onClose }) {
 
   const [selectedTab, setSelectedTab] = useState('info');
 
-  // 탐험횟수 업데이트
+  // 포켓몬 삭제 핸들러 추가
+  const handleDeletePokemon = async (memberId, pokemonUniqueId) => {
+    const updatedPokemon = member.caughtPokemon.filter(
+      p => p && p.uniqueId !== pokemonUniqueId
+    );
+    
+    // editMemberPokemon을 이용해서 전체 포켓몬 배열 업데이트
+    await editMemberPokemon(memberId, pokemonUniqueId, { 
+      caughtPokemon: updatedPokemon 
+    });
+  };
+
   const handleUpdateWalkCount = (memberId, newWalkCount) => {
     setMembers(prev => ({
       ...prev,
@@ -38,7 +50,6 @@ function MemberDetailPanel({ member, onClose }) {
     }
   };
 
-  // 최대 탐험횟수 업데이트
   const handleUpdateMaxWalkCount = (memberId, newMaxWalkCount) => {
     setMembers(prev => ({
       ...prev,
@@ -58,32 +69,31 @@ function MemberDetailPanel({ member, onClose }) {
   };
 
   const handleToggleAdmin = (memberId, memberName) => {
-    const action = member.isAdmin ? '해제' : '부여';
+    const action = member.isAdmin ? '제거' : '부여';
     if (window.confirm(`${memberName}님의 관리자 권한을 ${action}하시겠습니까?`)) {
       toggleAdminStatus(memberId);
-      alert(`관리자 권한이 ${action}되었습니다.`);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col">
         {/* 헤더 */}
-        <div className="bg-indigo-600 text-white p-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-indigo-600 font-bold text-2xl">
-              {member.name.charAt(0)}
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold">{member.name}</h2>
-              <p className="text-indigo-100">ID: {member.id}</p>
-            </div>
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-4 rounded-t-xl flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold">{member.name}</h2>
+            <p className="text-indigo-100 text-sm">ID: {member.id}</p>
           </div>
-          <button onClick={onClose} className="text-white hover:bg-indigo-700 rounded-lg p-2">✕</button>
+          <button
+            onClick={onClose}
+            className="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-colors"
+          >
+            ✕
+          </button>
         </div>
 
         {/* 탭 */}
-        <div className="flex border-b border-gray-200">
+        <div className="border-b border-gray-200 flex px-6 bg-gray-50">
           <button 
             onClick={() => setSelectedTab('info')} 
             className={`flex-1 py-3 font-semibold ${
@@ -92,7 +102,7 @@ function MemberDetailPanel({ member, onClose }) {
                 : 'text-gray-600'
             }`}
           >
-            💰 정보/관리
+            기본정보
           </button>
           <button 
             onClick={() => setSelectedTab('pokemon')} 
@@ -135,9 +145,13 @@ function MemberDetailPanel({ member, onClose }) {
           {selectedTab === 'pokemon' && (
             <MemberPokemonTab
               member={member}
+              trainer={trainer}
               allPokemonMaster={allPokemonMaster}
+              allMoves={allMoves}                    // ✅ 전달
+              pokemonLearnsets={pokemonLearnsets}    // ✅ 전달
               onGivePokemon={givePokemonToMember}
               onEditPokemon={editMemberPokemon}
+              onDeletePokemon={handleDeletePokemon}  // ✅ 전달
             />
           )}
 

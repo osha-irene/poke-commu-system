@@ -1,703 +1,541 @@
 import React, { useState, useMemo } from 'react';
-import ReactDOM from 'react-dom';
-import { POKEBALL_LIST, getButtonClass, getTypeColor } from '../../../../styles/theme';
-import { X, Zap, Shield, Star, Sparkles } from 'lucide-react';
-import { usePokemonContext } from '../../../../contexts/PokemonContext';
-
-const TYPE_COLORS = {
-  '노말': '#A8A878', '불꽃': '#F08030', '물': '#6890F0', '전기': '#F8D030',
-  '풀': '#78C850', '얼음': '#98D8D8', '격투': '#C03028', '독': '#A040A0',
-  '땅': '#E0C068', '비행': '#A890F0', '에스퍼': '#F85888', '벌레': '#A8B820',
-  '바위': '#B8A038', '고스트': '#705898', '드래곤': '#7038F8', '악': '#705848',
-  '강철': '#B8B8D0', '페어리': '#EE99AC'
-};
+import { 
+  Edit, Save, X, Trash2, Star, Sparkles, Image, 
+  Award, Heart, Zap, Shield, Gift, Plus, Minus
+} from 'lucide-react';
 
 const getCategoryIcon = (category) => {
-  switch (category) {
-    case '물리': return <Zap size={14} className="text-orange-500" />;
-    case '특수': return <Star size={14} className="text-purple-500" />;
-    case '변화': return <Shield size={14} className="text-blue-500" />;
-    default: return null;
-  }
+  if (category === '물리') return <Zap size={14} className="text-orange-500" />;
+  if (category === '특수') return <Star size={14} className="text-purple-500" />;
+  if (category === '변화') return <Shield size={14} className="text-blue-500" />;
+  return null;
 };
+
+const POKEBALL_LIST = [
+  { name: '몬스터볼', nameEn: 'poke-ball' },
+  { name: '수퍼볼', nameEn: 'great-ball' },
+  { name: '하이퍼볼', nameEn: 'ultra-ball' },
+  { name: '마스터볼', nameEn: 'master-ball' },
+  { name: '프리미어볼', nameEn: 'premier-ball' },
+];
 
 function MemberPokemonTab({ 
   member, 
-  onGivePokemon, 
-  onEditPokemon 
+  trainer,
+  allPokemonMaster = [], 
+  allMoves = [], 
+  pokemonLearnsets = {},
+  onGivePokemon,
+  onEditPokemon,
+  onDeletePokemon
 }) {
-  const { 
-    allPokemonMaster = [], 
-    allMoves = [], 
-    pokemonLearnsets = {} 
-  } = usePokemonContext() || {};
-  
-  const [pokemonMode, setPokemonMode] = useState('view');
-  
-  // 편집 모드 상태
-  const [editingPokemon, setEditingPokemon] = useState(null);
-  const [editLevel, setEditLevel] = useState(5);
-  const [editFriendship, setEditFriendship] = useState(0);
-  const [editNickname, setEditNickname] = useState('');
-  const [editSpriteUrl, setEditSpriteUrl] = useState('');
-  const [editBallImage, setEditBallImage] = useState('');
-  
-  // 포켓몬 지급 상태
-  const [searchQuery, setSearchQuery] = useState('');
+  const [mode, setMode] = useState('view');
   const [selectedPokemon, setSelectedPokemon] = useState(null);
-  const [level, setLevel] = useState(5);
-  const [friendship, setFriendship] = useState(0);
-  const [nickname, setNickname] = useState('');
-  const [heldItemName, setHeldItemName] = useState('');
-  const [caughtWithBall, setCaughtWithBall] = useState('몬스터볼');
-  const [isShiny, setIsShiny] = useState(false);
   
-  // 기술 설정 상태
-  const [moveMode, setMoveMode] = useState('auto');
-  const [selectedMoves, setSelectedMoves] = useState([]);
-  const [showMoveSelector, setShowMoveSelector] = useState(false);
+  const [editData, setEditData] = useState({
+    level: 5,
+    friendship: 0,
+    nickname: '',
+    spriteUrl: '',
+    iconUrl: '',
+    ballImage: '',
+    isShiny: false,
+    heldItem: '',
+    moves: [],
+    effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
+    condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 }
+  });
   
-  const filteredPokemon = allPokemonMaster.filter(p => {
-    const query = searchQuery.toLowerCase();
-    return (
-      p.name.toLowerCase().includes(query) ||
-      p.nameEn?.toLowerCase().includes(query) ||
-      p.number.toString().includes(query)
-    );
-  }).slice(0, 50);
+  const [giveData, setGiveData] = useState({
+    searchQuery: '',
+    selectedPokemon: null,
+    level: 5,
+    friendship: 0,
+    nickname: '',
+    heldItemName: '',
+    caughtWithBall: '몬스터볼',
+    isShiny: false,
+    selectedMoves: []
+  });
 
-  // 현재 레벨 이하에서 배울 수 있는 모든 기술
+  const filteredPokemon = useMemo(() => {
+    if (!giveData.searchQuery) return allPokemonMaster.slice(0, 50);
+    const query = giveData.searchQuery.toLowerCase();
+    return allPokemonMaster
+      .filter(p => 
+        p.name?.toLowerCase().includes(query) || 
+        p.nameEn?.toLowerCase().includes(query) ||
+        p.number?.toString().includes(query)
+      )
+      .slice(0, 50);
+  }, [giveData.searchQuery, allPokemonMaster]);
+
   const availableMoves = useMemo(() => {
-    if (!selectedPokemon) return [];
-    if (!pokemonLearnsets || Object.keys(pokemonLearnsets).length === 0) return [];
-    if (!allMoves || allMoves.length === 0) return [];
+    if (!giveData.selectedPokemon) return [];
+    const learnset = pokemonLearnsets[giveData.selectedPokemon.number?.toString()];
+    if (!learnset) return [];
     
-    const learnset = pokemonLearnsets[selectedPokemon.number.toString()];
-    if (!learnset || !learnset.levelUpMoves) return [];
+    const levelMoves = learnset.levelUpMoves
+      ?.filter(entry => entry.level <= giveData.level)
+      .map(entry => allMoves.find(m => m.id === entry.moveId))
+      .filter(Boolean) || [];
     
-    return learnset.levelUpMoves
-      .filter(lm => lm.level <= level)
-      .map(lm => {
-        const move = allMoves.find(m => m.id === lm.moveId);
-        return move ? { ...move, learnLevel: lm.level } : null;
-      })
-      .filter(Boolean)
-      .sort((a, b) => b.learnLevel - a.learnLevel);
-  }, [selectedPokemon, level, pokemonLearnsets, allMoves]);
-
-  // 자동 랜덤 기술 생성
-  const getRandomMoves = () => {
-    if (availableMoves.length === 0) return [];
+    const machineMoves = learnset.machineMoves
+      ?.map(moveId => allMoves.find(m => m.id === moveId))
+      .filter(Boolean) || [];
     
-    const shuffled = [...availableMoves].sort(() => Math.random() - 0.5);
-    const selected = shuffled.slice(0, Math.min(4, shuffled.length));
-    
-    return selected.map(move => ({
-      moveId: move.id,
-      currentPp: move.pp,
-      learnedAt: move.learnLevel
-    }));
-  };
+    return [...new Map([...levelMoves, ...machineMoves].map(m => [m.id, m])).values()];
+  }, [giveData.selectedPokemon, giveData.level, pokemonLearnsets, allMoves]);
 
   const handleGivePokemon = () => {
-    if (!selectedPokemon) {
+    if (!giveData.selectedPokemon) {
       alert('포켓몬을 선택해주세요!');
       return;
     }
     
-    let moves = [];
-    if (moveMode === 'auto') {
-      moves = getRandomMoves();
-    } else {
-      moves = selectedMoves.map(move => ({
-        moveId: move.id,
-        currentPp: move.pp,
-        learnedAt: move.learnLevel || level
-      }));
-    }
-    
     const options = {
-      level: level,
-      friendship: friendship,
-      nickname: nickname || null,
-      heldItem: heldItemName || null,
-      caughtWithBall: caughtWithBall,
-      moves: moves,
-      isShiny: isShiny
+      level: giveData.level,
+      friendship: giveData.friendship,
+      nickname: giveData.nickname || null,
+      heldItem: giveData.heldItemName || null,
+      caughtWithBall: giveData.caughtWithBall,
+      isShiny: giveData.isShiny,
+      moves: giveData.selectedMoves.slice(0, 4),
+      isPartner: false
     };
     
-    onGivePokemon(member.id, selectedPokemon, options);
-    setSelectedPokemon(null);
-    setNickname('');
-    setHeldItemName('');
-    setCaughtWithBall('몬스터볼');
-    setSelectedMoves([]);
-    setMoveMode('auto');
-    setIsShiny(false);
+    onGivePokemon?.(member.id, giveData.selectedPokemon, options);
     
-    const shinyText = isShiny ? '반짝이 ' : '';
-    alert(`${member.name}님에게 ${shinyText}${selectedPokemon.name} (Lv.${level})을 지급했습니다!`);
-  };
-
-  const handleEditPokemon = (pokemon) => {
-    setEditingPokemon(pokemon);
-    setEditLevel(pokemon.level);
-    setEditFriendship(pokemon.friendship || 0);
-    setEditNickname(pokemon.nickname || '');
-    setEditSpriteUrl(pokemon.spriteUrl || '');
-    setEditBallImage(pokemon.ballImage || '');
-    setPokemonMode('edit');
-  };
-
-  const handleSaveEdit = () => {
-    if (!editingPokemon) return;
-    
-    const updates = {
-      level: editLevel,
-      friendship: editFriendship,
-      nickname: editNickname || null,
-      spriteUrl: editSpriteUrl || editingPokemon.spriteUrl,
-      ballImage: editBallImage || null
-    };
-    
-    onEditPokemon(member.id, editingPokemon.uniqueId, updates);
-    
-    setEditingPokemon(null);
-    setPokemonMode('view');
-    alert(`${editingPokemon.nickname || editingPokemon.name} 정보가 수정되었습니다!`);
-  };
-
-  const toggleMoveSelection = (move) => {
-    setSelectedMoves(prev => {
-      const exists = prev.find(m => m.id === move.id);
-      if (exists) {
-        return prev.filter(m => m.id !== move.id);
-      } else if (prev.length < 4) {
-        return [...prev, move];
-      } else {
-        alert('최대 4개까지 선택할 수 있습니다!');
-        return prev;
-      }
+    setGiveData({
+      searchQuery: '',
+      selectedPokemon: null,
+      level: 5,
+      friendship: 0,
+      nickname: '',
+      heldItemName: '',
+      caughtWithBall: '몬스터볼',
+      isShiny: false,
+      selectedMoves: []
     });
+    setMode('view');
   };
 
-  return (
+  const handleEditPokemon = () => {
+    if (!selectedPokemon) return;
+    
+    onEditPokemon?.(member.id, selectedPokemon.uniqueId, editData);
+    setMode('view');
+    setSelectedPokemon(null);
+  };
+
+  const startEdit = (pokemon) => {
+    setSelectedPokemon(pokemon);
+    setEditData({
+      level: pokemon.level || 5,
+      friendship: pokemon.friendship || 0,
+      nickname: pokemon.nickname || '',
+      spriteUrl: pokemon.spriteUrl || '',
+      iconUrl: pokemon.iconUrl || '',
+      ballImage: pokemon.ballImageUrl || '',
+      isShiny: pokemon.isShiny || false,
+      heldItem: pokemon.heldItem || '',
+      moves: pokemon.moves || [],
+      effort: pokemon.effort || { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
+      condition: pokemon.condition || { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 }
+    });
+    setMode('edit');
+  };
+
+  const renderViewMode = () => (
     <div className="space-y-4">
-      {/* 보기/지급/편집 토글 */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-bold text-lg">
-          {pokemonMode === 'view' ? '보유 포켓몬' : pokemonMode === 'give' ? '포켓몬 지급' : '포켓몬 편집'}
-        </h3>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setPokemonMode('view')}
-            className={getButtonClass(pokemonMode === 'view' ? 'primary' : 'secondary', 'md')}
-          >
-            보기
-          </button>
-          <button
-            onClick={() => setPokemonMode('give')}
-            className={getButtonClass(pokemonMode === 'give' ? 'success' : 'secondary', 'md')}
-          >
-            지급
-          </button>
-          <button
-            onClick={() => setPokemonMode('edit')}
-            className={getButtonClass(pokemonMode === 'edit' ? 'warning' : 'secondary', 'md')}
-          >
-            편집
-          </button>
-        </div>
+      <div className="flex justify-between items-center">
+        <h3 className="font-bold text-lg">보유 포켓몬 ({member.caughtPokemon?.filter(p => p).length || 0}/26)</h3>
+        <button
+          onClick={() => setMode('give')}
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+        >
+          <Gift size={16} />
+          포켓몬 지급
+        </button>
       </div>
 
-      {/* 보기 모드 */}
-      {pokemonMode === 'view' && (
-        <div className="space-y-2">
-          {member.caughtPokemon && member.caughtPokemon.length > 0 ? (
-            member.caughtPokemon.map((pokemon, idx) => pokemon && (
-              <div key={idx} className="bg-white border border-gray-200 rounded-lg p-3 flex items-center gap-3 hover:shadow-md transition-shadow">
-                <div 
-                  className="w-16 h-16 flex-shrink-0"
-                  style={{
-                    backgroundImage: `url(${pokemon.spriteUrl})`,
-                    backgroundSize: 'contain',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'center',
-                    imageRendering: 'pixelated'
-                  }}
+      <div className="grid grid-cols-2 gap-3 max-h-[600px] overflow-y-auto">
+        {member.caughtPokemon?.filter(p => p).map((pokemon, idx) => (
+          <div key={pokemon.uniqueId || idx} className="bg-white border-2 border-gray-200 rounded-lg p-3 hover:border-blue-300">
+            <div className="flex gap-3">
+              <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
+                <img 
+                  src={pokemon.spriteUrl || pokemon.imageUrl} 
+                  alt={pokemon.name}
+                  className="w-14 h-14"
+                  style={{ imageRendering: 'pixelated' }}
                 />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <div className="font-bold text-gray-800">{pokemon.nickname || pokemon.name}</div>
-                    {pokemon.isShiny && <Sparkles className="text-yellow-500" size={16} />}
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  {pokemon.isShiny && <Sparkles size={14} className="text-yellow-500" />}
+                  <span className="font-bold text-sm truncate">{pokemon.nickname || pokemon.name}</span>
+                </div>
+                <div className="text-xs text-gray-600 space-y-0.5">
+                  <div>Lv.{pokemon.level} | {pokemon.type}</div>
+                  <div className="flex items-center gap-1">
+                    <Heart size={10} className="text-pink-500" />
+                    <span>{pokemon.friendship || 0}</span>
                   </div>
-                  <div className="text-sm text-gray-600">Lv.{pokemon.level} | 친밀도: {pokemon.friendship || 0}</div>
-                  {pokemon.heldItem && <div className="text-xs text-blue-600">도구: {pokemon.heldItem}</div>}
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="text-center py-8 text-gray-400">포켓몬이 없습니다</div>
-          )}
+
+              <div className="flex flex-col gap-1">
+                <button
+                  onClick={() => startEdit(pokemon)}
+                  className="p-1.5 bg-blue-50 text-blue-600 rounded hover:bg-blue-100"
+                  title="편집"
+                >
+                  <Edit size={14} />
+                </button>
+                <button
+                  onClick={() => {
+                    if (window.confirm(`${pokemon.nickname || pokemon.name}을(를) 삭제하시겠습니까?`)) {
+                      onDeletePokemon?.(member.id, pokemon.uniqueId);
+                    }
+                  }}
+                  className="p-1.5 bg-red-50 text-red-600 rounded hover:bg-red-100"
+                  title="삭제"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderGiveMode = () => (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="font-bold text-lg">포켓몬 지급</h3>
+        <button
+          onClick={() => setMode('view')}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-800"
+        >
+          <X size={16} />
+          취소
+        </button>
+      </div>
+
+      <input
+        type="text"
+        placeholder="포켓몬 검색 (이름, 번호)..."
+        value={giveData.searchQuery}
+        onChange={(e) => setGiveData(prev => ({ ...prev, searchQuery: e.target.value }))}
+        className="w-full px-4 py-2 border rounded-lg"
+      />
+
+      <div className="grid grid-cols-4 gap-2 max-h-[200px] overflow-y-auto p-2 bg-gray-50 rounded">
+        {filteredPokemon.map(pokemon => (
+          <button
+            key={pokemon.id}
+            onClick={() => setGiveData(prev => ({ ...prev, selectedPokemon: pokemon }))}
+            className={`p-2 rounded border-2 transition-all ${
+              giveData.selectedPokemon?.id === pokemon.id
+                ? 'border-blue-500 bg-blue-50'
+                : 'border-gray-200 hover:border-blue-300'
+            }`}
+          >
+            <img 
+              src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`}
+              alt={pokemon.name}
+              className="w-full h-12 object-contain"
+              style={{ imageRendering: 'pixelated' }}
+            />
+            <div className="text-xs text-center mt-1 truncate">{pokemon.name}</div>
+          </button>
+        ))}
+      </div>
+
+      {giveData.selectedPokemon && (
+        <div className="space-y-3 p-4 bg-gray-50 rounded-lg">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-semibold mb-1">레벨</label>
+              <input
+                type="number"
+                min="1"
+                max="100"
+                value={giveData.level}
+                onChange={(e) => setGiveData(prev => ({ ...prev, level: parseInt(e.target.value) || 1 }))}
+                className="w-full px-3 py-2 border rounded"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold mb-1">친밀도</label>
+              <input
+                type="number"
+                min="0"
+                max="255"
+                value={giveData.friendship}
+                onChange={(e) => setGiveData(prev => ({ ...prev, friendship: parseInt(e.target.value) || 0 }))}
+                className="w-full px-3 py-2 border rounded"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold mb-1">별명</label>
+            <input
+              type="text"
+              value={giveData.nickname}
+              onChange={(e) => setGiveData(prev => ({ ...prev, nickname: e.target.value }))}
+              placeholder="별명 (선택사항)"
+              className="w-full px-3 py-2 border rounded"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold mb-1">포획볼</label>
+            <select
+              value={giveData.caughtWithBall}
+              onChange={(e) => setGiveData(prev => ({ ...prev, caughtWithBall: e.target.value }))}
+              className="w-full px-3 py-2 border rounded"
+            >
+              {POKEBALL_LIST.map(ball => (
+                <option key={ball.nameEn} value={ball.name}>{ball.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="isShiny"
+              checked={giveData.isShiny}
+              onChange={(e) => setGiveData(prev => ({ ...prev, isShiny: e.target.checked }))}
+              className="w-4 h-4"
+            />
+            <label htmlFor="isShiny" className="text-sm font-semibold flex items-center gap-1">
+              <Sparkles size={14} className="text-yellow-500" />
+              이로치 (반짝이)
+            </label>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold mb-2">기술 선택 (최대 4개)</label>
+            <div className="grid grid-cols-2 gap-2 max-h-[150px] overflow-y-auto p-2 bg-white rounded border">
+              {availableMoves.map(move => {
+                const isSelected = giveData.selectedMoves.some(m => m.id === move.id);
+                return (
+                  <button
+                    key={move.id}
+                    onClick={() => {
+                      if (isSelected) {
+                        setGiveData(prev => ({
+                          ...prev,
+                          selectedMoves: prev.selectedMoves.filter(m => m.id !== move.id)
+                        }));
+                      } else if (giveData.selectedMoves.length < 4) {
+                        setGiveData(prev => ({
+                          ...prev,
+                          selectedMoves: [...prev.selectedMoves, move]
+                        }));
+                      }
+                    }}
+                    disabled={!isSelected && giveData.selectedMoves.length >= 4}
+                    className={`p-2 text-left rounded border text-xs ${
+                      isSelected
+                        ? 'bg-blue-50 border-blue-500'
+                        : 'border-gray-200 hover:border-blue-300'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    <div className="flex items-center gap-1">
+                      {getCategoryIcon(move.damageClass)}
+                      <span className="font-semibold">{move.name}</span>
+                    </div>
+                    <div className="text-gray-600 text-xs">{move.type}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <button
+            onClick={handleGivePokemon}
+            className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 font-semibold"
+          >
+            지급하기
+          </button>
         </div>
       )}
+    </div>
+  );
 
-      {/* 지급 모드 */}
-      {pokemonMode === 'give' && (
-        <div className="space-y-4">
-          <input
-            type="text"
-            placeholder="포켓몬 이름 또는 번호로 검색..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none transition-all"
-          />
+  const renderEditMode = () => {
+    if (!selectedPokemon) return null;
 
-          {!selectedPokemon ? (
-            <div className="grid grid-cols-4 gap-3 max-h-96 overflow-y-auto bg-gray-50 p-3 rounded-lg">
-              {filteredPokemon.map(pokemon => (
-                <button
-                  key={pokemon.number}
-                  onClick={() => {
-                    setSelectedPokemon(pokemon);
-                    setSelectedMoves([]);
-                  }}
-                  className="bg-white border-2 border-gray-200 rounded-lg p-3 hover:border-indigo-400 hover:shadow-md transition-all text-center"
-                >
-                  <div 
-                    className="w-full h-20 mb-2"
-                    style={{
-                      backgroundImage: `url(https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png)`,
-                      backgroundSize: 'contain',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'center',
-                      imageRendering: 'pixelated'
-                    }}
-                  />
-                  <div className="text-xs font-bold text-gray-700 truncate">
-                    No.{pokemon.number.toString().padStart(3, '0')}
-                  </div>
-                  <div className="text-sm font-bold text-gray-800 truncate">{pokemon.name}</div>
-                </button>
-              ))}
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h3 className="font-bold text-lg">포켓몬 편집: {selectedPokemon.nickname || selectedPokemon.name}</h3>
+          <div className="flex gap-2">
+            <button
+              onClick={handleEditPokemon}
+              className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+            >
+              <Save size={16} />
+              저장
+            </button>
+            <button
+              onClick={() => {
+                setMode('view');
+                setSelectedPokemon(null);
+              }}
+              className="flex items-center gap-2 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+            >
+              <X size={16} />
+              취소
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-semibold mb-1">레벨</label>
+              <input
+                type="number"
+                min="1"
+                max="100"
+                value={editData.level}
+                onChange={(e) => setEditData(prev => ({ ...prev, level: parseInt(e.target.value) || 1 }))}
+                className="w-full px-3 py-2 border rounded"
+              />
             </div>
-          ) : (
-            <div className="bg-white border-2 border-indigo-300 rounded-lg p-6">
-              <div className="flex items-center gap-4 mb-6">
-                <div 
-                  className="w-24 h-24"
-                  style={{
-                    backgroundImage: `url(https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${selectedPokemon.number}.png)`,
-                    backgroundSize: 'contain',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'center',
-                    imageRendering: 'pixelated'
-                  }}
-                />
-                <div>
-                  <div className="text-2xl font-bold text-gray-800">{selectedPokemon.name}</div>
-                  <div className="text-sm text-gray-600">No.{selectedPokemon.number.toString().padStart(3, '0')}</div>
-                  <div className="flex gap-1 mt-2">
-                    <span 
-                      className="text-xs px-2 py-0.5 rounded font-bold text-white"
-                      style={{ backgroundColor: TYPE_COLORS[selectedPokemon.type] || '#777' }}
-                    >
-                      {selectedPokemon.type}
-                    </span>
-                    {selectedPokemon.type2 && (
-                      <span 
-                        className="text-xs px-2 py-0.5 rounded font-bold text-white"
-                        style={{ backgroundColor: TYPE_COLORS[selectedPokemon.type2] || '#777' }}
-                      >
-                        {selectedPokemon.type2}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
 
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">레벨 (1-100)</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="100"
-                      value={level}
-                      onChange={(e) => setLevel(parseInt(e.target.value) || 1)}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none transition-all"
-                    />
-                  </div>
+            <div>
+              <label className="block text-sm font-semibold mb-1">친밀도</label>
+              <input
+                type="number"
+                min="0"
+                max="255"
+                value={editData.friendship}
+                onChange={(e) => setEditData(prev => ({ ...prev, friendship: parseInt(e.target.value) || 0 }))}
+                className="w-full px-3 py-2 border rounded"
+              />
+            </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">친밀도 (0-255)</label>
+            <div>
+              <label className="block text-sm font-semibold mb-1">별명</label>
+              <input
+                type="text"
+                value={editData.nickname}
+                onChange={(e) => setEditData(prev => ({ ...prev, nickname: e.target.value }))}
+                className="w-full px-3 py-2 border rounded"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="editShiny"
+                checked={editData.isShiny}
+                onChange={(e) => setEditData(prev => ({ ...prev, isShiny: e.target.checked }))}
+                className="w-4 h-4"
+              />
+              <label htmlFor="editShiny" className="text-sm font-semibold flex items-center gap-1">
+                <Sparkles size={14} className="text-yellow-500" />
+                이로치
+              </label>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-1 flex items-center gap-2">
+                <Image size={14} />
+                스프라이트 URL
+              </label>
+              <input
+                type="text"
+                value={editData.spriteUrl}
+                onChange={(e) => setEditData(prev => ({ ...prev, spriteUrl: e.target.value }))}
+                className="w-full px-3 py-2 border rounded text-xs"
+                placeholder="https://..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-1">볼 이미지 URL</label>
+              <input
+                type="text"
+                value={editData.ballImage}
+                onChange={(e) => setEditData(prev => ({ ...prev, ballImage: e.target.value }))}
+                className="w-full px-3 py-2 border rounded text-xs"
+                placeholder="https://..."
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-semibold mb-2 flex items-center gap-2">
+                <Award size={14} />
+                노력치
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {Object.entries(editData.effort).map(([stat, value]) => (
+                  <div key={stat}>
+                    <label className="text-xs text-gray-600">{stat}</label>
                     <input
                       type="number"
                       min="0"
                       max="255"
-                      value={friendship}
-                      onChange={(e) => setFriendship(parseInt(e.target.value) || 0)}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none transition-all"
+                      value={value}
+                      onChange={(e) => setEditData(prev => ({
+                        ...prev,
+                        effort: { ...prev.effort, [stat]: parseInt(e.target.value) || 0 }
+                      }))}
+                      className="w-full px-2 py-1 border rounded text-sm"
                     />
                   </div>
-                </div>
-
-                {/* ✨ 반짝이 체크박스 */}
-                <div className="flex items-center gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <input
-                    type="checkbox"
-                    id="isShiny"
-                    checked={isShiny}
-                    onChange={(e) => setIsShiny(e.target.checked)}
-                    className="w-5 h-5 cursor-pointer accent-yellow-500"
-                  />
-                  <label htmlFor="isShiny" className="cursor-pointer flex items-center gap-2">
-                    <Sparkles className="text-yellow-500" size={24} />
-                    <div>
-                      <div className="font-bold text-yellow-700">반짝이 (Shiny)</div>
-                      <div className="text-xs text-yellow-600">이색 포켓몬으로 지급합니다</div>
-                    </div>
-                  </label>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">닉네임 (선택)</label>
-                  <input
-                    type="text"
-                    placeholder="닉네임 없음"
-                    value={nickname}
-                    onChange={(e) => setNickname(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">소지 도구 (선택)</label>
-                  <input
-                    type="text"
-                    placeholder="소지 도구 이름"
-                    value={heldItemName}
-                    onChange={(e) => setHeldItemName(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">포획한 볼</label>
-                  <select
-                    value={caughtWithBall}
-                    onChange={(e) => setCaughtWithBall(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none transition-all"
-                  >
-                    {POKEBALL_LIST.map(ball => (
-                      <option key={ball.name} value={ball.name}>{ball.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* 기술 설정 */}
-              <div className="border-t pt-4 mt-4">
-                <div className="flex items-center justify-between mb-3">
-                  <label className="text-sm font-semibold text-gray-700">기술 설정</label>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setMoveMode('auto')}
-                      className={`px-3 py-1 rounded text-sm font-semibold transition-colors ${
-                        moveMode === 'auto'
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                    >
-                      자동 랜덤
-                    </button>
-                    <button
-                      onClick={() => setMoveMode('manual')}
-                      className={`px-3 py-1 rounded text-sm font-semibold transition-colors ${
-                        moveMode === 'manual'
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                    >
-                      직접 선택
-                    </button>
-                  </div>
-                </div>
-
-                {moveMode === 'auto' ? (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
-                    🎲 현재 레벨 이하에서 배울 수 있는 기술 중 랜덤으로 최대 4개가 자동 설정됩니다.
-                  </div>
-                ) : (
-                  <div>
-                    <button
-                      onClick={() => setShowMoveSelector(true)}
-                      className="w-full bg-indigo-100 text-indigo-700 py-2 rounded-lg hover:bg-indigo-200 font-semibold transition-colors mb-2"
-                    >
-                      기술 선택하기 ({selectedMoves.length}/4)
-                    </button>
-                    
-                    {selectedMoves.length > 0 && (
-                      <div className="space-y-2">
-                        {selectedMoves.map((move, idx) => (
-                          <div key={idx} className="bg-white border border-gray-200 rounded-lg p-2 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-gray-800">{move.name}</span>
-                              <span
-                                className="text-xs px-2 py-0.5 rounded font-bold text-white"
-                                style={{ backgroundColor: TYPE_COLORS[move.type] || '#777' }}
-                              >
-                                {move.type}
-                              </span>
-                              <span className="flex items-center gap-1 text-xs text-gray-600">
-                                {getCategoryIcon(move.category)}
-                              </span>
-                            </div>
-                            <button
-                              onClick={() => toggleMoveSelection(move)}
-                              className="text-red-500 hover:text-red-700"
-                            >
-                              <X size={16} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={() => {
-                    setSelectedPokemon(null);
-                    setSelectedMoves([]);
-                    setMoveMode('auto');
-                  }}
-                  className={`flex-1 ${getButtonClass('secondary', 'lg')}`}
-                >
-                  취소
-                </button>
-                <button
-                  onClick={handleGivePokemon}
-                  className={`flex-1 ${getButtonClass('success', 'lg')}`}
-                >
-                  지급
-                </button>
+                ))}
               </div>
             </div>
-          )}
-        </div>
-      )}
 
-      {/* 편집 모드 */}
-      {pokemonMode === 'edit' && (
-        <div className="space-y-4">
-          {!editingPokemon ? (
-            <div className="space-y-2">
-              {member.caughtPokemon && member.caughtPokemon.length > 0 ? (
-                member.caughtPokemon.map((pokemon, idx) => pokemon && (
-                  <button
-                    key={idx}
-                    onClick={() => handleEditPokemon(pokemon)}
-                    className="w-full bg-white border border-gray-200 rounded-lg p-3 flex items-center gap-3 hover:shadow-md hover:border-yellow-400 transition-all text-left"
-                  >
-                    <div 
-                      className="w-16 h-16 flex-shrink-0"
-                      style={{
-                        backgroundImage: `url(${pokemon.spriteUrl})`,
-                        backgroundSize: 'contain',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'center',
-                        imageRendering: 'pixelated'
-                      }}
+            <div>
+              <label className="block text-sm font-semibold mb-2 flex items-center gap-2">
+                <Star size={14} />
+                컨디션
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {Object.entries(editData.condition).map(([stat, value]) => (
+                  <div key={stat}>
+                    <label className="text-xs text-gray-600">{stat}</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="255"
+                      value={value}
+                      onChange={(e) => setEditData(prev => ({
+                        ...prev,
+                        condition: { ...prev.condition, [stat]: parseInt(e.target.value) || 0 }
+                      }))}
+                      className="w-full px-2 py-1 border rounded text-sm"
                     />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <div className="font-bold text-gray-800">{pokemon.nickname || pokemon.name}</div>
-                        {pokemon.isShiny && <Sparkles className="text-yellow-500" size={16} />}
-                      </div>
-                      <div className="text-sm text-gray-600">Lv.{pokemon.level} | 친밀도: {pokemon.friendship || 0}</div>
-                    </div>
-                  </button>
-                ))
-              ) : (
-                <div className="text-center py-8 text-gray-400">포켓몬이 없습니다</div>
-              )}
-            </div>
-          ) : (
-            <div className="bg-white border-2 border-yellow-300 rounded-lg p-6">
-              <div className="flex items-center gap-4 mb-6">
-                <div 
-                  className="w-24 h-24"
-                  style={{
-                    backgroundImage: `url(${editingPokemon.spriteUrl})`,
-                    backgroundSize: 'contain',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'center',
-                    imageRendering: 'pixelated'
-                  }}
-                />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <div className="text-2xl font-bold text-gray-800">
-                      {editingPokemon.nickname || editingPokemon.name}
-                    </div>
-                    {editingPokemon.isShiny && <Sparkles className="text-yellow-500" size={24} />}
                   </div>
-                  <div className="text-sm text-gray-600">
-                    Lv.{editLevel} | 친밀도 {editFriendship}
-                  </div>
-                </div>
+                ))}
               </div>
-
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">레벨 (1-100)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="100"
-                    value={editLevel}
-                    onChange={(e) => setEditLevel(parseInt(e.target.value) || 1)}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">친밀도 (0-255)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="255"
-                    value={editFriendship}
-                    onChange={(e) => setEditFriendship(parseInt(e.target.value) || 0)}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all"
-                  />
-                </div>
-
-                <div className="col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">닉네임</label>
-                  <input
-                    type="text"
-                    placeholder="닉네임 없음"
-                    value={editNickname}
-                    onChange={(e) => setEditNickname(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setEditingPokemon(null);
-                    setPokemonMode('view');
-                  }}
-                  className={`flex-1 ${getButtonClass('secondary', 'lg')}`}
-                >
-                  취소
-                </button>
-                <button
-                  onClick={handleSaveEdit}
-                  className={`flex-1 ${getButtonClass('warning', 'lg')}`}
-                >
-                  저장
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 기술 선택 모달 */}
-      {showMoveSelector && ReactDOM.createPortal(
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" 
-          style={{ zIndex: 9999 }}
-        >
-          <div 
-            className="bg-white rounded-lg w-full max-w-2xl flex flex-col"
-            style={{ height: '80vh', maxHeight: '600px' }}
-          >
-            <div className="bg-indigo-600 text-white p-4 flex items-center justify-between rounded-t-lg">
-              <h3 className="text-xl font-bold">기술 선택 ({selectedMoves.length}/4)</h3>
-              <button onClick={() => setShowMoveSelector(false)} className="hover:bg-indigo-700 rounded p-1">
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4">
-              <div className="text-sm text-gray-600 mb-3">
-                Lv.{level} 이하에서 배울 수 있는 기술 ({availableMoves.length}개)
-              </div>
-              
-              {availableMoves.length === 0 ? (
-                <div className="text-center py-8 text-gray-400">
-                  <p className="font-semibold mb-2">배울 수 있는 기술이 없습니다</p>
-                  <p className="text-sm">기술 데이터를 확인해주세요</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {availableMoves.map(move => {
-                    const isSelected = selectedMoves.find(m => m.id === move.id);
-                    
-                    return (
-                      <button
-                        key={move.id}
-                        onClick={() => toggleMoveSelection(move)}
-                        className={`w-full border-2 rounded-lg p-3 text-left transition-all ${
-                          isSelected
-                            ? 'border-indigo-500 bg-indigo-50'
-                            : 'border-gray-200 hover:border-indigo-300 bg-white'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-gray-800">{move.name}</span>
-                            <span
-                              className="text-xs px-2 py-0.5 rounded font-bold text-white"
-                              style={{ backgroundColor: TYPE_COLORS[move.type] || '#777' }}
-                            >
-                              {move.type}
-                            </span>
-                            <span className="flex items-center gap-1 text-xs text-gray-600">
-                              {getCategoryIcon(move.category)}
-                              {move.category}
-                            </span>
-                          </div>
-                          <span className="text-xs text-gray-500">Lv.{move.learnLevel}</span>
-                        </div>
-                        
-                        <div className="flex gap-4 text-sm text-gray-600">
-                          {move.power > 0 && <span>위력: {move.power}</span>}
-                          <span>명중: {move.accuracy}</span>
-                          <span>PP: {move.pp}</span>
-                        </div>
-                        
-                        {move.description && (
-                          <p className="text-xs text-gray-500 mt-1">{move.description}</p>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            <div className="p-4 border-t border-gray-200 bg-white rounded-b-lg">
-              <button
-                onClick={() => setShowMoveSelector(false)}
-                className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-semibold transition-colors"
-              >
-                선택 완료
-              </button>
             </div>
           </div>
-        </div>,
-        document.body
-      )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="bg-white rounded-lg border p-6">
+      {mode === 'view' && renderViewMode()}
+      {mode === 'give' && renderGiveMode()}
+      {mode === 'edit' && renderEditMode()}
     </div>
   );
 }

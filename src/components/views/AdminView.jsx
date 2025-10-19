@@ -53,6 +53,7 @@ export default function AdminView() {
     updateMemberMoney,
     updateMemberRegionAccess,
     editMemberPokemon,
+    deleteMemberPokemon,
     updateShopData,
     setMaintenanceMode,
     updateRegionLootConfig,
@@ -552,6 +553,7 @@ export default function AdminView() {
           onGiveItem={giveItemToMember}
           onGivePokemon={givePokemonToMember}
           onEditPokemon={editMemberPokemon}
+          onDeletePokemon={deleteMemberPokemon}
           onResetWalk={handleResetMember}
           onToggleAdmin={handleToggleAdmin}
           onUpdateMoney={updateMemberMoney}
