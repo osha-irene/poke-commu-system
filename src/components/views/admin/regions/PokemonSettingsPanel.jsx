@@ -1,6 +1,5 @@
-
-import React, { useState, useMemo } from 'react';
-import { Settings, Percent, TrendingUp, Sparkles, Package, Plus, Search, X, Save } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Settings, Percent, TrendingUp, Sparkles, Package, Plus, Search, X, Save, Globe } from 'lucide-react';
 import { useGame } from '../../../../contexts/GameContext';
 import { TYPE_NAMES_EN } from '../../../../styles/theme';
 
@@ -20,10 +19,26 @@ export default function PokemonSettingsPanel({ region, onUpdateRegion }) {
   const [pokemonRates, setPokemonRates] = useState(region.pokemonRates || {});
   const [shinyRate, setShinyRate] = useState(region.shinyRate || 4096);
   const [typeFilter, setTypeFilter] = useState('all');
-  const [pokedexTab, setPokedexTab] = useState('game');
   const [allowNationalPokedex, setAllowNationalPokedex] = useState(
     region.allowNationalPokedex !== undefined ? region.allowNationalPokedex : false
   );
+  const [pokedexTab, setPokedexTab] = useState(
+    region.allowNationalPokedex ? 'national' : 'game'
+  );
+  const [showRegionalForms, setShowRegionalForms] = useState(true);
+
+  // region.id가 변경될 때만 초기화 (같은 지역 내 업데이트는 무시)
+  useEffect(() => {
+    setEncounterRate(region.encounterRate !== undefined ? region.encounterRate : 90);
+    setMinLevel(region.minLevel || 5);
+    setMaxLevel(region.maxLevel || 20);
+    setSelectedPokemon(Array.isArray(region.pokemons) ? region.pokemons : []);
+    setPokemonRates(region.pokemonRates || {});
+    setShinyRate(region.shinyRate || 4096);
+    const nationalPokedex = region.allowNationalPokedex !== undefined ? region.allowNationalPokedex : false;
+    setAllowNationalPokedex(nationalPokedex);
+    setPokedexTab(nationalPokedex ? 'national' : 'game');
+  }, [region.id]);
 
   const pokemonTypes = [
     { id: 'all', name: '전체' },
@@ -32,6 +47,12 @@ export default function PokemonSettingsPanel({ region, onUpdateRegion }) {
       name: nameKr
     }))
   ];
+
+  const handleToggleNationalPokedex = () => {
+    const newValue = !allowNationalPokedex;
+    setAllowNationalPokedex(newValue);
+    setPokedexTab(newValue ? 'national' : 'game');
+  };
 
   const getAvailablePokemonForEncounter = () => {
     const targetPokedex = allowNationalPokedex ? allPokemonMaster : gamePokedex;
@@ -80,8 +101,16 @@ export default function PokemonSettingsPanel({ region, onUpdateRegion }) {
       allowNationalPokedex: allowNationalPokedex
     };
 
+    console.log('저장할 지역 데이터:', updatedRegion);
+    console.log('allowNationalPokedex 값:', allowNationalPokedex);
+
     await onUpdateRegion(region.id, updatedRegion);
-    alert('✅ 지역 설정이 저장되었습니다!');
+    
+    // 저장 후 로컬 상태도 강제로 업데이트
+    setAllowNationalPokedex(updatedRegion.allowNationalPokedex);
+    setPokedexTab(updatedRegion.allowNationalPokedex ? 'national' : 'game');
+    
+    alert('지역 설정이 저장되었습니다!');
   };
 
   const togglePokemon = (pokemon) => {
@@ -104,7 +133,8 @@ export default function PokemonSettingsPanel({ region, onUpdateRegion }) {
     setPokemonRates(prev => ({ ...prev, [pokemonId]: parseInt(rate) || 1 }));
   };
 
-  const currentPokedex = pokedexTab === 'game' ? gamePokedex : allPokemonMaster;
+  // allowNationalPokedex 기반으로 도감 결정
+  const currentPokedex = allowNationalPokedex ? allPokemonMaster : gamePokedex;
 
   const getKoreanTypeName = (englishType) => {
     const entry = Object.entries(TYPE_NAMES_EN).find(([kr, en]) => 
@@ -117,6 +147,9 @@ export default function PokemonSettingsPanel({ region, onUpdateRegion }) {
     if (!currentPokedex) return [];
     
     return currentPokedex.filter(p => {
+      // 리전폼 필터
+      if (!showRegionalForms && p.isRegionalForm) return false;
+      
       if (searchQuery && !p.name.toLowerCase().includes(searchQuery.toLowerCase())) {
         return false;
       }
@@ -145,7 +178,7 @@ export default function PokemonSettingsPanel({ region, onUpdateRegion }) {
       
       return true;
     });
-  }, [currentPokedex, searchQuery, typeFilter, pokedexTab]);
+  }, [currentPokedex, searchQuery, typeFilter, showRegionalForms]);
 
   return (
     <div className="bg-white rounded-lg border-2 border-indigo-200 p-6 space-y-6">
@@ -158,7 +191,7 @@ export default function PokemonSettingsPanel({ region, onUpdateRegion }) {
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-gray-700">전국도감</span>
           <button
-            onClick={() => setAllowNationalPokedex(!allowNationalPokedex)}
+            onClick={handleToggleNationalPokedex}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
               allowNationalPokedex ? 'bg-green-500' : 'bg-gray-300'
             }`}
@@ -428,7 +461,10 @@ export default function PokemonSettingsPanel({ region, onUpdateRegion }) {
         
         <div className="flex gap-2 mb-3">
           <button
-            onClick={() => setPokedexTab('game')}
+            onClick={() => {
+              setPokedexTab('game');
+              setAllowNationalPokedex(false);
+            }}
             className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-colors ${
               pokedexTab === 'game'
                 ? 'bg-indigo-600 text-white'
@@ -438,7 +474,10 @@ export default function PokemonSettingsPanel({ region, onUpdateRegion }) {
             게임 도감 ({gamePokedex?.length || 0})
           </button>
           <button
-            onClick={() => setPokedexTab('national')}
+            onClick={() => {
+              setPokedexTab('national');
+              setAllowNationalPokedex(true);
+            }}
             className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-colors ${
               pokedexTab === 'national'
                 ? 'bg-indigo-600 text-white'
@@ -449,30 +488,7 @@ export default function PokemonSettingsPanel({ region, onUpdateRegion }) {
           </button>
         </div>
         
-        <div className="flex gap-2 mb-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-            <input
-              type="text"
-              placeholder="포켓몬 이름 검색..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
-            />
-          </div>
-          
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="w-40 border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-indigo-500 focus:outline-none bg-white cursor-pointer"
-          >
-            {pokemonTypes.map(type => (
-              <option key={type.id} value={type.id}>
-                {type.name}
-              </option>
-            ))}
-          </select>
-        </div>
+
         
         <div className="text-xs text-gray-600 mb-2 flex items-center gap-1">
           <Package size={12} />

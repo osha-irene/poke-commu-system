@@ -840,7 +840,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png"
     },
     {
-      "id": 10158,
       "number": 10158,
       "originalNumber": 25,
       "displayNumber": 25,
@@ -906,7 +905,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/26.png"
     },
     {
-      "id": 10100,
       "number": 10100,
       "originalNumber": 26,
       "displayNumber": 26,
@@ -972,7 +970,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/27.png"
     },
     {
-      "id": 10101,
       "number": 10101,
       "originalNumber": 27,
       "displayNumber": 27,
@@ -1038,7 +1035,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/28.png"
     },
     {
-      "id": 10102,
       "number": 10102,
       "originalNumber": 28,
       "displayNumber": 28,
@@ -1384,7 +1380,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/37.png"
     },
     {
-      "id": 10103,
       "number": 10103,
       "originalNumber": 37,
       "displayNumber": 37,
@@ -1450,7 +1445,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/38.png"
     },
     {
-      "id": 10104,
       "number": 10104,
       "originalNumber": 38,
       "displayNumber": 38,
@@ -1893,7 +1887,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/50.png"
     },
     {
-      "id": 10105,
       "number": 10105,
       "originalNumber": 50,
       "displayNumber": 50,
@@ -1963,7 +1956,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/51.png"
     },
     {
-      "id": 10106,
       "number": 10106,
       "originalNumber": 51,
       "displayNumber": 51,
@@ -2033,7 +2025,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/52.png"
     },
     {
-      "id": 10107,
       "number": 10107,
       "originalNumber": 52,
       "displayNumber": 52,
@@ -2068,7 +2059,6 @@
       "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10107.png"
     },
     {
-      "id": 10161,
       "number": 10161,
       "originalNumber": 52,
       "displayNumber": 52,
@@ -2972,7 +2962,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/77.png"
     },
     {
-      "id": 10162,
       "number": 10162,
       "originalNumber": 77,
       "displayNumber": 77,
@@ -3042,7 +3031,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/78.png"
     },
     {
-      "id": 10163,
       "number": 10163,
       "originalNumber": 78,
       "displayNumber": 78,
@@ -3112,7 +3100,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/79.png"
     },
     {
-      "id": 10164,
       "number": 10164,
       "originalNumber": 79,
       "displayNumber": 79,
@@ -3182,7 +3169,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/80.png"
     },
     {
-      "id": 10165,
       "number": 10165,
       "originalNumber": 80,
       "displayNumber": 80,
@@ -3322,7 +3308,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/83.png"
     },
     {
-      "id": 10166,
       "number": 10166,
       "originalNumber": 83,
       "displayNumber": 83,
@@ -4290,7 +4275,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/110.png"
     },
     {
-      "id": 10167,
       "number": 10167,
       "originalNumber": 110,
       "displayNumber": 110,
@@ -4745,7 +4729,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/122.png"
     },
     {
-      "id": 10168,
       "number": 10168,
       "originalNumber": 122,
       "displayNumber": 122,
@@ -5155,7 +5138,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/133.png"
     },
     {
-      "id": 10159,
       "number": 10159,
       "originalNumber": 133,
       "displayNumber": 133,
@@ -5567,7 +5549,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/144.png"
     },
     {
-      "id": 10169,
       "number": 10169,
       "originalNumber": 144,
       "displayNumber": 144,
@@ -5633,7 +5614,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/145.png"
     },
     {
-      "id": 10170,
       "number": 10170,
       "originalNumber": 145,
       "displayNumber": 145,
@@ -5699,7 +5679,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/146.png"
     },
     {
-      "id": 10171,
       "number": 10171,
       "originalNumber": 146,
       "displayNumber": 146,
@@ -7543,7 +7522,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/199.png"
     },
     {
-      "id": 10172,
       "number": 10172,
       "originalNumber": 199,
       "displayNumber": 199,
@@ -7988,7 +7966,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/211.png"
     },
     {
-      "id": 10234,
       "number": 10234,
       "originalNumber": 211,
       "displayNumber": 211,
@@ -8163,7 +8140,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/215.png"
     },
     {
-      "id": 10235,
       "number": 10235,
       "originalNumber": 215,
       "displayNumber": 215,
@@ -9869,7 +9845,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/264.png"
     },
     {
-      "id": 10175,
       "number": 10175,
       "originalNumber": 264,
       "displayNumber": 264,
@@ -17997,7 +17972,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/503.png"
     },
     {
-      "id": 10236,
       "number": 10236,
       "originalNumber": 503,
       "displayNumber": 503,
@@ -19801,7 +19775,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/554.png"
     },
     {
-      "id": 10176,
       "number": 10176,
       "originalNumber": 554,
       "displayNumber": 554,
@@ -19867,7 +19840,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/555.png"
     },
     {
-      "id": 10177,
       "number": 10177,
       "originalNumber": 555,
       "displayNumber": 555,
@@ -19900,7 +19872,6 @@
       "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10177.png"
     },
     {
-      "id": 10178,
       "number": 10178,
       "originalNumber": 555,
       "displayNumber": 555,
@@ -20176,7 +20147,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/562.png"
     },
     {
-      "id": 10179,
       "number": 10179,
       "originalNumber": 562,
       "displayNumber": 562,
@@ -20481,7 +20451,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/570.png"
     },
     {
-      "id": 10238,
       "number": 10238,
       "originalNumber": 570,
       "displayNumber": 570,
@@ -25117,7 +25086,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/705.png"
     },
     {
-      "id": 10241,
       "number": 10241,
       "originalNumber": 705,
       "displayNumber": 705,
@@ -25797,7 +25765,6 @@
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/724.png"
     },
     {
-      "id": 10244,
       "number": 10244,
       "originalNumber": 724,
       "displayNumber": 724,

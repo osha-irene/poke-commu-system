@@ -717,11 +717,14 @@ const updateRegionPokemon = async (regionId, updatedData) => {
     minLevel: updatedData.minLevel || 5,
     maxLevel: updatedData.maxLevel || 20,
     shinyRate: updatedData.shinyRate || 4096,
+    allowNationalPokedex: updatedData.allowNationalPokedex !== undefined 
+      ? updatedData.allowNationalPokedex 
+      : false,  // ⭐ 이 줄 추가!
     groupId: updatedData.groupId !== undefined ? updatedData.groupId : null,
     groupName: updatedData.groupName !== undefined ? updatedData.groupName : null,
     areaName: updatedData.areaName !== undefined ? updatedData.areaName : null,
     groupVisible: updatedData.groupVisible !== undefined ? updatedData.groupVisible : true,
-    isDefaultTown: updatedData.isDefaultTown !== undefined ? updatedData.isDefaultTown : false,  // ⭐ 추가
+    isDefaultTown: updatedData.isDefaultTown !== undefined ? updatedData.isDefaultTown : false,
     name: updatedData.name || updatedData.name
   };
   
@@ -907,17 +910,30 @@ const deleteTown = async (groupId) => {
 const updateGamePokedex = async (selectedPokemonNumbers) => {
   if (!currentUser?.isAdmin) return;
   
-  // 선택된 포켓몬으로 새 도감 생성 (마을 메타데이터 제외)
+  console.log('🔍 updateGamePokedex 호출');
+  console.log('  - 입력 번호:', selectedPokemonNumbers);
+  
+  // ⭐ originalNumber 또는 number로 검색
   const newPokedex = selectedPokemonNumbers
-    .map(num => allPokemonMaster.find(p => p.number === num))
+    .map(num => {
+      const found = allPokemonMaster.find(p => 
+        p.originalNumber === num || p.number === num
+      );
+      console.log(`  - 번호 ${num} 검색 결과:`, found?.name);
+      return found;
+    })
     .filter(Boolean)
-    .filter(p => !p.isTownMeta && !p.groupId && p.name && p.number) // 포켓몬만 필터링
-    .sort((a, b) => a.number - b.number)
+    .filter(p => !p.isTownMeta && !p.groupId && p.name && p.number)
+    .sort((a, b) => (a.originalNumber || a.number) - (b.originalNumber || b.number))
     .map((p, index) => ({ 
       ...p, 
-      originalNumber: p.number, 
+      originalNumber: p.originalNumber || p.number, 
       newNumber: index + 1 
     }));
+  
+  console.log('  - 최종 도감:', newPokedex.length, '종');
+  console.log('  - 샘플:', newPokedex.slice(0, 5).map(p => ({ name: p.name, number: p.number, originalNumber: p.originalNumber })));
+ 
   
   // 로컬 state 업데이트
   setGamePokedex(newPokedex);

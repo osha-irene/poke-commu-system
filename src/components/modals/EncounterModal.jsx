@@ -7,6 +7,7 @@ export default function EncounterModal({
   items, 
   sharedPokedexData = {}, 
   caughtPokemon = [], 
+  allPokemonMaster = [],
   onApplyLoot 
 }) {
   const [selectedBall, setSelectedBall] = useState(null);
@@ -181,13 +182,26 @@ const pokemonSpriteUrl = pokemon.isShiny
         shakeCount++;
         setShaking(shakeCount);
         
-        if (shakeCount >= 3) {
+         if (shakeCount >= 3) {
           clearInterval(shakeInterval);
           
           setTimeout(() => {
-            const catchChance = pokemon.catchRate * selectedBall.multiplier;
+            // 리전폼은 원종의 포획률 사용
+            let baseCatchRate = pokemon.catchRate;
+            
+            if (baseCatchRate === undefined && pokemon.originalNumber) {
+              const originalPokemon = allPokemonMaster.find(p => p.number === pokemon.originalNumber);
+              baseCatchRate = originalPokemon?.catchRate || 0.20;
+              console.log('📝 리전폼 포획률 참조:', pokemon.name, '→ 원종:', originalPokemon?.name, '포획률:', baseCatchRate);
+            }
+            
+            if (baseCatchRate === undefined) {
+              baseCatchRate = 0.20;
+            }
+            
+            const catchChance = baseCatchRate * selectedBall.multiplier;
             const randomValue = Math.random();
-			const success = randomValue < catchChance;
+		      	const success = randomValue < catchChance;
 			
 			  // ✅ 디버깅 로그 추가
 			  console.log('🎯 포획 시도:', pokemon.name);

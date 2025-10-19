@@ -496,6 +496,7 @@ return (
           {currentTab === 'pokedex' && (
             <PokedexView 
               pokedex={gamePokedex}
+              allPokedex={allPokemonMaster} 
               caughtPokemon={caughtPokemon.filter(p => p !== null)}
               pokedexData={sharedPokedexData}
               regions={regions}
@@ -559,6 +560,7 @@ return (
               {currentTab === 'pokedex' && (
                 <PokedexView 
                   pokedex={gamePokedex}
+                  allPokedex={allPokemonMaster} 
                   caughtPokemon={caughtPokemon.filter(p => p !== null)}
                   pokedexData={sharedPokedexData}
                   regions={regions}
@@ -610,6 +612,7 @@ return (
           caughtPokemon={caughtPokemon} 
           onApplyLoot={applyLoot} 
           isSuperAdmin={currentUser?.isSuperAdmin}
+          allPokemonMaster={allPokemonMaster} 
         />
       )}
 

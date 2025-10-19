@@ -10,10 +10,15 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
   
   const [tempSelected, setTempSelected] = useState(new Set());
 
-  const currentPokemonNumbers = useMemo(() => 
-    new Set(gamePokedex.map(p => p.originalNumber || p.number)),
-    [gamePokedex]
-  );
+  const currentPokemonNumbers = useMemo(() => {
+    const numbers = new Set();
+    gamePokedex.forEach(p => {
+      // ⭐ 실제 포켓몬의 고유 번호만 추가 (number)
+      numbers.add(p.number);
+    });
+    console.log('🔍 currentPokemonNumbers:', Array.from(numbers));
+    return numbers;
+  }, [gamePokedex]);
 
   const currentPokedex = useMemo(() => 
     gamePokedex.sort((a, b) => (a.newNumber || 0) - (b.newNumber || 0)),
@@ -21,40 +26,54 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
   );
 
   const availableToAdd = useMemo(() => {
-    return allPokemonMaster
-      .filter(p => {
-        if (currentPokemonNumbers.has(p.number)) return false;
+    console.log('🔍 availableToAdd 계산 시작');
+    console.log('  - allPokemonMaster 수:', allPokemonMaster.length);
+    console.log('  - showRegionalForms:', showRegionalForms);
+    console.log('  - currentPokemonNumbers 크기:', currentPokemonNumbers.size);
+    
+    const filtered = allPokemonMaster.filter(p => {
+      // ⭐ number로만 체크 (리전폼은 고유한 number를 가짐)
+      if (currentPokemonNumbers.has(p.number)) {
+        return false;
+      }
+      
+      if (!showRegionalForms && p.isRegionalForm) {
+        return false;
+      }
+      
+      if (generationFilter !== 'all' && parseInt(p.generation) !== parseInt(generationFilter)) {
+        return false;
+      }
+      
+      if (typeFilter !== 'all' && p.type !== typeFilter && p.type2 !== typeFilter) {
+        return false;
+      }
+      
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const number = p.number?.toString() || '';
+        const originalNumber = p.originalNumber?.toString() || '';
+        const name = p.name?.toLowerCase() || '';
+        const nameEn = p.nameEn?.toLowerCase() || '';
         
-        if (!showRegionalForms && p.isRegionalForm) return false;
-        
-        if (generationFilter !== 'all' && parseInt(p.generation) !== parseInt(generationFilter)) {
-          return false;
-        }
-        
-        if (typeFilter !== 'all' && p.type !== typeFilter && p.type2 !== typeFilter) {
-          return false;
-        }
-        
-        if (searchQuery) {
-          const query = searchQuery.toLowerCase();
-          const number = p.number?.toString() || '';
-          const originalNumber = p.originalNumber?.toString() || '';
-          const name = p.name?.toLowerCase() || '';
-          const nameEn = p.nameEn?.toLowerCase() || '';
-          
-          return number.includes(query) ||
-                 originalNumber.includes(query) ||
-                 name.includes(query) ||
-                 nameEn.includes(query);
-        }
-        
-        return true;
-      })
-      .sort((a, b) => {
-        const aDisplay = a.displayNumber || a.originalNumber || a.number;
-        const bDisplay = b.displayNumber || b.originalNumber || b.number;
-        return aDisplay - bDisplay;
-      });
+        return number.includes(query) ||
+               originalNumber.includes(query) ||
+               name.includes(query) ||
+               nameEn.includes(query);
+      }
+      
+      return true;
+    });
+    
+    const sorted = filtered.sort((a, b) => {
+      const aDisplay = a.displayNumber || a.originalNumber || a.number;
+      const bDisplay = b.displayNumber || b.originalNumber || b.number;
+      return aDisplay - bDisplay;
+    });
+    
+    console.log('✅ availableToAdd 최종:', sorted.length, '개');
+    
+    return sorted;
   }, [allPokemonMaster, currentPokemonNumbers, generationFilter, typeFilter, searchQuery, showRegionalForms]);
 
   const filteredCurrent = useMemo(() => {
@@ -88,14 +107,36 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
       return;
     }
     
-    const newNumbers = [...currentPokemonNumbers, ...Array.from(tempSelected)];
-    updateGamePokedex(Array.from(new Set(newNumbers)).sort((a, b) => a - b));
+    console.log('🔍 추가 버튼 클릭');
+    console.log('  - tempSelected:', Array.from(tempSelected));
+    
+    // ⭐ 선택된 포켓몬의 number를 그대로 사용
+    const newNumbers = Array.from(tempSelected);
+    console.log('  - 추가할 번호들:', newNumbers);
+    
+    const existingNumbers = gamePokedex.map(p => p.number);
+    console.log('  - 기존 도감 번호들:', existingNumbers);
+    
+    const combined = [...existingNumbers, ...newNumbers];
+    const uniqueNumbers = Array.from(new Set(combined)).sort((a, b) => a - b);
+    console.log('  - 최종 번호 배열:', uniqueNumbers);
+    
+    updateGamePokedex(uniqueNumbers);
     setTempSelected(new Set());
   };
 
   const handleRemovePokemon = (pokemon) => {
     if (window.confirm(`${pokemon.name}을(를) 도감에서 제거하시겠습니까?`)) {
-      const newNumbers = Array.from(currentPokemonNumbers).filter(n => n !== (pokemon.originalNumber || pokemon.number));
+      // 제거할 포켓몬의 number를 찾아서 제거
+      const numbersToRemove = new Set([pokemon.number]);
+      if (pokemon.originalNumber) numbersToRemove.add(pokemon.originalNumber);
+      
+      const updatedPokedex = gamePokedex.filter(p => 
+        !numbersToRemove.has(p.number) && 
+        !(p.originalNumber && numbersToRemove.has(p.originalNumber))
+      );
+      
+      const newNumbers = updatedPokedex.map(p => p.originalNumber || p.number);
       updateGamePokedex(newNumbers.sort((a, b) => a - b));
     }
   };

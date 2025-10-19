@@ -1,5 +1,6 @@
 // src/hooks/useGameState.js - Firebase 완전 버전
 
+
 import { useState, useEffect } from 'react';
 import { ref, get, set, update } from 'firebase/database';
 import { database } from '../firebase';
@@ -19,6 +20,8 @@ import { useShop } from './useShop';
 import { useMoves } from './useMoves';
 import { useAdminFunctions } from './useAdminFunctions';
 import { isEVItem, applyEVItem } from '../utils/evItemUtils';
+
+
 
 const getDefaultLootConfig = () => ({
   money: { min: 50, max: 200 },
@@ -92,7 +95,14 @@ export default function useGameState() {
   const [firstCatchPokemon, setFirstCatchPokemon] = useState(null);
 
   const [allPokemon] = useState(pokemonData.pokemon);
-  const [allPokemonMaster] = useState(allPokemonData.pokemon);
+console.log('🔍 allPokemonData.pokemon 원본:', allPokemonData.pokemon.length);
+console.log('🔍 리전폼 수:', allPokemonData.pokemon.filter(p => p.isRegionalForm).length);
+console.log('🔍 10000번 이상:', allPokemonData.pokemon.filter(p => p.number >= 10000).length);
+
+const [allPokemonMaster] = useState(allPokemonData.pokemon);
+
+console.log('🔍 useState 후 allPokemonMaster:', allPokemonMaster.length);
+console.log('🔍 리전폼 수:', allPokemonMaster.filter(p => p.isRegionalForm).length);
   const [allMoves] = useState(movesData.moves || []);
   const [pokemonLearnsets] = useState(movesData.pokemonLearnsets || {});
 
@@ -384,8 +394,7 @@ const handleRegionClick = async (region) => {
 
     const availablePokemon = searchPokedex.filter(p => 
       regionPokemonIds.includes(p.id) || 
-      regionPokemonIds.includes(p.number) || 
-      regionPokemonIds.includes(p.originalNumber)
+      regionPokemonIds.includes(p.number) // originalNumber 제거!
     );
 
     if (availablePokemon.length > 0) {
@@ -412,7 +421,7 @@ const handleRegionClick = async (region) => {
         isShiny: isShiny
       });
       
-      const pokemonNumber = String(randomPokemon.originalNumber || randomPokemon.number);
+      const pokemonNumber = String(randomPokemon.number);
       
       // 첫 조우 기록
       const isFirstEncounter = !sharedPokedexData[pokemonNumber];
@@ -489,8 +498,6 @@ const handleRegionClick = async (region) => {
   const handleCloseEncounter = () => {
     setEncounterPokemon(null);
   };
-// src/hooks/useGameState.js의 applyLoot 함수 수정
-// currentUser의 dailyWalks를 보존하면서 money와 inventory만 업데이트
 
 const applyLoot = (loot, ballUsed = null) => {
   if (!loot || !currentUser) return;
@@ -587,103 +594,125 @@ const applyLoot = (loot, ballUsed = null) => {
     }
   };
 
-  const handleCatchSuccess = async (pokemon, ballUsed) => {
-    if (!currentUser) return;
-    
-    const nonPartnerCount = currentUser.caughtPokemon.filter(p => p && !p.isPartner).length;
-    
-    if (nonPartnerCount >= 20) {
-      alert('⚠️ 파트너를 제외한 포켓몬이 20마리입니다!\n더 이상 포켓몬을 잡을 수 없습니다.');
-      return;
-    }
-      
-    const pokemonTemplate = allPokemonMaster.find(p => 
-      p.number === (pokemon.number || pokemon.originalNumber)
-    );
-    
-    if (!pokemonTemplate) {
-      alert('포켓몬 정보를 찾을 수 없습니다!');
-      return;
-    }
-    
-    const regionName = pokemon.regionName;
-    const region = regions.find(r => r.name === regionName);
-    const minLevel = region?.minLevel || 5;
-    const maxLevel = region?.maxLevel || 20;
-    const level = Math.floor(Math.random() * (maxLevel - minLevel + 1)) + minLevel;
-    
-    const ballItem = allItems.find(item => 
-      item.name === ballUsed.name || 
-      item.id === ballUsed.id
-    );
-    
-    const newPokemon = {
-      uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      pokemonId: pokemonTemplate.id,
-      name: pokemonTemplate.name,
-      nameEn: pokemonTemplate.nameEn,
-      number: pokemonTemplate.number,
-      type: pokemonTemplate.type,
-      type2: pokemonTemplate.type2 || null,
-      level: level,
-      hp: pokemonTemplate.baseHp,
-      maxHp: pokemonTemplate.baseHp,
-      exp: 0,
-      friendship: 0,
-      heldItem: null,
-      moves: movesHook.getStartingMoves(pokemonTemplate.number, level, movesData),
-      caughtWithBall: ballUsed.name,
-      ballImageUrl: ballUsed.imageUrl || ballItem?.spriteUrl || ballItem?.imageUrl,
-      isPartner: false,
-       isShiny: pokemon.isShiny || false,
-      condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
-      effort: { 
-        hp: 0, 
-        attack: 0, 
-        defense: 0, 
-        specialAttack: 0,
-        specialDefense: 0,
-        speed: 0 
-      },
-      imageUrl: pokemonTemplate.imageUrl,
-  iconUrl: pokemon.isShiny 
-    ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/shiny/${pokemonTemplate.number}.png`
-    : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`,
-  spriteUrl: pokemon.isShiny
-    ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${pokemonTemplate.number}.png`
-    : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`
-};
 
-    const currentPokemon = [...currentUser.caughtPokemon];
-    const party = currentPokemon.slice(0, 6);
-    const box = currentPokemon.slice(6);
+const handleCatchSuccess = async (pokemon, ballUsed) => {
+  if (!currentUser) return;
+  
+  console.log('🎯 포획 시도:', pokemon);
+  console.log('  - pokemon.number:', pokemon.number);
+  console.log('  - pokemon.originalNumber:', pokemon.originalNumber);
+  
+  const nonPartnerCount = currentUser.caughtPokemon.filter(p => p && !p.isPartner).length;
+  
+  if (nonPartnerCount >= 20) {
+    alert('⚠️ 파트너를 제외한 포켓몬이 20마리입니다!\n더 이상 포켓몬을 잡을 수 없습니다.');
+    return;
+  }
+  
+  // ⭐ number로 직접 검색 (리전폼의 경우 number가 10103 같은 고유 번호)
+  const pokemonTemplate = allPokemonMaster.find(p => p.number === pokemon.number);
+  
+  console.log('  - 찾은 템플릿:', pokemonTemplate?.name, 'number:', pokemonTemplate?.number);
+  
+  if (!pokemonTemplate) {
+    console.error('❌ 포켓몬 템플릿을 찾을 수 없습니다!');
+    console.error('  - 검색한 번호:', pokemon.number);
+    alert('포켓몬 정보를 찾을 수 없습니다!');
+    return;
+  }
+  
+  const regionName = pokemon.regionName;
+  const region = regions.find(r => r.name === regionName);
+  const minLevel = region?.minLevel || 5;
+  const maxLevel = region?.maxLevel || 20;
+  const level = Math.floor(Math.random() * (maxLevel - minLevel + 1)) + minLevel;
+  
+  const ballItem = allItems.find(item => 
+    item.name === ballUsed.name || item.id === ballUsed.id
+  );
+  
+  // ⭐ JSON 데이터 기반으로 개체값 생성
+  const gender = generateGender(pokemonTemplate);
+  const size = generateSize(pokemonTemplate);
+  const ability = generateAbility(pokemonTemplate, false);
+  
+  const newPokemon = {
+    uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    pokemonId: pokemonTemplate.id,
+    name: pokemonTemplate.name,
+    nameEn: pokemonTemplate.nameEn,
+    number: pokemonTemplate.number,
+    type: pokemonTemplate.type,
+    type2: pokemonTemplate.type2 || null,
+    level: level,
+    hp: pokemonTemplate.baseHp,
+    maxHp: pokemonTemplate.baseHp,
+    exp: 0,
+    friendship: 0,
+    heldItem: null,
+    moves: movesHook.getStartingMoves(pokemonTemplate.number, level, movesData),
+    caughtWithBall: ballUsed.name,
+    ballImageUrl: ballUsed.imageUrl || ballItem?.spriteUrl || ballItem?.imageUrl,
+    isPartner: false,
+    isShiny: pokemon.isShiny || false,
     
-    let emptySlotIndex = -1;
-    for (let i = 0; i < 6; i++) {
-      if (!party[i] || party[i] === null) {
-        emptySlotIndex = i;
-        break;
-      }
-    }
+    // 개체값 속성들
+    gender: gender,
+    height: size.height,
+    weight: size.weight,
+    sizeRank: size.sizeRank,
+    heightVariation: size.heightVariation,
+    weightVariation: size.weightVariation,
+    ability: ability,
+    isHiddenAbility: false,
     
-    let updatedCaughtPokemon;
-    
-    if (emptySlotIndex !== -1) {
-      console.log('✅ 엔트리 빈 슬롯', emptySlotIndex, '에 포켓몬 추가');
-      party[emptySlotIndex] = newPokemon;
-      updatedCaughtPokemon = [...party, ...box];
-    } else {
-      console.log('📦 엔트리 가득참 - 박스에 포켓몬 추가');
-      updatedCaughtPokemon = [...party, ...box, newPokemon];
-    }
-    
-    console.log('🎉 포켓몬 잡기 완료! 최종 배열:', updatedCaughtPokemon.slice(0, 8).map((p, i) => `[${i}] ${p?.name || 'null'}`));
-    
-    updateCurrentUser({ caughtPokemon: updatedCaughtPokemon });
+    condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
+    effort: { 
+      hp: 0, 
+      attack: 0, 
+      defense: 0, 
+      specialAttack: 0,
+      specialDefense: 0,
+      speed: 0 
+    },
+    imageUrl: pokemonTemplate.imageUrl,
+    iconUrl: pokemon.isShiny 
+      ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/shiny/${pokemonTemplate.number}.png`
+      : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`,
+    spriteUrl: pokemon.isShiny
+      ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${pokemonTemplate.number}.png`
+      : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`
+  };
 
-  // ⭐ 포획 시: firstCatcher 기록
-  // ✅ pokemonNumber를 문자열로 변환
-  const pokemonNumber = String(pokemonTemplate.number);
+  const currentPokemon = [...currentUser.caughtPokemon];
+  const party = currentPokemon.slice(0, 6);
+  const box = currentPokemon.slice(6);
+  
+  let emptySlotIndex = -1;
+  for (let i = 0; i < 6; i++) {
+    if (!party[i] || party[i] === null) {
+      emptySlotIndex = i;
+      break;
+    }
+  }
+  
+  let updatedCaughtPokemon;
+  
+  if (emptySlotIndex !== -1) {
+    console.log('✅ 엔트리 빈 슬롯', emptySlotIndex, '에 포켓몬 추가');
+    party[emptySlotIndex] = newPokemon;
+    updatedCaughtPokemon = [...party, ...box];
+  } else {
+    console.log('📦 엔트리 가득참 - 박스에 포켓몬 추가');
+    updatedCaughtPokemon = [...party, ...box, newPokemon];
+  }
+  
+  console.log('🎉 포켓몬 잡기 완료!');
+  
+  updateCurrentUser({ caughtPokemon: updatedCaughtPokemon });
+
+  // ⭐ 포획 시: firstCatcher 기록 (originalNumber 또는 number 사용)
+  const pokemonNumber = String(pokemonTemplate.originalNumber || pokemonTemplate.number);
   const entry = sharedPokedexData[pokemonNumber] || {};
   
   if (!entry.firstCatcher) {
@@ -704,7 +733,7 @@ const applyLoot = (loot, ballUsed = null) => {
       [pokemonNumber]: updatedEntry
     }));
       
-     // 🔥 Firebase에 저장
+    // 🔥 Firebase에 저장
     try {
       const pokedexRef = ref(database, `gameData/sharedPokedex/${pokemonNumber}`);
       await set(pokedexRef, updatedEntry);
@@ -714,8 +743,6 @@ const applyLoot = (loot, ballUsed = null) => {
     }
   }
 };
-
-  
   const saveFirstCatchMemo = async (pokemonNumber, memo) => {
   // ✅ pokemonNumber를 문자열로 변환
   const numericKey = String(pokemonNumber);
@@ -826,6 +853,74 @@ const skipFirstCatchMemo = async (pokemonNumber) => {
   }
   
   return result;
+};
+
+const generateGender = (pokemonData) => {
+  const ratio = pokemonData.genderRatio || { male: 50, female: 50 };
+  
+  // 무성 포켓몬
+  if (ratio.male === 0 && ratio.female === 0) {
+    return 'none';
+  }
+  
+  const random = Math.random() * 100;
+  return random < ratio.male ? 'male' : 'female';
+};
+
+// 크기 생성 함수 (7단계: XXXS ~ XXXL)
+const generateSize = (pokemonData) => {
+  const baseHeight = pokemonData.height || 10;
+  const baseWeight = pokemonData.weight || 100;
+  
+  // ±30% 범위에서 랜덤 (더 넓은 범위로 희귀도 증가)
+  const heightVariation = 0.7 + Math.random() * 0.6; // 0.7 ~ 1.3
+  const weightVariation = 0.7 + Math.random() * 0.6; // 0.7 ~ 1.3
+  
+  const height = (baseHeight * heightVariation).toFixed(1);
+  const weight = (baseWeight * weightVariation).toFixed(1);
+  
+  // 평균값 계산 (키와 몸무게의 평균 비율)
+  const avgVariation = (heightVariation + weightVariation) / 2;
+  
+  // 7단계 크기 등급
+  let sizeRank;
+  if (avgVariation < 0.75) {
+    sizeRank = 'XXXS';      // 극소 (0.7~0.75) - 매우 희귀
+  } else if (avgVariation < 0.85) {
+    sizeRank = 'XXS';       // 최소 (0.75~0.85) - 희귀
+  } else if (avgVariation < 0.95) {
+    sizeRank = 'XS';        // 소형 (0.85~0.95)
+  } else if (avgVariation <= 1.05) {
+    sizeRank = 'M';         // 보통 (0.95~1.05) - 가장 흔함
+  } else if (avgVariation <= 1.15) {
+    sizeRank = 'XL';        // 대형 (1.05~1.15)
+  } else if (avgVariation <= 1.25) {
+    sizeRank = 'XXL';       // 최대 (1.15~1.25) - 희귀
+  } else {
+    sizeRank = 'XXXL';      // 극대 (1.25~1.3) - 매우 희귀
+  }
+  
+  return {
+    height: parseFloat(height),
+    weight: parseFloat(weight),
+    sizeRank,
+    heightVariation: (heightVariation * 100).toFixed(1),
+    weightVariation: (weightVariation * 100).toFixed(1)
+  };
+};
+
+// 특성 생성 함수 (JSON 데이터 사용)
+const generateAbility = (pokemonData, isHiddenAllowed = false) => {
+  const abilities = pokemonData.abilities || ['없음'];
+  
+  // 숨겨진 특성 획득 가능 여부 (레이드, 특별 이벤트 등)
+  if (isHiddenAllowed && pokemonData.hiddenAbility && Math.random() < 0.05) {
+    return pokemonData.hiddenAbility;  // 5% 확률로 숨특
+  }
+  
+  // 일반 특성 중 랜덤 선택
+  const selectedAbility = abilities[Math.floor(Math.random() * abilities.length)];
+  return selectedAbility;
 };
 
   const updateGamePokedex = (selectedPokemonNumbers) => {
