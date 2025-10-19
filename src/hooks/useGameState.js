@@ -474,7 +474,6 @@ const handleRegionClick = async (region) => {
         ...randomPokemon,
         level,
         isShiny,
-        loot
       };
       
       setEncounterPokemon(encounteredPokemon);

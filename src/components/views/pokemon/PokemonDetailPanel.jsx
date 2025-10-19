@@ -27,6 +27,40 @@ import LevelUpMoveModal from './LevelUpMoveModal';
 const getPokemonSpriteUrl = (number) => 
   `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`;
 
+// ⭐ 여기에 헬퍼 함수들 추가
+const getGenderIcon = (gender) => {
+  if (gender === 'male') return '♂';
+  if (gender === 'female') return '♀';
+  return '⚪';
+};
+
+const getGenderColor = (gender) => {
+  if (gender === 'male') return 'text-blue-600';
+  if (gender === 'female') return 'text-pink-600';
+  return 'text-gray-400';
+};
+
+const getSizeColor = (rank) => {
+  const colors = {
+    'XXXS': 'text-purple-700 font-extrabold',
+    'XXS': 'text-purple-600 font-bold',
+    'XS': 'text-blue-600',
+    'M': 'text-gray-600',
+    'XL': 'text-orange-600',
+    'XXL': 'text-red-600 font-bold',
+    'XXXL': 'text-red-700 font-extrabold'
+  };
+  return colors[rank] || 'text-gray-600';
+};
+
+const getSizeRarity = (rank) => {
+  if (rank === 'XXXS' || rank === 'XXXL') return '✨ 극희귀';
+  if (rank === 'XXS' || rank === 'XXL') return '⭐ 희귀';
+  if (rank === 'XS' || rank === 'XL') return '🔹 레어';
+  return '일반';
+};
+
+
 export default function PokemonDetailPanel({ 
   pokemon, 
   currentUser,
@@ -420,6 +454,13 @@ const isThisPartner = currentUser?.partnerPokemon?.uniqueId === pokemon.uniqueId
                   />
                 )}
                 <h2 className="text-2xl font-bold text-gray-800">{nickname}</h2>
+
+                  {/* ⭐ 성별 아이콘 추가 */}
+                  {pokemon.gender && pokemon.gender !== 'none' && (
+                    <span className={`text-2xl font-bold ${getGenderColor(pokemon.gender)}`}>
+                      {getGenderIcon(pokemon.gender)}
+                    </span>
+                  )}
                 {/* ✨ 반짝이 아이콘 */}
                 {pokemon.isShiny && (
                   <Sparkles className="text-yellow-500 animate-pulse" size={20} />
@@ -436,6 +477,56 @@ const isThisPartner = currentUser?.partnerPokemon?.uniqueId === pokemon.uniqueId
             )}
             
             <div className="text-lg text-gray-600">Lv. {pokemon.level}</div>
+            {/* ⭐ 크기/특성 정보 추가 */}
+{(pokemon.sizeRank || pokemon.ability) && (
+  <div className="grid grid-cols-2 gap-3 mt-2">
+    {/* 크기 정보 */}
+    {pokemon.sizeRank && (
+      <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+        <div className="text-xs text-gray-500 mb-1">크기</div>
+        <div className="flex items-center justify-between mb-2">
+          <span className={`text-lg font-bold ${getSizeColor(pokemon.sizeRank)}`}>
+            {pokemon.sizeRank}
+          </span>
+          <span className="text-xs text-gray-500">
+            {getSizeRarity(pokemon.sizeRank)}
+          </span>
+        </div>
+        {pokemon.height && (
+          <div className="text-xs text-gray-600">
+            키: {(pokemon.height / 10).toFixed(1)}m
+          </div>
+        )}
+        {pokemon.weight && (
+          <div className="text-xs text-gray-600">
+            무게: {(pokemon.weight / 10).toFixed(1)}kg
+          </div>
+        )}
+      </div>
+    )}
+
+    {/* 특성 정보 */}
+    {pokemon.ability && (
+      <div className={`rounded-lg p-3 border-2 ${
+        pokemon.isHiddenAbility 
+          ? 'bg-yellow-50 border-yellow-400' 
+          : 'bg-indigo-50 border-indigo-200'
+      }`}>
+        <div className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+          특성
+          {pokemon.isHiddenAbility && (
+            <span className="text-yellow-600 font-bold">⭐</span>
+          )}
+        </div>
+        <div className={`font-bold text-sm ${
+          pokemon.isHiddenAbility ? 'text-yellow-700' : 'text-indigo-700'
+        }`}>
+          {pokemon.ability}
+        </div>
+      </div>
+    )}
+  </div>
+)}
           </div>
 
           {/* 진화 알림 */}

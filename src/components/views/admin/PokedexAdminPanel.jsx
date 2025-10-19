@@ -1,52 +1,62 @@
 import React, { useState, useMemo } from 'react';
+import { Globe } from 'lucide-react';
 
 export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updateGamePokedex }) {
-  const [activeTab, setActiveTab] = useState('current'); // 'current' or 'add'
+  const [activeTab, setActiveTab] = useState('current');
   const [searchQuery, setSearchQuery] = useState('');
   const [generationFilter, setGenerationFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [showRegionalForms, setShowRegionalForms] = useState(true);
   
-  // 추가할 포켓몬 임시 선택
   const [tempSelected, setTempSelected] = useState(new Set());
 
-  // 현재 도감에 있는 포켓몬 번호들
   const currentPokemonNumbers = useMemo(() => 
     new Set(gamePokedex.map(p => p.originalNumber || p.number)),
     [gamePokedex]
   );
 
-  // 현재 탭: 도감에 있는 포켓몬
   const currentPokedex = useMemo(() => 
     gamePokedex.sort((a, b) => (a.newNumber || 0) - (b.newNumber || 0)),
     [gamePokedex]
   );
 
-  // 추가 탭: 도감에 없는 포켓몬
   const availableToAdd = useMemo(() => {
     return allPokemonMaster
-      .filter(p => !currentPokemonNumbers.has(p.number))
       .filter(p => {
-        if (generationFilter !== 'all') {
-          const gen = parseInt(p.generation);
-          const targetGen = parseInt(generationFilter);
-          if (gen !== targetGen) return false;
+        if (currentPokemonNumbers.has(p.number)) return false;
+        
+        if (!showRegionalForms && p.isRegionalForm) return false;
+        
+        if (generationFilter !== 'all' && parseInt(p.generation) !== parseInt(generationFilter)) {
+          return false;
         }
-        if (typeFilter !== 'all') {
-          if (p.type !== typeFilter && p.type2 !== typeFilter) return false;
+        
+        if (typeFilter !== 'all' && p.type !== typeFilter && p.type2 !== typeFilter) {
+          return false;
         }
+        
         if (searchQuery) {
           const query = searchQuery.toLowerCase();
-          return (
-            p.name.toLowerCase().includes(query) ||
-            p.nameEn?.toLowerCase().includes(query) ||
-            p.number.toString().includes(query)
-          );
+          const number = p.number?.toString() || '';
+          const originalNumber = p.originalNumber?.toString() || '';
+          const name = p.name?.toLowerCase() || '';
+          const nameEn = p.nameEn?.toLowerCase() || '';
+          
+          return number.includes(query) ||
+                 originalNumber.includes(query) ||
+                 name.includes(query) ||
+                 nameEn.includes(query);
         }
+        
         return true;
+      })
+      .sort((a, b) => {
+        const aDisplay = a.displayNumber || a.originalNumber || a.number;
+        const bDisplay = b.displayNumber || b.originalNumber || b.number;
+        return aDisplay - bDisplay;
       });
-  }, [allPokemonMaster, currentPokemonNumbers, generationFilter, typeFilter, searchQuery]);
+  }, [allPokemonMaster, currentPokemonNumbers, generationFilter, typeFilter, searchQuery, showRegionalForms]);
 
-  // 현재 탭 필터링
   const filteredCurrent = useMemo(() => {
     return currentPokedex.filter(p => {
       if (searchQuery) {
@@ -62,7 +72,6 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
     });
   }, [currentPokedex, searchQuery]);
 
-  // 임시 선택 토글
   const toggleTempSelect = (pokemon) => {
     const newSelected = new Set(tempSelected);
     if (newSelected.has(pokemon.number)) {
@@ -73,7 +82,6 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
     setTempSelected(newSelected);
   };
 
-  // 선택된 포켓몬들 추가
   const handleAddSelected = () => {
     if (tempSelected.size === 0) {
       alert('추가할 포켓몬을 선택해주세요!');
@@ -85,7 +93,6 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
     setTempSelected(new Set());
   };
 
-  // 포켓몬 제거
   const handleRemovePokemon = (pokemon) => {
     if (window.confirm(`${pokemon.name}을(를) 도감에서 제거하시겠습니까?`)) {
       const newNumbers = Array.from(currentPokemonNumbers).filter(n => n !== (pokemon.originalNumber || pokemon.number));
@@ -94,7 +101,7 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
   };
 
   const handleRemoveAll = () => {
-    if (window.confirm('⚠️ 모든 포켓몬을 도감에서 제거하시겠습니까?')) {
+    if (window.confirm('모든 포켓몬을 도감에서 제거하시겠습니까?')) {
       updateGamePokedex([]);
     }
   };
@@ -113,7 +120,6 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
     updateGamePokedex(Array.from(new Set(newNumbers)).sort((a, b) => a - b));
   };
 
-  // 전체 선택/해제 (추가 탭)
   const toggleAllInAddTab = () => {
     if (tempSelected.size === availableToAdd.length && availableToAdd.length > 0) {
       setTempSelected(new Set());
@@ -145,7 +151,6 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
 
   return (
     <div className="space-y-4">
-      {/* 탭 선택 */}
       <div className="flex gap-2 border-b border-gray-300">
         <button
           onClick={() => { setActiveTab('current'); setTempSelected(new Set()); }}
@@ -169,7 +174,6 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
         </button>
       </div>
 
-      {/* 검색 및 필터 */}
       <div className="flex gap-3">
         <input
           type="text"
@@ -202,11 +206,22 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
                 <option key={type} value={type}>{type}</option>
               ))}
             </select>
+
+            <button
+              onClick={() => setShowRegionalForms(!showRegionalForms)}
+              className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-colors flex items-center gap-2 ${
+                showRegionalForms
+                  ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <Globe size={18} />
+              {showRegionalForms ? '리전폼 포함' : '원종만'}
+            </button>
           </>
         )}
       </div>
 
-      {/* 빠른 액션 버튼 */}
       {activeTab === 'current' && (
         <div className="flex gap-2">
           <button
@@ -246,7 +261,6 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
         </div>
       )}
 
-      {/* 포켓몬 리스트 */}
       <div className="border border-gray-300 rounded-lg max-h-96 overflow-y-auto p-3">
         {activeTab === 'current' && (
           <div className="grid grid-cols-4 gap-2">
@@ -338,8 +352,25 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
                       )}
                     </div>
                     <div className="text-center">
-                      <div className="text-xs text-gray-500">#{pokemon.number}</div>
-                      <div className="font-semibold text-xs truncate">{pokemon.name}</div>
+                      <div className="text-xs text-gray-500">
+                        #{pokemon.newNumber || pokemon.displayNumber || pokemon.number}
+                        {pokemon.originalNumber && pokemon.originalNumber !== pokemon.number && (
+                          <span className="text-gray-400"> (#{pokemon.originalNumber})</span>
+                        )}
+                      </div>
+                      <div className="font-semibold text-xs truncate">
+                        {pokemon.name}
+                        {pokemon.isRegionalForm && (
+                          <span className={`ml-1 px-1 py-0.5 text-[10px] rounded ${
+                            pokemon.regionalForm === 'alola' ? 'bg-yellow-200 text-yellow-800' :
+                            pokemon.regionalForm === 'galar' ? 'bg-blue-200 text-blue-800' :
+                            pokemon.regionalForm === 'hisui' ? 'bg-green-200 text-green-800' :
+                            'bg-purple-200 text-purple-800'
+                          }`}>
+                            {pokemon.regionalForm?.toUpperCase()}
+                          </span>
+                        )}
+                      </div>
                       <div className="flex gap-1 justify-center mt-1">
                         <span className={`text-white text-xs px-1.5 py-0.5 rounded ${typeColors[pokemon.type] || 'bg-gray-400'}`}>
                           {pokemon.type}

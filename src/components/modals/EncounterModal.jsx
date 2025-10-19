@@ -196,73 +196,51 @@ const pokemonSpriteUrl = pokemon.isShiny
 			  console.log('  - 최종 포획 확률:', catchChance);
 			  console.log('  - 랜덤 값:', randomValue);
 			  console.log('  - 결과:', success ? '성공 ✅' : '실패 ❌');
-						
-            // ✅ 볼 소모는 항상 발생
-            if (onApplyLoot) {
-              onApplyLoot({ money: 0, items: [], ingredients: [], berries: [] }, selectedBall);
-            }
-            
-            if (success) {
-              setResult('success');
-              setCatching(false);
 
-              setTimeout(() => {
-                if (pokemon.loot && onApplyLoot) {
-                  onApplyLoot(pokemon.loot, null); // 볼은 이미 소모했으므로 null
-                  
-                  let lootMessage = '\n\n🎁 탐험 보상을 획득했습니다!\n';
-                  lootMessage += `💰 ${pokemon.loot.money}G\n`;
-                  
-                  if (pokemon.loot.items.length > 0) {
-                    lootMessage += `📦 아이템: ${pokemon.loot.items.map(i => `${i.name} x${i.count}`).join(', ')}\n`;
-                  }
-                  if (pokemon.loot.ingredients.length > 0) {
-                    lootMessage += `🎁 식재료: ${pokemon.loot.ingredients.map(i => `${i.name} x${i.count}`).join(', ')}\n`;
-                  }
-                  if (pokemon.loot.berries.length > 0) {
-                    lootMessage += `🌳 열매: ${pokemon.loot.berries.map(i => `${i.name} x${i.count}`).join(', ')}`;
-                  }
-                  
-                  setTimeout(() => {
-                    alert(`${pokemon.name}을(를) 잡았습니다!${lootMessage}`);
-                  }, 100);
-                }
                 
-                onCatchSuccess(pokemon, selectedBall);
+          // ✅ 볼 소모는 항상 발생
+          if (onApplyLoot) {
+            onApplyLoot({ money: 0, items: [], ingredients: [], berries: [] }, selectedBall);
+          }
+
+          if (success) {
+            setResult('success');
+            setCatching(false);
+
+            setTimeout(() => {  // ⭐ 이 setTimeout이 빠졌습니다!
+              alert(`${pokemon.name}을(를) 잡았습니다!`);
+              
+              onCatchSuccess(pokemon, selectedBall);
+              onClose();
+            }, 2500);
+          } else {
+            // ✅ 포획 실패
+            setEscapeAttempts(prev => prev + 1);
+            const pokemonEscapes = checkIfPokemonEscapes();
+            
+            // ✅ 랜덤 메시지 선택
+            const failMessages = [
+              `앗! 아깝다!\n${pokemon.name}이(가) 볼에서 나왔다!`,
+              `아쉽다!\n조금만 더 하면 잡을 수 있었는데!`,
+              `아깝다!\n조금만 더 하면 됐는데!`
+            ];
+            const randomMessage = failMessages[Math.floor(Math.random() * failMessages.length)];
+            
+            if (pokemonEscapes) {
+              setResult('fail');
+              setCatching(false);
+                    
+              setTimeout(() => {
                 onClose();
-              }, 2500);
+              }, 3000);
             } else {
-			  // ✅ 포획 실패
-			  setEscapeAttempts(prev => prev + 1);
-			  const pokemonEscapes = checkIfPokemonEscapes();
-			  
-			  // ✅ 랜덤 메시지 선택
-			  const failMessages = [
-				`앗! 아깝다!\n${pokemon.name}이(가) 볼에서 나왔다!`,
-				`아쉽다!\n조금만 더 하면 잡을 수 있었는데!`,
-				`아깝다!\n조금만 더 하면 됐는데!`
-			  ];
-			  const randomMessage = failMessages[Math.floor(Math.random() * failMessages.length)];
-			  
-			  if (pokemonEscapes) {
-				setResult('fail');
-				setCatching(false);
-				
-				if (pokemon.loot && onApplyLoot) {
-				  onApplyLoot(pokemon.loot, null);
-				}
-				
-				setTimeout(() => {
-				  onClose();
-				}, 3000);
-			  } else {
-				// ✅ 도망가지 않음 - UI만 업데이트
-				setCatching(false);
-				setResult(null);
-				setShaking(0);
-				setMessage(randomMessage); // ✅ 랜덤 메시지 설정
-			  }
-			}
+              // ✅ 도망가지 않음 - UI만 업데이트
+              setCatching(false);
+              setResult(null);
+              setShaking(0);
+              setMessage(randomMessage); // ✅ 랜덤 메시지 설정
+            }
+          }
           }, 500);
         }
       }, 800);
