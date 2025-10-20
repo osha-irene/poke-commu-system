@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Star, Calendar, Search, Package, X, Store, CircleDot, RefreshCw, Save, Lock, Clock } from 'lucide-react';
+import { Plus, Trash2, Star, Calendar, Search, Package, X, Store, CircleDot, RefreshCw, Save, Lock, Clock, Gift } from 'lucide-react';
 import { CATEGORIES, getItemPocket, filterItemsByPocket, getItemIcon } from '../../../utils/itemUtils';
 import ItemSelectorModal from '../../modals/ItemSelectorModal';
+import RandomBoxAdminPanel from './RandomBoxAdminPanel'; 
 
 export default function ShopAdminPanel({ 
   shopData = {},
@@ -26,6 +27,8 @@ export default function ShopAdminPanel({
   const [isPersistent, setIsPersistent] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [tempTemplate, setTempTemplate] = useState(null);
+  const [showRandomBoxPanel, setShowRandomBoxPanel] = useState(false);
+
   
   const [rareSearchQuery, setRareSearchQuery] = useState('');
   const [rareItemCategory, setRareItemCategory] = useState('all');
@@ -469,6 +472,14 @@ export default function ShopAdminPanel({
             <CircleDot size={20} />
             규토리볼
           </button>
+		  
+		  <button
+			  onClick={() => setShowRandomBoxPanel(true)}
+			  className="px-6 py-3 rounded-lg font-bold whitespace-nowrap transition-colors flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700"
+			>
+			  <Gift size={20} />
+			  랜덤박스
+			</button>
         </div>
       </div>
 
@@ -1260,6 +1271,7 @@ export default function ShopAdminPanel({
                         </div>
                       </div>
                     )}
+
                   </div>
                 </div>
               </div>
@@ -1267,6 +1279,37 @@ export default function ShopAdminPanel({
           </div>
         </div>
       )}
+    
+		{showRandomBoxPanel && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div className="bg-white rounded-2xl shadow-2xl max-w-7xl w-full h-[90vh] flex flex-col">
+      <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
+        <div>
+          <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <Gift className="text-purple-600" size={24} />
+            랜덤박스 관리
+          </h3>
+          <p className="text-sm text-gray-600 mt-1">랜덤박스 상품 구성과 확률을 설정합니다</p>
+        </div>
+        <button
+          onClick={() => setShowRandomBoxPanel(false)}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <X size={24} />
+        </button>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto p-6">
+        <RandomBoxAdminPanel 
+          shopData={shopData}
+          allItems={allItems}
+          onUpdateShop={onUpdateShop}
+        />
+      </div>
     </div>
+  </div>
+)}
+	</div>
+	
   );
 }

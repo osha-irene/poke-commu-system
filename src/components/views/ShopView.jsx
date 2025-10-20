@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { ShoppingCart, Clock, Star, Coins, Sparkles, Calendar, Package, Zap } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
 import { getItemPocket } from '../../utils/itemUtils';
+import RandomBoxShop from './RandomBoxShop';
 
 export default function ShopView() {
   const {
     currentUser: trainer,
+    updateCurrentUser,
     allItems = [],
     shopData = {},
     handlePurchase: onPurchase
@@ -21,11 +23,10 @@ export default function ShopView() {
   const todayName = dayNames[today.getDay()];
   const todayNameKo = dayNamesKo[today.getDay()];
   
-  // 현재 주차 계산 (ISO 8601 기준 - 월요일 시작)
   const getWeekKey = (date) => {
     const d = new Date(date);
-    const dayNum = d.getDay() || 7; // 일요일을 7로 변경
-    d.setDate(d.getDate() + 4 - dayNum); // 목요일로 이동
+    const dayNum = d.getDay() || 7;
+    d.setDate(d.getDate() + 4 - dayNum);
     const yearStart = new Date(d.getFullYear(), 0, 1);
     const weekNum = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
     return `${d.getFullYear()}-W${weekNum}`;
@@ -33,11 +34,9 @@ export default function ShopView() {
   
   const currentWeek = getWeekKey(today);
   
-  // 모든 상품을 하나의 배열로 통합
   const getAllShopItems = () => {
     const items = [];
     
-    // 희귀 아이템
     if (shopData.rareDailyItem?.itemId) {
       items.push({
         ...shopData.rareDailyItem,
@@ -45,7 +44,6 @@ export default function ShopView() {
       });
     }
     
-    // 오늘의 상품
     const dailyItems = shopData.dailyItems?.[todayName] || [];
     dailyItems.forEach(item => {
       items.push({
@@ -54,7 +52,6 @@ export default function ShopView() {
       });
     });
     
-    // 상시 판매
     const permanentItems = shopData.permanentItems || [];
     permanentItems.forEach(item => {
       items.push({
@@ -73,7 +70,6 @@ export default function ShopView() {
     return withoutRare.filter(item => item.type === filterType);
   };
   
-  // 아이템 상세 정보 가져오기
   const getItemDetails = (shopItem) => {
     const item = allItems.find(i => i.id === shopItem.itemId);
     return {
@@ -83,7 +79,6 @@ export default function ShopView() {
     };
   };
   
-  // 요일별 아이템의 이번 주 구매 수량 확인
   const getWeeklyPurchasedAmount = (itemId, dayName) => {
     const purchaseHistory = trainer?.weeklyPurchaseHistory || {};
     const weekData = purchaseHistory[currentWeek] || {};
@@ -91,18 +86,16 @@ export default function ShopView() {
     return dayData[itemId] || 0;
   };
   
-  // 구매 처리
   const handlePurchase = () => {
     if (!selectedItem) return;
     
     const totalPrice = selectedItem.price * quantity;
     
     if (trainer.money < totalPrice) {
-      alert('💰 돈이 부족합니다!');
+      alert('돈이 부족합니다!');
       return;
     }
     
-    // 희귀템 중복 구매 체크 (일일 제한)
     if (selectedItem.type === 'rare') {
       const purchaseHistory = trainer?.purchaseHistory || {};
       const todayDate = new Date().toISOString().split('T')[0];
@@ -110,25 +103,23 @@ export default function ShopView() {
       const alreadyPurchased = (todayPurchases[selectedItem.itemId] || 0) >= 1;
       
       if (alreadyPurchased) {
-        alert('⭐ 희귀 아이템은 하루에 1개만 구매할 수 있습니다!');
+        alert('희귀 아이템은 하루에 1개만 구매할 수 있습니다!');
         return;
       }
     }
     
-    // 요일별 아이템 주간 재고 체크
     if (selectedItem.type === 'daily') {
       const weeklyPurchased = getWeeklyPurchasedAmount(selectedItem.itemId, todayName);
       const remainingStock = selectedItem.stock - weeklyPurchased;
       
       if (remainingStock < quantity) {
-        alert(`📦 이번 주 재고가 부족합니다! (남은 재고: ${remainingStock}개)`);
+        alert(`이번 주 재고가 부족합니다! (남은 재고: ${remainingStock}개)`);
         return;
       }
     }
     
-    // 상시 아이템 재고 체크
     if (selectedItem.type === 'permanent' && selectedItem.stock !== 99 && selectedItem.stock < quantity) {
-      alert(`📦 재고가 부족합니다! (남은 재고: ${selectedItem.stock}개)`);
+      alert(`재고가 부족합니다! (남은 재고: ${selectedItem.stock}개)`);
       return;
     }
     
@@ -145,21 +136,57 @@ export default function ShopView() {
     setQuantity(1);
   };
 
-  // 아이템 카드 렌더링
+  const buyRandomBox = (box, result) => {
+    const newMoney = trainer.money - box.price;
+    
+    const existingItem = trainer.inventory.find(
+      i => i.itemId === result.itemId || i.name === result.name
+    );
+    
+    const itemData = allItems.find(i => i.id === result.itemId);
+    
+    const newInventory = existingItem
+      ? trainer.inventory.map(i =>
+          (i.itemId === result.itemId || i.name === result.name)
+            ? { ...i, count: i.count + result.count }
+            : i
+        )
+      : [
+          ...trainer.inventory,
+          {
+            itemId: result.itemId,
+            name: result.name,
+            nameEn: itemData?.nameEn,
+            count: result.count,
+            imageUrl: itemData?.spriteUrl || itemData?.imageUrl,
+            cost: itemData?.cost || 0,
+            sellPrice: itemData?.sellPrice || 0,
+            category: itemData?.category,
+            pocket: itemData?.pocket
+          }
+        ];
+    
+    updateCurrentUser({
+      money: newMoney,
+      inventory: newInventory
+    });
+    
+    console.log(`${box.name} 구매 완료! ${result.name} x${result.count} 획득`);
+  };
+
   const renderItemCard = (shopItem) => {
     const item = getItemDetails(shopItem);
     if (!item) return null;
     
     const isSelected = selectedItem?.itemId === shopItem.itemId;
     
-    // 품절 체크 - 전역 재고 기준
-		let isSoldOut = false;
-		let remainingStock = shopItem.stock;
+    let isSoldOut = false;
+    let remainingStock = shopItem.stock;
 
-		if (shopItem.type === 'daily' || shopItem.type === 'permanent') {
-		  isSoldOut = shopItem.stock !== 99 && shopItem.stock <= 0;
-		  remainingStock = shopItem.stock;
-		}
+    if (shopItem.type === 'daily' || shopItem.type === 'permanent') {
+      isSoldOut = shopItem.stock !== 99 && shopItem.stock <= 0;
+      remainingStock = shopItem.stock;
+    }
 
     const typeStyles = {
       rare: {
@@ -282,165 +309,101 @@ export default function ShopView() {
         </div>
       </div>
 
-      {/* 특별 상품 영역 */}
-      {(shopData.rareDailyItem?.itemId || (shopData.gachaBall?.enabled && shopData.gachaBall?.balls?.length === 2)) && (
-        <div className="grid grid-cols-3 gap-4">
-          {/* 오늘의 희귀 아이템 */}
-          {shopData.rareDailyItem?.itemId && (
-            <div className="relative border-2 border-purple-300 bg-purple-50 rounded-lg overflow-hidden shadow-lg">
-              <div className="absolute -top-0 left-4 bg-purple-600 text-white text-sm px-4 py-1.5 font-bold flex items-center gap-2 rounded-b-lg shadow-md z-10">
-                <Star size={14} />
-                오늘의 희귀
-              </div>
+      {/* 오늘의 희귀 아이템 */}
+      {shopData.rareDailyItem?.itemId && (
+        <div className="relative border-2 border-purple-300 bg-purple-50 rounded-lg overflow-hidden shadow-lg">
+          <div className="absolute -top-0 left-4 bg-purple-600 text-white text-sm px-4 py-1.5 font-bold flex items-center gap-2 rounded-b-lg shadow-md z-10">
+            <Star size={14} />
+            오늘의 희귀
+          </div>
+          
+          <div className="p-4 pt-10">
+            {(() => {
+              const item = getItemDetails(shopData.rareDailyItem);
+              if (!item) return null;
               
-              <div className="p-4 pt-10">
-                {(() => {
-                  const item = getItemDetails(shopData.rareDailyItem);
-                  if (!item) return null;
-                  
-                  const isSelected = selectedItem?.itemId === shopData.rareDailyItem.itemId;
-                  
-                  // 희귀템 구매 이력 체크 (일일 제한)
-                  const purchaseHistory = trainer?.purchaseHistory || {};
-                  const todayDate = new Date().toISOString().split('T')[0];
-                  const todayPurchases = purchaseHistory[todayDate] || {};
-                  const alreadyPurchased = (todayPurchases[shopData.rareDailyItem.itemId] || 0) >= 1;
-                  const isSoldOut = alreadyPurchased;
-                  
-                  return (
-                    <button
-                      onClick={() => {
-                        if (isSoldOut) return;
-                        setSelectedItem({
-                          ...item,
-                          type: 'rare',
-                          price: shopData.rareDailyItem.price,
-                          stock: shopData.rareDailyItem.stock || 1
-                        });
-                        setQuantity(1);
-                      }}
-                      disabled={isSoldOut}
-                      className={`w-full transition-all border-2 rounded-lg p-4 relative ${
-                        isSoldOut
-                          ? 'opacity-50 cursor-not-allowed grayscale border-gray-300 bg-gray-100'
-                          : isSelected 
-                            ? 'ring-4 ring-yellow-400 scale-105 border-white bg-white' 
-                            : 'hover:shadow-md hover:scale-102 border-white bg-white'
-                      }`}
-                    >
-                      {isSoldOut && (
-                        <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center z-20 rounded-lg">
-                          <div className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg transform rotate-12 shadow-xl">
-                            구매완료
-                          </div>
-                        </div>
-                      )}
-                      
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className="w-20 h-20 flex items-center justify-center flex-shrink-0 bg-purple-50 rounded-lg">
-                          <img 
-                            src={item.spriteUrl} 
-                            alt={item.name}
-                            className="max-w-full max-h-full"
-                            style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
-                          />
-                        </div>
-                        <div className="flex-1 text-left">
-                          <div className="font-bold text-lg text-gray-800 mb-1">{item.name}</div>
-                          <div className="text-sm text-gray-600 line-clamp-3">{item.effect?.replace(/\n/g, ' ')}</div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between pt-3 border-t-2 border-purple-100">
-                        <div className="flex items-center gap-1 text-yellow-600 font-bold text-xl">
-                          <Coins size={20} />
-                          ₽{shopData.rareDailyItem.price.toLocaleString()}
-                        </div>
-                        <div className={`text-sm font-semibold ${
-                          isSoldOut ? 'text-red-600' : 'text-gray-600'
-                        }`}>
-                          {isSoldOut ? '구매완료' : '1인 1개'}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })()}
-              </div>
-            </div>
-          )}
-
-          {/* 규토리볼 */}
-          {shopData.gachaBall?.enabled && shopData.gachaBall?.balls?.length === 2 && (
-            <div className={`relative border-2 border-orange-300 bg-orange-50 rounded-lg overflow-hidden shadow-lg ${
-              shopData.rareDailyItem?.itemId ? 'col-span-2' : 'col-span-3'
-            }`}>
-              <div className="absolute -top-0 left-4 bg-orange-600 text-white text-sm px-4 py-1.5 font-bold flex items-center gap-2 rounded-b-lg shadow-md z-10">
-                <Sparkles size={14} />
-                오늘의 규토리볼
-              </div>
+              const isSelected = selectedItem?.itemId === shopData.rareDailyItem.itemId;
               
-              <div className="p-4 pt-10">
-                <div className="grid grid-cols-2 gap-4">
-                  {shopData.gachaBall.balls.map((ball, index) => {
-                    const item = allItems.find(i => i.id === ball.itemId);
-                    if (!item) return null;
-                    
-                    const isSelected = selectedItem?.itemId === ball.itemId;
-                    
-                    return (
-                      <button
-                        key={ball.itemId}
-                        onClick={() => {
-                          setSelectedItem({
-                            ...item,
-                            itemId: ball.itemId,
-                            price: 200,
-                            stock: 99,
-                            type: 'gacha'
-                          });
-                          setQuantity(1);
-                        }}
-                        className={`w-full transition-all border-2 border-white bg-white rounded-lg p-4 ${
-                          isSelected ? 'ring-4 ring-yellow-400 scale-105' : 'hover:shadow-md hover:scale-102'
-                        }`}
-                      >
-                        <div className="flex items-start gap-3 mb-3">
-                          <div className="w-20 h-20 flex items-center justify-center flex-shrink-0 bg-orange-50 rounded-lg">
-                            <img 
-                              src={item.spriteUrl} 
-                              alt={item.name}
-                              className="max-w-full max-h-full"
-                              style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
-                            />
-                          </div>
-                          <div className="flex-1 text-left">
-                            <div className="font-bold text-lg text-gray-800 mb-1">{item.name}</div>
-                            <div className="text-sm text-gray-600 line-clamp-3">{item.effect?.replace(/\n/g, ' ')}</div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center justify-between pt-3 border-t-2 border-orange-100">
-                          <div className="flex items-center gap-1 text-yellow-600 font-bold text-xl">
-                            <Coins size={20} />
-                            ₽200
-                          </div>
-                          <div className="text-sm text-gray-600 font-semibold">
-                            재고 무제한
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          )}
+              const purchaseHistory = trainer?.purchaseHistory || {};
+              const todayDate = new Date().toISOString().split('T')[0];
+              const todayPurchases = purchaseHistory[todayDate] || {};
+              const alreadyPurchased = (todayPurchases[shopData.rareDailyItem.itemId] || 0) >= 1;
+              const isSoldOut = alreadyPurchased;
+              
+              return (
+                <button
+                  onClick={() => {
+                    if (isSoldOut) return;
+                    setSelectedItem({
+                      ...item,
+                      type: 'rare',
+                      price: shopData.rareDailyItem.price,
+                      stock: shopData.rareDailyItem.stock || 1
+                    });
+                    setQuantity(1);
+                  }}
+                  disabled={isSoldOut}
+                  className={`w-full transition-all border-2 rounded-lg p-4 relative ${
+                    isSoldOut
+                      ? 'opacity-50 cursor-not-allowed grayscale border-gray-300 bg-gray-100'
+                      : isSelected 
+                        ? 'ring-4 ring-yellow-400 scale-105 border-white bg-white' 
+                        : 'hover:shadow-md hover:scale-102 border-white bg-white'
+                  }`}
+                >
+                  {isSoldOut && (
+                    <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center z-20 rounded-lg">
+                      <div className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg transform rotate-12 shadow-xl">
+                        구매완료
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="w-20 h-20 flex items-center justify-center flex-shrink-0 bg-purple-50 rounded-lg">
+                      <img 
+                        src={item.spriteUrl} 
+                        alt={item.name}
+                        className="max-w-full max-h-full"
+                        style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
+                      />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="font-bold text-lg text-gray-800 mb-1">{item.name}</div>
+                      <div className="text-sm text-gray-600 line-clamp-3">{item.effect?.replace(/\n/g, ' ')}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-3 border-t-2 border-purple-100">
+                    <div className="flex items-center gap-1 text-yellow-600 font-bold text-xl">
+                      <Coins size={20} />
+                      ₽{shopData.rareDailyItem.price.toLocaleString()}
+                    </div>
+                    <div className={`text-sm font-semibold ${
+                      isSoldOut ? 'text-red-600' : 'text-gray-600'
+                    }`}>
+                      {isSoldOut ? '구매완료' : '1인 1개'}
+                    </div>
+                  </div>
+                </button>
+              );
+            })()}
+          </div>
         </div>
       )}
 
+      {/* 랜덤박스 섹션 */}
+      <RandomBoxShop 
+        shopData={shopData}
+        currentUser={trainer}
+        allItems={allItems}
+        onBuyRandomBox={buyRandomBox}
+        selectedItem={selectedItem}
+        onSelectBox={(box) => setSelectedItem(box)}
+      />
+
       {/* 상점 메인 */}
       <div className="bg-white rounded-lg border-2 border-gray-200 shadow-lg">
-        {/* 필터 탭 */}
         <div className="border-b-2 border-gray-200 bg-gray-50 p-4">
           <div className="flex gap-2">
             <button
@@ -478,7 +441,6 @@ export default function ShopView() {
           </div>
         </div>
 
-        {/* 상품 그리드 */}
         <div className="p-6">
           {filteredItems().length === 0 ? (
             <div className="text-center py-16 text-gray-400">
@@ -495,7 +457,7 @@ export default function ShopView() {
       </div>
 
       {/* 구매 패널 */}
-      {selectedItem && (
+      {selectedItem && selectedItem.type !== 'randombox' && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t-4 border-indigo-600 shadow-2xl p-6 z-50">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center gap-6">

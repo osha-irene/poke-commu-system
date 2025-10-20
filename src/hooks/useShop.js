@@ -1,4 +1,4 @@
-// src/hooks/useShop.js - enrichment + isPersistent 완전 버전
+// src/hooks/useShop.js - randomBoxes 추가 버전
 
 import { useState, useEffect } from 'react';
 import { ref, onValue, set } from 'firebase/database';
@@ -15,7 +15,7 @@ const getWeekKey = (date) => {
   return `${d.getFullYear()}-W${weekNum}`;
 };
 
-// 🔥 enrichItemData 함수
+// enrichItemData 함수
 const enrichItemData = (itemTemplate, allItems) => {
   if (!itemTemplate) return null;
   
@@ -53,7 +53,7 @@ const enrichItemData = (itemTemplate, allItems) => {
     cost: fullItem.cost,
     price: itemTemplate.price || fullItem.cost,
     stock: itemTemplate.stock || 999,
-    isPersistent: itemTemplate.isPersistent || false  // ⭐ 추가
+    isPersistent: itemTemplate.isPersistent || false
   };
 };
 
@@ -83,6 +83,13 @@ const getDefaultInitialDailyItems = () => ({
   ]
 });
 
+// ⭐ 기본 랜덤박스 설정
+const getDefaultRandomBoxes = () => ([
+  { id: 1, name: '브론즈 박스', price: 1000, enabled: false, items: [] },
+  { id: 2, name: '실버 박스', price: 3000, enabled: false, items: [] },
+  { id: 3, name: '골드 박스', price: 5000, enabled: false, items: [] }
+]);
+
 export const useShop = (currentUser, updateCurrentUser, allItems) => {
   const [shopData, setShopData] = useState({
     dailyItems: {},
@@ -91,6 +98,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
     rareDailyItem: null,
     rareItemPool: [],
     gachaBall: { enabled: false, balls: [] },
+    randomBoxes: getDefaultRandomBoxes(), // ⭐ 추가
     refreshInterval: 86400000,
     lastRefresh: Date.now(),
     lastWeekReset: null
@@ -113,6 +121,12 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
         const loadedData = snapshot.val();
         const currentWeek = getWeekKey(new Date());
         
+        // ⭐ randomBoxes 초기화 체크
+        if (!loadedData.randomBoxes) {
+          loadedData.randomBoxes = getDefaultRandomBoxes();
+          await set(shopRef, loadedData);
+        }
+        
         if (!loadedData.initialDailyItems) {
           loadedData.initialDailyItems = getDefaultInitialDailyItems();
           await set(shopRef, loadedData);
@@ -123,26 +137,23 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
         if (needsWeeklyReset) {
           console.log('🔄 새로운 주 감지! 요일별 아이템 재고 리셋');
           
-          // 🔥 주간 리셋 로직 (isPersistent 고려)
           const resetDailyItems = {};
           
           for (const day of ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']) {
             const initialItems = loadedData.initialDailyItems[day] || [];
             const currentItems = loadedData.dailyItems[day] || [];
             
-            // 1. 초기 템플릿 아이템 enrichment
             const enrichedInitialItems = initialItems
               .map(template => enrichItemData(template, allItems))
               .filter(Boolean);
             
-            // 2. 추가된 persistent 아이템 (초기 템플릿에 없는 것)
             const persistentAddedItems = currentItems.filter(item => 
               item.isPersistent === true && 
               !initialItems.some(init => init.itemId === item.itemId)
             );
             
             resetDailyItems[day] = [...enrichedInitialItems, ...persistentAddedItems];
-            console.log(`✅ ${day}: ${resetDailyItems[day].length}개 (초기: ${enrichedInitialItems.length}, 추가: ${persistentAddedItems.length})`);
+            console.log(`✅ ${day}: ${resetDailyItems[day].length}개`);
           }
           
           const resetData = {
@@ -153,12 +164,11 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
           
           await set(shopRef, resetData);
           setShopData(resetData);
-          console.log('✅ 리셋 완료 (persistent 아이템 유지됨)');
+          console.log('✅ 리셋 완료');
           
         } else {
           console.log('ℹ️ 주간 리셋 불필요, enrichment 적용');
           
-          // 🔥 기존 데이터 enrichment
           const enrichedDailyItems = {};
           for (const [day, items] of Object.entries(loadedData.dailyItems || {})) {
             enrichedDailyItems[day] = items.map(item => {
@@ -176,6 +186,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
             rareDailyItem: loadedData.rareDailyItem || null,
             rareItemPool: loadedData.rareItemPool || [],
             gachaBall: loadedData.gachaBall || { enabled: false, balls: [] },
+            randomBoxes: loadedData.randomBoxes || getDefaultRandomBoxes(), // ⭐ 추가
             refreshInterval: loadedData.refreshInterval || 86400000,
             lastRefresh: loadedData.lastRefresh || Date.now(),
             lastWeekReset: loadedData.lastWeekReset || currentWeek
@@ -185,7 +196,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
         }
         
       } else {
-        // 🔥 초기 데이터 생성
+        // 초기 데이터 생성
         console.log('🔧 초기 상점 데이터 생성 중...');
         
         const currentWeek = getWeekKey(new Date());
@@ -205,6 +216,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
           rareDailyItem: null,
           rareItemPool: [],
           gachaBall: { enabled: false, balls: [] },
+          randomBoxes: getDefaultRandomBoxes(), // ⭐ 추가
           refreshInterval: 86400000,
           lastRefresh: Date.now(),
           lastWeekReset: currentWeek
@@ -232,7 +244,6 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
     }
   };
 
-  // ⭐ 요일별 아이템 추가
   const addDailyItem = async (day, item, isPersistent = false) => {
     const newItem = {
       ...item,
@@ -251,27 +262,24 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
     console.log(`✅ ${day}에 아이템 추가 (persistent: ${isPersistent})`);
   };
 
-  // ⭐ isPersistent 토글
-  const toggleItemPersistent = async (day, itemId) => { // ⭐ itemIndex → itemId
-  const updatedItems = (shopData.dailyItems[day] || []).map(item => 
-    item.itemId === itemId
-      ? { ...item, isPersistent: !item.isPersistent }
-      : item
-  );
-      
-      const updatedShopData = {
-        ...shopData,
-        dailyItems: {
-          ...shopData.dailyItems,
-          [day]: updatedItems
-        }
-      };
-      
-      await updateShopData(updatedShopData);
-    }
+  const toggleItemPersistent = async (day, itemId) => {
+    const updatedItems = (shopData.dailyItems[day] || []).map(item => 
+      item.itemId === itemId
+        ? { ...item, isPersistent: !item.isPersistent }
+        : item
+    );
+    
+    const updatedShopData = {
+      ...shopData,
+      dailyItems: {
+        ...shopData.dailyItems,
+        [day]: updatedItems
+      }
+    };
+    
+    await updateShopData(updatedShopData);
+  };
 
-
-  // ⭐ 요일별 아이템 삭제
   const removeDailyItem = async (day, itemIndex) => {
     const updatedItems = (shopData.dailyItems[day] || []).filter((_, idx) => idx !== itemIndex);
     
@@ -346,14 +354,59 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
     return true;
   };
 
+  // ⭐ 랜덤박스 구매 함수
+  const buyRandomBox = (box, result) => {
+    if (!currentUser) return false;
+    
+    // 골드 차감
+    const newMoney = currentUser.money - box.price;
+    
+    // 아이템 추가
+    const existingItem = currentUser.inventory.find(
+      i => i.itemId === result.itemId || i.name === result.name
+    );
+    
+    const itemData = allItems.find(i => i.id === result.itemId);
+    
+    const newInventory = existingItem
+      ? currentUser.inventory.map(i =>
+          (i.itemId === result.itemId || i.name === result.name)
+            ? { ...i, count: i.count + result.count }
+            : i
+        )
+      : [
+          ...currentUser.inventory,
+          {
+            itemId: result.itemId,
+            name: result.name,
+            nameEn: itemData?.nameEn,
+            count: result.count,
+            imageUrl: itemData?.spriteUrl || itemData?.imageUrl,
+            cost: itemData?.cost || 0,
+            sellPrice: itemData?.sellPrice || 0,
+            category: itemData?.category,
+            pocket: itemData?.pocket
+          }
+        ];
+    
+    updateCurrentUser({
+      money: newMoney,
+      inventory: newInventory
+    });
+    
+    console.log(`✅ ${box.name} 구매 완료! ${result.name} x${result.count} 획득`);
+    return true;
+  };
+
   return {
     shopData,
     updateShopData,
-    addDailyItem,           // ⭐
-    removeDailyItem,        // ⭐
-    toggleItemPersistent,   // ⭐
+    addDailyItem,
+    removeDailyItem,
+    toggleItemPersistent,
     updateInitialDailyItems,
     sellItem,
+    buyRandomBox, // ⭐ 추가
     isLoading
   };
 };
