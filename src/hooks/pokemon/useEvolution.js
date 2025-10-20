@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import evolutionsData from '../data/evolutions.json';
+import evolutionsData from '../../data/evolutions.json';
 
 export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) => {
   const [evolutionModal, setEvolutionModal] = useState(null);

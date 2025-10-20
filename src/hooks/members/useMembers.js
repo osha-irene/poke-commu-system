@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { ref, get, set } from 'firebase/database';
 import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
-import { database, auth } from '../firebase';
-import itemsData from '../data/items.json';
+import { database, auth } from '../../firebase';
+import itemsData from '../../data/items.json';
 
 export const useMembers = (allPokemonData) => {
   const [members, setMembers] = useState({});

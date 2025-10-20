@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { ref, get, set } from 'firebase/database';
-import { database } from '../firebase';
-import itemsData from '../data/items.json';
-import customItemsData from '../data/customItems.json';
-import regionsData from '../data/regions.json';
-import technicalMachinesData from '../data/technicalMachines.json';
-import { ITEM_POCKETS } from '../utils/itemUtils';
+import { database } from '../../firebase';
+import itemsData from '../../data/items.json';
+import customItemsData from '../../data/customItems.json';
+import regionsData from '../../data/regions.json';
+import technicalMachinesData from '../../data/technicalMachines.json';
+import { ITEM_POCKETS } from '../../utils/itemUtils';
 
 export const useGameData = (allPokemonData) => {
   const [allItems, setAllItems] = useState([]);

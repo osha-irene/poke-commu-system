@@ -1,4 +1,7 @@
-// src/hooks/usePokemonManagement.js
+// src/hooks/pokemon/usePokemonManagement.js - 진화 체크 통합
+
+import { ref, get } from 'firebase/database';
+import { database } from '../../firebase';
 
 const usePokemonManagement = (
   currentUser, 
@@ -23,7 +26,7 @@ const usePokemonManagement = (
     console.log('📦 현재 전체 배열:', currentUser.caughtPokemon.map((p, i) => `[${i}] ${p?.name || 'null'}`));
     
     const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === uniqueId);
-    console.log('📍 포켓몬 인덱스:', pokemonIndex);
+    console.log('🔍 포켓몬 인덱스:', pokemonIndex);
     
     if (pokemonIndex === -1) { 
       console.error('❌ 포켓몬을 찾을 수 없습니다!');
@@ -38,9 +41,6 @@ const usePokemonManagement = (
     
     const party = currentUser.caughtPokemon.slice(0, 6);
     const box = currentUser.caughtPokemon.slice(6);
-    
-    console.log('📋 분리된 엔트리:', party.map((p, i) => `[${i}] ${p?.name || 'null'}`));
-    console.log('📋 분리된 박스:', box.map((p, i) => `[${i}] ${p?.name}`));
     
     let emptySlotIndex = -1;
     for (let i = 0; i < 6; i++) {
@@ -61,19 +61,11 @@ const usePokemonManagement = (
     const boxIndex = pokemonIndex - 6;
     const pokemon = box[boxIndex];
     
-    console.log('🎯 이동할 포켓몬:', pokemon.name, '(박스 내 인덱스:', boxIndex, ')');
-    
     party[emptySlotIndex] = pokemon;
     box.splice(boxIndex, 1);
     const finalPokemon = [...party, ...box];
     
-    console.log('✅ 최종 엔트리:', party.map((p, i) => `[${i}] ${p?.name || 'null'}`));
-    console.log('✅ 최종 박스:', box.map((p, i) => `[${i + 6}] ${p?.name}`));
-    console.log('✅ 최종 전체 배열 길이:', finalPokemon.length);
-    
     updateCurrentUser({ caughtPokemon: finalPokemon });
-    
-    console.log('✅ movePokemonToParty 완료!');
   };
 
   // 박스 이동
@@ -113,7 +105,6 @@ const usePokemonManagement = (
   const releasePokemon = (uniqueId) => {
     if (!currentUser) return;
 
-    // 파트너 포켓몬 체크
     if (currentUser.partnerPokemon && currentUser.partnerPokemon.uniqueId === uniqueId) {
       alert('💖 파트너 포켓몬은 방생할 수 없습니다!');
       return;
@@ -147,138 +138,190 @@ const usePokemonManagement = (
   };
 
   // 파트너 설정
-const setPartnerPokemon = (uniqueId) => {
-  if (!currentUser) return;
-  
-  // ⭐ null을 전달받으면 파트너 해제
-  if (uniqueId === null) {
-    if (!currentUser.partnerPokemon) {
-      alert('설정된 파트너 포켓몬이 없습니다.');
+  const setPartnerPokemon = (uniqueId) => {
+    if (!currentUser) return;
+    
+    if (uniqueId === null) {
+      if (!currentUser.partnerPokemon) {
+        alert('설정된 파트너 포켓몬이 없습니다.');
+        return;
+      }
+      
+      const unsetPartner = { ...currentUser.partnerPokemon, isPartner: false };
+      const party = currentUser.caughtPokemon.slice(0, 6);
+      const box = currentUser.caughtPokemon.slice(6);
+      
+      let emptySlotIndex = -1;
+      for (let i = 0; i < 6; i++) {
+        if (party[i] === null) {
+          emptySlotIndex = i;
+          break;
+        }
+      }
+      
+      let finalCaughtPokemon;
+      if (emptySlotIndex !== -1) {
+        party[emptySlotIndex] = unsetPartner;
+        finalCaughtPokemon = [...party, ...box];
+      } else {
+        finalCaughtPokemon = [...party, ...box, unsetPartner];
+      }
+      
+      updateCurrentUser({ 
+        partnerPokemon: null,
+        caughtPokemon: finalCaughtPokemon
+      });
+      
+      alert('파트너 설정이 해제되었습니다.');
       return;
     }
     
-    const unsetPartner = { ...currentUser.partnerPokemon, isPartner: false };
-    const party = currentUser.caughtPokemon.slice(0, 6);
-    const box = currentUser.caughtPokemon.slice(6);
-    
-    let emptySlotIndex = -1;
-    for (let i = 0; i < 6; i++) {
-      if (party[i] === null) {
-        emptySlotIndex = i;
-        break;
-      }
+    const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
+    if (!pokemon) {
+      alert('포켓몬을 찾을 수 없습니다!');
+      return;
     }
     
-    let finalCaughtPokemon;
-    if (emptySlotIndex !== -1) {
-      party[emptySlotIndex] = unsetPartner;
-      finalCaughtPokemon = [...party, ...box];
-    } else {
-      finalCaughtPokemon = [...party, ...box, unsetPartner];
+    const newPartnerPokemon = { ...pokemon, isPartner: true };
+    const newCaughtPokemon = currentUser.caughtPokemon.filter(p => p && p.uniqueId !== uniqueId);
+    
+    let finalCaughtPokemon = newCaughtPokemon;
+    
+    if (currentUser.partnerPokemon) {
+      const oldPartner = { ...currentUser.partnerPokemon, isPartner: false };
+      const party = finalCaughtPokemon.slice(0, 6);
+      const box = finalCaughtPokemon.slice(6);
+      
+      let emptySlotIndex = -1;
+      for (let i = 0; i < 6; i++) {
+        if (party[i] === null) {
+          emptySlotIndex = i;
+          break;
+        }
+      }
+      
+      if (emptySlotIndex !== -1) {
+        party[emptySlotIndex] = oldPartner;
+        finalCaughtPokemon = [...party, ...box];
+      } else {
+        finalCaughtPokemon = [...party, ...box, oldPartner];
+      }
     }
     
     updateCurrentUser({ 
-      partnerPokemon: null,
+      partnerPokemon: newPartnerPokemon,
       caughtPokemon: finalCaughtPokemon
     });
     
-    alert('파트너 설정이 해제되었습니다.');
-    return;
-  }
-  
-  // ⭐ 파트너 설정
-  const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
-  if (!pokemon) {
-    alert('포켓몬을 찾을 수 없습니다!');
-    return;
-  }
-  
-  const newPartnerPokemon = { ...pokemon, isPartner: true };
-  const newCaughtPokemon = currentUser.caughtPokemon.filter(p => p && p.uniqueId !== uniqueId);
-  
-  let finalCaughtPokemon = newCaughtPokemon;
-  
-  // 기존 파트너가 있으면 엔트리로 돌려보내기
-  if (currentUser.partnerPokemon) {
-    const oldPartner = { ...currentUser.partnerPokemon, isPartner: false };
-    const party = finalCaughtPokemon.slice(0, 6);
-    const box = finalCaughtPokemon.slice(6);
+    alert('💖 파트너 포켓몬으로 설정되었습니다!');
+  };
+
+  // 레벨업 (이상한사탕 + 진화 체크 통합)
+  const useRareCandy = async (uniqueId, onLevelUp) => {
+    if (!currentUser) return;
     
-    let emptySlotIndex = -1;
-    for (let i = 0; i < 6; i++) {
-      if (party[i] === null) {
-        emptySlotIndex = i;
-        break;
-      }
+    const candyItem = currentUser.inventory.find(item => item.name === '이상한사탕');
+    if (!candyItem || candyItem.count <= 0) { 
+      alert('이상한사탕이 없습니다!'); 
+      return; 
     }
     
-    if (emptySlotIndex !== -1) {
-      party[emptySlotIndex] = oldPartner;
-      finalCaughtPokemon = [...party, ...box];
+    let pokemon;
+    if (currentUser.partnerPokemon?.uniqueId === uniqueId) {
+      pokemon = currentUser.partnerPokemon;
     } else {
-      finalCaughtPokemon = [...party, ...box, oldPartner];
+      pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
     }
-  }
-  
-  updateCurrentUser({ 
-    partnerPokemon: newPartnerPokemon,
-    caughtPokemon: finalCaughtPokemon
-  });
-  
-  alert('💖 파트너 포켓몬으로 설정되었습니다!');
-};
-
-  // 레벨업// usePokemonManagement.js의 useRareCandy 함수를 이렇게 수정하세요
-
-const useRareCandy = async (uniqueId, onLevelUp) => {
-  if (!currentUser) return;
-  
-  const candyItem = currentUser.inventory.find(item => item.name === '이상한사탕');
-  if (!candyItem || candyItem.count <= 0) { 
-    alert('이상한사탕이 없습니다!'); 
-    return; 
-  }
-  
-  // 파트너 포켓몬 체크
-  let pokemon;
-  if (currentUser.partnerPokemon?.uniqueId === uniqueId) {
-    pokemon = currentUser.partnerPokemon;
-  } else {
-    pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
-  }
-  
-  if (!pokemon) return;
-  
-  // ⭐ 레벨 제한 확인
-  try {
-    const { ref, get } = await import('firebase/database');
-    const { database } = await import('../firebase');
     
-    const levelRestrictionRef = ref(database, 'gameData/levelRestriction');
-    const snapshot = await get(levelRestrictionRef);
+    if (!pokemon) return;
     
-    if (snapshot.exists()) {
-      const restriction = snapshot.val();
+    // 레벨 제한 확인
+    try {
+      const levelRestrictionRef = ref(database, 'gameData/levelRestriction');
+      const snapshot = await get(levelRestrictionRef);
       
-      if (restriction.enabled) {
-        const { maxLevel } = restriction;
+      if (snapshot.exists()) {
+        const restriction = snapshot.val();
         
-        // 이미 최대 레벨이면 사용 불가
-        if (pokemon.level >= maxLevel) {
-          alert(`⚠️ 레벨 제한으로 인해 더 이상 레벨업할 수 없습니다!\n현재 최대 레벨: ${maxLevel}`);
-          return;
+        if (restriction.enabled) {
+          const { maxLevel } = restriction;
+          
+          if (pokemon.level >= maxLevel) {
+            alert(`⚠️ 레벨 제한으로 인해 더 이상 레벨업할 수 없습니다!\n현재 최대 레벨: ${maxLevel}`);
+            return;
+          }
         }
       }
+    } catch (error) {
+      console.error('레벨 제한 확인 실패:', error);
     }
-  } catch (error) {
-    console.error('레벨 제한 확인 실패:', error);
-  }
-  
-  const newLevel = pokemon.level + 1;
-  
-  // 파트너 포켓몬 업데이트
-  if (currentUser.partnerPokemon?.uniqueId === uniqueId) {
-    const updatedPartner = { ...pokemon, level: newLevel };
+    
+    const newLevel = pokemon.level + 1;
+    
+    // 파트너 포켓몬 업데이트
+    if (currentUser.partnerPokemon?.uniqueId === uniqueId) {
+      const updatedPartner = { ...pokemon, level: newLevel };
+      
+      const newInventory = currentUser.isSuperAdmin
+        ? currentUser.inventory
+        : currentUser.inventory.map(item =>
+            item.name === '이상한사탕' 
+              ? { ...item, count: item.count - 1 }
+              : item
+          ).filter(item => item.count > 0);
+      
+      updateCurrentUser({ 
+        partnerPokemon: updatedPartner,
+        inventory: newInventory 
+      });
+      
+      alert(`${pokemon.nickname || pokemon.name}의 레벨이 올랐다!\nLv.${pokemon.level} → Lv.${newLevel}`);
+      
+      // 진화 체크 및 기술 배우기
+      setTimeout(async () => {
+        try {
+          const memberRef = ref(database, `members/${currentUser.id}`);
+          const snapshot = await get(memberRef);
+          
+          if (snapshot.exists()) {
+            const latestUser = snapshot.val();
+            const updatedPokemon = latestUser.partnerPokemon;
+            
+            if (updatedPokemon && checkEvolutionOnLevelUp) {
+              const shouldShowEvolutionModal = checkEvolutionOnLevelUp(updatedPokemon);
+              
+              if (shouldShowEvolutionModal) {
+                console.log('✨ 진화 모달 표시됨! 기술 배우기는 건너뜀');
+                return;
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Firebase 조회 실패:', error);
+        }
+        
+        if (onLevelUp && pokemonLearnsets && allMoves) {
+          const learnset = pokemonLearnsets[pokemon.number];
+          if (learnset) {
+            const newMoves = learnset
+              .filter(entry => entry.level === newLevel)
+              .map(entry => allMoves.find(move => move.id === entry.moveId))
+              .filter(Boolean);
+            
+            if (newMoves.length > 0) {
+              onLevelUp(uniqueId, newLevel, newMoves);
+            }
+          }
+        }
+      }, 100);
+      
+      return;
+    }
+    
+    // 일반 포켓몬 업데이트
+    const newCaughtPokemon = currentUser.caughtPokemon.map(p => 
+      p && p.uniqueId === uniqueId ? { ...p, level: newLevel } : p
+    );
     
     const newInventory = currentUser.isSuperAdmin
       ? currentUser.inventory
@@ -289,74 +332,50 @@ const useRareCandy = async (uniqueId, onLevelUp) => {
         ).filter(item => item.count > 0);
     
     updateCurrentUser({ 
-      partnerPokemon: updatedPartner,
+      caughtPokemon: newCaughtPokemon, 
       inventory: newInventory 
     });
     
     alert(`${pokemon.nickname || pokemon.name}의 레벨이 올랐다!\nLv.${pokemon.level} → Lv.${newLevel}`);
     
-    if (onLevelUp && pokemonLearnsets && allMoves) {
-      const learnset = pokemonLearnsets[pokemon.number];
-      if (learnset) {
-        const newMoves = learnset
-          .filter(entry => entry.level === newLevel)
-          .map(entry => allMoves.find(move => move.id === entry.moveId))
-          .filter(Boolean);
+    // 진화 체크 및 기술 배우기
+    setTimeout(async () => {
+      try {
+        const memberRef = ref(database, `members/${currentUser.id}`);
+        const snapshot = await get(memberRef);
         
-        if (newMoves.length > 0) {
-          onLevelUp(uniqueId, newLevel, newMoves);
+        if (snapshot.exists()) {
+          const latestUser = snapshot.val();
+          const updatedPokemon = latestUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
+          
+          if (updatedPokemon && checkEvolutionOnLevelUp) {
+            const shouldShowEvolutionModal = checkEvolutionOnLevelUp(updatedPokemon);
+            
+            if (shouldShowEvolutionModal) {
+              console.log('✨ 진화 모달 표시됨! 기술 배우기는 건너뜀');
+              return;
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Firebase 조회 실패:', error);
+      }
+      
+      if (onLevelUp && pokemonLearnsets && allMoves) {
+        const learnset = pokemonLearnsets[pokemon.number.toString()];
+        if (learnset && learnset.levelUpMoves) {
+          const newMoves = learnset.levelUpMoves
+            .filter(entry => entry.level === newLevel)
+            .map(entry => allMoves.find(move => move.id === entry.moveId))
+            .filter(Boolean);
+          
+          if (newMoves.length > 0) {
+            onLevelUp(uniqueId, newLevel, newMoves);
+          }
         }
       }
-    }
-    return;
-  }
-  
-  // 일반 포켓몬 업데이트
-  const newCaughtPokemon = currentUser.caughtPokemon.map(p => 
-    p && p.uniqueId === uniqueId ? { ...p, level: newLevel } : p
-  );
-  
-  const newInventory = currentUser.isSuperAdmin
-    ? currentUser.inventory
-    : currentUser.inventory.map(item =>
-        item.name === '이상한사탕' 
-          ? { ...item, count: item.count - 1 }
-          : item
-      ).filter(item => item.count > 0);
-  
-  updateCurrentUser({ 
-    caughtPokemon: newCaughtPokemon, 
-    inventory: newInventory 
-  });
-  
-  alert(`${pokemon.nickname || pokemon.name}의 레벨이 올랐다!\nLv.${pokemon.level} → Lv.${newLevel}`);
-  
-  if (onLevelUp && pokemonLearnsets && allMoves) {
-    const learnset = pokemonLearnsets[pokemon.number.toString()];
-    if (learnset && learnset.levelUpMoves) {
-      const newMoves = learnset.levelUpMoves
-        .filter(entry => entry.level === newLevel)
-        .map(entry => allMoves.find(move => move.id === entry.moveId))
-        .filter(Boolean);
-      
-      if (newMoves.length > 0) {
-        onLevelUp(uniqueId, newLevel, newMoves);
-      }
-    }
-  }
-  
-  // 진화 체크
-  if (checkEvolutionOnLevelUp) {
-    const evolutionResult = checkEvolutionOnLevelUp(
-      newCaughtPokemon.find(p => p && p.uniqueId === uniqueId) || 
-      (currentUser.partnerPokemon?.uniqueId === uniqueId ? currentUser.partnerPokemon : null)
-    );
-    
-    if (evolutionResult) {
-      console.log('레벨업 진화 가능:', evolutionResult);
-    }
-  }
-};
+    }, 100);
+  };
 
   // 닉네임 변경
   const updatePokemonNickname = (uniqueId, nickname) => {
@@ -370,7 +389,6 @@ const useRareCandy = async (uniqueId, onLevelUp) => {
   // 아이템 주기
   const giveItemToPokemon = (pokemonUniqueId, itemName, allItems) => {
     if (!currentUser || !currentUser.inventory || !currentUser.caughtPokemon) {
-      console.error('❌ currentUser 또는 데이터가 없습니다:', currentUser);
       alert('오류가 발생했습니다. 페이지를 새로고침해주세요.');
       return false;
     }
@@ -459,9 +477,6 @@ const useRareCandy = async (uniqueId, onLevelUp) => {
   const reorderPartyPokemon = (reorderedParty) => {
     if (!currentUser) return;
     
-    console.log('🔄 reorderPartyPokemon 호출');
-    console.log('📦 새로운 엔트리 순서:', reorderedParty.map(p => p?.name || 'null'));
-    
     const box = currentUser.caughtPokemon.slice(6);
     const partyWithNulls = [...reorderedParty];
     while (partyWithNulls.length < 6) {
@@ -469,9 +484,40 @@ const useRareCandy = async (uniqueId, onLevelUp) => {
     }
     
     const finalPokemon = [...partyWithNulls.slice(0, 6), ...box];
-    console.log('✅ 최종 배열:', finalPokemon.map((p, i) => `[${i}] ${p?.name || 'null'}`));
-    
     updateCurrentUser({ caughtPokemon: finalPokemon });
+  };
+
+  // 노력치 증가
+  const increaseEffort = (uniqueId, stat, amount) => {
+    if (!currentUser) return;
+    
+    const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
+    if (!pokemon) return;
+    
+    const currentEffort = pokemon.effort || {
+      hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0
+    };
+    
+    const totalEV = Object.values(currentEffort).reduce((sum, v) => sum + v, 0);
+    const remaining = 510 - totalEV;
+    const maxForStat = 252 - (currentEffort[stat] || 0);
+    const actualIncrease = Math.min(amount, remaining, maxForStat);
+    
+    if (actualIncrease <= 0) {
+      alert('더 이상 노력치를 올릴 수 없습니다!');
+      return;
+    }
+    
+    const newEffort = {
+      ...currentEffort,
+      [stat]: (currentEffort[stat] || 0) + actualIncrease
+    };
+    
+    const newCaughtPokemon = currentUser.caughtPokemon.map(p =>
+      p && p.uniqueId === uniqueId ? { ...p, effort: newEffort } : p
+    );
+    
+    updateCurrentUser({ caughtPokemon: newCaughtPokemon });
   };
 
   return {
@@ -483,7 +529,8 @@ const useRareCandy = async (uniqueId, onLevelUp) => {
     updatePokemonNickname,
     giveItemToPokemon,
     takeItemFromPokemon,
-    reorderPartyPokemon
+    reorderPartyPokemon,
+    increaseEffort
   };
 };
 

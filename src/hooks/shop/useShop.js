@@ -1,9 +1,9 @@
-// src/hooks/useShop.js - randomBoxes 추가 버전
+// src/hooks/shop/useShop.js - handlePurchase 추가
 
 import { useState, useEffect } from 'react';
 import { ref, onValue, set } from 'firebase/database';
-import { database } from '../firebase';
-import { getItemPocket, ITEM_POCKETS } from '../utils/itemUtils';
+import { database } from '../../firebase';
+import { getItemPocket } from '../../utils/itemUtils';
 
 // 현재 주차 계산
 const getWeekKey = (date) => {
@@ -83,7 +83,7 @@ const getDefaultInitialDailyItems = () => ({
   ]
 });
 
-// ⭐ 기본 랜덤박스 설정
+// 기본 랜덤박스 설정
 const getDefaultRandomBoxes = () => ([
   { id: 1, name: '브론즈 박스', price: 1000, enabled: false, items: [] },
   { id: 2, name: '실버 박스', price: 3000, enabled: false, items: [] },
@@ -98,7 +98,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
     rareDailyItem: null,
     rareItemPool: [],
     gachaBall: { enabled: false, balls: [] },
-    randomBoxes: getDefaultRandomBoxes(), // ⭐ 추가
+    randomBoxes: getDefaultRandomBoxes(),
     refreshInterval: 86400000,
     lastRefresh: Date.now(),
     lastWeekReset: null
@@ -106,7 +106,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log('🔄 useShop useEffect 실행');
+    console.log('📄 useShop useEffect 실행');
     console.log('📦 allItems:', allItems?.length || 0, '개');
     
     if (!allItems || allItems.length === 0) {
@@ -121,7 +121,6 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
         const loadedData = snapshot.val();
         const currentWeek = getWeekKey(new Date());
         
-        // ⭐ randomBoxes 초기화 체크
         if (!loadedData.randomBoxes) {
           loadedData.randomBoxes = getDefaultRandomBoxes();
           await set(shopRef, loadedData);
@@ -135,7 +134,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
         const needsWeeklyReset = !loadedData.lastWeekReset || loadedData.lastWeekReset !== currentWeek;
         
         if (needsWeeklyReset) {
-          console.log('🔄 새로운 주 감지! 요일별 아이템 재고 리셋');
+          console.log('📄 새로운 주 감지! 요일별 아이템 재고 리셋');
           
           const resetDailyItems = {};
           
@@ -186,7 +185,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
             rareDailyItem: loadedData.rareDailyItem || null,
             rareItemPool: loadedData.rareItemPool || [],
             gachaBall: loadedData.gachaBall || { enabled: false, balls: [] },
-            randomBoxes: loadedData.randomBoxes || getDefaultRandomBoxes(), // ⭐ 추가
+            randomBoxes: loadedData.randomBoxes || getDefaultRandomBoxes(),
             refreshInterval: loadedData.refreshInterval || 86400000,
             lastRefresh: loadedData.lastRefresh || Date.now(),
             lastWeekReset: loadedData.lastWeekReset || currentWeek
@@ -196,7 +195,6 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
         }
         
       } else {
-        // 초기 데이터 생성
         console.log('🔧 초기 상점 데이터 생성 중...');
         
         const currentWeek = getWeekKey(new Date());
@@ -216,7 +214,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
           rareDailyItem: null,
           rareItemPool: [],
           gachaBall: { enabled: false, balls: [] },
-          randomBoxes: getDefaultRandomBoxes(), // ⭐ 추가
+          randomBoxes: getDefaultRandomBoxes(),
           refreshInterval: 86400000,
           lastRefresh: Date.now(),
           lastWeekReset: currentWeek
@@ -354,14 +352,12 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
     return true;
   };
 
-  // ⭐ 랜덤박스 구매 함수
+  // 랜덤박스 구매
   const buyRandomBox = (box, result) => {
     if (!currentUser) return false;
     
-    // 골드 차감
     const newMoney = currentUser.money - box.price;
     
-    // 아이템 추가
     const existingItem = currentUser.inventory.find(
       i => i.itemId === result.itemId || i.name === result.name
     );
@@ -398,6 +394,170 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
     return true;
   };
 
+  // 아이템 구매
+  const handlePurchase = async (item, quantity) => {
+    if (!currentUser) return false;
+    
+    console.log('🛒 구매 시도 - 전체 아이템 정보:', item);
+    
+    let itemData;
+    if (typeof item === 'string' || typeof item === 'number') {
+      itemData = allItems.find(i => i.id === item);
+      if (!itemData) {
+        alert('아이템 정보를 찾을 수 없습니다!');
+        return false;
+      }
+    } else {
+      itemData = item;
+    }
+    
+    const itemCost = itemData.cost ?? itemData.price ?? itemData.buyPrice ?? 0;
+    const totalCost = itemCost * quantity;
+    
+    console.log('💰 최종 가격:', itemCost, '총액:', totalCost);
+    
+    if (totalCost <= 0) {
+      console.error('❌ 가격이 0 이하입니다! 아이템 정보:', itemData);
+      alert('아이템 가격 정보가 올바르지 않습니다!');
+      return false;
+    }
+    
+    if (currentUser.money < totalCost) {
+      alert('돈이 부족합니다!');
+      return false;
+    }
+    
+    // 재고 체크
+    const itemStock = itemData.stock ?? 99;
+    if (itemStock !== 99 && itemStock < quantity) {
+      alert(`재고가 부족합니다! (남은 재고: ${itemStock}개)`);
+      return false;
+    }
+    
+    // 희귀 아이템 구매 이력 체크
+    const itemType = itemData.type;
+    const itemId = itemData.itemId ?? itemData.id;
+    
+    if (itemType === 'rare') {
+      const purchaseHistory = currentUser.purchaseHistory || {};
+      const today = new Date().toISOString().split('T')[0];
+      const todayPurchases = purchaseHistory[today] || {};
+      
+      const alreadyPurchased = todayPurchases[itemId] || 0;
+      if (alreadyPurchased >= 1) {
+        alert('오늘의 희귀 아이템은 1인당 1개만 구매할 수 있습니다!');
+        return false;
+      }
+      
+      if (quantity > 1) {
+        alert('희귀 아이템은 한 번에 1개만 구매할 수 있습니다!');
+        return false;
+      }
+    }
+    
+    // 인벤토리에 아이템 추가
+    const existingItem = currentUser.inventory.find(
+      i => i.itemId === itemData.id || i.name === itemData.name
+    );
+    
+    const newInventory = existingItem
+      ? currentUser.inventory.map(i =>
+          (i.itemId === itemData.id || i.name === itemData.name)
+            ? { ...i, count: i.count + quantity }
+            : i
+        )
+      : [
+          ...currentUser.inventory,
+          {
+            itemId: itemData.id,
+            name: itemData.name,
+            nameEn: itemData.nameEn,
+            count: quantity,
+            imageUrl: itemData.spriteUrl || itemData.imageUrl,
+            cost: itemCost,
+            sellPrice: itemData.sellPrice,
+            category: itemData.category,
+            pocket: itemData.pocket,
+            effect: itemData.effect,
+            friendshipBoost: itemData.friendshipBoost,
+            ivBoost: itemData.ivBoost,
+            evBoost: itemData.evBoost,
+            conditionBoost: itemData.conditionBoost,
+            specialEffect: itemData.specialEffect
+          }
+        ];
+    
+    const newMoney = currentUser.money - totalCost;
+    
+    // 상점 재고 감소 처리
+    try {
+      const today = new Date();
+      const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      const todayName = dayNames[today.getDay()];
+      
+      let updatedShopData = JSON.parse(JSON.stringify(shopData));
+      let needShopUpdate = false;
+      
+      if (itemType === 'rare' && updatedShopData.rareDailyItem?.itemId === itemId) {
+        const purchaseHistory = currentUser.purchaseHistory || {};
+        const todayStr = new Date().toISOString().split('T')[0];
+        const todayPurchases = purchaseHistory[todayStr] || {};
+        todayPurchases[itemId] = (todayPurchases[itemId] || 0) + quantity;
+        purchaseHistory[todayStr] = todayPurchases;
+        
+        if (updatedShopData.rareDailyItem.stock !== 99) {
+          updatedShopData.rareDailyItem = {
+            ...updatedShopData.rareDailyItem,
+            stock: Math.max(0, updatedShopData.rareDailyItem.stock - quantity)
+          };
+          needShopUpdate = true;
+        }
+        
+        updateCurrentUser({
+          inventory: newInventory,
+          money: newMoney,
+          purchaseHistory: purchaseHistory
+        });
+        
+      } else if (itemType === 'daily') {
+        const dailyItems = updatedShopData.dailyItems?.[todayName] || [];
+        updatedShopData.dailyItems[todayName] = dailyItems.map(i => 
+          i.itemId === itemId && i.stock !== 99
+            ? { ...i, stock: Math.max(0, i.stock - quantity) }
+            : i
+        );
+        needShopUpdate = true;
+        
+      } else if (itemType === 'permanent') {
+        updatedShopData.permanentItems = (updatedShopData.permanentItems || []).map(i =>
+          i.itemId === itemId && i.stock !== 99
+            ? { ...i, stock: Math.max(0, i.stock - quantity) }
+            : i
+        );
+        needShopUpdate = true;
+      }
+      
+      if (needShopUpdate) {
+        await updateShopData(updatedShopData);
+      }
+      
+      if (itemType !== 'rare') {
+        updateCurrentUser({
+          inventory: newInventory,
+          money: newMoney
+        });
+      }
+      
+      alert(`${itemData.name} ${quantity}개를 구매했습니다!`);
+      return true;
+      
+    } catch (error) {
+      console.error('❌ 재고 업데이트 실패:', error);
+      alert('구매 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+      return false;
+    }
+  };
+
   return {
     shopData,
     updateShopData,
@@ -406,7 +566,8 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
     toggleItemPersistent,
     updateInitialDailyItems,
     sellItem,
-    buyRandomBox, // ⭐ 추가
+    buyRandomBox,
+    handlePurchase, // 추가
     isLoading
   };
 };

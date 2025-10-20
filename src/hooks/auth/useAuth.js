@@ -8,7 +8,7 @@ import {
   signOut,
   onAuthStateChanged 
 } from 'firebase/auth';
-import { auth, database } from '../firebase';
+import { auth, database } from '../../firebase';
 
 const ensurePartyPadding = (caughtPokemon) => {
   if (caughtPokemon && typeof caughtPokemon === 'object' && !Array.isArray(caughtPokemon)) {
