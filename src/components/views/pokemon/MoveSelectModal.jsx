@@ -38,10 +38,21 @@ export default function MoveSelectModal({
   );
 
   const learnableMovesIds = useMemo(() => {
-    const learnset = pokemonLearnsets[pokemon.number.toString()];
-    if (!learnset) return [];
-    return learnset.levelUpMoves.map(lm => lm.moveId);
-  }, [pokemon.number, pokemonLearnsets]);
+  const learnset = pokemonLearnsets[pokemon.number.toString()];
+  if (!learnset) return [];
+  
+  // 모든 배울 수 있는 기술 통합
+  const allLearnableMoves = [
+    ...(learnset.levelUpMoves?.map(lm => lm.moveId) || []),
+    ...(learnset.machineMoves || []),
+    ...(learnset.eggMoves || []),
+    ...(learnset.tutorMoves || [])
+  ];
+  
+  // 중복 제거
+  return [...new Set(allLearnableMoves)];
+}, [pokemon.number, pokemonLearnsets]);
+
 
   const filteredMoves = useMemo(() => {
     let moves = allMoves;

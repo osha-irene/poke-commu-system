@@ -272,7 +272,8 @@ export default function ShopAdminPanel({
       updatedShopData.gachaBall = { enabled: false, balls: [] };
     }
     updatedShopData.gachaBall.enabled = enabled;
-    
+	
+	   
     try {
       await onUpdateShop(updatedShopData);
       console.log('규토리볼 노출 상태 변경:', enabled);
@@ -280,6 +281,23 @@ export default function ShopAdminPanel({
       console.error('규토리볼 노출 상태 변경 실패:', error);
     }
   };
+  
+  	const handleToggleRareItem = async (enabled) => {
+		  let updatedShopData = JSON.parse(JSON.stringify(shopData));
+		  
+		  if (!updatedShopData.rareItemConfig) {
+			updatedShopData.rareItemConfig = { enabled: false };
+		  }
+		  
+		  updatedShopData.rareItemConfig.enabled = enabled;
+		  
+		  try {
+			await onUpdateShop(updatedShopData);
+			console.log('희귀템 노출 상태 변경:', enabled);
+		  } catch (error) {
+			console.error('희귀템 노출 상태 변경 실패:', error);
+		  }
+		};
 
   const handleAddGachaBall = async (item) => {
     let updatedShopData = JSON.parse(JSON.stringify(shopData));
@@ -1032,6 +1050,22 @@ export default function ShopAdminPanel({
                       현재 희귀 아이템 풀 ({(shopData.rareItemPool || []).length}개)
                     </h4>
                   </div>
+				  
+				   <div className="bg-white rounded-lg p-3 border-2 border-purple-200">
+					  <div className="flex items-center justify-between">
+						<span className="font-bold text-sm text-gray-800">상점 노출</span>
+						<label className="relative inline-flex items-center cursor-pointer">
+						  <input
+							type="checkbox"
+							checked={shopData.rareItemConfig?.enabled || false}
+							onChange={(e) => handleToggleRareItem(e.target.checked)}
+							className="sr-only peer"
+						  />
+						  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+						</label>
+					  </div>
+					</div>
+				
                   <div className="flex-1 overflow-y-auto p-4 space-y-2">
                     {(shopData.rareItemPool || []).length === 0 ? (
                       <div className="flex flex-col items-center justify-center h-full text-gray-400">

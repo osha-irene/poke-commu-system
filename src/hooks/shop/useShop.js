@@ -1,4 +1,4 @@
-// src/hooks/shop/useShop.js - handlePurchase 추가
+// src/hooks/shop/useShop.js - 완전한 최종 버전
 
 import { useState, useEffect } from 'react';
 import { ref, onValue, set } from 'firebase/database';
@@ -97,6 +97,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
     permanentItems: [],
     rareDailyItem: null,
     rareItemPool: [],
+    rareItemConfig: { enabled: false },
     gachaBall: { enabled: false, balls: [] },
     randomBoxes: getDefaultRandomBoxes(),
     refreshInterval: 86400000,
@@ -106,7 +107,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log('📄 useShop useEffect 실행');
+    console.log('🔄 useShop useEffect 실행');
     console.log('📦 allItems:', allItems?.length || 0, '개');
     
     if (!allItems || allItems.length === 0) {
@@ -121,20 +122,41 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
         const loadedData = snapshot.val();
         const currentWeek = getWeekKey(new Date());
         
+        // 기본값 설정
         if (!loadedData.randomBoxes) {
           loadedData.randomBoxes = getDefaultRandomBoxes();
-          await set(shopRef, loadedData);
         }
-        
         if (!loadedData.initialDailyItems) {
           loadedData.initialDailyItems = getDefaultInitialDailyItems();
+        }
+        if (!loadedData.rareItemConfig) {
+          loadedData.rareItemConfig = { enabled: false };
+        }
+        
+        // ⭐ 희귀템 자동 추첨 체크
+        const today = new Date().toISOString().split('T')[0];
+        const needsRareItemRefresh = loadedData.rareDailyItem?.lastRefresh !== today;
+        
+        if (needsRareItemRefresh && loadedData.rareItemPool && loadedData.rareItemPool.length > 0) {
+          console.log('🎲 희귀템 자동 추첨 실행');
+          const randomIndex = Math.floor(Math.random() * loadedData.rareItemPool.length);
+          const selectedRareItem = loadedData.rareItemPool[randomIndex];
+          
+          loadedData.rareDailyItem = {
+            itemId: selectedRareItem.itemId,
+            price: selectedRareItem.price,
+            stock: 1,
+            lastRefresh: today
+          };
+          
           await set(shopRef, loadedData);
+          console.log('✅ 오늘의 희귀템 추첨 완료:', allItems.find(i => i.id === selectedRareItem.itemId)?.name);
         }
         
         const needsWeeklyReset = !loadedData.lastWeekReset || loadedData.lastWeekReset !== currentWeek;
         
         if (needsWeeklyReset) {
-          console.log('📄 새로운 주 감지! 요일별 아이템 재고 리셋');
+          console.log('🔄 새로운 주 감지! 요일별 아이템 재고 리셋');
           
           const resetDailyItems = {};
           
@@ -184,6 +206,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
             permanentItems: loadedData.permanentItems || [],
             rareDailyItem: loadedData.rareDailyItem || null,
             rareItemPool: loadedData.rareItemPool || [],
+            rareItemConfig: loadedData.rareItemConfig || { enabled: false },
             gachaBall: loadedData.gachaBall || { enabled: false, balls: [] },
             randomBoxes: loadedData.randomBoxes || getDefaultRandomBoxes(),
             refreshInterval: loadedData.refreshInterval || 86400000,
@@ -213,6 +236,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
           permanentItems: [],
           rareDailyItem: null,
           rareItemPool: [],
+          rareItemConfig: { enabled: false },
           gachaBall: { enabled: false, balls: [] },
           randomBoxes: getDefaultRandomBoxes(),
           refreshInterval: 86400000,
@@ -242,6 +266,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
     }
   };
 
+  // ⭐ 요일별 아이템 추가
   const addDailyItem = async (day, item, isPersistent = false) => {
     const newItem = {
       ...item,
@@ -260,6 +285,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
     console.log(`✅ ${day}에 아이템 추가 (persistent: ${isPersistent})`);
   };
 
+  // ⭐ isPersistent 토글 (itemId로 수정)
   const toggleItemPersistent = async (day, itemId) => {
     const updatedItems = (shopData.dailyItems[day] || []).map(item => 
       item.itemId === itemId
@@ -278,6 +304,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
     await updateShopData(updatedShopData);
   };
 
+  // ⭐ 요일별 아이템 삭제
   const removeDailyItem = async (day, itemIndex) => {
     const updatedItems = (shopData.dailyItems[day] || []).filter((_, idx) => idx !== itemIndex);
     
@@ -567,7 +594,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
     updateInitialDailyItems,
     sellItem,
     buyRandomBox,
-    handlePurchase, // 추가
+    handlePurchase,
     isLoading
   };
 };

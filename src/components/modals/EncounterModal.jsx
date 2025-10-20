@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PokemonPreviewInfo from '../views/pokemon/PokemonPreviewInfo';
 
 export default function EncounterModal({ 
   pokemon, 
@@ -415,7 +416,7 @@ const pokemonSpriteUrl = pokemon.isShiny
 					</p>
 				  )}
 				  <p className="text-xs text-gray-600 mt-1">
-					{pokemon.type} 타입
+					 <PokemonPreviewInfo pokemon={pokemon} />
 					{escapeAttempts > 0 && (
 					  <span className="ml-2 text-orange-600 font-semibold">
 						| 포획 실패 {escapeAttempts}회
@@ -423,6 +424,7 @@ const pokemonSpriteUrl = pokemon.isShiny
 					)}
 				  </p>
 				</div>
+				
 
               <div className="bg-white rounded-lg border-4 border-gray-800 p-4">
                 <div className="flex items-center justify-between mb-3">

@@ -81,21 +81,36 @@ function MemberPokemonTab({
 
   // 지급용 기술 목록
   const giveAvailableMoves = useMemo(() => {
-    if (!giveData.selectedPokemon) return [];
-    const learnset = pokemonLearnsets[giveData.selectedPokemon.number?.toString()];
-    if (!learnset) return [];
-    
-    const levelMoves = learnset.levelUpMoves
-      ?.filter(entry => entry.level <= giveData.level)
-      .map(entry => allMoves.find(m => m.id === entry.moveId))
-      .filter(Boolean) || [];
-    
-    const machineMoves = learnset.machineMoves
-      ?.map(moveId => allMoves.find(m => m.id === moveId))
-      .filter(Boolean) || [];
-    
-    return [...new Map([...levelMoves, ...machineMoves].map(m => [m.id, m])).values()];
-  }, [giveData.selectedPokemon, giveData.level, pokemonLearnsets, allMoves]);
+  if (!giveData.selectedPokemon) return [];
+  const learnset = pokemonLearnsets[giveData.selectedPokemon.number?.toString()];
+  if (!learnset) return [];
+  
+  // 1. 레벨업 기술
+  const levelMoves = learnset.levelUpMoves
+    ?.filter(entry => entry.level <= giveData.level)
+    .map(entry => allMoves.find(m => m.id === entry.moveId))
+    .filter(Boolean) || [];
+  
+  // 2. 기술머신 (TM/HM)
+  const machineMoves = learnset.machineMoves
+    ?.map(moveId => allMoves.find(m => m.id === moveId))
+    .filter(Boolean) || [];
+  
+  // 3. 알 기술
+  const eggMoves = learnset.eggMoves
+    ?.map(moveId => allMoves.find(m => m.id === moveId))
+    .filter(Boolean) || [];
+  
+  // 4. 교배 기술
+  const tutorMoves = learnset.tutorMoves
+    ?.map(moveId => allMoves.find(m => m.id === moveId))
+    .filter(Boolean) || [];
+  
+  // 중복 제거 후 반환
+  return [...new Map([...levelMoves, ...machineMoves, ...eggMoves, ...tutorMoves].map(m => [m.id, m])).values()];
+}, [giveData.selectedPokemon, giveData.level, pokemonLearnsets, allMoves]);
+
+
 
   const getRandomMoves = () => {
   if (giveAvailableMoves.length === 0) {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingCart, Clock, Star, Coins, Sparkles, Calendar, Package, Zap } from 'lucide-react';
+import { ShoppingCart, Clock, Star, Coins, Sparkles, Calendar, Package, Zap, CircleDot } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
 import { getItemPocket } from '../../utils/itemUtils';
 import RandomBoxShop from './RandomBoxShop';
@@ -33,6 +33,16 @@ export default function ShopView() {
   };
   
   const currentWeek = getWeekKey(today);
+  
+  // ⭐ getItemDetails 함수를 먼저 선언
+  const getItemDetails = (shopItem) => {
+    const item = allItems.find(i => i.id === shopItem.itemId);
+    return {
+      ...item,
+      ...shopItem,
+      pocket: getItemPocket(item || shopItem)
+    };
+  };
   
   const getAllShopItems = () => {
     const items = [];
@@ -70,15 +80,6 @@ export default function ShopView() {
     return withoutRare.filter(item => item.type === filterType);
   };
   
-  const getItemDetails = (shopItem) => {
-    const item = allItems.find(i => i.id === shopItem.itemId);
-    return {
-      ...item,
-      ...shopItem,
-      pocket: getItemPocket(item || shopItem)
-    };
-  };
-  
   const getWeeklyPurchasedAmount = (itemId, dayName) => {
     const purchaseHistory = trainer?.weeklyPurchaseHistory || {};
     const weekData = purchaseHistory[currentWeek] || {};
@@ -89,6 +90,58 @@ export default function ShopView() {
   const handlePurchase = () => {
     if (!selectedItem) return;
     
+    // 규토리볼 가챠 구매
+    if (selectedItem.type === 'gachaball') {
+      if (trainer.money < 200) {
+        alert('돈이 부족합니다!');
+        return;
+      }
+
+      const gachaBalls = selectedItem.gachaBalls;
+      const randomBall = gachaBalls[Math.floor(Math.random() * gachaBalls.length)];
+      const wonItem = allItems.find(i => i.id === randomBall.itemId);
+      
+      if (!wonItem) {
+        alert('아이템을 찾을 수 없습니다!');
+        return;
+      }
+
+      const existingItem = trainer.inventory.find(
+        i => i.itemId === wonItem.id || i.name === wonItem.name
+      );
+
+      const newInventory = existingItem
+        ? trainer.inventory.map(i =>
+            (i.itemId === wonItem.id || i.name === wonItem.name)
+              ? { ...i, count: i.count + quantity }
+              : i
+          )
+        : [
+            ...trainer.inventory,
+            {
+              itemId: wonItem.id,
+              name: wonItem.name,
+              nameEn: wonItem.nameEn,
+              count: quantity,
+              imageUrl: wonItem.spriteUrl || wonItem.imageUrl,
+              cost: wonItem.cost || 0,
+              sellPrice: wonItem.sellPrice || 0,
+              category: wonItem.category,
+              pocket: wonItem.pocket
+            }
+          ];
+
+      updateCurrentUser({
+        money: trainer.money - (200 * quantity),
+        inventory: newInventory
+      });
+
+      alert(`규토리볼 ${quantity}회 뽑기 완료!\n${wonItem.name} ${quantity}개를 획득했습니다!`);
+      setSelectedItem(null);
+      setQuantity(1);
+      return;
+    }
+    
     const totalPrice = selectedItem.price * quantity;
     
     if (trainer.money < totalPrice) {
@@ -96,47 +149,16 @@ export default function ShopView() {
       return;
     }
     
-    if (selectedItem.type === 'rare') {
-      const purchaseHistory = trainer?.purchaseHistory || {};
-      const todayDate = new Date().toISOString().split('T')[0];
-      const todayPurchases = purchaseHistory[todayDate] || {};
-      const alreadyPurchased = (todayPurchases[selectedItem.itemId] || 0) >= 1;
-      
-      if (alreadyPurchased) {
-        alert('희귀 아이템은 하루에 1개만 구매할 수 있습니다!');
-        return;
-      }
+    const success = onPurchase(selectedItem, quantity);
+    if (success) {
+      setSelectedItem(null);
+      setQuantity(1);
     }
-    
-    if (selectedItem.type === 'daily') {
-      const weeklyPurchased = getWeeklyPurchasedAmount(selectedItem.itemId, todayName);
-      const remainingStock = selectedItem.stock - weeklyPurchased;
-      
-      if (remainingStock < quantity) {
-        alert(`이번 주 재고가 부족합니다! (남은 재고: ${remainingStock}개)`);
-        return;
-      }
-    }
-    
-    if (selectedItem.type === 'permanent' && selectedItem.stock !== 99 && selectedItem.stock < quantity) {
-      alert(`재고가 부족합니다! (남은 재고: ${selectedItem.stock}개)`);
-      return;
-    }
-    
-    const itemToSend = {
-      ...selectedItem,
-      cost: selectedItem.price,
-      itemId: selectedItem.itemId,
-      weekKey: selectedItem.type === 'daily' ? currentWeek : undefined,
-      dayName: selectedItem.type === 'daily' ? todayName : undefined
-    };
-    
-    onPurchase(itemToSend, quantity);
-    setSelectedItem(null);
-    setQuantity(1);
   };
 
   const buyRandomBox = (box, result) => {
+    if (!trainer) return false;
+    
     const newMoney = trainer.money - box.price;
     
     const existingItem = trainer.inventory.find(
@@ -171,7 +193,8 @@ export default function ShopView() {
       inventory: newInventory
     });
     
-    console.log(`${box.name} 구매 완료! ${result.name} x${result.count} 획득`);
+    alert(`${box.name}에서 ${result.name} x${result.count} 획득`);
+    return true;
   };
 
   const renderItemCard = (shopItem) => {
@@ -243,33 +266,33 @@ export default function ShopView() {
           </div>
         )}
         
-        <div className={`absolute -top-0 left-4 ${style.labelBg} text-white text-xs px-3 py-1 font-bold flex items-center gap-1 rounded-b-lg shadow-md z-10`}>
+        <div className={`absolute top-0 left-0 ${style.labelBg} text-white text-xs px-3 py-1 font-bold flex items-center gap-1 rounded-br-lg z-10`}>
           <Icon size={12} />
-          {style.label}
+          <span>{style.label}</span>
         </div>
         
-        <div className="p-4 pt-8">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-20 h-20 flex items-center justify-center bg-white rounded-lg">
+        <div className={`${style.bg} p-4 pt-8`}>
+          <div className="flex items-start gap-3 mb-3">
+            <div className="w-16 h-16 flex items-center justify-center flex-shrink-0 bg-white rounded-lg">
               <img 
                 src={item.spriteUrl} 
                 alt={item.name}
                 className="max-w-full max-h-full"
-                style={{ imageRendering: 'pixelated', transform: 'scale(1.8)' }}
+                style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
               />
             </div>
             <div className="flex-1 text-left">
-              <div className="font-bold text-lg text-gray-800">{item.name}</div>
-              <div className="text-sm text-gray-600 line-clamp-2">{item.effect?.replace(/\n/g, ' ')}</div>
+              <div className="font-bold text-sm text-gray-800 mb-1">{item.name}</div>
+              <div className="text-xs text-gray-600 line-clamp-2">{item.effect?.replace(/\n/g, ' ')}</div>
             </div>
           </div>
           
-          <div className="flex items-center justify-between pt-3 border-t-2 border-white">
-            <div className="flex items-center gap-1 text-yellow-600 font-bold text-xl">
-              <Coins size={20} />
+          <div className="flex items-center justify-between pt-3 border-t-2 border-gray-200">
+            <div className="flex items-center gap-1 text-yellow-600 font-bold">
+              <Coins size={16} />
               ₽{shopItem.price.toLocaleString()}
             </div>
-            <div className={`text-sm font-semibold ${
+            <div className={`text-xs font-semibold ${
               isSoldOut ? 'text-red-600' : 'text-gray-600'
             }`}>
               {shopItem.stock === 99 
@@ -308,89 +331,6 @@ export default function ShopView() {
           </div>
         </div>
       </div>
-
-      {/* 오늘의 희귀 아이템 */}
-      {shopData.rareDailyItem?.itemId && (
-        <div className="relative border-2 border-purple-300 bg-purple-50 rounded-lg overflow-hidden shadow-lg">
-          <div className="absolute -top-0 left-4 bg-purple-600 text-white text-sm px-4 py-1.5 font-bold flex items-center gap-2 rounded-b-lg shadow-md z-10">
-            <Star size={14} />
-            오늘의 희귀
-          </div>
-          
-          <div className="p-4 pt-10">
-            {(() => {
-              const item = getItemDetails(shopData.rareDailyItem);
-              if (!item) return null;
-              
-              const isSelected = selectedItem?.itemId === shopData.rareDailyItem.itemId;
-              
-              const purchaseHistory = trainer?.purchaseHistory || {};
-              const todayDate = new Date().toISOString().split('T')[0];
-              const todayPurchases = purchaseHistory[todayDate] || {};
-              const alreadyPurchased = (todayPurchases[shopData.rareDailyItem.itemId] || 0) >= 1;
-              const isSoldOut = alreadyPurchased;
-              
-              return (
-                <button
-                  onClick={() => {
-                    if (isSoldOut) return;
-                    setSelectedItem({
-                      ...item,
-                      type: 'rare',
-                      price: shopData.rareDailyItem.price,
-                      stock: shopData.rareDailyItem.stock || 1
-                    });
-                    setQuantity(1);
-                  }}
-                  disabled={isSoldOut}
-                  className={`w-full transition-all border-2 rounded-lg p-4 relative ${
-                    isSoldOut
-                      ? 'opacity-50 cursor-not-allowed grayscale border-gray-300 bg-gray-100'
-                      : isSelected 
-                        ? 'ring-4 ring-yellow-400 scale-105 border-white bg-white' 
-                        : 'hover:shadow-md hover:scale-102 border-white bg-white'
-                  }`}
-                >
-                  {isSoldOut && (
-                    <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center z-20 rounded-lg">
-                      <div className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg transform rotate-12 shadow-xl">
-                        구매완료
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="w-20 h-20 flex items-center justify-center flex-shrink-0 bg-purple-50 rounded-lg">
-                      <img 
-                        src={item.spriteUrl} 
-                        alt={item.name}
-                        className="max-w-full max-h-full"
-                        style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
-                      />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="font-bold text-lg text-gray-800 mb-1">{item.name}</div>
-                      <div className="text-sm text-gray-600 line-clamp-3">{item.effect?.replace(/\n/g, ' ')}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between pt-3 border-t-2 border-purple-100">
-                    <div className="flex items-center gap-1 text-yellow-600 font-bold text-xl">
-                      <Coins size={20} />
-                      ₽{shopData.rareDailyItem.price.toLocaleString()}
-                    </div>
-                    <div className={`text-sm font-semibold ${
-                      isSoldOut ? 'text-red-600' : 'text-gray-600'
-                    }`}>
-                      {isSoldOut ? '구매완료' : '1인 1개'}
-                    </div>
-                  </div>
-                </button>
-              );
-            })()}
-          </div>
-        </div>
-      )}
 
       {/* 랜덤박스 섹션 */}
       <RandomBoxShop 
@@ -442,15 +382,183 @@ export default function ShopView() {
         </div>
 
         <div className="p-6">
-          {filteredItems().length === 0 ? (
+          {/* 상품 그리드 */}
+          <div className="grid grid-cols-3 gap-4">
+            {/* 오늘의 희귀 아이템 */}
+            {(filterType === 'all' || filterType === 'rare') && 
+             shopData.rareItemConfig?.enabled && 
+             shopData.rareDailyItem?.itemId && 
+             (() => {
+              const item = getItemDetails(shopData.rareDailyItem);
+              if (!item) return null;
+              
+              const purchaseHistory = trainer?.purchaseHistory || {};
+              const todayDate = new Date().toISOString().split('T')[0];
+              const todayPurchases = purchaseHistory[todayDate] || {};
+              const alreadyPurchased = (todayPurchases[shopData.rareDailyItem.itemId] || 0) >= 1;
+              const isSoldOut = alreadyPurchased;
+              const isSelected = selectedItem?.itemId === shopData.rareDailyItem.itemId;
+              
+              return (
+                <button
+                  key="rare-item"
+                  onClick={() => {
+                    if (isSoldOut) return;
+                    setSelectedItem({
+                      ...item,
+                      type: 'rare',
+                      price: shopData.rareDailyItem.price,
+                      stock: shopData.rareDailyItem.stock || 1
+                    });
+                    setQuantity(1);
+                  }}
+                  disabled={isSoldOut}
+                  className={`relative border-2 rounded-lg overflow-hidden transition-all ${
+                    isSoldOut 
+                      ? 'opacity-50 cursor-not-allowed grayscale border-gray-300 bg-gray-100'
+                      : isSelected
+                        ? 'border-yellow-400 shadow-lg scale-105 bg-white'
+                        : 'border-gray-200 hover:border-gray-300 hover:shadow-md hover:scale-102 bg-white'
+                  }`}
+                >
+                  {isSoldOut && (
+                    <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center z-20">
+                      <div className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg transform rotate-12 shadow-xl">
+                        품절
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="absolute top-0 left-0 bg-purple-600 text-white text-xs px-3 py-1 font-bold flex items-center gap-1 rounded-br-lg z-10">
+                    <Star size={12} />
+                    <span>오늘의 희귀</span>
+                  </div>
+                  
+                  <div className="bg-purple-50 p-4 pt-8">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="w-16 h-16 flex items-center justify-center flex-shrink-0 bg-white rounded-lg">
+                        <img 
+                          src={item.spriteUrl} 
+                          alt={item.name}
+                          className="max-w-full max-h-full"
+                          style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
+                        />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <div className="font-bold text-sm text-gray-800 mb-1">{item.name}</div>
+                        <div className="text-xs text-gray-600 line-clamp-2">{item.effect?.replace(/\n/g, ' ')}</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between pt-3 border-t-2 border-gray-200">
+                      <div className="flex items-center gap-1 text-yellow-600 font-bold">
+                        <Coins size={16} />
+                        ₽{shopData.rareDailyItem.price.toLocaleString()}
+                      </div>
+                      <div className={`text-xs font-semibold ${isSoldOut ? 'text-red-600' : 'text-gray-600'}`}>
+                        {isSoldOut ? '구매완료' : '1인 1개'}
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              );
+            })()}
+
+            {/* 규토리볼 가챠 (2칸 차지, 바깥 박스로 감싸기) */}
+            {(filterType === 'all' || filterType === 'gacha') && (() => {
+              const gachaEnabled = shopData.gachaBall?.enabled;
+              const gachaBalls = shopData.gachaBall?.balls || [];
+              const hasEnoughBalls = gachaBalls.length === 2;
+              
+              if (!gachaEnabled || !hasEnoughBalls) return null;
+              
+              const isSelected = selectedItem?.type === 'gachaball';
+              
+              return (
+                <div
+                  key="gacha-ball-wrapper"
+                  className={`col-span-2 relative border-4 rounded-xl overflow-hidden transition-all ${
+                    isSelected
+                      ? 'border-yellow-400 shadow-xl'
+                      : 'border-orange-300 hover:border-orange-400 hover:shadow-lg'
+                  }`}
+                >
+                  <div className="absolute top-0 left-0 bg-orange-600 text-white text-xs px-3 py-1.5 font-bold flex items-center gap-1 rounded-br-lg z-10">
+                    <CircleDot size={12} />
+                    <span>규토리볼 가챠</span>
+                  </div>
+                  
+                  <div className="bg-orange-50 p-3 pt-8">
+                    <div className="grid grid-cols-2 gap-3">
+                      {gachaBalls.map((ballItem) => {
+                        const item = allItems.find(i => i.id === ballItem.itemId);
+                        if (!item) return null;
+
+                        return (
+                          <button
+                            key={ballItem.itemId}
+                            onClick={() => {
+                              setSelectedItem({
+                                type: 'gachaball',
+                                name: '규토리볼 가챠',
+                                price: 200,
+                                gachaBalls: gachaBalls,
+                                description: '랜덤으로 몬스터볼 1개를 획득합니다'
+                              });
+                              setQuantity(1);
+                            }}
+                            className="relative border-2 rounded-lg overflow-hidden transition-all bg-white border-gray-200 hover:border-gray-300 hover:shadow-md"
+                          >
+                            <div className="bg-white p-4">
+                              <div className="flex items-start gap-3 mb-3">
+                                <div className="w-16 h-16 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                  <img 
+                                    src={item.imageUrl} 
+                                    alt={item.name}
+                                    className="max-w-full max-h-full"
+                                    style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
+                                  />
+                                </div>
+                                <div className="flex-1 text-left">
+                                  <div className="font-bold text-sm text-gray-800 mb-1">{item.name}</div>
+                                  <div className="text-xs text-gray-600 line-clamp-2">{item.effect || item.description}</div>
+                                </div>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    
+                    <div className="mt-3 text-xs text-center py-2 bg-white rounded-lg border-2 border-orange-200 font-semibold text-orange-700">
+                      💫 2개 중 랜덤으로 1개를 획득합니다
+                    </div>
+                    
+                    <div className="mt-3 flex items-center justify-between px-4 py-3 bg-white rounded-lg border-2 border-orange-200">
+                      <div className="flex items-center gap-1 text-yellow-600 font-bold">
+                        <Coins size={16} />
+                        ₽200
+                      </div>
+                      <div className="text-xs font-semibold text-gray-600">
+                        무제한
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* 일반 아이템들 */}
+            {filteredItems().map(item => renderItemCard(item))}
+          </div>
+
+          {filteredItems().length === 0 && 
+           (!shopData.rareItemConfig?.enabled || !shopData.rareDailyItem?.itemId) && 
+           (!shopData.gachaBall?.enabled || shopData.gachaBall?.balls?.length !== 2) && (
             <div className="text-center py-16 text-gray-400">
               <ShoppingCart size={64} className="mx-auto mb-4 opacity-50" />
               <p className="text-lg">판매 중인 상품이 없습니다</p>
               <p className="text-sm mt-2">나중에 다시 확인해보세요</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-3 gap-4">
-              {filteredItems().map(item => renderItemCard(item))}
             </div>
           )}
         </div>
@@ -461,28 +569,70 @@ export default function ShopView() {
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t-4 border-indigo-600 shadow-2xl p-6 z-50">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center gap-6">
-              <div className="w-24 h-24 flex items-center justify-center bg-gray-100 rounded-lg">
-                <img 
-                  src={selectedItem.spriteUrl} 
-                  alt={selectedItem.name}
-                  className="max-w-full max-h-full"
-                  style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
-                />
-              </div>
-              
-              <div className="flex-1">
-                <h3 className="text-2xl font-bold mb-1">{selectedItem.name}</h3>
-                <p className="text-gray-600 text-sm mb-2">{selectedItem.effect?.replace(/\n/g, ' ')}</p>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 text-yellow-600 font-bold text-xl">
-                    <Coins size={20} />
-                    ₽{selectedItem.price.toLocaleString()} × {quantity}
+              {selectedItem.type === 'gachaball' ? (
+                <>
+                  <div className="w-24 h-24 bg-orange-50 rounded-lg p-2 border-2 border-orange-200">
+                    <div className="grid grid-cols-2 gap-1 h-full">
+                      {selectedItem.gachaBalls.map((ballItem) => {
+                        const item = allItems.find(i => i.id === ballItem.itemId);
+                        if (!item) return null;
+                        return (
+                          <div key={ballItem.itemId} className="bg-white rounded flex items-center justify-center">
+                            <img 
+                              src={item.imageUrl} 
+                              alt={item.name}
+                              className="max-w-full max-h-full"
+                              style={{ imageRendering: 'pixelated' }}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div className="text-2xl font-bold text-indigo-600">
-                    = ₽{(selectedItem.price * quantity).toLocaleString()}
+                  
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-bold mb-1 flex items-center gap-2">
+                      <CircleDot size={24} className="text-orange-600" />
+                      {selectedItem.name}
+                    </h3>
+                    <p className="text-gray-600 text-sm mb-2">{selectedItem.description}</p>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2 text-yellow-600 font-bold text-xl">
+                        <Coins size={20} />
+                        ₽{selectedItem.price.toLocaleString()} × {quantity}
+                      </div>
+                      <div className="text-2xl font-bold text-indigo-600">
+                        = ₽{(selectedItem.price * quantity).toLocaleString()}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-24 h-24 flex items-center justify-center bg-gray-100 rounded-lg">
+                    <img 
+                      src={selectedItem.spriteUrl} 
+                      alt={selectedItem.name}
+                      className="max-w-full max-h-full"
+                      style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
+                    />
+                  </div>
+                  
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-bold mb-1">{selectedItem.name}</h3>
+                    <p className="text-gray-600 text-sm mb-2">{selectedItem.effect?.replace(/\n/g, ' ')}</p>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2 text-yellow-600 font-bold text-xl">
+                        <Coins size={20} />
+                        ₽{selectedItem.price.toLocaleString()} × {quantity}
+                      </div>
+                      <div className="text-2xl font-bold text-indigo-600">
+                        = ₽{(selectedItem.price * quantity).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
               
               <div className="flex items-center gap-4">
                 <div className="flex flex-col gap-2">
@@ -501,7 +651,7 @@ export default function ShopView() {
                   onClick={handlePurchase}
                   className="bg-indigo-600 text-white px-8 py-4 rounded-lg hover:bg-indigo-700 font-bold text-lg shadow-lg transition-all hover:scale-105"
                 >
-                  구매하기
+                  {selectedItem.type === 'gachaball' ? '뽑기' : '구매하기'}
                 </button>
                 
                 <button

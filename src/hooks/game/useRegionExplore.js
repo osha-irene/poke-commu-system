@@ -1,6 +1,8 @@
 // src/hooks/game/useRegionExplore.js
 // 지역 탐험 시스템
 
+import { useIndividualValues } from './useIndividualValues';
+
 export const useRegionExplore = (
   currentUser,
   updateCurrentUser,
@@ -10,6 +12,7 @@ export const useRegionExplore = (
   usePokedex
 ) => {
   
+  const { generateGender, generateAbility } = useIndividualValues();
   const { generateLoot, getDefaultLootConfig, applyLoot } = useLoot;
   const { recordFirstEncounter } = usePokedex;
 
@@ -105,18 +108,25 @@ export const useRegionExplore = (
         const loot = generateLoot(region.lootConfig || getDefaultLootConfig(), allItems);
         
         const minLevel = region.minLevel || 5;
-        const maxLevel = region.maxLevel || 20;
-        const level = Math.floor(Math.random() * (maxLevel - minLevel + 1)) + minLevel;
+		const maxLevel = region.maxLevel || 20;
+		const level = Math.floor(Math.random() * (maxLevel - minLevel + 1)) + minLevel;
+
+		// 성별 생성
+		const gender = generateGender(randomPokemon);
+
+		// 특성 생성
+		const ability = generateAbility(randomPokemon, false);
+
+		const encounteredPokemon = {
+		  ...randomPokemon,
+		  level,
+		  isShiny,
+		  gender,
+		  ability,
+		};
+
+		setEncounterPokemon(encounteredPokemon);
         
-        const encounteredPokemon = {
-          ...randomPokemon,
-          level,
-          isShiny,
-          regionName: region.name,
-          loot
-        };
-        
-        setEncounterPokemon(encounteredPokemon);
         
       } else {
         alert('이 지역에는 포켓몬이 없습니다!');
