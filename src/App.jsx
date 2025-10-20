@@ -21,10 +21,12 @@ import useGameState from './hooks/useGameState';
 import ShopView from './components/views/ShopView';
 import MembersView from './components/views/MembersView';
 import NPCsView from './components/views/NPCsView';
+import CampingView from './components/views/CampingView';
 import QnABoard from './components/views/QnABoard';
 import CookingView from './components/views/CookingView';
 import { PokemonProvider } from './contexts/PokemonContext';
 import { GameProvider } from './contexts/GameContext';
+
 
 // 로그인 화면 컴포넌트
 function LoginScreen({ onLogin, onRegister }) {
@@ -228,6 +230,7 @@ export default function App() {
     isMembersLoading,
     editMemberPokemon,
     deleteMemberPokemon,
+	camping,
   } = gameState;
 
   // 게시판 로드
@@ -513,7 +516,19 @@ return (
           {currentTab === 'items' && <ItemsView />}
           {currentTab === 'shop' && <ShopView />}
           {currentTab === 'cooking' && <CookingView />}
-          
+		  {currentTab === 'camping' && (
+			  <CampingView
+				trainer={currentUser}
+				campingSessions={camping.campingSessions}
+				userCampingData={camping.userCampingData}
+				isLoading={camping.isLoading}
+				onStartCamping={camping.startCamping}
+				canCampToday={camping.canCampToday}
+				isCampingDay={camping.isCampingDay}
+				members={members}
+			  />
+			)}
+					  
           {currentTab === 'profile' && (
             <ProfileView 
               trainer={trainer}
@@ -550,55 +565,69 @@ return (
           <div className="flex-1 flex flex-col">
             <Header currentTab={currentTab} trainer={trainer} />
 
-            <main className="flex-1 overflow-auto p-8">
-              {currentTab === 'map' && (
-                <MapView 
-                  regions={regions} 
-                  onRegionClick={handleRegionClick} 
-                />
-              )}
-              
-              {currentTab === 'pokedex' && (
-                <PokedexView 
-                  pokedex={gamePokedex}
-                  allPokedex={allPokemonMaster} 
-                  caughtPokemon={caughtPokemon.filter(p => p !== null)}
-                  pokedexData={sharedPokedexData}
-                  regions={regions}
-                  currentUser={currentUser}
-                  onUpdateMemo={updatePokedexMemo}
-                  onUpdatePokedexRegions={updatePokedexRegions}
-                />
-              )}
-              
-              {currentTab === 'members' && <MembersView />}
-              {currentTab === 'npcs' && <NPCsView />}
-              {currentTab === 'pokemon' && <PokemonView />}
-              {currentTab === 'items' && <ItemsView />}
-              {currentTab === 'shop' && <ShopView />}
-              {currentTab === 'cooking' && <CookingView />}
-              
-              {currentTab === 'profile' && (
-                <ProfileView 
-                  trainer={trainer}
-                  caughtPokemon={caughtPokemon}
-                  items={items}
-                />
-              )}
-              
-              {currentTab === 'qna' && (
-                <QnABoard
-                  posts={qnaPosts}
-                  currentUser={currentUser}
-                  onCreatePost={handleCreatePost}
-                  onDeletePost={handleDeletePost}
-                  onCreateComment={handleCreateComment}
-                  onDeleteComment={handleDeleteComment}
-                />
-              )}
-              
-              {currentTab === 'admin' && isAdmin && <AdminView />}
-            </main>
+		<main className="flex-1 overflow-auto p-8">
+		  {currentTab === 'map' && (
+			<MapView 
+			  regions={regions} 
+			  onRegionClick={handleRegionClick} 
+			/>
+		  )}
+		  
+		  {currentTab === 'pokedex' && (
+			<PokedexView 
+			  pokedex={gamePokedex}
+			  allPokedex={allPokemonMaster} 
+			  caughtPokemon={caughtPokemon.filter(p => p !== null)}
+			  pokedexData={sharedPokedexData}
+			  regions={regions}
+			  currentUser={currentUser}
+			  onUpdateMemo={updatePokedexMemo}
+			  onUpdatePokedexRegions={updatePokedexRegions}
+			/>
+		  )}
+		  
+		  {currentTab === 'members' && <MembersView />}
+		  {currentTab === 'npcs' && <NPCsView />}
+		  {currentTab === 'pokemon' && <PokemonView />}
+		  {currentTab === 'items' && <ItemsView />}
+		  {currentTab === 'shop' && <ShopView />}
+		  {currentTab === 'cooking' && <CookingView />}
+		  
+		  {/* ✅ 여기에 캠핑 탭 추가! */}
+		  {currentTab === 'camping' && (
+			<CampingView
+			  trainer={currentUser}
+			  campingSessions={camping.campingSessions}
+			  userCampingData={camping.userCampingData}
+			  isLoading={camping.isLoading}
+			  onStartCamping={camping.startCamping}
+			  canCampToday={camping.canCampToday}
+			  isCampingDay={camping.isCampingDay}
+			  members={members}
+			/>
+		  )}
+		  
+		  {currentTab === 'profile' && (
+			<ProfileView 
+			  trainer={trainer}
+			  caughtPokemon={caughtPokemon}
+			  items={items}
+			/>
+		  )}
+		  
+		  {currentTab === 'qna' && (
+			<QnABoard
+			  posts={qnaPosts}
+			  currentUser={currentUser}
+			  onCreatePost={handleCreatePost}
+			  onDeletePost={handleDeletePost}
+			  onCreateComment={handleCreateComment}
+			  onDeleteComment={handleDeleteComment}
+			/>
+		  )}
+		  
+		  {currentTab === 'admin' && isAdmin && <AdminView />}
+		</main>
           </div>
         </div>
       )}

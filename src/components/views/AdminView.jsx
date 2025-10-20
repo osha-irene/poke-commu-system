@@ -12,6 +12,7 @@ import CustomItemCreator from './admin/CustomItemCreator';
 import RegionExplorePanel from './admin/RegionExplorePanel';
 import CookingAdminPanel from './admin/CookingAdminPanel';
 import LevelRestrictionPanel from './admin/LevelRestrictionPanel';
+import CampingAdminPanel from './admin/CampingAdminPanel';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
@@ -62,6 +63,7 @@ export default function AdminView() {
     deleteRecipe,
     updateIngredientStats,
     updateGamePokedex,
+	camping
   } = gameContext;
 
   const [adminTab, setAdminTab] = useState('members');
@@ -243,6 +245,9 @@ export default function AdminView() {
         <TabButton active={adminTab === 'cooking'} onClick={() => setAdminTab('cooking')}>
           🍳 요리 시스템
         </TabButton>
+		<TabButton active={adminTab === 'camping'} onClick={() => setAdminTab('camping')}>
+		  ⛺ 캠핑 관리
+		</TabButton>
         <TabButton active={adminTab === 'settings'} onClick={() => setAdminTab('settings')}>
           ⚙️ 시스템 설정
         </TabButton>
@@ -536,6 +541,17 @@ export default function AdminView() {
           </Card>
         </>
       )}
+		
+		// 패널 렌더링 추가
+		{adminTab === 'camping' && (
+		  <CampingAdminPanel
+			campingSessions={camping?.campingSessions || []}
+			onProgressSession={camping.progressSession}
+			onCompleteCooking={camping.completeCooking}
+			onApplyResults={camping.applyResultsToMember}
+			onDeleteSession={camping.deleteSession}
+		  />
+		)}
 
       {/* 위험 구역 탭 */}
       {adminTab === 'danger' && trainer?.isSuperAdmin && (

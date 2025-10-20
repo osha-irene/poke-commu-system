@@ -382,31 +382,58 @@ export const useAdminMembers = (
     }
 
     // Firebase 저장
+    // givePokemonToMember 함수의 끝 부분 (Line 450-490)
+
+    // Firebase 저장
     try {
-      const { id, ...dataToSave } = { 
+      // 저장할 데이터 준비
+      const memberDataToSave = { 
         ...member, 
-        caughtPokemon: updatedPokemonList,
-        partnerPokemon: newPartnerPokemon
+        caughtPokemon: updatedPokemonList
       };
+
+      // 파트너 포켓몬 처리 (undefined 방지)
+      if (newPartnerPokemon !== undefined && newPartnerPokemon !== null) {
+        memberDataToSave.partnerPokemon = newPartnerPokemon;
+      } else if (member.partnerPokemon !== undefined) {
+        // 기존 파트너 포켓몬 유지
+        memberDataToSave.partnerPokemon = member.partnerPokemon;
+      }
+      // partnerPokemon이 없으면 필드 자체를 포함하지 않음
+
+      // id 제거
+      const { id, ...dataToSave } = memberDataToSave;
+      
+      // undefined 값을 null로 변환 (Firebase 안전성)
+      const cleanData = JSON.parse(
+        JSON.stringify(dataToSave, (key, value) => 
+          value === undefined ? null : value
+        )
+      );
       
       const memberRef = ref(database, `members/${memberId}`);
-      await set(memberRef, dataToSave);
+      await set(memberRef, cleanData);
       
       setMembers(prev => ({
         ...prev,
         [memberId]: { 
           ...prev[memberId], 
           caughtPokemon: updatedPokemonList,
-          partnerPokemon: newPartnerPokemon
+          ...(newPartnerPokemon !== undefined && newPartnerPokemon !== null 
+            ? { partnerPokemon: newPartnerPokemon } 
+            : {})
         }
       }));
         
       if (memberId === currentUser.id) {
         console.log('✅ 본인에게 지급 - updateCurrentUser 호출');
-        updateCurrentUser({ 
-          caughtPokemon: updatedPokemonList,
-          partnerPokemon: newPartnerPokemon
-        });
+        const currentUserUpdate = { 
+          caughtPokemon: updatedPokemonList
+        };
+        if (newPartnerPokemon !== undefined && newPartnerPokemon !== null) {
+          currentUserUpdate.partnerPokemon = newPartnerPokemon;
+        }
+        updateCurrentUser(currentUserUpdate);
       }
       
       const partnerText = isPartner ? ' (파트너)' : '';
@@ -414,10 +441,11 @@ export const useAdminMembers = (
       alert(`${member.name}에게${shinyText} ${newPokemon.nickname || newPokemon.name}${partnerText}을(를) 지급했습니다!`);
     } catch (error) {
       console.error('❌ 포켓몬 지급 실패:', error);
-      alert('포켓몬 지급 중 오류가 발생했습니다.');
+      alert('포켓몬 지급 중 오류가 발생했습니다: ' + error.message);
     }
-  };
+  };  // ← 이 줄 추가! givePokemonToMember 함수 종료
 
+ 
   // ========== 포켓몬 삭제 ==========
   const deleteMemberPokemon = async (memberId, pokemonUniqueId) => {
     if (!currentUser?.isAdmin) return;

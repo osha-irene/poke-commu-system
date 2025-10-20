@@ -32,6 +32,7 @@ import { useRecipes } from './game/useRecipes';
 import { usePokemonCatch } from './game/usePokemonCatch';
 import { useRegionExplore } from './game/useRegionExplore';
 import { useItemEffects } from './items/useItemEffects';
+import { useCamping } from './game/useCamping';
 
 // 관리자 훅들 (맨 마지막)
 import { useAdminMembers } from './admin/useAdminMembers';
@@ -108,6 +109,14 @@ export default function useGameState() {
     allMoves,
     evolutionHook.checkEvolutionOnLevelUp 
   );
+  
+  // 캠핑 기능
+  const campingHook = useCamping(
+  currentUser,
+  updateCurrentUser,
+  allPokemonMaster,
+  allItems
+);
 
   // 관리자 기능 (3개 훅으로 분리)
   const adminMembers = useAdminMembers(
@@ -342,6 +351,7 @@ export default function useGameState() {
     isAuthLoading,
     updatePokedexMemo: (pokemonNumber, memo) => 
       gameDataUpdatePokedexMemo(pokemonNumber, memo, currentUser),
+	  camping: campingHook,
     
     // 포켓몬 관리
     movePokemonToParty: restPokemonManagement.movePokemonToParty,

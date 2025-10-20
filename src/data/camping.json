@@ -1,0 +1,94 @@
+{
+  "campingConfig": {
+    "weeklyLimit": 1,
+    "allowedDays": ["월요일", "화요일"],
+    "maxPartySize": 2,
+    "baseSuccessRate": 0.7,
+    "duoSuccessBonus": 0.15,
+    "eggChanceBase": 0.05,
+    "eggChanceWithFriendship": 0.1,
+    "minFriendshipForBonus": 160,
+    "eggHatchSteps": 5000,
+    "eggHatchStepsByGroup": {
+      "monster": 5000,
+      "water1": 5000,
+      "bug": 3000,
+      "flying": 3000,
+      "field": 5000,
+      "fairy": 5000,
+      "grass": 5000,
+      "humanlike": 6000,
+      "water3": 5000,
+      "mineral": 6000,
+      "amorphous": 5000,
+      "water2": 5000,
+      "ditto": 6000,
+      "dragon": 8000,
+      "undiscovered": 0
+    }
+  },
+  "cookingStages": [
+    {
+      "stage": 1,
+      "name": "만족",
+      "friendshipBonus": 10,
+      "expBonus": 50,
+      "successRate": 1.0,
+      "description": "그냥 그저그런 떡볶이"
+    },
+    {
+      "stage": 2,
+      "name": "계속",
+      "friendshipBonus": 20,
+      "expBonus": 100,
+      "successRate": 0.8,
+      "description": "조금 맛있는 떡볶이"
+    },
+    {
+      "stage": 3,
+      "name": "계속",
+      "friendshipBonus": 30,
+      "expBonus": 150,
+      "successRate": 0.6,
+      "description": "꽤 맛있는 떡볶이"
+    },
+    {
+      "stage": 4,
+      "name": "계속",
+      "friendshipBonus": 40,
+      "expBonus": 200,
+      "successRate": 0.4,
+      "description": "매우 맛있는 떡볶이"
+    },
+    {
+      "stage": 5,
+      "name": "완성",
+      "friendshipBonus": 50,
+      "expBonus": 300,
+      "successRate": 0.2,
+      "description": "완벽한 떡볶이"
+    }
+  ],
+  "bonusItems": [
+    {
+      "itemId": 101,
+      "name": "진화의돌",
+      "weight": 5
+    },
+    {
+      "itemId": 102,
+      "name": "기술머신",
+      "weight": 10
+    },
+    {
+      "itemId": 103,
+      "name": "레어사탕",
+      "weight": 15
+    },
+    {
+      "itemId": 104,
+      "name": "금구슬",
+      "weight": 20
+    }
+  ]
+}

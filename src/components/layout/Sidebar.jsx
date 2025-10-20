@@ -1,5 +1,5 @@
 import React from 'react';
-import { Map, BookOpen, Smile, Package, User, Settings, LogOut, ShoppingBag, Users, Bot, MessageSquare, Volume2, VolumeX, ChefHat } from 'lucide-react';
+import { Map, BookOpen, Smile, Package, User, Settings, LogOut, ShoppingBag, Users, Bot, MessageSquare, Volume2, VolumeX, ChefHat, Tent } from 'lucide-react';
 import NavButton from './NavButton';
 
 export default function Sidebar({ currentTab, setCurrentTab, isAdmin, trainer, onLogout, soundEnabled, onToggleSound }) {
@@ -97,12 +97,19 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin, trainer, o
           active={currentTab === 'shop'}
           onClick={() => setCurrentTab('shop')}
         />
-		<NavButton 
-		  icon={ChefHat}
-		  label="요리" 
-		  active={currentTab === 'cooking'}
-		  onClick={() => setCurrentTab('cooking')}
-		/>
+        <NavButton 
+          icon={ChefHat}
+          label="요리" 
+          active={currentTab === 'cooking'}
+          onClick={() => setCurrentTab('cooking')}
+        />
+        {/* 캠핑 버튼 추가 */}
+        <NavButton 
+          icon={Tent}
+          label="캠핑" 
+          active={currentTab === 'camping'}
+          onClick={() => setCurrentTab('camping')}
+        />
         <NavButton 
           icon={User}
           label="프로필" 
