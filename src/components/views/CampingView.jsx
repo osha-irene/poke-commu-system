@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Tent, Users, Calendar, Star, Gift, TrendingUp, CheckCircle, XCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Tent, Users, Calendar, Star, Gift, TrendingUp, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
+import { getDatabase, ref, get } from 'firebase/database';
 
 export default function CampingView({ 
   trainer,
@@ -15,28 +16,75 @@ export default function CampingView({
 }) {
   const [selectedMode, setSelectedMode] = useState('solo');
   const [selectedPartner, setSelectedPartner] = useState(null);
+  const [mastodonAccount, setMastodonAccount] = useState('');
+  const [isCheckingAccount, setIsCheckingAccount] = useState(true);
 
   const entryPokemon = trainer?.caughtPokemon?.slice(0, 6).filter(p => p) || [];
   const mySessions = campingSessions.filter(s => s.memberId === trainer?.id && s.status !== 'applied');
 
-  const handleStartCamping = () => {
+  // 마스토돈 계정 확인
+  useEffect(() => {
+    const checkMastodonAccount = async () => {
+      if (!trainer?.id) return;
+      
+      try {
+        const db = getDatabase();
+        const accountRef = ref(db, `members/${trainer.id}/mastodonAccount`);
+        const snapshot = await get(accountRef);
+        
+        if (snapshot.exists()) {
+          setMastodonAccount(snapshot.val());
+        }
+      } catch (error) {
+        console.error('마스토돈 계정 확인 실패:', error);
+      } finally {
+        setIsCheckingAccount(false);
+      }
+    };
+
+    checkMastodonAccount();
+  }, [trainer]);
+
+  const handleStartCamping = async () => {
+    // 1. 마스토돈 계정 확인
+    if (!mastodonAccount) {
+      alert('⚠️ 마스토돈 계정을 먼저 연결해주세요!\n\n프로필 > 설정 탭에서 연결할 수 있어요.');
+      return;
+    }
+
+    // 2. 엔트리 포켓몬 확인
     if (entryPokemon.length === 0) {
       alert('엔트리에 포켓몬이 없습니다!');
       return;
     }
 
+    // 3. 파트너 확인 (2인 캠핑인 경우)
     if (selectedMode === 'duo' && !selectedPartner) {
       alert('함께 캠핑할 파트너를 선택해주세요!');
       return;
     }
 
+    // 4. 캠핑 시작
     const partner = selectedMode === 'duo' ? members[selectedPartner] : null;
-    onStartCamping(entryPokemon, partner?.id, partner?.name);
+    await onStartCamping(entryPokemon, partner?.id, partner?.name);
+
+    // 5. 마스토돈 안내
+    alert(`🏕️ 캠핑을 시작했어요!
+
+이제 마스토돈에서 봇을 멘션해주세요:
+
+@pokemonbot@poketodon.monster [캠핑]
+
+예시:
+@pokemonbot@poketodon.monster [캠핑]
+
+봇이 1분마다 멘션을 확인해요!`);
   };
 
   const getStatusBadge = (status) => {
     const badges = {
       pending: { text: '대기 중', color: 'bg-yellow-100 text-yellow-700', icon: Calendar },
+      waiting_for_mastodon: { text: '마스토돈 대기', color: 'bg-orange-100 text-orange-700', icon: AlertCircle },
       in_progress: { text: '진행 중', color: 'bg-blue-100 text-blue-700', icon: TrendingUp },
       ready_to_complete: { text: '완료 대기', color: 'bg-purple-100 text-purple-700', icon: Star },
       completed: { text: '완료', color: 'bg-green-100 text-green-700', icon: CheckCircle },
@@ -65,6 +113,45 @@ export default function CampingView({
           </div>
         </div>
       </div>
+
+      {/* 마스토돈 계정 미연결 경고 */}
+      {!isCheckingAccount && !mastodonAccount && (
+        <Card className="bg-red-50 border-2 border-red-300 p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle size={24} className="text-red-600 flex-shrink-0 mt-1" />
+            <div className="text-red-800 flex-1">
+              <div className="font-bold mb-1">⚠️ 마스토돈 계정 연결 필요</div>
+              <div className="text-sm mb-2">
+                캠핑을 하려면 마스토돈 계정을 먼저 연결해야 해요!
+              </div>
+              <button
+                onClick={() => {
+                  // 프로필 탭으로 이동 (App.jsx에서 setCurrentTab 전달 필요)
+                  alert('프로필 > 설정 탭으로 이동해서 마스토돈 계정을 연결해주세요!');
+                }}
+                className="text-sm bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                설정으로 이동
+              </button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* 마스토돈 계정 연결됨 표시 */}
+      {!isCheckingAccount && mastodonAccount && (
+        <Card className="bg-green-50 border-2 border-green-300 p-4">
+          <div className="flex items-start gap-3">
+            <CheckCircle size={24} className="text-green-600 flex-shrink-0 mt-1" />
+            <div className="text-green-800">
+              <div className="font-bold mb-1">✅ 마스토돈 계정 연결됨</div>
+              <div className="text-sm">
+                연결된 계정: <span className="font-mono font-semibold">{mastodonAccount}</span>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {!canCampToday && !trainer?.isAdmin && !trainer?.isSuperAdmin && (
         <Card className="bg-yellow-50 border-2 border-yellow-300 p-4">
@@ -170,7 +257,11 @@ export default function CampingView({
           variant="primary"
           size="lg"
           onClick={handleStartCamping}
-          disabled={(!canCampToday || !isCampingDay) && !trainer?.isAdmin && !trainer?.isSuperAdmin || isLoading}
+          disabled={
+            !mastodonAccount || 
+            ((!canCampToday || !isCampingDay) && !trainer?.isAdmin && !trainer?.isSuperAdmin) || 
+            isLoading
+          }
           className="w-full"
         >
           <Tent size={20} />
@@ -205,6 +296,11 @@ export default function CampingView({
                     {session.isDuo && (
                       <div className="text-sm text-gray-600">
                         파트너: {session.partnerName}
+                      </div>
+                    )}
+                    {session.status === 'waiting_for_mastodon' && (
+                      <div className="mt-2 text-sm text-orange-700 bg-orange-50 border border-orange-200 rounded p-2">
+                        💬 마스토돈에서 <span className="font-mono font-semibold">@pokemonbot@poketodon.monster [캠핑]</span>을 멘션해주세요!
                       </div>
                     )}
                   </div>

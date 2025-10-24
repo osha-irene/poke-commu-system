@@ -24,6 +24,7 @@ import NPCsView from './components/views/NPCsView';
 import CampingView from './components/views/CampingView';
 import QnABoard from './components/views/QnABoard';
 import CookingView from './components/views/CookingView';
+import ProfileSettings from './components/settings/ProfileSettings';
 import { PokemonProvider } from './contexts/PokemonContext';
 import { GameProvider } from './contexts/GameContext';
 

@@ -7,6 +7,7 @@ import CurrentShopTab from '../shop/CurrentShopTab';
 import TemplateTab from '../shop/TemplateTab';
 import RareItemPanel from '../shop/RareItemPanel';
 import GachaBallPanel from '../shop/GachaBallPanel';
+import RandomBoxAdminPanel from './RandomBoxAdminPanel';
 
 export default function ShopAdminPanel({ 
   shopData = {},
@@ -234,11 +235,11 @@ export default function ShopAdminPanel({
             </div>
             
             <div className="flex-1 overflow-y-auto p-6">
-              <div className="text-center py-12 text-gray-400">
-                <Gift size={64} className="mx-auto mb-4 text-gray-300" />
-                <p className="text-lg font-semibold">RandomBoxAdminPanel 컴포넌트를 import 하세요</p>
-                <p className="text-sm mt-2">기존 RandomBoxAdminPanel 컴포넌트를 여기에 넣으면 됩니다</p>
-              </div>
+              <RandomBoxAdminPanel 
+                shopData={shopData}
+                allItems={allItems}
+                onUpdateShop={onUpdateShop}
+              />
             </div>
           </div>
         </div>

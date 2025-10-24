@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Gift, Plus, Trash2, Edit2, Save, X, ChevronDown, ChevronUp } from 'lucide-react';
-import ItemSelectorModal from '../../modals/ItemSelectorModal';
+import ItemSelectorModal from '../modals/ItemSelectorModal';
 
 export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }) {
   const [editingBox, setEditingBox] = useState(null);
