@@ -1,11 +1,35 @@
 import React, { useState } from 'react';
-import { Gift, Sparkles, Coins } from 'lucide-react';
+import { Gift, Sparkles, Coins, Loader } from 'lucide-react';
 
 export default function RandomBoxShop({ shopData, currentUser, allItems, onBuyRandomBox, selectedItem, onSelectBox }) {
   const [showResultModal, setShowResultModal] = useState(false);
   const [rewardResult, setRewardResult] = useState(null);
 
-  const randomBoxes = (shopData?.randomBoxes || []).filter(box => box.enabled);
+  // ⭐ 안전하게 randomBoxes 가져오기
+  const randomBoxes = React.useMemo(() => {
+    if (!shopData || !shopData.randomBoxes) return [];
+    
+    return shopData.randomBoxes
+      .filter(box => box.enabled)
+      .map(box => ({
+        ...box,
+        items: Array.isArray(box.items) ? box.items : []
+      }));
+  }, [shopData]);
+
+  // ⭐ 로딩 상태 체크
+  if (!shopData) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader size={48} className="text-purple-600 animate-spin" />
+      </div>
+    );
+  }
+
+  // ⭐ allItems 체크
+  if (!allItems || allItems.length === 0) {
+    return null;
+  }
 
   const handleBuyBox = () => {
     const selectedBox = selectedItem;
@@ -16,7 +40,9 @@ export default function RandomBoxShop({ shopData, currentUser, allItems, onBuyRa
       return;
     }
 
-    if (selectedBox.items.length === 0) {
+    // ⭐ items 안전 체크
+    const items = Array.isArray(selectedBox.items) ? selectedBox.items : [];
+    if (items.length === 0) {
       alert('이 랜덤박스에는 아이템이 없습니다!');
       return;
     }
@@ -26,6 +52,11 @@ export default function RandomBoxShop({ shopData, currentUser, allItems, onBuyRa
     }
 
     const result = selectRandomItem(selectedBox);
+    if (!result) {
+      alert('아이템 추첨에 실패했습니다!');
+      return;
+    }
+
     onBuyRandomBox(selectedBox, result);
     setRewardResult(result);
     setShowResultModal(true);
@@ -33,15 +64,21 @@ export default function RandomBoxShop({ shopData, currentUser, allItems, onBuyRa
   };
 
   const selectRandomItem = (box) => {
-    const totalWeight = box.items.reduce((sum, item) => sum + item.weight, 0);
+    // ⭐ items 안전 체크
+    const items = Array.isArray(box.items) ? box.items : [];
+    if (items.length === 0) return null;
+    
+    const totalWeight = items.reduce((sum, item) => sum + (parseInt(item.weight) || 0), 0);
+    if (totalWeight === 0) return null;
+    
     let random = Math.random() * totalWeight;
     
-    for (const item of box.items) {
-      random -= item.weight;
+    for (const item of items) {
+      random -= (parseInt(item.weight) || 0);
       if (random <= 0) {
-        const count = Math.floor(
-          Math.random() * (item.maxCount - item.minCount + 1)
-        ) + item.minCount;
+        const minCount = parseInt(item.minCount) || 1;
+        const maxCount = parseInt(item.maxCount) || 1;
+        const count = Math.floor(Math.random() * (maxCount - minCount + 1)) + minCount;
         
         return {
           itemId: item.itemId,
@@ -51,14 +88,16 @@ export default function RandomBoxShop({ shopData, currentUser, allItems, onBuyRa
       }
     }
     
-    const firstItem = box.items[0];
+    // 폴백: 첫 번째 아이템
+    const firstItem = items[0];
     return {
       itemId: firstItem.itemId,
       name: firstItem.name,
-      count: firstItem.minCount
+      count: parseInt(firstItem.minCount) || 1
     };
   };
 
+  // ⭐ 랜덤박스가 없으면 렌더링하지 않음
   if (randomBoxes.length === 0) {
     return null;
   }
@@ -80,6 +119,9 @@ export default function RandomBoxShop({ shopData, currentUser, allItems, onBuyRa
           <div className="grid grid-cols-3 gap-4">
             {randomBoxes.map((box) => {
               const isSelected = selectedItem?.id === box.id && selectedItem?.type === 'randombox';
+              // ⭐ box.items 안전 체크
+              const boxItems = Array.isArray(box.items) ? box.items : [];
+              const totalWeight = boxItems.reduce((sum, i) => sum + (parseInt(i.weight) || 0), 0);
               
               return (
                 <div key={box.id} className="space-y-3">
@@ -87,66 +129,68 @@ export default function RandomBoxShop({ shopData, currentUser, allItems, onBuyRa
                     onClick={() => onSelectBox({ ...box, type: 'randombox' })}
                     className={`w-full relative border-2 rounded-lg overflow-hidden transition-all ${
                       isSelected
-                        ? 'border-yellow-400 shadow-lg scale-105 bg-white'
-                        : 'border-gray-200 hover:border-gray-300 hover:shadow-md hover:scale-102 bg-white'
+                        ? 'border-pink-400 bg-pink-50 shadow-lg'
+                        : 'border-gray-300 hover:border-pink-300 hover:shadow-md'
                     }`}
                   >
-                    <div className="absolute -top-0 left-4 bg-pink-600 text-white text-xs px-3 py-1 font-bold flex items-center gap-1 rounded-b-lg shadow-md z-10">
-                      <Gift size={12} />
-                      랜덤박스
-                    </div>
-                    
-                    <div className="p-4 pt-8">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-20 h-20 flex items-center justify-center bg-pink-50 rounded-lg">
-                          <Gift size={40} className="text-pink-500" />
-                        </div>
-                        <div className="flex-1 text-left">
-                          <div className="font-bold text-lg text-gray-800">{box.name}</div>
-                          <div className="text-sm text-gray-600">{box.items.length}종류의 아이템</div>
-                        </div>
+                    <div className="p-4">
+                      <div className="text-center mb-3">
+                        <Gift size={40} className="mx-auto text-pink-600" />
                       </div>
-                      
-                      <div className="flex items-center justify-between pt-3 border-t-2 border-white">
-                        <div className="flex items-center gap-1 text-yellow-600 font-bold text-xl">
-                          <Coins size={20} />
-                          ₽{box.price.toLocaleString()}
-                        </div>
-                        <div className="text-sm text-gray-600 font-semibold">
-                          무제한
+                      <div className="text-center">
+                        <h4 className="font-bold text-lg text-gray-800">{box.name}</h4>
+                        <div className="flex items-center justify-center gap-1 mt-2 text-yellow-600">
+                          <Coins size={16} />
+                          <span className="font-bold">{box.price.toLocaleString()}G</span>
                         </div>
                       </div>
                     </div>
                   </button>
 
                   <details className="bg-gray-50 rounded-lg border border-gray-200">
-                    <summary className="px-4 py-2 text-sm text-gray-600 cursor-pointer hover:text-gray-800 font-semibold">
+                    <summary className="p-3 cursor-pointer hover:text-gray-800 font-semibold">
                       포함 아이템 보기
                     </summary>
                     <div className="px-4 pb-4 pt-2">
+                      {/* ⭐ 106번째 줄 근처 - 안전한 map 처리 */}
                       <div className="grid grid-cols-2 gap-2">
-                        {box.items.map(item => {
-                          const itemInfo = allItems.find(i => i.id === item.itemId);
-                          const totalWeight = box.items.reduce((sum, i) => sum + i.weight, 0);
-                          const probability = ((item.weight / totalWeight) * 100).toFixed(1);
-                          
-                          return (
-                            <div key={item.itemId} className="flex items-center gap-2 text-xs bg-white rounded p-2 border border-gray-200">
-                              <img 
-                                src={itemInfo?.spriteUrl || '/images/items/default.png'}
-                                alt={item.name}
-                                className="w-8 h-8"
-                                style={{ imageRendering: 'pixelated' }}
-                              />
-                              <div className="flex-1 min-w-0">
-                                <div className="font-semibold text-gray-700 truncate">{item.name}</div>
-                                <div className="text-pink-600">
-                                  {probability}% / {item.minCount}~{item.maxCount}개
+                        {boxItems.length > 0 ? (
+                          boxItems.map(item => {
+                            const itemInfo = allItems.find(i => i.id === item.itemId);
+                            const probability = totalWeight > 0 
+                              ? ((parseInt(item.weight) / totalWeight) * 100).toFixed(1)
+                              : '0.0';
+                            
+                            return (
+                              <div 
+                                key={`${box.id}-${item.itemId}`}
+                                className="flex items-center gap-2 text-xs bg-white rounded p-2 border border-gray-200"
+                              >
+                                <img 
+                                  src={itemInfo?.spriteUrl || '/images/items/default.png'}
+                                  alt={item.name || '아이템'}
+                                  className="w-8 h-8"
+                                  style={{ imageRendering: 'pixelated' }}
+                                  onError={(e) => {
+                                    e.target.src = '/images/items/default.png';
+                                  }}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-semibold text-gray-700 truncate">
+                                    {item.name || '알 수 없음'}
+                                  </div>
+                                  <div className="text-pink-600">
+                                    {probability}% / {item.minCount}~{item.maxCount}개
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })
+                        ) : (
+                          <div className="col-span-2 text-center text-gray-500 py-4">
+                            아이템이 없습니다
+                          </div>
+                        )}
                       </div>
                     </div>
                   </details>
@@ -157,79 +201,40 @@ export default function RandomBoxShop({ shopData, currentUser, allItems, onBuyRa
         </div>
       </div>
 
-      {/* 구매 패널 */}
+      {/* 구매 버튼 */}
       {selectedItem?.type === 'randombox' && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-4 border-pink-600 shadow-2xl p-6 z-50">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-center gap-6">
-              <div className="w-24 h-24 flex items-center justify-center bg-pink-50 rounded-lg">
-                <Gift size={48} className="text-pink-500" />
-              </div>
-              
-              <div className="flex-1">
-                <h3 className="text-2xl font-bold mb-1">{selectedItem.name}</h3>
-                <p className="text-gray-600 text-sm mb-2">{selectedItem.items.length}종류의 아이템 중 랜덤 획득</p>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 text-yellow-600 font-bold text-xl">
-                    <Coins size={20} />
-                    ₽{selectedItem.price.toLocaleString()}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={handleBuyBox}
-                  className="bg-pink-600 text-white px-8 py-4 rounded-lg hover:bg-pink-700 font-bold text-lg shadow-lg transition-all hover:scale-105"
-                >
-                  구매하기
-                </button>
-                
-                <button
-                  onClick={() => onSelectBox(null)}
-                  className="bg-gray-200 text-gray-700 px-6 py-4 rounded-lg hover:bg-gray-300 font-semibold"
-                >
-                  취소
-                </button>
-              </div>
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+          <button
+            onClick={handleBuyBox}
+            className="bg-gradient-to-r from-pink-600 to-purple-600 text-white px-8 py-4 rounded-full font-bold text-lg shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all flex items-center gap-3"
+          >
+            <Gift size={24} />
+            <span>{selectedItem.name} 구매하기</span>
+            <div className="flex items-center gap-1 bg-white/20 px-3 py-1 rounded-full">
+              <Coins size={18} />
+              {selectedItem.price.toLocaleString()}G
             </div>
-          </div>
+          </button>
         </div>
       )}
 
       {/* 결과 모달 */}
       {showResultModal && rewardResult && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
-            <div className="bg-gradient-to-r from-pink-600 to-purple-600 p-6 text-white text-center">
-              <Sparkles size={48} className="mx-auto mb-3" />
-              <h3 className="text-2xl font-bold mb-2">축하합니다!</h3>
-              <p className="text-pink-100">다음 아이템을 획득했습니다</p>
-            </div>
-
-            <div className="p-8 text-center">
-              <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-6 mb-6 border-2 border-yellow-200">
-                {(() => {
-                  const itemInfo = allItems.find(i => i.id === rewardResult.itemId);
-                  return (
-                    <>
-                      <img 
-                        src={itemInfo?.spriteUrl || itemInfo?.imageUrl || '/images/items/default.png'}
-                        alt={rewardResult.name}
-                        className="w-24 h-24 mx-auto mb-4 object-contain"
-                        style={{ imageRendering: 'pixelated' }}
-                      />
-                      <h4 className="text-2xl font-bold text-gray-800 mb-2">
-                        {rewardResult.name}
-                      </h4>
-                      <div className="text-3xl font-bold text-purple-600">
-                        × {rewardResult.count}
-                      </div>
-                    </>
-                  );
-                })()}
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl animate-bounce-in">
+            <div className="text-center">
+              <Sparkles size={64} className="mx-auto text-yellow-500 mb-4" />
+              <h3 className="text-2xl font-bold text-gray-800 mb-4">획득 완료!</h3>
+              
+              <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg p-6 border-2 border-yellow-300 mb-6">
+                <div className="text-xl font-bold text-gray-800 mb-2">
+                  {rewardResult.name}
+                </div>
+                <div className="text-3xl font-bold text-pink-600">
+                  x {rewardResult.count}개
+                </div>
               </div>
-
+              
               <button
                 onClick={() => {
                   setShowResultModal(false);
