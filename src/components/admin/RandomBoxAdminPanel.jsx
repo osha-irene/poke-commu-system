@@ -1,31 +1,73 @@
 import React, { useState } from 'react';
-import { Gift, Plus, Trash2, Edit2, Save, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Gift, Plus, Trash2, ChevronDown, ChevronUp, Loader } from 'lucide-react';
 import ItemSelectorModal from '../modals/ItemSelectorModal';
 
 export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }) {
-  const [editingBox, setEditingBox] = useState(null);
   const [expandedBox, setExpandedBox] = useState(null);
   const [showItemSelector, setShowItemSelector] = useState(false);
   const [selectedBoxId, setSelectedBoxId] = useState(null);
   
-  // 랜덤박스 초기 데이터 (없으면 생성)
-  const randomBoxes = (shopData.randomBoxes || []).map(box => ({
-    ...box,
-    items: box.items || [] // ⭐ items가 없으면 빈 배열로 초기화
-  }));
+  // ⭐ 안전한 데이터 초기화
+  const getDefaultRandomBoxes = () => [
+    { id: 1, name: '브론즈 박스', price: 1000, enabled: false, items: [] },
+    { id: 2, name: '실버 박스', price: 3000, enabled: false, items: [] },
+    { id: 3, name: '골드 박스', price: 5000, enabled: false, items: [] }
+  ];
+
+  // ⭐ shopData가 없거나 randomBoxes가 없으면 기본값 사용
+  const randomBoxes = React.useMemo(() => {
+    if (!shopData || !shopData.randomBoxes) {
+      return getDefaultRandomBoxes();
+    }
+    
+    // items가 없는 박스는 빈 배열로 초기화
+    return shopData.randomBoxes.map(box => ({
+      ...box,
+      items: Array.isArray(box.items) ? box.items : []
+    }));
+  }, [shopData]);
+
+  // ⭐ 로딩 상태 체크
+  if (!shopData) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <Loader size={48} className="mx-auto mb-4 text-purple-600 animate-spin" />
+          <p className="text-gray-600">랜덤박스 데이터 로딩 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ⭐ allItems가 없으면 경고
+  if (!allItems || allItems.length === 0) {
+    return (
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+        <p className="text-yellow-800 font-semibold">⚠️ 아이템 데이터를 불러오는 중입니다...</p>
+      </div>
+    );
+  }
 
   const handleToggleBox = (boxId) => {
     const updatedBoxes = randomBoxes.map(box => 
       box.id === boxId ? { ...box, enabled: !box.enabled } : box
     );
-    onUpdateShop({ ...shopData, randomBoxes: updatedBoxes });
+    
+    onUpdateShop({ 
+      ...shopData, 
+      randomBoxes: updatedBoxes 
+    });
   };
 
   const handleUpdateBox = (boxId, field, value) => {
     const updatedBoxes = randomBoxes.map(box => 
       box.id === boxId ? { ...box, [field]: value } : box
     );
-    onUpdateShop({ ...shopData, randomBoxes: updatedBoxes });
+    
+    onUpdateShop({ 
+      ...shopData, 
+      randomBoxes: updatedBoxes 
+    });
   };
 
   const handleAddItem = (boxId) => {
@@ -41,33 +83,44 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
     
     if (!item) {
       setShowItemSelector(false);
+      setSelectedBoxId(null);
       return;
     }
 
     const updatedBoxes = randomBoxes.map(box => {
       if (box.id === selectedBoxId) {
+        const currentItems = Array.isArray(box.items) ? box.items : [];
+        
         // 중복 체크
-        if ((box.items || []).some(i => i.itemId === item.id)) {
+        if (currentItems.some(i => i.itemId === item.id)) {
           alert('이미 추가된 아이템입니다!');
           return box;
         }
         
         return {
           ...box,
-          items: [...(box.items || []), {
-            itemId: item.id,
-            name: item.name,
-            weight: 10, // 기본값
-            minCount: 1, // 기본값
-            maxCount: 1 // 기본값
-          }]
+          items: [
+            ...currentItems,
+            {
+              itemId: item.id,
+              name: item.name,
+              weight: 10,
+              minCount: 1,
+              maxCount: 1
+            }
+          ]
         };
       }
       return box;
     });
 
-    onUpdateShop({ ...shopData, randomBoxes: updatedBoxes });
+    onUpdateShop({ 
+      ...shopData, 
+      randomBoxes: updatedBoxes 
+    });
+    
     setShowItemSelector(false);
+    setSelectedBoxId(null);
   };
 
   const handleRemoveItem = (boxId, itemId) => {
@@ -75,45 +128,56 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
 
     const updatedBoxes = randomBoxes.map(box => {
       if (box.id === boxId) {
+        const currentItems = Array.isArray(box.items) ? box.items : [];
         return {
           ...box,
-          items: box.items.filter(item => item.itemId !== itemId)
+          items: currentItems.filter(item => item.itemId !== itemId)
         };
       }
       return box;
     });
 
-    onUpdateShop({ ...shopData, randomBoxes: updatedBoxes });
+    onUpdateShop({ 
+      ...shopData, 
+      randomBoxes: updatedBoxes 
+    });
   };
 
   const handleUpdateItem = (boxId, itemId, field, value) => {
     const updatedBoxes = randomBoxes.map(box => {
       if (box.id === boxId) {
+        const currentItems = Array.isArray(box.items) ? box.items : [];
         return {
           ...box,
-          items: box.items.map(item => 
-            item.itemId === itemId ? { ...item, [field]: parseInt(value) || 0 } : item
+          items: currentItems.map(item => 
+            item.itemId === itemId 
+              ? { ...item, [field]: parseInt(value) || 0 } 
+              : item
           )
         };
       }
       return box;
     });
 
-    onUpdateShop({ ...shopData, randomBoxes: updatedBoxes });
+    onUpdateShop({ 
+      ...shopData, 
+      randomBoxes: updatedBoxes 
+    });
   };
 
   const getTotalWeight = (items) => {
-    if (!items || !Array.isArray(items)) return 0;
-    return items.reduce((sum, item) => sum + (item.weight || 0), 0);
+    if (!items || !Array.isArray(items) || items.length === 0) return 0;
+    return items.reduce((sum, item) => sum + (parseInt(item.weight) || 0), 0);
   };
 
   const getItemProbability = (weight, totalWeight) => {
-    if (totalWeight === 0) return 0;
-    return ((weight / totalWeight) * 100).toFixed(2);
+    if (!weight || !totalWeight || totalWeight === 0) return '0.00';
+    return ((parseFloat(weight) / parseFloat(totalWeight)) * 100).toFixed(2);
   };
 
   return (
     <div className="space-y-6">
+      {/* 헤더 */}
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg p-6 shadow-lg">
         <div className="flex items-center gap-3">
           <Gift size={32} />
@@ -126,8 +190,9 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
         </div>
       </div>
 
+      {/* 랜덤박스 리스트 */}
       {randomBoxes.map((box) => {
-        const boxItems = box.items || []; // ⭐ 안전하게 items 가져오기
+        const boxItems = Array.isArray(box.items) ? box.items : [];
         const totalWeight = getTotalWeight(boxItems);
         const isExpanded = expandedBox === box.id;
 
@@ -138,7 +203,7 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
               box.enabled ? 'border-green-300 shadow-lg' : 'border-gray-200 opacity-60'
             }`}
           >
-            {/* 헤더 */}
+            {/* 박스 헤더 */}
             <div className={`p-4 flex items-center justify-between ${
               box.enabled ? 'bg-gradient-to-r from-green-50 to-blue-50' : 'bg-gray-50'
             }`}>
@@ -146,6 +211,7 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
                 <button
                   onClick={() => setExpandedBox(isExpanded ? null : box.id)}
                   className="p-2 hover:bg-white/50 rounded-lg transition-colors"
+                  aria-label={isExpanded ? '접기' : '펼치기'}
                 >
                   {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                 </button>
@@ -155,9 +221,10 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
                 <div>
                   <input
                     type="text"
-                    value={box.name}
+                    value={box.name || ''}
                     onChange={(e) => handleUpdateBox(box.id, 'name', e.target.value)}
                     className="font-bold text-lg border-none bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-300 rounded px-2"
+                    placeholder="박스 이름"
                   />
                   <div className="text-sm text-gray-600 mt-1">
                     {boxItems.length}개 아이템 • 총 가중치: {totalWeight}
@@ -170,7 +237,8 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
                   <div className="text-xs text-gray-500 mb-1">가격</div>
                   <input
                     type="number"
-                    value={box.price}
+                    min="0"
+                    value={box.price || 0}
                     onChange={(e) => handleUpdateBox(box.id, 'price', parseInt(e.target.value) || 0)}
                     className="w-24 px-3 py-1 border border-gray-300 rounded text-center font-bold text-lg focus:border-blue-500 focus:outline-none"
                   />
@@ -196,7 +264,7 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
                   <h4 className="font-bold text-gray-800">포함된 아이템</h4>
                   <button
                     onClick={() => handleAddItem(box.id)}
-                    className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-semibold"
+                    className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-semibold transition-colors"
                   >
                     <Plus size={18} />
                     아이템 추가
@@ -206,7 +274,7 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
                 {boxItems.length === 0 ? (
                   <div className="text-center py-12 text-gray-400">
                     <Gift size={48} className="mx-auto mb-3 opacity-30" />
-                    <p>아이템이 없습니다</p>
+                    <p className="font-semibold">아이템이 없습니다</p>
                     <p className="text-sm mt-1">위 버튼을 눌러 아이템을 추가하세요</p>
                   </div>
                 ) : (
@@ -217,18 +285,21 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
 
                       return (
                         <div 
-                          key={item.itemId}
+                          key={`${box.id}-${item.itemId}`}
                           className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                         >
                           {/* 아이템 이미지 & 이름 */}
-                          <div className="flex items-center gap-3 flex-1">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
                             <img 
                               src={itemData?.spriteUrl || itemData?.imageUrl || '/images/items/default.png'}
-                              alt={item.name}
-                              className="w-12 h-12 object-contain"
+                              alt={item.name || '아이템'}
+                              className="w-12 h-12 object-contain flex-shrink-0"
+                              onError={(e) => {
+                                e.target.src = '/images/items/default.png';
+                              }}
                             />
-                            <div>
-                              <div className="font-bold text-gray-800">{item.name}</div>
+                            <div className="min-w-0">
+                              <div className="font-bold text-gray-800 truncate">{item.name || '알 수 없는 아이템'}</div>
                               <div className="text-xs text-purple-600 font-semibold">
                                 확률: {probability}%
                               </div>
@@ -236,14 +307,14 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
                           </div>
 
                           {/* 설정 입력 */}
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-shrink-0">
                             <div className="text-center">
                               <label className="text-xs text-gray-500 block mb-1">가중치</label>
                               <input
                                 type="number"
                                 min="1"
                                 max="100"
-                                value={item.weight}
+                                value={item.weight || 10}
                                 onChange={(e) => handleUpdateItem(box.id, item.itemId, 'weight', e.target.value)}
                                 className="w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm focus:border-blue-500 focus:outline-none"
                               />
@@ -254,7 +325,7 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
                               <input
                                 type="number"
                                 min="1"
-                                value={item.minCount}
+                                value={item.minCount || 1}
                                 onChange={(e) => handleUpdateItem(box.id, item.itemId, 'minCount', e.target.value)}
                                 className="w-14 px-2 py-1 border border-gray-300 rounded text-center text-sm focus:border-blue-500 focus:outline-none"
                               />
@@ -265,7 +336,7 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
                               <input
                                 type="number"
                                 min="1"
-                                value={item.maxCount}
+                                value={item.maxCount || 1}
                                 onChange={(e) => handleUpdateItem(box.id, item.itemId, 'maxCount', e.target.value)}
                                 className="w-14 px-2 py-1 border border-gray-300 rounded text-center text-sm focus:border-blue-500 focus:outline-none"
                               />
@@ -274,6 +345,7 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
                             <button
                               onClick={() => handleRemoveItem(box.id, item.itemId)}
                               className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                              aria-label="아이템 삭제"
                             >
                               <Trash2 size={18} />
                             </button>
@@ -285,7 +357,7 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
                 )}
 
                 {/* 확률 요약 */}
-                {boxItems.length > 0 && (
+                {boxItems.length > 0 && totalWeight > 0 && (
                   <div className="mt-4 p-4 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border-2 border-blue-200">
                     <div className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
                       <Gift size={16} className="text-blue-600" />
@@ -296,7 +368,7 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
                     <div className="mb-4">
                       <div className="w-full bg-gray-200 rounded-full h-6 overflow-hidden flex">
                         {boxItems.map((item, index) => {
-                          const probability = getItemProbability(item.weight, totalWeight);
+                          const probability = parseFloat(getItemProbability(item.weight, totalWeight));
                           const colors = [
                             'bg-blue-500',
                             'bg-purple-500',
@@ -311,10 +383,10 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
                           
                           return (
                             <div
-                              key={item.itemId}
+                              key={`bar-${box.id}-${item.itemId}`}
                               className={`${color} flex items-center justify-center text-white text-xs font-bold transition-all duration-300 hover:brightness-110 px-1`}
                               style={{ width: `${probability}%` }}
-                              title={`${item.name}: ${probability}%`}
+                              title={`${item.name}: ${probability.toFixed(2)}%`}
                             >
                               {probability >= 8 && (
                                 <span className="truncate">{item.name}</span>
@@ -343,15 +415,23 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
                         const color = colors[index % colors.length];
                         
                         return (
-                          <div key={item.itemId} className="flex items-center gap-2 bg-white rounded-lg p-2 border border-gray-200">
+                          <div 
+                            key={`summary-${box.id}-${item.itemId}`}
+                            className="flex items-center gap-2 bg-white rounded-lg p-2 border border-gray-200"
+                          >
                             <div className={`w-3 h-3 rounded-full ${color} flex-shrink-0`}></div>
                             <img 
                               src={itemData?.spriteUrl || itemData?.imageUrl || '/images/items/default.png'}
-                              alt={item.name}
+                              alt={item.name || '아이템'}
                               className="w-6 h-6 object-contain flex-shrink-0"
+                              onError={(e) => {
+                                e.target.src = '/images/items/default.png';
+                              }}
                             />
                             <div className="flex-1 min-w-0">
-                              <div className="text-xs font-semibold text-gray-800 truncate">{item.name}</div>
+                              <div className="text-xs font-semibold text-gray-800 truncate">
+                                {item.name || '알 수 없음'}
+                              </div>
                               <div className="text-xs text-gray-500">
                                 {item.minCount === item.maxCount 
                                   ? `${item.minCount}개` 
