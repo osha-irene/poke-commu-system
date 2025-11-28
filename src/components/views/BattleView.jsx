@@ -141,9 +141,6 @@ export function BattleView() {
   const convertToBattleFormat = (pokemon) => {
     console.log('🔄 변환할 포켓몬:', pokemon);
     
-    const defaultIVs = { hp: 31, attack: 31, defense: 31, spAttack: 31, spDefense: 31, speed: 31 };
-    const defaultEVs = { hp: 0, attack: 0, defense: 0, spAttack: 0, spDefense: 0, speed: 0 };
-
     // moves 처리: moveId를 name으로 변환
     const moves = (pokemon.moves || [])
       .filter(move => move && move.moveId)
@@ -157,27 +154,36 @@ export function BattleView() {
     if (pokemon.type) types.push(pokemon.type);
     if (pokemon.type2) types.push(pokemon.type2);
 
+    // 노력치 변환: Firebase의 effort → EVs
+    const evs = pokemon.effort ? {
+      hp: pokemon.effort.hp || 0,
+      atk: pokemon.effort.attack || 0,
+      def: pokemon.effort.defense || 0,
+      spa: pokemon.effort.specialAttack || 0,
+      spd: pokemon.effort.specialDefense || 0,
+      spe: pokemon.effort.speed || 0
+    } : { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
+
     const converted = {
       name: pokemon.nameEn || pokemon.name,  // 영문명 우선
       level: pokemon.level || 50,
       types: types.length > 0 ? types : ['Normal'],
       ability: pokemon.ability || 'Overgrow',
       item: pokemon.heldItem || null,
-      nature: pokemon.nature || 'Hardy',
       stats: {
         hp: pokemon.maxHp || pokemon.hp || 100,
-        attack: 50,  // Firebase에 stats가 없으므로 기본값
+        attack: 50,  // Firebase에 종족값이 없으므로 기본값
         defense: 50,
         spAttack: 50,
         spDefense: 50,
         speed: 50
       },
-      ivs: pokemon.ivs || defaultIVs,
-      evs: pokemon.effort || defaultEVs,  // effort가 EVs
+      evs: evs,  // 노력치 전달
       moves: moves.length > 0 ? moves : [{ name: 'tackle' }]  // 최소 1개
     };
 
     console.log('✅ 변환된 포켓몬:', converted);
+    console.log('  노력치:', evs);
     return converted;
   };
 
