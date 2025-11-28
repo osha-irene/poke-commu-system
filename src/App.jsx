@@ -27,6 +27,8 @@ import CookingView from './components/views/CookingView';
 import ProfileSettings from './components/settings/ProfileSettings';
 import { PokemonProvider } from './contexts/PokemonContext';
 import { GameProvider } from './contexts/GameContext';
+import BattleView from './components/views/BattleView';
+
 
 
 // 로그인 화면 컴포넌트
@@ -550,6 +552,7 @@ return (
           )}
           
           {currentTab === 'admin' && isAdmin && <AdminView />}
+          {currentTab === 'battle' && <BattleView />}
         </MobileLayout>
       ) : (
         <div className="h-screen flex bg-gray-50">
@@ -628,11 +631,11 @@ return (
 		  )}
 		  
 		  {currentTab === 'admin' && isAdmin && <AdminView />}
+      {currentTab === 'battle' && <BattleView />} 
 		</main>
           </div>
         </div>
       )}
-
       {encounterPokemon && (
         <EncounterModal
           pokemon={encounterPokemon}
