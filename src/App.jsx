@@ -2,6 +2,7 @@
 
 import useMediaQuery from './hooks/useMediaQuery';
 import MobileLayout from './components/layout/MobileLayout';
+import './App.css';
 
 import React, { useState, useEffect } from 'react';
 import { ref, get, set } from 'firebase/database';
@@ -24,10 +25,130 @@ import NPCsView from './components/views/NPCsView';
 import CampingView from './components/views/CampingView';
 import QnABoard from './components/views/QnABoard';
 import CookingView from './components/views/CookingView';
-import ProfileSettings from './components/settings/ProfileSettings';
 import { PokemonProvider } from './contexts/PokemonContext';
 import { GameProvider } from './contexts/GameContext';
 import BattleView from './components/views/BattleView';
+
+function HomeProfileCard({ trainer, isAdmin, soundEnabled, onToggleSound, onLogout, onPokemonClick }) {
+  return (
+    <section className="home-profile-card">
+      <div className="home-profile-card__identity">
+        <div className="home-profile-card__avatar">
+          {trainer?.name?.charAt(0) || '?'}
+        </div>
+        <div>
+          <div className="home-profile-card__name">{trainer?.name}</div>
+          {isAdmin && (
+            <div className="home-profile-card__badge">
+              {trainer?.isSuperAdmin ? '슈퍼관리자' : '관리자'}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="home-profile-card__details">
+        <div className="home-profile-card__stats">
+          <span>오늘의 모험</span>
+          <strong>{trainer?.dailyWalks}/{trainer?.maxDailyWalks}</strong>
+        </div>
+        <div className="home-profile-card__stats">
+          <span>소지금</span>
+          <strong>{trainer?.money?.toLocaleString?.() || 0}원</strong>
+        </div>
+        <div className="home-profile-card__actions">
+          <button type="button" onClick={onPokemonClick} className="home-profile-card__pokemon">
+            내 포켓몬
+          </button>
+          <button type="button" onClick={onToggleSound} className="home-profile-card__sound">
+            {soundEnabled ? '사운드 ON' : '사운드 OFF'}
+          </button>
+          <button type="button" onClick={onLogout} className="home-profile-card__logout">
+            로그아웃
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HomeDashboard({ trainer, isAdmin, soundEnabled, onToggleSound, onLogout, onPokemonClick }) {
+  const cards = [
+    {
+      title: 'NPC 소개',
+      body: '주요 NPC와 안내 캐릭터가 들어갈 자리입니다.'
+    },
+    {
+      title: '자기 프로필',
+      content: (
+        <HomeProfileCard
+            trainer={trainer}
+            isAdmin={isAdmin}
+            soundEnabled={soundEnabled}
+            onToggleSound={onToggleSound}
+            onLogout={onLogout}
+            onPokemonClick={onPokemonClick}
+        />
+      )
+    },
+    {
+      title: '캘린더',
+      body: '커뮤니티 일정, 이벤트, 마감일을 정리할 자리입니다.'
+    },
+    {
+      title: '미정',
+      body: '추가 콘텐츠를 넣을 예비 영역입니다.'
+    }
+  ];
+
+  return (
+    <section className="home-dashboard">
+      {cards.map((card) => (
+        <article key={card.title} className="home-dashboard__panel">
+          <h2>{card.title}</h2>
+          {card.content || <p>{card.body}</p>}
+        </article>
+      ))}
+    </section>
+  );
+}
+
+function CommunityPlaceholder({ type, trainer, isAdmin, soundEnabled, onToggleSound, onLogout, onPokemonClick }) {
+  if (type === 'notice') {
+    return (
+      <HomeDashboard
+        trainer={trainer}
+        isAdmin={isAdmin}
+        soundEnabled={soundEnabled}
+        onToggleSound={onToggleSound}
+        onLogout={onLogout}
+        onPokemonClick={onPokemonClick}
+      />
+    );
+  }
+
+  const content = {
+    notice: {
+      title: '공지사항',
+      body: '운영 공지, 업데이트, 이벤트, 점검 안내가 들어갈 자리입니다.'
+    },
+    world: {
+      title: '세계관',
+      body: '지역 설정, 이야기, 커뮤니티 배경을 정리하는 페이지입니다.'
+    },
+    system: {
+      title: '시스템',
+      body: '모험, 포획, 도감, 상점, 요리, 캠핑, 배틀 규칙을 안내하는 페이지입니다.'
+    }
+  };
+  const selected = content[type] || content.notice;
+
+  return (
+    <section className="community-panel">
+      <p className="community-panel__eyebrow">Poke Community</p>
+      <h2>{selected.title}</h2>
+      <p>{selected.body}</p>
+    </section>
+  );
+}
 
 
 
@@ -235,6 +356,7 @@ export default function App() {
     deleteMemberPokemon,
 	camping,
   } = gameState;
+  const isFeaturePage = currentTab !== 'notice';
 
   // 게시판 로드
   useEffect(() => {
@@ -555,7 +677,10 @@ return (
           {currentTab === 'battle' && <BattleView />}
         </MobileLayout>
       ) : (
-        <div className="h-screen flex bg-gray-50">
+        <div className={`main-shell ${currentTab === 'notice' ? 'main-shell--home' : ''}`}>
+          <Header currentTab={currentTab} setCurrentTab={setCurrentTab} />
+
+          <div className={`main-layout ${currentTab === 'notice' ? 'main-layout--home' : ''}`}>
           <Sidebar 
             currentTab={currentTab}
             setCurrentTab={setCurrentTab}
@@ -566,10 +691,21 @@ return (
             onToggleSound={() => setSoundEnabled(!soundEnabled)}
           />
 
-          <div className="flex-1 flex flex-col">
-            <Header currentTab={currentTab} trainer={trainer} />
+		<main className={`content-stage ${currentTab === 'notice' ? 'content-stage--home' : 'content-stage--view'} ${isFeaturePage ? 'content-stage--feature' : ''}`}>
+      {currentTab === 'notice' && (
+        <CommunityPlaceholder
+          type="notice"
+          trainer={trainer}
+          isAdmin={isAdmin}
+          soundEnabled={soundEnabled}
+            onToggleSound={() => setSoundEnabled(!soundEnabled)}
+            onLogout={handleLogout}
+            onPokemonClick={() => setCurrentTab('pokemon')}
+        />
+      )}
+      {currentTab === 'world' && <CommunityPlaceholder type="world" trainer={trainer} />}
+      {currentTab === 'system' && <CommunityPlaceholder type="system" trainer={trainer} />}
 
-		<main className="flex-1 overflow-auto p-8">
 		  {currentTab === 'map' && (
 			<MapView 
 			  regions={regions} 

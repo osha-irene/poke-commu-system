@@ -103,9 +103,7 @@ img[style*="pixelated"],
 
 /* 배경 이미지 방식용 (PartySlot, BoxPokemon 등) */
 .pokemon-bg-sprite {
-  background-size: contain !important;
-  background-repeat: no-repeat !important;
-  background-position: center !important;
+  background-repeat: no-repeat;
   image-rendering: -moz-crisp-edges;
   image-rendering: -webkit-crisp-edges;
   image-rendering: pixelated;
@@ -134,4 +132,504 @@ img[style*="pixelated"],
     box-shadow: none !important; 
     /* Webkit/Blink 기반 브라우저(Chrome, Edge)용 */
     -webkit-tap-highlight-color: transparent !important; 
+}
+
+.main-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  background-image:
+    linear-gradient(rgba(9, 24, 15, 0.18), rgba(9, 24, 15, 0.48)),
+    url('./assets/forest-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.main-shell--home {
+  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.site-header {
+  flex: 0 0 118px;
+  min-height: 118px;
+  padding: 78px 32px 8px;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+}
+
+.site-logo {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.site-logo img {
+  display: block;
+  width: min(270px, 30vw);
+  height: auto;
+  filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.26));
+}
+
+.top-nav {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+
+.top-nav--left {
+  justify-content: flex-end;
+}
+
+.top-nav--right {
+  justify-content: flex-start;
+}
+
+.brush-nav-button {
+  width: 118px;
+  height: 64px;
+  border: 0;
+  background: transparent;
+  color: #050505;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0;
+  font-family: 'Segoe Print', 'Comic Sans MS', 'Malgun Gothic', cursive;
+  box-shadow: none;
+  transform: rotate(-1.2deg);
+  cursor: pointer;
+  transition: transform 150ms ease, filter 150ms ease;
+}
+
+.brush-nav-button img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 10px rgba(0, 0, 0, 0.24));
+}
+
+.brush-nav-button:nth-child(even) {
+  transform: rotate(1.1deg);
+}
+
+.brush-nav-button:hover,
+.brush-nav-button.is-active {
+  background: transparent;
+  box-shadow: none;
+  filter: brightness(1.06);
+  transform: translateY(3px) rotate(0deg);
+}
+
+.main-layout {
+  width: calc(100vw - 20px);
+  max-width: 1520px;
+  flex: 1 1 auto;
+  min-height: calc(100vh - 144px);
+  margin: 172px 10px 12px;
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 24px;
+}
+
+.main-layout--home {
+  height: calc(100vh - 302px);
+  min-height: 0;
+}
+
+.trainer-rail {
+  position: sticky;
+  top: 304px;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+}
+
+.trainer-card {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(8px);
+}
+
+.trainer-card__avatar {
+  width: 74px;
+  height: 74px;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #213b25, #71a34a);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.trainer-card__name {
+  text-align: center;
+  color: #171717;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.trainer-card__badge {
+  width: max-content;
+  margin: 8px auto 14px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #173a25;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.trainer-card__stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  color: #333;
+  font-size: 14px;
+}
+
+.trainer-card__stats strong {
+  color: #102817;
+}
+
+.trainer-card__sound,
+.trainer-logout {
+  width: 100%;
+  border: 0;
+  margin-top: 12px;
+  padding: 11px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(16, 40, 23, 0.1);
+  color: #132719;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.trainer-card__sound.is-on {
+  background: rgba(74, 125, 49, 0.18);
+}
+
+.trainer-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.trainer-nav__button {
+  width: 100%;
+  height: 62px;
+}
+
+.trainer-logout {
+  margin-top: auto;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+}
+
+.content-stage {
+  min-width: 0;
+  min-height: 0;
+  padding: 34px 28px 24px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.content-stage--home {
+  overflow: hidden;
+  padding: 30px 18px 14px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.content-stage--view {
+  overflow: visible;
+}
+
+.content-stage--feature {
+  background: rgba(235, 244, 219, 0.82);
+  border: 1px solid rgba(209, 225, 185, 0.9);
+  border-radius: 22px;
+  box-shadow: 0 18px 42px rgba(36, 60, 29, 0.16);
+  backdrop-filter: blur(4px);
+}
+
+.community-panel {
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(28px, 6vw, 72px);
+  color: #111;
+}
+
+.community-panel__eyebrow {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #315424;
+  margin-bottom: 12px;
+}
+
+.community-panel h2 {
+  font-size: clamp(36px, 7vw, 88px);
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: 0;
+  margin-bottom: 18px;
+}
+
+.community-panel p {
+  max-width: 620px;
+  font-size: 18px;
+  line-height: 1.7;
+  color: #293228;
+}
+
+.home-dashboard {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: minmax(115px, 0.68fr) minmax(130px, 0.82fr);
+  gap: 14px;
+}
+
+.content-stage--view .home-dashboard {
+  height: auto;
+}
+
+.home-dashboard__panel {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  padding: clamp(12px, 1.6vw, 22px);
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(5px);
+}
+
+.home-dashboard__panel h2 {
+  margin: 0 0 8px;
+  color: #111;
+  font-size: clamp(20px, 2.2vw, 30px);
+  line-height: 1.05;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.home-dashboard__panel p {
+  max-width: 520px;
+  color: #233024;
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.home-profile-card {
+  width: min(620px, 100%);
+  margin: 4px auto 0;
+  padding: 18px 20px;
+  background: rgba(250, 253, 247, 0.9);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.16);
+  display: grid;
+  grid-template-columns: minmax(180px, 0.9fr) minmax(220px, 1.1fr);
+  align-items: center;
+  gap: 24px;
+}
+
+.home-profile-card__identity {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.home-profile-card__avatar {
+  width: 68px;
+  height: 68px;
+  flex: 0 0 auto;
+  margin: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #47783b;
+  color: white;
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.home-profile-card__name {
+  text-align: left;
+  color: #111;
+  font-size: 22px;
+  line-height: 1.2;
+  font-weight: 900;
+}
+
+.home-profile-card__badge {
+  width: max-content;
+  margin: 9px 0 0;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #183f28;
+  color: white;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.home-profile-card__stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  color: #2c342d;
+  font-size: 15px;
+}
+
+.home-profile-card__details {
+  min-width: 0;
+}
+
+.home-profile-card__stats strong {
+  color: #0f2418;
+}
+
+.home-profile-card__sound,
+.home-profile-card__pokemon {
+  flex: 1 1 auto;
+  border: 0;
+  margin-top: 0;
+  padding: 14px 12px;
+  background: rgba(66, 103, 52, 0.18);
+  color: #12301f;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.home-profile-card__pokemon {
+  background: rgba(49, 93, 133, 0.16);
+  color: #183147;
+}
+
+.home-profile-card__logout {
+  flex: 0 0 auto;
+  min-width: 76px;
+  border: 0;
+  margin: 0;
+  padding: 7px 12px;
+  background: rgba(17, 34, 22, 0.08);
+  color: #243126;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.home-profile-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+@media (max-width: 900px) {
+  .main-shell {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .site-header {
+    min-height: 220px;
+    flex-basis: auto;
+    padding: 14px 14px 10px;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .site-logo {
+    order: -1;
+  }
+
+  .site-logo img {
+    width: min(280px, 78vw);
+  }
+
+  .top-nav,
+  .top-nav--left,
+  .top-nav--right {
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .brush-nav-button {
+    width: 112px;
+    height: 62px;
+  }
+
+  .main-layout {
+    width: calc(100vw - 24px);
+    margin: 0 auto 20px;
+    grid-template-columns: 1fr;
+  }
+
+  .trainer-rail {
+    order: 2;
+  }
+
+  .content-stage {
+    order: 1;
+    padding: 16px;
+    overflow: visible;
+  }
+
+  .trainer-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-dashboard {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    height: auto;
+  }
+
+  .home-profile-card {
+    grid-template-columns: 1fr;
+  }
 }
