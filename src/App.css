@@ -38,6 +38,16 @@
 }
 /* src/index.css 또는 src/App.css에 추가 */
 
+html {
+  scrollbar-gutter: stable;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 /* 포켓몬/아이템 스프라이트 이미지 통일 렌더링 */
 img[style*="pixelated"],
 .pixelated-sprite {
@@ -213,7 +223,7 @@ img[style*="pixelated"],
   box-shadow: none;
   transform: rotate(-1.2deg);
   cursor: pointer;
-  transition: transform 150ms ease, filter 150ms ease;
+  transition: filter 150ms ease;
 }
 
 .brush-nav-button img {
@@ -234,7 +244,6 @@ img[style*="pixelated"],
   background: transparent;
   box-shadow: none;
   filter: brightness(1.06);
-  transform: translateY(3px) rotate(0deg);
 }
 
 .main-layout {
@@ -360,7 +369,7 @@ img[style*="pixelated"],
   min-height: 0;
   padding: 34px 28px 24px;
   background: transparent;
-  border: 0;
+  border: 1px solid transparent;
   box-shadow: none;
   backdrop-filter: none;
 }
