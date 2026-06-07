@@ -80,14 +80,14 @@ html {
   --sidebar-sticky-top: 304px;
   --sidebar-shift: -104px;
   --content-padding: 34px 28px 24px;
-  --top-panel-lift: -6px;
+  --top-panel-lift: -30px;
   --npc-shift-x: 85px;
   --npc-shift-y: 30px;
   --player-shift-x: 30px;
   --player-shift-y: 45px;
   --news-button-top-offset: 34px;
   --schedule-shift-x: 0px;
-  --schedule-shift-y: 40px;
+  --schedule-shift-y: 20px;
   --login-field-height: 35px;
   --login-button-height: 38px;
   --calendar-day-size: 28px;
