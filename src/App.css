@@ -45,8 +45,7 @@ html {
 }
 
 body {
-  min-width: 1540px;
-  overflow-x: auto;
+  overflow-x: hidden;
 }
 
 *,
@@ -256,7 +255,7 @@ img[style*="pixelated"],
   z-index: 30;
   flex: 0 0 236px;
   min-height: 236px;
-  width: 1520px;
+  width: min(1480px, calc(100% - 20px));
   margin: 0 auto;
   box-sizing: border-box;
   padding: 20px 16px 0;
@@ -286,7 +285,7 @@ img[style*="pixelated"],
 
 .site-logo img {
   display: block;
-  width: 680px;
+  width: 640px;
   transform: translateY(-6px);
   height: auto;
   filter: drop-shadow(5px 6px 2px rgba(0, 0, 0, 0.4));
@@ -362,8 +361,8 @@ img[style*="pixelated"],
 }
 
 .site-header .brush-nav-button {
-  width: 138px;
-  height: 84px;
+  width: 132px;
+  height: 80px;
   padding: 0;
   overflow: hidden;
   filter: drop-shadow(2px 3px 1px rgba(0, 0, 0, 0.38));
@@ -398,17 +397,17 @@ img[style*="pixelated"],
 }
 
 .main-layout {
-  width: 1520px;
+  width: min(1480px, calc(100% - 20px));
   flex: 1 1 auto;
   min-height: 760px;
   margin: 56px auto 12px;
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr) 260px;
+  grid-template-columns: 260px minmax(0, 980px) 260px;
   gap: 24px;
 }
 
 .main-layout--home {
-  height: 640px;
+  height: 620px;
   min-height: 0;
 }
 
@@ -536,7 +535,7 @@ img[style*="pixelated"],
   position: absolute;
   top: -98px;
   left: -250px;
-  width: 600px;
+  width: 570px;
   aspect-ratio: 3956 / 4968;
   background-image: url('./assets/main_deco_paper.png');
   background-size: contain;
@@ -738,7 +737,7 @@ img[style*="pixelated"],
   position: absolute;
   top: calc(50% - 34px);
   right: -84px;
-  width: 148px;
+  width: 140px;
   height: auto;
   padding: 0;
   border: 0;
@@ -763,7 +762,7 @@ img[style*="pixelated"],
 
 .home-login-panel {
   position: absolute;
-  top: 112px;
+  top: 128px;
   right: 68px;
   z-index: 6;
   width: min(226px, 64%);
@@ -1111,10 +1110,7 @@ img[style*="pixelated"],
   margin-top: 10px;
 }
 
-@media (max-width: 720px) {
-  body {
-    min-width: 0;
-  }
+@media (max-width: 900px) {
   
 
 .main-shell {
@@ -1411,10 +1407,7 @@ img[style*="pixelated"],
   color: rgba(72, 61, 43, 0.72);
 }
 
-@media (max-width: 720px) {
-  body {
-    min-width: 0;
-  }
+@media (max-width: 900px) {
   .playlist-widget {
     right: 12px;
     bottom: 12px;
