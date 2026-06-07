@@ -276,7 +276,7 @@ img[style*="pixelated"],
 
 .site-logo img {
   display: block;
-  width: clamp(484px, 37.7vw, 727px);
+  width: 680px;
   transform: translateY(-6px);
   height: auto;
   filter: drop-shadow(5px 6px 2px rgba(0, 0, 0, 0.4));
@@ -286,8 +286,8 @@ img[style*="pixelated"],
   position: absolute;
   left: 50%;
   top: 50%;
-  width: clamp(300px, 23vw, 455px);
-  height: clamp(88px, 8vw, 138px);
+  width: 395px;
+  height: 122px;
   transform: translate(-50%, calc(-50% - 6px));
   border: 0;
   padding: 0;
@@ -352,8 +352,8 @@ img[style*="pixelated"],
 }
 
 .site-header .brush-nav-button {
-  width: clamp(100px, 7.7vw, 151px);
-  height: clamp(57px, 4.8vw, 92px);
+  width: 138px;
+  height: 84px;
   padding: 0;
   overflow: hidden;
   filter: drop-shadow(2px 3px 1px rgba(0, 0, 0, 0.38));
@@ -388,9 +388,9 @@ img[style*="pixelated"],
 }
 
 .main-layout {
-  width: min(1520px, calc(100vw - 20px));
+  width: min(1520px, calc(100% - 20px));
   flex: 1 1 auto;
-  min-height: calc(100vh - 144px);
+  min-height: 760px;
   margin: 56px auto 12px;
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr) 260px;
@@ -398,7 +398,7 @@ img[style*="pixelated"],
 }
 
 .main-layout--home {
-  height: calc(100vh - 304px);
+  height: 640px;
   min-height: 0;
 }
 
@@ -526,7 +526,7 @@ img[style*="pixelated"],
   position: absolute;
   top: -98px;
   left: -250px;
-  width: clamp(366px, 39.9vw, 633px);
+  width: 600px;
   aspect-ratio: 3956 / 4968;
   background-image: url('./assets/main_deco_paper.png');
   background-size: contain;
@@ -627,7 +627,7 @@ img[style*="pixelated"],
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  padding: clamp(12px, 1.6vw, 22px);
+  padding: 18px;
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.58);
   box-shadow: 0 16px 34px rgba(0, 0, 0, 0.18);
@@ -727,8 +727,8 @@ img[style*="pixelated"],
 .home-dashboard__news-button {
   position: absolute;
   top: calc(50% - 34px);
-  right: clamp(-104px, -5vw, -48px);
-  width: clamp(112px, 10vw, 168px);
+  right: -84px;
+  width: 148px;
   height: auto;
   padding: 0;
   border: 0;
@@ -753,8 +753,8 @@ img[style*="pixelated"],
 
 .home-login-panel {
   position: absolute;
-  top: clamp(92px, 7.9vw, 128px);
-  right: clamp(46px, 5.1vw, 84px);
+  top: 112px;
+  right: 68px;
   z-index: 6;
   width: min(226px, 64%);
   margin: 0;
@@ -824,8 +824,8 @@ img[style*="pixelated"],
 }
 .home-session-panel {
   position: absolute;
-  top: clamp(98px, 8.2vw, 134px);
-  right: clamp(46px, 5.1vw, 84px);
+  top: 118px;
+  right: 68px;
   z-index: 6;
   width: min(226px, 64%);
   display: grid;
@@ -871,7 +871,7 @@ img[style*="pixelated"],
 }
 .home-calendar {
   width: min(280px, 78%);
-  margin: 46px 0 0 clamp(42px, 5.2vw, 76px);
+  margin: 46px 0 0 64px;
   font-family: Georgia, 'Times New Roman', serif;
   color: #2b271d;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
