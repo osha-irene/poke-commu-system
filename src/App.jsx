@@ -421,6 +421,28 @@ export default function App() {
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
   const isMobile = useMediaQuery('(max-width: 768px)');
 
+  useEffect(() => {
+    const updateSiteScale = () => {
+      const root = document.documentElement;
+      const width = window.innerWidth || 1548;
+      const height = window.innerHeight || 960;
+      const designWidth = 1548;
+      const designHeight = 930;
+      const widthScale = (width - 24) / designWidth;
+      const heightScale = (height - 8) / designHeight;
+      const nextScale = Math.min(0.95, widthScale, heightScale);
+      root.style.setProperty('--site-scale', Math.max(0.34, nextScale).toFixed(4));
+    };
+
+    updateSiteScale();
+    window.addEventListener('resize', updateSiteScale);
+    window.addEventListener('orientationchange', updateSiteScale);
+
+    return () => {
+      window.removeEventListener('resize', updateSiteScale);
+      window.removeEventListener('orientationchange', updateSiteScale);
+    };
+  }, []);
   // ??useGameState ?몄텧 (湲곗〈怨??숈씪)
   const gameState = useGameState();
   
