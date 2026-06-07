@@ -40,6 +40,13 @@
 
 html {
   scrollbar-gutter: stable;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-width: 1540px;
+  overflow-x: auto;
 }
 
 *,
@@ -249,6 +256,9 @@ img[style*="pixelated"],
   z-index: 30;
   flex: 0 0 236px;
   min-height: 236px;
+  width: 1520px;
+  margin: 0 auto;
+  box-sizing: border-box;
   padding: 20px 16px 0;
   display: grid;
   grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
@@ -388,7 +398,7 @@ img[style*="pixelated"],
 }
 
 .main-layout {
-  width: min(1520px, calc(100% - 20px));
+  width: 1520px;
   flex: 1 1 auto;
   min-height: 760px;
   margin: 56px auto 12px;
@@ -1101,7 +1111,10 @@ img[style*="pixelated"],
   margin-top: 10px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 720px) {
+  body {
+    min-width: 0;
+  }
   
 
 .main-shell {
@@ -1111,6 +1124,7 @@ img[style*="pixelated"],
   }
 
   .site-header {
+    width: 100%;
     min-height: 392px;
     flex-basis: auto;
     padding: 2px 14px 4px;
@@ -1397,7 +1411,10 @@ img[style*="pixelated"],
   color: rgba(72, 61, 43, 0.72);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 720px) {
+  body {
+    min-width: 0;
+  }
   .playlist-widget {
     right: 12px;
     bottom: 12px;
