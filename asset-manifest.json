@@ -1,14 +1,20 @@
 {
   "files": {
-    "main.css": "/poke-commu-system/static/css/main.b6d98f27.css",
-    "main.js": "/poke-commu-system/static/js/main.d5ae5922.js",
-    "static/media/forest-bg.jpg": "/poke-commu-system/static/media/forest-bg.5876b951f3e7ea00803b.jpg",
+    "main.css": "/poke-commu-system/static/css/main.17820929.css",
+    "main.js": "/poke-commu-system/static/js/main.28e8f676.js",
+    "static/media/forest-bg (2).png": "/poke-commu-system/static/media/forest-bg (2).023aaebd6df83a1d1128.png",
+    "static/media/main_deco_paper.png": "/poke-commu-system/static/media/main_deco_paper.f65efe6456e423dc929f.png",
+    "static/media/main_player.png": "/poke-commu-system/static/media/main_player.e7faba9211c9be0d3ba5.png",
+    "static/media/main_schedule.png": "/poke-commu-system/static/media/main_schedule.b4a02c8f403fc2f67f11.png",
+    "static/media/main_npc.png": "/poke-commu-system/static/media/main_npc.70941150bda78881f09b.png",
+    "static/media/main_deco_leaves (2).png": "/poke-commu-system/static/media/main_deco_leaves (2).1d65fa47529c541e03ac.png",
+    "static/media/main_news.png": "/poke-commu-system/static/media/main_news.1610334b488bf668eaef.png",
     "index.html": "/poke-commu-system/index.html",
-    "main.b6d98f27.css.map": "/poke-commu-system/static/css/main.b6d98f27.css.map",
-    "main.d5ae5922.js.map": "/poke-commu-system/static/js/main.d5ae5922.js.map"
+    "main.17820929.css.map": "/poke-commu-system/static/css/main.17820929.css.map",
+    "main.28e8f676.js.map": "/poke-commu-system/static/js/main.28e8f676.js.map"
   },
   "entrypoints": [
-    "static/css/main.b6d98f27.css",
-    "static/js/main.d5ae5922.js"
+    "static/css/main.17820929.css",
+    "static/js/main.28e8f676.js"
   ]
 }
