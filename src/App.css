@@ -39,7 +39,11 @@
 /* src/index.css ?먮뒗 src/App.css??異붽? */
 
 html {
-  -webkit-text-size-adjust: 100%;
+    overflow-y: scroll;
+  scrollbar-gutter: stable;
+  scrollbar-color: rgba(178, 211, 135, 0.82) rgba(63, 74, 42, 0.96);
+  scrollbar-width: thin;
+-webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   background-color: #3f4a2a;
   background-image: url('./assets/forest-bg (2).png');
@@ -69,7 +73,7 @@ html {
   --news-button-right: -90px;
   --login-top: 78px;
   --panel-form-right: 145px;
-  --calendar-offset-x: 88px;
+  --calendar-offset-x: 110px;
   --calendar-offset-y: 46px;
   --nav-lift: -32px;
   --nav-inner-offset: 28px;
@@ -123,19 +127,19 @@ body::-webkit-scrollbar {
 
 html::-webkit-scrollbar-track,
 body::-webkit-scrollbar-track {
-  background: #3f4a2a;
+  background: rgba(63, 74, 42, 0.96);
 }
 
 html::-webkit-scrollbar-thumb,
 body::-webkit-scrollbar-thumb {
-  background: rgba(44, 58, 31, 0.78);
-  border: 2px solid #3f4a2a;
+  background: rgba(178, 211, 135, 0.82);
+  border: 2px solid rgba(63, 74, 42, 0.96);
   border-radius: 999px;
 }
 
 html::-webkit-scrollbar-corner,
 body::-webkit-scrollbar-corner {
-  background: #3f4a2a;
+  background: rgba(63, 74, 42, 0.96);
 }*,
 *::before,
 *::after {
