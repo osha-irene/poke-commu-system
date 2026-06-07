@@ -748,6 +748,22 @@ img[style*="pixelated"],
   position: relative;
   z-index: 2;
 }
+.home-doctor-crop {
+  position: absolute;
+  top: 5px;
+  right: clamp(38px, 4.2vw, 70px);
+  width: clamp(300px, 25vw, 390px);
+  aspect-ratio: 900 / 685;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.home-doctor-crop img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
 .home-dashboard::before {
   content: '';
   grid-column: 1 / -1;

@@ -1,4 +1,4 @@
-// src/App.jsx - 湲곗〈 肄붾뱶??Context留?異붽?
+﻿// src/App.jsx - 湲곗〈 肄붾뱶??Context留?異붽?
 
 import useMediaQuery from './hooks/useMediaQuery';
 import MobileLayout from './components/layout/MobileLayout';
@@ -30,6 +30,7 @@ import { PokemonProvider } from './contexts/PokemonContext';
 import { GameProvider } from './contexts/GameContext';
 import BattleView from './components/views/BattleView';
 import mainNewsButton from './assets/main_news.png';
+import doctorWpenImage from './assets/npc/doctor_wpen.png';
 import { User, Lock, LogOut, Music, X, Play, Pause, SkipBack, SkipForward, Volume2 } from 'lucide-react';
 
 function HomeProfileCard({ trainer, isAdmin, soundEnabled, onToggleSound, onLogout, onPokemonClick }) {
@@ -103,12 +104,19 @@ function PlaylistWidget() {
     id: ''
   });
   const playerRef = useRef(null);
+  const hasUnlockedPlaybackRef = useRef(false);
 
   const sendPlayerCommand = (func, args = []) => {
     playerRef.current?.contentWindow?.postMessage(
       JSON.stringify({ event: 'command', func, args }),
       '*'
     );
+  };
+
+  const startPlayback = () => {
+    sendPlayerCommand('setVolume', [volume]);
+    sendPlayerCommand('playVideo');
+    setIsPlaying(true);
   };
 
   useEffect(() => {
@@ -146,13 +154,34 @@ function PlaylistWidget() {
     if (!playlistSettings.id) return;
 
     const timer = window.setTimeout(() => {
-      sendPlayerCommand('setVolume', [volume]);
-      sendPlayerCommand('playVideo');
-      setIsPlaying(true);
+      startPlayback();
     }, 800);
 
     return () => window.clearTimeout(timer);
   }, [playlistSettings.id]);
+
+  useEffect(() => {
+    if (!playlistSettings.id || typeof window === 'undefined') return;
+
+    const unlockPlayback = () => {
+      if (hasUnlockedPlaybackRef.current) return;
+      hasUnlockedPlaybackRef.current = true;
+      startPlayback();
+      window.removeEventListener('pointerdown', unlockPlayback);
+      window.removeEventListener('touchstart', unlockPlayback);
+      window.removeEventListener('keydown', unlockPlayback);
+    };
+
+    window.addEventListener('pointerdown', unlockPlayback, { passive: true });
+    window.addEventListener('touchstart', unlockPlayback, { passive: true });
+    window.addEventListener('keydown', unlockPlayback);
+
+    return () => {
+      window.removeEventListener('pointerdown', unlockPlayback);
+      window.removeEventListener('touchstart', unlockPlayback);
+      window.removeEventListener('keydown', unlockPlayback);
+    };
+  }, [playlistSettings.id, volume]);
 
   const handlePlayPause = () => {
     const nextPlaying = !isPlaying;
@@ -194,9 +223,7 @@ function PlaylistWidget() {
                 allow="autoplay; encrypted-media; picture-in-picture"
                 allowFullScreen
                 onLoad={() => {
-                  sendPlayerCommand('setVolume', [volume]);
-                  sendPlayerCommand('playVideo');
-                  setIsPlaying(true);
+                  startPlayback();
                 }}
               />
             </div>
@@ -270,6 +297,11 @@ function HomeDashboard({ showLogin = false, onLogin, trainer, onLogout }) {
     <section className="home-dashboard" aria-label="main panels">
       {Array.from({ length: 4 }, (_, index) => (
         <article key={index} className="home-dashboard__panel">
+          {index === 0 && (
+            <div className="home-doctor-crop" aria-hidden="true">
+              <img src={doctorWpenImage} alt="" />
+            </div>
+          )}
           {index === 1 && showLogin && (
             <form className="home-login-panel" onSubmit={handleLoginSubmit}>
               <label className="home-login-field">
