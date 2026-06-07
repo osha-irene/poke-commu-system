@@ -120,7 +120,6 @@ export const useAuth = (members, setMembers) => {
       await signOut(auth);
       setCurrentUser(null);
       localStorage.removeItem('poke_currentUserId');
-      window.location.reload();
       console.log('✅ 로그아웃 완료');
     } catch (error) {
       console.error('❌ 로그아웃 오류:', error);

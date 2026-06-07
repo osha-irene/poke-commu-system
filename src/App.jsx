@@ -1,4 +1,4 @@
-﻿// src/App.jsx - 湲곗〈 肄붾뱶??Context留?異붽?
+// src/App.jsx - 湲곗〈 肄붾뱶??Context留?異붽?
 
 import useMediaQuery from './hooks/useMediaQuery';
 import MobileLayout from './components/layout/MobileLayout';
@@ -732,9 +732,10 @@ export default function App() {
     };
 
     return (
+      <>
+      <PlaylistWidget />
       <div className="main-shell main-shell--home">
         <SakuraEffect />
-        <PlaylistWidget />
         <Header currentTab="notice" setCurrentTab={handlePublicNavigation} />
         <div className="main-layout main-layout--home">
           <Sidebar
@@ -747,6 +748,7 @@ export default function App() {
           </main>
         </div>
       </div>
+      </>
     );
   }
 
@@ -771,6 +773,8 @@ export default function App() {
     );
   }
 return (
+  <>
+  <PlaylistWidget />
   <GameProvider value={gameState}>
     <PokemonProvider value={pokemonValue}>
       {isMobile ? (
@@ -847,7 +851,6 @@ return (
       ) : (
         <div className={`main-shell ${currentTab === 'notice' ? 'main-shell--home' : ''}`}>
           <SakuraEffect />
-          <PlaylistWidget />
           <Header currentTab={currentTab} setCurrentTab={setCurrentTab} />
 
           <div className={`main-layout ${currentTab === 'notice' ? 'main-layout--home' : ''}`}>
@@ -975,5 +978,6 @@ return (
     )}
     </PokemonProvider>
   </GameProvider>
+  </>
 );
 }

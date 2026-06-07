@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 
 const assetPath = (fileName) => `${process.env.PUBLIC_URL}/img/ui/${fileName}`;
 
