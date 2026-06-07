@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 const assetPath = (fileName) => `${process.env.PUBLIC_URL}/img/ui/${fileName}`;
 
@@ -15,7 +15,7 @@ export default function Header({ currentTab, setCurrentTab }) {
 
   return (
     <header className="site-header">
-      <nav className="top-nav top-nav--left" aria-label="커뮤니티 왼쪽 메뉴">
+      <nav className="top-nav top-nav--left" aria-label="而ㅻ??덊떚 ?쇱そ 硫붾돱">
         {leftNavItems.map((item) => (
           <button
             key={item.id}
@@ -29,16 +29,17 @@ export default function Header({ currentTab, setCurrentTab }) {
         ))}
       </nav>
 
-      <button
-        type="button"
-        className="site-logo"
-        onClick={() => setCurrentTab('notice')}
-        aria-label="메인으로 이동"
-      >
+      <div className="site-logo">
         <img src={assetPath('logo.png')} alt="Poke Commu" />
-      </button>
+        <button
+          type="button"
+          className="site-logo-hitbox"
+          onClick={() => setCurrentTab('notice')}
+          aria-label="메인으로 이동"
+        />
+      </div>
 
-      <nav className="top-nav top-nav--right" aria-label="커뮤니티 오른쪽 메뉴">
+      <nav className="top-nav top-nav--right" aria-label="而ㅻ??덊떚 ?ㅻⅨ履?硫붾돱">
         {rightNavItems.map((item) => (
           <button
             key={item.id}

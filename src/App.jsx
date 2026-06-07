@@ -1,10 +1,11 @@
-// src/App.jsx - 기존 코드에 Context만 추가
+// src/App.jsx - 湲곗〈 肄붾뱶??Context留?異붽?
 
 import useMediaQuery from './hooks/useMediaQuery';
 import MobileLayout from './components/layout/MobileLayout';
 import './App.css';
+import SakuraEffect from './effects/sakura';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ref, get, set } from 'firebase/database';
 import { database } from './firebase';
 import Sidebar from './components/layout/Sidebar';
@@ -28,6 +29,8 @@ import CookingView from './components/views/CookingView';
 import { PokemonProvider } from './contexts/PokemonContext';
 import { GameProvider } from './contexts/GameContext';
 import BattleView from './components/views/BattleView';
+import mainNewsButton from './assets/main_news.png';
+import { User, Lock, LogOut, Music, X, Play, Pause, SkipBack, SkipForward, Volume2 } from 'lucide-react';
 
 function HomeProfileCard({ trainer, isAdmin, soundEnabled, onToggleSound, onLogout, onPokemonClick }) {
   return (
@@ -40,7 +43,7 @@ function HomeProfileCard({ trainer, isAdmin, soundEnabled, onToggleSound, onLogo
           <div className="home-profile-card__name">{trainer?.name}</div>
           {isAdmin && (
             <div className="home-profile-card__badge">
-              {trainer?.isSuperAdmin ? '슈퍼관리자' : '관리자'}
+              {trainer?.isSuperAdmin ? '?덊띁愿由ъ옄' : '愿由ъ옄'}
             </div>
           )}
         </div>
@@ -56,10 +59,10 @@ function HomeProfileCard({ trainer, isAdmin, soundEnabled, onToggleSound, onLogo
         </div>
         <div className="home-profile-card__actions">
           <button type="button" onClick={onPokemonClick} className="home-profile-card__pokemon">
-            내 포켓몬
+            ???ъ폆紐?
           </button>
           <button type="button" onClick={onToggleSound} className="home-profile-card__sound">
-            {soundEnabled ? '사운드 ON' : '사운드 OFF'}
+            {soundEnabled ? '?ъ슫??ON' : '?ъ슫??OFF'}
           </button>
           <button type="button" onClick={onLogout} className="home-profile-card__logout">
             로그아웃
@@ -70,47 +73,275 @@ function HomeProfileCard({ trainer, isAdmin, soundEnabled, onToggleSound, onLogo
   );
 }
 
-function HomeDashboard({ trainer, isAdmin, soundEnabled, onToggleSound, onLogout, onPokemonClick }) {
-  const cards = [
-    {
-      title: 'NPC 소개',
-      body: '주요 NPC와 안내 캐릭터가 들어갈 자리입니다.'
-    },
-    {
-      title: '자기 프로필',
-      content: (
-        <HomeProfileCard
-            trainer={trainer}
-            isAdmin={isAdmin}
-            soundEnabled={soundEnabled}
-            onToggleSound={onToggleSound}
-            onLogout={onLogout}
-            onPokemonClick={onPokemonClick}
-        />
-      )
-    },
-    {
-      title: '캘린더',
-      body: '커뮤니티 일정, 이벤트, 마감일을 정리할 자리입니다.'
-    },
-    {
-      title: '미정',
-      body: '추가 콘텐츠를 넣을 예비 영역입니다.'
-    }
-  ];
+function getYouTubeEmbedTarget(value = '') {
+  const trimmed = value.trim();
+  if (!trimmed) return { kind: '', id: '' };
+
+  try {
+    const url = new URL(trimmed);
+    const playlistId = url.searchParams.get('list');
+    const videoId = url.hostname.includes('youtu.be')
+      ? url.pathname.split('/').filter(Boolean)[0]
+      : url.searchParams.get('v') || url.pathname.match(/\/embed\/([^/?#]+)/)?.[1];
+
+    if (playlistId) return { kind: 'playlist', id: playlistId };
+    if (videoId) return { kind: 'video', id: videoId };
+  } catch {
+    // Plain IDs are treated as playlist IDs for backward compatibility.
+  }
+
+  return { kind: 'playlist', id: trimmed };
+}
+
+function PlaylistWidget() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [volume, setVolume] = useState(65);
+  const [playlistSettings, setPlaylistSettings] = useState({
+    title: 'Playlist',
+    kind: '',
+    id: ''
+  });
+  const playerRef = useRef(null);
+
+  const sendPlayerCommand = (func, args = []) => {
+    playerRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ event: 'command', func, args }),
+      '*'
+    );
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadPlaylistSettings = async () => {
+      try {
+        const settingsRef = ref(database, 'gameData/playlistSettings');
+        const snapshot = await get(settingsRef);
+
+        if (snapshot.exists() && isMounted) {
+          const saved = snapshot.val() || {};
+          const target = saved.kind && saved.id
+            ? { kind: saved.kind, id: saved.id }
+            : getYouTubeEmbedTarget(saved.url || saved.playlistId || '');
+
+          setPlaylistSettings({
+            title: saved.title || 'Playlist',
+            ...target
+          });
+        }
+      } catch (error) {
+        console.error('playlist settings load failed:', error);
+      }
+    };
+
+    loadPlaylistSettings();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!playlistSettings.id) return;
+
+    const timer = window.setTimeout(() => {
+      sendPlayerCommand('setVolume', [volume]);
+      sendPlayerCommand('playVideo');
+      setIsPlaying(true);
+    }, 800);
+
+    return () => window.clearTimeout(timer);
+  }, [playlistSettings.id]);
+
+  const handlePlayPause = () => {
+    const nextPlaying = !isPlaying;
+    sendPlayerCommand(nextPlaying ? 'playVideo' : 'pauseVideo');
+    setIsPlaying(nextPlaying);
+  };
+
+  const handleVolumeChange = (event) => {
+    const nextVolume = Number(event.target.value);
+    setVolume(nextVolume);
+    sendPlayerCommand('setVolume', [nextVolume]);
+  };
+
+  const originParam = typeof window !== 'undefined'
+    ? `&origin=${encodeURIComponent(window.location.origin)}`
+    : '';
+  const embedSrc = playlistSettings.id
+    ? playlistSettings.kind === 'video'
+      ? `https://www.youtube.com/embed/${encodeURIComponent(playlistSettings.id)}?enablejsapi=1&autoplay=1&loop=1&playlist=${encodeURIComponent(playlistSettings.id)}${originParam}`
+      : `https://www.youtube.com/embed/videoseries?list=${encodeURIComponent(playlistSettings.id)}&enablejsapi=1&autoplay=1&loop=1${originParam}`
+    : '';
 
   return (
-    <section className="home-dashboard">
-      {cards.map((card) => (
-        <article key={card.title} className="home-dashboard__panel">
-          <h2>{card.title}</h2>
-          {card.content || <p>{card.body}</p>}
-        </article>
-      ))}
-    </section>
+    <div className={`playlist-widget ${isOpen ? 'is-open' : ''}`}>
+      <section className="playlist-panel" aria-label="플레이리스트" aria-hidden={!isOpen}>
+        <div className="playlist-panel__header">
+          <span>{playlistSettings.title || 'Playlist'}</span>
+          <button type="button" onClick={() => setIsOpen(false)} aria-label="플레이리스트 닫기">
+            <X aria-hidden="true" />
+          </button>
+        </div>
+        {embedSrc ? (
+          <>
+            <div className="playlist-panel__player">
+              <iframe
+                ref={playerRef}
+                title="YouTube playlist player"
+                src={embedSrc}
+                allow="autoplay; encrypted-media; picture-in-picture"
+                allowFullScreen
+                onLoad={() => {
+                  sendPlayerCommand('setVolume', [volume]);
+                  sendPlayerCommand('playVideo');
+                  setIsPlaying(true);
+                }}
+              />
+            </div>
+            <div className="playlist-panel__controls" aria-label="음악 컨트롤">
+              <button type="button" onClick={() => sendPlayerCommand('previousVideo')} aria-label="이전 곡">
+                <SkipBack aria-hidden="true" />
+              </button>
+              <button type="button" onClick={handlePlayPause} aria-label={isPlaying ? '멈춤' : '재생'}>
+                {isPlaying ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
+              </button>
+              <button type="button" onClick={() => sendPlayerCommand('nextVideo')} aria-label="다음 곡">
+                <SkipForward aria-hidden="true" />
+              </button>
+              <label className="playlist-panel__volume">
+                <Volume2 aria-hidden="true" />
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={volume}
+                  onChange={handleVolumeChange}
+                  aria-label="볼륨"
+                />
+              </label>
+            </div>
+          </>
+        ) : (
+          <p className="playlist-panel__empty">플레이리스트가 설정되지 않았습니다.</p>
+        )}
+      </section>
+      <button
+        type="button"
+        className="playlist-toggle"
+        onClick={() => setIsOpen((current) => !current)}
+        aria-label="플레이리스트 열기"
+        aria-expanded={isOpen}
+      >
+        <Music aria-hidden="true" />
+      </button>
+    </div>
   );
 }
 
+function HomeDashboard({ showLogin = false, onLogin, trainer, onLogout }) {
+  const [loginUserId, setLoginUserId] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const calendarDays = [
+    { day: 31, muted: true },
+    ...Array.from({ length: 30 }, (_, index) => ({ day: index + 1, muted: false })),
+    ...Array.from({ length: 4 }, (_, index) => ({ day: index + 1, muted: true }))
+  ];
+  const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+  const handleNewsClick = () => {
+    const newsUrl = '';
+
+    if (newsUrl) {
+      window.location.href = newsUrl;
+    }
+  };
+
+  const handleLoginSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!onLogin) return;
+
+    await onLogin(loginUserId, loginPassword);
+  };
+
+  return (
+    <section className="home-dashboard" aria-label="main panels">
+      {Array.from({ length: 4 }, (_, index) => (
+        <article key={index} className="home-dashboard__panel">
+          {index === 1 && showLogin && (
+            <form className="home-login-panel" onSubmit={handleLoginSubmit}>
+              <label className="home-login-field">
+                <User aria-hidden="true" />
+                <input
+                  type="text"
+                  value={loginUserId}
+                  onChange={(event) => setLoginUserId(event.target.value)}
+                  autoComplete="username"
+                  aria-label="아이디"
+                  required
+                />
+              </label>
+              <label className="home-login-field">
+                <Lock aria-hidden="true" />
+                <input
+                  type="password"
+                  value={loginPassword}
+                  onChange={(event) => setLoginPassword(event.target.value)}
+                  autoComplete="current-password"
+                  aria-label="비밀번호"
+                  required
+                />
+              </label>
+              <button type="submit">LOGIN</button>
+            </form>
+          )}
+          {index === 1 && !showLogin && onLogout && (
+            <div className="home-session-panel">
+              <span>{trainer?.name || 'Trainer'}</span>
+              <button type="button" onClick={onLogout}>
+                <LogOut aria-hidden="true" />
+                로그아웃
+              </button>
+            </div>
+          )}
+          {index === 2 && (
+            <div className="home-calendar" aria-label="June 2026 calendar">
+              <div className="home-calendar__header">
+                <span>Calendar</span>
+                <strong>June 2026</strong>
+              </div>
+              <div className="home-calendar__weekdays">
+                {weekDays.map((day, dayIndex) => (
+                  <span key={`${day}-${dayIndex}`} className={dayIndex === 0 ? 'is-sunday' : dayIndex === 6 ? 'is-saturday' : ''}>{day}</span>
+                ))}
+              </div>
+              <div className="home-calendar__grid">
+                {calendarDays.map((day, dayIndex) => (
+                  <span
+                    key={`${day.muted ? 'muted' : 'current'}-${day.day}-${dayIndex}`}
+                    className={[day.day === 7 && !day.muted ? 'is-today' : '', dayIndex % 7 === 0 ? 'is-sunday' : dayIndex % 7 === 6 ? 'is-saturday' : '', day.muted ? 'is-muted' : ''].filter(Boolean).join(' ')}
+                  >
+                    {day.day}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </article>
+      ))}
+      <button
+        type="button"
+        className="home-dashboard__news-button"
+        aria-label="news"
+        onClick={handleNewsClick}
+      >
+        <img src={mainNewsButton} alt="" aria-hidden="true" />
+      </button>
+    </section>
+  );
+}
 function CommunityPlaceholder({ type, trainer, isAdmin, soundEnabled, onToggleSound, onLogout, onPokemonClick }) {
   if (type === 'notice') {
     return (
@@ -128,7 +359,7 @@ function CommunityPlaceholder({ type, trainer, isAdmin, soundEnabled, onToggleSo
   const content = {
     notice: {
       title: '공지사항',
-      body: '운영 공지, 업데이트, 이벤트, 점검 안내가 들어갈 자리입니다.'
+      body: '운영 공지, 업데이트, 이벤트 안내가 들어갈 자리입니다.'
     },
     world: {
       title: '세계관',
@@ -136,7 +367,7 @@ function CommunityPlaceholder({ type, trainer, isAdmin, soundEnabled, onToggleSo
     },
     system: {
       title: '시스템',
-      body: '모험, 포획, 도감, 상점, 요리, 캠핑, 배틀 규칙을 안내하는 페이지입니다.'
+      body: '모험, 탐험, 교감, 상점, 요리, 캠핑, 배틀 규칙을 안내하는 페이지입니다.'
     }
   };
   const selected = content[type] || content.notice;
@@ -152,126 +383,13 @@ function CommunityPlaceholder({ type, trainer, isAdmin, soundEnabled, onToggleSo
 
 
 
-// 로그인 화면 컴포넌트
-function LoginScreen({ onLogin, onRegister }) {
-  const [mode, setMode] = useState('login');
-  const [userId, setUserId] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (mode === 'login') {
-      await onLogin(userId, password);
-    } else if (mode === 'register') {
-      if (!name) {
-        alert('이름을 입력해주세요.');
-        return;
-      }
-      const success = await onRegister(userId, password, name);
-      if (success) {
-        setMode('login');
-        setUserId('');
-        setPassword('');
-        setName('');
-      }
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">🐾 포켓몬 탐험</h1>
-          <p className="text-gray-600">커뮤니티 시스템</p>
-        </div>
-
-        <div className="flex gap-2 mb-6">
-          <button
-            onClick={() => setMode('login')}
-            className={`flex-1 py-2 rounded-lg font-semibold transition-colors ${
-              mode === 'login'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            로그인
-          </button>
-          <button
-            onClick={() => setMode('register')}
-            className={`flex-1 py-2 rounded-lg font-semibold transition-colors ${
-              mode === 'register'
-                ? 'bg-green-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            회원가입
-          </button>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">아이디</label>
-            <input
-              type="text"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="아이디를 입력하세요"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">비밀번호</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="비밀번호 (6자 이상)"
-              required
-            />
-          </div>
-
-          {mode === 'register' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">이름</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="이름을 입력하세요"
-                required
-              />
-            </div>
-          )}
-          
-          <button
-            type="submit"
-            className={`w-full py-3 rounded-lg font-semibold transition-colors ${
-              mode === 'login'
-                ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                : 'bg-green-600 hover:bg-green-700 text-white'
-            }`}
-          >
-            {mode === 'login' ? '로그인' : '회원가입'}
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-}
-
 export default function App() {
   const [qnaPosts, setQnaPosts] = useState([]);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
   const isMobile = useMediaQuery('(max-width: 768px)');
 
-  // ✅ useGameState 호출 (기존과 동일)
+  // ??useGameState ?몄텧 (湲곗〈怨??숈씪)
   const gameState = useGameState();
   
   const {
@@ -358,7 +476,7 @@ export default function App() {
   } = gameState;
   const isFeaturePage = currentTab !== 'notice';
 
-  // 게시판 로드
+  // 寃뚯떆??濡쒕뱶
   useEffect(() => {
     const loadQnaPosts = async () => {
       try {
@@ -369,7 +487,7 @@ export default function App() {
           setQnaPosts(snapshot.val());
         }
       } catch (error) {
-        console.error('❌ 게시판 로드 실패:', error);
+        console.error('??寃뚯떆??濡쒕뱶 ?ㅽ뙣:', error);
       } finally {
         setIsLoadingPosts(false);
       }
@@ -378,7 +496,7 @@ export default function App() {
     loadQnaPosts();
   }, []);
 
-  // 사운드 로드
+  // ?ъ슫??濡쒕뱶
   useEffect(() => {
     const loadSoundSettings = async () => {
       if (!currentUser?.id) return;
@@ -391,14 +509,14 @@ export default function App() {
           setSoundEnabled(snapshot.val());
         }
       } catch (error) {
-        console.error('사운드 설정 로드 실패:', error);
+        console.error('?ъ슫???ㅼ젙 濡쒕뱶 ?ㅽ뙣:', error);
       }
     };
 
     loadSoundSettings();
   }, [currentUser]);
 
-  // 게시판 저장
+  // 寃뚯떆?????
   useEffect(() => {
     const saveQnaPosts = async () => {
       if (isLoadingPosts || qnaPosts.length === 0) return;
@@ -407,14 +525,14 @@ export default function App() {
         const postsRef = ref(database, 'community/qnaPosts');
         await set(postsRef, qnaPosts);
       } catch (error) {
-        console.error('❌ 게시판 저장 실패:', error);
+        console.error('??寃뚯떆??????ㅽ뙣:', error);
       }
     };
 
     saveQnaPosts();
   }, [qnaPosts, isLoadingPosts]);
 
-  // 사운드 저장
+  // ?ъ슫?????
   useEffect(() => {
     const saveSoundSettings = async () => {
       if (!currentUser?.id) return;
@@ -423,14 +541,14 @@ export default function App() {
         const soundRef = ref(database, `users/${currentUser.id}/settings/soundEnabled`);
         await set(soundRef, soundEnabled);
       } catch (error) {
-        console.error('❌ 사운드 설정 저장 실패:', error);
+        console.error('???ъ슫???ㅼ젙 ????ㅽ뙣:', error);
       }
     };
 
     saveSoundSettings();
   }, [soundEnabled, currentUser]);
 
-  // 클릭 사운드
+  // ?대┃ ?ъ슫??
   useEffect(() => {
     const basePath = window.location.pathname.includes('/poke-commu-system') 
       ? '/poke-commu-system' 
@@ -495,19 +613,19 @@ export default function App() {
 
  const handleRegister = async (userId, password, name) => {
     try {
-      console.log('🔐 회원가입 시작:', userId);
+      console.log('?뵍 ?뚯썝媛???쒖옉:', userId);
       
       const email = `${userId}@pokemon.com`;
       const { createUserWithEmailAndPassword } = await import('firebase/auth');
       const { auth, database } = await import('./firebase');
       const { ref, set } = await import('firebase/database');
       
-      // 1️⃣ Firebase Auth에 계정 생성
+      // 1截뤴깵 Firebase Auth??怨꾩젙 ?앹꽦
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUid = userCredential.user.uid;
-      console.log('✅ Auth 계정 생성 완료:', firebaseUid);
+      console.log('??Auth 怨꾩젙 ?앹꽦 ?꾨즺:', firebaseUid);
       
-      // 2️⃣ Realtime Database에 회원 데이터 저장
+      // 2截뤴깵 Realtime Database???뚯썝 ?곗씠?????
       const memberRef = ref(database, `members/${firebaseUid}`);
       const newMemberData = {
         name: name,
@@ -523,7 +641,7 @@ export default function App() {
         inventory: [
           {
             itemId: 4,
-            name: '몬스터볼',
+            name: '紐ъ뒪?곕낵',
             count: 15,
             imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'
           }
@@ -532,9 +650,9 @@ export default function App() {
       };
       
       await set(memberRef, newMemberData);
-      console.log('✅ Database 저장 완료:', firebaseUid);
+      console.log('??Database ????꾨즺:', firebaseUid);
       
-      // 3️⃣ members state에 추가 (즉시 반영)
+      // 3截뤴깵 members state??異붽? (利됱떆 諛섏쁺)
       setMembers(prev => ({
         ...prev,
         [firebaseUid]: {
@@ -543,20 +661,20 @@ export default function App() {
         }
       }));
       
-      alert(`✅ 회원가입 완료!\n\n아이디: ${userId}\n이름: ${name}\n\n로그인해주세요!`);
+      alert(`???뚯썝媛???꾨즺!\n\n?꾩씠?? ${userId}\n?대쫫: ${name}\n\n濡쒓렇?명빐二쇱꽭??`);
       return true;
       
     } catch (error) {
-      console.error('❌ 회원가입 오류:', error);
+      console.error('???뚯썝媛???ㅻ쪟:', error);
       
       if (error.code === 'auth/email-already-in-use') {
-        alert('이미 사용 중인 아이디입니다.');
+        alert('?대? ?ъ슜 以묒씤 ?꾩씠?붿엯?덈떎.');
       } else if (error.code === 'auth/weak-password') {
-        alert('비밀번호는 6자 이상이어야 합니다.');
+        alert('鍮꾨?踰덊샇??6???댁긽?댁뼱???⑸땲??');
       } else if (error.code === 'auth/invalid-email') {
-        alert('유효하지 않은 이메일 형식입니다.');
+        alert('?좏슚?섏? ?딆? ?대찓???뺤떇?낅땲??');
       } else {
-        alert(`회원가입 중 오류가 발생했습니다.\n${error.message}`);
+        alert(`?뚯썝媛??以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.\n${error.message}`);
       }
       
       return false;
@@ -564,21 +682,39 @@ export default function App() {
   };
   if (isAuthLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">⏳</div>
-          <p className="text-xl text-gray-600">로딩 중...</p>
+      <div className="app-loading-screen">
+        <div className="app-loading-indicator" aria-label="로딩 중">
+          <span />
+          <span />
+          <span />
         </div>
       </div>
     );
   }
 
   if (!currentUser || !currentUser.id) {
+    const handlePublicNavigation = (nextTab) => {
+      if (nextTab !== 'notice') {
+        alert('아직 접근할 수 없습니다.');
+      }
+    };
+
     return (
-      <LoginScreen 
-        onLogin={handleLogin}
-        onRegister={handleRegister}
-      />
+      <div className="main-shell main-shell--home">
+        <SakuraEffect />
+        <PlaylistWidget />
+        <Header currentTab="notice" setCurrentTab={handlePublicNavigation} />
+        <div className="main-layout main-layout--home">
+          <Sidebar
+            currentTab="notice"
+            setCurrentTab={handlePublicNavigation}
+            isAdmin={false}
+          />
+          <main className="content-stage content-stage--home">
+            <HomeDashboard showLogin onLogin={handleLogin} />
+          </main>
+        </div>
+      </div>
     );
   }
 
@@ -586,7 +722,7 @@ export default function App() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
-          <div className="text-6xl mb-4">🔧</div>
+          <div className="text-6xl mb-4">점검</div>
           <h2 className="text-2xl font-bold text-gray-800 mb-4">시스템 점검 중</h2>
           <p className="text-gray-600 mb-6">
             현재 시스템 점검이 진행 중입니다.<br />
@@ -678,6 +814,8 @@ return (
         </MobileLayout>
       ) : (
         <div className={`main-shell ${currentTab === 'notice' ? 'main-shell--home' : ''}`}>
+          <SakuraEffect />
+          <PlaylistWidget />
           <Header currentTab={currentTab} setCurrentTab={setCurrentTab} />
 
           <div className={`main-layout ${currentTab === 'notice' ? 'main-layout--home' : ''}`}>
@@ -733,7 +871,7 @@ return (
 		  {currentTab === 'shop' && <ShopView />}
 		  {currentTab === 'cooking' && <CookingView />}
 		  
-		  {/* ✅ 여기에 캠핑 탭 추가! */}
+		  {/* ???ш린??罹좏븨 ??異붽?! */}
 		  {currentTab === 'camping' && (
 			<CampingView
 			  trainer={currentUser}

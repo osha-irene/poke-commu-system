@@ -1,7 +1,7 @@
 // src/components/views/AdminView.jsx - 완전 수정 버전
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../../contexts/GameContext';
-import { ref as dbRef, set } from 'firebase/database';
+import { ref as dbRef, get, set } from 'firebase/database';
 import { database } from '../../firebase';
 import { User, ChevronRight } from 'lucide-react';
 import RegionEditModal from '../modals/RegionEditModal';
@@ -76,8 +76,78 @@ export default function AdminView() {
   const [escapeMode, setEscapeMode] = useState(() =>
     localStorage.getItem('poke_escapeMode') || 'none'
   );
+  const [playlistTitle, setPlaylistTitle] = useState('Playlist');
+  const [playlistInput, setPlaylistInput] = useState('');
+  const [playlistSaving, setPlaylistSaving] = useState(false);
 
   const selectedMember = selectedMemberId && members ? members[selectedMemberId] : null;
+
+  const getYouTubeEmbedTarget = (value = '') => {
+    const trimmed = value.trim();
+    if (!trimmed) return { kind: '', id: '' };
+
+    try {
+      const url = new URL(trimmed);
+      const playlistId = url.searchParams.get('list');
+      const videoId = url.hostname.includes('youtu.be')
+        ? url.pathname.split('/').filter(Boolean)[0]
+        : url.searchParams.get('v') || url.pathname.match(/\/embed\/([^/?#]+)/)?.[1];
+
+      if (playlistId) return { kind: 'playlist', id: playlistId };
+      if (videoId) return { kind: 'video', id: videoId };
+    } catch {
+      // Plain IDs are treated as playlist IDs for backward compatibility.
+    }
+
+    return { kind: 'playlist', id: trimmed };
+  };
+
+  useEffect(() => {
+    const loadPlaylistSettings = async () => {
+      try {
+        const settingsRef = dbRef(database, 'gameData/playlistSettings');
+        const snapshot = await get(settingsRef);
+
+        if (snapshot.exists()) {
+          const saved = snapshot.val() || {};
+          setPlaylistTitle(saved.title || 'Playlist');
+          setPlaylistInput(saved.url || saved.id || saved.playlistId || '');
+        }
+      } catch (error) {
+        console.error('playlist settings load failed:', error);
+      }
+    };
+
+    loadPlaylistSettings();
+  }, []);
+
+  const handleSavePlaylistSettings = async () => {
+    const target = getYouTubeEmbedTarget(playlistInput);
+
+    if (!target.id) {
+      alert('YouTube 플레이리스트 URL 또는 ID를 입력해주세요.');
+      return;
+    }
+
+    try {
+      setPlaylistSaving(true);
+      const settingsRef = dbRef(database, 'gameData/playlistSettings');
+      await set(settingsRef, {
+        title: playlistTitle || 'Playlist',
+        kind: target.kind,
+        id: target.id,
+        playlistId: target.kind === 'playlist' ? target.id : '',
+        url: playlistInput,
+        updatedAt: Date.now()
+      });
+      alert('플레이리스트 설정이 저장되었습니다.');
+    } catch (error) {
+      console.error('playlist settings save failed:', error);
+      alert('플레이리스트 설정 저장에 실패했습니다.');
+    } finally {
+      setPlaylistSaving(false);
+    }
+  };
 
   useEffect(() => {
     console.log('🔄 AdminView - members 변경됨:', Object.keys(members || {}).length);
@@ -421,6 +491,37 @@ export default function AdminView() {
               >
                 {maintenanceMode ? '점검 종료' : '점검 시작'}
               </Button>
+            </div>
+          </Card>
+          <Card className="p-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">YouTube 플레이리스트 설정</h3>
+            <div className="grid gap-3">
+              <label className="grid gap-1">
+                <span className="text-sm font-semibold text-gray-700">표시 이름</span>
+                <input
+                  type="text"
+                  value={playlistTitle}
+                  onChange={(event) => setPlaylistTitle(event.target.value)}
+                  className="border-2 border-gray-300 rounded-lg px-4 py-3 focus:border-indigo-500 focus:outline-none"
+                  placeholder="Playlist"
+                />
+              </label>
+              <label className="grid gap-1">
+                <span className="text-sm font-semibold text-gray-700">YouTube 플레이리스트 URL 또는 ID</span>
+                <input
+                  type="text"
+                  value={playlistInput}
+                  onChange={(event) => setPlaylistInput(event.target.value)}
+                  className="border-2 border-gray-300 rounded-lg px-4 py-3 focus:border-indigo-500 focus:outline-none"
+                  placeholder="https://www.youtube.com/playlist?list=..."
+                />
+              </label>
+              <div className="flex items-center justify-between gap-3 text-sm text-gray-600">
+                <span>저장 후 오른쪽 하단 플레이리스트 버튼에 반영됩니다.</span>
+                <Button variant="primary" onClick={handleSavePlaylistSettings} disabled={playlistSaving}>
+                  {playlistSaving ? '저장 중...' : '저장'}
+                </Button>
+              </div>
             </div>
           </Card>
 

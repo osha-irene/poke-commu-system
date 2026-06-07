@@ -1,0 +1,72 @@
+.sakura-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  mix-blend-mode: normal;
+}
+
+.sakura {
+  position: absolute;
+  top: -8vh;
+  pointer-events: none;
+  border-radius: 72% 28% 68% 32%;
+  box-shadow: 0 0 4px rgba(233, 241, 153, 0.28);
+  transform: translate3d(0, 0, 0) rotate(var(--sakura-rotate));
+  animation-name: sakura-fall, sakura-blow, sakura-sway;
+  animation-timing-function: linear, linear, ease-in-out;
+  animation-iteration-count: infinite, infinite, infinite;
+}
+
+.sakura--tone-0 {
+  background: linear-gradient(120deg, rgba(39, 68, 34, 0.64), rgba(196, 218, 87, 0.48));
+}
+
+.sakura--tone-1 {
+  background: linear-gradient(145deg, rgba(28, 62, 35, 0.6), rgba(210, 228, 111, 0.46));
+}
+
+.sakura--tone-2 {
+  background: linear-gradient(105deg, rgba(66, 100, 47, 0.56), rgba(226, 236, 136, 0.44));
+}
+
+@keyframes sakura-fall {
+  0% {
+    top: -8vh;
+  }
+
+  100% {
+    top: 108vh;
+  }
+}
+
+@keyframes sakura-blow {
+  0% {
+    margin-left: 0;
+  }
+
+  100% {
+    margin-left: var(--sakura-drift);
+  }
+}
+
+@keyframes sakura-sway {
+  0% {
+    transform: rotate(var(--sakura-rotate));
+  }
+
+  45% {
+    transform: rotate(calc(var(--sakura-rotate) + 68deg));
+  }
+
+  100% {
+    transform: rotate(calc(var(--sakura-rotate) + 12deg));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sakura-layer {
+    display: none;
+  }
+}
