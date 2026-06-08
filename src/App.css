@@ -1,4 +1,4 @@
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+@import url('https://cdn.jsdelivr.net/gh/sunn-us/SUIT/fonts/static/woff2/SUIT.css');
 
 @font-face {
   font-family: 'YeojuCeramic';
@@ -70,7 +70,7 @@
     transform: rotate(360deg);
   }
 }
-/* src/index.css ?먮뒗 src/App.css??異붽? */
+/* src/index.css ?�?�� src/App.css???�붽? */
 
 html {
   overflow-x: hidden;
@@ -182,7 +182,7 @@ body::-webkit-scrollbar-corner {
   box-sizing: border-box;
 }
 
-/* ?ъ폆紐??꾩씠???ㅽ봽?쇱씠???대?吏 ?듭씪 ?뚮뜑留?*/
+/* ???�紐??꾩씠????�봽??�씠????�?吏 ???�� ???���?*/
 img[style*="pixelated"],
 .pixelated-sprite {
   image-rendering: -moz-crisp-edges;          /* Firefox */
@@ -191,19 +191,19 @@ img[style*="pixelated"],
   image-rendering: crisp-edges;               /* Opera */
   -ms-interpolation-mode: nearest-neighbor;   /* IE */
   
-  /* 釉뚮씪?곗?蹂??ш린 李⑥씠 諛⑹? */
+  /* ?�뚮??�?�???�?李⑥??諛⑹? */
   width: auto;
   height: auto;
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
   
-  /* ?덊떚?⑤━?댁떛 ?꾩쟾 ?쒓굅 */
+  /* ??�떚??�━??�떛 ?꾩쟾 ??�굅 */
   -webkit-font-smoothing: none;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ?꾩씠???대?吏 ?꾩슜 ?대옒??*/
+/* ?꾩씠????�?吏 ?꾩슜 ??�???*/
 .item-sprite {
   image-rendering: -moz-crisp-edges;
   image-rendering: -webkit-crisp-edges;
@@ -211,13 +211,13 @@ img[style*="pixelated"],
   image-rendering: crisp-edges;
   -ms-interpolation-mode: nearest-neighbor;
   
-  /* 怨좎젙 ?ш린濡??듭씪 */
+  /* ?�좎????린濡????�� */
   width: 48px !important;
   height: 48px !important;
   object-fit: contain;
 }
 
-/* ?ъ폆紐??꾩씠肄??꾩슜 ?대옒??(?묒? ?ш린) */
+/* ???�紐??꾩씠???꾩슜 ??�???(?�? ??�? */
 .pokemon-icon {
   image-rendering: -moz-crisp-edges;
   image-rendering: -webkit-crisp-edges;
@@ -225,13 +225,13 @@ img[style*="pixelated"],
   image-rendering: crisp-edges;
   -ms-interpolation-mode: nearest-neighbor;
   
-  /* 怨좎젙 ?ш린濡??듭씪 */
+  /* ?�좎????린濡????�� */
   width: 56px !important;
   height: 56px !important;
   object-fit: contain;
 }
 
-/* ?ъ폆紐??ㅽ봽?쇱씠???꾩슜 ?대옒??(以묎컙 ?ш린) */
+/* ???�紐???�봽??�씠???꾩슜 ??�???(以묎�???�? */
 .pokemon-sprite {
   image-rendering: -moz-crisp-edges;
   image-rendering: -webkit-crisp-edges;
@@ -239,13 +239,13 @@ img[style*="pixelated"],
   image-rendering: crisp-edges;
   -ms-interpolation-mode: nearest-neighbor;
   
-  /* 怨좎젙 ?ш린濡??듭씪 */
+  /* ?�좎????린濡????�� */
   width: 96px !important;
   height: 96px !important;
   object-fit: contain;
 }
 
-/* 諛곌꼍 ?대?吏 諛⑹떇??(PartySlot, BoxPokemon ?? */
+/* 諛곌�???�?吏 諛⑹???(PartySlot, BoxPokemon ?? */
 .pokemon-bg-sprite {
   background-repeat: no-repeat;
   image-rendering: -moz-crisp-edges;
@@ -261,20 +261,20 @@ img[style*="pixelated"],
     box-shadow: none !important;
 }
 
-/* Recharts Wrapper???④퍡 ?곸슜 */
+/* Recharts Wrapper????�퍡 ?곸슜 */
 .recharts-wrapper:focus {
     outline: none !important;
     box-shadow: none !important;
 }
 
-/* global.css ?뚯씪??異붽? */
+/* global.css ???��???�붽? */
 .recharts-surface[tabindex="0"]:focus,
 .recharts-surface:focus {
-    /* 釉뚮씪?곗? 湲곕낯 outline??媛뺤젣濡??쒓굅 */
+    /* ?�뚮??�? 湲곕??outline??媛뺤?�濡???�굅 */
     outline: none !important;
-    /* Tailwind CSS ring ?④낵???④퍡 ?쒓굅 */
+    /* Tailwind CSS ring ??�낵????�퍡 ??�굅 */
     box-shadow: none !important; 
-    /* Webkit/Blink 湲곕컲 釉뚮씪?곗?(Chrome, Edge)??*/
+    /* Webkit/Blink 湲곕�??�뚮??�?(Chrome, Edge)??*/
     -webkit-tap-highlight-color: transparent !important; 
 }
 
@@ -529,7 +529,7 @@ img[style*="pixelated"],
   font-weight: 900;
   line-height: 1;
   letter-spacing: 0;
-  font-family: 'Segoe Print', 'Comic Sans MS', 'Malgun Gothic', cursive;
+  font-family: 'SUITE', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   box-shadow: none;
   cursor: pointer;
   transition: filter 150ms ease;
@@ -798,7 +798,7 @@ img[style*="pixelated"],
   border: 0;
   box-shadow: none;
   backdrop-filter: none;
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family: 'SUITE', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
 .community-panel__eyebrow {
@@ -838,7 +838,7 @@ img[style*="pixelated"],
   position: relative;
   overflow-x: clip;
   color: #ffffff;
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family: 'SUITE', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
 .world-view::before {
@@ -932,7 +932,7 @@ img[style*="pixelated"],
 .world-view__section p.world-view__legend-source {
   max-width: 100%;
   margin-top: 8px;
-  font-family: 'GapyeongHanseokbongBigBrush', 'Pretendard', sans-serif;
+  font-family: 'GapyeongHanseokbongBigBrush', 'SUITE', sans-serif;
   font-size: clamp(10px, 2.2vw, 16px);
   font-weight: 400;
   line-height: 2.5;
@@ -1030,7 +1030,7 @@ img[style*="pixelated"],
   padding: 6px 7px 6px 10px;
   background: transparent;
   color: rgba(255, 255, 255, 0.68);
-  font: 700 12px/1.35 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font: 700 12px/1.35 'SUITE', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   text-align: left;
   word-break: keep-all;
   overflow-wrap: anywhere;
@@ -1212,7 +1212,7 @@ img[style*="pixelated"],
   gap: var(--home-issue-column-gap);
   transform: translate(var(--schedule-shift-x), var(--schedule-shift-y));
   z-index: 3;
-  font-family: 'Malgun Gothic', system-ui, sans-serif;
+  font-family: 'SUITE', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   pointer-events: none;
 }
 
@@ -1461,7 +1461,7 @@ img[style*="pixelated"],
   padding: 6px 11px 6px 36px;
   background: rgba(92, 73, 50, 0.22);
   color: #2d2419;
-  font: 600 13px/1.2 system-ui, sans-serif;
+  font: 600 13px/1.2 'SUITE', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   outline: none;
   box-shadow: none;
 }
@@ -1528,7 +1528,7 @@ img[style*="pixelated"],
   align-items: center;
   justify-content: center;
   gap: clamp(5px, 0.5vw, 7px);
-  font: 700 12px/1 'Malgun Gothic', system-ui, sans-serif;
+  font: 700 12px/1 'SUITE', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   cursor: pointer;
   box-shadow: none;
 }
@@ -2166,14 +2166,14 @@ img[style*="pixelated"],
 .playlist-panel__empty {
   margin: 0;
   color: rgba(45, 36, 25, 0.72);
-  font: 600 12px/1.5 system-ui, sans-serif;
+  font: 600 12px/1.5 'SUITE', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 .playlist-panel__list {
   margin: 0;
   padding: 0 0 0 18px;
   display: grid;
   gap: 5px;
-  font: 600 12px/1.35 system-ui, sans-serif;
+  font: 600 12px/1.35 'SUITE', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
 .playlist-panel__list li::marker {
