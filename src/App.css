@@ -288,6 +288,20 @@ img[style*="pixelated"],
   background: #1f271d;
 }
 
+.app-loading-screen--overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  min-height: 100dvh;
+  opacity: 1;
+  transition: opacity 560ms ease;
+}
+
+.app-loading-screen--overlay.is-fading-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .app-loading-screen::before {
   content: '';
   position: absolute;

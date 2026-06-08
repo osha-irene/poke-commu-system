@@ -279,6 +279,20 @@ function getCalendarDays(year, month) {
   });
 }
 
+const DEPLOYED_HOME_FEED_START_TIME = Date.parse('2026-07-04T00:00:00+09:00');
+
+function isLocalRuntime() {
+  if (typeof window === 'undefined') return true;
+
+  const hostname = window.location.hostname;
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '::1' ||
+    hostname === ''
+  );
+}
+
 function HomeDashboard({ showLogin = false, onLogin, trainer, onLogout, onPokemonClick, onItemsClick, members = {} }) {
   const [loginUserId, setLoginUserId] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -305,6 +319,10 @@ function HomeDashboard({ showLogin = false, onLogin, trainer, onLogout, onPokemo
     const numeric = Number(value);
     return Number.isFinite(numeric) && numeric > 0 ? numeric : fallbackIndex;
   };
+  const shouldFilterDeployedFeed = !isLocalRuntime();
+  const isAllowedHomeFeedEntry = (entry) => (
+    !shouldFilterDeployedFeed || entry.eventTime >= DEPLOYED_HOME_FEED_START_TIME
+  );
 
   const cookingFeed = Object.values(members || {})
     .flatMap((member) => {
@@ -329,6 +347,7 @@ function HomeDashboard({ showLogin = false, onLogin, trainer, onLogout, onPokemo
           eventTime: getEventTime(String(item.itemId || '').replace('cooked_', ''), index)
         }));
     })
+    .filter(isAllowedHomeFeedEntry)
     .sort((a, b) => b.eventTime - a.eventTime)
     .slice(0, 1);
 
@@ -343,6 +362,7 @@ function HomeDashboard({ showLogin = false, onLogin, trainer, onLogout, onPokemo
         eventTime: getEventTime(entry.evolvedAt || entry.createdAt, index)
       }));
     })
+    .filter(isAllowedHomeFeedEntry)
     .sort((a, b) => b.eventTime - a.eventTime)
     .slice(0, 1);
 
@@ -518,6 +538,18 @@ function CommunityPlaceholder({ type }) {
   return <WorldView content={content} tocLabel={tocLabel} hiddenSectionTitles={[]} />;
 }
 
+function LoadingOverlay({ overlay = false, fading = false }) {
+  return (
+    <div className={`app-loading-screen ${overlay ? 'app-loading-screen--overlay' : ''} ${fading ? 'is-fading-out' : ''}`}>
+      <div className="app-loading-indicator" aria-label="로딩 중">
+        <span />
+        <span />
+        <span />
+      </div>
+    </div>
+  );
+}
+
 
 
 export default function App() {
@@ -569,6 +601,7 @@ export default function App() {
     handleLogin,
     handleLogout,
     isAuthLoading,
+    isMembersLoading,
     handleRegionClick,
     handleCloseEncounter,
     handleCatchSuccess,
@@ -597,6 +630,66 @@ export default function App() {
 	camping,
   } = gameState;
   const isFeaturePage = currentTab !== 'home';
+  const isCoreLoading = isAuthLoading || isMembersLoading;
+  const [isInitialPageReady, setIsInitialPageReady] = useState(false);
+  const [isLoadingOverlayVisible, setIsLoadingOverlayVisible] = useState(true);
+  const [isLoadingOverlayFading, setIsLoadingOverlayFading] = useState(false);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    if (isCoreLoading) {
+      setIsInitialPageReady(false);
+      return () => {
+        isCancelled = true;
+      };
+    }
+
+    const waitForWindowLoad = new Promise((resolve) => {
+      if (document.readyState === 'complete') {
+        resolve();
+        return;
+      }
+
+      window.addEventListener('load', resolve, { once: true });
+    });
+
+    const waitForFonts = document.fonts?.ready?.catch?.(() => undefined) || Promise.resolve();
+    const waitForFrames = new Promise((resolve) => {
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(resolve);
+      });
+    });
+    const waitForSettling = new Promise((resolve) => window.setTimeout(resolve, 650));
+
+    Promise.all([waitForWindowLoad, waitForFonts, waitForFrames, waitForSettling]).then(() => {
+      if (!isCancelled) {
+        setIsInitialPageReady(true);
+      }
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isCoreLoading, currentUser?.id]);
+
+  useEffect(() => {
+    if (isCoreLoading || !isInitialPageReady) {
+      setIsLoadingOverlayVisible(true);
+      setIsLoadingOverlayFading(false);
+      return undefined;
+    }
+
+    setIsLoadingOverlayVisible(true);
+    setIsLoadingOverlayFading(true);
+
+    const timer = window.setTimeout(() => {
+      setIsLoadingOverlayVisible(false);
+      setIsLoadingOverlayFading(false);
+    }, 560);
+
+    return () => window.clearTimeout(timer);
+  }, [isCoreLoading, isInitialPageReady]);
 
   // 寃뚯떆??濡쒕뱶
   useEffect(() => {
@@ -733,7 +826,11 @@ export default function App() {
     pokemonLearnsets
   };
 
-  if (isAuthLoading) {
+  if (isCoreLoading) {
+    return <LoadingOverlay />;
+  }
+
+  if (false && isCoreLoading) {
     return (
       <div className="app-loading-screen">
         <div className="app-loading-indicator" aria-label="로딩 중">
@@ -769,6 +866,7 @@ export default function App() {
           </main>
         </div>
       </div>
+      {isLoadingOverlayVisible && <LoadingOverlay overlay fading={isLoadingOverlayFading} />}
       </>
     );
   }
@@ -1012,6 +1110,7 @@ return (
     )}
     </PokemonProvider>
   </GameProvider>
+  {isLoadingOverlayVisible && <LoadingOverlay overlay fading={isLoadingOverlayFading} />}
   </>
 );
 }
