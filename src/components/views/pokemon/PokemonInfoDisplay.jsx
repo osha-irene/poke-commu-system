@@ -3,7 +3,7 @@ const PokemonInfoDisplay = ({ pokemon }) => {
   const getGenderIcon = (gender) => {
     if (gender === 'male') return '♂';
     if (gender === 'female') return '♀';
-    return '⚪';
+    return null;
   };
   
   const getGenderColor = (gender) => {
@@ -37,7 +37,7 @@ const PokemonInfoDisplay = ({ pokemon }) => {
       {/* 기본 정보 */}
       <div className="flex items-center gap-2 mb-3">
         <h3 className="text-xl font-bold">{pokemon.nickname || pokemon.name}</h3>
-        {pokemon.gender && pokemon.gender !== 'none' && (
+        {(pokemon.gender === 'male' || pokemon.gender === 'female') && (
           <span className={`text-2xl font-bold ${getGenderColor(pokemon.gender)}`}>
             {getGenderIcon(pokemon.gender)}
           </span>

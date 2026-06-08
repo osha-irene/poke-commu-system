@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Package, Percent, TrendingUp, Map as MapIcon, Building2 } from 'lucide-react';
+import { MapPin, Map as MapIcon, Building2 } from 'lucide-react';
 
 export default function MapView({ regions, onRegionClick }) {
   const [viewMode, setViewMode] = useState('default');

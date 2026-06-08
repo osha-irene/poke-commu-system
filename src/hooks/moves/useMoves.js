@@ -1,5 +1,7 @@
 // src/hooks/useMoves.js
 
+import { getPokemonLearnset } from '../../utils/pokemonLearnsets';
+
 export const useMoves = (currentUser, updateCurrentUser, allMoves, pokemonLearnsets) => {
   
   // 기술 배우기/교체
@@ -110,7 +112,7 @@ export const useMoves = (currentUser, updateCurrentUser, allMoves, pokemonLearns
   const getAvailableMovesForLevel = (pokemonNumber, level) => {
     if (!pokemonLearnsets) return [];
     
-    const learnset = pokemonLearnsets[pokemonNumber.toString()];
+    const learnset = getPokemonLearnset(pokemonLearnsets, pokemonNumber);
     if (!learnset) return [];
     
     return learnset.levelUpMoves
@@ -126,7 +128,7 @@ export const useMoves = (currentUser, updateCurrentUser, allMoves, pokemonLearns
   const getAllLearnableMoves = (pokemonNumber, currentLevel) => {
     if (!pokemonLearnsets) return [];
     
-    const learnset = pokemonLearnsets[pokemonNumber.toString()];
+    const learnset = getPokemonLearnset(pokemonLearnsets, pokemonNumber);
     if (!learnset) return [];
     
     return learnset.levelUpMoves
@@ -142,7 +144,7 @@ export const useMoves = (currentUser, updateCurrentUser, allMoves, pokemonLearns
   const getStartingMoves = (pokemonNumber, currentLevel, movesData) => {
     if (!movesData?.pokemonLearnsets) return [];
     
-    const learnset = movesData.pokemonLearnsets[pokemonNumber.toString()];
+    const learnset = getPokemonLearnset(movesData.pokemonLearnsets, pokemonNumber);
     if (!learnset) return [];
     
     // 현재 레벨 이하에서 배울 수 있는 기술 중 최신 4개

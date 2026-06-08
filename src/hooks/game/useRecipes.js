@@ -171,7 +171,23 @@ export const useRecipes = (currentUser, updateCurrentUser) => {
       });
     }
     
-    updateCurrentUser({ inventory: newInventory });
+    const cookedAt = Date.now();
+    const cookingHistoryEntry = {
+      id: `cooked_${cookedAt}`,
+      itemName: resultItem.name,
+      imageUrl: resultItem.spriteUrl || '/images/items/default.png',
+      recipeId: recipe.id,
+      recipeName: recipe.name,
+      cookedAt
+    };
+
+    updateCurrentUser({
+      inventory: newInventory,
+      cookingHistory: [
+        cookingHistoryEntry,
+        ...((currentUser.cookingHistory || []).filter(Boolean))
+      ].slice(0, 10)
+    });
     
     // 레시피 발견 처리
     const isNewRecipe = discoverRecipe(recipe.id);

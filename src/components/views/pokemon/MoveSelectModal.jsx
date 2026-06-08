@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { X, Search, Zap, Shield, Star } from 'lucide-react';
 import { getTypeNameKr, getTypeColor, COLORS } from '../../../styles/theme';
+import { getLearnsetTmMoves, getPokemonLearnset } from '../../../utils/pokemonLearnsets';
 
 const CATEGORY_NAMES_KR = {
   'physical': '물리',
@@ -37,21 +38,21 @@ export default function MoveSelectModal({
     [currentMoves]
   );
 
-  const learnableMovesIds = useMemo(() => {
-  const learnset = pokemonLearnsets[pokemon.number.toString()];
+const learnableMovesIds = useMemo(() => {
+  const learnset = getPokemonLearnset(pokemonLearnsets, pokemon);
   if (!learnset) return [];
   
   // 모든 배울 수 있는 기술 통합
   const allLearnableMoves = [
     ...(learnset.levelUpMoves?.map(lm => lm.moveId) || []),
-    ...(learnset.machineMoves || []),
+    ...getLearnsetTmMoves(learnset),
     ...(learnset.eggMoves || []),
     ...(learnset.tutorMoves || [])
   ];
   
   // 중복 제거
   return [...new Set(allLearnableMoves)];
-}, [pokemon.number, pokemonLearnsets]);
+}, [pokemon, pokemonLearnsets]);
 
 
   const filteredMoves = useMemo(() => {

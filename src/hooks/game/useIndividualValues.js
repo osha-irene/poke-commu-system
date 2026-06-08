@@ -1,18 +1,12 @@
 // src/hooks/game/useIndividualValues.js
 // 포켓몬 개체값 생성 (성별, 크기, 특성)
 
+import { generatePokemonGender } from '../../utils/pokemonGender';
+
 export const useIndividualValues = () => {
   // 성별 생성
   const generateGender = (pokemonData) => {
-    const ratio = pokemonData.genderRatio || { male: 50, female: 50 };
-    
-    // 무성 포켓몬
-    if (ratio.male === 0 && ratio.female === 0) {
-      return 'none';
-    }
-    
-    const random = Math.random() * 100;
-    return random < ratio.male ? 'male' : 'female';
+    return generatePokemonGender(pokemonData);
   };
 
   // 크기 생성 (7단계: XXXS ~ XXXL)

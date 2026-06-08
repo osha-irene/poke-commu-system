@@ -117,6 +117,8 @@ async function createInitialMembersWithAuth() {
         dailyWalks: 10,
         maxDailyWalks: 10,
         money: 50000,
+        trainerExp: 0,
+        lastAttendanceDate: null,
         accessibleRegions: [],
         caughtPokemon: [null, null, null, null, null, null],
         inventory: getInitialInventory()
@@ -134,6 +136,8 @@ async function createInitialMembersWithAuth() {
         dailyWalks: 10,
         maxDailyWalks: 10,
         money: 10000,
+        trainerExp: 0,
+        lastAttendanceDate: null,
         accessibleRegions: [],
         caughtPokemon: [null, null, null, null, null, null],
         inventory: getInitialInventory()

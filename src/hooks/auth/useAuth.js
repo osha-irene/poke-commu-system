@@ -9,6 +9,7 @@ import {
   onAuthStateChanged 
 } from 'firebase/auth';
 import { auth, database } from '../../firebase';
+import { DAILY_ATTENDANCE_EXP, getKoreaDateKey } from '../../utils/experience';
 
 const ensurePartyPadding = (caughtPokemon) => {
   if (caughtPokemon && typeof caughtPokemon === 'object' && !Array.isArray(caughtPokemon)) {
@@ -53,11 +54,27 @@ export const useAuth = (members, setMembers) => {
           
           if (snapshot.exists() && isSubscribed) {
             const memberData = snapshot.val();
+            const todayKey = getKoreaDateKey();
+            const currentTrainerExp = Number(memberData.trainerExp) || 0;
+            const shouldGrantAttendanceExp = memberData.lastAttendanceDate !== todayKey;
+            const memberDataWithAttendance = shouldGrantAttendanceExp
+              ? {
+                  ...memberData,
+                  trainerExp: currentTrainerExp + DAILY_ATTENDANCE_EXP,
+                  lastAttendanceDate: todayKey
+                }
+              : memberData;
+
+            if (shouldGrantAttendanceExp) {
+              const { id, email, ...dataToSave } = memberDataWithAttendance;
+              await set(memberRef, dataToSave);
+            }
+
             const paddedUser = {
-              ...memberData,
+              ...memberDataWithAttendance,
               id: firebaseUser.uid,
               email: firebaseUser.email,
-              caughtPokemon: ensurePartyPadding(memberData.caughtPokemon || [])
+              caughtPokemon: ensurePartyPadding(memberDataWithAttendance.caughtPokemon || [])
             };
             
             console.log('✅ 회원 데이터 로드:', paddedUser.name);

@@ -182,7 +182,7 @@ export default function MobileItemsView() {
         <div className="flex items-center justify-between text-white">
           <div>
             <div className="text-sm opacity-90">보유 금액</div>
-            <div className="text-2xl font-bold">₩{(trainer.money || 0).toLocaleString()}</div>
+            <div className="text-2xl font-bold">{(trainer.money || 0).toLocaleString()}원</div>
           </div>
           <div className="text-right">
             <div className="text-sm opacity-90">총 아이템</div>
@@ -291,7 +291,7 @@ export default function MobileItemsView() {
                       <div className="flex items-center gap-3 text-xs">
                         {details.sellPrice > 0 && (
                           <div className="text-green-600 font-semibold">
-                            판매 ₩{details.sellPrice.toLocaleString()}
+                            판매 {details.sellPrice.toLocaleString()}원
                           </div>
                         )}
                         {details.canUse && (
@@ -403,7 +403,7 @@ export default function MobileItemsView() {
                             className="w-full bg-green-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-green-700 active:scale-98 transition-all flex items-center justify-center gap-2"
                           >
                             <ShoppingCart size={20} />
-                            판매하기 (₩{details.sellPrice.toLocaleString()})
+                            판매하기 ({details.sellPrice.toLocaleString()}원)
                           </button>
                         )}
                         <button
@@ -474,7 +474,7 @@ export default function MobileItemsView() {
                         />
                         {isSell && details.sellPrice > 0 && (
                           <p className="text-lg text-green-600 font-bold mt-3">
-                            총 판매 금액: ₩{(details.sellPrice * quantity).toLocaleString()}
+                            총 판매 금액: {(details.sellPrice * quantity).toLocaleString()}원
                           </p>
                         )}
                       </div>

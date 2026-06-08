@@ -11,10 +11,7 @@ function ProfileSettings({ trainer }) {  // ← props로 trainer 받기
 
   // 기존 마스토돈 계정 불러오기
   useEffect(() => {
-    loadMastodonAccount();
-  }, [trainer]);
-
-  const loadMastodonAccount = async () => {
+    const loadMastodonAccount = async () => {
     if (!trainer?.id) return;
     
     try {
@@ -28,7 +25,10 @@ function ProfileSettings({ trainer }) {  // ← props로 trainer 받기
     } catch (error) {
       console.error('마스토돈 계정 불러오기 실패:', error);
     }
-  };
+    };
+
+    loadMastodonAccount();
+  }, [trainer]);
 
   const linkMastodonAccount = async () => {
     if (!mastodonAccount.trim()) {

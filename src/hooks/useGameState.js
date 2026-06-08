@@ -40,7 +40,7 @@ import { useAdminRegions } from './admin/useAdminRegions';
 import { useAdminItems } from './admin/useAdminItems';
 
 export default function useGameState() {
-  const [currentTab, setCurrentTab] = useState('notice');
+  const [currentTab, setCurrentTab] = useState('home');
   const [encounterPokemon, setEncounterPokemon] = useState(null);
   const [firstCatchPokemon, setFirstCatchPokemon] = useState(null);
   

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Settings, Percent, TrendingUp, Sparkles, Package, Plus, Search, X, Save, Globe } from 'lucide-react';
+import { Settings, Percent, TrendingUp, Sparkles, Package, Plus, X, Save } from 'lucide-react';
 import { useGame } from '../../../../contexts/GameContext';
 import { TYPE_NAMES_EN } from '../../../../styles/theme';
 
@@ -11,21 +11,21 @@ export default function PokemonSettingsPanel({ region, onUpdateRegion }) {
   );
   const [minLevel, setMinLevel] = useState(region.minLevel || 5);
   const [maxLevel, setMaxLevel] = useState(region.maxLevel || 20);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery] = useState('');
   const [selectedPokemon, setSelectedPokemon] = useState(() => {
     const pokemons = region.pokemons;
     return Array.isArray(pokemons) ? pokemons : [];
   });
   const [pokemonRates, setPokemonRates] = useState(region.pokemonRates || {});
   const [shinyRate, setShinyRate] = useState(region.shinyRate || 4096);
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [typeFilter] = useState('all');
   const [allowNationalPokedex, setAllowNationalPokedex] = useState(
     region.allowNationalPokedex !== undefined ? region.allowNationalPokedex : false
   );
   const [pokedexTab, setPokedexTab] = useState(
     region.allowNationalPokedex ? 'national' : 'game'
   );
-  const [showRegionalForms, setShowRegionalForms] = useState(true);
+  const [showRegionalForms] = useState(true);
 
   // region.id가 변경될 때만 초기화 (같은 지역 내 업데이트는 무시)
   useEffect(() => {
@@ -38,15 +38,7 @@ export default function PokemonSettingsPanel({ region, onUpdateRegion }) {
     const nationalPokedex = region.allowNationalPokedex !== undefined ? region.allowNationalPokedex : false;
     setAllowNationalPokedex(nationalPokedex);
     setPokedexTab(nationalPokedex ? 'national' : 'game');
-  }, [region.id]);
-
-  const pokemonTypes = [
-    { id: 'all', name: '전체' },
-    ...Object.entries(TYPE_NAMES_EN).map(([nameKr, nameEn]) => ({
-      id: nameEn,
-      name: nameKr
-    }))
-  ];
+  }, [region.id, region.encounterRate, region.minLevel, region.maxLevel, region.pokemons, region.pokemonRates, region.shinyRate, region.allowNationalPokedex]);
 
   const handleToggleNationalPokedex = () => {
     const newValue = !allowNationalPokedex;
@@ -82,7 +74,6 @@ export default function PokemonSettingsPanel({ region, onUpdateRegion }) {
   };
 
   const probabilities = calculateProbabilities();
-  const totalWeight = availableEncounterPokemon.reduce((sum, id) => sum + (pokemonRates[id] || 10), 0);
 
   const colorPalette = [
     '#6366f1', '#ec4899', '#8b5cf6', '#f59e0b', '#10b981',

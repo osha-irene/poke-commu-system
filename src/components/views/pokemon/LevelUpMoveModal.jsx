@@ -31,7 +31,6 @@ export default function LevelUpMoveModal({
   const [selectedOldMove, setSelectedOldMove] = useState(null);
 
   const isFull = currentMoves.length >= 4;
-  const hasSpace = currentMoves.length < 4;
 
   const handleConfirm = () => {
     if (isFull && !selectedOldMove) {

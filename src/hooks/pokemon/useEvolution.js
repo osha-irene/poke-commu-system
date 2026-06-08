@@ -4,6 +4,35 @@ import evolutionsData from '../../data/evolutions.json';
 export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) => {
   const [evolutionModal, setEvolutionModal] = useState(null);
 
+  const toPokemonNumber = (value) => {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+  };
+
+  const getPokemonNumberCandidates = (pokemon = {}) => {
+    const currentNumber = toPokemonNumber(pokemon.number);
+    if (currentNumber !== null) return [currentNumber];
+
+    return [pokemon.originalNumber, pokemon.pokemonId]
+      .map(toPokemonNumber)
+      .filter((number, index, numbers) => number !== null && numbers.indexOf(number) === index);
+  };
+
+  const findEvolutionForPokemon = (pokemon, predicate = () => true) => {
+    const candidates = getPokemonNumberCandidates(pokemon);
+    return evolutionsData.evolutions.find((evo) =>
+      candidates.includes(toPokemonNumber(evo.from)) && predicate(evo)
+    );
+  };
+
+  const findPokemonTemplateByNumber = (number) => {
+    const targetNumber = toPokemonNumber(number);
+    return allPokemonMaster.find((pokemon) =>
+      toPokemonNumber(pokemon.number) === targetNumber ||
+      toPokemonNumber(pokemon.originalNumber) === targetNumber
+    );
+  };
+
  // 진화 가능 여부 확인
   const checkEvolution = (pokemon) => {
     console.log('🔍 checkEvolution 호출:', pokemon.name, pokemon.number, 'Lv.', pokemon.level);
@@ -14,9 +43,7 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
     }
 
     // 해당 포켓몬의 진화 정보 찾기
-    const evolution = evolutionsData.evolutions.find(
-      evo => evo.from === pokemon.number
-    );
+    const evolution = findEvolutionForPokemon(pokemon);
     
     console.log('📋 찾은 진화 정보:', evolution);
 
@@ -130,7 +157,7 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
     if (evolution) {
       console.log('✨ 진화 가능! 모달 띄우기');
       
-      const evolvedPokemonData = allPokemonMaster.find(p => p.number === evolution.to);
+      const evolvedPokemonData = findPokemonTemplateByNumber(evolution.to);
       
       if (!evolvedPokemonData) {
         console.log('❌ 진화할 포켓몬 데이터 없음');
@@ -171,8 +198,7 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
     const normalizedItemName = normalizeItemName(itemName);
     console.log('🔥 normalizedItemName:', normalizedItemName);
     
-    const evolution = evolutionsData.evolutions.find(evo => {
-      if (evo.from !== pokemon.number) return false;
+    const evolution = findEvolutionForPokemon(pokemon, (evo) => {
       if (evo.condition.type !== 'item') return false;
       
       const evolItem = normalizeItemName(evo.condition.item || '');
@@ -189,7 +215,7 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
     }
     
     // ⭐ 변경: 바로 진화하지 않고 모달 표시
-    const evolvedPokemonData = allPokemonMaster.find(p => p.number === evolution.to);
+    const evolvedPokemonData = findPokemonTemplateByNumber(evolution.to);
     
     if (!evolvedPokemonData) {
       alert('진화할 포켓몬 데이터를 찾을 수 없습니다!');
@@ -213,9 +239,7 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
 
   // 진화 실행
   const performEvolution = (pokemon, evolution) => {
-    const evolvedTemplate = allPokemonMaster.find(
-      p => p.number === evolution.to
-    );
+    const evolvedTemplate = findPokemonTemplateByNumber(evolution.to);
 
     if (!evolvedTemplate) {
       alert('❌ 진화 정보를 찾을 수 없습니다!');
@@ -227,6 +251,8 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
         return {
           ...p,
           number: evolvedTemplate.number,
+          originalNumber: evolvedTemplate.originalNumber || evolvedTemplate.number,
+          pokemonId: evolvedTemplate.number,
           name: evolvedTemplate.name,
           nameEn: evolvedTemplate.nameEn,
           type: evolvedTemplate.type,
@@ -242,7 +268,25 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
       return p;
     });
 
-    updateCurrentUser({ caughtPokemon: updatedPokemon });
+    const evolvedAt = Date.now();
+    const evolutionHistoryEntry = {
+      id: `evolution_${pokemon.uniqueId || evolvedAt}_${evolvedAt}`,
+      pokemonId: pokemon.uniqueId || null,
+      fromName: pokemon.nickname || pokemon.name,
+      toName: evolvedTemplate.name,
+      toNameEn: evolvedTemplate.nameEn,
+      toNumber: evolvedTemplate.number,
+      imageUrl: evolvedTemplate.imageUrl,
+      evolvedAt
+    };
+
+    updateCurrentUser({
+      caughtPokemon: updatedPokemon,
+      evolutionHistory: [
+        evolutionHistoryEntry,
+        ...((currentUser.evolutionHistory || []).filter(Boolean))
+      ].slice(0, 10)
+    });
     return true;
   };
 
@@ -257,7 +301,7 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
     const success = performEvolution(pokemon, evolution);
 
     if (success) {
-      const evolvedTemplate = allPokemonMaster.find(p => p.number === evolution.to);
+      const evolvedTemplate = findPokemonTemplateByNumber(evolution.to);
       alert(`🎉 축하합니다!\n${pokemon.nickname || pokemon.name}이(가) ${evolvedTemplate.name}(으)로 진화했습니다!`);
     }
 
@@ -283,7 +327,7 @@ const manualEvolve = (pokemon) => {
   }
   
   // 모달 표시 (실제 진화는 acceptEvolution에서)
-  const evolvedPokemonData = allPokemonMaster.find(p => p.number === evolution.to);
+  const evolvedPokemonData = findPokemonTemplateByNumber(evolution.to);
   
   if (!evolvedPokemonData) {
     alert('진화할 포켓몬 데이터를 찾을 수 없습니다!');

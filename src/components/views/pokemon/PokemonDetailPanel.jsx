@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   ArrowUpCircle, 
   ArrowDownCircle, 
-  Trash2, 
   Heart, 
+  Trees,
   X, 
   Edit2, 
   Check,
@@ -23,6 +23,7 @@ import { getTypeColor, POKEBALL_LIST } from '../../../styles/theme';
 import MovesList from './MovesList';
 import MoveSelectModal from './MoveSelectModal';
 import LevelUpMoveModal from './LevelUpMoveModal';
+import { getRequiredExpForLevel } from '../../../utils/experience';
 
 const getPokemonSpriteUrl = (number) => 
   `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`;
@@ -31,7 +32,7 @@ const getPokemonSpriteUrl = (number) =>
 const getGenderIcon = (gender) => {
   if (gender === 'male') return '♂';
   if (gender === 'female') return '♀';
-  return '⚪';
+  return null;
 };
 
 const getGenderColor = (gender) => {
@@ -77,7 +78,6 @@ export default function PokemonDetailPanel({
   onUpdateNickname,
   onGiveItem,
   onTakeItem,
-  onSetPartner,
   onForgetMove,
   onLearnMove,   
   isAdmin = false,
@@ -94,6 +94,8 @@ export default function PokemonDetailPanel({
   const [showMoveSelectModal, setShowMoveSelectModal] = useState(false);
   const [showLevelUpMoveModal, setShowLevelUpMoveModal] = useState(false); 
   const [levelUpData, setLevelUpData] = useState(null);
+  const [expInput, setExpInput] = useState('');
+  const [showExpPanel, setShowExpPanel] = useState(false);
   
   // 툴팁용 state 추가
   const [hoveredCondition, setHoveredCondition] = useState(null);
@@ -101,13 +103,25 @@ export default function PokemonDetailPanel({
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [tooltipType, setTooltipType] = useState(''); 
 
+  const toPokemonNumber = (value) => {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+  };
+  const trainerExp = Number(currentUser?.trainerExp) || 0;
+  const requiredLevelExp = getRequiredExpForLevel(pokemon.level);
+  const selectedExpAmount = Math.max(0, Math.floor(Number(expInput) || 0));
+  const remainingTrainerExp = Math.max(0, trainerExp - Math.min(selectedExpAmount, trainerExp));
+  const canAllocateExp = selectedExpAmount > 0 && trainerExp >= selectedExpAmount;
+  const levelExpTitle = requiredLevelExp === null
+    ? '현재 레벨에서는 경험치 배분으로 더 이상 레벨업할 수 없습니다'
+    : canAllocateExp
+      ? `경험치 배분: ${selectedExpAmount} / 보유 ${trainerExp}`
+      : `배분할 경험치를 입력해주세요 / 보유 ${trainerExp}`;
+
   // 진화 가능 여부 체크
   const canEvolve = checkEvolution && checkEvolution(pokemon);
 const isHoldingEverstone = pokemon.heldItem?.toLowerCase() === 'everstone' || 
                             pokemon.heldItem?.toLowerCase() === '변함없는돌';
-
-  // 파트너 여부 확인 (파일 상단 어딘가에 추가)
-const isThisPartner = currentUser?.partnerPokemon?.uniqueId === pokemon.uniqueId;
 
   // 컨디션 및 노력치 데이터
   const conditionData = [
@@ -137,7 +151,7 @@ const isThisPartner = currentUser?.partnerPokemon?.uniqueId === pokemon.uniqueId
         x={x}
         y={y}
         textAnchor={textAnchor}
-        fill="#581C87"
+        fill="#4f741f"
         fontSize={9}
         fontWeight={600}
         style={{ cursor: 'pointer' }}
@@ -173,7 +187,7 @@ const isThisPartner = currentUser?.partnerPokemon?.uniqueId === pokemon.uniqueId
         x={x}
         y={y}
         textAnchor={textAnchor}
-        fill="#1E3A8A"
+        fill="#4f741f"
         fontSize={9}
         fontWeight={600}
         style={{ cursor: 'pointer' }}
@@ -220,17 +234,6 @@ const isThisPartner = currentUser?.partnerPokemon?.uniqueId === pokemon.uniqueId
       })
     : null;
 
- const pokeballData = pokemon.caughtWithBall && typeof pokemon.caughtWithBall === 'string'
-  ? allItems.find(item => {
-      const itemName = item.name?.toLowerCase();
-      const itemNameEn = item.nameEn?.toLowerCase();
-      const ballName = pokemon.caughtWithBall.toLowerCase();
-      return itemName === ballName || 
-             itemNameEn === ballName ||
-             itemName?.includes(ballName) ||
-             itemNameEn?.includes(ballName);
-    })
-  : null;
 
 const getBallImage = () => {
   // 1순위: allItems
@@ -277,13 +280,15 @@ const ballImage = getBallImage();
   const type2Colors = pokemon.type2 ? getTypeColor(pokemon.type2) : null;
 
   // HP 계산
-  const hpPercent = Math.min(100, Math.max(0, (pokemon.hp / pokemon.maxHp) * 100));
-  const hpColor = hpPercent > 50 ? 'bg-green-500' : hpPercent > 20 ? 'bg-yellow-500' : 'bg-red-500';
 
   // 진화 후 포켓몬 정보 가져오기
   const getEvolvedPokemon = () => {
     if (!canEvolve || !allPokemonMaster) return null;
-    return allPokemonMaster.find(p => p.number === canEvolve.to);
+    const targetNumber = toPokemonNumber(canEvolve.to);
+    return allPokemonMaster.find((p) =>
+      toPokemonNumber(p.number) === targetNumber ||
+      toPokemonNumber(p.originalNumber) === targetNumber
+    );
   };
 
   const evolvedPokemon = getEvolvedPokemon();
@@ -292,6 +297,8 @@ const ballImage = getBallImage();
   useEffect(() => {
     setNickname(pokemon.nickname || pokemon.name);
     setIsEditingNickname(false);
+    setExpInput('');
+    setShowExpPanel(false);
   }, [pokemon.uniqueId, pokemon.nickname, pokemon.name]);
 
   // Handlers
@@ -331,20 +338,20 @@ const ballImage = getBallImage();
   };
 
   return (
-    <div className="w-full bg-white rounded-lg border border-gray-200 p-6">
+    <div className="pokemon-detail-card w-full rounded-lg p-6">
       {/* 헤더 */}
       <div className="flex justify-between items-start mb-4">
-        <h3 className="text-xl font-bold text-gray-800">포켓몬 정보</h3>
+        <h3 className="text-xl font-bold text-[#26351f]">포켓몬 정보</h3>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
           <X size={20} />
         </button>
       </div>
 
-      <div className="flex gap-6">
+      <div className="pokemon-detail-layout">
         {/* 포켓몬 이미지 */}
-        <div className="flex-shrink-0">
+        <div className="pokemon-detail-art-wrap">
           <div 
-            className="w-36 h-36 p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg border border-indigo-100 pokemon-bg-sprite"
+            className="pokemon-detail-art pokemon-bg-sprite"
             style={{
               backgroundImage: `url(${pokemon.spriteUrl || getPokemonSpriteUrl(originalNumber)})`,
               backgroundSize: '75%',
@@ -355,7 +362,7 @@ const ballImage = getBallImage();
         </div>
 
         {/* 정보 영역 */}
-        <div className="flex-1 flex flex-col gap-3">
+        <div className="pokemon-detail-content">
           {/* 기본 정보 */}
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -382,62 +389,85 @@ const ballImage = getBallImage();
 
               {/* 아이콘 버튼 그룹 */}
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    if (!hasRareCandy) return;
-                    onUseCandy(pokemon.uniqueId, (pokemonId, newLevel, newMoves) => {
-                      setLevelUpData({ pokemonId, newLevel, newMoves });
-                      setShowLevelUpMoveModal(true);
-                    });
-                  }}
-                  disabled={!hasRareCandy}
-                  className={`p-2 rounded-lg transition-colors ${
-                    hasRareCandy
-                      ? 'text-yellow-600 hover:bg-yellow-50'
-                      : 'text-gray-300 cursor-not-allowed'
-                  }`}
-                  title={hasRareCandy ? '이상한사탕 사용' : '이상한사탕이 없습니다'}
-                >
-                  {rareCandyImage ? (
-                    <div 
-                      className="w-6 h-6"
-                      style={{
-                        backgroundImage: `url(${rareCandyImage})`,
-                        backgroundSize: 'contain',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'center',
-                        imageRendering: 'pixelated'
-                      }}
-                    />
-                  ) : (
-                    <span className="text-xl">🍬</span>
-                  )}
-                </button>
-
-                <button
-                    onClick={() => {
-                      if (isThisPartner) {
-                        // 파트너 해제
-                        if (window.confirm(`${pokemon.nickname || pokemon.name}의 파트너 설정을 해제하시겠습니까?`)) {
-                          onSetPartner(null);  // ⭐ null 전달하여 파트너 해제
-                        }
-                      } else {
-                        // 파트너 설정
-                        if (window.confirm(`${pokemon.nickname || pokemon.name}를 파트너 포켓몬으로 설정하시겠습니까?\n\n파트너는 방생할 수 없으며, 1마리만 설정 가능합니다.`)) {
-                          onSetPartner(pokemon.uniqueId);  // ⭐ uniqueId 전달
-                        }
-                      }
-                    }}
-                    className={`p-2 rounded-lg transition-colors ${
-                      isThisPartner
-                        ? 'text-pink-600 hover:bg-pink-50'
-                        : 'text-gray-400 hover:bg-gray-50'
-                    }`}
-                    title={isThisPartner ? '파트너 해제' : '파트너 설정'}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowExpPanel((value) => !value)}
+                    className="p-2 text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors"
+                    title={levelExpTitle}
                   >
-                    <Heart size={20} fill={isThisPartner ? 'currentColor' : 'none'} />
+                    {rareCandyImage ? (
+                      <div
+                        className="w-6 h-6"
+                        style={{
+                          backgroundImage: `url(${rareCandyImage})`,
+                          backgroundSize: 'contain',
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'center',
+                          imageRendering: 'pixelated'
+                        }}
+                      />
+                    ) : (
+                      <span className="text-xl">🍬</span>
+                    )}
                   </button>
 
+                  {showExpPanel && (
+                    <div className="pokemon-detail-exp-popover">
+                      <div className="flex items-center justify-between gap-3">
+                        <strong>경험치 배분</strong>
+                        <button
+                          type="button"
+                          onClick={() => setShowExpPanel(false)}
+                          className="text-[#789252] hover:text-[#2f4a24]"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                      <div className="mt-2 flex items-center gap-2">
+                        <input
+                          type="number"
+                          min="1"
+                          max={trainerExp}
+                          value={expInput}
+                          onChange={(event) => {
+                            const value = event.target.value;
+                            if (value === '') {
+                              setExpInput('');
+                              return;
+                            }
+                            setExpInput(String(Math.max(0, Math.floor(Number(value) || 0))));
+                          }}
+                          className="h-9 w-24 rounded-lg border border-[#a7c86f] bg-[#f8fbef] px-2 text-sm font-bold text-[#2f4a24] focus:border-[#7fa438] focus:outline-none"
+                          placeholder="EXP"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!canAllocateExp) return;
+                            onUseCandy(pokemon.uniqueId, (pokemonId, newLevel, newMoves) => {
+                              setLevelUpData({ pokemonId, newLevel, newMoves });
+                              setShowLevelUpMoveModal(true);
+                            }, selectedExpAmount);
+                            setExpInput('');
+                            setShowExpPanel(false);
+                          }}
+                          disabled={!canAllocateExp}
+                          className={`h-9 rounded-lg px-3 text-xs font-bold transition-colors ${
+                            canAllocateExp
+                              ? 'bg-[#6f8f25] text-white hover:bg-[#4f741f]'
+                              : 'bg-[#dbeabf] text-[#7f9360] cursor-not-allowed'
+                          }`}
+                        >
+                          배분
+                        </button>
+                      </div>
+                      <div className="mt-2 text-xs font-semibold text-[#9a6b00]">
+                        (남은 경험치: {remainingTrainerExp})
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <button
                   onClick={onMove}
                   className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
@@ -452,11 +482,11 @@ const ballImage = getBallImage();
                   className={`p-2 rounded-lg transition-colors ${
                     pokemon.isPartner
                       ? 'text-gray-300 cursor-not-allowed'
-                      : 'text-red-600 hover:bg-red-50'
+                      : 'text-[#6f8f25] hover:bg-[#eef7df]'
                   }`}
                   title={pokemon.isPartner ? '파트너 포켓몬은 방생할 수 없습니다' : '포켓몬 방생'}
                 >
-                  <Trash2 size={20} />
+                  <Trees size={20} />
                 </button>
               </div>
             </div>
@@ -498,7 +528,7 @@ const ballImage = getBallImage();
                   <h2 className="text-2xl font-bold text-gray-800">{nickname}</h2>
 
                   {/* ⭐ 성별 아이콘 추가 */}
-                  {pokemon.gender && pokemon.gender !== 'none' && (
+                  {(pokemon.gender === 'male' || pokemon.gender === 'female') && (
                     <span className={`text-2xl font-bold ${getGenderColor(pokemon.gender)}`}>
                       {getGenderIcon(pokemon.gender)}
                     </span>
@@ -519,6 +549,11 @@ const ballImage = getBallImage();
             )}
             
             <div className="text-lg text-gray-600">Lv. {pokemon.level}</div>
+            <div className="text-xs font-semibold text-yellow-700">
+              보유 경험치 {trainerExp}
+              {requiredLevelExp !== null ? ` / 다음 레벨 ${requiredLevelExp}` : ' / 레벨업 불가'}
+            </div>
+          </div>
             {/* ⭐ 크기/특성 정보 추가 */}
 {(pokemon.sizeRank || pokemon.ability) && (
   <div className="grid grid-cols-2 gap-3 mt-2">
@@ -569,7 +604,6 @@ const ballImage = getBallImage();
     )}
   </div>
 )}
-          </div>
 
           {/* 진화 알림 */}
           {canEvolve && !isHoldingEverstone && evolvedPokemon && (
@@ -618,7 +652,7 @@ const ballImage = getBallImage();
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart data={conditionData} tabIndex={-1}>
                     <PolarGrid 
-                      stroke="#9333EA"
+                      stroke="#7fa438"
                       strokeWidth={1.5}
                       strokeOpacity={0.3}
                       radialLines={false}
@@ -634,9 +668,9 @@ const ballImage = getBallImage();
                     />
                     <Radar 
                       dataKey="A" 
-                      stroke="#A855F7"
+                      stroke="#7fa438"
                       strokeWidth={1} 
-                      fill="#A855F7" 
+                      fill="#c7e57d"
                       fillOpacity={1}
                       activeDot={false}
                       dot={false}
@@ -656,7 +690,7 @@ const ballImage = getBallImage();
                   >
                     <div 
                       className="px-2 py-1 rounded text-white text-xs font-semibold"
-                      style={{ backgroundColor: '#A855F7' }}
+                      style={{ backgroundColor: '#6f8f25' }}
                     >
                       {hoveredCondition}
                     </div>
@@ -665,7 +699,7 @@ const ballImage = getBallImage();
                       style={{
                         borderLeft: '5px solid transparent',
                         borderRight: '5px solid transparent',
-                        borderTop: '5px solid #A855F7',
+                        borderTop: '5px solid #6f8f25',
                         marginTop: '-1px'
                       }}
                     />
@@ -683,7 +717,7 @@ const ballImage = getBallImage();
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart data={effortData}>
                     <PolarGrid 
-                      stroke="#2563EB"
+                      stroke="#7fa438"
                       strokeWidth={1.5}
                       strokeOpacity={0.3}
                       radialLines={false}
@@ -701,9 +735,9 @@ const ballImage = getBallImage();
                     />
                     <Radar 
                       dataKey="A" 
-                      stroke="#3B82F6"
+                      stroke="#4f741f"
                       strokeWidth={1} 
-                      fill="#3B82F6" 
+                      fill="#9fcf45"
                       fillOpacity={1}
                       activeDot={false}
                       dot={false}
@@ -723,7 +757,7 @@ const ballImage = getBallImage();
                   >
                     <div 
                       className="px-2 py-1 rounded text-white text-xs font-semibold"
-                      style={{ backgroundColor: '#3B82F6' }}
+                      style={{ backgroundColor: '#4f741f' }}
                     >
                       {hoveredEffort}
                     </div>
@@ -732,7 +766,7 @@ const ballImage = getBallImage();
                       style={{
                         borderLeft: '5px solid transparent',
                         borderRight: '5px solid transparent',
-                        borderTop: '5px solid #3B82F6',
+                        borderTop: '5px solid #4f741f',
                         marginTop: '-1px'
                       }}
                     />
@@ -853,7 +887,7 @@ const ballImage = getBallImage();
       {/* 모달들 */}
       {showMoveSelectModal && allMoves && (
         <MoveSelectModal
-          pokemon={pokemon}
+          pokemon={pokedexEntry ? { ...pokemon, ...pokedexEntry } : pokemon}
           allMoves={allMoves}
           pokemonLearnsets={pokemonLearnsets}
           currentMoves={pokemon.moves || []} 

@@ -95,8 +95,6 @@ export function useBattle(player1Pokemon, player2Pokemon, generation = 9) {
     setBattleState(prev => {
       const isPlayer1 = attackerSide === 'player1';
       const attacker = prev[attackerSide];
-      const defenderSide = isPlayer1 ? 'player2' : 'player1';
-      const defender = prev[defenderSide];
 
       if (prev.winner) return prev;
       if (!attacker.pokemon.moves[moveIndex]) return prev;

@@ -1,7 +1,7 @@
 // src/components/views/pokemon/MovesList.jsx
 import React from 'react';
 import { Zap, Shield, Star, Trash2 } from 'lucide-react';
-import { getTypeNameKr, getTypeColor, COLORS } from '../../../styles/theme';
+import { getTypeNameKr, getTypeColor } from '../../../styles/theme';
 
 // ✅ 카테고리 영문→한글 매핑
 const CATEGORY_NAMES_KR = {
@@ -36,7 +36,7 @@ export default function MovesList({
   const displayMoves = moves.map((m, idx) => {
     // 여러 방법으로 찾아보기
     const moveData1 = allMoves.find(move => move.id === m.moveId);
-    const moveData2 = allMoves.find(move => move.id == m.moveId);
+    const moveData2 = allMoves.find(move => String(move.id) === String(m.moveId));
     const moveData3 = allMoves.find(move => move.id === String(m.moveId));
     const moveData4 = allMoves.find(move => move.id === Number(m.moveId));
     

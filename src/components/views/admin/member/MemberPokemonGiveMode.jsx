@@ -5,6 +5,7 @@ import {
   X, Gift, Sparkles, Plus, Trash2, Award, Zap, Heart, Star, Check, User, Ruler, Scale, Image as ImageIcon
 } from 'lucide-react';
 import { POKEBALL_LIST } from '../../../../styles/theme';
+import { getPokemonGenderOptions } from '../../../../utils/pokemonGender';
 
 export default function MemberPokemonGiveMode({
   allPokemonMaster,
@@ -26,6 +27,10 @@ export default function MemberPokemonGiveMode({
       )
       .slice(0, 50);
   }, [giveData.searchQuery, allPokemonMaster]);
+
+  const genderOptions = getPokemonGenderOptions(giveData.selectedPokemon);
+  const isGenderless = genderOptions.length === 1 && genderOptions[0] === 'none';
+  const genderValue = genderOptions.includes(giveData.gender) ? giveData.gender : 'random';
 
   return (
     <div className="bg-white rounded-lg border p-4 space-y-4">
@@ -51,12 +56,16 @@ export default function MemberPokemonGiveMode({
         {filteredPokemon.map(pokemon => (
           <button
             key={pokemon.number}
-            onClick={() => setGiveData(prev => ({ 
-              ...prev, 
-              selectedPokemon: pokemon,
-              nickname: pokemon.name,
-              selectedMoves: []
-            }))}
+            onClick={() => {
+              const nextGenderOptions = getPokemonGenderOptions(pokemon);
+              setGiveData(prev => ({
+                ...prev,
+                selectedPokemon: pokemon,
+                nickname: pokemon.name,
+                selectedMoves: [],
+                gender: nextGenderOptions.length === 1 && nextGenderOptions[0] === 'none' ? 'none' : 'random'
+              }));
+            }}
             className={`p-2 rounded border ${
               giveData.selectedPokemon?.number === pokemon.number
                 ? 'bg-blue-100 border-blue-500'
@@ -189,14 +198,14 @@ export default function MemberPokemonGiveMode({
                   성별
                 </label>
                 <select
-                  value={giveData.gender}
+                  value={isGenderless ? 'none' : genderValue}
                   onChange={(e) => setGiveData(prev => ({ ...prev, gender: e.target.value }))}
                   className="w-full px-3 py-2 border rounded text-sm"
                 >
-                  <option value="random">랜덤</option>
-                  <option value="male">♂ 수컷</option>
-                  <option value="female">♀ 암컷</option>
-                  <option value="none">⚪ 무성</option>
+                  {!isGenderless && <option value="random">랜덤</option>}
+                  {genderOptions.includes('male') && <option value="male">♂ 수컷</option>}
+                  {genderOptions.includes('female') && <option value="female">♀ 암컷</option>}
+                  {isGenderless && <option value="none">무성</option>}
                 </select>
               </div>
 

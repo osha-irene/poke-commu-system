@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingCart, Clock, Star, Coins, Sparkles, Calendar, Package, Zap, CircleDot } from 'lucide-react';
+import { ShoppingCart, Star, Coins, Calendar, Package, CircleDot } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
 import { getItemPocket } from '../../utils/itemUtils';
 import RandomBoxShop from './RandomBoxShop';
@@ -22,19 +22,7 @@ export default function ShopView() {
   const dayNamesKo = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
   const todayName = dayNames[today.getDay()];
   const todayNameKo = dayNamesKo[today.getDay()];
-  
-  const getWeekKey = (date) => {
-    const d = new Date(date);
-    const dayNum = d.getDay() || 7;
-    d.setDate(d.getDate() + 4 - dayNum);
-    const yearStart = new Date(d.getFullYear(), 0, 1);
-    const weekNum = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-    return `${d.getFullYear()}-W${weekNum}`;
-  };
-  
-  const currentWeek = getWeekKey(today);
-  
-  // ⭐ getItemDetails 함수를 먼저 선언
+// ⭐ getItemDetails 함수를 먼저 선언
   const getItemDetails = (shopItem) => {
     const item = allItems.find(i => i.id === shopItem.itemId);
     return {
@@ -78,13 +66,6 @@ export default function ShopView() {
     const withoutRare = items.filter(item => item.type !== 'rare');
     if (filterType === 'all') return withoutRare;
     return withoutRare.filter(item => item.type === filterType);
-  };
-  
-  const getWeeklyPurchasedAmount = (itemId, dayName) => {
-    const purchaseHistory = trainer?.weeklyPurchaseHistory || {};
-    const weekData = purchaseHistory[currentWeek] || {};
-    const dayData = weekData[dayName] || {};
-    return dayData[itemId] || 0;
   };
   
   const handlePurchase = () => {
@@ -290,7 +271,7 @@ export default function ShopView() {
           <div className="flex items-center justify-between pt-3 border-t-2 border-gray-200">
             <div className="flex items-center gap-1 text-yellow-600 font-bold">
               <Coins size={16} />
-              ₽{shopItem.price.toLocaleString()}
+              {shopItem.price.toLocaleString()}원
             </div>
             <div className={`text-xs font-semibold ${
               isSoldOut ? 'text-red-600' : 'text-gray-600'
@@ -326,7 +307,7 @@ export default function ShopView() {
             <div className="text-sm text-indigo-200 mb-1">보유 금액</div>
             <div className="text-4xl font-bold flex items-center gap-2">
               <Coins size={32} />
-              ₽{trainer.money?.toLocaleString() || 0}
+              {trainer.money?.toLocaleString() || 0}원
             </div>
           </div>
         </div>
@@ -453,7 +434,7 @@ export default function ShopView() {
                     <div className="flex items-center justify-between pt-3 border-t-2 border-gray-200">
                       <div className="flex items-center gap-1 text-yellow-600 font-bold">
                         <Coins size={16} />
-                        ₽{shopData.rareDailyItem.price.toLocaleString()}
+                        {shopData.rareDailyItem.price.toLocaleString()}원
                       </div>
                       <div className={`text-xs font-semibold ${isSoldOut ? 'text-red-600' : 'text-gray-600'}`}>
                         {isSoldOut ? '구매완료' : '1인 1개'}
@@ -537,7 +518,7 @@ export default function ShopView() {
                     <div className="mt-3 flex items-center justify-between px-4 py-3 bg-white rounded-lg border-2 border-orange-200">
                       <div className="flex items-center gap-1 text-yellow-600 font-bold">
                         <Coins size={16} />
-                        ₽200
+                        200원
                       </div>
                       <div className="text-xs font-semibold text-gray-600">
                         무제한
@@ -599,10 +580,10 @@ export default function ShopView() {
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2 text-yellow-600 font-bold text-xl">
                         <Coins size={20} />
-                        ₽{selectedItem.price.toLocaleString()} × {quantity}
+                        {selectedItem.price.toLocaleString()}원 × {quantity}
                       </div>
                       <div className="text-2xl font-bold text-indigo-600">
-                        = ₽{(selectedItem.price * quantity).toLocaleString()}
+                        = {(selectedItem.price * quantity).toLocaleString()}원
                       </div>
                     </div>
                   </div>
@@ -624,10 +605,10 @@ export default function ShopView() {
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2 text-yellow-600 font-bold text-xl">
                         <Coins size={20} />
-                        ₽{selectedItem.price.toLocaleString()} × {quantity}
+                        {selectedItem.price.toLocaleString()}원 × {quantity}
                       </div>
                       <div className="text-2xl font-bold text-indigo-600">
-                        = ₽{(selectedItem.price * quantity).toLocaleString()}
+                        = {(selectedItem.price * quantity).toLocaleString()}원
                       </div>
                     </div>
                   </div>

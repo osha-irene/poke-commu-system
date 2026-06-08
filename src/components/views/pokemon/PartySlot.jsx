@@ -290,8 +290,6 @@ export default function PartySlot({
   );
   const displayNumber = pokedexEntry?.newNumber || pokemon.number;
 
-  const hpPercent = (pokemon.hp / pokemon.maxHp) * 100;
-  const hpColor = hpPercent > 50 ? 'bg-green-500' : hpPercent > 20 ? 'bg-yellow-500' : 'bg-red-500';
   
   const typeColors = getTypeColor(pokemon.type);
   const type2Colors = pokemon.type2 ? getTypeColor(pokemon.type2) : null;

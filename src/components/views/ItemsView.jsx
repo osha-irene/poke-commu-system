@@ -1,6 +1,6 @@
 import useMediaQuery from '../../hooks/useMediaQuery';
 import MobileItemsView from './_mobile/MobileItemsView';
-import { getItemPocket, canUseItem, ITEM_POCKETS, CATEGORIES } from '../../utils/itemUtils';
+import { getItemPocket, canUseItem, CATEGORIES } from '../../utils/itemUtils';
 import { Package, Circle, Heart, Dumbbell, Apple, Disc, Backpack, Sparkles, Sword, Key, Search, X,Trash2, ShoppingCart } from 'lucide-react'; 
 import React, { useState } from 'react';
 
@@ -279,7 +279,7 @@ const categories = CATEGORIES.map(cat => {
           <div className="flex items-center gap-4">
             <div className="bg-yellow-50 border border-yellow-200 px-4 py-2 rounded-lg">
               <span className="text-sm font-semibold text-yellow-700">💰 보유 금액: </span>
-              <span className="text-lg font-bold text-yellow-600">₽{(trainer.money || 0).toLocaleString()}</span>
+              <span className="text-lg font-bold text-yellow-600">{(trainer.money || 0).toLocaleString()}원</span>
             </div>
             <div className="text-sm text-gray-500">
               총 {items.reduce((sum, item) => sum + item.count, 0)}개
@@ -378,12 +378,12 @@ const categories = CATEGORIES.map(cat => {
                         <div className="flex items-center gap-2">
                           {details.cost > 0 && (
                             <div className="text-xs text-gray-500">
-                              💰 ₽{details.cost.toLocaleString()}
+                              💰 {details.cost.toLocaleString()}원
                             </div>
                           )}
                           {details.canSell && details.sellPrice > 0 && (
                             <div className="text-xs text-green-600 font-semibold">
-                              💵 ₽{details.sellPrice.toLocaleString()}
+                              💵 {details.sellPrice.toLocaleString()}원
                             </div>
                           )}
                         </div>
@@ -447,7 +447,6 @@ const categories = CATEGORIES.map(cat => {
               const details = getItemDetails(selectedItem);
               const isSelling = actionMode === 'sell';
               const isUsing = actionMode === 'use';
-              const isTrashing = actionMode === 'trash';
               
               return (
                 <>
@@ -546,7 +545,7 @@ const categories = CATEGORIES.map(cat => {
                         />
                         {isSelling && details.sellPrice > 0 && (
                           <p className="text-sm text-green-600 font-semibold mt-2">
-                            총 판매 금액: ₽{(details.sellPrice * quantity).toLocaleString()}
+                            총 판매 금액: {(details.sellPrice * quantity).toLocaleString()}원
                           </p>
                         )}
                       </div>

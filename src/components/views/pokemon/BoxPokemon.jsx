@@ -61,7 +61,7 @@ export default function BoxPokemon({
         Lv.{pokemon.level}
       </div>
       
-      {/* 포켓몬 이미지 - 로컬 스프라이트의 오른쪽 64x64만 표시 */}
+      {/* 포켓몬 이미지 - 로컬 스프라이트의 왼쪽 64x64만 표시 */}
       <div className="aspect-square flex items-center justify-center p-2">
         <div 
           className="pokemon-bg-sprite"
@@ -70,7 +70,8 @@ export default function BoxPokemon({
             height: '64px',
             backgroundImage: `url(${imageUrl})`,
             backgroundSize: '128px 64px',
-            backgroundPosition: 'right center'
+            backgroundPosition: 'left center',
+            backgroundRepeat: 'no-repeat'
           }}
         />
       </div>

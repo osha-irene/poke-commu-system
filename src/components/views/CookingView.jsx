@@ -5,17 +5,10 @@ import recipesData from '../../data/recipes.json'; // ✅ import 추가
 import { useGame } from '../../contexts/GameContext';
 
 export default function CookingView() {
-  const {
-    currentUser,
-    recipes,
+  const {    recipes,
     discoveredRecipes,
-    cookRecipe: onCook,
-    createRecipe,
-    updateIngredientStats,
-    isAdmin,
-    items: userItems  // ← 추가
+    cookRecipe: onCook,    items: userItems  // ← 추가
   } = useGame();
-  const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [selectedIngredients, setSelectedIngredients] = useState([]);
   const [showRecipeBook, setShowRecipeBook] = useState(false);
   const [cookingMode, setCookingMode] = useState('fixed');

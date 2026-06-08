@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MessageSquare, Lock, Eye, Send, Trash2, Edit2, X } from 'lucide-react';
+import { MessageSquare, Lock, Eye, Send, Trash2, X } from 'lucide-react';
 
 export default function QnABoard({ currentUser, posts = [], onCreatePost, onDeletePost, onCreateComment, onDeleteComment }) {
   const [showWriteModal, setShowWriteModal] = useState(false);

@@ -38,7 +38,7 @@ export default function Header({ currentTab, setCurrentTab }) {
           <button
             type="button"
             className="site-logo-hitbox"
-            onClick={() => setCurrentTab('notice')}
+            onClick={() => setCurrentTab('home')}
             aria-label="메인으로 이동"
           />
         </div>

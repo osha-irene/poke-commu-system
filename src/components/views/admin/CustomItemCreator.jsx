@@ -77,7 +77,6 @@ const handleSubmit = async () => {  // ⭐ async 추가
   }
 };
 
-  const selectedCategory = categories.find(c => c.id === itemData.category);
 
   return (
     <>
@@ -154,7 +153,7 @@ const handleSubmit = async () => {  // ⭐ async 추가
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    구매 가격 (₽)
+                    구매 가격 (원)
                   </label>
                   <input
                     type="number"
@@ -166,7 +165,7 @@ const handleSubmit = async () => {  // ⭐ async 추가
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    판매 가격 (₽)
+                    판매 가격 (원)
                   </label>
                   <input
                     type="number"

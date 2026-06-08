@@ -1,7 +1,6 @@
 // src/components/views/admin/MemberDetailPanel.jsx
 import React, { useState } from 'react';
 import { useGame } from '../../../contexts/GameContext';
-import { usePokemonContext } from '../../../contexts/PokemonContext';
 import MemberInfoTab from './member/MemberInfoTab';
 import MemberPokemonTab from './member/MemberPokemonTab';
 import MemberItemTab from './member/MemberItemTab';

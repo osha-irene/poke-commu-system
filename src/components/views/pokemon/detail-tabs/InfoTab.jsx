@@ -165,7 +165,7 @@ export default function InfoTab({
             )}
             <h3 className="text-xl font-bold text-gray-800">{nickname}</h3>
             
-            {pokemon.gender && pokemon.gender !== 'none' && (
+            {(pokemon.gender === 'male' || pokemon.gender === 'female') && (
               <span className={`text-xl font-bold ${getGenderColor(pokemon.gender)}`}>
                 {getGenderIcon(pokemon.gender)}
               </span>

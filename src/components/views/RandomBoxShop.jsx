@@ -47,7 +47,7 @@ export default function RandomBoxShop({ shopData, currentUser, allItems, onBuyRa
       return;
     }
 
-    if (!window.confirm(`${selectedBox.name}을(를) ${selectedBox.price.toLocaleString()}G에 구매하시겠습니까?`)) {
+    if (!window.confirm(`${selectedBox.name}을(를) ${selectedBox.price.toLocaleString()}원에 구매하시겠습니까?`)) {
       return;
     }
 
@@ -141,7 +141,7 @@ export default function RandomBoxShop({ shopData, currentUser, allItems, onBuyRa
                         <h4 className="font-bold text-lg text-gray-800">{box.name}</h4>
                         <div className="flex items-center justify-center gap-1 mt-2 text-yellow-600">
                           <Coins size={16} />
-                          <span className="font-bold">{box.price.toLocaleString()}G</span>
+                          <span className="font-bold">{box.price.toLocaleString()}원</span>
                         </div>
                       </div>
                     </div>
@@ -212,7 +212,7 @@ export default function RandomBoxShop({ shopData, currentUser, allItems, onBuyRa
             <span>{selectedItem.name} 구매하기</span>
             <div className="flex items-center gap-1 bg-white/20 px-3 py-1 rounded-full">
               <Coins size={18} />
-              {selectedItem.price.toLocaleString()}G
+              {selectedItem.price.toLocaleString()}원
             </div>
           </button>
         </div>

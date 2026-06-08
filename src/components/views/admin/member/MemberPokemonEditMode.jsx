@@ -4,9 +4,11 @@ import {
   X, Save, Sparkles, Image, Gift, Star, Award, Zap, Heart, Plus, Trash2, ImageIcon
 } from 'lucide-react';
 import { POKEBALL_LIST } from '../../../../styles/theme';
+import { getPokemonGenderOptions } from '../../../../utils/pokemonGender';
 
 export default function MemberPokemonEditMode({ 
   pokemon,
+  pokemonTemplate,
   editData,
   setEditData,
   allMoves,
@@ -16,6 +18,10 @@ export default function MemberPokemonEditMode({
   onOpenItemModal,
   onOpenMoveModal
 }) {
+  const genderOptions = getPokemonGenderOptions(pokemonTemplate || pokemon);
+  const isGenderless = genderOptions.length === 1 && genderOptions[0] === 'none';
+  const genderValue = genderOptions.includes(editData.gender) ? editData.gender : 'random';
+
   return (
     <div className="bg-white rounded-lg border p-4 space-y-4">
       <div className="flex justify-between items-center mb-4">
@@ -115,14 +121,14 @@ export default function MemberPokemonEditMode({
               <div>
                 <label className="block text-sm font-semibold mb-2">성별</label>
                 <select
-                  value={editData.gender || 'random'}
+                  value={isGenderless ? 'none' : genderValue}
                   onChange={(e) => setEditData(prev => ({ ...prev, gender: e.target.value }))}
                   className="w-full px-3 py-2 border rounded"
                 >
-                  <option value="random">랜덤</option>
-                  <option value="male">수컷 (♂)</option>
-                  <option value="female">암컷 (♀)</option>
-                  <option value="none">무성</option>
+                  {!isGenderless && <option value="random">랜덤</option>}
+                  {genderOptions.includes('male') && <option value="male">수컷 (♂)</option>}
+                  {genderOptions.includes('female') && <option value="female">암컷 (♀)</option>}
+                  {isGenderless && <option value="none">무성</option>}
                 </select>
               </div>
 

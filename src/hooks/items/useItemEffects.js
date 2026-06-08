@@ -2,6 +2,7 @@
 // 아이템 사용 효과 시스템
 
 import { isEVItem, applyEVItem } from '../../utils/evItemUtils';
+import { getLearnsetTmMoves, getPokemonLearnset } from '../../utils/pokemonLearnsets';
 
 export const useItemEffects = (
   currentUser,
@@ -79,7 +80,7 @@ export const useItemEffects = (
       
       console.log('✅ 기술 찾음:', moveData);
       
-      const learnset = pokemonLearnsets[pokemon.number.toString()];
+      const learnset = getPokemonLearnset(pokemonLearnsets, pokemon);
       
       if (!learnset) {
         console.warn('⚠️ 이 포켓몬의 학습 데이터가 없습니다:', pokemon.number);
@@ -87,7 +88,7 @@ export const useItemEffects = (
         return;
       }
       
-      if (!learnset.tmMoves || !learnset.tmMoves.includes(moveData.id)) {
+      if (!getLearnsetTmMoves(learnset).includes(moveData.id)) {
         alert(`${pokemon.nickname || pokemon.name}은(는) ${moveData.name}을(를) 배울 수 없습니다!`);
         return;
       }
@@ -237,8 +238,17 @@ export const useItemEffects = (
     // 이상한사탕
     if (itemData?.name === '이상한사탕' || 
         itemData?.nameEn?.toLowerCase().includes('rare candy')) {
-      handleRareCandyWithEvolution(pokemon.uniqueId);
-      consumeItem(item);
+      const availableExp = Number(currentUser.trainerExp) || 0;
+      const input = window.prompt(`배분할 경험치를 입력해주세요.\n보유 경험치: ${availableExp}`, '');
+      if (input === null) return;
+
+      const expAmount = Math.floor(Number(input) || 0);
+      if (expAmount <= 0) {
+        alert('배분할 경험치를 입력해주세요.');
+        return;
+      }
+
+      handleRareCandyWithEvolution(pokemon.uniqueId, undefined, expAmount);
       return;
     }
      

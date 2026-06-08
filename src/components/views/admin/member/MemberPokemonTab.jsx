@@ -4,6 +4,7 @@ import ItemSelectorModal from '../../../modals/ItemSelectorModal';
 import MemberPokemonViewMode from './MemberPokemonViewMode';
 import MemberPokemonEditMode from './MemberPokemonEditMode';
 import MemberPokemonGiveMode from './MemberPokemonGiveMode';
+import { getLearnsetTmMoves, getPokemonLearnset } from '../../../../utils/pokemonLearnsets';
 
 function MemberPokemonTab({ 
   member, 
@@ -79,10 +80,25 @@ function MemberPokemonTab({
   } 
 });
 
+  const getPokemonTemplate = (pokemon) => {
+    if (!pokemon) return null;
+    return (allPokemonMaster || []).find(template =>
+      template.number === pokemon.number ||
+      template.id === pokemon.pokemonId ||
+      template.nameEn === pokemon.nameEn ||
+      template.name === pokemon.name
+    ) || null;
+  };
+
+  const withPokemonTemplateData = (pokemon) => {
+    const template = getPokemonTemplate(pokemon);
+    return template ? { ...pokemon, ...template } : pokemon;
+  };
+
   // 지급용 기술 목록
   const giveAvailableMoves = useMemo(() => {
   if (!giveData.selectedPokemon) return [];
-  const learnset = pokemonLearnsets[giveData.selectedPokemon.number?.toString()];
+  const learnset = getPokemonLearnset(pokemonLearnsets, giveData.selectedPokemon);
   if (!learnset) return [];
   
   // 1. 레벨업 기술
@@ -92,7 +108,7 @@ function MemberPokemonTab({
     .filter(Boolean) || [];
   
   // 2. 기술머신 (TM/HM)
-  const machineMoves = learnset.machineMoves
+  const machineMoves = getLearnsetTmMoves(learnset)
     ?.map(moveId => allMoves.find(m => m.id === moveId))
     .filter(Boolean) || [];
   
@@ -285,7 +301,7 @@ console.log('📋 최종 기술:', {
               }
               setShowMoveModal(false);
             }}
-            pokemon={selectedPokemon}
+            pokemon={withPokemonTemplateData(selectedPokemon)}
             allMoves={allMoves}
             pokemonLearnsets={pokemonLearnsets}
             learnedMoveIds={editData.moves.map(m => m.moveId)}
@@ -364,6 +380,7 @@ console.log('📋 최종 기술:', {
       {mode === 'edit' && selectedPokemon && (
         <MemberPokemonEditMode
           pokemon={selectedPokemon}
+          pokemonTemplate={getPokemonTemplate(selectedPokemon)}
           editData={editData}
           setEditData={setEditData}
           allMoves={allMoves}

@@ -4,6 +4,7 @@ import { useGame } from '../../../contexts/GameContext';
 import PartySlot from '../pokemon/PartySlot'; 
 import BoxPokemon from '../pokemon/BoxPokemon'; 
 import PokemonDetailPanel from '../pokemon/PokemonDetailPanel';
+import { getRequiredExpForLevel } from '../../../utils/experience';
 
 export default function MobilePokemonView() {
   const {
@@ -24,9 +25,7 @@ export default function MobilePokemonView() {
     learnMove,
     currentUser,
     allMoves = [],
-    pokemonLearnsets = {},
-    useItemOnPokemon
-  } = useGame();
+    pokemonLearnsets = {},  } = useGame();
 
   const isAdmin = currentUser?.isAdmin || false;
 
@@ -43,12 +42,14 @@ export default function MobilePokemonView() {
     item.name === '이상한사탕' || 
     item.nameEn?.toLowerCase().includes('rare candy')
   );
-  const hasRareCandy = rareCandy && rareCandy.count > 0;
   const rareCandyImage = rareCandy?.imageUrl;
 
   const selectedPokemon = selectedPokemonId 
     ? caughtPokemon.find(p => p && p.uniqueId === selectedPokemonId)
     : null;
+  const trainerExp = Number(currentUser?.trainerExp) || 0;
+  const selectedRequiredExp = selectedPokemon ? getRequiredExpForLevel(selectedPokemon.level) : null;
+  const hasRareCandy = selectedRequiredExp !== null && trainerExp >= selectedRequiredExp;
 
   const selectedPokemonIndex = selectedPokemon 
     ? caughtPokemon.findIndex(p => p && p.uniqueId === selectedPokemon.uniqueId)
@@ -66,14 +67,30 @@ export default function MobilePokemonView() {
     setSelectedPokemonId(null);
   };
 
-  const handleUseCandy = (uniqueId, onLevelUpCallback) => {
-    if (!hasRareCandy) return;
-    
+  const handleUseCandy = (uniqueId, onLevelUpCallback, expAmount = 0) => {
     const pokemon = caughtPokemon.find(p => p && p.uniqueId === uniqueId);
     if (!pokemon) return;
-    
-    if (window.confirm(`${pokemon.nickname || pokemon.name}에게 이상한사탕을 사용하시겠습니까?`)) {
-      onUseRareCandy(uniqueId, onLevelUpCallback);
+
+    const requestedExp = Math.floor(Number(expAmount) || 0);
+    const availableExp = Number(currentUser?.trainerExp) || 0;
+
+    if (getRequiredExpForLevel(pokemon.level) === null) {
+      alert('현재 레벨에서는 경험치 배분으로 더 이상 레벨업할 수 없습니다.');
+      return;
+    }
+
+    if (requestedExp <= 0) {
+      alert('배분할 경험치를 입력해주세요.');
+      return;
+    }
+
+    if (requestedExp > availableExp) {
+      alert(`경험치가 부족합니다!\n입력 경험치: ${requestedExp}\n보유 경험치: ${availableExp}`);
+      return;
+    }
+
+    if (window.confirm(`${pokemon.nickname || pokemon.name}에게 경험치 ${requestedExp}을(를) 배분하시겠습니까?\n보유 경험치: ${availableExp}`)) {
+      onUseRareCandy(uniqueId, onLevelUpCallback, requestedExp);
     }
   };
 

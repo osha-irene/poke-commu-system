@@ -24,9 +24,7 @@ export default function AdminView() {
     currentUser: trainer,
     members = {},
     regions = [],
-    setRegions,
-    allPokemon = [],
-    allPokemonMaster = [],
+    setRegions,    allPokemonMaster = [],
     allItems = [],
     gamePokedex = [],
     shopData = {},
@@ -40,7 +38,6 @@ export default function AdminView() {
     deleteTown,
     setMembers,
     updateCurrentUser,
-    updateMaxDailyWalks,
     updateRegionPokemon,
     addRegion,
     deleteRegion,
@@ -189,10 +186,6 @@ export default function AdminView() {
     }
   };
 
-  const handleUpdateMaxWalks = () => {
-    updateMaxDailyWalks?.(maxWalks);
-    alert('최대 탐험 횟수가 업데이트되었습니다!');
-  };
 
   // 전체 멤버 탐험 횟수 일괄 변경
   const handleUpdateAllMembersMaxWalks = async () => {
@@ -643,7 +636,6 @@ export default function AdminView() {
         </>
       )}
 		
-		// 패널 렌더링 추가
 		{adminTab === 'camping' && (
 		  <CampingAdminPanel
 			campingSessions={camping?.campingSessions || []}

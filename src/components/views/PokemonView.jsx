@@ -9,6 +9,7 @@ import { PartnerSlot, EggSlot } from './pokemon/PartySlot';
 import BoxPokemon from './pokemon/BoxPokemon';
 import PokemonDetailPanel from './pokemon/PokemonDetailPanel';
 import { getButtonClass, getCardClass } from '../../styles/theme';
+import { getRequiredExpForLevel } from '../../utils/experience';
 
 function DesktopPokemonView() {
   const {
@@ -30,9 +31,7 @@ function DesktopPokemonView() {
     reorderPartyPokemon: onReorderParty,
     currentUser,
     allMoves = [],
-    pokemonLearnsets = {},
-    useItemOnPokemon: onUseItemOnPokemon,
-    checkEvolution,
+    pokemonLearnsets = {},    checkEvolution,
     manualEvolve
   } = useGame();
 
@@ -50,7 +49,6 @@ function DesktopPokemonView() {
   const [isDraggingInParty, setIsDraggingInParty] = useState(false);
   const [partyDraggedIndex, setPartyDraggedIndex] = useState(null);
   const [partyHoverIndex, setPartyHoverIndex] = useState(null);
-  const dragOverTimeoutRef = React.useRef(null);
   const dropSuccessRef = React.useRef(false);
   
   // 파트너 포켓몬은 currentUser.partnerPokemon에서 가져옴 (별도 저장)
@@ -74,13 +72,15 @@ function DesktopPokemonView() {
     item.name === '이상한사탕' || 
     item.nameEn?.toLowerCase().includes('rare candy')
   );
-  const hasRareCandy = rareCandy && rareCandy.count > 0;
   const rareCandyImage = rareCandy?.imageUrl;
 
   const selectedPokemon = selectedPokemonId 
     ? (caughtPokemon.find(p => p && p.uniqueId === selectedPokemonId) || 
        (partnerPokemon?.uniqueId === selectedPokemonId ? partnerPokemon : null))
     : null;
+  const trainerExp = Number(currentUser?.trainerExp) || 0;
+  const selectedRequiredExp = selectedPokemon ? getRequiredExpForLevel(selectedPokemon.level) : null;
+  const hasRareCandy = selectedRequiredExp !== null && trainerExp >= selectedRequiredExp;
 
   const selectedPokemonIndex = selectedPokemon 
     ? caughtPokemon.findIndex(p => p && p.uniqueId === selectedPokemon.uniqueId)
@@ -253,14 +253,31 @@ function DesktopPokemonView() {
     setSelectedPokemonId(pokemon.uniqueId);
   };
 
-  const handleUseCandy = (uniqueId, onLevelUpCallback) => {
-    if (!hasRareCandy) return;
-    
-    const pokemon = caughtPokemon.find(p => p && p.uniqueId === uniqueId);
+  const handleUseCandy = (uniqueId, onLevelUpCallback, expAmount = 0) => {
+    const pokemon = caughtPokemon.find(p => p && p.uniqueId === uniqueId) ||
+      (partnerPokemon?.uniqueId === uniqueId ? partnerPokemon : null);
     if (!pokemon) return;
-    
-    if (window.confirm(`${pokemon.nickname || pokemon.name}에게 이상한사탕을 사용하시겠습니까?`)) {
-      onUseRareCandy(uniqueId, onLevelUpCallback);
+
+    const requestedExp = Math.floor(Number(expAmount) || 0);
+    const availableExp = Number(currentUser?.trainerExp) || 0;
+
+    if (getRequiredExpForLevel(pokemon.level) === null) {
+      alert('현재 레벨에서는 경험치 배분으로 더 이상 레벨업할 수 없습니다.');
+      return;
+    }
+
+    if (requestedExp <= 0) {
+      alert('배분할 경험치를 입력해주세요.');
+      return;
+    }
+
+    if (requestedExp > availableExp) {
+      alert(`경험치가 부족합니다!\n입력 경험치: ${requestedExp}\n보유 경험치: ${availableExp}`);
+      return;
+    }
+
+    if (window.confirm(`${pokemon.nickname || pokemon.name}에게 경험치 ${requestedExp}을(를) 배분하시겠습니까?\n보유 경험치: ${availableExp}`)) {
+      onUseRareCandy(uniqueId, onLevelUpCallback, requestedExp);
     }
   };
 
@@ -329,32 +346,6 @@ function DesktopPokemonView() {
       onReorderParty(newParty);
     }
     setShowReorderModal(false);
-  };
-
-  const handlePartyDragOver = (e, index) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!isDraggingInParty || partyDraggedIndex === null) return;
-    if (partyDraggedIndex === index) return;
-    
-    if (partyHoverIndex !== index) {
-      setPartyHoverIndex(index);
-    }
-  };
-
-  const handlePartyDragLeave = (e) => {
-    e.stopPropagation();
-    
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX;
-    const y = e.clientY;
-    
-    if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-      return;
-    }
-    
-    setPartyHoverIndex(null);
   };
 
   const handlePartyDrop = (e, dropIndex) => {

@@ -4,6 +4,7 @@
 import { ref, set } from 'firebase/database';
 import { database } from '../../firebase';
 import { POKEBALL_LIST } from '../../styles/theme';
+import { normalizePokemonGender } from '../../utils/pokemonGender';
 
 export const useAdminMembers = (
   currentUser,
@@ -53,6 +54,8 @@ export const useAdminMembers = (
       dailyWalks: 10,
       maxDailyWalks: 10,
       money: 10000,
+      trainerExp: 0,
+      lastAttendanceDate: null,
       accessibleRegions: [],
       caughtPokemon: [],
       inventory: getInitialInventory()
@@ -268,8 +271,7 @@ export const useAdminMembers = (
       : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`;
 
     // 기본값 설정
-    const finalGender = gender || (pokemonTemplate.genderRatio ? 
-      (Math.random() * 100 < pokemonTemplate.genderRatio.male ? 'male' : 'female') : 'none');
+    const finalGender = normalizePokemonGender(gender, pokemonTemplate);
     
     const finalAbility = ability || (pokemonTemplate.abilities && pokemonTemplate.abilities.length > 0 ? 
       pokemonTemplate.abilities[0] : '없음');
@@ -287,6 +289,8 @@ export const useAdminMembers = (
       nameEn: pokemonTemplate.nameEn,
       nickname,
       number: pokemonTemplate.number,
+      originalNumber: pokemonTemplate.originalNumber || pokemonTemplate.number,
+      formVariant: pokemonTemplate.formVariant || null,
       type: pokemonTemplate.type,
       type2: pokemonTemplate.type2 || null,
       level,
@@ -499,6 +503,13 @@ export const useAdminMembers = (
 
     const updatedPokemon = member.caughtPokemon.map(p => {
       if (p && p.uniqueId === pokemonUniqueId) {
+        const pokemonTemplate = (allPokemonMaster || []).find(template =>
+          template.number === p.number ||
+          template.id === p.pokemonId ||
+          template.nameEn === p.nameEn ||
+          template.name === p.name
+        ) || p;
+
         const currentCondition = p.condition || {
           elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0
         };
@@ -516,7 +527,7 @@ export const useAdminMembers = (
           friendship: safeValue(updates.friendship, p.friendship || 0),
           caughtWithBall: safeValue(updates.caughtWithBall, p.caughtWithBall),
           ballImageUrl: safeValue(updates.ballImage, p.ballImageUrl),
-          gender: safeValue(updates.gender, p.gender),
+          gender: normalizePokemonGender(safeValue(updates.gender, p.gender), pokemonTemplate),
           sizeRank: safeValue(updates.sizeRank, p.sizeRank),
           heightVariation: updates.heightVariation !== undefined 
             ? parseFloat(updates.heightVariation) 

@@ -108,12 +108,12 @@ export default function MobileLayout({
         <>
           {/* 오버레이 */}
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-50"
+            className="fixed inset-0 bg-black bg-opacity-50 z-[100000]"
             onClick={() => setMenuOpen(false)}
           />
           
           {/* 메뉴 패널 */}
-          <aside className="fixed top-0 left-0 h-full w-64 bg-white shadow-2xl z-50 flex flex-col animate-slide-in">
+          <aside className="fixed top-0 left-0 h-full w-64 bg-white shadow-2xl z-[100001] flex flex-col animate-slide-in">
             {/* 메뉴 헤더 */}
             <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6">
               <div className="flex items-center justify-between mb-4">

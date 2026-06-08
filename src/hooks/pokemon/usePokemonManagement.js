@@ -2,6 +2,8 @@
 
 import { ref, get } from 'firebase/database';
 import { database } from '../../firebase';
+import { getRequiredExpForLevel } from '../../utils/experience';
+import { getPokemonLearnset } from '../../utils/pokemonLearnsets';
 
 const usePokemonManagement = (
   currentUser, 
@@ -13,6 +15,20 @@ const usePokemonManagement = (
   allMoves,
   checkEvolutionOnLevelUp
 ) => {
+  const getPokemonTemplate = (pokemon) => {
+    if (!pokemon) return null;
+    return (allPokemonMaster || []).find(template =>
+      template.number === pokemon.number ||
+      template.id === pokemon.pokemonId ||
+      template.nameEn === pokemon.nameEn ||
+      template.name === pokemon.name
+    ) || null;
+  };
+
+  const withPokemonTemplateData = (pokemon) => {
+    const template = getPokemonTemplate(pokemon);
+    return template ? { ...pokemon, ...template } : pokemon;
+  };
 
   // 엔트리 이동
   const movePokemonToParty = (uniqueId) => {
@@ -217,14 +233,8 @@ const usePokemonManagement = (
   };
 
   // 레벨업 (이상한사탕 + 진화 체크 통합)
-  const useRareCandy = async (uniqueId, onLevelUp) => {
+  const useRareCandy = async (uniqueId, onLevelUp, expAmount = 0) => {
     if (!currentUser) return;
-    
-    const candyItem = currentUser.inventory.find(item => item.name === '이상한사탕');
-    if (!candyItem || candyItem.count <= 0) { 
-      alert('이상한사탕이 없습니다!'); 
-      return; 
-    }
     
     let pokemon;
     if (currentUser.partnerPokemon?.uniqueId === uniqueId) {
@@ -234,7 +244,22 @@ const usePokemonManagement = (
     }
     
     if (!pokemon) return;
+
+    const requestedExp = Math.floor(Number(expAmount) || 0);
+    const availableExp = Number(currentUser.trainerExp) || 0;
+
+    if (requestedExp <= 0) {
+      alert('배분할 경험치를 입력해주세요.');
+      return;
+    }
+
+    if (requestedExp > availableExp) {
+      alert(`경험치가 부족합니다!\n입력 경험치: ${requestedExp}\n보유 경험치: ${availableExp}`);
+      return;
+    }
     
+    let maxAllowedLevel = Infinity;
+
     // 레벨 제한 확인
     try {
       const levelRestrictionRef = ref(database, 'gameData/levelRestriction');
@@ -245,8 +270,9 @@ const usePokemonManagement = (
         
         if (restriction.enabled) {
           const { maxLevel } = restriction;
+          maxAllowedLevel = Number(maxLevel) || Infinity;
           
-          if (pokemon.level >= maxLevel) {
+          if (pokemon.level >= maxAllowedLevel) {
             alert(`⚠️ 레벨 제한으로 인해 더 이상 레벨업할 수 없습니다!\n현재 최대 레벨: ${maxLevel}`);
             return;
           }
@@ -256,26 +282,50 @@ const usePokemonManagement = (
       console.error('레벨 제한 확인 실패:', error);
     }
     
-    const newLevel = pokemon.level + 1;
+    let newLevel = Number(pokemon.level) || 1;
+    let pokemonExp = Number(pokemon.exp) || 0;
+    let remainingAppliedExp = requestedExp;
+    const learnedLevels = [];
+
+    while (remainingAppliedExp > 0) {
+      if (newLevel >= maxAllowedLevel) break;
+
+      const requiredExp = getRequiredExpForLevel(newLevel);
+      if (requiredExp === null) break;
+
+      const expToNextLevel = requiredExp - pokemonExp;
+      const appliedNow = Math.min(remainingAppliedExp, expToNextLevel);
+      pokemonExp += appliedNow;
+      remainingAppliedExp -= appliedNow;
+
+      if (pokemonExp >= requiredExp) {
+        newLevel += 1;
+        pokemonExp = 0;
+        learnedLevels.push(newLevel);
+      }
+    }
+
+    const usedExp = requestedExp - remainingAppliedExp;
+    if (usedExp <= 0) {
+      alert('현재 레벨에서는 경험치를 더 배분할 수 없습니다.');
+      return;
+    }
+
+    const nextTrainerExp = availableExp - usedExp;
+    const levelChanged = newLevel > pokemon.level;
     
     // 파트너 포켓몬 업데이트
     if (currentUser.partnerPokemon?.uniqueId === uniqueId) {
-      const updatedPartner = { ...pokemon, level: newLevel };
-      
-      const newInventory = currentUser.isSuperAdmin
-        ? currentUser.inventory
-        : currentUser.inventory.map(item =>
-            item.name === '이상한사탕' 
-              ? { ...item, count: item.count - 1 }
-              : item
-          ).filter(item => item.count > 0);
+      const updatedPartner = { ...pokemon, level: newLevel, exp: pokemonExp };
       
       updateCurrentUser({ 
         partnerPokemon: updatedPartner,
-        inventory: newInventory 
+        trainerExp: nextTrainerExp
       });
       
-      alert(`${pokemon.nickname || pokemon.name}의 레벨이 올랐다!\nLv.${pokemon.level} → Lv.${newLevel}`);
+      alert(levelChanged
+        ? `${pokemon.nickname || pokemon.name}의 레벨이 올랐다!\nLv.${pokemon.level} → Lv.${newLevel}\n사용 경험치: ${usedExp}\n남은 경험치: ${nextTrainerExp}`
+        : `${pokemon.nickname || pokemon.name}에게 경험치 ${usedExp}을(를) 배분했습니다.\n남은 경험치: ${nextTrainerExp}`);
       
       // 진화 체크 및 기술 배우기
       setTimeout(async () => {
@@ -287,7 +337,7 @@ const usePokemonManagement = (
             const latestUser = snapshot.val();
             const updatedPokemon = latestUser.partnerPokemon;
             
-            if (updatedPokemon && checkEvolutionOnLevelUp) {
+            if (levelChanged && updatedPokemon && checkEvolutionOnLevelUp) {
               const shouldShowEvolutionModal = checkEvolutionOnLevelUp(updatedPokemon);
               
               if (shouldShowEvolutionModal) {
@@ -300,13 +350,13 @@ const usePokemonManagement = (
           console.error('Firebase 조회 실패:', error);
         }
         
-        if (onLevelUp && pokemonLearnsets && allMoves) {
-          const learnset = pokemonLearnsets[pokemon.number];
-          if (learnset) {
-            const newMoves = learnset
-              .filter(entry => entry.level === newLevel)
-              .map(entry => allMoves.find(move => move.id === entry.moveId))
-              .filter(Boolean);
+      if (levelChanged && onLevelUp && pokemonLearnsets && allMoves) {
+        const learnset = getPokemonLearnset(pokemonLearnsets, withPokemonTemplateData(pokemon));
+        if (learnset?.levelUpMoves) {
+          const newMoves = learnset.levelUpMoves
+            .filter(entry => learnedLevels.includes(entry.level))
+            .map(entry => allMoves.find(move => move.id === entry.moveId))
+            .filter(Boolean);
             
             if (newMoves.length > 0) {
               onLevelUp(uniqueId, newLevel, newMoves);
@@ -319,24 +369,18 @@ const usePokemonManagement = (
     }
     
     // 일반 포켓몬 업데이트
-    const newCaughtPokemon = currentUser.caughtPokemon.map(p => 
-      p && p.uniqueId === uniqueId ? { ...p, level: newLevel } : p
+    const newCaughtPokemon = currentUser.caughtPokemon.map(p =>
+      p && p.uniqueId === uniqueId ? { ...p, level: newLevel, exp: pokemonExp } : p
     );
-    
-    const newInventory = currentUser.isSuperAdmin
-      ? currentUser.inventory
-      : currentUser.inventory.map(item =>
-          item.name === '이상한사탕' 
-            ? { ...item, count: item.count - 1 }
-            : item
-        ).filter(item => item.count > 0);
     
     updateCurrentUser({ 
       caughtPokemon: newCaughtPokemon, 
-      inventory: newInventory 
+      trainerExp: nextTrainerExp
     });
     
-    alert(`${pokemon.nickname || pokemon.name}의 레벨이 올랐다!\nLv.${pokemon.level} → Lv.${newLevel}`);
+    alert(levelChanged
+      ? `${pokemon.nickname || pokemon.name}의 레벨이 올랐다!\nLv.${pokemon.level} → Lv.${newLevel}\n사용 경험치: ${usedExp}\n남은 경험치: ${nextTrainerExp}`
+      : `${pokemon.nickname || pokemon.name}에게 경험치 ${usedExp}을(를) 배분했습니다.\n남은 경험치: ${nextTrainerExp}`);
     
     // 진화 체크 및 기술 배우기
     setTimeout(async () => {
@@ -348,7 +392,7 @@ const usePokemonManagement = (
           const latestUser = snapshot.val();
           const updatedPokemon = latestUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
           
-          if (updatedPokemon && checkEvolutionOnLevelUp) {
+          if (levelChanged && updatedPokemon && checkEvolutionOnLevelUp) {
             const shouldShowEvolutionModal = checkEvolutionOnLevelUp(updatedPokemon);
             
             if (shouldShowEvolutionModal) {
@@ -361,11 +405,11 @@ const usePokemonManagement = (
         console.error('Firebase 조회 실패:', error);
       }
       
-      if (onLevelUp && pokemonLearnsets && allMoves) {
-        const learnset = pokemonLearnsets[pokemon.number.toString()];
+      if (levelChanged && onLevelUp && pokemonLearnsets && allMoves) {
+        const learnset = getPokemonLearnset(pokemonLearnsets, withPokemonTemplateData(pokemon));
         if (learnset && learnset.levelUpMoves) {
           const newMoves = learnset.levelUpMoves
-            .filter(entry => entry.level === newLevel)
+            .filter(entry => learnedLevels.includes(entry.level))
             .map(entry => allMoves.find(move => move.id === entry.moveId))
             .filter(Boolean);
           

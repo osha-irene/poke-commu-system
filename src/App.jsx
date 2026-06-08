@@ -5,7 +5,7 @@ import MobileLayout from './components/layout/MobileLayout';
 import './App.css';
 import SakuraEffect from './effects/sakura';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ref, get, set } from 'firebase/database';
 import { database } from './firebase';
 import Sidebar from './components/layout/Sidebar';
@@ -26,53 +26,15 @@ import NPCsView from './components/views/NPCsView';
 import CampingView from './components/views/CampingView';
 import QnABoard from './components/views/QnABoard';
 import CookingView from './components/views/CookingView';
+import WorldView from './components/views/WorldView';
+import { noticeContent, systemContent } from './data/communityContent';
 import { PokemonProvider } from './contexts/PokemonContext';
 import { GameProvider } from './contexts/GameContext';
 import BattleView from './components/views/BattleView';
 import mainNewsButton from './assets/main_news.png';
 import doctorWpenImage from './assets/npc/doctor_wpen.png';
-import { User, Lock, LogOut, Music, X, Play, Pause, SkipBack, SkipForward, Volume2 } from 'lucide-react';
-
-function HomeProfileCard({ trainer, isAdmin, soundEnabled, onToggleSound, onLogout, onPokemonClick }) {
-  return (
-    <section className="home-profile-card">
-      <div className="home-profile-card__identity">
-        <div className="home-profile-card__avatar">
-          {trainer?.name?.charAt(0) || '?'}
-        </div>
-        <div>
-          <div className="home-profile-card__name">{trainer?.name}</div>
-          {isAdmin && (
-            <div className="home-profile-card__badge">
-              {trainer?.isSuperAdmin ? '?덊띁愿由ъ옄' : '愿由ъ옄'}
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="home-profile-card__details">
-        <div className="home-profile-card__stats">
-          <span>오늘의 모험</span>
-          <strong>{trainer?.dailyWalks}/{trainer?.maxDailyWalks}</strong>
-        </div>
-        <div className="home-profile-card__stats">
-          <span>소지금</span>
-          <strong>{trainer?.money?.toLocaleString?.() || 0}원</strong>
-        </div>
-        <div className="home-profile-card__actions">
-          <button type="button" onClick={onPokemonClick} className="home-profile-card__pokemon">
-            ???ъ폆紐?
-          </button>
-          <button type="button" onClick={onToggleSound} className="home-profile-card__sound">
-            {soundEnabled ? '?ъ슫??ON' : '?ъ슫??OFF'}
-          </button>
-          <button type="button" onClick={onLogout} className="home-profile-card__logout">
-            로그아웃
-          </button>
-        </div>
-      </div>
-    </section>
-  );
-}
+import pokemonIcon from './assets/pokemon-icon.svg';
+import { User, Lock, LogOut, Music, X, Play, Pause, SkipBack, SkipForward, Volume2, Package } from 'lucide-react';
 
 function getYouTubeEmbedTarget(value = '') {
   const trimmed = value.trim();
@@ -106,18 +68,18 @@ function PlaylistWidget() {
   const playerRef = useRef(null);
   const hasUnlockedPlaybackRef = useRef(false);
 
-  const sendPlayerCommand = (func, args = []) => {
+  const sendPlayerCommand = useCallback((func, args = []) => {
     playerRef.current?.contentWindow?.postMessage(
       JSON.stringify({ event: 'command', func, args }),
       '*'
     );
-  };
+  }, []);
 
-  const startPlayback = () => {
+  const startPlayback = useCallback(() => {
     sendPlayerCommand('setVolume', [volume]);
     sendPlayerCommand('playVideo');
     setIsPlaying(true);
-  };
+  }, [sendPlayerCommand, volume]);
 
   useEffect(() => {
     let isMounted = true;
@@ -158,7 +120,7 @@ function PlaylistWidget() {
     }, 800);
 
     return () => window.clearTimeout(timer);
-  }, [playlistSettings.id]);
+  }, [playlistSettings.id, startPlayback]);
 
   useEffect(() => {
     if (!playlistSettings.id || typeof window === 'undefined') return;
@@ -181,7 +143,7 @@ function PlaylistWidget() {
       window.removeEventListener('touchstart', unlockPlayback);
       window.removeEventListener('keydown', unlockPlayback);
     };
-  }, [playlistSettings.id, volume]);
+  }, [playlistSettings.id, startPlayback]);
 
   const handlePlayPause = () => {
     const nextPlaying = !isPlaying;
@@ -267,15 +229,122 @@ function PlaylistWidget() {
   );
 }
 
-function HomeDashboard({ showLogin = false, onLogin, trainer, onLogout }) {
+function getPokemonLocalIconUrl(pokemon = {}) {
+  const rawName = pokemon.nameEn || pokemon.nameEnglish || pokemon.speciesNameEn || '';
+  if (!rawName) return '';
+
+  const fileName = rawName
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[.'?]/g, '')
+    .replace(/\s+/g, '-')
+    .toUpperCase();
+
+  return fileName ? '/img/icons/' + fileName + '.png' : '';
+}
+
+function getKoreaDateParts(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric'
+  }).formatToParts(date);
+
+  return {
+    year: Number(parts.find((part) => part.type === 'year')?.value),
+    month: Number(parts.find((part) => part.type === 'month')?.value),
+    day: Number(parts.find((part) => part.type === 'day')?.value)
+  };
+}
+
+function getCalendarDays(year, month) {
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const previousMonthDays = new Date(Date.UTC(year, month - 1, 0)).getUTCDate();
+  const firstDayIndex = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
+  const totalSlots = Math.ceil((firstDayIndex + daysInMonth) / 7) * 7;
+
+  return Array.from({ length: totalSlots }, (_, index) => {
+    const dayOffset = index - firstDayIndex + 1;
+
+    if (dayOffset < 1) {
+      return { day: previousMonthDays + dayOffset, muted: true };
+    }
+
+    if (dayOffset > daysInMonth) {
+      return { day: dayOffset - daysInMonth, muted: true };
+    }
+
+    return { day: dayOffset, muted: false };
+  });
+}
+
+function HomeDashboard({ showLogin = false, onLogin, trainer, onLogout, onPokemonClick, onItemsClick, members = {} }) {
   const [loginUserId, setLoginUserId] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
-  const calendarDays = [
-    { day: 31, muted: true },
-    ...Array.from({ length: 30 }, (_, index) => ({ day: index + 1, muted: false })),
-    ...Array.from({ length: 4 }, (_, index) => ({ day: index + 1, muted: true }))
-  ];
-  const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  const [koreaToday, setKoreaToday] = useState(() => getKoreaDateParts());
+  const calendarDays = getCalendarDays(koreaToday.year, koreaToday.month);
+  const calendarLabel = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Seoul',
+    month: 'long'
+  }).format(new Date(Date.UTC(koreaToday.year, koreaToday.month - 1, 1)));
+  const weekDays = ['\uC77C', '\uC6D4', '\uD654', '\uC218', '\uBAA9', '\uAE08', '\uD1A0'];
+
+  useEffect(() => {
+    const updateKoreaToday = () => setKoreaToday(getKoreaDateParts());
+    updateKoreaToday();
+
+    const timer = window.setInterval(updateKoreaToday, 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const getEventTime = (value, fallbackIndex = 0) => {
+    const parsed = Date.parse(value || '');
+    if (!Number.isNaN(parsed)) return parsed;
+
+    const numeric = Number(value);
+    return Number.isFinite(numeric) && numeric > 0 ? numeric : fallbackIndex;
+  };
+
+  const cookingFeed = Object.values(members || {})
+    .flatMap((member) => {
+      const trainerName = member?.name || member?.nickname || '\uB204\uAD70\uAC00';
+      const historyEntries = (member?.cookingHistory || []).filter(Boolean).map((entry, index) => ({
+        id: entry.id || `cooking-${member?.id || trainerName}-${index}`,
+        trainerName,
+        itemName: entry.itemName || entry.recipeName || '\uC694\uB9AC',
+        image: entry.imageUrl || entry.image || '',
+        eventTime: getEventTime(entry.cookedAt || entry.createdAt, index)
+      }));
+
+      if (historyEntries.length > 0) return historyEntries;
+
+      return (member?.inventory || [])
+        .filter((item) => item?.isCooked)
+        .map((item, index) => ({
+          id: item.itemId || `cooked-item-${member?.id || trainerName}-${index}`,
+          trainerName,
+          itemName: item.name || '\uC694\uB9AC',
+          image: item.imageUrl || item.image || '',
+          eventTime: getEventTime(String(item.itemId || '').replace('cooked_', ''), index)
+        }));
+    })
+    .sort((a, b) => b.eventTime - a.eventTime)
+    .slice(0, 1);
+
+  const evolutionFeed = Object.values(members || {})
+    .flatMap((member) => {
+      const trainerName = member?.name || member?.nickname || '\uB204\uAD70\uAC00';
+      return (member?.evolutionHistory || []).filter(Boolean).map((entry, index) => ({
+        id: entry.id || `evolution-${member?.id || trainerName}-${index}`,
+        trainerName,
+        pokemonName: entry.toName || entry.pokemonName || '\uD3EC\uCF13\uBAAC',
+        spriteUrl: getPokemonLocalIconUrl({ nameEn: entry.toNameEn }) || entry.imageUrl || '',
+        eventTime: getEventTime(entry.evolvedAt || entry.createdAt, index)
+      }));
+    })
+    .sort((a, b) => b.eventTime - a.eventTime)
+    .slice(0, 1);
 
   const handleNewsClick = () => {
     const newsUrl = '';
@@ -332,17 +401,81 @@ function HomeDashboard({ showLogin = false, onLogin, trainer, onLogout }) {
           {index === 1 && !showLogin && onLogout && (
             <div className="home-session-panel">
               <span>{trainer?.name || 'Trainer'}</span>
+              <div className="home-session-panel__quick-actions" aria-label="temporary shortcuts">
+                <button type="button" onClick={onPokemonClick}>
+                  <img className="home-session-panel__pokemon-icon" src={pokemonIcon} alt="" aria-hidden="true" />
+                  {'\uD3EC\uCF13\uBAAC'}
+                </button>
+                <button type="button" onClick={onItemsClick}>
+                  <Package aria-hidden="true" />
+                  {'\uAC00\uBC29'}
+                </button>
+              </div>
               <button type="button" onClick={onLogout}>
                 <LogOut aria-hidden="true" />
-                로그아웃
+                {'\uB85C\uADF8\uC544\uC6C3'}
               </button>
             </div>
           )}
+          {index === 3 && (
+            <div className="home-issue-board" aria-label="home issue feed">
+              <section className="home-issue-board__section" aria-label="cooking news">
+                <div className="home-issue-board__heading">
+                  <span>{'\uC624\uB298\uC758 \uC694\uB9AC'}</span>
+                  <strong>COOK</strong>
+                </div>
+                {cookingFeed.length > 0 ? (
+                  <ul className="home-issue-list">
+                    {cookingFeed.map((entry) => (
+                      <li key={entry.id} className="home-issue-item home-issue-item--item">
+                        {entry.image ? <img src={entry.image} alt="" /> : <span className="home-issue-item__fallback home-issue-item__fallback--item" aria-hidden="true">I</span>}
+                        <span className="home-issue-item__text">
+                          <span>{entry.trainerName}{'\uAC00'}</span>
+                          <span>{entry.itemName}{'\uC744(\uB97C)'}</span>
+                          <span>{'\uB9CC\uB4E4\uC5C8\uB2E4'}</span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="home-issue-empty">{'\uC544\uC9C1 \uC694\uB9AC \uC18C\uC2DD\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.'}</p>
+                )}
+              </section>
+              <section className="home-issue-board__section" aria-label="evolution news">
+                <div className="home-issue-board__heading">
+                  <span>{'\uC624\uB298\uC758 \uC9C4\uD654'}</span>
+                  <strong>EVOLVE</strong>
+                </div>
+                {evolutionFeed.length > 0 ? (
+                  <ul className="home-issue-list">
+                    {evolutionFeed.map((entry) => (
+                      <li key={entry.id} className="home-issue-item home-issue-item--catch">
+                        {entry.spriteUrl ? (
+                          <span
+                            className="home-issue-pokemon-icon-crop"
+                            style={{ backgroundImage: `url(${entry.spriteUrl})` }}
+                            aria-hidden="true"
+                          />
+                        ) : <span className="home-issue-item__fallback home-issue-item__fallback--catch" aria-hidden="true">P</span>}
+                        <span className="home-issue-item__text">
+                          <span>{entry.trainerName}{'\uC758'}</span>
+                          <span>{entry.pokemonName}{'\uC774(\uAC00)'}</span>
+                          <span>{'\uC9C4\uD654\uD588\uB2E4'}</span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="home-issue-empty">{'\uC544\uC9C1 \uC9C4\uD654 \uC18C\uC2DD\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.'}</p>
+                )}
+              </section>
+            </div>
+          )}
           {index === 2 && (
-            <div className="home-calendar" aria-label="June 2026 calendar">
+            <div className="home-calendar" aria-label="Korea time calendar">
               <div className="home-calendar__header">
                 <span>Calendar</span>
-                <strong>June 2026</strong>
+                <strong>{calendarLabel}</strong>
               </div>
               <div className="home-calendar__weekdays">
                 {weekDays.map((day, dayIndex) => (
@@ -353,7 +486,7 @@ function HomeDashboard({ showLogin = false, onLogin, trainer, onLogout }) {
                 {calendarDays.map((day, dayIndex) => (
                   <span
                     key={`${day.muted ? 'muted' : 'current'}-${day.day}-${dayIndex}`}
-                    className={[day.day === 7 && !day.muted ? 'is-today' : '', dayIndex % 7 === 0 ? 'is-sunday' : dayIndex % 7 === 6 ? 'is-saturday' : '', day.muted ? 'is-muted' : ''].filter(Boolean).join(' ')}
+                    className={[day.day === koreaToday.day && !day.muted ? 'is-today' : '', dayIndex % 7 === 0 ? 'is-sunday' : dayIndex % 7 === 6 ? 'is-saturday' : '', day.muted ? 'is-muted' : ''].filter(Boolean).join(' ')}
                   >
                     {day.day}
                   </span>
@@ -374,43 +507,15 @@ function HomeDashboard({ showLogin = false, onLogin, trainer, onLogout }) {
     </section>
   );
 }
-function CommunityPlaceholder({ type, trainer, isAdmin, soundEnabled, onToggleSound, onLogout, onPokemonClick }) {
-  if (type === 'notice') {
-    return (
-      <HomeDashboard
-        trainer={trainer}
-        isAdmin={isAdmin}
-        soundEnabled={soundEnabled}
-        onToggleSound={onToggleSound}
-        onLogout={onLogout}
-        onPokemonClick={onPokemonClick}
-      />
-    );
+function CommunityPlaceholder({ type }) {
+  if (type === 'world') {
+    return <WorldView />;
   }
 
-  const content = {
-    notice: {
-      title: '공지사항',
-      body: '운영 공지, 업데이트, 이벤트 안내가 들어갈 자리입니다.'
-    },
-    world: {
-      title: '세계관',
-      body: '지역 설정, 이야기, 커뮤니티 배경을 정리하는 페이지입니다.'
-    },
-    system: {
-      title: '시스템',
-      body: '모험, 탐험, 교감, 상점, 요리, 캠핑, 배틀 규칙을 안내하는 페이지입니다.'
-    }
-  };
-  const selected = content[type] || content.notice;
+  const content = type === 'system' ? systemContent : noticeContent;
+  const tocLabel = type === 'system' ? '시스템 섹션' : '공지사항 섹션';
 
-  return (
-    <section className="community-panel">
-      <p className="community-panel__eyebrow">Poke Community</p>
-      <h2>{selected.title}</h2>
-      <p>{selected.body}</p>
-    </section>
-  );
+  return <WorldView content={content} tocLabel={tocLabel} hiddenSectionTitles={[]} />;
 }
 
 
@@ -457,14 +562,10 @@ export default function App() {
     encounterPokemon,
     firstCatchPokemon,
     regions,
-    allPokemon,
     allPokemonMaster,
-    allItems,
     members,
     gamePokedex,
     sharedPokedexData,
-    shopData,
-    updateShopData,
     handleLogin,
     handleLogout,
     isAuthLoading,
@@ -473,62 +574,29 @@ export default function App() {
     handleCatchSuccess,
     saveFirstCatchMemo,
     skipFirstCatchMemo,
-    updateMaxDailyWalks,
-    updateRegionPokemon,
-    addMember,
-    toggleAdminStatus,
-    resetMemberWalkCount,
-    resetAllWalkCounts,
-    resetGameData,
-    movePokemonToParty,
-    movePokemonToBox,
     releasePokemon,
     useRareCandy,
     updatePokemonNickname,
     updatePokedexMemo,
-    updateGamePokedex,
-    addItemToSelf,
-    giveItemToMember,
-    toggleItemManagement,
-    givePokemonToMember,
-    addPokemonToSelf,
     giveItemToPokemon,
     takeItemFromPokemon,
-    handlePurchase,
     setPartnerPokemon,
     forgetMove,
     learnMove,
     replaceMove,
-    giveMoveToPokemon,
     allMoves,
     pokemonLearnsets,
-    sellItem,
-    createCustomItem,
-    updateMemberMoney,
-    updateMemberRegionAccess,
     maintenanceMode,
-    setMaintenanceMode,
     applyLoot,
-    updateRegionLootConfig,
     updatePokedexRegions,
     useItemOnPokemon,
     evolutionModal,
     acceptEvolution,
     cancelEvolution,
     increaseEffort,
-    recipes,
-    createRecipe,
-    discoveredRecipes,
-    cookRecipe,
-    updateIngredientStats,
-    updateCurrentUser,
-    setMembers,
-    isMembersLoading,
-    editMemberPokemon,
-    deleteMemberPokemon,
 	camping,
   } = gameState;
-  const isFeaturePage = currentTab !== 'notice';
+  const isFeaturePage = currentTab !== 'home';
 
   // 寃뚯떆??濡쒕뱶
   useEffect(() => {
@@ -665,75 +733,6 @@ export default function App() {
     pokemonLearnsets
   };
 
- const handleRegister = async (userId, password, name) => {
-    try {
-      console.log('?뵍 ?뚯썝媛???쒖옉:', userId);
-      
-      const email = `${userId}@pokemon.com`;
-      const { createUserWithEmailAndPassword } = await import('firebase/auth');
-      const { auth, database } = await import('./firebase');
-      const { ref, set } = await import('firebase/database');
-      
-      // 1截뤴깵 Firebase Auth??怨꾩젙 ?앹꽦
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const firebaseUid = userCredential.user.uid;
-      console.log('??Auth 怨꾩젙 ?앹꽦 ?꾨즺:', firebaseUid);
-      
-      // 2截뤴깵 Realtime Database???뚯썝 ?곗씠?????
-      const memberRef = ref(database, `members/${firebaseUid}`);
-      const newMemberData = {
-        name: name,
-        email: email,
-        isAdmin: false,
-        isSuperAdmin: false,
-        canManageItems: false,
-        dailyWalks: 10,
-        maxDailyWalks: 10,
-        money: 10000,
-        accessibleRegions: [],
-        caughtPokemon: [null, null, null, null, null, null],
-        inventory: [
-          {
-            itemId: 4,
-            name: '紐ъ뒪?곕낵',
-            count: 15,
-            imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'
-          }
-        ],
-        createdAt: new Date().toISOString()
-      };
-      
-      await set(memberRef, newMemberData);
-      console.log('??Database ????꾨즺:', firebaseUid);
-      
-      // 3截뤴깵 members state??異붽? (利됱떆 諛섏쁺)
-      setMembers(prev => ({
-        ...prev,
-        [firebaseUid]: {
-          ...newMemberData,
-          id: firebaseUid
-        }
-      }));
-      
-      alert(`???뚯썝媛???꾨즺!\n\n?꾩씠?? ${userId}\n?대쫫: ${name}\n\n濡쒓렇?명빐二쇱꽭??`);
-      return true;
-      
-    } catch (error) {
-      console.error('???뚯썝媛???ㅻ쪟:', error);
-      
-      if (error.code === 'auth/email-already-in-use') {
-        alert('?대? ?ъ슜 以묒씤 ?꾩씠?붿엯?덈떎.');
-      } else if (error.code === 'auth/weak-password') {
-        alert('鍮꾨?踰덊샇??6???댁긽?댁뼱???⑸땲??');
-      } else if (error.code === 'auth/invalid-email') {
-        alert('?좏슚?섏? ?딆? ?대찓???뺤떇?낅땲??');
-      } else {
-        alert(`?뚯썝媛??以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.\n${error.message}`);
-      }
-      
-      return false;
-    }
-  };
   if (isAuthLoading) {
     return (
       <div className="app-loading-screen">
@@ -748,7 +747,7 @@ export default function App() {
 
   if (!currentUser || !currentUser.id) {
     const handlePublicNavigation = (nextTab) => {
-      if (nextTab !== 'notice') {
+      if (nextTab !== 'home') {
         alert('아직 접근할 수 없습니다.');
       }
     };
@@ -766,7 +765,7 @@ export default function App() {
             isAdmin={false}
           />
           <main className="content-stage content-stage--home">
-            <HomeDashboard showLogin onLogin={handleLogin} />
+            <HomeDashboard showLogin onLogin={handleLogin} members={members} />
           </main>
         </div>
       </div>
@@ -871,11 +870,11 @@ return (
           {currentTab === 'battle' && <BattleView />}
         </MobileLayout>
       ) : (
-        <div className={`main-shell ${currentTab === 'notice' ? 'main-shell--home' : ''}`}>
+        <div className={`main-shell ${currentTab === 'home' ? 'main-shell--home' : ''}`}>
           <SakuraEffect />
           <Header currentTab={currentTab} setCurrentTab={setCurrentTab} />
 
-          <div className={`main-layout ${currentTab === 'notice' ? 'main-layout--home' : ''}`}>
+          <div className={`main-layout ${currentTab === 'home' ? 'main-layout--home' : ''} ${['notice', 'world', 'system'].includes(currentTab) ? 'main-layout--world' : ''}`}>
           <Sidebar 
             currentTab={currentTab}
             setCurrentTab={setCurrentTab}
@@ -886,7 +885,18 @@ return (
             onToggleSound={() => setSoundEnabled(!soundEnabled)}
           />
 
-		<main className={`content-stage ${currentTab === 'notice' ? 'content-stage--home' : 'content-stage--view'} ${isFeaturePage ? 'content-stage--feature' : ''}`}>
+      {isFeaturePage && <span className="content-stage__surface" aria-hidden="true" />}
+
+		<main className={`content-stage ${currentTab === 'home' ? 'content-stage--home' : 'content-stage--view'} ${isFeaturePage ? 'content-stage--feature' : ''} ${['notice', 'world', 'system'].includes(currentTab) ? 'content-stage--world' : ''}`}>
+      {currentTab === 'home' && (
+        <HomeDashboard
+          trainer={trainer}
+          onLogout={handleLogout}
+          onPokemonClick={() => setCurrentTab('pokemon')}
+          onItemsClick={() => setCurrentTab('items')}
+          members={members}
+        />
+      )}
       {currentTab === 'notice' && (
         <CommunityPlaceholder
           type="notice"
@@ -896,6 +906,8 @@ return (
             onToggleSound={() => setSoundEnabled(!soundEnabled)}
             onLogout={handleLogout}
             onPokemonClick={() => setCurrentTab('pokemon')}
+            onItemsClick={() => setCurrentTab('items')}
+            members={members}
         />
       )}
       {currentTab === 'world' && <CommunityPlaceholder type="world" trainer={trainer} />}

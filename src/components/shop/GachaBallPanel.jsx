@@ -3,8 +3,7 @@
 // ============================================
 
 import React, { useState, useMemo } from 'react';
-import { CircleDot, Trash2, Search, Package, X } from 'lucide-react';
-import { getItemIcon } from '../../utils/itemUtils';
+import { CircleDot, Trash2, Search, Package } from 'lucide-react';
 
 export default function GachaBallPanel({ 
   shopData, 

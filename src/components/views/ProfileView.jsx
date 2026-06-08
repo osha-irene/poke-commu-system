@@ -106,8 +106,8 @@ export default function ProfileView({ trainer, caughtPokemon, items }) {
                 <span className="font-semibold">{trainer.dailyWalks}회</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">보유 골드</span>
-                <span className="font-semibold">{trainer.money?.toLocaleString() || 0}G</span>
+                <span className="text-gray-600">보유 금액</span>
+                <span className="font-semibold">{trainer.money?.toLocaleString() || 0}원</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">보유 아이템</span>
