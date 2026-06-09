@@ -48,10 +48,11 @@ function getVisibleInventory(member) {
 }
 
 function getPartyPokemon(member) {
-  return (member.caughtPokemon || []).filter(Boolean).slice(0, 6);
+  return (member.caughtPokemon || []).slice(0, 6).filter(Boolean);
 }
 
 function getPartnerPokemon(member) {
+  if (member?.partnerPokemon) return member.partnerPokemon;
   const party = getPartyPokemon(member);
   return party.find((pokemon) => pokemon.isPartner) || party[0] || null;
 }
@@ -90,7 +91,7 @@ function RoleBadge({ member }) {
 }
 
 export default function MembersView({ members = {}, isLoading = false }) {
-  const [selectedMember, setSelectedMember] = useState(null);
+  const [selectedMemberId, setSelectedMemberId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const memberList = useMemo(() => getMemberList(members), [members]);
@@ -110,6 +111,9 @@ export default function MembersView({ members = {}, isLoading = false }) {
     });
   }, [memberList, searchQuery]);
 
+  const selectedMember = selectedMemberId
+    ? memberList.find((member) => member.id === selectedMemberId) || null
+    : null;
   const selectedParty = selectedMember ? getPartyPokemon(selectedMember) : [];
   const selectedPartner = selectedMember ? getPartnerPokemon(selectedMember) : null;
   const selectedInventory = selectedMember ? getVisibleInventory(selectedMember) : [];
@@ -158,7 +162,7 @@ export default function MembersView({ members = {}, isLoading = false }) {
           <button
             type="button"
             key={member.id}
-            onClick={() => setSelectedMember(member)}
+            onClick={() => setSelectedMemberId(member.id)}
             className="member-image-tile group relative aspect-square overflow-hidden rounded-xl border border-gray-200 bg-slate-100 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
             title={member.name}
           >
@@ -174,13 +178,13 @@ export default function MembersView({ members = {}, isLoading = false }) {
       </div>
 
       {selectedMember && createPortal((
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setSelectedMember(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setSelectedMemberId(null)}>
           <section className="flex max-h-[86vh] w-full max-w-5xl overflow-hidden rounded-lg bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
             <aside className="flex w-80 flex-shrink-0 flex-col border-r-2 border-lime-200 bg-white/55">
               <div className="relative flex-1 p-4">
                 <button
                   type="button"
-                  onClick={() => setSelectedMember(null)}
+                  onClick={() => setSelectedMemberId(null)}
                   className="absolute left-3 top-3 z-10 rounded-full bg-white/90 p-1.5 text-gray-700 shadow hover:bg-white"
                   aria-label="닫기"
                 >

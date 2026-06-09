@@ -215,9 +215,18 @@ const isHoldingEverstone = pokemon.heldItem?.toLowerCase() === 'everstone' ||
   };
 
   // 영운 도감
-  const pokedexEntry = gamePokedex?.find(p => 
-    p.number === pokemon.number || p.originalNumber === pokemon.number
-  );
+  const pokemonNumbers = new Set([
+    toPokemonNumber(pokemon.number),
+    toPokemonNumber(pokemon.originalNumber)
+  ].filter(Boolean));
+  const pokedexEntry = gamePokedex?.find(entry => {
+    const entryNumbers = [
+      toPokemonNumber(entry.number),
+      toPokemonNumber(entry.originalNumber)
+    ].filter(Boolean);
+
+    return entryNumbers.some(number => pokemonNumbers.has(number));
+  });
   const displayNumber = pokedexEntry?.newNumber || pokemon.number;
   const originalNumber = pokedexEntry?.originalNumber || pokemon.number;
 

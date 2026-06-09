@@ -3,9 +3,14 @@ import { Star } from 'lucide-react';
 
 export default function FirstCatchMemoModal({ pokemon, onSave, onSkip }) {
   const [memo, setMemo] = useState('');
+  const memoPokemonNumber = pokemon.memoPokemonNumber || pokemon.originalNumber || pokemon.number;
 
   const handleSave = () => {
-    onSave(memo.trim());
+    onSave(memoPokemonNumber, memo.trim());
+  };
+
+  const handleSkip = () => {
+    onSkip(memoPokemonNumber);
   };
 
   return (
@@ -55,7 +60,7 @@ export default function FirstCatchMemoModal({ pokemon, onSave, onSkip }) {
 
         <div className="flex gap-3">
           <button
-            onClick={onSkip}
+            onClick={handleSkip}
             className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 transition-colors"
           >
             나중에 작성

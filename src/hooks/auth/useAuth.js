@@ -13,7 +13,14 @@ import { auth, database } from '../../firebase';
 
 const ensurePartyPadding = (caughtPokemon) => {
   if (caughtPokemon && typeof caughtPokemon === 'object' && !Array.isArray(caughtPokemon)) {
-    caughtPokemon = Object.values(caughtPokemon);
+    const numericKeys = Object.keys(caughtPokemon)
+      .map(key => Number(key))
+      .filter(key => Number.isInteger(key) && key >= 0);
+    const maxIndex = numericKeys.length > 0 ? Math.max(...numericKeys) : -1;
+
+    caughtPokemon = Array.from({ length: Math.max(6, maxIndex + 1) }, (_, index) => (
+      Object.prototype.hasOwnProperty.call(caughtPokemon, index) ? caughtPokemon[index] : null
+    ));
   }
   
   if (!caughtPokemon || !Array.isArray(caughtPokemon) || caughtPokemon.length === 0) {

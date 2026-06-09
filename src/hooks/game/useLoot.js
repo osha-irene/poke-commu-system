@@ -166,13 +166,22 @@ export const useLoot = (currentUser, updateCurrentUser, setMembers, allItems) =>
   const updateRegionLootConfig = async (regionId, lootConfig, regions, setRegions) => {
     if (!currentUser?.isAdmin) return;
     
-    setRegions(prev => prev.map(region => 
+    const updatedRegions = (Array.isArray(regions) ? regions : []).map(region =>
       region.id === regionId ? { ...region, lootConfig } : region
-    ));
+    );
+
+    setRegions(updatedRegions);
     
     try {
-      const regionRef = ref(database, `gameData/regions/${regionId}/lootConfig`);
-      await set(regionRef, lootConfig);
+      await set(ref(database, 'gameData/regions'), updatedRegions);
+
+      const configRef = ref(database, 'gameData/config');
+      const snapshot = await get(configRef);
+      const currentConfig = snapshot.val() || {};
+      await set(configRef, {
+        ...currentConfig,
+        regions: updatedRegions
+      });
       alert('보상 설정이 저장되었습니다!');
     } catch (error) {
       console.error('보상 설정 저장 실패:', error);

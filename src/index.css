@@ -12,4 +12,15 @@ body {
   font-family: 'SUITE', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  cursor: var(--app-cursor-default, auto);
+}
+
+button,
+a,
+summary,
+label,
+[role="button"],
+[onclick],
+.cursor-pointer {
+  cursor: var(--app-cursor-pointer, pointer);
 }

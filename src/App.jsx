@@ -1483,6 +1483,7 @@ return (
           isSuperAdmin={currentUser?.isSuperAdmin}
           allPokemonMaster={allPokemonMaster} 
           maxNonPartnerPokemon={systemSettings?.maxNonPartnerPokemon || 18}
+          escapeMode={systemSettings?.escapeMode || 'none'}
         />
       )}
 

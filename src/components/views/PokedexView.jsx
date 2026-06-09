@@ -80,10 +80,44 @@ export default function PokedexView({
     ));
   };
 
-  const getPokedexEntry = (pokemon = {}) => {
+  const getPokedexEntryWithKey = (pokemon = {}) => {
     const number = toDexNumber(pokemon.number);
     const originalNumber = toDexNumber(pokemon.originalNumber);
-    return pokedexData[number] || pokedexData[originalNumber] || null;
+    const entryByNumber = number ? pokedexData[number] : null;
+    const entryByOriginal = originalNumber ? pokedexData[originalNumber] : null;
+
+    if (entryByNumber && entryByOriginal && number !== originalNumber) {
+      const mergedEntry = {
+        ...entryByOriginal,
+        ...entryByNumber,
+        firstEncounter: entryByNumber.firstEncounter || entryByOriginal.firstEncounter,
+        encounteredAt: entryByNumber.encounteredAt || entryByOriginal.encounteredAt,
+        firstCatcher: entryByNumber.firstCatcher || entryByOriginal.firstCatcher,
+        caughtBy: entryByNumber.caughtBy || entryByOriginal.caughtBy,
+        caughtAt: entryByNumber.caughtAt || entryByOriginal.caughtAt,
+        memo: entryByNumber.memo || entryByOriginal.memo || null,
+        regions: entryByNumber.regions?.length ? entryByNumber.regions : (entryByOriginal.regions || [])
+      };
+
+      return {
+        entry: mergedEntry,
+        key: entryByOriginal.firstCatcher ? originalNumber : number
+      };
+    }
+
+    if (entryByOriginal) {
+      return { entry: entryByOriginal, key: originalNumber };
+    }
+
+    if (entryByNumber) {
+      return { entry: entryByNumber, key: number };
+    }
+
+    return { entry: null, key: originalNumber || number };
+  };
+
+  const getPokedexEntry = (pokemon = {}) => {
+    return getPokedexEntryWithKey(pokemon).entry;
   };
 
   // 영운 도감에 등록된 포켓몬은 해금 전에도 카드로 표시
@@ -105,6 +139,8 @@ export default function PokedexView({
 
   const filteredPokedex = visiblePokedex.filter(pokemon => {
     if (!searchTerm) return true;
+    if (!isPokemonUnlocked(pokemon)) return false;
+
     const query = searchTerm.toLowerCase();
     return (
       pokemon.name.toLowerCase().includes(query) ||
@@ -266,7 +302,6 @@ export default function PokedexView({
   };
 
   const handlePokemonClick = (pokemon) => {
-    const pokemonOriginalNumber = pokemon.originalNumber || pokemon.number;
     if (!isPokemonUnlocked(pokemon)) return;
 
     setSelectedPokemon(pokemon);
@@ -287,18 +322,17 @@ export default function PokedexView({
     setIsEditingMemo(false);
     setIsEditingRegions(false);
 
-    const entry = getPokedexEntry(pokemon) || pokedexData[pokemonOriginalNumber];
+    const entry = getPokedexEntry(pokemon);
     setMemoText(entry?.memo || '');
   };
 
   const handleSaveMemo = () => {
     if (!selectedPokemon || !onUpdateMemo) return;
 
-    const pokemonOriginalNumber = selectedPokemon.originalNumber || selectedPokemon.number;
-    const entry = pokedexData[pokemonOriginalNumber];
+    const { entry, key } = getPokedexEntryWithKey(selectedForm || selectedPokemon);
 
     if (entry && entry.firstCatcher === currentUser?.name) {
-      onUpdateMemo(pokemonOriginalNumber, memoText);
+      onUpdateMemo(key, memoText);
       setIsEditingMemo(false);
     } else {
       alert('최초 포획자만 메모를 작성할 수 있습니다!');
@@ -306,8 +340,7 @@ export default function PokedexView({
   };
 
   const handleEditMemo = () => {
-    const pokemonOriginalNumber = selectedPokemon.originalNumber || selectedPokemon.number;
-    const entry = pokedexData[pokemonOriginalNumber];
+    const { entry } = getPokedexEntryWithKey(selectedForm || selectedPokemon);
     if (entry && entry.firstCatcher === currentUser?.name) {
       setIsEditingMemo(true);
     } else {

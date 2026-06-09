@@ -11,6 +11,10 @@ import PokemonDetailPanel from './pokemon/PokemonDetailPanel';
 import { getButtonClass, getCardClass } from '../../styles/theme';
 import { getRequiredExpForLevel } from '../../utils/experience';
 
+const isEmptyPokemonSlot = (pokemon) => (
+  pokemon === null || pokemon === undefined || pokemon === 'null'
+);
+
 function DesktopPokemonView() {
   const {
     caughtPokemon = [],
@@ -60,10 +64,13 @@ function DesktopPokemonView() {
   console.log('파트너 포켓몬:', partnerPokemon);
   
   // 엔트리와 박스는 원래 배열 그대로 사용 (파트너도 포함)
-  const partySlots = caughtPokemon.slice(0, 6);
+  const partySlots = caughtPokemon.slice(0, 6).map(pokemon => (
+    isEmptyPokemonSlot(pokemon) ? null : pokemon
+  ));
   while (partySlots.length < 6) partySlots.push(null);
   
-  const box = caughtPokemon.slice(6).filter(p => p !== null);
+  const partyCount = partySlots.filter(pokemon => !isEmptyPokemonSlot(pokemon)).length;
+  const box = caughtPokemon.slice(6).filter(pokemon => !isEmptyPokemonSlot(pokemon));
   
   // 알 찾기 (임시 데이터)
   const currentEgg = null;
@@ -124,7 +131,7 @@ function DesktopPokemonView() {
       pokemonName: pokemon.name,
       slotIndex,
       isInParty,
-      totalPartyPokemon: partySlots.filter(p => p !== null).length,
+      totalPartyPokemon: partyCount,
       partySlots: partySlots.map((p, i) => `[${i}] ${p?.name || 'null'}`)
     });
     
@@ -375,13 +382,13 @@ function DesktopPokemonView() {
     
     console.log('순서 변경 시작:', partyDraggedIndex, '->', dropIndex);
 
-    const actualPokemon = partySlots.filter(p => p !== null);
+    const actualPokemon = partySlots.filter(pokemon => !isEmptyPokemonSlot(pokemon));
     
     let fromIdx = -1, toIdx = -1;
     let count = 0;
     
     for (let i = 0; i < 6; i++) {
-      if (partySlots[i] !== null) {
+      if (!isEmptyPokemonSlot(partySlots[i])) {
         if (i === partyDraggedIndex) fromIdx = count;
         if (i === dropIndex) toIdx = count;
         count++;
@@ -429,7 +436,7 @@ function DesktopPokemonView() {
         <div className={getCardClass('default') + ' p-6'}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold text-gray-800">
-              엔트리 ({partySlots.filter(p => p !== null).length}/6)
+              엔트리 ({partyCount}/6)
             </h3>
             <button onClick={handleOpenReorderModal}></button>
           </div>

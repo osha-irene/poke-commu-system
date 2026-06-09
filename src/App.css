@@ -4641,3 +4641,30 @@ html body #root .item-selector-list-scroll::-webkit-scrollbar-thumb {
   border: 2px solid rgba(236, 248, 213, 0.98) !important;
   border-radius: 999px !important;
 }
+
+html body *,
+html body #root * {
+  cursor: var(--app-cursor-default, auto) !important;
+}
+
+html body button:not(:disabled),
+html body a,
+html body summary,
+html body label,
+html body [role="button"],
+html body [onclick],
+html body .cursor-pointer,
+html body .cursor-move {
+  cursor: var(--app-cursor-pointer, pointer) !important;
+}
+
+html body input,
+html body textarea,
+html body [contenteditable="true"] {
+  cursor: text !important;
+}
+
+html body button:disabled,
+html body .cursor-not-allowed {
+  cursor: not-allowed !important;
+}

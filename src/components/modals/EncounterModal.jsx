@@ -10,7 +10,8 @@ export default function EncounterModal({
   caughtPokemon = [], 
   allPokemonMaster = [],
   onApplyLoot,
-  maxNonPartnerPokemon = 18
+  maxNonPartnerPokemon = 18,
+  escapeMode = 'none'
 }) {
   const [selectedBall, setSelectedBall] = useState(null);
   const [catching, setCatching] = useState(false);
@@ -28,7 +29,7 @@ export default function EncounterModal({
   }, []);
 
   // 도망 모드 가져오기
-  const escapeMode = localStorage.getItem('poke_escapeMode') || 'instant';
+  const activeEscapeMode = ['none', 'instant', 'speed'].includes(escapeMode) ? escapeMode : 'none';
 
   // 파트너 포켓몬 찾기
   const partnerPokemon = caughtPokemon.find(p => p && p.isPartner);
@@ -99,17 +100,17 @@ const pokemonSpriteUrl = pokemon.isShiny
 
   // 도망 로직
   const checkIfPokemonEscapes = () => {
-    if (escapeMode === 'none') {
+    if (activeEscapeMode === 'none') {
       console.log('🏃 도망 안함 모드 - 포켓몬이 남아있습니다');
       return false;
     }
 
-    if (escapeMode === 'instant') {
+    if (activeEscapeMode === 'instant') {
       console.log('⚡ 즉시 도망 모드 - 포켓몬이 도망갑니다');
       return true;
     }
 
-    if (escapeMode === 'speed') {
+    if (activeEscapeMode === 'speed') {
       if (!partnerPokemon) {
         console.log('❌ 파트너 포켓몬 없음 - 즉시 도망');
         return true;
@@ -141,7 +142,7 @@ const pokemonSpriteUrl = pokemon.isShiny
       return escapes;
     }
 
-    return true;
+    return false;
   };
 
   const handleCatch = (e) => {

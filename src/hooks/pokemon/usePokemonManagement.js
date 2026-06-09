@@ -30,6 +30,18 @@ const usePokemonManagement = (
     return template ? { ...pokemon, ...template } : pokemon;
   };
 
+  const isEmptyPokemonSlot = (pokemon) => (
+    pokemon === null || pokemon === undefined || pokemon === 'null'
+  );
+
+  const compactPartySlots = (party = []) => {
+    const occupiedSlots = party.filter(pokemon => !isEmptyPokemonSlot(pokemon));
+    while (occupiedSlots.length < 6) {
+      occupiedSlots.push(null);
+    }
+    return occupiedSlots.slice(0, 6);
+  };
+
   // 엔트리 이동
   const movePokemonToParty = (uniqueId) => {
     console.log('🔥 movePokemonToParty 시작:', uniqueId);
@@ -55,12 +67,12 @@ const usePokemonManagement = (
       return; 
     }
     
-    const party = currentUser.caughtPokemon.slice(0, 6);
+    const party = compactPartySlots(currentUser.caughtPokemon.slice(0, 6));
     const box = currentUser.caughtPokemon.slice(6);
     
     let emptySlotIndex = -1;
     for (let i = 0; i < 6; i++) {
-      if (party[i] === null) { 
+      if (isEmptyPokemonSlot(party[i])) { 
         emptySlotIndex = i; 
         break; 
       }
@@ -110,9 +122,9 @@ const usePokemonManagement = (
     
     const party = newCaughtPokemon.slice(0, 6);
     const box = newCaughtPokemon.slice(6);
-    const sortedParty = [...party.filter(p => p !== null), ...party.filter(p => p === null)];
+    const compactedParty = compactPartySlots(party);
     const updatedBox = [...box, pokemon];
-    const finalPokemon = [...sortedParty, ...updatedBox];
+    const finalPokemon = [...compactedParty, ...updatedBox];
     
     updateCurrentUser({ caughtPokemon: finalPokemon });
   };
@@ -142,8 +154,8 @@ const usePokemonManagement = (
       newCaughtPokemon[pokemonIndex] = null;
       const party = newCaughtPokemon.slice(0, 6);
       const box = newCaughtPokemon.slice(6);
-      const sortedParty = [...party.filter(p => p !== null), ...party.filter(p => p === null)];
-      const finalPokemon = [...sortedParty, ...box];
+      const compactedParty = compactPartySlots(party);
+      const finalPokemon = [...compactedParty, ...box];
       updateCurrentUser({ caughtPokemon: finalPokemon });
     } else {
       newCaughtPokemon.splice(pokemonIndex, 1);
@@ -169,7 +181,7 @@ const usePokemonManagement = (
       
       let emptySlotIndex = -1;
       for (let i = 0; i < 6; i++) {
-        if (party[i] === null) {
+        if (isEmptyPokemonSlot(party[i])) {
           emptySlotIndex = i;
           break;
         }
@@ -210,7 +222,7 @@ const usePokemonManagement = (
       
       let emptySlotIndex = -1;
       for (let i = 0; i < 6; i++) {
-        if (party[i] === null) {
+        if (isEmptyPokemonSlot(party[i])) {
           emptySlotIndex = i;
           break;
         }

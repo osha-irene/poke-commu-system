@@ -6,6 +6,10 @@ import BoxPokemon from '../pokemon/BoxPokemon';
 import PokemonDetailPanel from '../pokemon/PokemonDetailPanel';
 import { getRequiredExpForLevel } from '../../../utils/experience';
 
+const isEmptyPokemonSlot = (pokemon) => (
+  pokemon === null || pokemon === undefined || pokemon === 'null'
+);
+
 export default function MobilePokemonView() {
   const {
     caughtPokemon = [],
@@ -33,10 +37,13 @@ export default function MobilePokemonView() {
   const [showBox, setShowBox] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
 
-  const partySlots = caughtPokemon.slice(0, 6);
+  const partySlots = caughtPokemon.slice(0, 6).map(pokemon => (
+    isEmptyPokemonSlot(pokemon) ? null : pokemon
+  ));
   while (partySlots.length < 6) partySlots.push(null);
   
-  const box = caughtPokemon.slice(6).filter(p => p !== null);
+  const partyCount = partySlots.filter(pokemon => !isEmptyPokemonSlot(pokemon)).length;
+  const box = caughtPokemon.slice(6).filter(pokemon => !isEmptyPokemonSlot(pokemon));
   
   const rareCandy = items?.find(item => 
     item.name === '이상한사탕' || 
@@ -118,7 +125,7 @@ export default function MobilePokemonView() {
       {/* 파티 슬롯 */}
       <div className="px-4 py-4">
         <h3 className="text-lg font-bold text-gray-800 mb-3">
-          파티 ({partySlots.filter(p => p !== null).length}/6)
+          파티 ({partyCount}/6)
         </h3>
         
         <div className="grid grid-cols-1 gap-3">  {/* ⭐ grid-cols-2 → grid-cols-1 */}

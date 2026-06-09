@@ -256,7 +256,10 @@ export default function useGameState() {
     );
     
     if (result && result.isFirstCatch) {
-      setFirstCatchPokemon(result.pokemonTemplate);
+      setFirstCatchPokemon({
+        ...result.pokemonTemplate,
+        memoPokemonNumber: result.pokemonNumber
+      });
     }
   };
 

@@ -34,7 +34,7 @@ export default function AdminView() {
     removeDailyItem,
     toggleItemPersistent,
     maintenanceMode = false,
-    systemSettings = { maxNonPartnerPokemon: 18 },
+    systemSettings = { maxNonPartnerPokemon: 18, escapeMode: 'none' },
     createTown,
     updateTown,
     deleteTown,
@@ -74,9 +74,7 @@ export default function AdminView() {
   const [newMemberId, setNewMemberId] = useState('');
   const [newMemberPassword, setNewMemberPassword] = useState('');
   const [newMemberName, setNewMemberName] = useState('');
-  const [escapeMode, setEscapeMode] = useState(() =>
-    localStorage.getItem('poke_escapeMode') || 'none'
-  );
+  const [escapeMode, setEscapeMode] = useState(systemSettings.escapeMode || 'none');
   const [playlistTitle, setPlaylistTitle] = useState('Playlist');
   const [playlistInput, setPlaylistInput] = useState('');
   const [playlistSaving, setPlaylistSaving] = useState(false);
@@ -161,6 +159,10 @@ export default function AdminView() {
   useEffect(() => {
     setMaxNonPartnerPokemon(systemSettings.maxNonPartnerPokemon || 18);
   }, [systemSettings.maxNonPartnerPokemon]);
+
+  useEffect(() => {
+    setEscapeMode(systemSettings.escapeMode || 'none');
+  }, [systemSettings.escapeMode]);
 
   const handleAddMember = async () => {
     if (!newMemberId || !newMemberPassword || !newMemberName) {
@@ -285,11 +287,20 @@ export default function AdminView() {
     deleteRecipe?.(recipeId);
   };
 
-  const handleEscapeModeChange = (mode) => {
-    setEscapeMode(mode);
-    localStorage.setItem('poke_escapeMode', mode);
-    const modeText = mode === 'none' ? '도망 안함' : mode === 'instant' ? '즉시 도망' : '스피드 기반';
-    alert(`도망 모드가 "${modeText}"으로 변경되었습니다.`);
+  const handleEscapeModeChange = async (mode) => {
+    const nextMode = ['none', 'instant', 'speed'].includes(mode) ? mode : 'none';
+    setEscapeMode(nextMode);
+    try {
+      await updateSystemSettings?.({
+        ...systemSettings,
+        escapeMode: nextMode
+      });
+      const modeText = nextMode === 'none' ? '도망 안함' : nextMode === 'instant' ? '즉시 도망' : '스피드 기반';
+      alert(`도망 모드가 "${modeText}"으로 변경되었습니다.`);
+    } catch (error) {
+      console.error('도망 모드 저장 실패:', error);
+      alert('도망 모드 저장 중 오류가 발생했습니다.');
+    }
   };
 
   const TabButton = ({ active, onClick, children, variant = 'default' }) => (

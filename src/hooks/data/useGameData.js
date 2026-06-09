@@ -1,16 +1,31 @@
 // src/hooks/useGameData.js - Firebase 완전 버전 + TM 통합
 
 import { useState, useEffect } from 'react';
-import { ref, get, set } from 'firebase/database';
+import { ref, get, set, onValue } from 'firebase/database';
 import { database } from '../../firebase';
 import itemsData from '../../data/items.json';
 import regionsData from '../../data/regions.json';
 import technicalMachinesData from '../../data/technicalMachines.json';
 import { ITEM_POCKETS } from '../../utils/itemUtils';
 
+const toRegionList = (nextRegions = []) => {
+  if (Array.isArray(nextRegions)) return nextRegions;
+  if (!nextRegions || typeof nextRegions !== 'object') return [];
+
+  const entries = Object.entries(nextRegions);
+  const numericEntries = entries
+    .filter(([key]) => /^\d+$/.test(key))
+    .sort(([a], [b]) => Number(a) - Number(b));
+
+  if (numericEntries.length > 0) {
+    return numericEntries.map(([, value]) => value);
+  }
+
+  return entries.map(([, value]) => value);
+};
+
 const normalizeRegions = (nextRegions = []) => {
-  if (!Array.isArray(nextRegions)) return [];
-  return nextRegions.filter(region => !(
+  return toRegionList(nextRegions).filter(region => region?.id && region?.name && !(
     region?.isTownMeta && (!region.groupId || !region.groupName)
   ));
 };
@@ -41,7 +56,8 @@ export const useGameData = (allPokemonData) => {
   const [sharedPokedexData, setSharedPokedexData] = useState({});
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [systemSettings, setSystemSettings] = useState({
-    maxNonPartnerPokemon: 18
+    maxNonPartnerPokemon: 18,
+    escapeMode: 'none'
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -183,8 +199,12 @@ export const useGameData = (allPokemonData) => {
         const systemSettingsRef = ref(database, 'gameData/systemSettings');
         const systemSettingsSnapshot = await get(systemSettingsRef);
         const savedSystemSettings = systemSettingsSnapshot.exists() ? systemSettingsSnapshot.val() : {};
+        const savedEscapeMode = ['none', 'instant', 'speed'].includes(savedSystemSettings.escapeMode)
+          ? savedSystemSettings.escapeMode
+          : 'none';
         const normalizedSystemSettings = {
-          maxNonPartnerPokemon: Number(savedSystemSettings.maxNonPartnerPokemon) || 18
+          maxNonPartnerPokemon: Number(savedSystemSettings.maxNonPartnerPokemon) || 18,
+          escapeMode: savedEscapeMode
         };
         await set(systemSettingsRef, normalizedSystemSettings);
         setSystemSettings(normalizedSystemSettings);
@@ -207,7 +227,7 @@ export const useGameData = (allPokemonData) => {
         setGamePokedex(allPokemonData.filter(p => parseInt(p.generation) === 1));
         setSharedPokedexData({});
         setMaintenanceMode(false);
-        setSystemSettings({ maxNonPartnerPokemon: 18 });
+        setSystemSettings({ maxNonPartnerPokemon: 18, escapeMode: 'none' });
       } finally {
         setIsLoading(false);
       }
@@ -215,6 +235,27 @@ export const useGameData = (allPokemonData) => {
 
     loadGameData();
   }, [allPokemonData]);
+
+  useEffect(() => {
+    if (isLoading) return undefined;
+
+    const regionsRef = ref(database, 'gameData/regions');
+    const unsubscribe = onValue(regionsRef, (snapshot) => {
+      if (!snapshot.exists()) return;
+
+      const rawRegions = snapshot.val();
+      const normalizedRegions = normalizeRegions(rawRegions);
+      setRegions(prevRegions => (
+        JSON.stringify(prevRegions) === JSON.stringify(normalizedRegions)
+          ? prevRegions
+          : normalizedRegions
+      ));
+    }, (error) => {
+      console.error('지역 데이터 실시간 동기화 실패:', error);
+    });
+
+    return () => unsubscribe();
+  }, [isLoading]);
 
   // 🔥 지역 데이터 변경 시 Firebase에 저장
   useEffect(() => {
@@ -326,10 +367,12 @@ export const useGameData = (allPokemonData) => {
   };
 
   const updateSystemSettings = async (nextSettings) => {
+    const nextEscapeMode = nextSettings?.escapeMode ?? systemSettings.escapeMode;
     const normalizedSettings = {
       ...systemSettings,
       ...(nextSettings || {}),
-      maxNonPartnerPokemon: Math.max(1, Number(nextSettings?.maxNonPartnerPokemon ?? systemSettings.maxNonPartnerPokemon) || 18)
+      maxNonPartnerPokemon: Math.max(1, Number(nextSettings?.maxNonPartnerPokemon ?? systemSettings.maxNonPartnerPokemon) || 18),
+      escapeMode: ['none', 'instant', 'speed'].includes(nextEscapeMode) ? nextEscapeMode : 'none'
     };
 
     setSystemSettings(normalizedSettings);
