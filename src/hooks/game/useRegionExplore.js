@@ -16,19 +16,21 @@ export const useRegionExplore = (
   const { generateLoot, getDefaultLootConfig, applyLoot } = useLoot;
   const { recordFirstEncounter } = usePokedex;
 
+  const normalizeRate = (value, fallback = 1) => {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return fallback;
+    return parsed > 1 ? parsed / 100 : parsed;
+  };
+
   // 지역 탐험
   const handleRegionClick = async (region, setEncounterPokemon, allItems) => {
     if (!currentUser) return;
 
-    // 안전하게 배열로 변환
-    const accessibleRegions = Array.isArray(currentUser.accessibleRegions) 
-      ? currentUser.accessibleRegions 
-      : [];
-
-    if (accessibleRegions.length > 0 && !accessibleRegions.includes(region.id)) {
-      alert('⛔ 이 구역에 접근할 수 없습니다!');
-      return;
-    }
+    const baseRegionName = region.regionName || region.name;
+    const placeName = region.placeName || null;
+    const encounterLocationName = placeName
+      ? `${baseRegionName} ${placeName}`
+      : baseRegionName;
 
     if (currentUser.dailyWalks > 0) {
       // 조우 확률 계산
@@ -63,7 +65,7 @@ export const useRegionExplore = (
         ];
         applyLoot(loot, null);
         const itemText = itemList.length > 0 ? `\n🎁 ${itemList.join(', ')}` : '';
-        alert(`🌿 ${region.name}을(를) 탐험했지만 포켓몬을 발견하지 못했습니다!\n\n💰 ${loot.money}원을 획득했습니다!${itemText}`);
+        alert(`🌿 ${encounterLocationName}을(를) 탐험했지만 포켓몬을 발견하지 못했습니다!\n\n💰 ${loot.money}원을 획득했습니다!${itemText}`);
         return;
       }
 
@@ -103,11 +105,15 @@ export const useRegionExplore = (
         const pokemonNumber = String(randomPokemon.number);
 
         // 첫 조우 기록
-        await recordFirstEncounter(pokemonNumber, region.name);
+        await recordFirstEncounter(pokemonNumber, encounterLocationName);
 
-        const minLevel = region.minLevel || 5;
-		const maxLevel = region.maxLevel || 20;
+        const regionMaxLevel = region.regionMaxLevel || region.maxLevel || 20;
+        const maxLevel = Math.min(region.maxLevel || regionMaxLevel, regionMaxLevel);
+        const minLevel = Math.min(region.minLevel || 5, maxLevel);
 		const level = Math.floor(Math.random() * (maxLevel - minLevel + 1)) + minLevel;
+        const baseCatchRate = normalizeRate(randomPokemon.catchRate, 0.2);
+        const maxCatchRate = normalizeRate(region.maxCatchRate, 1);
+        const catchRate = Math.min(baseCatchRate, maxCatchRate);
 
 		// 성별 생성
 		const gender = generateGender(randomPokemon);
@@ -121,13 +127,20 @@ export const useRegionExplore = (
 		  isShiny,
 		  gender,
 		  ability,
+      catchRate,
+      regionName: encounterLocationName,
+      baseRegionId: region.baseRegionId || region.regionId || region.id,
+      placeId: region.placeId || null,
+      placeName,
+      minLevel,
+      maxLevel,
 		};
 
 		setEncounterPokemon(encounteredPokemon);
 
 
       } else {
-        alert('이 지역에는 포켓몬이 없습니다!');
+        alert(placeName ? '이 장소에는 포켓몬이 없습니다!' : '이 지역에는 포켓몬이 없습니다!');
       }
     } else {
       alert('오늘의 탐험 횟수를 모두 소진했습니다!');

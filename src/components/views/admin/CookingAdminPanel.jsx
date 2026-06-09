@@ -1,6 +1,5 @@
-// src/components/views/admin/CookingAdminPanel.jsx
 import React, { useState } from 'react';
-import { Plus, Trash2, Save, FileText, BarChart3, Gift, Package, Star, TrendingUp, ChefHat, Layers } from 'lucide-react';
+import { Plus, Trash2, Save, FileText, BarChart3, Gift, Package, Star, TrendingUp, ChefHat, Layers, Edit2, X } from 'lucide-react';
 import ItemSelectorModal from '../../modals/ItemSelectorModal';
 
 const Card = ({ children, className = '' }) => (
@@ -18,9 +17,10 @@ const Button = ({ children, variant = 'primary', size = 'md', onClick, disabled,
     md: 'px-4 py-2',
     lg: 'px-6 py-3 text-lg'
   };
-  
+
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
       className={`${baseClass} ${variants[variant]} ${sizes[size]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
@@ -30,156 +30,269 @@ const Button = ({ children, variant = 'primary', size = 'md', onClick, disabled,
   );
 };
 
-export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allItems = [], recipes = [] }) {
-  // 레시피 설정 상태
+const conditionLabels = {
+  elegance: '근사함',
+  beauty: '아름다움',
+  cuteness: '귀여움',
+  intelligence: '슬기로움',
+  strength: '강인함',
+  power: '파워',
+  sweetness: '달콤함'
+};
+
+const effortLabels = {
+  hp: 'HP',
+  attack: '공격',
+  defense: '방어',
+  spAttack: '특수공격',
+  spDefense: '특수방어',
+  speed: '스피드'
+};
+
+const emptyIngredients = () => [
+  { name: '', count: 1 },
+  { name: '', count: 1 },
+  { name: '', count: 1 }
+];
+
+const emptyResultItem = () => ({
+  name: '',
+  pocket: 'berries',
+  effect: '',
+  friendshipBoost: 0,
+  conditionBoost: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
+  effortBoost: { hp: 0, attack: 0, defense: 0, spAttack: 0, spDefense: 0, speed: 0 },
+  spriteUrl: ''
+});
+
+const emptyRequiredStats = () => ({
+  elegance: 0,
+  beauty: 0,
+  cuteness: 0,
+  intelligence: 0,
+  strength: 0,
+  power: 0,
+  sweetness: 0
+});
+
+const emptyRequiredEfforts = () => ({
+  hp: 0,
+  attack: 0,
+  defense: 0,
+  spAttack: 0,
+  spDefense: 0,
+  speed: 0
+});
+
+const recipeSupports = (recipe, type) => {
+  if (!recipe) return false;
+  if (Array.isArray(recipe.types)) return recipe.types.includes(type);
+  if (recipe.type === 'both') return true;
+  return recipe.type === type;
+};
+
+export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDeleteRecipe, allItems = [], recipes = [] }) {
   const [recipeType, setRecipeType] = useState('fixed');
-  const [ingredients, setIngredients] = useState([
-    { name: '', count: 1 },
-    { name: '', count: 1 },
-    { name: '', count: 1 }
-  ]);
-  
-  // 결과 아이템 상태
-  const [resultItem, setResultItem] = useState({
-    name: '',
-    pocket: 'berries',
-    effect: '',
-    friendshipBoost: 0,
-    conditionBoost: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
-    effortBoost: { hp: 0, attack: 0, defense: 0, spAttack: 0, spDefense: 0, speed: 0 },
-    spriteUrl: ''
-  });
-  
-  // 스탯 기반 레시피 상태
-  const [requiredStats, setRequiredStats] = useState({
-    elegance: 0,
-    beauty: 0,
-    cuteness: 0,
-    intelligence: 0,
-    strength: 0,
-    power: 0,
-    sweetness: 0
-  });
-
-  const [requiredEfforts, setRequiredEfforts] = useState({
-    hp: 0,
-    attack: 0,
-    defense: 0,
-    spAttack: 0,
-    spDefense: 0,
-    speed: 0
-  });
-
-  // 아이템 선택 모달 상태
+  const [enabledRecipeTypes, setEnabledRecipeTypes] = useState({ fixed: true, stat: false });
+  const [ingredients, setIngredients] = useState(emptyIngredients);
+  const [resultItem, setResultItem] = useState(emptyResultItem);
+  const [requiredStats, setRequiredStats] = useState(emptyRequiredStats);
+  const [requiredEfforts, setRequiredEfforts] = useState(emptyRequiredEfforts);
+  const [editingRecipeId, setEditingRecipeId] = useState(null);
+  const [recipeFilter, setRecipeFilter] = useState('all');
   const [showItemModal, setShowItemModal] = useState(false);
   const [selectingIndex, setSelectingIndex] = useState(null);
 
-  // 재료 관리 함수
   const openItemSelector = (index) => {
     setSelectingIndex(index);
     setShowItemModal(true);
   };
 
   const handleSelectIngredient = (item) => {
-    const newIng = [...ingredients];
-    newIng[selectingIndex].name = item.name;
-    setIngredients(newIng);
+    if (selectingIndex === null) return;
+    const next = [...ingredients];
+    next[selectingIndex] = { ...next[selectingIndex], name: item.name };
+    setIngredients(next);
+    setShowItemModal(false);
   };
 
   const removeIngredient = (index) => {
-    const newIng = [...ingredients];
-    newIng[index] = { name: '', count: 1 };
-    setIngredients(newIng);
+    const next = [...ingredients];
+    next[index] = { name: '', count: 1 };
+    setIngredients(next);
   };
 
-  // 레시피 관리 함수
   const handleDeleteRecipe = (recipeId) => {
     if (window.confirm('정말로 이 레시피를 삭제하시겠습니까?')) {
+      if (editingRecipeId === recipeId) {
+        resetForm();
+      }
       onDeleteRecipe?.(recipeId);
     }
   };
 
-  const handleCreateRecipe = () => {
+  const resetForm = () => {
+    setIngredients(emptyIngredients());
+    setResultItem(emptyResultItem());
+    setRequiredStats(emptyRequiredStats());
+    setRequiredEfforts(emptyRequiredEfforts());
+    setEnabledRecipeTypes({ fixed: true, stat: false });
+    setRecipeType('fixed');
+    setEditingRecipeId(null);
+  };
+
+  const buildRecipePayload = () => {
     if (!resultItem.name.trim()) {
       alert('결과 아이템 이름을 입력해주세요!');
-      return;
+      return null;
     }
 
     if (!resultItem.effect.trim()) {
       alert('결과 아이템 설명을 입력해주세요!');
-      return;
+      return null;
     }
 
-    const validIngredients = ingredients.filter(ing => ing.name.trim());
+    const validIngredients = ingredients.filter((ing) => ing.name.trim());
+    const enabledTypes = Object.entries(enabledRecipeTypes)
+      .filter(([, enabled]) => enabled)
+      .map(([type]) => type);
 
-    if (recipeType === 'fixed' && validIngredients.length === 0) {
+    if (enabledTypes.length === 0) {
+      alert('고정 레시피 또는 스탯 레시피를 하나 이상 선택해주세요!');
+      return null;
+    }
+
+    if (enabledRecipeTypes.fixed && validIngredients.length === 0) {
       alert('최소 1개 이상의 재료를 선택해주세요!');
-      return;
+      return null;
     }
 
-    const recipe = {
-      id: `recipe_${Date.now()}`,
+    return {
       name: resultItem.name,
-      type: recipeType,
+      type: enabledTypes.length === 2 ? 'both' : enabledTypes[0],
+      types: enabledTypes,
       description: resultItem.effect,
-      ingredients: recipeType === 'fixed' ? validIngredients : [],
-      requiredStats: recipeType === 'stat' ? requiredStats : {},
-      requiredEfforts: recipeType === 'stat' ? requiredEfforts : {},
-      result: resultItem,
-      createdAt: new Date().toISOString()
+      ingredients: enabledRecipeTypes.fixed ? validIngredients : [],
+      requiredStats: enabledRecipeTypes.stat ? requiredStats : {},
+      requiredEfforts: enabledRecipeTypes.stat ? requiredEfforts : {},
+      result: {
+        ...resultItem,
+        name: resultItem.name,
+        effect: resultItem.effect
+      }
     };
+  };
 
-    onCreateRecipe(recipe);
-    
-    // 초기화
-    setIngredients([
-      { name: '', count: 1 },
-      { name: '', count: 1 },
-      { name: '', count: 1 }
-    ]);
+  const handleSaveRecipe = () => {
+    const payload = buildRecipePayload();
+    if (!payload) return;
+
+    if (editingRecipeId) {
+      onUpdateRecipe?.(editingRecipeId, payload);
+    } else {
+      onCreateRecipe?.({
+        id: `recipe_${Date.now()}`,
+        ...payload,
+        createdAt: new Date().toISOString()
+      });
+    }
+
+    resetForm();
+  };
+
+  const handleEditRecipe = (recipe) => {
+    const supportsFixed = recipeSupports(recipe, 'fixed');
+    const supportsStat = recipeSupports(recipe, 'stat');
+    const nextIngredients = emptyIngredients();
+
+    (recipe.ingredients || []).slice(0, 3).forEach((ingredient, index) => {
+      nextIngredients[index] = {
+        name: ingredient.name || '',
+        count: ingredient.count || 1
+      };
+    });
+
+    setEditingRecipeId(recipe.id);
+    setEnabledRecipeTypes({ fixed: supportsFixed, stat: supportsStat });
+    setRecipeType(supportsFixed ? 'fixed' : 'stat');
+    setIngredients(nextIngredients);
+    setRequiredStats({ ...emptyRequiredStats(), ...(recipe.requiredStats || {}) });
+    setRequiredEfforts({ ...emptyRequiredEfforts(), ...(recipe.requiredEfforts || {}) });
     setResultItem({
-      name: '',
-      pocket: 'berries',
-      effect: '',
-      friendshipBoost: 0,
-      conditionBoost: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
-      effortBoost: { hp: 0, attack: 0, defense: 0, spAttack: 0, spDefense: 0, speed: 0 },
-      spriteUrl: ''
-    });
-    setRequiredStats({
-      elegance: 0,
-      beauty: 0,
-      cuteness: 0,
-      intelligence: 0,
-      strength: 0,
-      power: 0,
-      sweetness: 0
-    });
-    setRequiredEfforts({
-      hp: 0,
-      attack: 0,
-      defense: 0,
-      spAttack: 0,
-      spDefense: 0,
-      speed: 0
+      ...emptyResultItem(),
+      ...(recipe.result || {}),
+      name: recipe.result?.name || recipe.name || '',
+      effect: recipe.result?.effect || recipe.description || '',
+      spriteUrl: recipe.result?.spriteUrl || ''
     });
   };
 
+  const toggleRecipeType = (type, checked) => {
+    setEnabledRecipeTypes((prev) => ({ ...prev, [type]: checked }));
+    if (checked) setRecipeType(type);
+  };
+
+  const filterOptions = [
+    { id: 'all', label: '전체', count: recipes.length },
+    { id: 'fixed', label: '고정', count: recipes.filter((recipe) => recipeSupports(recipe, 'fixed') && !recipeSupports(recipe, 'stat')).length },
+    { id: 'stat', label: '스탯', count: recipes.filter((recipe) => recipeSupports(recipe, 'stat') && !recipeSupports(recipe, 'fixed')).length },
+    { id: 'both', label: '고정 + 스탯', count: recipes.filter((recipe) => recipeSupports(recipe, 'fixed') && recipeSupports(recipe, 'stat')).length }
+  ];
+
+  const filteredRecipes = recipes.filter((recipe) => {
+    const supportsFixed = recipeSupports(recipe, 'fixed');
+    const supportsStat = recipeSupports(recipe, 'stat');
+
+    if (recipeFilter === 'fixed') return supportsFixed && !supportsStat;
+    if (recipeFilter === 'stat') return supportsStat && !supportsFixed;
+    if (recipeFilter === 'both') return supportsFixed && supportsStat;
+    return true;
+  });
+
   return (
     <div className="space-y-6">
-      {/* 레시피 등록 카드 */}
       <Card className="p-6">
         <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <ChefHat size={24} /> 레시피 등록
+          <ChefHat size={24} /> {editingRecipeId ? '레시피 편집' : '레시피 등록'}
         </h3>
+        {editingRecipeId && (
+          <div className="mb-4 flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            <span className="font-semibold">기존 레시피를 수정 중입니다.</span>
+            <button
+              type="button"
+              onClick={resetForm}
+              className="inline-flex items-center gap-1 rounded px-2 py-1 font-semibold hover:bg-emerald-100"
+            >
+              <X size={14} />
+              편집 취소
+            </button>
+          </div>
+        )}
 
-        {/* 레시피 타입 선택 */}
-        <div className="mb-0">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            레시피 타입
-          </label>
+        <div className="mb-4">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">레시피 조건</label>
+          <div className="mb-3 flex flex-wrap gap-3">
+            <label className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700">
+              <input
+                type="checkbox"
+                checked={enabledRecipeTypes.fixed}
+                onChange={(event) => toggleRecipeType('fixed', event.target.checked)}
+              />
+              고정 레시피 사용
+            </label>
+            <label className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700">
+              <input
+                type="checkbox"
+                checked={enabledRecipeTypes.stat}
+                onChange={(event) => toggleRecipeType('stat', event.target.checked)}
+              />
+              스탯 레시피 사용
+            </label>
+          </div>
+
           <div className="flex gap-0 relative">
             <button
+              type="button"
               onClick={() => setRecipeType('fixed')}
               className={`flex-1 py-3 px-4 rounded-t-lg border-2 border-b-0 font-semibold transition-all flex items-center gap-3 relative ${
                 recipeType === 'fixed'
@@ -194,6 +307,7 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
               </div>
             </button>
             <button
+              type="button"
               onClick={() => setRecipeType('stat')}
               className={`flex-1 py-3 px-4 rounded-t-lg border-2 border-b-0 font-semibold transition-all flex items-center gap-3 relative ${
                 recipeType === 'stat'
@@ -203,61 +317,39 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
             >
               <BarChart3 size={32} className="flex-shrink-0" />
               <div className="text-left">
-                <div className="text-sm font-bold">스탯 기반</div>
-                <div className="text-xs text-gray-500 mt-0.5">스탯 합산으로 결정</div>
+                <div className="text-sm font-bold">스탯 레시피</div>
+                <div className="text-xs text-gray-500 mt-0.5">재료 스탯 합산 조건</div>
               </div>
             </button>
           </div>
         </div>
 
-        {/* 전체를 감싸는 큰 테두리 박스 */}
-        <div className={`border-2 rounded-b-lg bg-white relative ${
-          recipeType === 'fixed' ? 'border-gray-300 rounded-tr-lg border-t-gray-300' : 'border-gray-300 rounded-tl-lg border-t-gray-300'
-        }`}>
-          {/* 선택된 탭 아래 흰색 덮개 */}
-          <div 
-            className="absolute bg-white z-30"
-            style={{
-              top: '-2px',
-              left: recipeType === 'fixed' ? '0' : '50.3%',
-              width: '49.8%',
-              height: '4px'
-            }}
-          />
-          
+        <div className="border-2 border-gray-300 rounded-b-lg bg-white relative">
           <div className="p-6">
-            {/* 2열 그리드 */}
             <div className="grid grid-cols-2 gap-6">
-              {/* 왼쪽: 재료 또는 스탯 */}
               <div className="flex flex-col" style={{ height: '510px' }}>
                 {recipeType === 'fixed' ? (
                   <div className="flex-1 flex flex-col h-full">
-                    <label className="text-sm font-semibold text-gray-700 mb-3">
-                      재료 (최대 3개)
-                    </label>
-                    
+                    <label className="text-sm font-semibold text-gray-700 mb-3">재료 (최대 3개)</label>
                     <div className="space-y-3 flex-1">
                       {ingredients.map((ing, index) => {
-                        const selectedItem = allItems.find(item => item.name === ing.name);
-                        
+                        const selectedItem = allItems.find((item) => item.name === ing.name);
+
                         return (
                           <div key={index} className="border-2 border-gray-200 rounded-lg p-3 bg-white relative" style={{ height: '154px' }}>
                             {ing.name ? (
                               <div className="flex items-center gap-2 h-full">
-                                <div className="w-20 h-20 bg-gray-50 rounded flex items-center justify-center flex-shrink-0">
-                                  <img 
+                                <div className="item-sprite w-20 h-20 bg-gray-50 rounded flex items-center justify-center flex-shrink-0">
+                                  <img
                                     src={selectedItem?.spriteUrl || selectedItem?.imageUrl}
                                     alt={ing.name}
                                     className="max-w-full max-h-full object-contain"
-                                    style={{ imageRendering: 'pixelated', transform: 'scale(1.8)' }}
+                                    style={{ imageRendering: 'pixelated' }}
                                   />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="text-base font-semibold text-gray-800 truncate mb-1">{ing.name}</div>
-                                  <button
-                                    onClick={() => openItemSelector(index)}
-                                    className="text-sm text-indigo-600 hover:text-indigo-700"
-                                  >
+                                  <button type="button" onClick={() => openItemSelector(index)} className="text-sm text-indigo-600 hover:text-indigo-700">
                                     변경
                                   </button>
                                 </div>
@@ -267,23 +359,21 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
                                     type="number"
                                     min="1"
                                     value={ing.count}
-                                    onChange={(e) => {
-                                      const newIng = [...ingredients];
-                                      newIng[index].count = parseInt(e.target.value) || 1;
-                                      setIngredients(newIng);
+                                    onChange={(event) => {
+                                      const next = [...ingredients];
+                                      next[index].count = parseInt(event.target.value, 10) || 1;
+                                      setIngredients(next);
                                     }}
                                     className="w-20 px-3 py-2 border border-gray-300 rounded text-center font-semibold"
                                   />
                                 </div>
-                                <button
-                                  onClick={() => removeIngredient(index)}
-                                  className="p-2 text-red-400 hover:bg-red-50 hover:text-red-600 rounded transition-colors"
-                                >
+                                <button type="button" onClick={() => removeIngredient(index)} className="p-2 text-red-400 hover:bg-red-50 hover:text-red-600 rounded transition-colors">
                                   <Trash2 size={20} />
                                 </button>
                               </div>
                             ) : (
                               <button
+                                type="button"
                                 onClick={() => openItemSelector(index)}
                                 className="w-full h-full border-2 border-dashed border-gray-300 rounded-lg hover:border-indigo-400 hover:bg-indigo-50 transition-colors flex flex-col items-center justify-center"
                               >
@@ -298,31 +388,19 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
                   </div>
                 ) : (
                   <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 h-full overflow-y-auto">
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      필요 컨디션 & 노력치 합계
-                    </label>
-                    
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">필요 컨디션 & 노력치 합계</label>
+
                     <div className="mb-4">
                       <div className="text-xs font-semibold text-gray-600 mb-2">컨디션 스탯</div>
                       <div className="grid grid-cols-2 gap-2">
-                        {Object.keys(requiredStats).map(stat => (
+                        {Object.keys(requiredStats).map((stat) => (
                           <div key={stat}>
-                            <label className="block text-xs text-gray-600 mb-1">
-                              {stat === 'elegance' ? '근사함' :
-                               stat === 'beauty' ? '아름다움' :
-                               stat === 'cuteness' ? '귀여움' :
-                               stat === 'intelligence' ? '슬기로움' :
-                               stat === 'strength' ? '강인함' :
-                               stat === 'power' ? '파워' : '달콤함'}
-                            </label>
+                            <label className="block text-xs text-gray-600 mb-1">{conditionLabels[stat] || stat}</label>
                             <input
                               type="number"
                               min="0"
                               value={requiredStats[stat]}
-                              onChange={(e) => setRequiredStats({
-                                ...requiredStats,
-                                [stat]: parseInt(e.target.value) || 0
-                              })}
+                              onChange={(event) => setRequiredStats({ ...requiredStats, [stat]: parseInt(event.target.value, 10) || 0 })}
                               className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                             />
                           </div>
@@ -333,37 +411,27 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
                     <div>
                       <div className="text-xs font-semibold text-gray-600 mb-2">노력치</div>
                       <div className="grid grid-cols-2 gap-2">
-                        {Object.keys(requiredEfforts).map(stat => (
+                        {Object.keys(requiredEfforts).map((stat) => (
                           <div key={stat}>
-                            <label className="block text-xs text-gray-600 mb-1">
-                              {stat === 'hp' ? 'HP' :
-                               stat === 'attack' ? '공격' :
-                               stat === 'defense' ? '방어' :
-                               stat === 'spAttack' ? '특수공격' :
-                               stat === 'spDefense' ? '특수방어' : '스피드'}
-                            </label>
+                            <label className="block text-xs text-gray-600 mb-1">{effortLabels[stat] || stat}</label>
                             <input
                               type="number"
                               min="0"
                               value={requiredEfforts[stat]}
-                              onChange={(e) => setRequiredEfforts({
-                                ...requiredEfforts,
-                                [stat]: parseInt(e.target.value) || 0
-                              })}
+                              onChange={(event) => setRequiredEfforts({ ...requiredEfforts, [stat]: parseInt(event.target.value, 10) || 0 })}
                               className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                             />
                           </div>
                         ))}
                       </div>
                       <p className="text-xs text-gray-600 mt-2 flex items-center gap-1">
-                        <Star size={12} /> 재료들의 컨디션&노력치가 이 값 이상이면 레시피 완성
+                        <Star size={12} /> 재료들의 컨디션과 노력치가 이 값 이상이면 레시피 완성
                       </p>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* 오른쪽: 결과 아이템 */}
               <div className="bg-gray-50 rounded-lg p-4 border-2 border-gray-300 flex flex-col" style={{ height: '510px' }}>
                 <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
                   <Gift size={20} /> 결과 아이템
@@ -372,13 +440,13 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
                   <input
                     type="text"
                     value={resultItem.name}
-                    onChange={(e) => setResultItem({ ...resultItem, name: e.target.value })}
+                    onChange={(event) => setResultItem({ ...resultItem, name: event.target.value })}
                     className="px-3 py-2 border border-gray-300 rounded-lg"
                     placeholder="아이템 이름 *"
                   />
                   <select
                     value={resultItem.pocket}
-                    onChange={(e) => setResultItem({ ...resultItem, pocket: e.target.value })}
+                    onChange={(event) => setResultItem({ ...resultItem, pocket: event.target.value })}
                     className="px-3 py-2 border border-gray-300 rounded-lg"
                   >
                     <option value="berries">나무열매</option>
@@ -389,7 +457,7 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
                 </div>
                 <textarea
                   value={resultItem.effect}
-                  onChange={(e) => setResultItem({ ...resultItem, effect: e.target.value })}
+                  onChange={(event) => setResultItem({ ...resultItem, effect: event.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2 resize-none"
                   rows="4"
                   placeholder="효과 설명 *"
@@ -397,47 +465,37 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
                 <input
                   type="text"
                   value={resultItem.spriteUrl}
-                  onChange={(e) => setResultItem({ ...resultItem, spriteUrl: e.target.value })}
+                  onChange={(event) => setResultItem({ ...resultItem, spriteUrl: event.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2"
-                  placeholder="이미지 URL (선택)"
+                  placeholder="이미지 URL"
                 />
-                
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">친밀도 증가</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={resultItem.friendshipBoost}
-                      onChange={(e) => setResultItem({
-                        ...resultItem,
-                        friendshipBoost: parseInt(e.target.value) || 0
-                      })}
-                      className="w-full px-2 py-1 border border-gray-300 rounded"
-                    />
-                  </div>
+
+                <div className="mb-2">
+                  <label className="block text-xs text-gray-600 mb-1">친밀도 증가</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={resultItem.friendshipBoost}
+                    onChange={(event) => setResultItem({ ...resultItem, friendshipBoost: parseInt(event.target.value, 10) || 0 })}
+                    className="w-full px-2 py-1 border border-gray-300 rounded"
+                  />
                 </div>
-                
+
                 <div className="mb-2">
                   <label className="block text-xs text-gray-600 mb-1">컨디션 증가</label>
                   <div className="grid grid-cols-5 gap-1">
-                    {Object.keys(resultItem.conditionBoost).map(stat => (
+                    {Object.keys(resultItem.conditionBoost).map((stat) => (
                       <div key={stat}>
-                        <label className="block text-[10px] text-gray-500 mb-0.5">
-                          {stat === 'elegance' ? '근사함' :
-                           stat === 'beauty' ? '아름다움' :
-                           stat === 'cuteness' ? '귀여움' :
-                           stat === 'intelligence' ? '슬기' : '강인함'}
-                        </label>
+                        <label className="block text-[10px] text-gray-500 mb-0.5">{conditionLabels[stat] || stat}</label>
                         <input
                           type="number"
                           min="0"
                           value={resultItem.conditionBoost[stat]}
-                          onChange={(e) => setResultItem({
+                          onChange={(event) => setResultItem({
                             ...resultItem,
                             conditionBoost: {
                               ...resultItem.conditionBoost,
-                              [stat]: parseInt(e.target.value) || 0
+                              [stat]: parseInt(event.target.value, 10) || 0
                             }
                           })}
                           className="w-full px-1 py-1 border border-gray-300 rounded text-xs"
@@ -450,24 +508,18 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
                 <div className="mb-2">
                   <label className="block text-xs text-gray-600 mb-1">노력치 증가</label>
                   <div className="grid grid-cols-6 gap-1">
-                    {Object.keys(resultItem.effortBoost).map(stat => (
+                    {Object.keys(resultItem.effortBoost).map((stat) => (
                       <div key={stat}>
-                        <label className="block text-[10px] text-gray-500 mb-0.5">
-                          {stat === 'hp' ? 'HP' :
-                           stat === 'attack' ? '공격' :
-                           stat === 'defense' ? '방어' :
-                           stat === 'spAttack' ? '특공' :
-                           stat === 'spDefense' ? '특방' : '스피드'}
-                        </label>
+                        <label className="block text-[10px] text-gray-500 mb-0.5">{effortLabels[stat] || stat}</label>
                         <input
                           type="number"
                           min="0"
                           value={resultItem.effortBoost[stat]}
-                          onChange={(e) => setResultItem({
+                          onChange={(event) => setResultItem({
                             ...resultItem,
                             effortBoost: {
                               ...resultItem.effortBoost,
-                              [stat]: parseInt(e.target.value) || 0
+                              [stat]: parseInt(event.target.value, 10) || 0
                             }
                           })}
                           className="w-full px-1 py-1 border border-gray-300 rounded text-xs"
@@ -476,16 +528,11 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="mt-auto pt-4 flex justify-end">
-                  <Button
-                    variant="primary"
-                    size="md"
-                    onClick={handleCreateRecipe}
-                    className="px-8"
-                  >
+                  <Button variant="primary" size="md" onClick={handleSaveRecipe} className="px-8">
                     <Save size={16} />
-                    <span>레시피 등록</span>
+                    <span>{editingRecipeId ? '레시피 수정' : '레시피 등록'}</span>
                   </Button>
                 </div>
               </div>
@@ -494,146 +541,157 @@ export default function CookingAdminPanel({ onCreateRecipe, onDeleteRecipe, allI
         </div>
       </Card>
 
-      {/* 등록된 레시피 목록 */}
       <Card className="p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <Layers size={24} /> 등록된 레시피 ({recipes.length}개)
-        </h3>
-        
-        {recipes.length === 0 ? (
+        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <Layers size={24} /> 등록된 레시피 ({filteredRecipes.length}/{recipes.length}개)
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {filterOptions.map((option) => (
+              <button
+                type="button"
+                key={option.id}
+                onClick={() => setRecipeFilter(option.id)}
+                className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
+                  recipeFilter === option.id
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {option.label} ({option.count})
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {filteredRecipes.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
             <ChefHat size={64} className="mx-auto mb-3 text-gray-300" />
-            <p>등록된 레시피가 없습니다</p>
+            <p>표시할 레시피가 없습니다</p>
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-4">
-            {recipes.map((recipe) => (
-              <div
-                key={recipe.id}
-                className="border-2 border-gray-200 rounded-xl bg-white flex flex-col relative group"
-              >
-                <button
-                  onClick={() => handleDeleteRecipe(recipe.id)}
-                  className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                  title="레시피 삭제"
-                >
-                  <Trash2 size={20} />
-                </button>
+            {filteredRecipes.map((recipe) => {
+              const supportsFixed = recipeSupports(recipe, 'fixed');
+              const supportsStat = recipeSupports(recipe, 'stat');
 
-                <div className="flex gap-3 p-4">
-                  <div className="flex items-center justify-center bg-gray-50 rounded-lg p-3 w-24 h-24 flex-shrink-0">
-                    {recipe.result.spriteUrl ? (
-                      <img 
-                        src={recipe.result.spriteUrl}
-                        alt={recipe.result.name}
-                        className="max-w-full max-h-full object-contain"
-                        style={{ imageRendering: 'pixelated' }}
-                      />
-                    ) : (
-                      <ChefHat size={40} className="text-gray-300" />
-                    )}
-                  </div>
+              return (
+                <div key={recipe.id} className="border-2 border-gray-200 rounded-xl bg-white flex flex-col relative group">
+                  <button
+                    type="button"
+                    onClick={() => handleEditRecipe(recipe)}
+                    className="absolute top-2 right-12 p-2 bg-emerald-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    title="레시피 편집"
+                  >
+                    <Edit2 size={20} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteRecipe(recipe.id)}
+                    className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    title="레시피 삭제"
+                  >
+                    <Trash2 size={20} />
+                  </button>
 
-                  <div className="flex-1">
-                    <h4 className="font-bold text-lg text-gray-800 mb-1">{recipe.result.name}</h4>
-                    
-                    <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-semibold mb-2 ${
-                      recipe.type === 'fixed' 
-                        ? 'bg-indigo-100 text-indigo-700' 
-                        : 'bg-purple-100 text-purple-700'
-                    }`}>
-                      {recipe.type === 'fixed' ? (
-                        <span className="flex items-center gap-1">
-                          <FileText size={12} /> 고정 레시피
-                        </span>
+                  <div className="flex gap-3 p-4">
+                    <div className="item-sprite flex items-center justify-center bg-gray-50 rounded-lg p-3 w-24 h-24 flex-shrink-0">
+                      {recipe.result?.spriteUrl ? (
+                        <img
+                          src={recipe.result.spriteUrl}
+                          alt={recipe.result.name}
+                          className="max-w-full max-h-full object-contain"
+                          style={{ imageRendering: 'pixelated' }}
+                        />
                       ) : (
-                        <span className="flex items-center gap-1">
-                          <BarChart3 size={12} /> 스탯 레시피
-                        </span>
-                      )}
-                    </span>
-
-                    <p className="text-xs text-gray-600 line-clamp-3">
-                      {recipe.description || recipe.result.effect || '특별한 요리 아이템'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 px-4 py-3 mt-auto">
-                  {recipe.type === 'fixed' && recipe.ingredients ? (
-                    <>
-                      <div className="font-semibold text-gray-700 mb-2 flex items-center gap-1 text-sm">
-                        <Package size={16} /> 필요 재료
-                      </div>
-                      <div className="space-y-1">
-                        {recipe.ingredients.map((ing, idx) => (
-                          <div key={idx} className="flex justify-between text-gray-700 text-sm">
-                            <span>{ing.name}</span>
-                            <span className="font-semibold text-indigo-600">×{ing.count}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  ) : recipe.type === 'stat' ? (
-                    <div className="space-y-3">
-                      {recipe.requiredStats && Object.values(recipe.requiredStats).some(v => v > 0) && (
-                        <>
-                          <div className="font-semibold text-gray-700 mb-2 flex items-center gap-1 text-sm">
-                            <BarChart3 size={16} /> 필요 컨디션
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            {Object.entries(recipe.requiredStats).map(([stat, value]) => (
-                              value > 0 && (
-                                <div key={stat} className="text-gray-700 text-xs">
-                                  <span>
-                                    {stat === 'elegance' ? '근사함' :
-                                     stat === 'beauty' ? '아름다움' :
-                                     stat === 'cuteness' ? '귀여움' :
-                                     stat === 'intelligence' ? '슬기' :
-                                     stat === 'strength' ? '강인함' :
-                                     stat === 'power' ? '파워' : '달콤'}
-                                  </span>
-                                  <span className="font-semibold text-purple-600 ml-1">{value}+</span>
-                                </div>
-                              )
-                            ))}
-                          </div>
-                        </>
-                      )}
-                      
-                      {recipe.requiredEfforts && Object.values(recipe.requiredEfforts).some(v => v > 0) && (
-                        <>
-                          <div className="font-semibold text-gray-700 mb-2 flex items-center gap-1 text-sm">
-                            <TrendingUp size={16} /> 필요 노력치
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            {Object.entries(recipe.requiredEfforts).map(([stat, value]) => (
-                              value > 0 && (
-                                <div key={stat} className="text-gray-700 text-xs">
-                                  <span>
-                                    {stat === 'hp' ? 'HP' :
-                                     stat === 'attack' ? '공격' :
-                                     stat === 'defense' ? '방어' :
-                                     stat === 'spAttack' ? '특공' :
-                                     stat === 'spDefense' ? '특방' : '스피드'}
-                                  </span>
-                                  <span className="font-semibold text-blue-600 ml-1">{value}+</span>
-                                </div>
-                              )
-                            ))}
-                          </div>
-                        </>
+                        <ChefHat size={40} className="text-gray-300" />
                       )}
                     </div>
-                  ) : null}
+
+                    <div className="flex-1">
+                      <h4 className="font-bold text-lg text-gray-800 mb-1">{recipe.result?.name || recipe.name}</h4>
+                      <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-semibold mb-2 ${
+                        supportsFixed && supportsStat
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : supportsFixed
+                            ? 'bg-indigo-100 text-indigo-700'
+                            : 'bg-purple-100 text-purple-700'
+                      }`}>
+                        <span className="flex items-center gap-1">
+                          {supportsFixed && supportsStat ? <Layers size={12} /> : supportsFixed ? <FileText size={12} /> : <BarChart3 size={12} />}
+                          {supportsFixed && supportsStat ? '고정 + 스탯 레시피' : supportsFixed ? '고정 레시피' : '스탯 레시피'}
+                        </span>
+                      </span>
+                      <p className="text-xs text-gray-600 line-clamp-3">
+                        {recipe.description || recipe.result?.effect || '특별한 요리 아이템'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 px-4 py-3 mt-auto space-y-3">
+                    {supportsFixed && recipe.ingredients?.length > 0 && (
+                      <div>
+                        <div className="font-semibold text-gray-700 mb-2 flex items-center gap-1 text-sm">
+                          <Package size={16} /> 필요 재료
+                        </div>
+                        <div className="space-y-1">
+                          {recipe.ingredients.map((ing, idx) => (
+                            <div key={idx} className="flex justify-between text-gray-700 text-sm">
+                              <span>{ing.name}</span>
+                              <span className="font-semibold text-indigo-600">x{ing.count}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {supportsStat && (
+                      <div className="space-y-3">
+                        {recipe.requiredStats && Object.values(recipe.requiredStats).some((value) => value > 0) && (
+                          <div>
+                            <div className="font-semibold text-gray-700 mb-2 flex items-center gap-1 text-sm">
+                              <BarChart3 size={16} /> 필요 컨디션
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              {Object.entries(recipe.requiredStats).map(([stat, value]) => (
+                                value > 0 && (
+                                  <div key={stat} className="text-gray-700 text-xs">
+                                    <span>{conditionLabels[stat] || stat}</span>
+                                    <span className="font-semibold text-purple-600 ml-1">{value}+</span>
+                                  </div>
+                                )
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {recipe.requiredEfforts && Object.values(recipe.requiredEfforts).some((value) => value > 0) && (
+                          <div>
+                            <div className="font-semibold text-gray-700 mb-2 flex items-center gap-1 text-sm">
+                              <TrendingUp size={16} /> 필요 노력치
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              {Object.entries(recipe.requiredEfforts).map(([stat, value]) => (
+                                value > 0 && (
+                                  <div key={stat} className="text-gray-700 text-xs">
+                                    <span>{effortLabels[stat] || stat}</span>
+                                    <span className="font-semibold text-blue-600 ml-1">{value}+</span>
+                                  </div>
+                                )
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </Card>
 
-      {/* 아이템 선택 모달 */}
       <ItemSelectorModal
         show={showItemModal}
         onClose={() => setShowItemModal(false)}

@@ -1,187 +1,326 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { Settings, Percent, TrendingUp, Sparkles, Package, Plus, X, Save } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Settings, Percent, TrendingUp, Sparkles, Package, Plus, X, Save, ShieldCheck } from 'lucide-react';
 import { useGame } from '../../../../contexts/GameContext';
-import { TYPE_NAMES_EN } from '../../../../styles/theme';
 
-export default function PokemonSettingsPanel({ region, onUpdateRegion }) {
-  const { allPokemonMaster, gamePokedex } = useGame();
-  
-  const [encounterRate, setEncounterRate] = useState(
-    region.encounterRate !== undefined ? region.encounterRate : 90
+const toPercent = (value, fallback = 100) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return parsed <= 1 ? Math.round(parsed * 100) : parsed;
+};
+
+const toRate = (value, fallback = 1) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(0, Math.min(100, parsed)) / 100;
+};
+
+const hasPokemonId = (pokemon, pokemonId) => (
+  pokemon.id === pokemonId ||
+  pokemon.number === pokemonId ||
+  pokemon.originalNumber === pokemonId
+);
+
+export default function PokemonSettingsPanel({
+  region,
+  parentRegion = null,
+  mode = 'place',
+  onUpdateRegion
+}) {
+  const { allPokemonMaster = [], gamePokedex = [] } = useGame();
+  const isRegionMode = mode === 'region';
+  const regionPokemonPool = useMemo(
+    () => (Array.isArray(parentRegion?.pokemons) ? parentRegion.pokemons : []),
+    [parentRegion?.pokemons]
   );
-  const [minLevel, setMinLevel] = useState(region.minLevel || 5);
-  const [maxLevel, setMaxLevel] = useState(region.maxLevel || 20);
-  const [searchQuery] = useState('');
-  const [selectedPokemon, setSelectedPokemon] = useState(() => {
-    const pokemons = region.pokemons;
-    return Array.isArray(pokemons) ? pokemons : [];
-  });
+  const parentEncounterRate = parentRegion?.encounterRate ?? 90;
+  const parentMinLevel = parentRegion?.minLevel || 5;
+  const parentMaxLevel = parentRegion?.maxLevel || 100;
+
+  const [encounterRate, setEncounterRate] = useState(region.encounterRate !== undefined ? region.encounterRate : parentEncounterRate);
+  const [minLevel, setMinLevel] = useState(region.minLevel || parentMinLevel);
+  const [maxLevel, setMaxLevel] = useState(region.maxLevel || parentMaxLevel || 20);
+  const [maxCatchRate, setMaxCatchRate] = useState(toPercent(region.maxCatchRate, 100));
+  const [selectedPokemon, setSelectedPokemon] = useState(Array.isArray(region.pokemons) ? region.pokemons : []);
   const [pokemonRates, setPokemonRates] = useState(region.pokemonRates || {});
-  const [shinyRate, setShinyRate] = useState(region.shinyRate || 4096);
-  const [typeFilter] = useState('all');
+  const [shinyRate, setShinyRate] = useState(region.shinyRate || parentRegion?.shinyRate || 4096);
+  const [pokemonSearchQuery, setPokemonSearchQuery] = useState('');
   const [allowNationalPokedex, setAllowNationalPokedex] = useState(
-    region.allowNationalPokedex !== undefined ? region.allowNationalPokedex : false
+    region.allowNationalPokedex !== undefined
+      ? region.allowNationalPokedex
+      : false
   );
-  const [pokedexTab, setPokedexTab] = useState(
-    region.allowNationalPokedex ? 'national' : 'game'
-  );
-  const [showRegionalForms] = useState(true);
+  const [pokedexTab, setPokedexTab] = useState(allowNationalPokedex ? 'national' : 'game');
 
-  // region.id가 변경될 때만 초기화 (같은 지역 내 업데이트는 무시)
   useEffect(() => {
-    setEncounterRate(region.encounterRate !== undefined ? region.encounterRate : 90);
-    setMinLevel(region.minLevel || 5);
-    setMaxLevel(region.maxLevel || 20);
+    setEncounterRate(region.encounterRate !== undefined ? region.encounterRate : parentEncounterRate);
+    setMinLevel(region.minLevel || parentMinLevel);
+    setMaxLevel(region.maxLevel || parentMaxLevel || 20);
+    setMaxCatchRate(toPercent(region.maxCatchRate, 100));
     setSelectedPokemon(Array.isArray(region.pokemons) ? region.pokemons : []);
     setPokemonRates(region.pokemonRates || {});
-    setShinyRate(region.shinyRate || 4096);
-    const nationalPokedex = region.allowNationalPokedex !== undefined ? region.allowNationalPokedex : false;
+    setShinyRate(region.shinyRate || parentRegion?.shinyRate || 4096);
+
+    const nationalPokedex = region.allowNationalPokedex !== undefined
+      ? region.allowNationalPokedex
+      : false;
     setAllowNationalPokedex(nationalPokedex);
     setPokedexTab(nationalPokedex ? 'national' : 'game');
-  }, [region.id, region.encounterRate, region.minLevel, region.maxLevel, region.pokemons, region.pokemonRates, region.shinyRate, region.allowNationalPokedex]);
+  }, [
+    region.id,
+    region.encounterRate,
+    region.minLevel,
+    region.maxLevel,
+    region.maxCatchRate,
+    region.pokemons,
+    region.pokemonRates,
+    region.shinyRate,
+    region.allowNationalPokedex,
+    parentEncounterRate,
+    parentMinLevel,
+    parentMaxLevel,
+    parentRegion?.shinyRate
+  ]);
 
-  const handleToggleNationalPokedex = () => {
-    const newValue = !allowNationalPokedex;
-    setAllowNationalPokedex(newValue);
-    setPokedexTab(newValue ? 'national' : 'game');
-  };
+  const currentPokedex = allowNationalPokedex ? allPokemonMaster : gamePokedex;
 
-  const getAvailablePokemonForEncounter = () => {
-    const targetPokedex = allowNationalPokedex ? allPokemonMaster : gamePokedex;
-    
-    return selectedPokemon.filter(pokemonId => {
-      return targetPokedex.some(p => 
-        p.id === pokemonId || 
-        p.number === pokemonId || 
-        p.originalNumber === pokemonId
+  const selectablePokemon = useMemo(() => {
+    if (!Array.isArray(currentPokedex)) return [];
+
+    return currentPokedex.filter((pokemon) => {
+      if (isRegionMode) return true;
+      if (regionPokemonPool.length === 0) return false;
+      return regionPokemonPool.some((pokemonId) => hasPokemonId(pokemon, pokemonId));
+    });
+  }, [currentPokedex, isRegionMode, regionPokemonPool]);
+
+  const filteredSelectablePokemon = useMemo(() => {
+    const query = pokemonSearchQuery.trim().toLowerCase().replace(/^#/, '');
+    if (!query) return selectablePokemon;
+
+    return selectablePokemon.filter((pokemon) => {
+      const number = String(pokemon.number ?? pokemon.id ?? '');
+      const originalNumber = String(pokemon.originalNumber ?? '');
+      const name = String(pokemon.name ?? '').toLowerCase();
+      const englishName = String(pokemon.englishName ?? pokemon.nameEn ?? '').toLowerCase();
+
+      return (
+        number.includes(query) ||
+        originalNumber.includes(query) ||
+        name.includes(query) ||
+        englishName.includes(query)
       );
     });
-  };
+  }, [pokemonSearchQuery, selectablePokemon]);
 
-  const availableEncounterPokemon = getAvailablePokemonForEncounter();
+  const availableEncounterPokemon = selectedPokemon.filter((pokemonId) => (
+    selectablePokemon.some((pokemon) => hasPokemonId(pokemon, pokemonId))
+  ));
+  const displayedSelectedPokemon = isRegionMode ? selectedPokemon : regionPokemonPool;
+  const isInGamePokedex = (pokemonId) => gamePokedex.some((pokemon) => hasPokemonId(pokemon, pokemonId));
+  const selectedPokemonGroups = isRegionMode
+    ? [
+        { title: '영운 도감', ids: displayedSelectedPokemon.filter((pokemonId) => isInGamePokedex(pokemonId)) },
+        { title: '전국 도감', ids: displayedSelectedPokemon.filter((pokemonId) => !isInGamePokedex(pokemonId)) }
+      ]
+    : [{ title: null, ids: displayedSelectedPokemon }];
 
-  const calculateProbabilities = () => {
-    const totalWeight = availableEncounterPokemon.reduce((sum, pokemonId) => {
-      return sum + (pokemonRates[pokemonId] || 10);
-    }, 0);
+  const probabilities = useMemo(() => {
+    const totalWeight = availableEncounterPokemon.reduce((sum, pokemonId) => (
+      sum + (pokemonRates[pokemonId] || 10)
+    ), 0);
 
-    return availableEncounterPokemon.map(pokemonId => {
+    return availableEncounterPokemon.map((pokemonId) => {
       const weight = pokemonRates[pokemonId] || 10;
       const relativeProb = totalWeight > 0 ? (weight / totalWeight) * 100 : 0;
-      const actualProb = (relativeProb / 100) * encounterRate;
+      const actualProb = (relativeProb / 100) * Number(encounterRate || 0);
       return { pokemonId, weight, relativeProb, actualProb };
     });
-  };
+  }, [availableEncounterPokemon, encounterRate, pokemonRates]);
 
-  const probabilities = calculateProbabilities();
-
-  const colorPalette = [
-    '#6366f1', '#ec4899', '#8b5cf6', '#f59e0b', '#10b981',
-    '#3b82f6', '#ef4444', '#06b6d4', '#f97316', '#84cc16'
-  ];
-
-  const handleSave = async () => {
-    const updatedRegion = {
-      ...region,
-      pokemons: selectedPokemon,
-      pokemonRates: pokemonRates,
-      encounterRate: parseFloat(encounterRate),
-      minLevel: parseInt(minLevel),
-      maxLevel: parseInt(maxLevel),
-      shinyRate: parseInt(shinyRate),
-      allowNationalPokedex: allowNationalPokedex
-    };
-
-    console.log('저장할 지역 데이터:', updatedRegion);
-    console.log('allowNationalPokedex 값:', allowNationalPokedex);
-
-    await onUpdateRegion(region.id, updatedRegion);
-    
-    // 저장 후 로컬 상태도 강제로 업데이트
-    setAllowNationalPokedex(updatedRegion.allowNationalPokedex);
-    setPokedexTab(updatedRegion.allowNationalPokedex ? 'national' : 'game');
-    
-    alert('지역 설정이 저장되었습니다!');
-  };
+  const getPokemonById = (pokemonId) => (
+    allPokemonMaster.find((pokemon) => hasPokemonId(pokemon, pokemonId))
+  );
 
   const togglePokemon = (pokemon) => {
     const pokemonId = pokemon.number;
-    
-    setSelectedPokemon(prev => {
+
+    setSelectedPokemon((prev) => {
       if (prev.includes(pokemonId)) {
-        const newRates = { ...pokemonRates };
-        delete newRates[pokemonId];
-        setPokemonRates(newRates);
-        return prev.filter(id => id !== pokemonId);
-      } else {
-        setPokemonRates(prev => ({ ...prev, [pokemonId]: 10 }));
-        return [...prev, pokemonId];
+        const nextRates = { ...pokemonRates };
+        delete nextRates[pokemonId];
+        setPokemonRates(nextRates);
+        return prev.filter((id) => id !== pokemonId);
       }
+
+      setPokemonRates((prevRates) => ({ ...prevRates, [pokemonId]: 10 }));
+      return [...prev, pokemonId];
     });
   };
 
   const updateRate = (pokemonId, rate) => {
-    setPokemonRates(prev => ({ ...prev, [pokemonId]: parseInt(rate) || 1 }));
+    setPokemonRates((prev) => ({ ...prev, [pokemonId]: parseInt(rate, 10) || 1 }));
   };
 
-  // allowNationalPokedex 기반으로 도감 결정
-  const currentPokedex = allowNationalPokedex ? allPokemonMaster : gamePokedex;
+  const handleToggleNationalPokedex = () => {
+    const nextValue = !allowNationalPokedex;
+    setAllowNationalPokedex(nextValue);
+    setPokedexTab(nextValue ? 'national' : 'game');
+  };
 
-  const getKoreanTypeName = (englishType) => {
-    const entry = Object.entries(TYPE_NAMES_EN).find(([kr, en]) => 
-      en.toLowerCase() === englishType.toLowerCase()
+  const handleSave = async () => {
+    const cappedMaxLevel = isRegionMode
+      ? parseInt(maxLevel, 10) || 1
+      : Math.min(parseInt(maxLevel, 10) || 1, parentMaxLevel);
+    const cappedMinLevel = Math.min(parseInt(minLevel, 10) || 1, cappedMaxLevel);
+
+    const allowedSelectedPokemon = isRegionMode
+      ? selectedPokemon
+      : selectedPokemon.filter((pokemonId) => regionPokemonPool.includes(pokemonId));
+
+    const nextRates = Object.fromEntries(
+      Object.entries(pokemonRates).filter(([pokemonId]) => allowedSelectedPokemon.includes(Number(pokemonId)))
     );
-    return entry ? entry[0] : null;
+
+    const updatedRegion = isRegionMode
+      ? {
+          ...region,
+          pokemons: selectedPokemon,
+          pokemonRates: {},
+          encounterRate: parseFloat(encounterRate) || 0,
+          minLevel: cappedMinLevel,
+          maxLevel: cappedMaxLevel,
+          maxCatchRate: toRate(maxCatchRate, 1),
+          shinyRate: parseInt(shinyRate, 10) || 4096,
+          allowNationalPokedex: false,
+          places: Array.isArray(region.places)
+            ? region.places.map((place) => ({
+                ...place,
+                pokemons: Array.isArray(place.pokemons)
+                  ? place.pokemons.filter((pokemonId) => selectedPokemon.includes(pokemonId))
+                  : [],
+                encounterRate: place.encounterRate !== undefined ? place.encounterRate : parseFloat(encounterRate) || 0,
+                maxLevel: Math.min(place.maxLevel || cappedMaxLevel, cappedMaxLevel),
+                minLevel: Math.min(place.minLevel || cappedMinLevel, place.maxLevel || cappedMaxLevel)
+              }))
+            : []
+        }
+      : {
+          ...region,
+          pokemons: allowedSelectedPokemon,
+          pokemonRates: nextRates,
+          encounterRate: parseFloat(encounterRate) || 0,
+          minLevel: cappedMinLevel,
+          maxLevel: cappedMaxLevel,
+          shinyRate: parseInt(shinyRate, 10) || parentRegion?.shinyRate || 4096,
+          allowNationalPokedex
+        };
+
+    await onUpdateRegion(region.id, updatedRegion);
+    alert(isRegionMode ? '지역 포켓몬 기준 설정이 저장되었습니다.' : '장소 출현 설정이 저장되었습니다.');
   };
 
-  const filteredPokemon = useMemo(() => {
-    if (!currentPokedex) return [];
-    
-    return currentPokedex.filter(p => {
-      // 리전폼 필터
-      if (!showRegionalForms && p.isRegionalForm) return false;
-      
-      if (searchQuery && !p.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-        return false;
-      }
-      
-      if (typeFilter !== 'all') {
-        const targetTypeKr = getKoreanTypeName(typeFilter);
-        
-        let pokemonTypes = [];
-        
-        if (Array.isArray(p.types)) {
-          pokemonTypes = p.types.map(t => {
-            if (typeof t === 'string') return t;
-            if (t.type?.name) return t.type.name;
-            if (t.name) return t.name;
-            return '';
-          });
-        } else {
-          if (p.type) pokemonTypes.push(p.type);
-          if (p.type2) pokemonTypes.push(p.type2);
-        }
-        
-        const hasType = pokemonTypes.some(t => t === targetTypeKr);
-        
-        if (!hasType) return false;
-      }
-      
-      return true;
-    });
-  }, [currentPokedex, searchQuery, typeFilter, showRegionalForms]);
+  const colorPalette = ['#6366f1', '#ec4899', '#8b5cf6', '#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#06b6d4'];
+  const renderPokemonSelectionCard = (pokemonId) => {
+    const pokemon = getPokemonById(pokemonId);
+    if (!pokemon) return null;
+
+    const isSelected = selectedPokemon.includes(pokemonId);
+    const existsInCurrentDex = isRegionMode || selectablePokemon.some((item) => hasPokemonId(item, pokemonId));
+    const canEncounter = isRegionMode || (isSelected && existsInCurrentDex);
+    const probability = probabilities.find((item) => item.pokemonId === pokemonId);
+
+    return (
+      <div
+        key={pokemonId}
+        onClick={isRegionMode ? undefined : () => togglePokemon(pokemon)}
+        className={`relative min-h-[112px] items-center gap-2 border-2 rounded-lg p-2 transition-colors ${
+          !isRegionMode && canEncounter
+            ? 'grid grid-cols-[88px_minmax(0,1fr)] text-left'
+            : 'flex flex-col justify-between text-center'
+        } ${
+          canEncounter
+            ? 'bg-indigo-50 border-indigo-200 hover:bg-indigo-100'
+            : isSelected
+              ? 'bg-gray-100 border-gray-200 text-gray-400'
+              : 'bg-white border-lime-200 text-gray-700 hover:bg-lime-50'
+        } ${!isRegionMode ? 'cursor-pointer' : ''}`}
+      >
+        {isSelected && !existsInCurrentDex && (
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-white/55 px-2">
+            <span className="rounded-full bg-gray-700/80 px-2 py-0.5 text-[11px] font-bold text-white">
+              출현 불가
+            </span>
+          </div>
+        )}
+        <div className="flex min-w-0 flex-col items-center justify-center text-center">
+          <img
+            src={pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`}
+            alt={pokemon.name}
+            className={`h-[72px] w-[72px] max-w-none object-contain ${isSelected || isRegionMode ? '' : 'opacity-45 grayscale'}`}
+            style={{ imageRendering: 'pixelated' }}
+          />
+          <div className="w-full min-w-0">
+            <div className="truncate text-sm font-bold text-gray-800">{pokemon.name}</div>
+            <div className="text-xs text-gray-600">No.{pokemon.number}</div>
+          </div>
+        </div>
+
+        {!isRegionMode && canEncounter && (
+          <div className="grid min-w-0 grid-cols-1 items-stretch gap-1.5 pr-3">
+            <div className="flex min-w-0 flex-col justify-center rounded-lg bg-white/70 px-2 py-1.5 text-center">
+              <div className="mb-0.5 whitespace-nowrap text-[11px] text-gray-500">실제 조우율</div>
+              <div className="text-sm font-bold text-indigo-600">
+                {(probability?.actualProb || 0).toFixed(2)}%
+              </div>
+            </div>
+            <div className="flex min-w-0 flex-col justify-center rounded-lg bg-white/70 px-2 py-1.5 text-center">
+              <div className="mb-0.5 whitespace-nowrap text-[11px] text-gray-600">가중치</div>
+              <input
+                type="number"
+                value={pokemonRates[pokemonId] || 10}
+                onClick={(event) => event.stopPropagation()}
+                onChange={(event) => updateRate(pokemonId, event.target.value)}
+                min="1"
+                max="100"
+                className="w-full min-w-0 border-2 border-indigo-300 rounded px-1 py-0.5 text-center text-xs focus:border-indigo-500 focus:outline-none"
+              />
+            </div>
+          </div>
+        )}
+
+        {isRegionMode && (
+          <button
+            type="button"
+            onClick={() => togglePokemon(pokemon)}
+            className="absolute right-1 top-1 z-20 rounded p-1 text-red-600 transition-colors hover:bg-red-50"
+          >
+            <X size={14} />
+          </button>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="bg-white rounded-lg border-2 border-indigo-200 p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h4 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-          <Settings size={24} />
-          포켓몬 출현 설정
-        </h4>
-        
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h4 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <Settings size={24} />
+            {isRegionMode ? '지역 포켓몬 기준 설정' : '장소 출현 설정'}
+          </h4>
+          <p className="mt-1 text-sm text-gray-600">
+            {isRegionMode
+              ? '이 지역 전체에서 사용할 포켓몬 풀과 최대값을 정합니다.'
+              : '지역 포켓몬 풀 안에서 이 장소에 실제 등장할 포켓몬과 범위를 정합니다.'}
+          </p>
+        </div>
+
+        {!isRegionMode && (
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-gray-700">전국도감</span>
           <button
+            type="button"
             onClick={handleToggleNationalPokedex}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
               allowNationalPokedex ? 'bg-green-500' : 'bg-gray-300'
@@ -194,9 +333,10 @@ export default function PokemonSettingsPanel({ region, onUpdateRegion }) {
             />
           </button>
         </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-5">
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
             <Percent size={16} />
@@ -205,11 +345,11 @@ export default function PokemonSettingsPanel({ region, onUpdateRegion }) {
           <input
             type="number"
             value={encounterRate}
-            onChange={(e) => setEncounterRate(parseFloat(e.target.value))}
+            onChange={(event) => setEncounterRate(parseFloat(event.target.value) || 0)}
             min="0"
             max="100"
             step="5"
-            className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-indigo-500 focus:outline-none"
+            className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-indigo-500 focus:outline-none"
           />
         </div>
 
@@ -221,27 +361,82 @@ export default function PokemonSettingsPanel({ region, onUpdateRegion }) {
           <input
             type="number"
             value={minLevel}
-            onChange={(e) => setMinLevel(parseInt(e.target.value))}
+            onChange={(event) => setMinLevel(parseInt(event.target.value, 10) || 1)}
             min="1"
-            max="100"
-            className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-indigo-500 focus:outline-none"
+            max={isRegionMode ? 100 : parentMaxLevel}
+            className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-indigo-500 focus:outline-none"
           />
         </div>
+
+        {false && !isRegionMode && (
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+              <Percent size={16} />
+              조우율 (%)
+            </label>
+            <input
+              type="number"
+              value={encounterRate}
+              onChange={(event) => setEncounterRate(parseFloat(event.target.value) || 0)}
+              min="0"
+              max="100"
+              step="5"
+              className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-indigo-500 focus:outline-none"
+            />
+          </div>
+        )}
+
+        {false && !isRegionMode && (
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+              <TrendingUp size={16} />
+              최소 레벨
+            </label>
+            <input
+              type="number"
+              value={minLevel}
+              onChange={(event) => setMinLevel(parseInt(event.target.value, 10) || 1)}
+              min="1"
+              max={parentMaxLevel}
+              className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-indigo-500 focus:outline-none"
+            />
+          </div>
+        )}
 
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
             <TrendingUp size={16} />
-            최대 레벨
+            {isRegionMode ? '지역 최대 레벨' : '최대 레벨'}
           </label>
           <input
             type="number"
             value={maxLevel}
-            onChange={(e) => setMaxLevel(parseInt(e.target.value))}
+            onChange={(event) => setMaxLevel(parseInt(event.target.value, 10) || 1)}
             min="1"
-            max="100"
-            className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-indigo-500 focus:outline-none"
+            max={isRegionMode ? 100 : parentMaxLevel}
+            className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-indigo-500 focus:outline-none"
           />
+          {!isRegionMode && (
+            <div className="mt-1 text-xs text-gray-500">지역 최대 레벨: {parentMaxLevel}</div>
+          )}
         </div>
+
+        {isRegionMode && (
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+              <ShieldCheck size={16} />
+              최대 포획률 (%)
+            </label>
+            <input
+              type="number"
+              value={maxCatchRate}
+              onChange={(event) => setMaxCatchRate(parseFloat(event.target.value) || 0)}
+              min="1"
+              max="100"
+              className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-indigo-500 focus:outline-none"
+            />
+          </div>
+        )}
 
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
@@ -251,82 +446,52 @@ export default function PokemonSettingsPanel({ region, onUpdateRegion }) {
           <input
             type="number"
             value={shinyRate}
-            onChange={(e) => setShinyRate(parseInt(e.target.value) || 4096)}
+            onChange={(event) => setShinyRate(parseInt(event.target.value, 10) || 4096)}
             min="1"
             max="100000"
             className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-indigo-500 focus:outline-none"
           />
-          <div className="mt-1 text-xs text-gray-600">
-            1/{shinyRate} ({(100/shinyRate).toFixed(3)}%)
-          </div>
+          <div className="mt-1 text-xs text-gray-600">1/{shinyRate}</div>
         </div>
       </div>
 
-      {availableEncounterPokemon.length > 0 && (
+      {!isRegionMode && regionPokemonPool.length === 0 && (
+        <div className="rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-sm font-semibold text-yellow-900">
+          먼저 위의 지역 포켓몬 기준 설정에서 이 지역에 등장 가능한 포켓몬을 선택하세요.
+        </div>
+      )}
+
+      {!isRegionMode && availableEncounterPokemon.length > 0 && (
         <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
           <h5 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
             <TrendingUp size={18} />
             확률 분포
           </h5>
-          
+
           <div className="w-full h-8 flex rounded-lg overflow-hidden border-2 border-gray-300">
             <div
               className="bg-gray-400 flex items-center justify-center text-white text-xs font-bold transition-all"
-              style={{ width: `${100 - encounterRate}%` }}
-              title={`미조우: ${(100 - encounterRate).toFixed(1)}%`}
+              style={{ width: `${Math.max(0, 100 - Number(encounterRate || 0))}%` }}
+              title={`미조우 ${Math.max(0, 100 - Number(encounterRate || 0)).toFixed(1)}%`}
             >
-              {(100 - encounterRate) >= 5 && '미조우'}
+              {Math.max(0, 100 - Number(encounterRate || 0)) >= 5 && '미조우'}
             </div>
-            
+
             {probabilities
               .sort((a, b) => b.actualProb - a.actualProb)
               .map(({ pokemonId, actualProb }, index) => {
-                const pokemon = allPokemonMaster?.find(p => p.id === pokemonId || p.number === pokemonId);
+                const pokemon = getPokemonById(pokemonId);
                 if (!pokemon) return null;
-                
                 const color = colorPalette[index % colorPalette.length];
-                
+
                 return (
                   <div
                     key={pokemonId}
                     className="flex items-center justify-center text-white text-xs font-bold transition-all hover:brightness-110"
-                    style={{ 
-                      width: `${actualProb}%`,
-                      backgroundColor: color
-                    }}
+                    style={{ width: `${actualProb}%`, backgroundColor: color }}
                     title={`${pokemon.name}: ${actualProb.toFixed(2)}%`}
                   >
                     {actualProb >= 5 && pokemon.name}
-                  </div>
-                );
-              })}
-          </div>
-          
-          <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-gray-400 rounded"></div>
-              <span className="text-gray-700">
-                미조우: <span className="font-bold">{(100 - encounterRate).toFixed(1)}%</span>
-              </span>
-            </div>
-            
-            {probabilities
-              .sort((a, b) => b.actualProb - a.actualProb)
-              .map(({ pokemonId, actualProb }, index) => {
-                const pokemon = allPokemonMaster?.find(p => p.id === pokemonId || p.number === pokemonId);
-                if (!pokemon) return null;
-                
-                const color = colorPalette[index % colorPalette.length];
-                
-                return (
-                  <div key={pokemonId} className="flex items-center gap-2">
-                    <div 
-                      className="w-4 h-4 rounded" 
-                      style={{ backgroundColor: color }}
-                    ></div>
-                    <span className="text-gray-700 truncate">
-                      {pokemon.name}: <span className="font-bold">{actualProb.toFixed(2)}%</span>
-                    </span>
                   </div>
                 );
               })}
@@ -338,183 +503,120 @@ export default function PokemonSettingsPanel({ region, onUpdateRegion }) {
         <div className="flex items-center justify-between mb-3">
           <h5 className="font-bold text-gray-800 flex items-center gap-2">
             <Package size={20} />
-            선택된 포켓몬 ({availableEncounterPokemon.length}/{selectedPokemon.length}종 출현)
+            {isRegionMode ? '선택된 포켓몬' : '포켓몬 선택'} ({selectedPokemon.length}종)
           </h5>
         </div>
-        
-        {selectedPokemon.length === 0 ? (
+
+        {displayedSelectedPokemon.length === 0 ? (
           <div className="bg-gray-50 rounded-lg p-6 text-center text-gray-500">
             <Package size={48} className="mx-auto mb-2 text-gray-300" />
-            <p>선택된 포켓몬이 없습니다</p>
+            <p>{isRegionMode ? '선택된 포켓몬이 없습니다.' : '지역에 등록된 포켓몬이 없습니다.'}</p>
           </div>
         ) : (
-          <div className="space-y-2 max-h-96 overflow-y-auto">
-            {selectedPokemon
-              .map(pokemonId => {
-                const pokemon = allPokemonMaster?.find(p => p.id === pokemonId || p.number === pokemonId);
-                if (!pokemon) return null;
-                
-                const canEncounter = availableEncounterPokemon.includes(pokemonId);
-                const prob = probabilities.find(p => p.pokemonId === pokemonId);
-                
-                return { pokemonId, pokemon, canEncounter, prob };
-              })
-              .filter(item => item !== null)
-              .sort((a, b) => {
-                if (a.canEncounter && !b.canEncounter) return -1;
-                if (!a.canEncounter && b.canEncounter) return 1;
-                if (a.canEncounter && b.canEncounter) {
-                  return (b.prob?.actualProb || 0) - (a.prob?.actualProb || 0);
-                }
-                return a.pokemon.name.localeCompare(b.pokemon.name);
-              })
-              .map(({ pokemonId, pokemon, canEncounter, prob }) => {
-                const weight = pokemonRates[pokemonId] || 10;
-                const relativeProb = prob?.relativeProb || 0;
-                const actualProb = prob?.actualProb || 0;
-
-                return (
-                  <div
-                    key={pokemonId}
-                    className={`flex items-center gap-3 border-2 rounded-lg p-3 transition-colors ${
-                      canEncounter
-                        ? 'bg-indigo-50 border-indigo-200 hover:bg-indigo-100'
-                        : 'bg-red-50 border-red-200 opacity-60'
-                    }`}
-                  >
-                    <img
-                      src={pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`}
-                      alt={pokemon.name}
-                      className="w-12 h-12"
-                      style={{ imageRendering: 'pixelated' }}
-                    />
-                    <div className="flex-1">
-                      <div className="font-bold text-gray-800 flex items-center gap-2">
-                        {pokemon.name}
-                        {!canEncounter && (
-                          <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full">
-                            출현불가
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs text-gray-600">No.{pokemon.number}</div>
+          <div className="space-y-4">
+            {selectedPokemonGroups.map((group) => (
+              group.ids.length > 0 && (
+                <div key={group.title || 'place'}>
+                  {group.title && (
+                    <div className="mb-2 text-sm font-bold text-lime-800">
+                      {group.title} ({group.ids.length}종)
                     </div>
-                    
-                    {canEncounter && (
-                      <div className="flex items-center gap-3">
-                        <div className="text-right">
-                          <div className="text-xs text-gray-500 mb-0.5">실제 조우율:</div>
-                          <div className="text-xl font-bold text-indigo-600">
-                            {actualProb.toFixed(2)}%
-                          </div>
-                        </div>
-                        
-                        <div className="text-right">
-                          <div className="text-xs text-gray-500 mb-0.5">조우 시:</div>
-                          <div className="text-lg font-semibold text-gray-600">
-                            {relativeProb.toFixed(1)}%
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center gap-2">
-                      <div className="text-xs text-gray-600">가중치</div>
-                      <input
-                        type="number"
-                        value={weight}
-                        onChange={(e) => updateRate(pokemonId, e.target.value)}
-                        min="1"
-                        max="100"
-                        className="w-16 border-2 border-indigo-300 rounded px-2 py-1 text-center text-sm focus:border-indigo-500 focus:outline-none"
-                        disabled={!canEncounter}
-                      />
-                    </div>
-                    
-                    <button
-                      onClick={() => togglePokemon(pokemon)}
-                      className="text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors"
-                    >
-                      <X size={18} />
-                    </button>
+                  )}
+                  <div className={`grid gap-2 max-h-[420px] overflow-y-auto ${!isRegionMode && availableEncounterPokemon.length > 0 ? 'grid-cols-3' : 'grid-cols-5'}`}>
+                    {group.ids.map((pokemonId) => renderPokemonSelectionCard(pokemonId))}
                   </div>
-                );
-              })}
+                </div>
+              )
+            ))}
           </div>
         )}
       </div>
 
+      {isRegionMode && (
       <div>
         <h5 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
           <Plus size={20} />
           포켓몬 추가
         </h5>
-        
+
+        <input
+          type="search"
+          value={pokemonSearchQuery}
+          onChange={(event) => setPokemonSearchQuery(event.target.value)}
+          className="mb-3 w-full rounded-lg border-2 border-lime-200 bg-white px-4 py-2 text-sm font-semibold text-gray-800 outline-none transition-colors placeholder:text-gray-400 focus:border-lime-500"
+          placeholder="포켓몬 이름 또는 번호 검색"
+        />
+
         <div className="flex gap-2 mb-3">
           <button
+            type="button"
             onClick={() => {
               setPokedexTab('game');
               setAllowNationalPokedex(false);
             }}
             className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-colors ${
-              pokedexTab === 'game'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              pokedexTab === 'game' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
-            게임 도감 ({gamePokedex?.length || 0})
+            영운 도감 ({gamePokedex?.length || 0})
           </button>
           <button
+            type="button"
             onClick={() => {
               setPokedexTab('national');
               setAllowNationalPokedex(true);
             }}
             className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-colors ${
-              pokedexTab === 'national'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              pokedexTab === 'national' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
             전국 도감 ({allPokemonMaster?.length || 0})
           </button>
         </div>
-        
 
-        
         <div className="text-xs text-gray-600 mb-2 flex items-center gap-1">
           <Package size={12} />
-          {filteredPokemon.length}마리 검색됨
+          {filteredSelectablePokemon.length}마리 표시 중
         </div>
-        
-        <div className="grid grid-cols-6 gap-2 max-h-80 overflow-y-auto p-2 bg-gray-50 rounded-lg border border-gray-200">
-          {filteredPokemon.map(pokemon => {
+
+        <div className="grid grid-cols-5 gap-2 max-h-80 overflow-y-auto p-2 bg-gray-50 rounded-lg border border-gray-200">
+          {filteredSelectablePokemon.length === 0 ? (
+            <div className="col-span-5 py-8 text-center text-sm font-semibold text-gray-500">
+              검색 결과가 없습니다.
+            </div>
+          ) : filteredSelectablePokemon.map((pokemon) => {
             const isSelected = selectedPokemon.includes(pokemon.number);
-            
+
             return (
               <button
                 key={pokemon.id || pokemon.number}
+                type="button"
                 onClick={() => togglePokemon(pokemon)}
-                className={`p-2 rounded-lg border-2 transition-all ${
+                className={`min-h-[124px] p-1 rounded-lg border-2 transition-all ${
                   isSelected
                     ? 'border-indigo-500 bg-indigo-100'
                     : 'border-gray-200 hover:border-indigo-300 bg-white'
                 }`}
                 title={pokemon.name}
               >
-                <img
-                  src={pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`}
-                  alt={pokemon.name}
-                  className="w-full"
-                  style={{ imageRendering: 'pixelated' }}
-                />
+                <div className="flex h-24 w-full items-center justify-center overflow-visible">
+                  <img
+                    src={pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`}
+                    alt={pokemon.name}
+                    className="h-24 w-24 max-w-none object-contain"
+                    style={{ imageRendering: 'pixelated' }}
+                  />
+                </div>
                 <div className="text-xs text-center truncate">{pokemon.name}</div>
               </button>
             );
           })}
         </div>
       </div>
+      )}
 
       <button
+        type="button"
         onClick={handleSave}
         className="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
       >

@@ -4,32 +4,16 @@ import React, { useState } from 'react';
 function MemberInfoTab({ 
   member, 
   trainer, 
-  regions,
   onResetWalk, 
   onToggleAdmin,
   onUpdateMoney, 
-  onUpdateRegionAccess,
   onUpdateWalkCount,
-  onUpdateMaxWalkCount  // ⭐ 최대 탐험횟수 업데이트 prop 추가
+  onUpdateMaxWalkCount,  // ⭐ 최대 탐험횟수 업데이트 prop 추가
+  onDeleteMember
 }) {
   const [moneyInput, setMoneyInput] = useState(member.money || 0);
-  const [selectedRegions, setSelectedRegions] = useState(member.accessibleRegions || []);
   const [editWalkCount, setEditWalkCount] = useState(member.dailyWalks);
   const [editMaxWalkCount, setEditMaxWalkCount] = useState(member.maxDailyWalks); // ⭐ 추가
-
-  const handleToggleRegion = (regionId) => {
-    setSelectedRegions(prev => {
-      if (prev.includes(regionId)) {
-        return prev.filter(id => id !== regionId);
-      } else {
-        return [...prev, regionId];
-      }
-    });
-  };
-
-  const handleSelectAllRegions = () => {
-    setSelectedRegions([]);
-  };
 
   return (
     <div className="space-y-6">
@@ -166,59 +150,6 @@ function MemberInfoTab({
         </div>
       </div>
 
-      {/* 리전 접근 권한 관리 */}
-      <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
-        <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-          🗺️ 산책 구역 접근 권한
-        </h3>
-        <p className="text-sm text-gray-600 mb-4">
-          {selectedRegions.length === 0 
-            ? '✅ 현재 모든 구역에 접근 가능합니다.' 
-            : `${selectedRegions.length}개 구역에만 접근 가능합니다.`}
-        </p>
-        
-        <div className="mb-4">
-          <button
-            onClick={handleSelectAllRegions}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-          >
-            모든 구역 허용
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto">
-          {regions.map(region => {
-            const isAccessible = selectedRegions.length === 0 || selectedRegions.includes(region.id);
-            return (
-              <button
-                key={region.id}
-                onClick={() => handleToggleRegion(region.id)}
-                className={`p-3 rounded-lg border-2 transition-colors text-left ${
-                  isAccessible
-                    ? 'bg-blue-100 border-blue-400 text-blue-900'
-                    : 'bg-gray-100 border-gray-300 text-gray-500'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">{region.name}</span>
-                  <span>{isAccessible ? '✅' : '❌'}</span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        <button
-          onClick={() => {
-            onUpdateRegionAccess(member.id, selectedRegions);
-            alert(`${member.name}님의 구역 접근 권한이 업데이트되었습니다!`);
-          }}
-          className="w-full mt-4 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-        >
-          권한 저장
-        </button>
-      </div>
-
       {/* 관리자 권한 */}
       <div className="space-y-3">
         <h3 className="font-bold">관리 기능</h3>
@@ -239,6 +170,15 @@ function MemberInfoTab({
             }`}
           >
             {member.isAdmin ? '관리자 권한 제거' : '관리자 권한 부여'}
+          </button>
+        )}
+
+        {trainer.isSuperAdmin && trainer.id !== member.id && !member.isSuperAdmin && (
+          <button
+            onClick={() => onDeleteMember?.(member.id, member.name)}
+            className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 font-semibold"
+          >
+            회원 삭제
           </button>
         )}
       </div>

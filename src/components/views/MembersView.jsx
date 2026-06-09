@@ -1,232 +1,299 @@
-import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, X } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Search, Shield, X, Users } from 'lucide-react';
 
-export default function PlayersView() {
-  const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
+const POKEMON_PLACEHOLDER = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
 
-  const [players] = useState([
-    {
-      id: 'player1',
-      name: '최민',
-      age: 27,
-      height: 181,
-      imageUrl: 'https://via.placeholder.com/300x600/4F46E5/FFFFFF?text=Player',
-      isLocked: true,
-      badges: ['H 252', 'A 0', 'B 0', 'C 0', 'D 252', 'S 0'],
-      partner: { name: '포켓몬 이름', level: 100, sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/94.png' },
-      entry: [
-        { name: '엔트리1', level: 100, sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/470.png' },
-        { name: '엔트리2', level: 100, sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/471.png' },
-        { name: '엔트리3', level: 100, sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png' },
-        { name: '엔트리4', level: 100, sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/131.png' },
-        { name: '엔트리5', level: 100, sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/6.png' },
-        { name: '엔트리6', level: 100, sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/3.png' }
-      ],
-      items: [
-        { name: '아이템1', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png' },
-        { name: '아이템2', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png' },
-        { name: '아이템3', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png' },
-        { name: '아이템4', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png' },
-        { name: '아이템5', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/potion.png' },
-        { name: '아이템6', imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/rare-candy.png' }
-      ]
-    },
-    {
-      id: 'player2',
-      name: '희진',
-      age: 25,
-      height: 165,
-      imageUrl: 'https://via.placeholder.com/300x600/10B981/FFFFFF?text=Player+2',
-      isLocked: false,
-      badges: ['H 252', 'A 252', 'B 0', 'C 0', 'D 4', 'S 0'],
-      partner: { name: '리자몽', level: 85, sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/6.png' },
-      entry: [
-        { name: '이상해꽃', level: 82, sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/3.png' }
-      ],
-      items: []
-    }
-  ]);
+function getMemberList(members) {
+  if (!members) return [];
 
-  const filteredPlayers = players.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase())
+  return Object.entries(members)
+    .map(([id, member]) => ({
+      id,
+      ...(member || {})
+    }))
+    .filter((member) => member && member.name)
+    .sort((a, b) => {
+      const aAdminRank = a.isSuperAdmin ? 2 : a.isAdmin ? 1 : 0;
+      const bAdminRank = b.isSuperAdmin ? 2 : b.isAdmin ? 1 : 0;
+
+      if (aAdminRank !== bAdminRank) return bAdminRank - aAdminRank;
+      return (a.name || '').localeCompare(b.name || '', 'ko');
+    });
+}
+
+function getPokemonName(pokemon) {
+  return pokemon?.nickname || pokemon?.name || pokemon?.nameKo || pokemon?.nameEn || '포켓몬';
+}
+
+function getPokemonImage(pokemon) {
+  return (
+    pokemon?.sprite ||
+    pokemon?.spriteUrl ||
+    pokemon?.imageUrl ||
+    pokemon?.iconUrl ||
+    pokemon?.frontSprite ||
+    POKEMON_PLACEHOLDER
   );
+}
+
+function getMemberImage(member) {
+  return member.profileImage || member.profileImageUrl || member.avatarUrl || member.imageUrl || '';
+}
+
+function getVisibleInventory(member) {
+  return (member.inventory || [])
+    .filter((item) => item && (item.count ?? 1) > 0)
+    .slice(0, 12);
+}
+
+function getPartyPokemon(member) {
+  return (member.caughtPokemon || []).filter(Boolean).slice(0, 6);
+}
+
+function getPartnerPokemon(member) {
+  const party = getPartyPokemon(member);
+  return party.find((pokemon) => pokemon.isPartner) || party[0] || null;
+}
+
+function MemberAvatar({ member, className = '' }) {
+  const imageUrl = getMemberImage(member);
+  const initial = member.name?.trim()?.charAt(0) || '?';
+
+  if (imageUrl) {
+    return (
+      <img
+        src={imageUrl}
+        alt={member.name}
+        className={`bg-indigo-100 object-cover ${className}`}
+      />
+    );
+  }
 
   return (
-    <div className="max-w-7xl mx-auto p-4 space-y-3">
-      {/* 헤더 */}
-      <div className="flex items-center justify-between">
+    <div className={`border-2 border-lime-300 bg-white/55 text-green-950 flex items-center justify-center font-bold ${className}`}>
+      {initial}
+    </div>
+  );
+}
+
+function RoleBadge({ member }) {
+  if (member.isSuperAdmin) {
+    return <span className="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full font-semibold">슈퍼관리자</span>;
+  }
+
+  if (member.isAdmin) {
+    return <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-semibold">관리자</span>;
+  }
+
+  return <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full font-semibold">회원</span>;
+}
+
+export default function MembersView({ members = {}, isLoading = false }) {
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const memberList = useMemo(() => getMemberList(members), [members]);
+  const filteredMembers = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return memberList;
+
+    return memberList.filter((member) => {
+      const searchable = [
+        member.name,
+        member.nickname,
+        member.email,
+        member.mastodonAccount
+      ].filter(Boolean).join(' ').toLowerCase();
+
+      return searchable.includes(query);
+    });
+  }, [memberList, searchQuery]);
+
+  const selectedParty = selectedMember ? getPartyPokemon(selectedMember) : [];
+  const selectedPartner = selectedMember ? getPartnerPokemon(selectedMember) : null;
+  const selectedInventory = selectedMember ? getVisibleInventory(selectedMember) : [];
+
+  return (
+    <div className="max-w-7xl mx-auto p-4 space-y-4">
+      <div className="members-toolbar rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 shadow-sm">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-800">플레이어</h2>
-          <p className="text-sm text-gray-500">{players.length}명</p>
+          <h2 className="flex items-center gap-2 text-xl font-bold text-gray-800">
+            <Users size={22} className="text-emerald-700" />
+            멤버
+          </h2>
+          <p className="text-sm text-gray-500">
+            {isLoading ? '회원 데이터를 불러오는 중입니다.' : `총 ${memberList.length}명`}
+          </p>
         </div>
-        <button className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 text-sm font-semibold flex items-center gap-1.5">
-          <Plus size={16} />
-          추가
-        </button>
+
+        <label className="relative w-full md:w-80">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden="true" />
+          <input
+            type="text"
+            placeholder="이름, 이메일, 계정 검색"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none"
+          />
+        </label>
+        </div>
       </div>
 
-      {/* 검색 */}
-      <input
-        type="text"
-        placeholder="이름 검색..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:outline-none"
-      />
+      {isLoading && (
+        <div className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
+          회원 목록을 불러오고 있습니다.
+        </div>
+      )}
 
-      {/* 그리드 */}
-      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-        {filteredPlayers.map(player => (
-          <div
-            key={player.id}
-            onClick={() => setSelectedPlayer(player)}
-            className="relative aspect-[3/4] rounded-lg overflow-hidden cursor-pointer group border border-gray-200 hover:border-blue-500 transition-all"
+      {!isLoading && filteredMembers.length === 0 && (
+        <div className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
+          표시할 회원이 없습니다.
+        </div>
+      )}
+
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
+        {filteredMembers.map((member) => (
+          <button
+            type="button"
+            key={member.id}
+            onClick={() => setSelectedMember(member)}
+            className="member-image-tile group relative aspect-square overflow-hidden rounded-xl border border-gray-200 bg-slate-100 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            title={member.name}
           >
-            <img 
-              src={player.imageUrl}
-              alt={player.name}
-              className="w-full h-full object-cover group-hover:brightness-75 transition-all"
-            />
-            {player.isLocked && (
-              <div className="absolute top-1.5 right-1.5 bg-red-600 text-white text-xs px-1.5 py-0.5 rounded font-semibold">
-                🔒
+            <MemberAvatar member={member} className="h-full w-full text-5xl" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-full bg-slate-950/78 px-2.5 py-2 text-left transition-transform duration-200 group-hover:translate-y-0 group-focus:translate-y-0">
+              <div className="truncate text-sm font-bold text-white">{member.name}</div>
+              <div className="mt-1">
+                <RoleBadge member={member} />
               </div>
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2.5">
-              <h3 className="text-white font-bold text-sm mb-0.5">{player.name}</h3>
-              <p className="text-white/90 text-xs">{player.age}세 • {player.height}cm</p>
             </div>
-          </div>
+          </button>
         ))}
       </div>
 
-      {/* 전체화면 모달 */}
-      {selectedPlayer && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => setSelectedPlayer(null)}>
-          <div className="bg-white rounded-lg w-full max-w-5xl h-[85vh] max-h-[800px] overflow-hidden flex" onClick={(e) => e.stopPropagation()}>
-            {/* 왼쪽: 사람 전신 이미지 */}
-            <div className="w-80 flex-shrink-0 bg-gradient-to-br from-blue-50 to-blue-100 flex flex-col">
-              <button 
-                onClick={() => setSelectedPlayer(null)} 
-                className="absolute top-3 left-3 bg-white/90 hover:bg-white rounded-full p-1.5 transition-colors z-10"
-              >
-                <X size={20} />
-              </button>
+      {selectedMember && createPortal((
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setSelectedMember(null)}>
+          <section className="flex max-h-[86vh] w-full max-w-5xl overflow-hidden rounded-lg bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            <aside className="flex w-80 flex-shrink-0 flex-col border-r-2 border-lime-200 bg-white/55">
+              <div className="relative flex-1 p-4">
+                <button
+                  type="button"
+                  onClick={() => setSelectedMember(null)}
+                  className="absolute left-3 top-3 z-10 rounded-full bg-white/90 p-1.5 text-gray-700 shadow hover:bg-white"
+                  aria-label="닫기"
+                >
+                  <X size={20} aria-hidden="true" />
+                </button>
+                <MemberAvatar member={selectedMember} className="h-full min-h-80 w-full rounded-lg text-8xl" />
+              </div>
 
-              {/* 헤더 정보 */}
-              <div className="p-3 bg-blue-600 text-white flex-shrink-0">
-                <div className="flex gap-1.5 mb-1.5 text-xs">
-                  <span className="bg-white/20 px-2 py-0.5 rounded font-semibold">ID:{selectedPlayer.id}</span>
-                  {selectedPlayer.isLocked && <span className="bg-red-500 px-2 py-0.5 rounded font-semibold">🔒</span>}
+              <div className="border-t bg-white p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <h2 className="min-w-0 flex-1 truncate text-lg font-bold text-gray-900">{selectedMember.name}</h2>
+                  <RoleBadge member={selectedMember} />
                 </div>
-                <h2 className="text-lg font-bold">{selectedPlayer.name}</h2>
-                <p className="text-xs text-blue-100">채희 (러너이름) • {selectedPlayer.age}세 • {selectedPlayer.height}cm</p>
+                <p className="truncate text-xs text-gray-500">{selectedMember.email || selectedMember.mastodonAccount || selectedMember.id}</p>
+              </div>
+            </aside>
+
+            <div className="flex-1 space-y-3 overflow-y-auto bg-gray-50 p-4">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <div className="rounded-lg border border-gray-200 bg-white p-3">
+                  <div className="text-xs text-gray-500">소지금</div>
+                  <div className="text-lg font-bold text-yellow-600">{(selectedMember.money || 0).toLocaleString()}원</div>
+                </div>
+                <div className="rounded-lg border border-gray-200 bg-white p-3">
+                  <div className="text-xs text-gray-500">탐험</div>
+                  <div className="text-lg font-bold text-purple-600">{selectedMember.dailyWalks ?? 0}/{selectedMember.maxDailyWalks ?? 0}회</div>
+                </div>
+                <div className="rounded-lg border border-gray-200 bg-white p-3">
+                  <div className="text-xs text-gray-500">포켓몬</div>
+                  <div className="text-lg font-bold text-blue-600">{(selectedMember.caughtPokemon || []).filter(Boolean).length}마리</div>
+                </div>
+                <div className="rounded-lg border border-gray-200 bg-white p-3">
+                  <div className="text-xs text-gray-500">아이템</div>
+                  <div className="text-lg font-bold text-emerald-600">{(selectedMember.inventory || []).filter(Boolean).length}개</div>
+                </div>
               </div>
 
-              {/* 전신 이미지 */}
-              <div className="flex-1 flex items-center justify-center p-3 min-h-0">
-                <img 
-                  src={selectedPlayer.imageUrl}
-                  alt={selectedPlayer.name}
-                  className="max-h-full max-w-full object-contain"
-                />
-              </div>
-
-              {/* 액션 버튼 */}
-              <div className="p-2 flex gap-2 bg-white border-t flex-shrink-0">
-                <button className="flex-1 flex items-center justify-center gap-1 bg-blue-50 text-blue-700 px-2 py-1.5 rounded text-xs font-semibold hover:bg-blue-100">
-                  <Edit2 size={12} />
-                  편집
-                </button>
-                <button className="flex-1 flex items-center justify-center gap-1 bg-red-50 text-red-700 px-2 py-1.5 rounded text-xs font-semibold hover:bg-red-100">
-                  <Trash2 size={12} />
-                  삭제
-                </button>
-              </div>
-            </div>
-
-            {/* 오른쪽: 포켓몬 데이터 */}
-            <div className="flex-1 overflow-y-auto bg-gray-50 p-3 space-y-2.5">
-              {/* 파트너 포켓몬 */}
-              <div className="bg-white rounded-lg border border-blue-200 p-2.5">
-                <h3 className="font-bold text-xs text-gray-800 mb-2 flex items-center gap-1.5">
-                  <span>파트너</span>
-                  <span className="text-xs text-red-600 bg-red-50 px-1.5 py-0.5 rounded">포켓몬 이름</span>
+              <section className="rounded-lg border border-blue-200 bg-white p-3">
+                <h3 className="mb-2 flex items-center gap-2 text-sm font-bold text-gray-800">
+                  <Shield size={16} aria-hidden="true" />
+                  파트너
                 </h3>
-                {selectedPlayer.partner && (
-                  <div className="flex items-center gap-2.5 bg-gradient-to-r from-blue-50 to-purple-50 rounded p-2">
-                    <div className="w-16 h-16 bg-white rounded border border-blue-300 flex items-center justify-center flex-shrink-0">
-                      <img 
-                        src={selectedPlayer.partner.sprite} 
-                        alt={selectedPlayer.partner.name}
-                        className="w-14 h-14"
+                {selectedPartner ? (
+                  <div className="flex items-center gap-3 rounded-lg bg-blue-50 p-3">
+                    <div className="flex h-28 w-28 flex-shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-white p-2">
+                      <img
+                        src={getPokemonImage(selectedPartner)}
+                        alt={getPokemonName(selectedPartner)}
+                        className="member-pokemon-modal-sprite object-contain pokemon-sprite"
                         style={{ imageRendering: 'pixelated' }}
                       />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-bold text-gray-800 truncate">{selectedPlayer.partner.name}</h4>
-                      <p className="text-xs text-gray-600">Lv.{selectedPlayer.partner.level}</p>
+                    <div className="min-w-0">
+                      <h4 className="truncate text-base font-bold text-gray-800">{getPokemonName(selectedPartner)}</h4>
+                      <p className="text-sm text-gray-600">Lv.{selectedPartner.level || 1}</p>
                     </div>
                   </div>
+                ) : (
+                  <p className="text-sm text-gray-500">파트너 포켓몬이 없습니다.</p>
                 )}
-              </div>
+              </section>
 
-              {/* 엔트리 포켓몬 */}
-              <div className="bg-white rounded-lg border border-gray-200 p-2.5">
-                <h3 className="font-bold text-xs text-gray-800 mb-2">엔트리</h3>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {selectedPlayer.entry?.map((poke, i) => (
-                    <div key={i} className="bg-gray-50 rounded border border-gray-200 p-1.5">
-                      <div className="w-full h-14 bg-white rounded flex items-center justify-center mb-1">
-                        <img 
-                          src={poke.sprite} 
-                          alt={poke.name}
-                          className="w-12 h-12"
-                          style={{ imageRendering: 'pixelated' }}
-                        />
+              <section className="rounded-lg border border-gray-200 bg-white p-3">
+                <h3 className="mb-2 text-sm font-bold text-gray-800">엔트리</h3>
+                {selectedParty.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {selectedParty.map((pokemon, index) => (
+                      <div key={pokemon.uniqueId || pokemon.id || index} className="rounded-lg border border-gray-200 bg-gray-50 p-2">
+                        <div className="mb-1 flex h-28 items-center justify-center rounded bg-white">
+                          <img
+                            src={getPokemonImage(pokemon)}
+                            alt={getPokemonName(pokemon)}
+                            className="member-pokemon-modal-sprite object-contain pokemon-sprite"
+                            style={{ imageRendering: 'pixelated' }}
+                          />
+                        </div>
+                        <div className="truncate text-center text-xs font-semibold text-gray-800">{getPokemonName(pokemon)}</div>
+                        <div className="text-center text-xs text-gray-500">Lv.{pokemon.level || 1}</div>
                       </div>
-                      <div className="text-center">
-                        <div className="font-semibold text-xs text-gray-800 truncate">{poke.name}</div>
-                        <div className="text-xs text-gray-500">Lv.{poke.level}</div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">등록된 포켓몬이 없습니다.</p>
+                )}
+              </section>
+
+              <section className="rounded-lg border border-gray-200 bg-white p-3">
+                <h3 className="mb-2 text-sm font-bold text-gray-800">보유 아이템</h3>
+                {selectedInventory.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                    {selectedInventory.map((item, index) => (
+                      <div key={item.itemId || item.id || index} className="rounded-lg border border-yellow-200 bg-yellow-50 p-2 text-center">
+                        <div className="mx-auto mb-1 h-10 w-10">
+                          <img
+                            src={item.imageUrl || item.spriteUrl || POKEMON_PLACEHOLDER}
+                            alt={item.name || '아이템'}
+                            className="h-full w-full object-contain"
+                            style={{ imageRendering: 'pixelated' }}
+                          />
+                        </div>
+                        <div className="truncate text-xs font-semibold text-gray-700">{item.name || '아이템'}</div>
+                        <div className="text-xs text-gray-500">x{item.count ?? 1}</div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* 뱃지 or 컨테스트 리본 */}
-              <div className="bg-white rounded-lg border border-gray-200 p-2.5">
-                <h3 className="font-bold text-xs text-gray-800 mb-2">뱃지 or 컨테스트 리본</h3>
-                <div className="grid grid-cols-6 gap-1.5">
-                  {selectedPlayer.items?.map((item, i) => (
-                    <div key={i} className="w-full h-12 bg-gradient-to-br from-yellow-50 to-orange-50 rounded border border-yellow-300 flex items-center justify-center">
-                      <img 
-                        src={item.imageUrl} 
-                        alt={item.name}
-                        className="w-9 h-9"
-                        style={{ imageRendering: 'pixelated' }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* 노력치 */}
-              <div className="bg-white rounded-lg border border-gray-200 p-2.5">
-                <h3 className="font-bold text-xs text-gray-800 mb-2">노력치</h3>
-                <div className="flex flex-wrap gap-1">
-                  {selectedPlayer.badges.map((badge, i) => (
-                    <span key={i} className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs font-mono">
-                      {badge}
-                    </span>
-                  ))}
-                </div>
-              </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">보유 아이템이 없습니다.</p>
+                )}
+              </section>
             </div>
-          </div>
+          </section>
         </div>
-      )}
+      ), document.body)}
     </div>
   );
 }

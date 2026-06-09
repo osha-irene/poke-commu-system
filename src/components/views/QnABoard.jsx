@@ -87,14 +87,14 @@ export default function QnABoard({ currentUser, posts = [], onCreatePost, onDele
   return (
     <div className="max-w-6xl mx-auto">
       {/* 헤더 */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg p-6 shadow-xl mb-6">
+      <div className="rounded-lg border-2 border-lime-300 bg-white/55 p-6 shadow-sm mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-              <MessageSquare size={32} />
+            <h1 className="text-3xl font-bold mb-2 flex items-center gap-3 text-green-950">
+              <MessageSquare size={32} className="text-lime-700" />
               Q&A 게시판
             </h1>
-            <p className="text-indigo-100">총괄에게 궁금한 점을 물어보세요!</p>
+            <p className="text-green-800">총괄에게 궁금한 점을 물어보세요!</p>
           </div>
           <button
             onClick={() => setShowWriteModal(true)}
@@ -172,8 +172,8 @@ export default function QnABoard({ currentUser, posts = [], onCreatePost, onDele
             className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6">
-              <h2 className="text-2xl font-bold">새 글쓰기</h2>
+            <div className="border-b-2 border-lime-300 bg-white/95 p-6">
+              <h2 className="text-2xl font-bold text-green-950">새 글쓰기</h2>
             </div>
 
             <div className="p-6 space-y-4">

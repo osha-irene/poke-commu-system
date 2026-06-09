@@ -3,7 +3,7 @@
 // ============================================
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Store, Lock, Clock } from 'lucide-react';
+import { Plus, Trash2, Store, Save, CheckCircle } from 'lucide-react';
 import { DAYS, TYPE_STYLES } from '../../utils/shopConstants';
 import { getFilteredShopItems } from '../../utils/shopHelpers';
 
@@ -11,31 +11,63 @@ export default function CurrentShopTab({
   shopData, 
   allItems, 
   onUpdateShop, 
-  onTogglePersistent,
   onOpenAddModal 
 }) {
   const [filterDay, setFilterDay] = useState('all');
+  const [draftShopData, setDraftShopData] = useState(() => JSON.parse(JSON.stringify(shopData || {})));
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState('');
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) {
+      setDraftShopData(JSON.parse(JSON.stringify(shopData || {})));
+    }
+  }, [shopData, hasUnsavedChanges]);
 
   // 디버그 로그
   useEffect(() => {
     console.log('===== CurrentShopTab 디버그 =====');
-    console.log('shopData:', shopData);
-    console.log('shopData.rareItemConfig:', shopData.rareItemConfig);
-    console.log('shopData.rareItemConfig?.enabled:', shopData.rareItemConfig?.enabled);
-    console.log('shopData.rareDailyItem:', shopData.rareDailyItem);
-    console.log('shopData.rareDailyItem?.itemId:', shopData.rareDailyItem?.itemId);
-    console.log('shopData.gachaBall:', shopData.gachaBall);
-    console.log('shopData.gachaBall?.enabled:', shopData.gachaBall?.enabled);
-    console.log('shopData.gachaBall?.balls:', shopData.gachaBall?.balls);
+    console.log('draftShopData:', draftShopData);
+    console.log('draftShopData.rareItemConfig:', draftShopData.rareItemConfig);
+    console.log('draftShopData.rareItemConfig?.enabled:', draftShopData.rareItemConfig?.enabled);
+    console.log('draftShopData.rareDailyItem:', draftShopData.rareDailyItem);
+    console.log('draftShopData.rareDailyItem?.itemId:', draftShopData.rareDailyItem?.itemId);
+    console.log('draftShopData.gachaBall:', draftShopData.gachaBall);
+    console.log('draftShopData.gachaBall?.enabled:', draftShopData.gachaBall?.enabled);
+    console.log('draftShopData.gachaBall?.balls:', draftShopData.gachaBall?.balls);
     
-    const allShopItems = getFilteredShopItems(shopData, filterDay);
+    const allShopItems = getFilteredShopItems(draftShopData, filterDay);
     console.log('getFilteredShopItems 결과:', allShopItems);
     console.log('희귀템 포함 여부:', allShopItems.some(item => item.type === 'rare'));
     console.log('===========================');
-  }, [shopData, filterDay]);
+  }, [draftShopData, filterDay]);
 
-  const handleRemoveItem = async (itemId, type, day) => {
-    const updatedShopData = JSON.parse(JSON.stringify(shopData));
+  const markDirty = (nextShopData) => {
+    setDraftShopData(nextShopData);
+    setHasUnsavedChanges(true);
+    setSaveStatus('');
+  };
+
+  const handleSaveChanges = async () => {
+    if (!hasUnsavedChanges || isSaving) return;
+
+    try {
+      setIsSaving(true);
+      await onUpdateShop(draftShopData);
+      setHasUnsavedChanges(false);
+      setSaveStatus('저장 완료');
+    } catch (error) {
+      console.error('상점 변경사항 저장 실패:', error);
+      setSaveStatus('저장 실패');
+      alert('상점 변경사항 저장 중 오류가 발생했습니다.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRemoveItem = (itemId, type, day) => {
+    const updatedShopData = JSON.parse(JSON.stringify(draftShopData));
     
     if (type === 'daily') {
       if (!updatedShopData.dailyItems) updatedShopData.dailyItems = {};
@@ -50,49 +82,68 @@ export default function CurrentShopTab({
       updatedShopData.rareDailyItem = { itemId: null, price: 0, lastRefresh: null };
     }
     
-    try {
-      await onUpdateShop(updatedShopData);
-    } catch (error) {
-      console.error('아이템 제거 실패:', error);
-    }
+    markDirty(updatedShopData);
   };
 
-  const handleUpdateItem = async (itemId, type, day, field, value) => {
-    const updatedShopData = JSON.parse(JSON.stringify(shopData));
+  const handleUpdateItem = (itemId, type, day, field, value) => {
+    const updatedShopData = JSON.parse(JSON.stringify(draftShopData));
+    const nextValue = field === 'isPersistent' ? Boolean(value) : parseInt(value) || 0;
     
     if (type === 'daily') {
       if (!updatedShopData.dailyItems) updatedShopData.dailyItems = {};
       updatedShopData.dailyItems[day] = (updatedShopData.dailyItems[day] || []).map(i => 
-        i.itemId === itemId ? { ...i, [field]: parseInt(value) || 0 } : i
+        i.itemId === itemId ? { ...i, [field]: nextValue } : i
       );
     } else if (type === 'permanent') {
       updatedShopData.permanentItems = (updatedShopData.permanentItems || []).map(i => 
-        i.itemId === itemId ? { ...i, [field]: parseInt(value) || 0 } : i
+        i.itemId === itemId ? { ...i, [field]: nextValue } : i
       );
     } else if (type === 'rare') {
       updatedShopData.rareDailyItem = {
         ...updatedShopData.rareDailyItem,
-        [field]: parseInt(value) || 0
+        [field]: nextValue
       };
     }
     
-    try {
-      await onUpdateShop(updatedShopData);
-    } catch (error) {
-      console.error('아이템 수정 실패:', error);
-    }
+    markDirty(updatedShopData);
   };
 
-  const filteredItems = getFilteredShopItems(shopData, filterDay);
+  const filteredItems = getFilteredShopItems(draftShopData, filterDay);
   
   console.log('렌더링 시점 - filteredItems:', filteredItems);
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-        <Store size={24} />
-        현재 상점 상품
-      </h3>
+      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+          <Store size={24} />
+          현재 상점 상품
+        </h3>
+        <div className="flex items-center gap-3">
+          {hasUnsavedChanges && (
+            <span className="text-sm font-semibold text-amber-700">저장되지 않은 변경사항</span>
+          )}
+          {!hasUnsavedChanges && saveStatus === '저장 완료' && (
+            <span className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-700">
+              <CheckCircle size={16} />
+              저장 완료
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={handleSaveChanges}
+            disabled={!hasUnsavedChanges || isSaving}
+            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
+              hasUnsavedChanges && !isSaving
+                ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            <Save size={16} />
+            {isSaving ? '저장 중...' : '변경사항 저장'}
+          </button>
+        </div>
+      </div>
       
       <div className="flex items-center justify-between mb-6">
         <div className="flex gap-2 overflow-x-auto">
@@ -165,24 +216,10 @@ export default function CurrentShopTab({
                     ? DAYS.find(d => d.id === shopItem.day)?.name 
                     : shopItem.type === 'permanent' 
                       ? '상시' 
-                      : '오늘의 희귀'}
+                      : '한정'}
                 </span>
               </div>
 
-              {shopItem.type === 'daily' && (
-                <button
-                  onClick={() => onTogglePersistent(shopItem.day, shopItem.itemId)}
-                  className={`absolute top-2 right-10 px-2 py-1 rounded text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity z-10 flex items-center gap-1 ${
-                    shopItem.isPersistent 
-                      ? 'bg-green-500 text-white' 
-                      : 'bg-gray-400 text-white'
-                  }`}
-                  title={shopItem.isPersistent ? '주간 유지 ON' : '일회성 아이템'}
-                >
-                  {shopItem.isPersistent ? <Lock size={12} /> : <Clock size={12} />}
-                </button>
-              )}
-              
               <button
                 onClick={() => handleRemoveItem(shopItem.itemId, shopItem.type, shopItem.day)}
                 className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
@@ -205,7 +242,7 @@ export default function CurrentShopTab({
                   <div className="font-bold text-sm text-gray-800 text-center">
                     {item.name}
                   </div>
-                  
+
                   <div className="flex items-center justify-center gap-3">
                     <div className="flex items-center gap-1">
                       <span className="text-xs text-gray-600 whitespace-nowrap">가격</span>

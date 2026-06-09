@@ -75,6 +75,29 @@ export const useRecipes = (currentUser, updateCurrentUser) => {
     }
   };
 
+  // 레시피 수정 (관리자)
+  const updateRecipe = async (recipeId, recipeData) => {
+    if (!currentUser?.isAdmin) return false;
+
+    const updatedRecipes = recipes.map((recipe) => (
+      recipe.id === recipeId
+        ? { ...recipe, ...recipeData, id: recipeId, updatedAt: new Date().toISOString() }
+        : recipe
+    ));
+    setRecipes(updatedRecipes);
+
+    try {
+      const recipesRef = ref(database, 'gameData/recipes');
+      await set(recipesRef, updatedRecipes);
+      alert(`✅ 레시피 "${recipeData.name}"이(가) 수정되었습니다!`);
+      return true;
+    } catch (error) {
+      console.error('레시피 수정 실패:', error);
+      alert('레시피 수정 중 오류가 발생했습니다.');
+      return false;
+    }
+  };
+
   // 레시피 삭제 (관리자)
   const deleteRecipe = async (recipeId) => {
     if (!currentUser?.isAdmin) return false;
@@ -210,6 +233,7 @@ export const useRecipes = (currentUser, updateCurrentUser) => {
     recipes,
     discoveredRecipes: discoveredRecipes[currentUser?.id] || [],
     createRecipe,
+    updateRecipe,
     deleteRecipe,
     discoverRecipe,
     cookRecipe,

@@ -10,7 +10,6 @@ function MemberDetailPanel({ member, onClose }) {
     currentUser: trainer,
     allItems,
     allPokemonMaster,
-    regions,
     allMoves,
     pokemonLearnsets,
     setMembers,
@@ -19,10 +18,10 @@ function MemberDetailPanel({ member, onClose }) {
     givePokemonToMember,
     editMemberPokemon,
     deleteMemberPokemon, // ⭐ 추가
+    deleteMember,
     resetMemberWalkCount,
     toggleAdminStatus,
     updateMemberMoney,
-    updateMemberRegionAccess,
   } = useGame();
 
   const [selectedTab, setSelectedTab] = useState('info');
@@ -70,18 +69,31 @@ function MemberDetailPanel({ member, onClose }) {
     }
   };
 
+  const handleDeleteMember = async (memberId, memberName) => {
+    if (!trainer?.isSuperAdmin) return;
+    if (!window.confirm(`${memberName}님을 삭제하시겠습니까?\n\n회원 데이터가 삭제되며 이 작업은 되돌릴 수 없습니다.`)) {
+      return;
+    }
+
+    const success = await deleteMember?.(memberId);
+    if (success) {
+      alert(`${memberName}님이 삭제되었습니다.`);
+      onClose?.();
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col">
         {/* 헤더 */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-4 rounded-t-xl flex justify-between items-center">
+        <div className="border-b-2 border-lime-300 bg-white/95 px-6 py-4 rounded-t-xl flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold">{member.name}</h2>
-            <p className="text-indigo-100 text-sm">ID: {member.id}</p>
+            <h2 className="text-2xl font-bold text-green-950">{member.name}</h2>
+            <p className="text-green-800 text-sm">ID: {member.id}</p>
           </div>
           <button
             onClick={onClose}
-            className="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-colors"
+            className="text-green-950 hover:bg-lime-100/70 p-2 rounded-lg transition-colors"
           >
             ✕
           </button>
@@ -127,13 +139,12 @@ function MemberDetailPanel({ member, onClose }) {
             <MemberInfoTab
               member={member}
               trainer={trainer}
-              regions={regions}
               onResetWalk={handleResetWalk}
               onToggleAdmin={handleToggleAdmin}
               onUpdateMoney={updateMemberMoney}
-              onUpdateRegionAccess={updateMemberRegionAccess}
               onUpdateWalkCount={handleUpdateWalkCount}
               onUpdateMaxWalkCount={handleUpdateMaxWalkCount}
+              onDeleteMember={handleDeleteMember}
             />
           )}
 

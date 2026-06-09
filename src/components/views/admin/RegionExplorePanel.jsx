@@ -1,9 +1,8 @@
 // src/components/views/admin/RegionExplorePanel.jsx
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ref, get, set } from 'firebase/database';
 import { database } from '../../../firebase';
 import { MapPin } from 'lucide-react';
-import TownManagementPanel from './regions/TownManagementPanel';
 import RegionManagementPanel from './regions/RegionManagementPanel';
 
 export default function RegionExplorePanel({ 
@@ -20,7 +19,19 @@ export default function RegionExplorePanel({
 }) {
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [editMode, setEditMode] = useState(null);
-  const [viewMode, setViewMode] = useState('regions');
+  const selectedRegionId = selectedRegion?.id;
+
+  useEffect(() => {
+    if (!selectedRegionId) return;
+    const latestRegion = regions.find((region) => region.id === selectedRegionId);
+    if (latestRegion) {
+      setSelectedRegion({
+        ...latestRegion,
+        pokemons: Array.isArray(latestRegion.pokemons) ? latestRegion.pokemons : [],
+        allowNationalPokedex: latestRegion.allowNationalPokedex !== undefined ? latestRegion.allowNationalPokedex : false
+      });
+    }
+  }, [regions, selectedRegionId]);
 
   const handleRegionClick = (region) => {
   console.log('🔍 선택한 지역 원본:', region);
@@ -94,6 +105,8 @@ export default function RegionExplorePanel({
     setRegions(updatedRegions);
     
     try {
+      await set(ref(database, 'gameData/regions'), updatedRegions);
+
       const configRef = ref(database, 'gameData/config');
       const snapshot = await get(configRef);
       const currentConfig = snapshot.val() || {};
@@ -123,56 +136,27 @@ export default function RegionExplorePanel({
             </p>
           </div>
 
-          <div className="flex gap-2">
-            <button
-              onClick={() => setViewMode('regions')}
-              className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-                viewMode === 'regions'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              지역별 관리
-            </button>
-            <button
-              onClick={() => setViewMode('towns')}
-              className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-                viewMode === 'towns'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              마을별 관리
-            </button>
-          </div>
         </div>
       </div>
 
-      {viewMode === 'towns' ? (
-        <TownManagementPanel 
-          towns={towns}
-          regions={regions}
-          onToggleVisibility={handleToggleTownVisibility}
-          onCreateTown={onCreateTown}      
-          onUpdateTown={onUpdateTown}   
-          onDeleteTown={onDeleteTown}  
-        />
-      ) : (
-        <RegionManagementPanel
-          regions={regions}
-            towns={towns}
-          groupedRegions={groupedRegions}
-          selectedRegion={selectedRegion}
-          editMode={editMode}
-          allItems={allItems}
-          onRegionClick={handleRegionClick}
-          onUpdateRegion={onUpdateRegion}
-          onUpdateRegionLootConfig={onUpdateRegionLootConfig}
-          onAddRegion={onAddRegion}
-          onDeleteRegion={onDeleteRegion}
-          setEditMode={setEditMode}
-        />
-      )}
+      <RegionManagementPanel
+        regions={regions}
+        towns={towns}
+        groupedRegions={groupedRegions}
+        selectedRegion={selectedRegion}
+        editMode={editMode}
+        allItems={allItems}
+        onRegionClick={handleRegionClick}
+        onUpdateRegion={onUpdateRegion}
+        onUpdateRegionLootConfig={onUpdateRegionLootConfig}
+        onAddRegion={onAddRegion}
+        onDeleteRegion={onDeleteRegion}
+        onToggleTownVisibility={handleToggleTownVisibility}
+        onCreateTown={onCreateTown}
+        onUpdateTown={onUpdateTown}
+        onDeleteTown={onDeleteTown}
+        setEditMode={setEditMode}
+      />
     </div>
   );
 }

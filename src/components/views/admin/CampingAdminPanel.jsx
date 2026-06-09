@@ -187,12 +187,12 @@ export default function CampingAdminPanel({
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg p-6 shadow-xl">
+      <div className="rounded-lg border-2 border-lime-300 bg-white/55 p-6 shadow-sm">
         <div className="flex items-center gap-4">
-          <Tent size={48} />
+          <Tent size={48} className="text-lime-700" />
           <div>
-            <h1 className="text-3xl font-bold mb-2">캠핑 관리</h1>
-            <p className="text-green-100">진행 중인 캠핑 세션을 관리합니다</p>
+            <h1 className="text-3xl font-bold mb-2 text-green-950">캠핑 관리</h1>
+            <p className="text-green-800">진행 중인 캠핑 세션을 관리합니다</p>
           </div>
         </div>
       </div>

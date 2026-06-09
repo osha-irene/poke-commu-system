@@ -178,12 +178,12 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
   return (
     <div className="space-y-6">
       {/* 헤더 */}
-      <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg p-6 shadow-lg">
+      <div className="rounded-lg border-2 border-lime-300 bg-white/55 p-6 shadow-sm">
         <div className="flex items-center gap-3">
-          <Gift size={32} />
+          <Gift size={32} className="text-lime-700" />
           <div>
-            <h3 className="text-2xl font-bold">랜덤박스 관리</h3>
-            <p className="text-purple-100 text-sm mt-1">
+            <h3 className="text-2xl font-bold text-green-950">랜덤박스 관리</h3>
+            <p className="text-green-800 text-sm mt-1">
               각 랜덤박스의 상품 구성과 확률을 설정하세요
             </p>
           </div>
@@ -199,24 +199,24 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
         return (
           <div 
             key={box.id} 
-            className={`bg-white rounded-lg border-2 overflow-hidden transition-all ${
-              box.enabled ? 'border-green-300 shadow-lg' : 'border-gray-200 opacity-60'
+            className={`rounded-lg border-2 bg-white/45 overflow-hidden transition-all ${
+              box.enabled ? 'border-lime-300 shadow-sm' : 'border-gray-200 opacity-60'
             }`}
           >
             {/* 박스 헤더 */}
-            <div className={`p-4 flex items-center justify-between ${
-              box.enabled ? 'bg-gradient-to-r from-green-50 to-blue-50' : 'bg-gray-50'
+            <div className={`p-4 flex items-center justify-between border-b ${
+              box.enabled ? 'border-lime-200 bg-white/40' : 'border-gray-200 bg-gray-50/70'
             }`}>
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => setExpandedBox(isExpanded ? null : box.id)}
-                  className="p-2 hover:bg-white/50 rounded-lg transition-colors"
+                  className="p-2 hover:bg-lime-100/70 rounded-lg transition-colors"
                   aria-label={isExpanded ? '접기' : '펼치기'}
                 >
                   {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                 </button>
 
-                <Gift size={28} className={box.enabled ? 'text-purple-600' : 'text-gray-400'} />
+                <Gift size={28} className={box.enabled ? 'text-lime-700' : 'text-gray-400'} />
                 
                 <div>
                   <input
@@ -358,9 +358,9 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
 
                 {/* 확률 요약 */}
                 {boxItems.length > 0 && totalWeight > 0 && (
-                  <div className="mt-4 p-4 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border-2 border-blue-200">
+                  <div className="mt-4 p-4 bg-white/40 rounded-lg border-2 border-lime-200">
                     <div className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
-                      <Gift size={16} className="text-blue-600" />
+                      <Gift size={16} className="text-lime-700" />
                       실시간 확률 분포
                     </div>
                     

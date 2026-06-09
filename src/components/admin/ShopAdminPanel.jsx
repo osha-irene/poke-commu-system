@@ -110,7 +110,7 @@ export default function ShopAdminPanel({
             }`}
           >
             <RefreshCw size={20} />
-            초기 재고 템플릿
+            요일별 아이템
           </button>
           
           <button
@@ -118,7 +118,7 @@ export default function ShopAdminPanel({
             className="px-6 py-3 rounded-lg font-bold whitespace-nowrap transition-colors flex items-center gap-2 bg-purple-600 text-white hover:bg-purple-700"
           >
             <Star size={20} />
-            희귀템 풀
+            한정 아이템
           </button>
           
           <button
@@ -131,7 +131,7 @@ export default function ShopAdminPanel({
           
           <button
             onClick={() => setShowRandomBoxPanel(true)}
-            className="px-6 py-3 rounded-lg font-bold whitespace-nowrap transition-colors flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700"
+            className="px-6 py-3 rounded-lg font-bold whitespace-nowrap transition-colors flex items-center gap-2 border-2 border-lime-300 bg-white/55 text-green-950 hover:bg-lime-100/70"
           >
             <Gift size={20} />
             랜덤박스

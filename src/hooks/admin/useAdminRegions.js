@@ -1,5 +1,5 @@
 // src/hooks/admin/useAdminRegions.js
-// 지역 및 마을 관리 전용 훅
+// 吏??諛?留덉쓣 愿由??꾩슜 ??
 
 import { ref, get, set } from 'firebase/database';
 import { database } from '../../firebase';
@@ -12,121 +12,127 @@ export const useAdminRegions = (
   allPokemonMaster,
   allPokemon
 ) => {
+  const persistRegions = async (updatedRegions, extraConfig = {}) => {
+    await set(ref(database, 'gameData/regions'), updatedRegions);
 
-  // ========== 지역 추가 ==========
+    const configRef = ref(database, 'gameData/config');
+    const snapshot = await get(configRef);
+    const currentConfig = snapshot.val() || {};
+
+    await set(configRef, {
+      ...currentConfig,
+      ...extraConfig,
+      regions: updatedRegions
+    });
+  };
+
+  // ========== 吏??異붽? ==========
   const addRegion = async (newRegion) => {
     if (!currentUser?.isAdmin) return;
-    
-    setRegions(prev => [...prev, newRegion]);
+
+    const updatedRegions = [...(Array.isArray(regions) ? regions : []), newRegion];
+    setRegions(updatedRegions);
     
     try {
-      const configRef = ref(database, 'gameData/config');
-      const snapshot = await get(configRef);
-      const currentConfig = snapshot.val() || {};
-      
-      const updatedRegions = [...(currentConfig.regions || []), newRegion];
-      
-      await set(configRef, {
-        ...currentConfig,
-        regions: updatedRegions
-      });
-      
-      console.log('✅ 지역 추가 완료:', newRegion.id);
+      await persistRegions(updatedRegions);
+      console.log('??吏??異붽? ?꾨즺:', newRegion.id);
     } catch (error) {
-      console.error('❌ 지역 추가 실패:', error);
+      console.error('??吏??異붽? ?ㅽ뙣:', error);
     }
   };
 
-  // ========== 지역 삭제 ==========
+  // ========== 吏????젣 ==========
   const deleteRegion = async (regionId) => {
     if (!currentUser?.isAdmin) return;
-    
-    setRegions(prev => prev.filter(r => r.id !== regionId));
+
+    const updatedRegions = (Array.isArray(regions) ? regions : []).filter(r => r.id !== regionId);
+    setRegions(updatedRegions);
     
     try {
-      const configRef = ref(database, 'gameData/config');
-      const snapshot = await get(configRef);
-      const currentConfig = snapshot.val() || {};
-      
-      const updatedRegions = (currentConfig.regions || []).filter(r => r.id !== regionId);
-      
-      await set(configRef, {
-        ...currentConfig,
-        regions: updatedRegions
-      });
-      
-      console.log('✅ 지역 삭제 완료:', regionId);
+      await persistRegions(updatedRegions);
+      console.log('??吏????젣 ?꾨즺:', regionId);
     } catch (error) {
-      console.error('❌ 지역 삭제 실패:', error);
+      console.error('??吏????젣 ?ㅽ뙣:', error);
     }
   };
 
-  // ========== 지역 포켓몬 업데이트 ==========
-  const updateRegionPokemon = async (regionId, updatedData) => {
+  // ========== 吏???ъ폆紐??낅뜲?댄듃 ==========
+  const updateRegionPokemon = async (regionId, updatedData, legacyRates, legacyEncounterRate, legacyMinLevel, legacyMaxLevel) => {
     if (!currentUser?.isAdmin) return;
+
+    const existingRegion = regions.find(region => region.id === regionId) || {};
+    const normalizedData = Array.isArray(updatedData)
+      ? {
+          ...existingRegion,
+          pokemons: updatedData,
+          pokemonRates: legacyRates || {},
+          encounterRate: legacyEncounterRate,
+          minLevel: legacyMinLevel,
+          maxLevel: legacyMaxLevel
+        }
+      : {
+          ...existingRegion,
+          ...(updatedData || {})
+        };
     
     const updateObj = {
-      pokemons: Array.isArray(updatedData.pokemons) 
-        ? updatedData.pokemons 
+      pokemons: Array.isArray(normalizedData.pokemons) 
+        ? normalizedData.pokemons 
         : [],
-      pokemonRates: updatedData.pokemonRates || {},
-      encounterRate: updatedData.encounterRate !== undefined 
-        ? updatedData.encounterRate 
+      pokemonRates: normalizedData.pokemonRates || {},
+      encounterRate: normalizedData.encounterRate !== undefined 
+        ? normalizedData.encounterRate 
         : 0.5,
-      minLevel: updatedData.minLevel || 5,
-      maxLevel: updatedData.maxLevel || 20,
-      shinyRate: updatedData.shinyRate || 4096,
-      allowNationalPokedex: updatedData.allowNationalPokedex !== undefined 
-        ? updatedData.allowNationalPokedex 
+      minLevel: normalizedData.minLevel || 5,
+      maxLevel: normalizedData.maxLevel || 20,
+      maxCatchRate: normalizedData.maxCatchRate !== undefined ? normalizedData.maxCatchRate : 1,
+      shinyRate: normalizedData.shinyRate || 4096,
+      allowNationalPokedex: normalizedData.allowNationalPokedex !== undefined 
+        ? normalizedData.allowNationalPokedex 
         : false,
-      groupId: updatedData.groupId !== undefined ? updatedData.groupId : null,
-      groupName: updatedData.groupName !== undefined ? updatedData.groupName : null,
-      areaName: updatedData.areaName !== undefined ? updatedData.areaName : null,
-      groupVisible: updatedData.groupVisible !== undefined ? updatedData.groupVisible : true,
-      isDefaultTown: updatedData.isDefaultTown !== undefined ? updatedData.isDefaultTown : false,
-      name: updatedData.name || updatedData.name
+      groupId: normalizedData.groupId !== undefined ? normalizedData.groupId : null,
+      groupName: normalizedData.groupName !== undefined ? normalizedData.groupName : null,
+      areaName: normalizedData.areaName !== undefined ? normalizedData.areaName : null,
+      groupVisible: normalizedData.groupVisible !== undefined ? normalizedData.groupVisible : true,
+      isDefaultTown: normalizedData.isDefaultTown !== undefined ? normalizedData.isDefaultTown : false,
+      name: normalizedData.name,
+      description: normalizedData.description !== undefined ? normalizedData.description : '',
+      x: normalizedData.x !== undefined ? normalizedData.x : 50,
+      y: normalizedData.y !== undefined ? normalizedData.y : 50,
+      color: normalizedData.color || '#87CEEB',
+      places: Array.isArray(normalizedData.places) ? normalizedData.places : []
     };
     
-    setRegions(prev => prev.map(region => 
+    const updatedRegions = (Array.isArray(regions) ? regions : []).map(region => 
       region.id === regionId 
         ? { ...region, ...updateObj } 
         : region
-    ));
+    );
+
+    setRegions(updatedRegions);
     
     try {
-      const configRef = ref(database, 'gameData/config');
-      const snapshot = await get(configRef);
-      const currentConfig = snapshot.val() || {};
-      
-      const updatedRegions = (currentConfig.regions || []).map(r =>
-        r.id === regionId ? { ...r, ...updateObj } : r
-      );
-      
-      await set(configRef, {
-        ...currentConfig,
-        regions: updatedRegions
-      });
-      
-      console.log('✅ 지역 업데이트 완료:', regionId);
+      await persistRegions(updatedRegions);
+      console.log('??吏???낅뜲?댄듃 ?꾨즺:', regionId);
     } catch (error) {
-      console.error('❌ 지역 업데이트 실패:', error);
+      console.error('??吏???낅뜲?댄듃 ?ㅽ뙣:', error);
     }
   };
 
-  // ========== 마을 생성 ==========
+  // ========== 留덉쓣 ?앹꽦 ==========
   const createTown = async (townData) => {
     if (!currentUser?.isAdmin) return;
     
     let updatedRegions = Array.isArray(regions) ? [...regions] : [];
     
-    // 기본 마을 설정 시 기존 기본 마을 해제
+    // 湲곕낯 留덉쓣 ?ㅼ젙 ??湲곗〈 湲곕낯 留덉쓣 ?댁젣
     if (townData.isDefaultTown) {
       updatedRegions = updatedRegions.map(r => 
         r.isDefaultTown ? { ...r, isDefaultTown: false } : r
       );
     }
     
-    // 마을 메타데이터 지역 생성
+    // 留덉쓣 硫뷀??곗씠??吏???앹꽦
     const townMetaRegion = {
       id: `town_meta_${townData.groupId}`,
       name: `[마을] ${townData.groupName}`,
@@ -142,45 +148,43 @@ export const useAdminRegions = (
       encounterRate: 0,
       minLevel: 1,
       maxLevel: 1,
-      description: '마을 정보 (탐험 불가)'
+      description: '마을 정보 (탐험 불가)',
+      places: []
     };
     
     updatedRegions.push(townMetaRegion);
     setRegions(updatedRegions);
     
     try {
-      const configRef = ref(database, 'gameData/config');
-      const snapshot = await get(configRef);
-      const currentConfig = snapshot.val() || {};
+      await persistRegions(updatedRegions);
       
-      await set(configRef, {
-        ...currentConfig,
-        regions: updatedRegions
-      });
-      
-      // 마을 정보를 towns 배열에도 저장
+      // 留덉쓣 ?뺣낫瑜?towns 諛곗뿴?먮룄 ???
       const townsRef = ref(database, 'gameData/towns');
       const townsSnapshot = await get(townsRef);
       const currentTowns = townsSnapshot.exists() ? townsSnapshot.val() : [];
       
-      const newTowns = [...currentTowns, townData];
+      const townList = Array.isArray(currentTowns) ? currentTowns : [];
+      const newTowns = [
+        ...townList.filter(town => town.groupId !== townData.groupId),
+        townData
+      ];
       await set(townsRef, newTowns);
       
-      console.log('✅ 마을 생성 완료:', townData);
-      alert(`마을 "${townData.groupName}"이(가) 생성되었습니다!\n\n이제 지역 관리에서 구역을 이 마을에 연결할 수 있습니다.`);
+      console.log('마을 생성 완료:', townData);
+      alert(`마을 "${townData.groupName}"이(가) 생성되었습니다.`);
     } catch (error) {
-      console.error('❌ 마을 생성 실패:', error);
+      console.error('마을 생성 실패:', error);
       alert('마을 생성 중 오류가 발생했습니다.');
     }
   };
 
-  // ========== 마을 수정 ==========
+  // ========== 留덉쓣 ?섏젙 ==========
   const updateTown = async (groupId, townData) => {
     if (!currentUser?.isAdmin) return;
     
     let updatedRegions = Array.isArray(regions) ? [...regions] : [];
     
-    // 해당 마을에 속한 모든 지역 업데이트
+    // ?대떦 留덉쓣???랁븳 紐⑤뱺 吏???낅뜲?댄듃
     updatedRegions = updatedRegions.map(region => {
       if (region.groupId === groupId) {
         return {
@@ -193,7 +197,7 @@ export const useAdminRegions = (
           groupVisible: townData.visible !== undefined ? townData.visible : region.groupVisible
         };
       }
-      // 다른 마을의 기본 설정 해제
+      // ?ㅻⅨ 留덉쓣??湲곕낯 ?ㅼ젙 ?댁젣
       if (townData.isDefaultTown && region.isDefaultTown && region.groupId !== groupId) {
         return { ...region, isDefaultTown: false };
       }
@@ -203,34 +207,45 @@ export const useAdminRegions = (
     setRegions(updatedRegions);
     
     try {
-      const configRef = ref(database, 'gameData/config');
-      const snapshot = await get(configRef);
-      const currentConfig = snapshot.val() || {};
+      await persistRegions(updatedRegions);
+
+      const townsRef = ref(database, 'gameData/towns');
+      const townsSnapshot = await get(townsRef);
+      const currentTowns = townsSnapshot.exists() ? townsSnapshot.val() : [];
+      if (Array.isArray(currentTowns) && currentTowns.length > 0) {
+        const updatedTowns = currentTowns.map(town => {
+          if (town.groupId === groupId) {
+            return { ...town, ...townData };
+          }
+          if (townData.isDefaultTown) {
+            return { ...town, isDefaultTown: false };
+          }
+          return town;
+        });
+        await set(townsRef, updatedTowns);
+      }
       
-      await set(configRef, {
-        ...currentConfig,
-        regions: updatedRegions
-      });
-      
-      console.log('✅ 마을 수정 완료:', groupId);
+      console.log('마을 수정 완료:', groupId);
     } catch (error) {
-      console.error('❌ 마을 수정 실패:', error);
+      console.error('마을 수정 실패:', error);
     }
   };
 
-  // ========== 마을 삭제 ==========
+  // ========== 留덉쓣 ??젣 ==========
   const deleteTown = async (groupId) => {
     if (!currentUser?.isAdmin) return;
     
-    // 해당 마을에 속한 모든 지역의 연결 해제
-    const updatedRegions = regions.map(region => {
+    const updatedRegions = (Array.isArray(regions) ? regions : [])
+      .filter(region => !(region.isTownMeta && region.groupId === groupId))
+      .map(region => {
       if (region.groupId === groupId) {
         return {
           ...region,
           groupId: null,
           groupName: null,
           areaName: null,
-          isDefaultTown: false
+          isDefaultTown: false,
+          groupVisible: true
         };
       }
       return region;
@@ -239,28 +254,28 @@ export const useAdminRegions = (
     setRegions(updatedRegions);
     
     try {
-      const configRef = ref(database, 'gameData/config');
-      const snapshot = await get(configRef);
-      const currentConfig = snapshot.val() || {};
+      await persistRegions(updatedRegions);
+
+      const townsRef = ref(database, 'gameData/towns');
+      const townsSnapshot = await get(townsRef);
+      const currentTowns = townsSnapshot.exists() ? townsSnapshot.val() : [];
+      if (Array.isArray(currentTowns)) {
+        await set(townsRef, currentTowns.filter(town => town.groupId !== groupId));
+      }
       
-      await set(configRef, {
-        ...currentConfig,
-        regions: updatedRegions
-      });
-      
-      console.log('✅ 마을 삭제 완료:', groupId);
-      alert('마을이 삭제되었습니다!');
+      console.log('마을 삭제 완료:', groupId);
+      alert('마을이 삭제되었습니다.');
     } catch (error) {
-      console.error('❌ 마을 삭제 실패:', error);
+      console.error('마을 삭제 실패:', error);
     }
   };
 
-  // ========== 게임 도감 업데이트 ==========
+  // ========== 寃뚯엫 ?꾧컧 ?낅뜲?댄듃 ==========
   const updateGamePokedex = async (selectedPokemonNumbers) => {
     if (!currentUser?.isAdmin) return;
     
-    console.log('도감 업데이트 시작');
-    console.log('  - 입력 번호:', selectedPokemonNumbers);
+    console.log('?꾧컧 ?낅뜲?댄듃 ?쒖옉');
+    console.log('  - ?낅젰 踰덊샇:', selectedPokemonNumbers);
     
     const newPokedex = selectedPokemonNumbers
       .map(num => {
@@ -279,40 +294,42 @@ export const useAdminRegions = (
         newNumber: index + 1 
       }));
     
-    console.log('  - 최종 도감:', newPokedex.length, '종');
+    console.log('  - 최종 영운 도감:', newPokedex.length, '종');
     console.log('  - 샘플:', newPokedex.slice(0, 5).map(p => ({ name: p.name, number: p.number, originalNumber: p.originalNumber })));
     
     setGamePokedex(newPokedex);
     
     const validPokemonNumbers = new Set(selectedPokemonNumbers);
     
-    // 지역에서 도감에 없는 포켓몬 제거
+    // 지역에 도감에 없는 포켓몬 제거
+    const isValidPokemonId = (pokemonId) => {
+      const pokemon = allPokemon.find(p => p.id === pokemonId);
+      if (pokemon) return validPokemonNumbers.has(pokemon.number);
+      return validPokemonNumbers.has(pokemonId);
+    };
+
     const updatedRegions = regions.map(region => ({
       ...region,
-      pokemons: (region.pokemons || []).filter(pokemonId => {
-        const pokemon = allPokemon.find(p => p.id === pokemonId);
-        if (pokemon) return validPokemonNumbers.has(pokemon.number);
-        return validPokemonNumbers.has(pokemonId);
-      })
+      pokemons: (region.pokemons || []).filter(isValidPokemonId),
+      places: Array.isArray(region.places)
+        ? region.places.map(place => ({
+            ...place,
+            pokemons: (place.pokemons || []).filter(isValidPokemonId)
+          }))
+        : []
     }));
     
     setRegions(updatedRegions);
     
     try {
-      const configRef = ref(database, 'gameData/config');
-      const snapshot = await get(configRef);
-      const currentConfig = snapshot.val() || {};
-      
-      await set(configRef, {
-        ...currentConfig,
+      await persistRegions(updatedRegions, {
         pokedex: newPokedex,
-        regions: updatedRegions
       });
       
-      console.log('✅ 게임 도감 업데이트 완료');
-      alert('✅ 게임 도감이 업데이트되었습니다!\n도감에서 제거된 포켓몬은 구역에서도 삭제되었습니다.');
+      console.log('영운 도감 업데이트 완료');
+      alert('영운 도감이 업데이트되었습니다.\n도감에서 제거된 포켓몬은 구역에서도 삭제되었습니다.');
     } catch (error) {
-      console.error('❌ 도감 업데이트 실패:', error);
+      console.error('도감 업데이트 실패:', error);
       alert('도감 업데이트 중 오류가 발생했습니다.');
     }
   };

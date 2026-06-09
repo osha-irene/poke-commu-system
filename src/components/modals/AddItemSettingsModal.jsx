@@ -25,7 +25,6 @@ export default function AddItemSettingsModal({
   const [selectedDay, setSelectedDay] = useState('monday');
   const [price, setPrice] = useState(0);
   const [stock, setStock] = useState(99);
-  const [isPersistent, setIsPersistent] = useState(true);
 
   useEffect(() => {
     if (selectedItem) {
@@ -40,7 +39,7 @@ export default function AddItemSettingsModal({
       itemId: selectedItem.id,
       price,
       stock,
-      isPersistent,
+      isPersistent: false,
       itemType,
       selectedDay
     });
@@ -146,21 +145,6 @@ export default function AddItemSettingsModal({
                 className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" 
               />
             </div>
-
-            {itemType === 'daily' && (
-              <div className="flex items-center gap-2">
-                <input 
-                  type="checkbox" 
-                  id="isPersistent"
-                  checked={isPersistent} 
-                  onChange={(e) => setIsPersistent(e.target.checked)} 
-                  className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" 
-                />
-                <label htmlFor="isPersistent" className="text-sm text-gray-700">
-                  매주 리셋 시 유지 (고정 상품)
-                </label>
-              </div>
-            )}
 
             <button 
               onClick={handleSubmit} 

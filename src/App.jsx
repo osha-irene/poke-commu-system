@@ -34,7 +34,13 @@ import BattleView from './components/views/BattleView';
 import mainNewsButton from './assets/main_news.png';
 import doctorWpenImage from './assets/npc/doctor_wpen.png';
 import pokemonIcon from './assets/pokemon-icon.svg';
-import { User, Lock, LogOut, Music, X, Play, Pause, SkipBack, SkipForward, Volume2, Package } from 'lucide-react';
+import logoText from './assets/logo_text.png';
+import logoCompass from './assets/logo_compass.png';
+import mainNpcPanel from './assets/main_npc.png';
+import { User, Lock, LogOut, Music, X, Play, Pause, SkipBack, SkipForward, Volume2, Package, Gift, ChefHat, Sparkles } from 'lucide-react';
+import { DAILY_ATTENDANCE_EXP, getKoreaDateKey } from './utils/experience';
+
+const DAILY_ATTENDANCE_MONEY = 2000;
 
 function getYouTubeEmbedTarget(value = '') {
   const trimmed = value.trim();
@@ -293,7 +299,76 @@ function isLocalRuntime() {
   );
 }
 
-function HomeDashboard({ showLogin = false, onLogin, trainer, onLogout, onPokemonClick, onItemsClick, members = {} }) {
+function getHomeFeeds(members = {}) {
+  const getEventTime = (value, fallbackIndex = 0) => {
+    const parsed = Date.parse(value || '');
+    if (!Number.isNaN(parsed)) return parsed;
+
+    const numeric = Number(value);
+    return Number.isFinite(numeric) && numeric > 0 ? numeric : fallbackIndex;
+  };
+  const shouldFilterDeployedFeed = !isLocalRuntime();
+  const isAllowedHomeFeedEntry = (entry) => (
+    !shouldFilterDeployedFeed || entry.eventTime >= DEPLOYED_HOME_FEED_START_TIME
+  );
+
+  const cookingFeed = Object.values(members || {})
+    .flatMap((member) => {
+      const trainerName = member?.name || member?.nickname || '누군가';
+      const historyEntries = (member?.cookingHistory || []).filter(Boolean).map((entry, index) => ({
+        id: entry.id || `cooking-${member?.id || trainerName}-${index}`,
+        trainerName,
+        itemName: entry.itemName || entry.recipeName || '요리',
+        image: entry.imageUrl || entry.image || '',
+        eventTime: getEventTime(entry.cookedAt || entry.createdAt, index)
+      }));
+
+      if (historyEntries.length > 0) return historyEntries;
+
+      return (member?.inventory || [])
+        .filter((item) => item?.isCooked)
+        .map((item, index) => ({
+          id: item.itemId || `cooked-item-${member?.id || trainerName}-${index}`,
+          trainerName,
+          itemName: item.name || '요리',
+          image: item.imageUrl || item.image || '',
+          eventTime: getEventTime(String(item.itemId || '').replace('cooked_', ''), index)
+        }));
+    })
+    .filter(isAllowedHomeFeedEntry)
+    .sort((a, b) => b.eventTime - a.eventTime)
+    .slice(0, 1);
+
+  const evolutionFeed = Object.values(members || {})
+    .flatMap((member) => {
+      const trainerName = member?.name || member?.nickname || '누군가';
+      return (member?.evolutionHistory || []).filter(Boolean).map((entry, index) => ({
+        id: entry.id || `evolution-${member?.id || trainerName}-${index}`,
+        trainerName,
+        pokemonName: entry.toName || entry.pokemonName || '포켓몬',
+        spriteUrl: getPokemonLocalIconUrl({ nameEn: entry.toNameEn }) || entry.imageUrl || '',
+        eventTime: getEventTime(entry.evolvedAt || entry.createdAt, index)
+      }));
+    })
+    .filter(isAllowedHomeFeedEntry)
+    .sort((a, b) => b.eventTime - a.eventTime)
+    .slice(0, 1);
+
+  return { cookingFeed, evolutionFeed };
+}
+
+function HomeDashboard({
+  showLogin = false,
+  onLogin,
+  trainer,
+  onLogout,
+  onPokemonClick,
+  onItemsClick,
+  onClaimAttendance,
+  attendanceClaimed = false,
+  isClaimingAttendance = false,
+  members = {}
+}) {
   const [loginUserId, setLoginUserId] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [koreaToday, setKoreaToday] = useState(() => getKoreaDateParts());
@@ -312,59 +387,7 @@ function HomeDashboard({ showLogin = false, onLogin, trainer, onLogout, onPokemo
     return () => window.clearInterval(timer);
   }, []);
 
-  const getEventTime = (value, fallbackIndex = 0) => {
-    const parsed = Date.parse(value || '');
-    if (!Number.isNaN(parsed)) return parsed;
-
-    const numeric = Number(value);
-    return Number.isFinite(numeric) && numeric > 0 ? numeric : fallbackIndex;
-  };
-  const shouldFilterDeployedFeed = !isLocalRuntime();
-  const isAllowedHomeFeedEntry = (entry) => (
-    !shouldFilterDeployedFeed || entry.eventTime >= DEPLOYED_HOME_FEED_START_TIME
-  );
-
-  const cookingFeed = Object.values(members || {})
-    .flatMap((member) => {
-      const trainerName = member?.name || member?.nickname || '\uB204\uAD70\uAC00';
-      const historyEntries = (member?.cookingHistory || []).filter(Boolean).map((entry, index) => ({
-        id: entry.id || `cooking-${member?.id || trainerName}-${index}`,
-        trainerName,
-        itemName: entry.itemName || entry.recipeName || '\uC694\uB9AC',
-        image: entry.imageUrl || entry.image || '',
-        eventTime: getEventTime(entry.cookedAt || entry.createdAt, index)
-      }));
-
-      if (historyEntries.length > 0) return historyEntries;
-
-      return (member?.inventory || [])
-        .filter((item) => item?.isCooked)
-        .map((item, index) => ({
-          id: item.itemId || `cooked-item-${member?.id || trainerName}-${index}`,
-          trainerName,
-          itemName: item.name || '\uC694\uB9AC',
-          image: item.imageUrl || item.image || '',
-          eventTime: getEventTime(String(item.itemId || '').replace('cooked_', ''), index)
-        }));
-    })
-    .filter(isAllowedHomeFeedEntry)
-    .sort((a, b) => b.eventTime - a.eventTime)
-    .slice(0, 1);
-
-  const evolutionFeed = Object.values(members || {})
-    .flatMap((member) => {
-      const trainerName = member?.name || member?.nickname || '\uB204\uAD70\uAC00';
-      return (member?.evolutionHistory || []).filter(Boolean).map((entry, index) => ({
-        id: entry.id || `evolution-${member?.id || trainerName}-${index}`,
-        trainerName,
-        pokemonName: entry.toName || entry.pokemonName || '\uD3EC\uCF13\uBAAC',
-        spriteUrl: getPokemonLocalIconUrl({ nameEn: entry.toNameEn }) || entry.imageUrl || '',
-        eventTime: getEventTime(entry.evolvedAt || entry.createdAt, index)
-      }));
-    })
-    .filter(isAllowedHomeFeedEntry)
-    .sort((a, b) => b.eventTime - a.eventTime)
-    .slice(0, 1);
+  const { cookingFeed, evolutionFeed } = getHomeFeeds(members);
 
   const handleNewsClick = () => {
     const newsUrl = '';
@@ -431,6 +454,19 @@ function HomeDashboard({ showLogin = false, onLogin, trainer, onLogout, onPokemo
                   {'\uAC00\uBC29'}
                 </button>
               </div>
+              <button
+                type="button"
+                onClick={onClaimAttendance}
+                disabled={attendanceClaimed || isClaimingAttendance}
+                className="home-session-panel__attendance"
+              >
+                <Gift aria-hidden="true" />
+                {attendanceClaimed
+                  ? '\uCD9C\uC11D \uC644\uB8CC'
+                  : isClaimingAttendance
+                    ? '\uCC98\uB9AC \uC911...'
+                    : '\uCD9C\uC11D \uBCF4\uC0C1'}
+              </button>
               <button type="button" onClick={onLogout}>
                 <LogOut aria-hidden="true" />
                 {'\uB85C\uADF8\uC544\uC6C3'}
@@ -527,6 +563,309 @@ function HomeDashboard({ showLogin = false, onLogin, trainer, onLogout, onPokemo
     </section>
   );
 }
+
+function MobileHomeDashboard({
+  trainer,
+  members = {},
+  onCookingClick,
+  onPokemonClick
+}) {
+  const [koreaToday, setKoreaToday] = useState(() => getKoreaDateParts());
+  const calendarDays = getCalendarDays(koreaToday.year, koreaToday.month);
+  const { cookingFeed, evolutionFeed } = getHomeFeeds(members);
+  const calendarLabel = `${koreaToday.year}.${String(koreaToday.month).padStart(2, '0')}`;
+  const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
+
+  useEffect(() => {
+    const updateKoreaToday = () => setKoreaToday(getKoreaDateParts());
+    updateKoreaToday();
+
+    const timer = window.setInterval(updateKoreaToday, 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  return (
+    <section className="mobile-home" aria-label="모바일 메인">
+      <div className="mobile-home__logo">
+        <img className="mobile-home__logo-compass" src={logoCompass} alt="" aria-hidden="true" />
+        <img src={logoText} alt="Origin Beyond" />
+      </div>
+
+      <div className="mobile-home__npc" aria-hidden="true">
+        <img className="mobile-home__npc-panel-image" src={mainNpcPanel} alt="" aria-hidden="true" />
+        <span className="mobile-home__npc-crop" aria-hidden="true">
+          <img src={doctorWpenImage} alt="" />
+        </span>
+      </div>
+
+      <section className="mobile-home__calendar" aria-label="캘린더">
+        <div className="home-calendar mobile-home-calendar">
+          <div className="home-calendar__header">
+            <span>Calendar</span>
+            <strong>{calendarLabel}</strong>
+          </div>
+          <div className="home-calendar__weekdays">
+            {weekDays.map((day, index) => (
+              <span key={day} className={index === 0 ? 'is-sunday' : index === 6 ? 'is-saturday' : ''}>
+                {day}
+              </span>
+            ))}
+          </div>
+          <div className="home-calendar__grid">
+            {calendarDays.map((day, index) => (
+              <span
+                key={`${day.muted ? 'muted' : 'current'}-${day.day}-${index}`}
+                className={[
+                  day.day === koreaToday.day && !day.muted ? 'is-today' : '',
+                  index % 7 === 0 ? 'is-sunday' : index % 7 === 6 ? 'is-saturday' : '',
+                  day.muted ? 'is-muted' : ''
+                ].filter(Boolean).join(' ')}
+              >
+                {day.day}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="mobile-home__feeds">
+        <section className="mobile-home-feed">
+          <div className="mobile-home__section-title">
+            <Sparkles size={18} />
+            <strong>오늘의 진화</strong>
+          </div>
+          {evolutionFeed.length > 0 ? (
+            evolutionFeed.map((entry) => (
+              <button key={entry.id} type="button" className="mobile-home-feed__item" onClick={onPokemonClick}>
+                {entry.spriteUrl ? (
+                  <span className="mobile-home-feed__pokemon" style={{ backgroundImage: `url(${entry.spriteUrl})` }} />
+                ) : (
+                  <span className="mobile-home-feed__fallback">P</span>
+                )}
+                <span>
+                  <strong>{entry.pokemonName}</strong>
+                  <small>{entry.trainerName}의 포켓몬이 진화했어요</small>
+                </span>
+              </button>
+            ))
+          ) : (
+            <p className="mobile-home-feed__empty">아직 진화 소식이 없습니다.</p>
+          )}
+        </section>
+
+        <section className="mobile-home-feed">
+          <div className="mobile-home__section-title">
+            <ChefHat size={18} />
+            <strong>오늘의 요리</strong>
+          </div>
+          {cookingFeed.length > 0 ? (
+            cookingFeed.map((entry) => (
+              <button key={entry.id} type="button" className="mobile-home-feed__item" onClick={onCookingClick}>
+                {entry.image ? (
+                  <img src={entry.image} alt="" />
+                ) : (
+                  <span className="mobile-home-feed__fallback">C</span>
+                )}
+                <span>
+                  <strong>{entry.itemName}</strong>
+                  <small>{entry.trainerName}님이 만든 요리</small>
+                </span>
+              </button>
+            ))
+          ) : (
+            <p className="mobile-home-feed__empty">아직 요리 소식이 없습니다.</p>
+          )}
+        </section>
+      </div>
+    </section>
+  );
+}
+
+function MobileScrollIndicator() {
+  const [indicator, setIndicator] = useState({
+    canScroll: false,
+    isVisible: false,
+    top: 0,
+    height: 48
+  });
+
+  useEffect(() => {
+    let frameId = 0;
+    let hideTimer = 0;
+
+    const updateIndicator = (show = false) => {
+      window.cancelAnimationFrame(frameId);
+      frameId = window.requestAnimationFrame(() => {
+        const doc = document.documentElement;
+        const scrollableHeight = Math.max(0, doc.scrollHeight - window.innerHeight);
+        const canScroll = scrollableHeight > 2;
+
+        if (!canScroll) {
+          setIndicator({ canScroll: false, isVisible: false, top: 0, height: 48 });
+          return;
+        }
+
+        const trackInset = 14;
+        const trackHeight = Math.max(1, window.innerHeight - trackInset * 2);
+        const thumbHeight = Math.max(42, Math.min(trackHeight, (window.innerHeight / doc.scrollHeight) * trackHeight));
+        const maxTravel = Math.max(0, trackHeight - thumbHeight);
+        const progress = Math.min(1, Math.max(0, window.scrollY / scrollableHeight));
+
+        setIndicator({
+          canScroll: true,
+          isVisible: show,
+          top: trackInset + progress * maxTravel,
+          height: thumbHeight
+        });
+      });
+    };
+
+    const revealIndicator = () => {
+      updateIndicator(true);
+      window.clearTimeout(hideTimer);
+      hideTimer = window.setTimeout(() => updateIndicator(false), 850);
+    };
+
+    updateIndicator(false);
+    window.addEventListener('scroll', revealIndicator, { passive: true });
+    window.addEventListener('resize', revealIndicator);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.clearTimeout(hideTimer);
+      window.removeEventListener('scroll', revealIndicator);
+      window.removeEventListener('resize', revealIndicator);
+    };
+  }, []);
+
+  if (!indicator.canScroll) return null;
+
+  return (
+    <div className={`mobile-scroll-indicator ${indicator.isVisible ? 'is-visible' : ''}`} aria-hidden="true">
+      <span style={{ height: `${indicator.height}px`, transform: `translateY(${indicator.top}px)` }} />
+    </div>
+  );
+}
+
+function MobilePublicHomeDashboard({ members = {}, onLogin }) {
+  const [loginUserId, setLoginUserId] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    await onLogin?.(loginUserId, loginPassword);
+  };
+
+  return (
+    <div className="mobile-public-home">
+      <MobileHomeDashboard members={members} />
+      <form className="mobile-home-login" onSubmit={handleSubmit}>
+        <label>
+          <User size={17} />
+          <input
+            type="text"
+            value={loginUserId}
+            onChange={(event) => setLoginUserId(event.target.value)}
+            autoComplete="username"
+            placeholder="아이디"
+            required
+          />
+        </label>
+        <label>
+          <Lock size={17} />
+          <input
+            type="password"
+            value={loginPassword}
+            onChange={(event) => setLoginPassword(event.target.value)}
+            autoComplete="current-password"
+            placeholder="비밀번호"
+            required
+          />
+        </label>
+        <button type="submit">LOGIN</button>
+      </form>
+    </div>
+  );
+}
+
+function ForcePasswordChangeModal({ onChangePassword }) {
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (newPassword.length < 6) {
+      alert('새 비밀번호는 6자 이상으로 입력해주세요.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      alert('비밀번호 확인이 일치하지 않습니다.');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const success = await onChangePassword?.(newPassword);
+      if (success) {
+        alert('비밀번호가 변경되었습니다.');
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/55 px-4">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-md rounded-2xl border-2 border-lime-300 bg-[#f4f8e8] p-6 shadow-2xl"
+      >
+        <h2 className="mb-2 text-2xl font-bold text-[#26351f]">비밀번호 변경</h2>
+        <p className="mb-5 text-sm leading-relaxed text-[#5f7342]">
+          임시 비밀번호로 로그인했습니다. 계속 이용하려면 새 비밀번호를 설정해주세요.
+        </p>
+
+        <label className="mb-3 block">
+          <span className="mb-1 block text-sm font-semibold text-[#384b27]">새 비밀번호</span>
+          <input
+            type="password"
+            value={newPassword}
+            onChange={(event) => setNewPassword(event.target.value)}
+            autoComplete="new-password"
+            className="w-full rounded-lg border border-[#a7c86f] bg-white px-4 py-3 focus:border-[#7fa438] focus:outline-none"
+            minLength={6}
+            required
+          />
+        </label>
+
+        <label className="mb-5 block">
+          <span className="mb-1 block text-sm font-semibold text-[#384b27]">새 비밀번호 확인</span>
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            autoComplete="new-password"
+            className="w-full rounded-lg border border-[#a7c86f] bg-white px-4 py-3 focus:border-[#7fa438] focus:outline-none"
+            minLength={6}
+            required
+          />
+        </label>
+
+        <button
+          type="submit"
+          disabled={isSaving}
+          className="w-full rounded-lg bg-[#4f741f] px-4 py-3 font-bold text-white transition-colors hover:bg-[#3f5f18] disabled:cursor-not-allowed disabled:bg-gray-400"
+        >
+          {isSaving ? '저장 중...' : '비밀번호 저장'}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 function CommunityPlaceholder({ type }) {
   if (type === 'world') {
     return <WorldView />;
@@ -600,6 +939,7 @@ export default function App() {
     sharedPokedexData,
     handleLogin,
     handleLogout,
+    changeCurrentUserPassword,
     isAuthLoading,
     isMembersLoading,
     handleRegionClick,
@@ -620,7 +960,9 @@ export default function App() {
     allMoves,
     pokemonLearnsets,
     maintenanceMode,
+    systemSettings,
     applyLoot,
+    updateCurrentUser,
     updatePokedexRegions,
     useItemOnPokemon,
     evolutionModal,
@@ -630,10 +972,38 @@ export default function App() {
 	camping,
   } = gameState;
   const isFeaturePage = currentTab !== 'home';
+  const isMembersPage = currentTab === 'members';
+  const isTopMenuPage = ['notice', 'world', 'system'].includes(currentTab);
+  const hasContentSurface = isFeaturePage && !isMembersPage;
   const isCoreLoading = isAuthLoading || isMembersLoading;
   const [isInitialPageReady, setIsInitialPageReady] = useState(false);
   const [isLoadingOverlayVisible, setIsLoadingOverlayVisible] = useState(true);
   const [isLoadingOverlayFading, setIsLoadingOverlayFading] = useState(false);
+  const [isClaimingAttendance, setIsClaimingAttendance] = useState(false);
+  const todayAttendanceKey = getKoreaDateKey();
+  const attendanceClaimed = currentUser?.lastAttendanceDate === todayAttendanceKey;
+
+  const handleClaimAttendance = async () => {
+    if (!currentUser?.id || isClaimingAttendance) return;
+
+    const todayKey = getKoreaDateKey();
+    if (currentUser.lastAttendanceDate === todayKey) {
+      alert('오늘 출석 보상은 이미 받았습니다.');
+      return;
+    }
+
+    setIsClaimingAttendance(true);
+    try {
+      await updateCurrentUser({
+        money: (Number(currentUser.money) || 0) + DAILY_ATTENDANCE_MONEY,
+        trainerExp: (Number(currentUser.trainerExp) || 0) + DAILY_ATTENDANCE_EXP,
+        lastAttendanceDate: todayKey
+      });
+      alert(`출석 보상 지급 완료!\n${DAILY_ATTENDANCE_MONEY.toLocaleString()}원과 경험치 ${DAILY_ATTENDANCE_EXP}을 받았습니다.`);
+    } finally {
+      setIsClaimingAttendance(false);
+    }
+  };
 
   useEffect(() => {
     let isCancelled = false;
@@ -849,6 +1219,17 @@ export default function App() {
       }
     };
 
+    if (isMobile) {
+      return (
+        <>
+          <PlaylistWidget />
+          <MobilePublicHomeDashboard members={members} onLogin={handleLogin} />
+          <MobileScrollIndicator />
+          {isLoadingOverlayVisible && <LoadingOverlay overlay fading={isLoadingOverlayFading} />}
+        </>
+      );
+    }
+
     return (
       <>
       <PlaylistWidget />
@@ -894,6 +1275,7 @@ export default function App() {
 return (
   <>
   <PlaylistWidget />
+  {isMobile && <MobileScrollIndicator />}
   <GameProvider value={gameState}>
     <PokemonProvider value={pokemonValue}>
       {isMobile ? (
@@ -906,6 +1288,15 @@ return (
           toggleSound={() => setSoundEnabled(!soundEnabled)}
           onLogout={handleLogout}
         >
+          {currentTab === 'home' && (
+            <MobileHomeDashboard
+              trainer={trainer}
+              members={members}
+              onCookingClick={() => setCurrentTab('cooking')}
+              onPokemonClick={() => setCurrentTab('pokemon')}
+            />
+          )}
+
           {currentTab === 'map' && (
             <MapView 
               regions={regions} 
@@ -926,7 +1317,7 @@ return (
             />
           )}
           
-          {currentTab === 'members' && <MembersView />}
+          {currentTab === 'members' && <MembersView members={members} isLoading={isMembersLoading} />}
           {currentTab === 'npcs' && <NPCsView />}
           {currentTab === 'pokemon' && <PokemonView />}
           {currentTab === 'items' && <ItemsView />}
@@ -972,7 +1363,7 @@ return (
           <SakuraEffect />
           <Header currentTab={currentTab} setCurrentTab={setCurrentTab} />
 
-          <div className={`main-layout ${currentTab === 'home' ? 'main-layout--home' : ''} ${['notice', 'world', 'system'].includes(currentTab) ? 'main-layout--world' : ''}`}>
+          <div className={`main-layout ${currentTab === 'home' ? 'main-layout--home' : ''} ${isTopMenuPage ? 'main-layout--world' : ''}`}>
           <Sidebar 
             currentTab={currentTab}
             setCurrentTab={setCurrentTab}
@@ -983,15 +1374,18 @@ return (
             onToggleSound={() => setSoundEnabled(!soundEnabled)}
           />
 
-      {isFeaturePage && <span className="content-stage__surface" aria-hidden="true" />}
+      {hasContentSurface && <span className="content-stage__surface" aria-hidden="true" />}
 
-		<main className={`content-stage ${currentTab === 'home' ? 'content-stage--home' : 'content-stage--view'} ${isFeaturePage ? 'content-stage--feature' : ''} ${['notice', 'world', 'system'].includes(currentTab) ? 'content-stage--world' : ''}`}>
+		<main className={`content-stage ${currentTab === 'home' ? 'content-stage--home' : 'content-stage--view'} ${isFeaturePage ? 'content-stage--feature' : ''} ${isTopMenuPage ? 'content-stage--world' : ''}`}>
       {currentTab === 'home' && (
         <HomeDashboard
           trainer={trainer}
           onLogout={handleLogout}
           onPokemonClick={() => setCurrentTab('pokemon')}
           onItemsClick={() => setCurrentTab('items')}
+          onClaimAttendance={handleClaimAttendance}
+          attendanceClaimed={attendanceClaimed}
+          isClaimingAttendance={isClaimingAttendance}
           members={members}
         />
       )}
@@ -1031,7 +1425,7 @@ return (
 			/>
 		  )}
 		  
-		  {currentTab === 'members' && <MembersView />}
+		  {currentTab === 'members' && <MembersView members={members} isLoading={isMembersLoading} />}
 		  {currentTab === 'npcs' && <NPCsView />}
 		  {currentTab === 'pokemon' && <PokemonView />}
 		  {currentTab === 'items' && <ItemsView />}
@@ -1088,6 +1482,7 @@ return (
           onApplyLoot={applyLoot} 
           isSuperAdmin={currentUser?.isSuperAdmin}
           allPokemonMaster={allPokemonMaster} 
+          maxNonPartnerPokemon={systemSettings?.maxNonPartnerPokemon || 18}
         />
       )}
 
@@ -1108,6 +1503,9 @@ return (
         onCancel={cancelEvolution}
       />
     )}
+      {currentUser?.forcePasswordChange && (
+        <ForcePasswordChangeModal onChangePassword={changeCurrentUserPassword} />
+      )}
     </PokemonProvider>
   </GameProvider>
   {isLoadingOverlayVisible && <LoadingOverlay overlay fading={isLoadingOverlayFading} />}

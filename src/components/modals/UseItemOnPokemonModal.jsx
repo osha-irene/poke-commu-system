@@ -126,11 +126,7 @@ const actualIncrease = afterValue - currentValue;
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* 헤더 */}
-        <div className={`text-white p-6 rounded-t-xl ${
-          isRareCandy 
-            ? 'bg-gradient-to-r from-yellow-500 to-orange-500'
-            : 'bg-gradient-to-r from-indigo-500 to-purple-600'
-        }`}>
+        <div className="border-b-2 border-lime-300 bg-white/95 text-green-950 p-6 rounded-t-xl">
           <div className="flex justify-between items-start">
             <div className="flex items-center gap-3">
               {getIcon()}
@@ -138,14 +134,12 @@ const actualIncrease = afterValue - currentValue;
                 <h2 className="text-2xl font-bold">
                   {isRareCandy ? '🍬 레벨업' : '아이템 사용'}
                 </h2>
-                <p className={`text-sm mt-1 ${
-                  isRareCandy ? 'text-yellow-100' : 'text-indigo-100'
-                }`}>
+                <p className="text-sm mt-1 text-green-800">
                   {pokemon.nickname || pokemon.name}에게 사용
                 </p>
               </div>
             </div>
-            <button onClick={onClose} className="text-white/80 hover:text-white transition-colors">
+            <button onClick={onClose} className="text-green-950 hover:text-lime-700 transition-colors">
               <X size={24} />
             </button>
           </div>
@@ -178,7 +172,7 @@ const actualIncrease = afterValue - currentValue;
 
           {/* 이상한 사탕 특별 안내 */}
           {isRareCandy && (
-            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg p-4 border-2 border-yellow-300">
+            <div className="bg-white/40 rounded-lg p-4 border-2 border-lime-200">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-2xl">🍬</span>
                 <span className="font-bold text-lg text-gray-800">이상한 사탕</span>
@@ -244,7 +238,7 @@ const actualIncrease = afterValue - currentValue;
 
           {/* 일반 아이템 효과 표시 */}
           {effect && !isRareCandy && !isMultiStat && (
-            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-4 border-2 border-blue-200">
+            <div className="bg-white/40 rounded-lg p-4 border-2 border-lime-200">
               <div className="text-sm font-semibold text-gray-700 mb-3">
                 📊 효과 미리보기
               </div>
@@ -383,9 +377,7 @@ const actualIncrease = afterValue - currentValue;
               disabled={!effect || (actualIncrease === 0 && !isRareCandy) || (isMultiStat && !selectedConditionStat)}
               className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
                 effect && (actualIncrease > 0 || isRareCandy) && (!isMultiStat || selectedConditionStat)
-                  ? isRareCandy
-                    ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:from-yellow-600 hover:to-orange-600'
-                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700'
+                  ? 'border-2 border-lime-300 bg-white/55 text-green-950 hover:bg-lime-100/70'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
             >

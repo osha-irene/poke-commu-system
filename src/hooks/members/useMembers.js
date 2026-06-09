@@ -119,7 +119,6 @@ async function createInitialMembersWithAuth() {
         money: 50000,
         trainerExp: 0,
         lastAttendanceDate: null,
-        accessibleRegions: [],
         caughtPokemon: [null, null, null, null, null, null],
         inventory: getInitialInventory()
       }
@@ -138,7 +137,6 @@ async function createInitialMembersWithAuth() {
         money: 10000,
         trainerExp: 0,
         lastAttendanceDate: null,
-        accessibleRegions: [],
         caughtPokemon: [null, null, null, null, null, null],
         inventory: getInitialInventory()
       }

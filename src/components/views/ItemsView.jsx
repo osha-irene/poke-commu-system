@@ -357,7 +357,7 @@ const categories = CATEGORIES.map(cat => {
                       <img 
                         src={details.imageUrl}
                         alt={details.name}
-                        className="max-w-full max-h-full object-contain"
+                        className="item-sprite item-sprite-2x object-contain"
                         style={{ imageRendering: 'pixelated' }}
                       />
                     </div>

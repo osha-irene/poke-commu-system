@@ -4,9 +4,39 @@ import { COLORS } from '../../styles/theme';
 
 const TYPE_COLORS = COLORS.types;
 
+const REGIONAL_FORM_LABELS = {
+  alola: '알로라',
+  galar: '가라르',
+  hisui: '히스이',
+  paldea: '팔데아'
+};
+
+function getRegionalFormLabel(pokemon = {}) {
+  const explicitRegionalForm = pokemon.regionalForm?.toLowerCase();
+  if (REGIONAL_FORM_LABELS[explicitRegionalForm]) {
+    return REGIONAL_FORM_LABELS[explicitRegionalForm];
+  }
+
+  const variantSource = `${pokemon.formVariant || ''} ${pokemon.nameEn || ''}`.toLowerCase();
+  const matchedRegion = Object.keys(REGIONAL_FORM_LABELS).find(region => (
+    variantSource.includes(`-${region}`) || variantSource.includes(` ${region}`)
+  ));
+
+  if (matchedRegion) {
+    return REGIONAL_FORM_LABELS[matchedRegion];
+  }
+
+  return pokemon.name.match(/\(([^)]+)\)/)?.[1] || pokemon.name;
+}
+
+const toDexNumber = (value) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
 export default function PokedexView({
-  pokedex = [],           // 게임 도감
-  allPokedex = [],        // 전체 도감 (리전폼 포함)
+  pokedex = [],           // 寃뚯엫 ?꾧컧
+  allPokedex = [],        // ?꾩껜 ?꾧컧 (由ъ쟾???ы븿)
   caughtPokemon = [],
   pokedexData = {},
   regions = [],
@@ -22,29 +52,58 @@ export default function PokedexView({
   const [isEditingRegions, setIsEditingRegions] = useState(false);
   const [editableRegions, setEditableRegions] = useState([]);
 
-  const myCaughtNumbers = new Set(caughtPokemon.map(p => p?.number).filter(Boolean));
-  const unlockedNumbers = new Set(Object.keys(pokedexData).map(num => parseInt(num)));
+  const myCaughtNumbers = new Set(
+    caughtPokemon
+      .flatMap(p => p ? [p.number, p.originalNumber] : [])
+      .map(toDexNumber)
+      .filter(Boolean)
+  );
+  const unlockedNumbers = new Set([
+    ...Object.keys(pokedexData).map(toDexNumber).filter(Boolean),
+    ...myCaughtNumbers
+  ]);
+  const gamePokedexNumbers = new Set(
+    pokedex.map(pokemon => toDexNumber(pokemon.number)).filter(Boolean)
+  );
 
-  // 원종 또는 리전폼 중 하나라도 해금되면 카드 표시
-  const unlockedPokedex = pokedex.filter(pokemon => {
+  const isPokemonUnlocked = (pokemon = {}) => {
+    const number = toDexNumber(pokemon.number);
+    const originalNumber = toDexNumber(pokemon.originalNumber);
+
+    if (number && unlockedNumbers.has(number)) return true;
+    if (originalNumber && unlockedNumbers.has(originalNumber)) return true;
+
+    return allPokedex.some(form => (
+      form.originalNumber === pokemon.number &&
+      gamePokedexNumbers.has(toDexNumber(form.number)) &&
+      unlockedNumbers.has(toDexNumber(form.number))
+    ));
+  };
+
+  const getPokedexEntry = (pokemon = {}) => {
+    const number = toDexNumber(pokemon.number);
+    const originalNumber = toDexNumber(pokemon.originalNumber);
+    return pokedexData[number] || pokedexData[originalNumber] || null;
+  };
+
+  // 영운 도감에 등록된 포켓몬은 해금 전에도 카드로 표시
+  const visiblePokedex = pokedex.filter(pokemon => {
     const isRegionalForm = pokemon.originalNumber && pokemon.originalNumber !== pokemon.number;
 
     if (isRegionalForm) {
-      // 리전폼은 카드로 표시 안 함 (원종 카드에서 탭으로 확인)
-      return false;
+      // 원종이 영운 도감에 있으면 원종 카드 안의 폼 탭으로만 표시
+      if (gamePokedexNumbers.has(toDexNumber(pokemon.originalNumber))) {
+        return false;
+      }
+
+      // 원종이 영운 도감에 없고 리전폼만 등록되어 있으면 리전폼 카드로 표시
+      return true;
     }
 
-    // 원종 카드: 원종 자체가 해금되었거나, 해당 원종의 리전폼 중 하나라도 해금되면 표시
-    const isOriginalUnlocked = unlockedNumbers.has(pokemon.number);
-    const hasUnlockedRegionalForm = allPokedex.some(p =>
-      p.originalNumber === pokemon.number &&
-      unlockedNumbers.has(p.number)
-    );
-
-    return isOriginalUnlocked || hasUnlockedRegionalForm;
+    return true;
   });
 
-  const filteredPokedex = unlockedPokedex.filter(pokemon => {
+  const filteredPokedex = visiblePokedex.filter(pokemon => {
     if (!searchTerm) return true;
     const query = searchTerm.toLowerCase();
     return (
@@ -55,88 +114,151 @@ export default function PokedexView({
     );
   });
 
-  const unlockedCount = unlockedPokedex.length;
-  const totalCount = pokedex.length;
+  const unlockedCount = visiblePokedex.filter(isPokemonUnlocked).length;
+  const totalCount = visiblePokedex.length;
   const percentage = totalCount > 0 ? Math.round((unlockedCount / totalCount) * 100) : 0;
 
   const getPokemonRegions = (pokemon) => {
-    // 리전폼은 자신의 number로 먼저 확인, 없으면 originalNumber로 확인
+    // 由ъ쟾?쇱? ?먯떊??number濡?癒쇱? ?뺤씤, ?놁쑝硫?originalNumber濡??뺤씤
     const pokemonNumber = pokemon.number;
     const pokemonOriginalNumber = pokemon.originalNumber || pokemon.number;
 
-    console.log('🗺️ 출현 지역 검색:', pokemon.name, 'number:', pokemon.number, 'originalNumber:', pokemon.originalNumber);
+    console.log('?뿺截?異쒗쁽 吏??寃??', pokemon.name, 'number:', pokemon.number, 'originalNumber:', pokemon.originalNumber);
 
-    // 1. 수동 등록: 리전폼 자체 번호로 먼저 확인
+    const getCurrentRegionLabels = () => {
+      const labelSet = new Set();
+
+      (regions || []).forEach(region => {
+        if (!region || region.isTownMeta || !region.name) return;
+
+        labelSet.add(region.name);
+        const places = Array.isArray(region.places) ? region.places : [];
+        places.forEach(place => {
+          if (place?.name) {
+            labelSet.add(`${region.name} ${place.name}`);
+          }
+        });
+      });
+
+      return labelSet;
+    };
+
+    const filterActiveRegions = (regionNames = []) => {
+      const currentLabels = getCurrentRegionLabels();
+      if (currentLabels.size === 0) return [];
+      return regionNames.filter(regionName => currentLabels.has(regionName));
+    };
+
+    // 1. ?섎룞 ?깅줉: 由ъ쟾???먯껜 踰덊샇濡?癒쇱? ?뺤씤
     const entryByNumber = pokedexData[pokemonNumber];
     if (entryByNumber?.regions && entryByNumber.regions.length > 0) {
-      console.log('  → 수동 등록된 지역 (자체 번호):', entryByNumber.regions);
-      return entryByNumber.regions;
+      const activeRegions = filterActiveRegions(entryByNumber.regions);
+      if (activeRegions.length > 0) {
+        console.log('  ???섎룞 ?깅줉??吏??(?먯껜 踰덊샇):', activeRegions);
+        return activeRegions;
+      }
     }
 
-    // 2. 수동 등록: 원종 번호로 확인 (폴백)
+    // 2. ?섎룞 ?깅줉: ?먯쥌 踰덊샇濡??뺤씤 (?대갚)
     const entryByOriginal = pokedexData[pokemonOriginalNumber];
     if (entryByOriginal?.regions && entryByOriginal.regions.length > 0) {
-      console.log('  → 수동 등록된 지역 (원종 번호):', entryByOriginal.regions);
-      return entryByOriginal.regions;
+      const activeRegions = filterActiveRegions(entryByOriginal.regions);
+      if (activeRegions.length > 0) {
+        console.log('  ???섎룞 ?깅줉??吏??(?먯쥌 踰덊샇):', activeRegions);
+        return activeRegions;
+      }
     }
 
     if (!regions || regions.length === 0) return [];
 
-    // 3. 자동 검색: 리전폼 자체 번호로 검색
+    const hasPokemonId = (pokemonIds = []) => (
+      Array.isArray(pokemonIds) && (
+        pokemonIds.includes(pokemon.id) ||
+        pokemonIds.includes(pokemonNumber) ||
+        pokemonIds.includes(pokemonOriginalNumber)
+      )
+    );
+
+    // 3. ?먮룞 寃?? ?μ냼蹂?異쒗쁽 ?ㅼ젙 ?곗꽑, 湲곗〈 吏???ㅼ젙? ?대갚
     const foundRegions = regions
-      .filter(region => {
-        const hasInPokemons = region.pokemons.includes(pokemon.id) ||
-               region.pokemons.includes(pokemonNumber) || // 리전폼 자체 번호
-               region.pokemons.includes(pokemonOriginalNumber); // 원종 번호
+      .filter(region => !region?.isTownMeta)
+      .flatMap(region => {
+      const regionLabel = region.name;
+      const places = Array.isArray(region.places) ? region.places : [];
+      const matchedPlaces = places
+        .filter(place => hasPokemonId(place.pokemons))
+        .map(place => `${regionLabel} ${place.name}`);
 
-        if (hasInPokemons) {
-          console.log('  → 지역 발견:', region.name, 'pokemons:', region.pokemons.slice(0, 5), '...');
-        }
+      if (matchedPlaces.length > 0) {
+        console.log('  ???μ냼 諛쒓껄:', regionLabel, matchedPlaces);
+        return matchedPlaces;
+      }
 
-        return hasInPokemons;
-      })
-      .map(region => region.name);
+      if (hasPokemonId(region.pokemons)) {
+        console.log('  ??吏??諛쒓껄:', region.name, 'pokemons:', region.pokemons.slice(0, 5), '...');
+        return [regionLabel];
+      }
 
-    console.log('  → 최종 출현 지역:', foundRegions);
+      return [];
+    });
+
+    console.log('  ??理쒖쥌 異쒗쁽 吏??', foundRegions);
     return foundRegions;
   };
 
-  // 리전폼 검색 (전체 도감에서, 해금된 것만)
+  const getEditableRegionOptions = () => (
+    (regions || []).filter(region => !region?.isTownMeta).flatMap(region => {
+      const regionLabel = region.name;
+      const places = Array.isArray(region.places) ? region.places.filter(place => place?.name) : [];
+
+      if (places.length > 0) {
+        return places.map(place => ({
+          id: `${region.id}__place__${place.id}`,
+          label: `${regionLabel} ${place.name}`
+        }));
+      }
+
+      return [{ id: region.id, label: regionLabel }];
+    })
+  );
+
+  // 由ъ쟾??寃??(?꾩껜 ?꾧컧?먯꽌, ?닿툑??寃껊쭔)
   const getRegionalForms = (pokemon) => {
     if (!pokemon || !allPokedex || allPokedex.length === 0) return [];
 
     const baseNumber = pokemon.originalNumber || pokemon.number;
 
     const forms = allPokedex.filter(p => {
-      // 리전폼 조건: originalNumber를 가지고 있고, 원종과 다른 번호
+      // 由ъ쟾??議곌굔: originalNumber瑜?媛吏怨??덇퀬, ?먯쥌怨??ㅻⅨ 踰덊샇
       const isRegionalForm = p.originalNumber && p.originalNumber !== p.number;
-      // 같은 원종 가족
+      // 媛숈? ?먯쥌 媛議?
       const isSameFamily = p.originalNumber === baseNumber || (p.originalNumber && p.originalNumber === pokemon.number);
-      // 자기 자신 제외
+      // ?먭린 ?먯떊 ?쒖쇅
       const isDifferent = p.number !== pokemon.number;
-      // 해금 여부
-      const isUnlocked = unlockedNumbers.has(p.number);
+      // ?닿툑 ?щ?
+      const isUnlocked = gamePokedexNumbers.has(toDexNumber(p.number)) &&
+        unlockedNumbers.has(toDexNumber(p.number));
 
       return isRegionalForm && isSameFamily && isDifferent && isUnlocked;
     });
 
-    console.log('🔍 리전폼 검색:', pokemon.name, 'baseNumber:', baseNumber, 'forms:', forms.map(f => `${f.name}(${f.number})`));
+    console.log('?뵇 由ъ쟾??寃??', pokemon.name, 'baseNumber:', baseNumber, 'forms:', forms.map(f => `${f.name}(${f.number})`));
     return forms;
   };
 
-  // 원종 찾기 (전체 도감에서, 해금된 것만)
+  // ?먯쥌 李얘린 (?꾩껜 ?꾧컧?먯꽌, ?닿툑??寃껊쭔)
   const getOriginalForm = (pokemon) => {
     if (!pokemon || !allPokedex || allPokedex.length === 0) return null;
 
-    // 현재 포켓몬이 리전폼인 경우에만 원종 찾기
+    // ?꾩옱 ?ъ폆紐ъ씠 由ъ쟾?쇱씤 寃쎌슦?먮쭔 ?먯쥌 李얘린
     const isRegionalForm = pokemon.originalNumber && pokemon.originalNumber !== pokemon.number;
 
     if (isRegionalForm) {
       const original = allPokedex.find(p =>
         p.number === pokemon.originalNumber &&
-        unlockedNumbers.has(p.number) // 원종도 해금되어야 탭 표시
+        unlockedNumbers.has(p.number) // ?먯쥌???닿툑?섏뼱?????쒖떆
       );
-      console.log('🔍 원종 검색:', pokemon.name, '→', original?.name, '해금:', original ? unlockedNumbers.has(original.number) : false);
+      console.log('원종 검색:', pokemon.name, '=>', original?.name, '해금:', original ? unlockedNumbers.has(original.number) : false);
       return original;
     }
 
@@ -145,18 +267,19 @@ export default function PokedexView({
 
   const handlePokemonClick = (pokemon) => {
     const pokemonOriginalNumber = pokemon.originalNumber || pokemon.number;
-    if (!unlockedNumbers.has(pokemonOriginalNumber)) return;
+    if (!isPokemonUnlocked(pokemon)) return;
 
     setSelectedPokemon(pokemon);
 
-    // ⭐ 원종이 해금되어 있으면 원종부터, 아니면 해금된 첫 번째 리전폼
-    if (unlockedNumbers.has(pokemon.number)) {
+    // 狩??먯쥌???닿툑?섏뼱 ?덉쑝硫??먯쥌遺?? ?꾨땲硫??닿툑??泥?踰덉㎏ 由ъ쟾??
+    if (unlockedNumbers.has(toDexNumber(pokemon.number))) {
       setSelectedForm(pokemon);
     } else {
-      // 원종이 해금 안 됐으면 리전폼 중 해금된 것 찾기
+      // ?먯쥌???닿툑 ???먯쑝硫?由ъ쟾??以??닿툑??寃?李얘린
       const unlockedRegionalForm = allPokedex.find(p =>
         p.originalNumber === pokemon.number &&
-        unlockedNumbers.has(p.number)
+        gamePokedexNumbers.has(toDexNumber(p.number)) &&
+        unlockedNumbers.has(toDexNumber(p.number))
       );
       setSelectedForm(unlockedRegionalForm || pokemon);
     }
@@ -164,7 +287,7 @@ export default function PokedexView({
     setIsEditingMemo(false);
     setIsEditingRegions(false);
 
-    const entry = pokedexData[pokemonOriginalNumber];
+    const entry = getPokedexEntry(pokemon) || pokedexData[pokemonOriginalNumber];
     setMemoText(entry?.memo || '');
   };
 
@@ -178,7 +301,7 @@ export default function PokedexView({
       onUpdateMemo(pokemonOriginalNumber, memoText);
       setIsEditingMemo(false);
     } else {
-      alert('첫 포획자만 메모를 작성할 수 있습니다!');
+      alert('최초 포획자만 메모를 작성할 수 있습니다!');
     }
   };
 
@@ -188,7 +311,7 @@ export default function PokedexView({
     if (entry && entry.firstCatcher === currentUser?.name) {
       setIsEditingMemo(true);
     } else {
-      alert('첫 포획자만 메모를 작성할 수 있습니다!');
+      alert('최초 포획자만 메모를 작성할 수 있습니다!');
     }
   };
 
@@ -214,6 +337,10 @@ export default function PokedexView({
     setIsEditingRegions(false);
   };
 
+  const getPokemonSpriteUrl = (pokemon) => (
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`
+  );
+
   return (
     <div className="h-full flex flex-col gap-4 text-[#26351f]">
       {/* 헤더 */}
@@ -224,7 +351,7 @@ export default function PokedexView({
             <div className="text-3xl font-bold text-[#4f741f]">{unlockedCount}/{totalCount}</div>
             <div className="text-sm text-[#627a3a]">발견 {percentage}%</div>
             <div className="text-xs text-[#82965d] mt-1">
-              내가 잡은 포켓몬: {myCaughtNumbers.size}마리
+              내가 잡은 포켓몬 {myCaughtNumbers.size}마리
             </div>
           </div>
         </div>
@@ -254,30 +381,37 @@ export default function PokedexView({
           <div className="flex h-full flex-col items-center justify-center text-[#819665]">
             <Lock size={64} className="mb-4" />
             <p className="text-lg font-semibold">
-              {searchTerm ? '검색 결과가 없습니다' : '아직 발견된 포켓몬이 없습니다'}
+              {searchTerm ? '검색 결과가 없습니다' : '아직 발견한 포켓몬이 없습니다'}
             </p>
-            <p className="text-sm mt-2">모험을 떠나 새로운 포켓몬을 만나보세요!</p>
+            <p className="text-sm mt-2">모험을 떠나 새로운 포켓몬을 만나보세요</p>
           </div>
         ) : (
           <div className="grid grid-cols-6 gap-4">
             {filteredPokedex.map((pokemon) => {
               const originalNumber = pokemon.originalNumber || pokemon.number;
-              const isMyCaught = myCaughtNumbers.has(originalNumber);
-              const isUnlocked = unlockedNumbers.has(originalNumber);
-              const entry = pokedexData[originalNumber];
+              const currentNumber = toDexNumber(pokemon.number);
+              const originalDexNumber = toDexNumber(originalNumber);
+              const isMyCaught = myCaughtNumbers.has(currentNumber) || myCaughtNumbers.has(originalDexNumber);
+              const isUnlocked = isPokemonUnlocked(pokemon);
+              const entry = getPokedexEntry(pokemon);
               const hasNote = entry?.memo;
 
-              // ⭐ 카드에 표시할 포켓몬 결정: 원종이 해금되면 원종, 아니면 해금된 첫 리전폼
+              // 狩?移대뱶???쒖떆???ъ폆紐?寃곗젙: ?먯쥌???닿툑?섎㈃ ?먯쥌, ?꾨땲硫??닿툑??泥?由ъ쟾??
               let displayPokemon = pokemon;
-              if (!unlockedNumbers.has(pokemon.number)) {
-                // 원종이 해금 안 됐으면 리전폼 중 해금된 것 찾기
-                const unlockedRegionalForm = allPokedex.find(p =>
-                  p.originalNumber === pokemon.number &&
-                  unlockedNumbers.has(p.number)
-                );
-                if (unlockedRegionalForm) {
-                  displayPokemon = unlockedRegionalForm;
-                }
+              const unlockedRegionalForm = allPokedex.find(p =>
+                p.originalNumber === pokemon.number &&
+                gamePokedexNumbers.has(toDexNumber(p.number)) &&
+                unlockedNumbers.has(toDexNumber(p.number))
+              );
+              const myCaughtRegionalForm = allPokedex.find(p =>
+                p.originalNumber === pokemon.number &&
+                gamePokedexNumbers.has(toDexNumber(p.number)) &&
+                myCaughtNumbers.has(toDexNumber(p.number))
+              );
+              if (myCaughtRegionalForm && !myCaughtNumbers.has(currentNumber)) {
+                displayPokemon = myCaughtRegionalForm;
+              } else if (!unlockedNumbers.has(currentNumber) && unlockedRegionalForm) {
+                displayPokemon = unlockedRegionalForm;
               }
 
               return (
@@ -300,29 +434,24 @@ export default function PokedexView({
                     No.{(pokemon.newNumber || pokemon.number).toString().padStart(3, '0')}
                   </div>
 
-                  <div
-                    className="mb-2 h-24 w-full bg-transparent"
-                    style={{
-                      backgroundImage: isUnlocked
-                        ? `url(https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${displayPokemon.number}.png)`
-                        : 'none',
-                      backgroundSize: 'contain',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'center',
-                      imageRendering: 'pixelated',
-                      backgroundColor: 'transparent'
-                    }}
-                  >
-                    {!isUnlocked && (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Lock size={32} className="text-[#8fa66a]" />
-                      </div>
+                  <div className={`flex w-full items-center justify-center bg-transparent ${isUnlocked ? 'mb-2 h-24' : 'h-36'}`}>
+                    {isUnlocked ? (
+                      <img
+                        src={getPokemonSpriteUrl(displayPokemon)}
+                        alt={displayPokemon.name}
+                        className="pokedex-card-sprite"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <span className="text-5xl font-black text-[#8fa66a] drop-shadow-sm">?</span>
                     )}
                   </div>
 
-                  <div className="truncate text-sm font-bold text-[#26351f]">
-                    {isUnlocked ? displayPokemon.name : '???'}
-                  </div>
+                  {isUnlocked && (
+                    <div className="truncate text-sm font-bold text-[#26351f]">
+                      {displayPokemon.name}
+                    </div>
+                  )}
 
                   {isUnlocked && (
                     <div className="flex gap-1 justify-center mt-2">
@@ -373,11 +502,11 @@ export default function PokedexView({
           }}
         >
           <div
-            className="m-4 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg border border-[#b7d982] bg-[#f4f8e8] p-6 shadow-2xl"
+            className="m-4 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg border border-[#b7d982] bg-[#f4f8e8] p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center">
-              {/* 도감 번호 - 리전폼도 원종 번호 표시 */}
+              {/* 도감 번호 */}
               <div className="mb-2 text-sm text-[#6f804f]">
                 {(() => {
                   const displayNumber = selectedForm.originalNumber || selectedForm.number;
@@ -390,7 +519,7 @@ export default function PokedexView({
                       No.{displayNumber.toString().padStart(3, '0')}
                       {baseForm?.newNumber && (
                         <span className="ml-2 text-xs">
-                          (게임도감 No.{baseForm.newNumber.toString().padStart(3, '0')})
+                          (영운 도감 No.{baseForm.newNumber.toString().padStart(3, '0')})
                         </span>
                       )}
                     </>
@@ -398,9 +527,9 @@ export default function PokedexView({
                 })()}
               </div>
 
-              {/* 리전폼 탭 */}
+              {/* 리전폼 */}
               {(() => {
-                // 현재 선택된 포켓몬이 원종인지 리전폼인지 확인
+                // ?꾩옱 ?좏깮???ъ폆紐ъ씠 ?먯쥌?몄? 由ъ쟾?쇱씤吏 ?뺤씤
                 const isCurrentRegionalForm = selectedPokemon.originalNumber &&
                                               selectedPokemon.originalNumber !== selectedPokemon.number;
 
@@ -408,25 +537,26 @@ export default function PokedexView({
                 let regionalForms = [];
 
                 if (isCurrentRegionalForm) {
-                  // 리전폼 카드 클릭: 원종 + 다른 리전폼들
+                  // 由ъ쟾??移대뱶 ?대┃: ?먯쥌 + ?ㅻⅨ 由ъ쟾?쇰뱾
                   originalForm = getOriginalForm(selectedPokemon);
                   regionalForms = getRegionalForms(selectedPokemon);
                 } else {
-                  // 원종 카드 클릭: 원종 자신 + 리전폼들
+                  // ?먯쥌 移대뱶 ?대┃: ?먯쥌 ?먯떊 + 由ъ쟾?쇰뱾
                   originalForm = selectedPokemon;
                   regionalForms = allPokedex.filter(p =>
                     p.originalNumber === selectedPokemon.number &&
                     p.originalNumber !== p.number &&
-                    unlockedNumbers.has(p.number)
+                    gamePokedexNumbers.has(toDexNumber(p.number)) &&
+                    unlockedNumbers.has(toDexNumber(p.number))
                   );
                 }
 
-                const hasForms = (originalForm && unlockedNumbers.has(originalForm.number)) || regionalForms.length > 0;
+                const hasForms = regionalForms.length > 0;
 
                 return hasForms && (
                   <div className="mb-4 flex flex-wrap gap-2 justify-center">
                     {/* 원종 버튼 */}
-                    {originalForm && unlockedNumbers.has(originalForm.number) && (
+                    {originalForm && gamePokedexNumbers.has(toDexNumber(originalForm.number)) && unlockedNumbers.has(toDexNumber(originalForm.number)) && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -442,9 +572,9 @@ export default function PokedexView({
                       </button>
                     )}
 
-                    {/* 리전폼 버튼들 */}
+                    {/* 리전폼 버튼 */}
                     {regionalForms.map(form => {
-                      const regionName = form.name.match(/\(([^)]+)\)/)?.[1] || form.name;
+                      const regionName = getRegionalFormLabel(form);
 
                       return (
                         <button
@@ -469,17 +599,13 @@ export default function PokedexView({
 
               {/* 포켓몬 이미지 */}
               <img
-                src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${selectedForm.number}.png`}
+                src={getPokemonSpriteUrl(selectedForm)}
                 alt={selectedForm.name}
-                className="mx-auto mb-4 h-48 w-48 bg-transparent"
-                style={{ imageRendering: 'pixelated',
-                      backgroundColor: 'transparent' }}
+                className="pokedex-modal-sprite mx-auto mb-4 bg-transparent"
               />
 
               {/* 이름 */}
               <h3 className="mb-2 text-2xl font-bold text-[#26351f]">{selectedForm.name}</h3>
-              <div className="mb-4 text-sm text-[#6f804f]">{selectedForm.nameEn}</div>
-
               {/* 타입 */}
               <div className="flex gap-2 justify-center mb-4">
                 <span
@@ -498,8 +624,9 @@ export default function PokedexView({
                 )}
               </div>
 
+              <div className="mb-4 grid gap-3 md:grid-cols-2">
               {/* 출현 지역 */}
-              <div className="mb-4 rounded border border-[#b7d982] bg-[#eef7df] p-3 text-left">
+              <div className="rounded border border-[#b7d982] bg-[#eef7df] p-3 text-left">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <MapPin size={16} className="text-[#4f741f]" />
@@ -517,15 +644,15 @@ export default function PokedexView({
 
                 {isEditingRegions ? (
                   <div className="space-y-2">
-                    {regions.map(region => (
+                    {getEditableRegionOptions().map(region => (
                       <label key={region.id} className="flex items-center gap-2 cursor-pointer hover:bg-[#d9e9ad] p-1 rounded">
                         <input
                           type="checkbox"
-                          checked={editableRegions.includes(region.name)}
-                          onChange={() => toggleRegion(region.name)}
+                          checked={editableRegions.includes(region.label)}
+                          onChange={() => toggleRegion(region.label)}
                           className="h-4 w-4 text-[#5f8228]"
                         />
-                        <span className="text-sm text-gray-700">{region.name}</span>
+                        <span className="text-sm text-gray-700">{region.label}</span>
                       </label>
                     ))}
                     <div className="flex gap-2 mt-3">
@@ -546,7 +673,7 @@ export default function PokedexView({
                 ) : (
                   <div className="text-sm text-[#536b35]">
                     {(() => {
-                      // 현재 선택된 폼의 출현 지역 표시
+                      // ?꾩옱 ?좏깮???쇱쓽 異쒗쁽 吏???쒖떆
                       const pokemonRegions = getPokemonRegions(selectedForm);
                       return pokemonRegions.length > 0
                         ? pokemonRegions.join(', ')
@@ -556,19 +683,18 @@ export default function PokedexView({
                 )}
               </div>
 
-              {/* 최초 포획자/조우자 정보 & 메모 */}
+              {/* 최초 포획 및 조우 정보 */}
               {(() => {
-                const originalNumber = selectedPokemon.originalNumber || selectedPokemon.number;
-                const entry = pokedexData[originalNumber];
+                const entry = getPokedexEntry(selectedForm) || getPokedexEntry(selectedPokemon);
 
                 if (!entry || (!entry.firstCatcher && !entry.firstEncounter)) return null;
 
                 if (entry.firstCatcher) {
                   return (
-                    <div className="mb-4 rounded border border-[#d2df87] bg-[#f4f8d8] p-4 text-left">
+                    <div className="rounded border border-[#d2df87] bg-[#f4f8d8] p-4 text-left">
                       <div className="flex items-center justify-between mb-2">
                         <div className="text-sm font-semibold text-gray-700">
-                          🏆 최초 포획: {entry.firstCatcher}
+                          최초 포획: {entry.firstCatcher}
                         </div>
                         {entry.firstCatcher === currentUser?.name && !isEditingMemo && (
                           <button
@@ -619,7 +745,7 @@ export default function PokedexView({
                       {!entry.memo && !isEditingMemo &&
                        entry.firstCatcher === currentUser?.name && (
                         <div className="text-xs italic text-[#6f804f]">
-                          메모를 남겨보세요!
+                          메모를 남겨보세요
                         </div>
                       )}
                     </div>
@@ -627,17 +753,18 @@ export default function PokedexView({
                 }
 
                 return (
-                  <div className="mb-4 rounded border border-[#b7d982] bg-[#eef7df] p-4 text-left">
+                  <div className="rounded border border-[#b7d982] bg-[#eef7df] p-4 text-left">
                     <div className="text-sm font-semibold text-gray-700 mb-2">
-                      👀 최초 조우: {entry.firstEncounter}
+                      최초 조우: {entry.firstEncounter}
                     </div>
                     <div className="flex items-start gap-2 rounded bg-[#fbfdf3] p-2 text-xs text-[#536b35]">
-                      <span>💡</span>
-                      <span>아직 아무도 포획하지 않았습니다. 첫 포획자가 되어보세요!</span>
+                      <span>정보</span>
+                      <span>아직 아무도 포획하지 않았습니다. 첫 포획자가 되어보세요.</span>
                     </div>
                   </div>
                 );
               })()}
+              </div>
 
               <button
                 onClick={() => {

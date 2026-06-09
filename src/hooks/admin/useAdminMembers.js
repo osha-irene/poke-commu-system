@@ -1,8 +1,10 @@
 // src/hooks/admin/useAdminMembers.js
 // 회원 관리 전용 훅
 
+import { initializeApp, deleteApp } from 'firebase/app';
+import { createUserWithEmailAndPassword, getAuth, signOut } from 'firebase/auth';
 import { ref, set } from 'firebase/database';
-import { database } from '../../firebase';
+import { auth, database } from '../../firebase';
 import { POKEBALL_LIST } from '../../styles/theme';
 import { normalizePokemonGender } from '../../utils/pokemonGender';
 
@@ -12,13 +14,33 @@ export const useAdminMembers = (
   setMembers,
   updateCurrentUser,
   allItems,
-  allPokemonMaster
+  allPokemonMaster,
+  systemSettings = {}
 ) => {
   
   // ========== 회원 추가 ==========
   const addMember = async (id, password, name) => {
     if (!currentUser?.isAdmin) return false;
-    if (members[id]) return false;
+
+    const loginId = String(id || '').trim();
+    const memberPassword = String(password || '');
+    const memberName = String(name || '').trim();
+    const isTemporaryPassword = memberPassword === '0000';
+    const authPassword = isTemporaryPassword ? '000000' : memberPassword;
+
+    if (!loginId || !memberPassword || !memberName) return false;
+    if (authPassword.length < 6) {
+      alert('비밀번호는 6자 이상으로 입력해주세요. 임시 비밀번호는 0000을 사용할 수 있습니다.');
+      return false;
+    }
+
+    const duplicateMember = members?.[loginId] || Object.values(members || {}).find(member => (
+      member?.loginId === loginId || member?.email === `${loginId}@pokemon.com`
+    ));
+    if (duplicateMember) {
+      alert('이미 사용 중인 아이디입니다.');
+      return false;
+    }
     
     const getInitialInventory = () => {
       const findItem = (searchTerms) => {
@@ -45,9 +67,11 @@ export const useAdminMembers = (
     };
 
     const newMember = {
-      password: password,
-      name: name,
-      email: `${id}@pokemon.com`,
+      loginId,
+      password: isTemporaryPassword ? '0000' : null,
+      name: memberName,
+      email: `${loginId}@pokemon.com`,
+      forcePasswordChange: isTemporaryPassword,
       isAdmin: false,
       isSuperAdmin: false,
       canManageItems: false,
@@ -56,25 +80,52 @@ export const useAdminMembers = (
       money: 10000,
       trainerExp: 0,
       lastAttendanceDate: null,
-      accessibleRegions: [],
       caughtPokemon: [],
       inventory: getInitialInventory()
     };
     
+    let secondaryApp = null;
+
     try {
-      const memberRef = ref(database, `members/${id}`);
+      secondaryApp = initializeApp(auth.app.options, `admin-member-create-${Date.now()}`);
+      const secondaryAuth = getAuth(secondaryApp);
+      const userCredential = await createUserWithEmailAndPassword(
+        secondaryAuth,
+        newMember.email,
+        authPassword
+      );
+      const uid = userCredential.user.uid;
+
+      await signOut(secondaryAuth);
+
+      const memberRef = ref(database, `members/${uid}`);
       await set(memberRef, newMember);
       
       setMembers(prev => ({
         ...prev,
-        [id]: { ...newMember, id }
+        [uid]: { ...newMember, id: uid }
       }));
       
-      console.log('✅ 새 회원 추가:', name);
+      console.log('✅ 새 회원 추가:', memberName, uid);
       return true;
     } catch (error) {
       console.error('❌ 회원 추가 실패:', error);
+      if (error.code === 'auth/email-already-in-use') {
+        alert('이미 사용 중인 아이디입니다.');
+      } else if (error.code === 'auth/weak-password') {
+        alert('비밀번호는 6자 이상으로 입력해주세요. 임시 비밀번호는 0000을 사용할 수 있습니다.');
+      } else {
+        alert(`회원 추가 중 오류가 발생했습니다.\n${error.message || error}`);
+      }
       return false;
+    } finally {
+      if (secondaryApp) {
+        try {
+          await deleteApp(secondaryApp);
+        } catch (error) {
+          console.warn('보조 Firebase 앱 정리 실패:', error);
+        }
+      }
     }
   };
 
@@ -235,11 +286,12 @@ export const useAdminMembers = (
       condition = null,
     } = options;
 
-    // 파트너가 아닌 경우에만 20마리 체크
+    // 파트너가 아닌 경우에만 포획 제한 체크
     if (!isPartner) {
       const nonPartnerCount = member.caughtPokemon.filter(p => p && !p.isPartner).length;
-      if (nonPartnerCount >= 20) {
-        alert(`⚠️ ${member.name}님은 이미 파트너를 제외한 포켓몬이 20마리입니다!\n더 이상 포켓몬을 지급할 수 없습니다.`);
+      const maxNonPartnerPokemon = Number(systemSettings.maxNonPartnerPokemon) || 18;
+      if (nonPartnerCount >= maxNonPartnerPokemon) {
+        alert(`⚠️ ${member.name}님은 이미 파트너를 제외한 포켓몬이 ${maxNonPartnerPokemon}마리입니다!\n더 이상 포켓몬을 지급할 수 없습니다.`);
         return;
       }
     }
@@ -657,29 +709,38 @@ export const useAdminMembers = (
     }
   };
 
-  // ========== 회원 지역 접근 권한 업데이트 ==========
-  const updateMemberRegionAccess = async (memberId, regionIds) => {
-    if (!currentUser?.isAdmin) return;
-    
+  // ========== 회원 삭제 ==========
+  const deleteMember = async (memberId) => {
+    if (!currentUser?.isSuperAdmin) return false;
+    if (!memberId || memberId === currentUser.id) {
+      alert('현재 로그인 중인 계정은 삭제할 수 없습니다.');
+      return false;
+    }
+
     const member = members[memberId];
-    if (!member) return;
-    
-    const updatedMember = {
-      ...member,
-      accessibleRegions: regionIds
-    };
-    
+    if (!member) {
+      alert('삭제할 회원을 찾을 수 없습니다.');
+      return false;
+    }
+
+    if (member.isSuperAdmin) {
+      alert('슈퍼 관리자 계정은 삭제할 수 없습니다.');
+      return false;
+    }
+
     try {
-      const { id, ...dataToSave } = updatedMember;
-      const memberRef = ref(database, `members/${memberId}`);
-      await set(memberRef, dataToSave);
-      
-      setMembers(prev => ({
-        ...prev,
-        [memberId]: updatedMember
-      }));
+      await set(ref(database, `members/${memberId}`), null);
+      setMembers(prev => {
+        const nextMembers = { ...prev };
+        delete nextMembers[memberId];
+        return nextMembers;
+      });
+      console.log('✅ 회원 삭제 완료:', memberId);
+      return true;
     } catch (error) {
-      console.error('❌ 지역 권한 업데이트 실패:', error);
+      console.error('❌ 회원 삭제 실패:', error);
+      alert('회원 삭제 중 오류가 발생했습니다.');
+      return false;
     }
   };
 
@@ -725,7 +786,7 @@ export const useAdminMembers = (
     editMemberPokemon,
     addPokemonToSelf,
     updateMemberMoney,
-    updateMemberRegionAccess,
+    deleteMember,
     resetGameData
   };
 };

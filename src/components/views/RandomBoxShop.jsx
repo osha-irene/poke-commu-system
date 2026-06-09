@@ -206,11 +206,11 @@ export default function RandomBoxShop({ shopData, currentUser, allItems, onBuyRa
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
           <button
             onClick={handleBuyBox}
-            className="bg-gradient-to-r from-pink-600 to-purple-600 text-white px-8 py-4 rounded-full font-bold text-lg shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all flex items-center gap-3"
+            className="border-2 border-lime-300 bg-white/85 text-green-950 px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:bg-lime-100/90 transform hover:scale-105 transition-all flex items-center gap-3"
           >
-            <Gift size={24} />
+            <Gift size={24} className="text-lime-700" />
             <span>{selectedItem.name} 구매하기</span>
-            <div className="flex items-center gap-1 bg-white/20 px-3 py-1 rounded-full">
+            <div className="flex items-center gap-1 border border-lime-300 bg-white/70 px-3 py-1 rounded-full">
               <Coins size={18} />
               {selectedItem.price.toLocaleString()}원
             </div>
@@ -226,11 +226,11 @@ export default function RandomBoxShop({ shopData, currentUser, allItems, onBuyRa
               <Sparkles size={64} className="mx-auto text-yellow-500 mb-4" />
               <h3 className="text-2xl font-bold text-gray-800 mb-4">획득 완료!</h3>
               
-              <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg p-6 border-2 border-yellow-300 mb-6">
+              <div className="bg-white/40 rounded-lg p-6 border-2 border-lime-200 mb-6">
                 <div className="text-xl font-bold text-gray-800 mb-2">
                   {rewardResult.name}
                 </div>
-                <div className="text-3xl font-bold text-pink-600">
+                <div className="text-3xl font-bold text-lime-700">
                   x {rewardResult.count}개
                 </div>
               </div>
@@ -240,7 +240,7 @@ export default function RandomBoxShop({ shopData, currentUser, allItems, onBuyRa
                   setShowResultModal(false);
                   setRewardResult(null);
                 }}
-                className="w-full bg-gradient-to-r from-pink-600 to-purple-600 text-white py-3 rounded-lg font-bold hover:shadow-lg transition-all"
+                className="w-full border-2 border-lime-300 bg-white/55 text-green-950 py-3 rounded-lg font-bold hover:bg-lime-100/70 transition-all"
               >
                 확인
               </button>

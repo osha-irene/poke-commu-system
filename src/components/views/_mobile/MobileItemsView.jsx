@@ -178,10 +178,10 @@ export default function MobileItemsView() {
   return (
     <div className="pb-4">
       {/* 상단 정보 */}
-      <div className="bg-gradient-to-r from-yellow-400 to-orange-400 px-4 py-3 mb-4">
-        <div className="flex items-center justify-between text-white">
+      <div className="border-2 border-lime-300 bg-white/55 px-4 py-3 mb-4">
+        <div className="flex items-center justify-between text-green-950">
           <div>
-            <div className="text-sm opacity-90">보유 금액</div>
+            <div className="text-sm text-green-700">보유 금액</div>
             <div className="text-2xl font-bold">{(trainer.money || 0).toLocaleString()}원</div>
           </div>
           <div className="text-right">

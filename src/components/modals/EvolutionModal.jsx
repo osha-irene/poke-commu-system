@@ -18,13 +18,13 @@ export default function EvolutionModal({
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden">
         {/* 헤더 */}
-        <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 p-6 text-white">
+        <div className="border-b-2 border-lime-300 bg-white/95 p-6 text-green-950">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <Sparkles size={32} className="animate-pulse" />
+            <Sparkles size={32} className="text-lime-700 animate-pulse" />
             <h2 className="text-3xl font-bold">진화!</h2>
-            <Sparkles size={32} className="animate-pulse" />
+            <Sparkles size={32} className="text-lime-700 animate-pulse" />
           </div>
-          <p className="text-center text-yellow-100">
+          <p className="text-center text-green-800">
             {pokemon.nickname || pokemon.name}이(가) 진화하려고 합니다!
           </p>
         </div>
@@ -34,7 +34,7 @@ export default function EvolutionModal({
           <div className="flex items-center justify-center gap-8">
             {/* 진화 전 */}
             <div className="flex-1 text-center">
-              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 border-2 border-blue-200">
+              <div className="bg-white/40 rounded-xl p-6 border-2 border-lime-200">
                 <div 
                   className="w-40 h-40 mx-auto mb-4"
                   style={{
@@ -70,8 +70,7 @@ export default function EvolutionModal({
 
             {/* 진화 후 */}
             <div className="flex-1 text-center">
-              <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-6 border-2 border-yellow-300 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-yellow-200/20 to-orange-200/20 animate-pulse" />
+              <div className="bg-white/40 rounded-xl p-6 border-2 border-lime-200 relative overflow-hidden">
                 <div 
                   className="w-40 h-40 mx-auto mb-4 relative z-10"
                   style={{
@@ -125,7 +124,7 @@ export default function EvolutionModal({
             </button>
             <button
               onClick={onAccept}
-              className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-4 rounded-lg hover:from-yellow-600 hover:to-orange-600 font-semibold transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+              className="flex-1 border-2 border-lime-300 bg-white/55 text-green-950 py-4 rounded-lg hover:bg-lime-100/70 font-semibold transition-all shadow-sm flex items-center justify-center gap-2"
             >
               <Sparkles size={20} />
               <span>진화하기!</span>

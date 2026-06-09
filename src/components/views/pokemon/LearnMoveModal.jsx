@@ -88,17 +88,17 @@ export default function LearnMoveModal({
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* 헤더 */}
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-t-xl">
+        <div className="border-b-2 border-lime-300 bg-white/95 p-6 rounded-t-xl">
           <div className="flex justify-between items-start">
             <div>
-              <h2 className="text-2xl font-bold mb-1">새로운 기술!</h2>
-              <p className="text-indigo-100">
+              <h2 className="text-2xl font-bold mb-1 text-green-950">새로운 기술!</h2>
+              <p className="text-green-800">
                 {pokemon.nickname || pokemon.name}이(가) {newMove.name}을(를) 배우려고 합니다
               </p>
             </div>
             <button
               onClick={handleCancel}
-              className="text-white/80 hover:text-white"
+              className="text-green-950 hover:text-lime-700"
             >
               <X size={24} />
             </button>
@@ -109,7 +109,7 @@ export default function LearnMoveModal({
           {/* 새로운 기술 */}
           <div>
             <h3 className="text-sm font-semibold text-gray-600 mb-2">🆕 배울 기술</h3>
-            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-400 rounded-lg p-4">
+            <div className="bg-white/40 border-2 border-lime-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-lg font-bold text-gray-800">{newMove.name}</span>
                 <span

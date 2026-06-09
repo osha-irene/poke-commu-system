@@ -194,7 +194,7 @@ export default function ShopView() {
 
     const typeStyles = {
       rare: {
-        label: '오늘의 희귀',
+        label: '한정',
         labelBg: 'bg-purple-600',
         border: 'border-purple-300',
         bg: 'bg-purple-50',
@@ -294,19 +294,19 @@ export default function ShopView() {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* 헤더 */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg p-6 shadow-xl">
+      <div className="rounded-lg border-2 border-lime-300 bg-white/55 p-6 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-              <ShoppingCart size={32} />
+            <h1 className="text-3xl font-bold mb-2 flex items-center gap-3 text-green-950">
+              <ShoppingCart size={32} className="text-lime-700" />
               포켓몬 상점
             </h1>
-            <p className="text-indigo-100">필요한 아이템을 구매하세요!</p>
+            <p className="text-green-800">필요한 아이템을 구매하세요!</p>
           </div>
-          <div className="text-right">
-            <div className="text-sm text-indigo-200 mb-1">보유 금액</div>
+          <div className="text-right text-green-950">
+            <div className="text-sm text-green-700 mb-1">보유 금액</div>
             <div className="text-4xl font-bold flex items-center gap-2">
-              <Coins size={32} />
+              <Coins size={32} className="text-lime-700" />
               {trainer.money?.toLocaleString() || 0}원
             </div>
           </div>
@@ -365,7 +365,7 @@ export default function ShopView() {
         <div className="p-6">
           {/* 상품 그리드 */}
           <div className="grid grid-cols-3 gap-4">
-            {/* 오늘의 희귀 아이템 */}
+            {/* 한정 아이템 */}
             {(filterType === 'all' || filterType === 'rare') && 
              shopData.rareItemConfig?.enabled && 
              shopData.rareDailyItem?.itemId && 
@@ -412,7 +412,7 @@ export default function ShopView() {
                   
                   <div className="absolute top-0 left-0 bg-purple-600 text-white text-xs px-3 py-1 font-bold flex items-center gap-1 rounded-br-lg z-10">
                     <Star size={12} />
-                    <span>오늘의 희귀</span>
+                    <span>한정</span>
                   </div>
                   
                   <div className="bg-purple-50 p-4 pt-8">

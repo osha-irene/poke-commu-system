@@ -24,7 +24,8 @@ export default function AdminView() {
     currentUser: trainer,
     members = {},
     regions = [],
-    setRegions,    allPokemonMaster = [],
+    setRegions,
+    allPokemonMaster = [],
     allItems = [],
     gamePokedex = [],
     shopData = {},
@@ -33,6 +34,7 @@ export default function AdminView() {
     removeDailyItem,
     toggleItemPersistent,
     maintenanceMode = false,
+    systemSettings = { maxNonPartnerPokemon: 18 },
     createTown,
     updateTown,
     deleteTown,
@@ -50,13 +52,14 @@ export default function AdminView() {
     givePokemonToMember,
     createCustomItem,
     updateMemberMoney,
-    updateMemberRegionAccess,
     editMemberPokemon,
     deleteMemberPokemon,
     updateShopData,
     setMaintenanceMode,
+    updateSystemSettings,
     updateRegionLootConfig,
     createRecipe,
+    updateRecipe,
     deleteRecipe,
     updateIngredientStats,
     updateGamePokedex,
@@ -65,6 +68,7 @@ export default function AdminView() {
 
   const [adminTab, setAdminTab] = useState('members');
   const [maxWalks, setMaxWalks] = useState(trainer?.maxDailyWalks || 5);
+  const [maxNonPartnerPokemon, setMaxNonPartnerPokemon] = useState(systemSettings.maxNonPartnerPokemon || 18);
   const [editingRegion, setEditingRegion] = useState(null);
   const [selectedMemberId, setSelectedMemberId] = useState(null);
   const [newMemberId, setNewMemberId] = useState('');
@@ -154,20 +158,22 @@ export default function AdminView() {
     }
   }, [members, selectedMemberId]);
 
-  const handleAddMember = () => {
+  useEffect(() => {
+    setMaxNonPartnerPokemon(systemSettings.maxNonPartnerPokemon || 18);
+  }, [systemSettings.maxNonPartnerPokemon]);
+
+  const handleAddMember = async () => {
     if (!newMemberId || !newMemberPassword || !newMemberName) {
       alert('모든 정보를 입력해주세요.');
       return;
     }
 
-    const success = addMember?.(newMemberId, newMemberPassword, newMemberName);
+    const success = await addMember?.(newMemberId, newMemberPassword, newMemberName);
     if (success) {
       alert(`${newMemberName}님이 추가되었습니다!`);
       setNewMemberId('');
       setNewMemberPassword('');
       setNewMemberName('');
-    } else {
-      alert('이미 존재하는 아이디입니다.');
     }
   };
 
@@ -240,6 +246,25 @@ export default function AdminView() {
     if (window.confirm('모든 회원의 탐험 횟수를 초기화하시겠습니까?')) {
       resetAllWalkCounts?.();
       alert('모든 회원의 탐험 횟수가 초기화되었습니다.');
+    }
+  };
+
+  const handleSavePokemonLimit = async () => {
+    const nextLimit = Number(maxNonPartnerPokemon);
+    if (!Number.isFinite(nextLimit) || nextLimit < 1) {
+      alert('1마리 이상으로 설정해주세요.');
+      return;
+    }
+
+    try {
+      await updateSystemSettings?.({
+        ...systemSettings,
+        maxNonPartnerPokemon: Math.floor(nextLimit)
+      });
+      alert(`회원당 포켓몬 보유 제한이 ${Math.floor(nextLimit)}마리로 저장되었습니다.`);
+    } catch (error) {
+      console.error('포켓몬 보유 제한 저장 실패:', error);
+      alert('포켓몬 보유 제한 저장 중 오류가 발생했습니다.');
     }
   };
 
@@ -430,7 +455,7 @@ export default function AdminView() {
       {/* 도감 관리 탭 */}
       {adminTab === 'pokedex' && (
         <Card className="p-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">📖 게임 도감 포켓몬 설정</h3>
+          <h3 className="text-xl font-bold text-gray-800 mb-4">📖 영운 도감 포켓몬 설정</h3>
           <PokedexAdminPanel
             allPokemonMaster={allPokemonMaster}
             gamePokedex={gamePokedex}
@@ -455,6 +480,7 @@ export default function AdminView() {
       {adminTab === 'cooking' && (
         <CookingAdminPanel
           onCreateRecipe={createRecipe}
+          onUpdateRecipe={updateRecipe}
           onUpdateIngredientStats={updateIngredientStats}
           onDeleteRecipe={handleDeleteRecipe}
           allItems={allItems}
@@ -558,6 +584,35 @@ export default function AdminView() {
             </div>
             <div className="mt-3 text-sm text-gray-600">
               현재 설정: 모든 회원 최대 <strong>{Object.values(members)[0]?.maxDailyWalks || 5}회</strong>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">포켓몬 보유 제한</h3>
+            <div className="bg-lime-50 border-2 border-lime-200 rounded-lg p-4 mb-4">
+              <p className="text-sm text-lime-900">
+                회원 1명이 보유할 수 있는 포켓몬 수를 설정합니다. 파트너 포켓몬은 이 제한에 포함되지 않고, 엔트리와 박스의 포켓몬을 합산합니다.
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <input
+                type="number"
+                value={maxNonPartnerPokemon}
+                onChange={(event) => setMaxNonPartnerPokemon(parseInt(event.target.value, 10) || 0)}
+                min="1"
+                max="999"
+                className="border-2 border-gray-300 rounded-lg px-4 py-3 w-32 text-lg font-semibold focus:border-indigo-500 focus:outline-none"
+              />
+              <span className="text-gray-600 font-semibold">마리</span>
+              <Button
+                variant="primary"
+                onClick={handleSavePokemonLimit}
+              >
+                저장
+              </Button>
+            </div>
+            <div className="mt-3 text-sm text-gray-600">
+              현재 설정: 파트너 제외 최대 <strong>{systemSettings.maxNonPartnerPokemon || 18}마리</strong>
             </div>
           </Card>
 
@@ -699,7 +754,6 @@ export default function AdminView() {
           onResetWalk={handleResetMember}
           onToggleAdmin={handleToggleAdmin}
           onUpdateMoney={updateMemberMoney}
-          onUpdateRegionAccess={updateMemberRegionAccess}
           setMembers={setMembers}
           currentUser={trainer}
           updateCurrentUser={updateCurrentUser}

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Map as MapIcon, Building2 } from 'lucide-react';
+import { MapPin, Map as MapIcon, Building2, X } from 'lucide-react';
 
 export default function MapView({ regions, onRegionClick }) {
   const [viewMode, setViewMode] = useState('default');
   const [selectedTown, setSelectedTown] = useState(null);
+  const [placeSelectRegion, setPlaceSelectRegion] = useState(null);
 
   useEffect(() => {
     const defaultTown = regions.find(r => r.groupId && r.isDefaultTown === true);
@@ -15,7 +16,7 @@ export default function MapView({ regions, onRegionClick }) {
   const visibleRegions = (() => {
     if (viewMode === 'all') {
       // 전체 보기: 마을에 속한 모든 구역 표시 (마을 메타 제외, 미분류 제외)
-      return regions.filter(r => !r.isTownMeta && r.groupId);
+      return regions.filter(r => !r.isTownMeta && r.groupId && r.groupVisible !== false);
     } else {
       // 기본 보기: 선택된 마을의 구역만 표시
       if (selectedTown) {
@@ -26,7 +27,7 @@ export default function MapView({ regions, onRegionClick }) {
         );
       }
       // 선택된 마을 없으면 마을에 속한 모든 구역
-      return regions.filter(r => !r.isTownMeta && r.groupId);
+      return regions.filter(r => !r.isTownMeta && r.groupId && r.groupVisible !== false);
     }
   })();
 
@@ -48,6 +49,34 @@ export default function MapView({ regions, onRegionClick }) {
   })();
 
   const currentTown = towns.find(t => t.groupId === selectedTown);
+
+  const handleRegionButtonClick = (region) => {
+    const places = Array.isArray(region.places) ? region.places.filter(place => place?.name) : [];
+
+    if (places.length > 0) {
+      setPlaceSelectRegion({ ...region, places });
+      return;
+    }
+
+    onRegionClick(region);
+  };
+
+  const handlePlaceClick = (region, place) => {
+    onRegionClick({
+      ...region,
+      ...place,
+      id: `${region.id}__place__${place.id}`,
+      baseRegionId: region.id,
+      regionId: region.id,
+      regionName: region.name,
+      regionMaxLevel: region.maxLevel,
+      lootConfig: place.lootConfig || region.lootConfig,
+      placeId: place.id,
+      placeName: place.name,
+      name: `${region.name} - ${place.name}`
+    });
+    setPlaceSelectRegion(null);
+  };
 
   return (
     <div className="w-full h-full flex items-center justify-center">
@@ -85,7 +114,7 @@ export default function MapView({ regions, onRegionClick }) {
                 >
                   {towns.map(town => (
                     <option key={town.groupId} value={town.groupId}>
-                      {town.groupName} {town.isDefaultTown ? '⭐' : ''}
+                      {town.groupName} {town.isDefaultTown ? '(기본)' : ''}
                     </option>
                   ))}
                 </select>
@@ -136,7 +165,7 @@ export default function MapView({ regions, onRegionClick }) {
               visibleRegions.map(region => (
                 <button
                   key={region.id}
-                  onClick={() => onRegionClick(region)}
+                  onClick={() => handleRegionButtonClick(region)}
                   className="absolute hover:opacity-90 active:scale-95 transition-all 
                            rounded-lg px-4 py-2 flex items-center justify-center 
                            text-white font-bold border-2 border-white shadow-lg 
@@ -151,7 +180,7 @@ export default function MapView({ regions, onRegionClick }) {
                 >
                   <div className="relative z-10 text-center">
                     <span className="text-sm">
-                      {region.areaName || region.name}
+                      {region.name}
                     </span>
                   </div>
                 </button>
@@ -169,6 +198,45 @@ export default function MapView({ regions, onRegionClick }) {
           </div>
         </div>
       </div>
+
+      {placeSelectRegion && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-lg border-2 border-lime-300 bg-white p-5 shadow-2xl">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">
+                  {placeSelectRegion.name}
+                </h3>
+                <p className="mt-1 text-sm text-gray-600">탐험할 장소를 선택하세요</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPlaceSelectRegion(null)}
+                className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
+                aria-label="닫기"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="grid gap-2">
+              {placeSelectRegion.places.map((place) => (
+                <button
+                  key={place.id}
+                  type="button"
+                  onClick={() => handlePlaceClick(placeSelectRegion, place)}
+                  className="flex items-center justify-between rounded-lg border-2 border-lime-200 bg-lime-50 px-4 py-3 text-left font-bold text-lime-950 transition-colors hover:border-lime-600 hover:bg-white"
+                >
+                  <span>{place.name}</span>
+                  <span className="text-xs font-semibold text-lime-800">
+                    {(place.pokemons || []).length}종 / {place.encounterRate ?? 0}%
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

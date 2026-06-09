@@ -184,7 +184,7 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
           </button>
         </div>
       
-      <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg p-6 mb-6 border-2 border-orange-200">
+      <div className="bg-white/40 rounded-lg p-6 mb-6 border-2 border-lime-200">
   <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
     📊 야생 포켓몬 레벨 범위
   </h3>
@@ -235,7 +235,7 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
         {activeTab === 'rates' && (
           <div className="flex-1 overflow-y-auto p-4">
             {/* ⭐ 전체 출현율 설정 */}
-            <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-6 mb-6 border-2 border-purple-200">
+            <div className="bg-white/40 rounded-lg p-6 mb-6 border-2 border-lime-200">
               <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                 🌟 포켓몬 출현율 설정
               </h3>

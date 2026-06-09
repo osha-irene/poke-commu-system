@@ -57,7 +57,7 @@ const enrichItemData = (itemTemplate, allItems) => {
   };
 };
 
-// 기본 초기 재고 템플릿
+// 기본 요일별 아이템
 const getDefaultInitialDailyItems = () => ({
   monday: [
     { itemId: 17, price: 300, stock: 10, isPersistent: true },
@@ -150,7 +150,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
           };
           
           await set(shopRef, loadedData);
-          console.log('✅ 오늘의 희귀템 추첨 완료:', allItems.find(i => i.id === selectedRareItem.itemId)?.name);
+          console.log('✅ 오늘의 한정 아이템 추첨 완료:', allItems.find(i => i.id === selectedRareItem.itemId)?.name);
         }
         
         const needsWeeklyReset = !loadedData.lastWeekReset || loadedData.lastWeekReset !== currentWeek;
@@ -329,7 +329,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
       await updateShopData(updatedShopData);
       return true;
     } catch (error) {
-      console.error('❌ 초기 재고 템플릿 저장 실패:', error);
+      console.error('❌ 요일별 아이템 저장 실패:', error);
       return false;
     }
   };
@@ -438,7 +438,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
       itemData = item;
     }
     
-    const itemCost = itemData.cost ?? itemData.price ?? itemData.buyPrice ?? 0;
+    const itemCost = Number(itemData.price ?? itemData.buyPrice ?? itemData.cost ?? 0);
     const totalCost = itemCost * quantity;
     
     console.log('💰 최종 가격:', itemCost, '총액:', totalCost);
@@ -461,9 +461,10 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
       return false;
     }
     
-    // 희귀 아이템 구매 이력 체크
+    // 한정 아이템 구매 이력 체크
     const itemType = itemData.type;
     const itemId = itemData.itemId ?? itemData.id;
+    const resolvedItemId = itemData.id ?? itemData.itemId;
     
     if (itemType === 'rare') {
       const purchaseHistory = currentUser.purchaseHistory || {};
@@ -472,31 +473,31 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
       
       const alreadyPurchased = todayPurchases[itemId] || 0;
       if (alreadyPurchased >= 1) {
-        alert('오늘의 희귀 아이템은 1인당 1개만 구매할 수 있습니다!');
+        alert('한정 아이템은 1인당 1개만 구매할 수 있습니다!');
         return false;
       }
       
       if (quantity > 1) {
-        alert('희귀 아이템은 한 번에 1개만 구매할 수 있습니다!');
+        alert('한정 아이템은 한 번에 1개만 구매할 수 있습니다!');
         return false;
       }
     }
     
     // 인벤토리에 아이템 추가
     const existingItem = currentUser.inventory.find(
-      i => i.itemId === itemData.id || i.name === itemData.name
+      i => i.itemId === resolvedItemId || i.name === itemData.name
     );
     
     const newInventory = existingItem
       ? currentUser.inventory.map(i =>
-          (i.itemId === itemData.id || i.name === itemData.name)
+          (i.itemId === resolvedItemId || i.name === itemData.name)
             ? { ...i, count: i.count + quantity }
             : i
         )
       : [
           ...currentUser.inventory,
           {
-            itemId: itemData.id,
+            itemId: resolvedItemId,
             name: itemData.name,
             nameEn: itemData.nameEn,
             count: quantity,

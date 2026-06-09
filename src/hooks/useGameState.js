@@ -64,6 +64,8 @@ export default function useGameState() {
     setSharedPokedexData,
     maintenanceMode,
     setMaintenanceMode,
+    systemSettings,
+    updateSystemSettings,
     updatePokedexMemo: gameDataUpdatePokedexMemo
   } = useGameData(allPokemonDataParsed);
 
@@ -74,6 +76,7 @@ export default function useGameState() {
     handleLogin,
     handleLogout,
     updateCurrentUser,
+    changeCurrentUserPassword,
     isLoading: isAuthLoading
   } = useAuth(members, setMembers);
 
@@ -125,7 +128,8 @@ export default function useGameState() {
     setMembers,
     updateCurrentUser,
     allItems,
-    allPokemonMaster
+    allPokemonMaster,
+    systemSettings
   );
 
   const adminRegions = useAdminRegions(
@@ -167,7 +171,8 @@ export default function useGameState() {
     movesData,
     individualValues,
     movesHook,
-    pokedexHook
+    pokedexHook,
+    systemSettings
   );
 
   // 지역 탐험
@@ -316,12 +321,15 @@ export default function useGameState() {
     allMoves,
     pokemonLearnsets,
     maintenanceMode,
+    systemSettings,
     setMembers,
     isMembersLoading,
     setMaintenanceMode,
+    updateSystemSettings,
     updateShopData,
     handleLogin,
     handleLogout,
+    changeCurrentUserPassword,
     handleRegionClick,
     handleCloseEncounter,
     handleCatchSuccess,
@@ -343,6 +351,7 @@ export default function useGameState() {
     recipes: recipesHook.recipes,
     discoveredRecipes: recipesHook.discoveredRecipes,
     createRecipe: recipesHook.createRecipe,
+    updateRecipe: recipesHook.updateRecipe,
     deleteRecipe: recipesHook.deleteRecipe,
     cookRecipe: recipesHook.cookRecipe,
     discoverRecipe: recipesHook.discoverRecipe,

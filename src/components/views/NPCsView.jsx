@@ -106,7 +106,7 @@ export default function PlayersView() {
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => setSelectedPlayer(null)}>
           <div className="bg-white rounded-lg w-full max-w-5xl h-[85vh] max-h-[800px] overflow-hidden flex" onClick={(e) => e.stopPropagation()}>
             {/* 왼쪽: 사람 전신 이미지 */}
-            <div className="w-80 flex-shrink-0 bg-gradient-to-br from-blue-50 to-blue-100 flex flex-col">
+            <div className="w-80 flex-shrink-0 border-r-2 border-lime-200 bg-white/55 flex flex-col">
               <button 
                 onClick={() => setSelectedPlayer(null)} 
                 className="absolute top-3 left-3 bg-white/90 hover:bg-white rounded-full p-1.5 transition-colors z-10"
@@ -155,7 +155,7 @@ export default function PlayersView() {
                   <span className="text-xs text-red-600 bg-red-50 px-1.5 py-0.5 rounded">포켓몬 이름</span>
                 </h3>
                 {selectedPlayer.partner && (
-                  <div className="flex items-center gap-2.5 bg-gradient-to-r from-blue-50 to-purple-50 rounded p-2">
+                  <div className="flex items-center gap-2.5 bg-white/40 rounded border border-lime-200 p-2">
                     <div className="w-16 h-16 bg-white rounded border border-blue-300 flex items-center justify-center flex-shrink-0">
                       <img 
                         src={selectedPlayer.partner.sprite} 
@@ -200,7 +200,7 @@ export default function PlayersView() {
                 <h3 className="font-bold text-xs text-gray-800 mb-2">뱃지 or 컨테스트 리본</h3>
                 <div className="grid grid-cols-6 gap-1.5">
                   {selectedPlayer.items?.map((item, i) => (
-                    <div key={i} className="w-full h-12 bg-gradient-to-br from-yellow-50 to-orange-50 rounded border border-yellow-300 flex items-center justify-center">
+                    <div key={i} className="w-full h-12 bg-white/40 rounded border border-lime-200 flex items-center justify-center">
                       <img 
                         src={item.imageUrl} 
                         alt={item.name}

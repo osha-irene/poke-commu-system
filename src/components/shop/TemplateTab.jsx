@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import { RefreshCw, Save, Package, Calendar, Plus, Trash2 } from 'lucide-react';
 import { DAYS } from '../../utils/shopConstants';
+import ItemSelectorModal from '../modals/ItemSelectorModal';
 
 export default function TemplateTab({ 
   shopData, 
@@ -13,6 +14,7 @@ export default function TemplateTab({
 }) {
   const [editMode, setEditMode] = useState(false);
   const [tempTemplate, setTempTemplate] = useState(null);
+  const [itemSelectorDay, setItemSelectorDay] = useState(null);
 
   const startEdit = () => {
     setTempTemplate(JSON.parse(JSON.stringify(shopData.initialDailyItems || {})));
@@ -31,19 +33,20 @@ export default function TemplateTab({
         initialDailyItems: tempTemplate
       };
       await onUpdateShop(updatedShopData);
-      alert('초기 재고 템플릿이 저장되었습니다!\n다음 주 월요일부터 이 재고로 리셋됩니다.');
+      alert('요일별 아이템이 저장되었습니다!\n다음 주 월요일부터 이 재고로 리셋됩니다.');
       setEditMode(false);
       setTempTemplate(null);
     } catch (error) {
-      console.error('템플릿 저장 실패:', error);
-      alert('템플릿 저장 중 오류가 발생했습니다.');
+      console.error('요일별 아이템 저장 실패:', error);
+      alert('요일별 아이템 저장 중 오류가 발생했습니다.');
     }
   };
 
   const updateTemplateItem = (day, itemId, field, value) => {
     const updated = { ...tempTemplate };
+    const nextValue = field === 'isPersistent' ? Boolean(value) : parseInt(value) || 0;
     updated[day] = (updated[day] || []).map(item => 
-      item.itemId === itemId ? { ...item, [field]: parseInt(value) || 0 } : item
+      item.itemId === itemId ? { ...item, [field]: nextValue } : item
     );
     setTempTemplate(updated);
   };
@@ -63,21 +66,36 @@ export default function TemplateTab({
       return;
     }
     
-    updated[day].push({ itemId, price, stock });
+    updated[day].push({ itemId, price, stock, isPersistent: true });
     setTempTemplate(updated);
+  };
+
+  const closeItemSelector = () => {
+    setItemSelectorDay(null);
+  };
+
+  const handleSelectItem = (item) => {
+    if (!itemSelectorDay || !item) {
+      closeItemSelector();
+      return;
+    }
+
+    const defaultPrice = Number(item.price ?? item.buyPrice ?? item.cost ?? 100) || 100;
+    addTemplateItem(itemSelectorDay, item.id, defaultPrice, 10);
+    closeItemSelector();
   };
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg p-6 shadow-lg">
+      <div className="rounded-lg border-2 border-lime-300 bg-white/55 p-6 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
-              <RefreshCw size={28} />
-              초기 재고 템플릿 관리
+            <h3 className="text-2xl font-bold mb-2 flex items-center gap-2 text-green-950">
+              <RefreshCw size={28} className="text-lime-700" />
+              요일별 아이템 관리
             </h3>
-            <p className="text-blue-100">
-              매주 월요일 00:00에 이 템플릿으로 요일별 아이템 재고가 자동 리셋됩니다
+            <p className="text-green-800">
+              매주 월요일 00:00에 요일별 아이템 재고가 자동 리셋됩니다
             </p>
           </div>
           <div className="flex gap-2">
@@ -143,27 +161,7 @@ export default function TemplateTab({
                 
                 {editMode && (
                   <button
-                    onClick={() => {
-                      const itemName = prompt('아이템 이름을 입력하세요:\n(예: 상처약, 몬스터볼, 이상한사탕)');
-                      if (!itemName) return;
-                      
-                      const foundItem = allItems.find(i => 
-                        i.name === itemName || 
-                        i.name.includes(itemName) || 
-                        itemName.includes(i.name)
-                      );
-                      
-                      if (!foundItem) {
-                        alert(`"${itemName}" 아이템을 찾을 수 없습니다.\n정확한 이름을 입력해주세요.`);
-                        return;
-                      }
-                      
-                      const price = parseInt(prompt(`${foundItem.name}의 가격을 입력하세요:`, foundItem.cost || '100') || '0');
-                      const stock = parseInt(prompt(`${foundItem.name}의 재고를 입력하세요:`, '10') || '0');
-                      
-                      addTemplateItem(day.id, foundItem.id, price, stock);
-                      alert(`${foundItem.name}이(가) ${day.name}에 추가되었습니다!`);
-                    }}
+                    onClick={() => setItemSelectorDay(day.id)}
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
                   >
                     <Plus size={18} />
@@ -207,6 +205,22 @@ export default function TemplateTab({
                           </div>
 
                           <div className="flex items-center gap-3">
+                            <label className="flex items-center gap-1 rounded-lg bg-white/80 px-2 py-1 text-xs font-semibold text-gray-700">
+                              <input
+                                type="checkbox"
+                                checked={!item.isPersistent}
+                                onChange={(e) => updateTemplateItem(
+                                  day.id,
+                                  item.itemId,
+                                  'isPersistent',
+                                  !e.target.checked
+                                )}
+                                disabled={!editMode}
+                                className="h-3.5 w-3.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                              />
+                              이번주만 판매
+                            </label>
+
                             <div className="flex items-center gap-1">
                               <span className="text-xs text-gray-600 whitespace-nowrap">가격</span>
                               <input
@@ -248,6 +262,14 @@ export default function TemplateTab({
           );
         })}
       </div>
+
+      <ItemSelectorModal
+        show={Boolean(itemSelectorDay)}
+        onClose={closeItemSelector}
+        onSelect={handleSelectItem}
+        items={allItems}
+        title="요일별 아이템에 추가할 아이템 선택"
+      />
     </div>
   );
 }

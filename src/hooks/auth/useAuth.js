@@ -6,10 +6,10 @@ import { ref, get, set } from 'firebase/database';
 import { 
   signInWithEmailAndPassword,
   signOut,
-  onAuthStateChanged 
+  onAuthStateChanged,
+  updatePassword
 } from 'firebase/auth';
 import { auth, database } from '../../firebase';
-import { DAILY_ATTENDANCE_EXP, getKoreaDateKey } from '../../utils/experience';
 
 const ensurePartyPadding = (caughtPokemon) => {
   if (caughtPokemon && typeof caughtPokemon === 'object' && !Array.isArray(caughtPokemon)) {
@@ -54,27 +54,11 @@ export const useAuth = (members, setMembers) => {
           
           if (snapshot.exists() && isSubscribed) {
             const memberData = snapshot.val();
-            const todayKey = getKoreaDateKey();
-            const currentTrainerExp = Number(memberData.trainerExp) || 0;
-            const shouldGrantAttendanceExp = memberData.lastAttendanceDate !== todayKey;
-            const memberDataWithAttendance = shouldGrantAttendanceExp
-              ? {
-                  ...memberData,
-                  trainerExp: currentTrainerExp + DAILY_ATTENDANCE_EXP,
-                  lastAttendanceDate: todayKey
-                }
-              : memberData;
-
-            if (shouldGrantAttendanceExp) {
-              const { id, email, ...dataToSave } = memberDataWithAttendance;
-              await set(memberRef, dataToSave);
-            }
-
             const paddedUser = {
-              ...memberDataWithAttendance,
+              ...memberData,
               id: firebaseUser.uid,
               email: firebaseUser.email,
-              caughtPokemon: ensurePartyPadding(memberDataWithAttendance.caughtPokemon || [])
+              caughtPokemon: ensurePartyPadding(memberData.caughtPokemon || [])
             };
             
             console.log('✅ 회원 데이터 로드:', paddedUser.name);
@@ -108,7 +92,23 @@ export const useAuth = (members, setMembers) => {
   const handleLogin = async (userId, password) => {
     try {
       const email = `${userId}@pokemon.com`;
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      let userCredential;
+
+      try {
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
+      } catch (error) {
+        if (
+          password === '0000' &&
+          (error.code === 'auth/invalid-credential' ||
+            error.code === 'auth/user-not-found' ||
+            error.code === 'auth/wrong-password')
+        ) {
+          userCredential = await signInWithEmailAndPassword(auth, email, '000000');
+        } else {
+          throw error;
+        }
+      }
+
       const firebaseUid = userCredential.user.uid;
       
       console.log('✅ Auth 로그인 성공, UID:', firebaseUid);
@@ -190,11 +190,41 @@ export const useAuth = (members, setMembers) => {
     }
   };
 
+  const changeCurrentUserPassword = async (newPassword) => {
+    if (!auth.currentUser || !currentUser) {
+      alert('로그인 정보를 확인할 수 없습니다. 다시 로그인해주세요.');
+      return false;
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      alert('새 비밀번호는 6자 이상으로 입력해주세요.');
+      return false;
+    }
+
+    try {
+      await updatePassword(auth.currentUser, newPassword);
+      await updateCurrentUser({
+        forcePasswordChange: false,
+        password: null
+      });
+      return true;
+    } catch (error) {
+      console.error('❌ 비밀번호 변경 실패:', error);
+      if (error.code === 'auth/requires-recent-login') {
+        alert('보안을 위해 다시 로그인한 뒤 비밀번호를 변경해주세요.');
+      } else {
+        alert('비밀번호 변경 중 오류가 발생했습니다.');
+      }
+      return false;
+    }
+  };
+
   return {
     currentUser,
     handleLogin,
     handleLogout,
     updateCurrentUser,
+    changeCurrentUserPassword,
     isLoading: isAuthLoading
   };
 };

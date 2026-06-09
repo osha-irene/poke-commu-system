@@ -8,12 +8,41 @@ import regionsData from '../../data/regions.json';
 import technicalMachinesData from '../../data/technicalMachines.json';
 import { ITEM_POCKETS } from '../../utils/itemUtils';
 
+const normalizeRegions = (nextRegions = []) => {
+  if (!Array.isArray(nextRegions)) return [];
+  return nextRegions.filter(region => !(
+    region?.isTownMeta && (!region.groupId || !region.groupName)
+  ));
+};
+
+const getTownRowsFromRegions = (nextRegions = []) => {
+  const townMap = new Map();
+
+  normalizeRegions(nextRegions).forEach(region => {
+    if (!region.isTownMeta || !region.groupId || townMap.has(region.groupId)) return;
+    townMap.set(region.groupId, {
+      groupId: region.groupId,
+      groupName: region.groupName,
+      x: region.x,
+      y: region.y,
+      color: region.color,
+      isDefaultTown: region.isDefaultTown || false,
+      visible: region.groupVisible !== false
+    });
+  });
+
+  return Array.from(townMap.values());
+};
+
 export const useGameData = (allPokemonData) => {
   const [allItems, setAllItems] = useState([]);
   const [regions, setRegions] = useState([]);
   const [gamePokedex, setGamePokedex] = useState([]);
   const [sharedPokedexData, setSharedPokedexData] = useState({});
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [systemSettings, setSystemSettings] = useState({
+    maxNonPartnerPokemon: 18
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   // 🔥 Firebase에서 데이터 로드
@@ -69,8 +98,22 @@ export const useGameData = (allPokemonData) => {
         const regionsRef = ref(database, 'gameData/regions');
         const regionsSnapshot = await get(regionsRef);
         if (regionsSnapshot.exists()) {
-          setRegions(regionsSnapshot.val());
-          console.log('💾 지역 데이터 로드:', regionsSnapshot.val().length, '개');
+          const rawRegions = regionsSnapshot.val();
+          const normalizedRegions = normalizeRegions(rawRegions);
+          setRegions(normalizedRegions);
+          if (JSON.stringify(rawRegions) !== JSON.stringify(normalizedRegions)) {
+            await set(regionsRef, normalizedRegions);
+            await set(ref(database, 'gameData/towns'), getTownRowsFromRegions(normalizedRegions));
+            const configRef = ref(database, 'gameData/config');
+            const configSnapshot = await get(configRef);
+            const currentConfig = configSnapshot.val() || {};
+            await set(configRef, {
+              ...currentConfig,
+              regions: normalizedRegions
+            });
+            console.log('🧹 삭제된 마을의 남은 메타 데이터 정리 완료');
+          }
+          console.log('💾 지역 데이터 로드:', normalizedRegions.length, '개');
         } else {
           // 초기 데이터 설정
           const initialRegions = regionsData.regions.map(region => ({
@@ -82,12 +125,12 @@ export const useGameData = (allPokemonData) => {
           console.log('🔧 초기 지역 데이터 생성');
         }
 
-        // 4. 게임 도감 로드
+        // 4. 영운 도감 로드
         const pokedexRef = ref(database, 'gameData/gamePokedex');
         const pokedexSnapshot = await get(pokedexRef);
         if (pokedexSnapshot.exists()) {
           setGamePokedex(pokedexSnapshot.val());
-          console.log('📖 게임 도감 로드 완료:', pokedexSnapshot.val().length, '마리');
+          console.log('📖 영운 도감 로드 완료:', pokedexSnapshot.val().length, '마리');
         } else {
           // 초기 데이터 설정 (1세대만)
           const initialPokedex = allPokemonData
@@ -99,7 +142,7 @@ export const useGameData = (allPokemonData) => {
             }));
           await set(pokedexRef, initialPokedex);
           setGamePokedex(initialPokedex);
-          console.log('🔧 초기 게임 도감 생성');
+          console.log('🔧 초기 영운 도감 생성');
         }
 
         // 5. 공유 도감 로드
@@ -136,6 +179,17 @@ export const useGameData = (allPokemonData) => {
         }
         console.log('🔧 점검 모드:', maintenanceSnapshot.exists() ? maintenanceSnapshot.val() : false);
 
+        // 7. 시스템 설정 로드
+        const systemSettingsRef = ref(database, 'gameData/systemSettings');
+        const systemSettingsSnapshot = await get(systemSettingsRef);
+        const savedSystemSettings = systemSettingsSnapshot.exists() ? systemSettingsSnapshot.val() : {};
+        const normalizedSystemSettings = {
+          maxNonPartnerPokemon: Number(savedSystemSettings.maxNonPartnerPokemon) || 18
+        };
+        await set(systemSettingsRef, normalizedSystemSettings);
+        setSystemSettings(normalizedSystemSettings);
+        console.log('⚙️ 시스템 설정:', normalizedSystemSettings);
+
         console.log('✅ 게임 데이터 로딩 완료!');
       } catch (error) {
         console.error('❌ 게임 데이터 로드 실패:', error);
@@ -153,6 +207,7 @@ export const useGameData = (allPokemonData) => {
         setGamePokedex(allPokemonData.filter(p => parseInt(p.generation) === 1));
         setSharedPokedexData({});
         setMaintenanceMode(false);
+        setSystemSettings({ maxNonPartnerPokemon: 18 });
       } finally {
         setIsLoading(false);
       }
@@ -176,16 +231,16 @@ export const useGameData = (allPokemonData) => {
     saveRegions();
   }, [regions, isLoading]);
 
-  // 🔥 게임 도감 변경 시 Firebase에 저장
+  // 🔥 영운 도감 변경 시 Firebase에 저장
   useEffect(() => {
     const saveGamePokedex = async () => {
       if (isLoading || gamePokedex.length === 0) return;
       try {
         const pokedexRef = ref(database, 'gameData/gamePokedex');
         await set(pokedexRef, gamePokedex);
-        console.log('💾 게임 도감 저장:', gamePokedex.length, '마리');
+        console.log('💾 영운 도감 저장:', gamePokedex.length, '마리');
       } catch (error) {
-        console.error('❌ 게임 도감 저장 실패:', error);
+        console.error('❌ 영운 도감 저장 실패:', error);
       }
     };
     saveGamePokedex();
@@ -270,6 +325,20 @@ export const useGameData = (allPokemonData) => {
     }
   };
 
+  const updateSystemSettings = async (nextSettings) => {
+    const normalizedSettings = {
+      ...systemSettings,
+      ...(nextSettings || {}),
+      maxNonPartnerPokemon: Math.max(1, Number(nextSettings?.maxNonPartnerPokemon ?? systemSettings.maxNonPartnerPokemon) || 18)
+    };
+
+    setSystemSettings(normalizedSettings);
+
+    const systemSettingsRef = ref(database, 'gameData/systemSettings');
+    await set(systemSettingsRef, normalizedSettings);
+    console.log('💾 시스템 설정 저장:', normalizedSettings);
+  };
+
   return {
     allItems,
     setAllItems,
@@ -281,6 +350,8 @@ export const useGameData = (allPokemonData) => {
     setSharedPokedexData,
     maintenanceMode,
     setMaintenanceMode,
+    systemSettings,
+    updateSystemSettings,
     updatePokedexMemo,
     isLoading
   };

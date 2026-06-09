@@ -48,7 +48,7 @@ export default function PokemonDetailPanel({
         {/* 포켓몬 이미지 (75% 크기 + 여백) */}
         <div className="flex-shrink-0">
           <div 
-            className="w-36 h-36 p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg"
+            className="w-36 h-36 p-4 bg-white/40 rounded-lg border-2 border-lime-200"
             style={{
               backgroundImage: `url(${pokemon.spriteUrl || pokemon.imageUrl})`,
               backgroundSize: '75%',

@@ -207,6 +207,25 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
     '페어리': 'bg-pink-300'
   };
 
+  const getPokemonImageUrl = (pokemon) => {
+    if (!pokemon) return '';
+
+    const imageUrl =
+      pokemon.spriteUrl ||
+      pokemon.iconUrl ||
+      pokemon.imageUrl ||
+      pokemon.sprite ||
+      pokemon.sprites?.front_default ||
+      pokemon.sprites?.other?.['official-artwork']?.front_default;
+
+    if (imageUrl) return imageUrl;
+
+    const spriteNumber = pokemon.originalNumber || pokemon.number;
+    return spriteNumber
+      ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${spriteNumber}.png`
+      : '';
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex gap-2 border-b border-gray-300">
@@ -333,9 +352,9 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
 
       <div className="border border-gray-300 rounded-lg max-h-96 overflow-y-auto p-3">
         {activeTab === 'current' && (
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-5 gap-2">
             {filteredCurrent.length === 0 ? (
-              <div className="col-span-4 text-center py-12 text-gray-400">
+              <div className="col-span-5 text-center py-12 text-gray-400">
                 도감이 비어있습니다
               </div>
             ) : (
@@ -345,15 +364,23 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
                   className="bg-white border-2 border-gray-200 rounded-lg p-2 hover:border-red-400 transition-colors group"
                 >
                   <div className="relative">
-                    <div
-                      className="w-full h-20 mb-2"
-                      style={{
-                        backgroundImage: `url(${pokemon.imageUrl})`,
-                        backgroundSize: 'contain',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'center'
-                      }}
-                    />
+                    <div className="w-full h-24 mb-2 flex items-center justify-center">
+                      <img
+                        src={getPokemonImageUrl(pokemon)}
+                        alt={pokemon.name || 'Pokemon'}
+                        className="pokedex-admin-sprite"
+                        loading="lazy"
+                        style={{
+                          width: 96,
+                          height: 96,
+                          objectFit: 'contain',
+                          imageRendering: 'pixelated'
+                        }}
+                        onError={(event) => {
+                          event.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
                     <button
                       onClick={() => handleRemovePokemon(pokemon)}
                       className="absolute top-0 right-0 bg-red-500 text-white w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold"
@@ -384,15 +411,15 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
         )}
 
         {activeTab === 'add' && (
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-5 gap-2">
             {availableToAdd.length === 0 ? (
-              <div className="col-span-4 text-center py-12 text-gray-400">
+              <div className="col-span-5 text-center py-12 text-gray-400">
                 {searchQuery || generationFilter !== 'all' || typeFilter !== 'all' 
                   ? '검색 결과가 없습니다'
                   : '추가할 포켓몬이 없습니다'}
               </div>
             ) : (
-              availableToAdd.slice(0, 100).map((pokemon) => {
+              availableToAdd.map((pokemon) => {
                 const isSelected = tempSelected.has(pokemon.number);
                 
                 return (
@@ -406,15 +433,23 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
                     }`}
                   >
                     <div className="relative">
-                      <div
-                        className="w-full h-20 mb-2"
-                        style={{
-                          backgroundImage: `url(${pokemon.imageUrl})`,
-                          backgroundSize: 'contain',
-                          backgroundRepeat: 'no-repeat',
-                          backgroundPosition: 'center'
-                        }}
-                      />
+                      <div className="w-full h-24 mb-2 flex items-center justify-center">
+                        <img
+                          src={getPokemonImageUrl(pokemon)}
+                          alt={pokemon.name || 'Pokemon'}
+                          className="pokedex-admin-sprite"
+                          loading="lazy"
+                          style={{
+                            width: 96,
+                            height: 96,
+                            objectFit: 'contain',
+                            imageRendering: 'pixelated'
+                          }}
+                          onError={(event) => {
+                            event.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      </div>
                       {isSelected && (
                         <div className="absolute top-0 right-0 bg-green-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
                           ✓

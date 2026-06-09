@@ -196,7 +196,7 @@ function MemberItemTab({ member, allItems, onGiveItem }) {
 
           {/* 선택된 아이템 정보 */}
           {selectedItem && (
-            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-4 border-2 border-indigo-200">
+            <div className="bg-white/40 rounded-lg p-4 border-2 border-lime-200">
               <div className="flex items-center gap-4 mb-3">
                 <div className="w-20 h-20 flex items-center justify-center relative bg-white rounded-lg">
                   {selectedItem.spriteUrl || selectedItem.imageUrl ? (

@@ -257,13 +257,13 @@ export default function MobilePokemonView() {
       {showDetail && selectedPokemon && (
         <div className="fixed inset-0 bg-white z-50 flex flex-col overflow-hidden">
           {/* 헤더 */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-3 flex items-center justify-between">
+          <div className="border-b-2 border-lime-300 bg-white/95 text-green-950 px-4 py-3 flex items-center justify-between">
             <h3 className="text-lg font-bold">
               {selectedPokemon.nickname || selectedPokemon.name}
             </h3>
             <button
               onClick={handleCloseDetail}
-              className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
+              className="p-2 hover:bg-lime-100/70 rounded-lg transition-colors"
             >
               <X size={24} />
             </button>

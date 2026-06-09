@@ -10,10 +10,10 @@ export default function FirstCatchMemoModal({ pokemon, onSave, onSkip }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-      <div className="bg-gradient-to-b from-yellow-100 to-orange-100 rounded-lg p-8 max-w-md w-full m-4 border-4 border-yellow-400">
+      <div className="bg-white rounded-lg p-8 max-w-md w-full m-4 border-4 border-lime-300">
         <div className="text-center mb-6">
           <div className="text-6xl mb-4">🎉</div>
-          <h2 className="text-3xl font-bold text-orange-600 mb-2">축하합니다!</h2>
+          <h2 className="text-3xl font-bold text-green-950 mb-2">축하합니다!</h2>
           <div className="flex items-center justify-center gap-2 mb-4">
             <Star size={20} className="text-yellow-500 fill-yellow-500" />
             <p className="text-xl font-semibold">첫 포획 달성!</p>

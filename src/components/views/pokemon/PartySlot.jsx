@@ -79,10 +79,10 @@ const STYLES = {
   filled: "flex items-center gap-4 rounded-lg p-3 border transition-all cursor-move",
   selected: "bg-indigo-100 border-indigo-400 shadow-md",
   unselected: "bg-indigo-50 border-indigo-200 hover:shadow-md hover:border-indigo-300",
-  partner: "bg-gradient-to-r from-pink-50 to-rose-50 border-pink-300 shadow-md",
-  partnerEmpty: "bg-gradient-to-r from-pink-50 to-rose-50 border-2 border-dashed border-pink-300",
-  egg: "bg-gradient-to-r from-yellow-50 to-amber-50 border-amber-300 shadow-md",
-  eggEmpty: "bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-dashed border-amber-300"
+  partner: "bg-white/40 border-lime-300 shadow-sm",
+  partnerEmpty: "bg-white/40 border-2 border-dashed border-lime-300",
+  egg: "bg-white/40 border-lime-300 shadow-sm",
+  eggEmpty: "bg-white/40 border-2 border-dashed border-lime-300"
 };
 
 // 파트너 포켓몬 슬롯

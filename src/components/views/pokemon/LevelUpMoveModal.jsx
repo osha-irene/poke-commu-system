@@ -43,24 +43,24 @@ export default function LevelUpMoveModal({
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-4 border-yellow-400">
+      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-4 border-lime-300">
         {/* 헤더 */}
-        <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white p-6 rounded-t-lg">
+        <div className="border-b-2 border-lime-300 bg-white/95 p-6 rounded-t-lg">
           <div className="flex justify-between items-start">
             <div className="flex items-center gap-3">
-              <div className="bg-white/20 p-3 rounded-full">
-                <TrendingUp size={32} />
+              <div className="border-2 border-lime-300 bg-white/55 p-3 rounded-full">
+                <TrendingUp size={32} className="text-lime-700" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">레벨 업!</h2>
-                <p className="text-yellow-100 text-sm">
+                <h2 className="text-2xl font-bold text-green-950">레벨 업!</h2>
+                <p className="text-green-800 text-sm">
                   {pokemon.nickname || pokemon.name}이(가) Lv.{newLevel}이 되었습니다!
                 </p>
               </div>
             </div>
             <button
               onClick={onSkip}
-              className="text-white/80 hover:text-white"
+              className="text-green-950 hover:text-lime-700"
             >
               <X size={24} />
             </button>
@@ -181,7 +181,7 @@ export default function LevelUpMoveModal({
               className={`flex-1 py-3 rounded-lg font-bold text-lg transition-all ${
                 isFull && !selectedOldMove
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white hover:from-yellow-500 hover:to-orange-500 shadow-lg'
+                  : 'border-2 border-lime-300 bg-white/55 text-green-950 hover:bg-lime-100/70 shadow-sm'
               }`}
             >
               {isFull ? '기술 교체하기' : '기술 배우기'}

@@ -9,7 +9,8 @@ export default function EncounterModal({
   sharedPokedexData = {}, 
   caughtPokemon = [], 
   allPokemonMaster = [],
-  onApplyLoot 
+  onApplyLoot,
+  maxNonPartnerPokemon = 18
 }) {
   const [selectedBall, setSelectedBall] = useState(null);
   const [catching, setCatching] = useState(false);
@@ -164,8 +165,9 @@ const pokemonSpriteUrl = pokemon.isShiny
 
     const nonPartnerCount = caughtPokemon.filter(p => p && !p.isPartner).length;
     
-    if (nonPartnerCount >= 20) {
-      alert('⚠️ 포켓몬이 가득 찼습니다!\n\n파트너를 제외한 포켓몬이 20마리입니다.\n박스를 정리한 후 다시 시도해주세요.');
+    const maxPokemonCount = Number(maxNonPartnerPokemon) || 18;
+    if (nonPartnerCount >= maxPokemonCount) {
+      alert(`⚠️ 포켓몬이 가득 찼습니다!\n\n파트너를 제외한 포켓몬이 ${maxPokemonCount}마리입니다.\n박스를 정리한 후 다시 시도해주세요.`);
       return;
     }
   
@@ -173,8 +175,10 @@ const pokemonSpriteUrl = pokemon.isShiny
     setResult(null);
     setMessage(''); // ✅ 메시지 초기화
 
-    const pokemonNumber = pokemon.number || pokemon.originalNumber;
-    const isFirst = !sharedPokedexData[pokemonNumber];
+      const pokemonNumber = pokemon.number || pokemon.originalNumber;
+      const originalNumber = pokemon.originalNumber || pokemon.number;
+      const isFirst = !sharedPokedexData[pokemonNumber]?.firstCatcher &&
+        !sharedPokedexData[originalNumber]?.firstCatcher;
     setIsFirstCatch(isFirst);
 
     setTimeout(() => {
@@ -282,7 +286,6 @@ const pokemonSpriteUrl = pokemon.isShiny
   return (
     <div 
       className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50" 
-      onClick={isReady && !catching && !result ? handleCloseClick : undefined}
     >
       <div 
         className="w-full max-w-5xl mx-4 max-h-[95vh] overflow-y-auto" 
@@ -291,7 +294,7 @@ const pokemonSpriteUrl = pokemon.isShiny
         {!result && !catching && (
           <div className="bg-white rounded-lg overflow-hidden border-4 border-gray-800">
                           {/* 상단 배틀 필드 */}
-              <div className="relative bg-gradient-to-b from-blue-200 to-green-200 p-6 border-b-4 border-gray-800">
+              <div className="relative bg-white p-6 border-b-4 border-gray-800">
                 <div className="flex justify-end mb-6">
                   <div className="text-center relative">
                     <div className="bg-white rounded-lg px-4 py-1 mb-3 border-2 border-gray-800 inline-block">
@@ -462,7 +465,7 @@ const pokemonSpriteUrl = pokemon.isShiny
                           }`}
                         >
                           <div 
-                            className="w-10 h-10 flex-shrink-0"
+                            className="item-sprite w-10 h-10 flex-shrink-0"
                             style={{
                               backgroundImage: `url(${ball.imageUrl})`,
                               backgroundSize: 'contain',
@@ -497,11 +500,11 @@ const pokemonSpriteUrl = pokemon.isShiny
         )}
 
         {catching && (
-          <div className="bg-gradient-to-b from-blue-200 to-green-200 rounded-lg p-12 text-center border-4 border-gray-800">
+          <div className="bg-white rounded-lg p-12 text-center border-4 border-gray-800">
             <div className="bg-white rounded-lg border-4 border-gray-800 p-8">
               <div 
                 key={shaking}
-                className="w-32 h-32 mx-auto mb-6"
+                className="item-sprite item-sprite-xl w-32 h-32 mx-auto mb-6"
                 style={{
                   backgroundImage: `url(${selectedBall.imageUrl})`,
                   backgroundSize: 'contain',
@@ -535,7 +538,7 @@ const pokemonSpriteUrl = pokemon.isShiny
         )}
 
         {result === 'success' && (
-          <div className="bg-gradient-to-b from-yellow-200 to-orange-200 rounded-lg p-12 text-center border-4 border-gray-800">
+          <div className="bg-white rounded-lg p-12 text-center border-4 border-gray-800">
             <div className="bg-white rounded-lg border-4 border-gray-800 p-8">
               <div className="text-9xl mb-6">🎉</div>
               <h3 className="text-4xl font-bold text-green-600 mb-4">잡았다!</h3>
@@ -552,7 +555,7 @@ const pokemonSpriteUrl = pokemon.isShiny
         )}
 
         {result === 'fail' && (
-          <div className="bg-gradient-to-b from-red-200 to-orange-200 rounded-lg p-12 text-center border-4 border-gray-800">
+          <div className="bg-white rounded-lg p-12 text-center border-4 border-gray-800">
             <div className="bg-white rounded-lg border-4 border-gray-800 p-8">
               <div className="text-9xl mb-6">💨</div>
               <h3 className="text-4xl font-bold text-red-600 mb-4">앗! 아깝다!</h3>

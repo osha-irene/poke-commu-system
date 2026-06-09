@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Tent, Users, Calendar, Star, Gift, TrendingUp, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Tent, Users, Calendar, Star, Gift, TrendingUp, CheckCircle, XCircle, AlertCircle, Backpack, MessageCircle } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { getDatabase, ref, get } from 'firebase/database';
@@ -104,12 +104,12 @@ export default function CampingView({
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 p-6">
-      <div className="bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg p-6 shadow-xl">
+      <div className="rounded-lg border-2 border-lime-300 bg-white/55 p-6 shadow-sm">
         <div className="flex items-center gap-4">
-          <Tent size={48} />
+          <Tent size={48} className="text-lime-700" />
           <div>
-            <h1 className="text-3xl font-bold mb-2">캠핑하기</h1>
-            <p className="text-green-100">포켓몬과 함께 캠핑을 떠나보세요!</p>
+            <h1 className="text-3xl font-bold mb-2 text-green-950">캠핑하기</h1>
+            <p className="text-green-800">포켓몬과 함께 캠핑을 떠나보세요!</p>
           </div>
         </div>
       </div>
@@ -120,7 +120,7 @@ export default function CampingView({
           <div className="flex items-start gap-3">
             <AlertCircle size={24} className="text-red-600 flex-shrink-0 mt-1" />
             <div className="text-red-800 flex-1">
-              <div className="font-bold mb-1">⚠️ 마스토돈 계정 연결 필요</div>
+              <div className="font-bold mb-1">마스토돈 계정 연결 필요</div>
               <div className="text-sm mb-2">
                 캠핑을 하려면 마스토돈 계정을 먼저 연결해야 해요!
               </div>
@@ -144,7 +144,7 @@ export default function CampingView({
           <div className="flex items-start gap-3">
             <CheckCircle size={24} className="text-green-600 flex-shrink-0 mt-1" />
             <div className="text-green-800">
-              <div className="font-bold mb-1">✅ 마스토돈 계정 연결됨</div>
+              <div className="font-bold mb-1">마스토돈 계정 연결됨</div>
               <div className="text-sm">
                 연결된 계정: <span className="font-mono font-semibold">{mastodonAccount}</span>
               </div>
@@ -197,7 +197,7 @@ export default function CampingView({
                 : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400'
             }`}
           >
-            <div className="text-3xl mb-2">🎒</div>
+            <Backpack size={32} className="mx-auto mb-2" />
             <div>혼자 캠핑</div>
             <div className="text-xs text-gray-500 mt-1">기본 성공률</div>
           </button>
@@ -209,7 +209,7 @@ export default function CampingView({
                 : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400'
             }`}
           >
-            <div className="text-3xl mb-2">👥</div>
+            <Users size={32} className="mx-auto mb-2" />
             <div>2인 캠핑</div>
             <div className="text-xs text-gray-500 mt-1">성공률 +15%</div>
           </button>
@@ -300,7 +300,10 @@ export default function CampingView({
                     )}
                     {session.status === 'waiting_for_mastodon' && (
                       <div className="mt-2 text-sm text-orange-700 bg-orange-50 border border-orange-200 rounded p-2">
-                        💬 마스토돈에서 <span className="font-mono font-semibold">@pokemonbot@poketodon.monster [캠핑]</span>을 멘션해주세요!
+                        <span className="inline-flex items-center gap-1">
+                          <MessageCircle size={14} />
+                          마스토돈에서 <span className="font-mono font-semibold">@pokemonbot@poketodon.monster [캠핑]</span>을 멘션해주세요!
+                        </span>
                       </div>
                     )}
                   </div>

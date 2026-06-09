@@ -30,7 +30,6 @@ export function useRegister(setMembers) {
         money: 10000,
         trainerExp: 0,
         lastAttendanceDate: null,
-        accessibleRegions: [],
         caughtPokemon: [null, null, null, null, null, null],
         inventory: [
           {

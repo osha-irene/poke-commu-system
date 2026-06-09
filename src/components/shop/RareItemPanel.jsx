@@ -69,8 +69,8 @@ export default function RareItemPanel({
       try {
         await onUpdateShop(updatedShopData);
       } catch (error) {
-        console.error('희귀템 풀에서 제거 실패:', error);
-        alert('희귀템 풀 제거 중 오류가 발생했습니다.');
+        console.error('한정 아이템 제거 실패:', error);
+        alert('한정 아이템 제거 중 오류가 발생했습니다.');
       }
       return;
     }
@@ -81,8 +81,8 @@ export default function RareItemPanel({
     try {
       await onUpdateShop(updatedShopData);
     } catch (error) {
-      console.error('희귀템 풀 추가 실패:', error);
-      alert('희귀템 풀 추가 중 오류가 발생했습니다.');
+      console.error('한정 아이템 추가 실패:', error);
+      alert('한정 아이템 추가 중 오류가 발생했습니다.');
     }
   };
 
@@ -108,7 +108,7 @@ export default function RareItemPanel({
     try {
       await onUpdateShop(updatedShopData);
     } catch (error) {
-      console.error('희귀템 풀에서 제거 실패:', error);
+      console.error('한정 아이템 제거 실패:', error);
     }
   };
 
@@ -118,9 +118,9 @@ export default function RareItemPanel({
         <div>
           <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
             <Star className="text-purple-600" size={24} />
-            희귀 아이템 관리
+            한정 아이템 관리
           </h3>
-          <p className="text-sm text-gray-600 mt-1">매일 랜덤으로 표시될 희귀 아이템 풀을 관리합니다</p>
+          <p className="text-sm text-gray-600 mt-1">매일 랜덤으로 표시될 한정 아이템을 관리합니다</p>
         </div>
       </div>
 
@@ -217,7 +217,7 @@ export default function RareItemPanel({
             <div className="bg-purple-50 p-4 border-b-2 border-purple-200 flex-shrink-0 space-y-3">
               <h4 className="font-bold text-gray-800 flex items-center gap-2">
                 <Star size={20} className="text-purple-600" />
-                현재 희귀 아이템 풀 ({(shopData.rareItemPool || []).length}개)
+                현재 한정 아이템 ({(shopData.rareItemPool || []).length}개)
               </h4>
               
               <div className="bg-white rounded-lg p-3 border-2 border-purple-200">
@@ -243,7 +243,7 @@ export default function RareItemPanel({
               {(shopData.rareItemPool || []).length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-gray-400">
                   <Star size={64} className="mb-4 text-gray-300" />
-                  <p className="text-lg font-semibold">등록된 희귀 아이템이 없습니다</p>
+                  <p className="text-lg font-semibold">등록된 한정 아이템이 없습니다</p>
                   <p className="text-sm mt-2">왼쪽에서 아이템을 선택해주세요</p>
                 </div>
               ) : (

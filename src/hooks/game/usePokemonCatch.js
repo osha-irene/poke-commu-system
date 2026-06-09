@@ -10,7 +10,8 @@ export const usePokemonCatch = (
   movesData,
   useIndividualValues,
   useMoves,
-  usePokedex
+  usePokedex,
+  systemSettings = {}
 ) => {
   
   const { generateGender, generateSize, generateAbility } = useIndividualValues;
@@ -27,8 +28,9 @@ export const usePokemonCatch = (
     
     const nonPartnerCount = currentUser.caughtPokemon.filter(p => p && !p.isPartner).length;
     
-    if (nonPartnerCount >= 20) {
-      alert('⚠️ 파트너를 제외한 포켓몬이 20마리입니다!\n더 이상 포켓몬을 잡을 수 없습니다.');
+    const maxNonPartnerPokemon = Number(systemSettings.maxNonPartnerPokemon) || 18;
+    if (nonPartnerCount >= maxNonPartnerPokemon) {
+      alert(`⚠️ 파트너를 제외한 포켓몬이 ${maxNonPartnerPokemon}마리입니다!\n더 이상 포켓몬을 잡을 수 없습니다.`);
       return;
     }
     
@@ -44,10 +46,10 @@ export const usePokemonCatch = (
       return;
     }
     
-    const region = regions.find(r => r.name === regionName);
-    const minLevel = region?.minLevel || 5;
-    const maxLevel = region?.maxLevel || 20;
-    const level = Math.floor(Math.random() * (maxLevel - minLevel + 1)) + minLevel;
+    const region = regions.find(r => r.name === regionName || r.areaName === regionName);
+    const minLevel = pokemon.minLevel || region?.minLevel || 5;
+    const maxLevel = pokemon.maxLevel || region?.maxLevel || 20;
+    const level = pokemon.level || Math.floor(Math.random() * (maxLevel - minLevel + 1)) + minLevel;
     
     const ballItem = allItems.find(item => 
       item.name === ballUsed.name || item.id === ballUsed.id
@@ -136,8 +138,15 @@ export const usePokemonCatch = (
     updateCurrentUser({ caughtPokemon: updatedCaughtPokemon });
 
     // 첫 포획 기록
-    const pokemonNumber = String(pokemonTemplate.originalNumber || pokemonTemplate.number);
-    const isFirstCatch = await recordFirstCatch(pokemonNumber);
+    const formNumber = String(pokemonTemplate.number);
+    const originalNumber = String(pokemonTemplate.originalNumber || pokemonTemplate.number);
+    const isRegionalForm = formNumber !== originalNumber;
+    const isFirstFormCatch = await recordFirstCatch(formNumber);
+    const isFirstOriginalCatch = isRegionalForm
+      ? await recordFirstCatch(originalNumber)
+      : isFirstFormCatch;
+    const isFirstCatch = isFirstFormCatch || isFirstOriginalCatch;
+    const pokemonNumber = originalNumber;
     
     return { isFirstCatch, pokemonNumber, pokemonTemplate };
   };

@@ -82,9 +82,9 @@ const handleSubmit = async () => {  // ⭐ async 추가
     <>
       <button
         onClick={() => setShowModal(true)}
-        className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-pink-700 font-semibold transition-all shadow-lg"
+        className="flex items-center gap-2 border-2 border-lime-300 bg-white/55 text-green-950 px-4 py-2 rounded-lg hover:bg-lime-100/70 font-semibold transition-all shadow-sm"
       >
-        <Sparkles size={18} />
+        <Sparkles size={18} className="text-lime-700" />
         커스텀 아이템 생성
       </button>
 
@@ -97,12 +97,12 @@ const handleSubmit = async () => {  // ⭐ async 추가
             className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6">
-              <h2 className="text-2xl font-bold flex items-center gap-2">
-                <Sparkles size={24} />
+            <div className="border-b-2 border-lime-300 bg-white/95 p-6">
+              <h2 className="text-2xl font-bold flex items-center gap-2 text-green-950">
+                <Sparkles size={24} className="text-lime-700" />
                 커스텀 아이템 생성
               </h2>
-              <p className="text-purple-100 text-sm mt-1">
+              <p className="text-green-800 text-sm mt-1">
                 나만의 독특한 아이템을 만들어보세요!
               </p>
             </div>
@@ -325,8 +325,8 @@ const handleSubmit = async () => {  // ⭐ async 추가
 
               {/* 컨디션 설정 */}
               {itemData.specialEffect === 'condition' && (
-                <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border-2 border-purple-200">
-                  <h4 className="font-bold text-purple-800 mb-3 flex items-center gap-2">
+                <div className="bg-white/40 rounded-lg p-4 border-2 border-lime-200">
+                  <h4 className="font-bold text-green-900 mb-3 flex items-center gap-2">
                     <span>✨</span>
                     <span>컨디션 상승량 (0-100)</span>
                   </h4>
@@ -413,7 +413,7 @@ const handleSubmit = async () => {  // ⭐ async 추가
                 </button>
                 <button
                   onClick={handleSubmit}
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 font-semibold transition-all shadow-lg"
+                  className="flex-1 px-4 py-2 border-2 border-lime-300 bg-white/55 text-green-950 rounded-lg hover:bg-lime-100/70 font-semibold transition-all shadow-sm"
                 >
                   생성하기
                 </button>

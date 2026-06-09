@@ -90,15 +90,15 @@ const learnableMovesIds = useMemo(() => {
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
         {/* 헤더 */}
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-t-xl flex-shrink-0">
+        <div className="border-b-2 border-lime-300 bg-white/95 p-6 rounded-t-xl flex-shrink-0">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-2xl font-bold">기술 선택</h2>
-              <p className="text-indigo-100 mt-1">
+              <h2 className="text-2xl font-bold text-green-950">기술 선택</h2>
+              <p className="text-green-800 mt-1">
                 {pokemon.nickname || pokemon.name}이(가) 배울 기술을 선택하세요
               </p>
             </div>
-            <button onClick={onClose} className="text-white/80 hover:text-white">
+            <button onClick={onClose} className="text-green-950 hover:text-lime-700">
               <X size={24} />
             </button>
           </div>

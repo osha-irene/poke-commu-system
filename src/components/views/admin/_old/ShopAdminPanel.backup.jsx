@@ -61,12 +61,12 @@ export default function ShopAdminPanel({
         initialDailyItems: tempTemplate
       };
       await onUpdateShop(updatedShopData);
-      alert('초기 재고 템플릿이 저장되었습니다!\n다음 주 월요일부터 이 재고로 리셋됩니다.');
+      alert('요일별 아이템이 저장되었습니다!\n다음 주 월요일부터 이 재고로 리셋됩니다.');
       setEditMode(false);
       setTempTemplate(null);
     } catch (error) {
-      console.error('템플릿 저장 실패:', error);
-      alert('템플릿 저장 중 오류가 발생했습니다.');
+      console.error('요일별 아이템 저장 실패:', error);
+      alert('요일별 아이템 저장 중 오류가 발생했습니다.');
     }
   };
 
@@ -260,9 +260,9 @@ export default function ShopAdminPanel({
     
     try {
       await onUpdateShop(updatedShopData);
-      console.log('희귀템 풀에서 제거 완료');
+      console.log('한정 아이템에서 제거 완료');
     } catch (error) {
-      console.error('희귀템 풀 제거 실패:', error);
+      console.error('한정 아이템 제거 실패:', error);
     }
   };
 
@@ -367,10 +367,10 @@ export default function ShopAdminPanel({
       
       try {
         await onUpdateShop(updatedShopData);
-        console.log('희귀템 풀에서 제거 완료');
+        console.log('한정 아이템에서 제거 완료');
       } catch (error) {
-        console.error('희귀템 풀 제거 실패:', error);
-        alert('희귀템 풀 제거 중 오류가 발생했습니다.');
+        console.error('한정 아이템 제거 실패:', error);
+        alert('한정 아이템 제거 중 오류가 발생했습니다.');
       }
       return;
     }
@@ -380,10 +380,10 @@ export default function ShopAdminPanel({
     
     try {
       await onUpdateShop(updatedShopData);
-      console.log('희귀템 풀에 추가 완료');
+      console.log('한정 아이템에 추가 완료');
     } catch (error) {
-      console.error('희귀템 풀 추가 실패:', error);
-      alert('희귀템 풀 추가 중 오류가 발생했습니다.');
+      console.error('한정 아이템 추가 실패:', error);
+      alert('한정 아이템 추가 중 오류가 발생했습니다.');
     }
   };
 
@@ -472,7 +472,7 @@ export default function ShopAdminPanel({
             }`}
           >
             <RefreshCw size={20} />
-            초기 재고 템플릿
+            요일별 아이템
           </button>
           
           <button
@@ -480,7 +480,7 @@ export default function ShopAdminPanel({
             className="px-6 py-3 rounded-lg font-bold whitespace-nowrap transition-colors flex items-center gap-2 bg-purple-600 text-white hover:bg-purple-700"
           >
             <Star size={20} />
-            희귀템 풀
+            한정 아이템
           </button>
           
           <button
@@ -579,7 +579,7 @@ export default function ShopAdminPanel({
                   <div className="absolute top-2 left-2 z-10">
                     <span className={`text-xs px-2 py-1 rounded ${style.labelBg} ${style.labelText} font-semibold`}>
                       {shopItem.type === 'daily' ? days.find(d => d.id === shopItem.day)?.name :
-                       shopItem.type === 'permanent' ? '상시' : '오늘의 희귀'}
+                       shopItem.type === 'permanent' ? '상시' : '한정'}
                     </span>
                   </div>
 
@@ -656,10 +656,10 @@ export default function ShopAdminPanel({
               <div>
                 <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
                   <RefreshCw size={28} />
-                  초기 재고 템플릿 관리
+                  요일별 아이템 관리
                 </h3>
                 <p className="text-blue-100">
-                  매주 월요일 00:00에 이 템플릿으로 요일별 아이템 재고가 자동 리셋됩니다
+                  매주 월요일 00:00에 요일별 아이템 재고가 자동 리셋됩니다
                 </p>
               </div>
               <div className="flex gap-2">
@@ -938,9 +938,9 @@ export default function ShopAdminPanel({
               <div>
                 <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                   <Star className="text-purple-600" size={24} />
-                  희귀 아이템 관리
+                  한정 아이템 관리
                 </h3>
-                <p className="text-sm text-gray-600 mt-1">매일 랜덤으로 표시될 희귀 아이템 풀을 관리합니다</p>
+                <p className="text-sm text-gray-600 mt-1">매일 랜덤으로 표시될 한정 아이템을 관리합니다</p>
               </div>
               <button
                 onClick={() => {
@@ -1047,7 +1047,7 @@ export default function ShopAdminPanel({
                   <div className="bg-purple-50 p-4 border-b-2 border-purple-200 flex-shrink-0">
                     <h4 className="font-bold text-gray-800 flex items-center gap-2">
                       <Star size={20} className="text-purple-600" />
-                      현재 희귀 아이템 풀 ({(shopData.rareItemPool || []).length}개)
+                      현재 한정 아이템 ({(shopData.rareItemPool || []).length}개)
                     </h4>
                   </div>
 				  
@@ -1070,7 +1070,7 @@ export default function ShopAdminPanel({
                     {(shopData.rareItemPool || []).length === 0 ? (
                       <div className="flex flex-col items-center justify-center h-full text-gray-400">
                         <Star size={64} className="mb-4 text-gray-300" />
-                        <p className="text-lg font-semibold">등록된 희귀 아이템이 없습니다</p>
+                        <p className="text-lg font-semibold">등록된 한정 아이템이 없습니다</p>
                         <p className="text-sm mt-2">왼쪽에서 아이템을 선택해주세요</p>
                       </div>
                     ) : (

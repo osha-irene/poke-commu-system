@@ -1,7 +1,7 @@
 import React from 'react';
 import { getTypeColor, COLORS } from '../../../styles/theme';
 
-// 로컬 폴백 URL
+// 로컬 ?�백 URL
 const getLocalIconUrl = (pokemon, allPokemonMaster) => {
   let englishName = pokemon.nameEn;
   
@@ -31,17 +31,17 @@ export default function BoxPokemon({
   
   if (!pokemon) return null;
 
-  // 게임 도감에서 이 포켓몬의 newNumber 찾기
+  // 게임 ?�감?�서 ???�켓몬의 newNumber 찾기
   const pokedexEntry = gamePokedex?.find(p => 
     p.number === pokemon.number || p.originalNumber === pokemon.number
   );
   const displayNumber = pokedexEntry?.newNumber || pokemon.number;
 
-  // 타입 색상 (theme.js 사용)
+  // ?�???�상 (theme.js ?�용)
   const typeColors = getTypeColor(pokemon.type);
   const type2Colors = pokemon.type2 ? getTypeColor(pokemon.type2) : null;
   
-  // 이미지 URL
+  // ?��?지 URL
   const imageUrl = getLocalIconUrl(pokemon, allPokemonMaster);
 
   return (
@@ -56,12 +56,12 @@ export default function BoxPokemon({
           : 'bg-white border-gray-200 hover:border-indigo-300 hover:shadow-md'
       }`}
     >
-      {/* 레벨 배지 */}
+      {/* ?�벨 배�? */}
       <div className="absolute top-1 right-1 bg-gray-800 text-white text-xs px-2 py-0.5 rounded-full font-bold z-10">
         Lv.{pokemon.level}
       </div>
       
-      {/* 포켓몬 이미지 - 로컬 스프라이트의 왼쪽 64x64만 표시 */}
+      {/* ?�켓�??��?지 - 로컬 ?�프?�이?�의 ?�쪽 64x64�??�시 */}
       <div className="aspect-square flex items-center justify-center p-2">
         <div 
           className="pokemon-bg-sprite"
@@ -76,7 +76,7 @@ export default function BoxPokemon({
         />
       </div>
       
-      {/* 정보 영역 */}
+      {/* ?�보 ?�역 */}
       <div className="bg-gray-50 p-2 border-t border-gray-200">
         <div className="text-xs text-gray-500 mb-1">
           No.{displayNumber.toString().padStart(3, '0')}
@@ -111,10 +111,10 @@ export default function BoxPokemon({
         </div>
       </div>
       
-      {/* 파트너 표시 */}
+      {/* ?�트???�시 */}
       {pokemon.isPartner && (
         <div className="absolute top-1 left-1 text-pink-500 text-lg z-10">
-          💖
+          ?��
         </div>
       )}
     </div>

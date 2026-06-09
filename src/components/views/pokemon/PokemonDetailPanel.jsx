@@ -214,7 +214,7 @@ const isHoldingEverstone = pokemon.heldItem?.toLowerCase() === 'everstone' ||
     );
   };
 
-  // 게임 도감
+  // 영운 도감
   const pokedexEntry = gamePokedex?.find(p => 
     p.number === pokemon.number || p.originalNumber === pokemon.number
   );
