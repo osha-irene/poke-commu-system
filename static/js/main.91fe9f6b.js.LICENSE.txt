@@ -257,6 +257,61 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+/**
+ * Dex Data
+ * Pokemon Showdown - http://pokemonshowdown.com/
+ *
+ * @license MIT
+ */
+
+/**
+ * PRNG
+ * Pokemon Showdown - http://pokemonshowdown.com/
+ *
+ * This simulates the on-cartridge PRNG used in the real games.
+ *
+ * In addition to potentially allowing us to read replays from in-game,
+ * this also makes it possible to record an "input log" (a seed +
+ * initial teams + move/switch decisions) and "replay" a simulation to
+ * get the same result.
+ *
+ * @license MIT license
+ */
+
+/**
+ * Simulator Battle
+ * Pokemon Showdown - http://pokemonshowdown.com/
+ *
+ * This file is where the battle simulation itself happens.
+ *
+ * The most important part of the simulation is the event system:
+ * see the `runEvent` function definition for details.
+ *
+ * General battle mechanics are in `battle-actions`; move-specific,
+ * item-specific, etc mechanics are in the corresponding file in
+ * `data`.
+ *
+ * @license MIT
+ */
+
+/**
+ * Simulator Field
+ * Pokemon Showdown - http://pokemonshowdown.com/
+ *
+ * @license MIT
+ */
+
+/**
+ * Simulator State
+ * Pokemon Showdown - http://pokemonshowdown.com/
+ *
+ * Helper functions for serializing Battle instances to JSON and back.
+ *
+ * (You might also consider using input logs instead.)
+ *
+ * @license MIT
+ */
+
 /** @license
          Copyright The Closure Library Authors.
          SPDX-License-Identifier: Apache-2.0

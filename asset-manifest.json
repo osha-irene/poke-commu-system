@@ -1,7 +1,8 @@
 {
   "files": {
-    "main.css": "/static/css/main.c501f138.css",
-    "main.js": "/static/js/main.a62d5def.js",
+    "main.css": "/static/css/main.97d8ed81.css",
+    "main.js": "/static/js/main.91fe9f6b.js",
+    "static/js/623.69c45dc4.chunk.js": "/static/js/623.69c45dc4.chunk.js",
     "static/media/forest-bg (2).png": "/static/media/forest-bg (2).023aaebd6df83a1d1128.png",
     "static/media/YeojuCeramic.ttf": "/static/media/YeojuCeramic.95ed01e4fba0f8c0a443.ttf",
     "static/media/main_deco_paper.png": "/static/media/main_deco_paper.f65efe6456e423dc929f.png",
@@ -15,11 +16,12 @@
     "static/media/logo_compass.png": "/static/media/logo_compass.5e060dd19119f1f61b6d.png",
     "index.html": "/index.html",
     "static/media/pokemon-icon.svg": "/static/media/pokemon-icon.d36b6f0655c180980d5acb3287a88011.svg",
-    "main.c501f138.css.map": "/static/css/main.c501f138.css.map",
-    "main.a62d5def.js.map": "/static/js/main.a62d5def.js.map"
+    "main.97d8ed81.css.map": "/static/css/main.97d8ed81.css.map",
+    "main.91fe9f6b.js.map": "/static/js/main.91fe9f6b.js.map",
+    "623.69c45dc4.chunk.js.map": "/static/js/623.69c45dc4.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.c501f138.css",
-    "static/js/main.a62d5def.js"
+    "static/css/main.97d8ed81.css",
+    "static/js/main.91fe9f6b.js"
   ]
 }
