@@ -712,6 +712,139 @@ export const useAdminMembers = (
 
  
   // ========== 포켓몬 삭제 ==========
+  const transferMemberPokemon = async (fromMemberId, toMemberId, transferTarget = {}) => {
+    if (!currentUser?.isAdmin) return false;
+
+    if (!fromMemberId || !toMemberId || fromMemberId === toMemberId) {
+      alert('서로 다른 멤버를 선택해주세요.');
+      return false;
+    }
+
+    const fromMember = members[fromMemberId];
+    const toMember = members[toMemberId];
+
+    if (!fromMember || !toMember) {
+      alert('멤버 정보를 찾을 수 없습니다.');
+      return false;
+    }
+
+    const transferEgg = Boolean(transferTarget.transferEgg);
+    const pokemonUniqueId = transferTarget.pokemonUniqueId;
+
+    try {
+      let updatedFromMember = { ...fromMember };
+      let updatedToMember = { ...toMember };
+      let transferredName = '';
+
+      if (transferEgg) {
+        if (!fromMember.egg) {
+          alert('이전할 알이 없습니다.');
+          return false;
+        }
+        if (toMember.egg) {
+          alert(`${toMember.name}님은 이미 알을 보유하고 있습니다.`);
+          return false;
+        }
+
+        const movedEgg = {
+          ...fromMember.egg,
+          transferredFrom: fromMember.name || fromMemberId,
+          transferredAt: new Date().toISOString()
+        };
+
+        updatedFromMember = {
+          ...fromMember,
+          egg: null
+        };
+        updatedToMember = {
+          ...toMember,
+          egg: movedEgg
+        };
+        transferredName = `${movedEgg.species || movedEgg.name || '알'} 알`;
+      } else {
+        if (!pokemonUniqueId) {
+          alert('이전할 포켓몬을 선택해주세요.');
+          return false;
+        }
+
+        const sourcePokemon = (fromMember.caughtPokemon || []).find(
+          pokemon => pokemon && pokemon.uniqueId === pokemonUniqueId
+        );
+
+        if (!sourcePokemon) {
+          alert('이전할 포켓몬을 찾을 수 없습니다.');
+          return false;
+        }
+
+        const targetNonPartnerCount = (toMember.caughtPokemon || []).filter(p => p && !p.isPartner).length;
+        const maxNonPartnerPokemon = Number(systemSettings.maxNonPartnerPokemon) || 18;
+        if (targetNonPartnerCount >= maxNonPartnerPokemon) {
+          alert(`${toMember.name}님은 파트너를 제외한 포켓몬이 ${maxNonPartnerPokemon}마리입니다.\n더 이상 포켓몬을 받을 수 없습니다.`);
+          return false;
+        }
+
+        const movedPokemon = {
+          ...sourcePokemon,
+          isPartner: false,
+          transferredFrom: fromMember.name || fromMemberId,
+          transferredAt: new Date().toISOString()
+        };
+
+        const updatedSourcePokemon = (fromMember.caughtPokemon || []).filter(
+          pokemon => pokemon && pokemon.uniqueId !== pokemonUniqueId
+        );
+        const placement = addPokemonToAvailableSlot(toMember.caughtPokemon || [], movedPokemon);
+
+        updatedFromMember = {
+          ...fromMember,
+          caughtPokemon: updatedSourcePokemon
+        };
+        updatedToMember = {
+          ...toMember,
+          caughtPokemon: placement.caughtPokemon
+        };
+        transferredName = movedPokemon.nickname || movedPokemon.name || '포켓몬';
+      }
+
+      const cleanForSave = (memberData) => {
+        const { id, ...dataToSave } = memberData;
+        return JSON.parse(JSON.stringify(dataToSave, (key, value) => (
+          value === undefined ? null : value
+        )));
+      };
+
+      await set(ref(database, `members/${fromMemberId}`), cleanForSave(updatedFromMember));
+      await set(ref(database, `members/${toMemberId}`), cleanForSave(updatedToMember));
+
+      setMembers(prev => ({
+        ...prev,
+        [fromMemberId]: updatedFromMember,
+        [toMemberId]: updatedToMember
+      }));
+
+      if (fromMemberId === currentUser?.id) {
+        updateCurrentUser({
+          caughtPokemon: updatedFromMember.caughtPokemon,
+          egg: updatedFromMember.egg ?? null
+        });
+      }
+
+      if (toMemberId === currentUser?.id) {
+        updateCurrentUser({
+          caughtPokemon: updatedToMember.caughtPokemon,
+          egg: updatedToMember.egg ?? null
+        });
+      }
+
+      alert(`${fromMember.name}님의 ${transferredName}을(를) ${toMember.name}님에게 이전했습니다.`);
+      return true;
+    } catch (error) {
+      console.error('포켓몬/알 이전 실패:', error);
+      alert('포켓몬/알 이전 중 오류가 발생했습니다: ' + error.message);
+      return false;
+    }
+  };
+
   const deleteMemberPokemon = async (memberId, pokemonUniqueId) => {
     if (!currentUser?.isAdmin) return;
     
@@ -1030,6 +1163,7 @@ export const useAdminMembers = (
     resetMemberWalkCount,
     resetAllWalkCounts,
     givePokemonToMember,
+    transferMemberPokemon,
     deleteMemberPokemon,
     hatchMemberEgg,
     editMemberPokemon,

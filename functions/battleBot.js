@@ -1,36 +1,248 @@
-const { Battle, Teams } = require('@pkmn/sim');
+const { Battle, Dex, Teams } = require('@pkmn/sim');
 
 const FORMAT_ID = 'gen9customgame';
+
+const loadMovesData = () => {
+  const candidates = ['./data/moves.json', '../src/data/moves.json'];
+  for (const path of candidates) {
+    try {
+      return require(path);
+    } catch (error) {
+      // Try the next location. Firebase deploys normally include functions/data.
+    }
+  }
+  return { moves: [] };
+};
+
+const loadPokemonData = () => {
+  const candidates = ['./data/pokemon.json', '../src/data/pokemon.json'];
+  for (const path of candidates) {
+    try {
+      const loaded = require(path);
+      return Array.isArray(loaded) ? loaded : loaded?.pokemon || [];
+    } catch (error) {
+      // Try the next location. Firebase deploys normally include functions/data.
+    }
+  }
+  return [];
+};
+
+const loadJsonData = (candidates, fallback) => {
+  for (const path of candidates) {
+    try {
+      return require(path);
+    } catch (error) {
+      // Try the next location.
+    }
+  }
+  return fallback;
+};
+
+const movesData = loadMovesData();
+const pokemonDataForNames = loadPokemonData();
+const abilitiesData = loadJsonData(['./data/abilities.json', '../src/data/abilities.json'], []);
+const itemsData = loadJsonData(['./data/items.json', '../src/data/items.json'], []);
+const customBattleData = loadJsonData(['./data/customBattleData.json', '../src/data/customBattleData.json'], {});
 
 const normalizeId = (value) => String(value || '')
   .toLowerCase()
   .replace(/[\s_\-'.:]/g, '')
   .replace(/[^\p{L}\p{N}]/gu, '');
 
+const registerCustomBattleData = () => {
+  (customBattleData.customMegaEvolutions || []).forEach((mega) => {
+    Dex.data.Species[normalizeId(mega.name)] = {
+      num: 350,
+      name: mega.name,
+      baseSpecies: mega.baseSpecies,
+      forme: mega.forme || 'Mega',
+      types: mega.types || ['Normal'],
+      abilities: { 0: mega.ability || 'No Ability' },
+      baseStats: mega.baseStats,
+      heightm: mega.heightm,
+      weightkg: mega.weightkg,
+      color: mega.color || 'White',
+      eggGroups: mega.eggGroups || ['Undiscovered'],
+      requiredItem: mega.item,
+      requiredItems: [mega.item].filter(Boolean),
+      isMega: true,
+      battleOnly: mega.baseSpecies,
+      changesFrom: mega.baseSpecies,
+    };
+
+    Dex.data.Items[normalizeId(mega.item)] = {
+      name: mega.item,
+      spritenum: 0,
+      megaStone: mega.name,
+      megaEvolves: mega.baseSpecies,
+      itemUser: [mega.baseSpecies],
+      onTakeItem: false,
+    };
+  });
+};
+
+registerCustomBattleData();
+
+const moveNameMap = new Map();
+const moveIdMap = new Map();
+(movesData.moves || []).forEach((move) => {
+  [move.id, move.nameEn, move.name].forEach((key) => {
+    const normalized = normalizeId(key);
+    if (normalized) moveNameMap.set(normalized, move.name || move.nameEn || move.id);
+    if (normalized) moveIdMap.set(normalized, move.nameEn || move.id);
+  });
+});
+
+const pokemonNameMap = new Map();
+pokemonDataForNames.forEach((pokemon) => {
+  [pokemon.id, pokemon.nameEn, pokemon.name, pokemon.species].forEach((key) => {
+    const normalized = normalizeId(key);
+    if (normalized) pokemonNameMap.set(normalized, pokemon.name || pokemon.nameEn || pokemon.id);
+  });
+});
+Object.entries(customBattleData.aliases?.speciesLabels || {}).forEach(([key, label]) => {
+  pokemonNameMap.set(normalizeId(key), label);
+});
+
+const abilityIdMap = new Map([
+  [normalizeId('매직미러'), 'Magic Bounce'],
+]);
+const abilityNameMap = new Map([
+  [normalizeId('Magic Bounce'), '매직미러'],
+  [normalizeId('magic-bounce'), '매직미러'],
+  [normalizeId('매직미러'), '매직미러'],
+]);
+Object.entries(customBattleData.aliases?.abilities || {}).forEach(([key, value]) => {
+  abilityIdMap.set(normalizeId(key), value);
+});
+Object.entries(customBattleData.aliases?.abilityLabels || {}).forEach(([key, value]) => {
+  abilityNameMap.set(normalizeId(key), value);
+});
+(Array.isArray(abilitiesData) ? abilitiesData : abilitiesData.abilities || []).forEach((ability) => {
+  [ability.id, ability.nameEn, ability.name].forEach((key) => {
+    const normalized = normalizeId(key);
+    if (normalized) abilityIdMap.set(normalized, ability.nameEn || ability.id);
+    if (normalized) abilityNameMap.set(normalized, ability.name || ability.nameEn || ability.id);
+  });
+});
+
+const itemIdMap = new Map([
+  [normalizeId('디안시나이트'), 'Diancite'],
+]);
+Object.entries(customBattleData.aliases?.items || {}).forEach(([key, value]) => {
+  itemIdMap.set(normalizeId(key), value);
+});
+(Array.isArray(itemsData) ? itemsData : itemsData.items || []).forEach((item) => {
+  [item.id, item.nameEn, item.name].forEach((key) => {
+    const normalized = normalizeId(key);
+    if (normalized) itemIdMap.set(normalized, item.nameEn || item.id);
+  });
+});
+
+const translateMoveName = (value) => {
+  const normalized = normalizeId(value);
+  return moveNameMap.get(normalized) || value || '기술';
+};
+
+const translateAbilityName = (value) => {
+  const normalized = normalizeId(value);
+  return abilityNameMap.get(normalized) || value || '특성';
+};
+
+const resolveMoveId = (value) => {
+  const normalized = normalizeId(value);
+  return moveIdMap.get(normalized) || normalized;
+};
+
+const resolveAbilityName = (value, fallback = 'No Ability') => {
+  const normalized = normalizeId(value);
+  return abilityIdMap.get(normalized) || value || fallback;
+};
+
+const resolveItemName = (value) => {
+  const normalized = normalizeId(value);
+  return itemIdMap.get(normalized) || value || '';
+};
+
+const translatePokemonName = (value) => {
+  const normalized = normalizeId(value);
+  return pokemonNameMap.get(normalized) || value || '포켓몬';
+};
+
+const formatSpeciesDetails = (details = '') => String(details).split(',')[0].trim();
+
+const formatMegaSpeciesName = (details = '') => {
+  const species = formatSpeciesDetails(details);
+  const megaMatch = species.match(/^(.+)-Mega(?:-[XY])?$/i);
+  if (!megaMatch) return translatePokemonName(species);
+  const suffix = /-Mega-X$/i.test(species) ? ' X' : /-Mega-Y$/i.test(species) ? ' Y' : '';
+  return `메가${translatePokemonName(megaMatch[1])}${suffix}`;
+};
+
+const formatBattleSpeciesName = (species = '') =>
+  /-Mega(?:-[XY])?$/i.test(formatSpeciesDetails(species))
+    ? formatMegaSpeciesName(species)
+    : translatePokemonName(formatSpeciesDetails(species));
+
+const getSpeciesPrimaryAbility = (species = '') => {
+  const dexSpecies = Dex.species.get(species);
+  if (!dexSpecies?.exists) return '';
+  return dexSpecies.abilities?.['0'] || Object.values(dexSpecies.abilities || {})[0] || '';
+};
+
 const stripCommandText = (content) => String(content || '')
   .replace(/@\S+/g, '')
   .trim();
 
-const moveChoiceFromText = (content) => {
+const extractBracketText = (content) => {
   const text = stripCommandText(content);
-  const explicit = text.match(/(?:^|\s)([12])\s*:\s*\[?\s*(?:기술\s*)?([1-4])\s*\]?/i);
-  if (explicit) return Number(explicit[2]) - 1;
-
-  const bracket = text.match(/\[?\s*기술\s*([1-4])\s*\]?/i);
-  if (bracket) return Number(bracket[1]) - 1;
-
-  return null;
+  const matches = [...text.matchAll(/\[([^\]]+)\]/g)].map(match => match[1].trim()).filter(Boolean);
+  return matches.length ? matches[matches.length - 1] : text.trim();
 };
 
 const wantsMega = (content) => /\[?\s*메가\s*진화\s*\]?|\[?\s*메가진화\s*\]?/i.test(content);
+
+const moveChoiceTokenFromText = (content) => {
+  const text = stripCommandText(content)
+    .replace(/\[?\s*메가\s*진화\s*\]?/gi, '')
+    .replace(/\[?\s*메가진화\s*\]?/gi, '')
+    .trim();
+
+  const moveNumber = text.match(/\[?\s*기술\s*([1-4])\s*\]?/i);
+  if (moveNumber) return { kind: 'index', value: Number(moveNumber[1]) - 1 };
+
+  const bracket = extractBracketText(text);
+  if (!bracket) return null;
+  const bracketMoveNumber = bracket.match(/^기술\s*([1-4])$/i);
+  if (bracketMoveNumber) return { kind: 'index', value: Number(bracketMoveNumber[1]) - 1 };
+
+  const cleaned = bracket.replace(/^기술\s*/i, '').trim();
+  if (!cleaned) return null;
+  return { kind: 'name', value: cleaned };
+};
+
+const teamChoiceFromText = (content) => {
+  const text = extractBracketText(content);
+  const match = text.match(/^(?:포켓몬|엔트리|선택)\s*([1-6])$/i) || text.match(/^([1-6])번?$/);
+  return match ? Number(match[1]) : null;
+};
+
+const isBattleMoveLikeText = (content) => {
+  const text = extractBracketText(content);
+  if (!text) return false;
+  if (/^(캠핑|계속|만족|배틀\s*(신청|수락|거절|도움말|help)|기권)/i.test(text)) return false;
+  if (/^(포켓몬|엔트리|선택)\s*[1-6]$/i.test(text)) return false;
+  return Boolean(moveChoiceTokenFromText(content));
+};
 
 const getBattleCommand = (content) => {
   if (/\[?\s*배틀\s*신청\s*\]?/i.test(content)) return 'challenge';
   if (/\[?\s*배틀\s*수락\s*\]?/i.test(content)) return 'accept';
   if (/\[?\s*배틀\s*거절\s*\]?/i.test(content)) return 'decline';
   if (/\[?\s*기권\s*\]?/i.test(content)) return 'forfeit';
-  if (/\[?\s*배틀\s*(도움말|help)\s*\]?/i.test(content)) return 'help';
-  if (moveChoiceFromText(content) !== null) return 'move';
+  if (/\[?\s*배틀\s*(?:도움말|help)\s*\]?/i.test(content)) return 'help';
+  if (teamChoiceFromText(content) !== null) return 'selectPokemon';
+  if (isBattleMoveLikeText(content)) return 'move';
   return null;
 };
 
@@ -64,8 +276,8 @@ const findPokemonTemplate = (pokemonData, pokemon) => {
 
 const getMoveId = (move) => {
   if (!move) return null;
-  if (typeof move === 'string') return normalizeId(move);
-  return normalizeId(move.id || move.moveId || move.nameEn || move.name);
+  if (typeof move === 'string') return resolveMoveId(move);
+  return resolveMoveId(move.id || move.moveId || move.nameEn || move.name);
 };
 
 const toPackedSet = (pokemonData, pokemon) => {
@@ -75,11 +287,17 @@ const toPackedSet = (pokemonData, pokemon) => {
     .filter(Boolean)
     .slice(0, 4);
 
+  const item = resolveItemName(pokemon.heldItemEn || pokemon.itemEn || pokemon.heldItem || pokemon.item || '');
+  const ability = resolveAbilityName(
+    pokemon.abilityEn || pokemon.ability || pokemon.hiddenAbility || template?.abilitiesEn?.[0] || template?.ability,
+    template?.abilitiesEn?.[0] || 'No Ability'
+  );
+
   return {
     name: pokemon.nickname || pokemon.name || template?.nameEn || 'Pokemon',
     species: pokemon.nameEn || template?.nameEn || pokemon.species || pokemon.name || 'Ditto',
-    item: pokemon.heldItemEn || pokemon.itemEn || pokemon.heldItem || pokemon.item || '',
-    ability: pokemon.abilityEn || template?.abilitiesEn?.[0] || pokemon.ability || 'No Ability',
+    item,
+    ability,
     moves: moves.length ? moves : ['tackle'],
     nature: pokemon.nature || 'Hardy',
     evs: pokemon.evs || {},
@@ -95,58 +313,239 @@ const packTeam = (pokemonData, pokemonList) =>
 
 const extractName = (value = '') => String(value).replace(/^p[12][a-z]?:\s*/, '') || value;
 
+const battleSlotKey = (value = '') => {
+  const match = String(value).match(/^(p[12][a-z]?):\s*/);
+  return match ? match[1] : '';
+};
+
+const applyDisplayNamesToLine = (line, displayNames) => {
+  let nextLine = line;
+  for (const [slot, name] of displayNames.entries()) {
+    nextLine = nextLine.replace(new RegExp(`${slot}: [^|]+`, 'g'), `${slot}: ${name}`);
+  }
+  return nextLine;
+};
+
+const formatEffectSource = (parts = []) => {
+  const fromIndex = parts.findIndex(part => part === '[from]');
+  if (fromIndex >= 0 && parts[fromIndex + 1]) {
+    return parts[fromIndex + 1].replace(/^move:\s*/i, '').replace(/^ability:\s*/i, '');
+  }
+  return '';
+};
+
+const formatSourceSuffix = (parts = []) => {
+  const source = formatEffectSource(parts);
+  return source ? ` (${translateMoveName(source)})` : '';
+};
+
+const formatMoveSource = (parts = []) => {
+  const source = formatEffectSource(parts);
+  if (!source) return '';
+  return ` (${translateAbilityName(source)}로 반사)`;
+};
+
+const formatBattleEffect = effect => {
+  const cleaned = String(effect || '').replace(/^move:\s*/i, '');
+  return translateMoveName(cleaned);
+};
+
+const formatWeather = weather => ({
+  SunnyDay: '쾌청',
+  RainDance: '비',
+  Sandstorm: '모래바람',
+  Hail: '싸라기눈',
+  Snow: '눈',
+  DesolateLand: '끝의대지',
+  PrimordialSea: '시작의바다',
+  DeltaStream: '델타스트림',
+})[weather] || weather;
+
+const formatSourcePokemon = (parts = []) => {
+  const ofIndex = parts.findIndex(part => part === '[of]');
+  return ofIndex >= 0 && parts[ofIndex + 1] ? extractName(parts[ofIndex + 1]) : '';
+};
+
+const formatStatus = status => ({
+  brn: '화상',
+  par: '마비',
+  psn: '독',
+  tox: '맹독',
+  slp: '잠듦',
+  frz: '얼음',
+})[status] || status;
+
+const formatStat = stat => ({
+  atk: '공격',
+  def: '방어',
+  spa: '특수공격',
+  spd: '특수방어',
+  spe: '스피드',
+  accuracy: '명중률',
+  evasion: '회피율',
+})[stat] || stat;
+
+const formatHp = value => String(value || '').replace(' fnt', ' 기절');
+
 const protocolToMessage = (line) => {
   if (!line || !line.startsWith('|')) return null;
   const parts = line.split('|');
   const command = parts[1];
 
   switch (command) {
+    case 'detailschange': {
+      const changedTo = formatSpeciesDetails(parts[3]);
+      if (/-Mega(?:-[XY])?$/i.test(changedTo)) {
+        const ability = getSpeciesPrimaryAbility(changedTo);
+        const megaName = formatMegaSpeciesName(parts[3]);
+        return [
+          `${extractName(parts[2])}은(는) ${megaName}로 메가진화했다!`,
+          ability ? `${megaName}의 특성이 ${translateAbilityName(ability)}로 바뀌었다!` : '',
+        ].filter(Boolean).join('\n');
+      }
+      return `${extractName(parts[2])}의 모습이 ${translatePokemonName(changedTo)}로 바뀌었다!`;
+    }
     case 'move':
-      return `${extractName(parts[2])}의 ${parts[3]}!`;
+      if (formatEffectSource(parts)) {
+        return `${extractName(parts[4])}의 ${translateMoveName(parts[3])}이(가) ${extractName(parts[2])}의 ${translateAbilityName(formatEffectSource(parts))} 특성으로 반사되었다!`;
+      }
+      return `${extractName(parts[2])}의 ${translateMoveName(parts[3])}!${formatMoveSource(parts)}`;
     case '-damage':
-      return `${extractName(parts[2])} HP ${parts[3]}`;
+      return `${extractName(parts[2])}에게 피해! HP ${formatHp(parts[3])}`;
     case '-heal':
-      return `${extractName(parts[2])} HP 회복 ${parts[3]}`;
+      return `${extractName(parts[2])}의 HP가 회복되었다! HP ${formatHp(parts[3])}`;
     case '-boost':
-      return `${extractName(parts[2])}의 ${parts[3]} +${parts[4]}`;
+      return `${extractName(parts[2])}의 ${formatStat(parts[3])}이(가) ${parts[4]}랭크 올랐다!${formatSourceSuffix(parts)}`;
     case '-unboost':
-      return `${extractName(parts[2])}의 ${parts[3]} -${parts[4]}`;
+      return `${extractName(parts[2])}의 ${formatStat(parts[3])}이(가) ${parts[4]}랭크 떨어졌다!${formatSourceSuffix(parts)}`;
+    case '-setboost':
+      return `${extractName(parts[2])}의 ${formatStat(parts[3])} 랭크가 ${parts[4]}이(가) 되었다!`;
+    case '-swapboost':
+      return `${extractName(parts[2])}와(과) ${extractName(parts[3])}의 능력 변화가 뒤바뀌었다!`;
+    case '-copyboost':
+      return `${extractName(parts[2])}은(는) ${extractName(parts[3])}의 능력 변화를 복사했다!`;
+    case '-clearboost':
+      return `${extractName(parts[2])}의 능력 변화가 원래대로 돌아갔다!`;
+    case '-clearallboost':
+      return '모든 포켓몬의 능력 변화가 원래대로 돌아갔다!';
+    case '-clearpositiveboost':
+      return `${extractName(parts[2])}의 올라간 능력 변화가 사라졌다!`;
+    case '-clearnegativeboost':
+      return `${extractName(parts[2])}의 떨어진 능력 변화가 사라졌다!`;
+    case '-invertboost':
+      return `${extractName(parts[2])}의 능력 변화가 반대로 뒤집혔다!`;
     case '-status':
-      return `${extractName(parts[2])}은(는) ${parts[3]} 상태가 됐습니다.`;
+      return `${extractName(parts[2])}은(는) ${formatStatus(parts[3])} 상태가 되었다!`;
+    case '-curestatus':
+      return `${extractName(parts[2])}의 ${formatStatus(parts[3])} 상태가 회복되었다!`;
     case '-weather':
-      return parts[3] === '[upkeep]' ? null : `${parts[2]} 날씨가 시작됐습니다.`;
+      if (parts[3] === '[upkeep]') return null;
+      if (formatEffectSource(parts)) {
+        const sourcePokemon = formatSourcePokemon(parts);
+        return `${sourcePokemon ? `${sourcePokemon}의 ` : ''}${translateAbilityName(formatEffectSource(parts))} 특성으로 날씨가 ${formatWeather(parts[2])}(으)로 바뀌었다!`;
+      }
+      return `날씨가 ${formatWeather(parts[2])}(으)로 바뀌었다!`;
     case '-mega':
-      return `${extractName(parts[2])}은(는) 메가진화했습니다.`;
+      return `${extractName(parts[2])}의 메가스톤이 빛났다!`;
     case '-miss':
-      return `${extractName(parts[2])}의 공격이 빗나갔습니다.`;
+      return `${extractName(parts[2])}의 공격은 빗나갔다!`;
     case '-fail':
-      return `${extractName(parts[2])}에게는 효과가 없었습니다.`;
+      return `${extractName(parts[2])}에게는 효과가 없었다...`;
     case '-immune':
-      return `${extractName(parts[2])}에게는 효과가 없습니다.`;
+      return `${extractName(parts[2])}에게는 통하지 않았다!`;
     case '-supereffective':
-      return '효과가 굉장했습니다!';
+      return '효과가 굉장했다!';
     case '-resisted':
-      return '효과가 별로인 것 같습니다...';
+      return '효과가 별로인 듯하다...';
     case '-crit':
-      return '급소에 맞았습니다!';
+      return '급소에 맞았다!';
+    case '-item':
+      return `${extractName(parts[2])}의 ${parts[3]}!`;
+    case '-enditem':
+      return `${extractName(parts[2])}의 ${parts[3]}은(는) 사라졌다.`;
+    case '-ability':
+      return `${extractName(parts[2])}의 특성 ${translateAbilityName(parts[3])}!`;
+    case '-endability':
+      return `${extractName(parts[2])}의 특성 ${translateAbilityName(parts[3])} 효과가 사라졌다.`;
+    case '-transform':
+      return `${extractName(parts[2])}은(는) ${extractName(parts[3])}로 변신했다!`;
+    case '-formechange': {
+      const changedTo = formatSpeciesDetails(parts[3]);
+      return `${extractName(parts[2])}의 모습이 ${translatePokemonName(changedTo)}로 바뀌었다!`;
+    }
+    case '-terastallize':
+      return `${extractName(parts[2])}은(는) ${parts[3]}타입으로 테라스탈했다!`;
+    case '-start': {
+      const source = formatEffectSource(parts);
+      return `${extractName(parts[2])}에게 ${formatBattleEffect(parts[3])} 효과가 나타났다${source ? ` (${translateAbilityName(source)})` : ''}.`;
+    }
+    case '-end':
+      return `${extractName(parts[2])}의 ${formatBattleEffect(parts[3])} 효과가 사라졌다.`;
+    case '-activate':
+      return `${extractName(parts[2])}의 ${parts[3]} 효과가 발동했다!`;
+    case '-fieldstart':
+      return `${parts[2]}이(가) 전개되었다!`;
+    case '-fieldend':
+      return `${parts[2]}이(가) 사라졌다.`;
+    case '-sidestart':
+      return `${parts[2]} 쪽에 ${parts[3]} 효과가 펼쳐졌다!`;
+    case '-sideend':
+      return `${parts[2]} 쪽의 ${parts[3]} 효과가 사라졌다.`;
+    case '-prepare':
+      return `${extractName(parts[2])}은(는) ${translateMoveName(parts[3])}을(를) 준비하고 있다!`;
+    case '-mustrecharge':
+      return `${extractName(parts[2])}은(는) 반동으로 움직일 수 없다!`;
+    case '-singleturn':
+      return `${extractName(parts[2])}은(는) ${parts[3]} 태세를 취했다!`;
     case 'switch':
-      return `${extractName(parts[2])} 등장!`;
+      return `${extractName(parts[2])}, 등장!`;
     case 'faint':
-      return `${extractName(parts[2])}은(는) 쓰러졌습니다.`;
+      return `${extractName(parts[2])}은(는) 쓰러졌다!`;
     case 'turn':
       return `턴 ${parts[2]}`;
     case 'win':
       return `${parts[2]} 승리!`;
     default:
+      if (command?.startsWith('-') && parts[2] && !['-anim', '-hint', '-message', '-nothing'].includes(command)) {
+        return `${extractName(parts[2])}에게 변화가 일어났다. (${command.replace(/^-/, '')}${parts[3] ? `: ${formatBattleEffect(parts[3])}` : ''})`;
+      }
       return null;
   }
 };
 
 const collectTurnMessages = (battle, fromIndex) => {
   const seen = new Set();
-  return battle.log
-    .slice(fromIndex)
-    .map(protocolToMessage)
+  const turnLog = battle.log.slice(fromIndex);
+  const orderedLog = [];
+  const displayNames = new Map();
+
+  for (let index = 0; index < turnLog.length; index += 1) {
+    const line = turnLog[index];
+    const nextLine = turnLog[index + 1];
+    if (
+      line?.startsWith('|detailschange|') &&
+      nextLine?.startsWith('|-mega|')
+    ) {
+      orderedLog.push(nextLine, line);
+      index += 1;
+      continue;
+    }
+    orderedLog.push(line);
+  }
+
+  return orderedLog
+    .map((line) => {
+      const message = protocolToMessage(applyDisplayNamesToLine(line, displayNames));
+
+      if (line?.startsWith('|detailschange|') || line?.startsWith('|-formechange|')) {
+        const parts = line.split('|');
+        const slot = battleSlotKey(parts[2]);
+        const nextName = formatBattleSpeciesName(parts[3]);
+        if (slot && nextName) displayNames.set(slot, nextName);
+      }
+
+      return message;
+    })
     .filter(Boolean)
     .filter((message) => {
       if (seen.has(message)) return false;
@@ -159,19 +558,50 @@ const activeSummary = (battle) => {
   const p1 = battle.p1.active[0];
   const p2 = battle.p2.active[0];
   if (!p1 || !p2) return '';
+  const activeName = pokemon => {
+    const speciesName = pokemon?.species?.name || pokemon?.species?.baseSpecies || '';
+    return /-Mega(?:-[XY])?$/i.test(speciesName) ? formatMegaSpeciesName(speciesName) : pokemon.name;
+  };
   return [
     '',
-    `1: ${p1.name} HP ${p1.hp}/${p1.maxhp}`,
-    `2: ${p2.name} HP ${p2.hp}/${p2.maxhp}`,
+    `${battle.p1.name}: ${activeName(p1)} HP ${p1.hp}/${p1.maxhp}`,
+    `${battle.p2.name}: ${activeName(p2)} HP ${p2.hp}/${p2.maxhp}`,
   ].join('\n');
+};
+
+const formatMoveList = (battle) => {
+  const p1 = battle.p1.active[0];
+  const p2 = battle.p2.active[0];
+  const sideMoves = (pokemon) => (pokemon?.moveSlots || [])
+    .slice(0, 4)
+    .map((moveSlot, index) => `${index + 1}. ${translateMoveName(moveSlot.id || moveSlot.move)}`)
+    .join(', ');
+
+  return [
+    '',
+    `${battle.p1.name} 기술: ${sideMoves(p1) || '없음'}`,
+    `${battle.p2.name} 기술: ${sideMoves(p2) || '없음'}`,
+  ].join('\n');
+};
+
+const hasFaintedThisTurn = (battle, fromIndex) =>
+  battle.log.slice(fromIndex).some(line => line.startsWith('|faint|'));
+
+const faintWinner = (battle, session) => {
+  const p1 = battle.p1.active[0];
+  const p2 = battle.p2.active[0];
+  if (p1 && p1.hp <= 0 && (!p2 || p2.hp <= 0)) return '';
+  if (p1 && p1.hp <= 0) return session.player2Name;
+  if (p2 && p2.hp <= 0) return session.player1Name;
+  return battle.winner || '';
 };
 
 const createBattle = (session) => {
   const battle = new Battle({ formatid: FORMAT_ID });
   battle.setPlayer('p1', { name: session.player1Name || '1P', team: session.player1Team });
   battle.setPlayer('p2', { name: session.player2Name || '2P', team: session.player2Team });
-  battle.choose('p1', 'team 1');
-  battle.choose('p2', 'team 1');
+  battle.choose('p1', `team ${Number(session.player1Lead || 1)}`);
+  battle.choose('p2', `team ${Number(session.player2Lead || 1)}`);
 
   for (const turn of session.turns || []) {
     battle.choose('p1', turn.p1);
@@ -183,12 +613,12 @@ const createBattle = (session) => {
 
 const formatHelp = () => [
   '배틀 명령어',
-  `[배틀 신청] @상대`,
-  `[배틀 수락]`,
-  `1:[기술1] 또는 [기술 1]`,
-  `2:[기술4] 또는 [기술 4]`,
-  `[메가진화] [기술 1]`,
-  `[기권]`,
+  '[배틀 신청] @상대',
+  '[배틀 수락]',
+  '[포켓몬 1] 또는 [엔트리 1]',
+  '[기술 1] 또는 [화염자동차]',
+  '[메가진화] [기술 1]',
+  '[기권]',
 ].join('\n');
 
 const accountMention = (account) => {
@@ -204,6 +634,67 @@ const battleMentions = (session) => Array.from(new Set([
 const withBattleMentions = (session, message) => {
   const mentions = battleMentions(session);
   return mentions ? `${mentions}\n${message}` : message;
+};
+
+const formatPokemonName = (pokemon) => pokemon?.nickname || pokemon?.name || `No.${pokemon?.number || '?'}`;
+
+const formatEntryList = (label, pokemonList = []) => [
+  `${label} 엔트리`,
+  ...pokemonList.slice(0, 6).map((pokemon, index) => (
+    `${index + 1}. ${formatPokemonName(pokemon)} Lv.${pokemon.level || 50}`
+  )),
+].join('\n');
+
+const resolveMoveChoice = (battle, side, content) => {
+  const token = moveChoiceTokenFromText(content);
+  if (!token) return null;
+
+  const activePokemon = battle[side]?.active?.[0];
+  const moveSlots = (activePokemon?.moveSlots || []).slice(0, 4);
+
+  if (token.kind === 'index') {
+    if (!moveSlots[token.value]) return null;
+    return token.value + 1;
+  }
+
+  const requested = normalizeId(token.value);
+  const matchedIndex = moveSlots.findIndex((moveSlot) => {
+    const candidates = [
+      moveSlot.id,
+      moveSlot.move,
+      translateMoveName(moveSlot.id || moveSlot.move),
+    ].map(normalizeId);
+    return candidates.includes(requested);
+  });
+
+  return matchedIndex >= 0 ? matchedIndex + 1 : null;
+};
+
+const collectChoiceErrors = (battle, fromIndex = 0) => battle.log
+  .slice(fromIndex)
+  .filter(line => line.startsWith('|error|'))
+  .map(line => line.split('|').slice(2).join('|').trim())
+  .filter(Boolean);
+
+const validateChoice = (session, side, choice) => {
+  const battle = createBattle(session);
+  const logFrom = battle.log.length;
+  const accepted = battle.choose(side, choice);
+  const errors = collectChoiceErrors(battle, logFrom);
+
+  return {
+    accepted: accepted !== false && errors.length === 0,
+    errors,
+  };
+};
+
+const formatChoiceError = (errors = []) => {
+  const message = errors[0] || '선택을 처리할 수 없었어요.';
+  if (/Can't mega evolve/i.test(message)) return '지금 선택한 포켓몬은 메가진화를 할 수 없어요.';
+  if (/Can't move/i.test(message)) return '현재 포켓몬이 그 기술을 사용할 수 없어요.';
+  if (/disabled/i.test(message)) return '그 기술은 지금 사용할 수 없는 상태예요.';
+  if (/trapped|switch/i.test(message)) return '지금은 그 선택을 할 수 없어요.';
+  return message.replace(/^\[Invalid choice\]\s*/i, '');
 };
 
 const createBattleBot = ({
@@ -241,6 +732,19 @@ const createBattleBot = ({
     return { sessionKey: pending[0][0], session: pending[0][1] };
   };
 
+  const findSelectingBattle = async (memberId) => {
+    const snapshot = await db.ref('gameData/battleSessions').once('value');
+    const sessions = snapshot.val() || {};
+    const selecting = Object.entries(sessions)
+      .filter(([, session]) =>
+        session.status === 'selecting' &&
+        (session.player1Id === memberId || session.player2Id === memberId)
+      )
+      .sort((a, b) => String(b[1].updatedAt || b[1].createdAt || '').localeCompare(String(a[1].updatedAt || a[1].createdAt || '')));
+    if (!selecting.length) return null;
+    return { sessionKey: selecting[0][0], session: selecting[0][1] };
+  };
+
   const findActiveBattle = async (memberId) => {
     const snapshot = await db.ref('gameData/battleSessions').once('value');
     const sessions = snapshot.val() || {};
@@ -259,8 +763,8 @@ const createBattleBot = ({
     if (!opponent) return '[배틀 신청] 뒤에 상대 계정을 함께 태그해 주세요.';
     if (opponent.id === author.id) return '자기 자신에게는 배틀을 신청할 수 없어요.';
 
-    const player1Pokemon = getParticipantPokemon(author.member);
-    const player2Pokemon = getParticipantPokemon(opponent.member);
+    const player1Pokemon = getParticipantPokemon(author.member).slice(0, 6);
+    const player2Pokemon = getParticipantPokemon(opponent.member).slice(0, 6);
     if (!player1Pokemon.length) return '신청자의 배틀 참가 포켓몬을 찾을 수 없어요.';
     if (!player2Pokemon.length) return '상대의 배틀 참가 포켓몬을 찾을 수 없어요.';
 
@@ -271,11 +775,22 @@ const createBattleBot = ({
       player1Name: author.member.name || author.member.nickname || author.id,
       player1Account: normalizeAccount(authorAccount),
       player1Team: packTeam(pokemonData, player1Pokemon),
+      player1Entries: player1Pokemon.map(pokemon => ({
+        key: pokemonKey(pokemon),
+        name: formatPokemonName(pokemon),
+        level: pokemon.level || 50,
+      })),
       player2Id: opponent.id,
       player2Name: opponent.member.name || opponent.member.nickname || opponent.id,
       player2Account: normalizeAccount(opponent.account || opponent.member.mastodonAccount || opponent.member.mastodonId || ''),
       player2Team: packTeam(pokemonData, player2Pokemon),
+      player2Entries: player2Pokemon.map(pokemon => ({
+        key: pokemonKey(pokemon),
+        name: formatPokemonName(pokemon),
+        level: pokemon.level || 50,
+      })),
       pendingChoices: {},
+      pendingTeamChoices: {},
       turns: [],
       mastodonStatusId: status.id,
       createdAt: new Date().toISOString(),
@@ -286,7 +801,7 @@ const createBattleBot = ({
     await ref.set(session);
     return withBattleMentions(session, [
       `${session.player2Name}님에게 배틀을 신청했어요.`,
-      '상대가 [배틀 수락]을 보내면 시작합니다.',
+      '상대가 [배틀 수락]을 보내면 엔트리를 선택합니다.',
     ].join('\n'));
   };
 
@@ -294,18 +809,68 @@ const createBattleBot = ({
     const pending = await findPendingChallenge(author.id);
     if (!pending) return '수락할 배틀 신청이 없어요.';
 
-    const battle = createBattle(pending.session);
     await db.ref(`gameData/battleSessions/${pending.sessionKey}`).update({
-      status: 'active',
+      status: 'selecting',
+      pendingTeamChoices: {},
       startedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
 
     return withBattleMentions(pending.session, [
+      '배틀을 수락했습니다. 먼저 출전 포켓몬을 선택해 주세요.',
+      formatEntryList(pending.session.player1Name, pending.session.player1Entries),
+      formatEntryList(pending.session.player2Name, pending.session.player2Entries),
+      '[포켓몬 1] 또는 [엔트리 1] 형식으로 선택할 수 있습니다.',
+    ].join('\n'));
+  };
+
+  const selectPokemon = async ({ author, content }) => {
+    const selecting = await findSelectingBattle(author.id);
+    if (!selecting) return '선택 중인 배틀이 없어요.';
+
+    const { sessionKey, session } = selecting;
+    const side = session.player1Id === author.id ? 'p1' : 'p2';
+    const selectedSlot = teamChoiceFromText(content);
+    const entries = side === 'p1' ? session.player1Entries : session.player2Entries;
+
+    if (!selectedSlot || selectedSlot < 1 || selectedSlot > entries.length) {
+      return `선택할 수 있는 번호를 찾지 못했어요. [포켓몬 1]처럼 입력해 주세요.\n${formatEntryList(side === 'p1' ? session.player1Name : session.player2Name, entries)}`;
+    }
+
+    const pendingTeamChoices = {
+      ...(session.pendingTeamChoices || {}),
+      [side]: selectedSlot,
+    };
+
+    if (!pendingTeamChoices.p1 || !pendingTeamChoices.p2) {
+      await db.ref(`gameData/battleSessions/${sessionKey}`).update({
+        pendingTeamChoices,
+        updatedAt: new Date().toISOString(),
+      });
+      return null;
+    }
+
+    const updatedSession = {
+      ...session,
+      player1Lead: pendingTeamChoices.p1,
+      player2Lead: pendingTeamChoices.p2,
+    };
+    const battle = createBattle(updatedSession);
+
+    await db.ref(`gameData/battleSessions/${sessionKey}`).update({
+      status: 'active',
+      player1Lead: pendingTeamChoices.p1,
+      player2Lead: pendingTeamChoices.p2,
+      pendingTeamChoices: {},
+      updatedAt: new Date().toISOString(),
+    });
+
+    return withBattleMentions(updatedSession, [
       '배틀 시작!',
-      `${pending.session.player1Name} vs ${pending.session.player2Name}`,
+      `${session.player1Name}: ${session.player1Entries[pendingTeamChoices.p1 - 1]?.name}`,
+      `${session.player2Name}: ${session.player2Entries[pendingTeamChoices.p2 - 1]?.name}`,
       activeSummary(battle),
-      '각자 1:[기술1] / 2:[기술4] 형식으로 기술을 선택해 주세요.',
+      '[기술 1] 또는 [기술명]으로 기술을 선택해 주세요.',
     ].filter(Boolean).join('\n'));
   };
 
@@ -320,7 +885,7 @@ const createBattleBot = ({
   };
 
   const forfeit = async ({ author }) => {
-    const active = await findActiveBattle(author.id);
+    const active = await findActiveBattle(author.id) || await findSelectingBattle(author.id);
     if (!active) return '진행 중인 배틀이 없어요.';
     const winner = active.session.player1Id === author.id ? active.session.player2Name : active.session.player1Name;
     await db.ref(`gameData/battleSessions/${active.sessionKey}`).update({
@@ -337,12 +902,24 @@ const createBattleBot = ({
 
     const { sessionKey, session } = active;
     const side = session.player1Id === author.id ? 'p1' : 'p2';
-    const moveIndex = moveChoiceFromText(content);
-    if (moveIndex === null) return '기술 번호를 찾지 못했어요. 예: 1:[기술1] 또는 [기술 1]';
+    const battleForChoice = createBattle(session);
+    const moveNumber = resolveMoveChoice(battleForChoice, side, content);
+    if (!moveNumber) {
+      return [
+        '현재 포켓몬이 가진 기술과 매치되는 입력을 찾지 못했어요.',
+        '[기술 1] 또는 [화염자동차]처럼 입력해 주세요.',
+      ].join('\n');
+    }
+
+    const choice = `move ${moveNumber}${wantsMega(content) ? ' mega' : ''}`;
+    const validation = validateChoice(session, side, choice);
+    if (!validation.accepted) {
+      return formatChoiceError(validation.errors);
+    }
 
     const pendingChoices = {
       ...(session.pendingChoices || {}),
-      [side]: `move ${moveIndex + 1}${wantsMega(content) ? ' mega' : ''}`,
+      [side]: choice,
     };
 
     if (!pendingChoices.p1 || !pendingChoices.p2) {
@@ -350,17 +927,29 @@ const createBattleBot = ({
         pendingChoices,
         updatedAt: new Date().toISOString(),
       });
-      const waitingFor = side === 'p1' ? session.player2Name : session.player1Name;
-      return withBattleMentions(
-        session,
-        `${side === 'p1' ? '1' : '2'}P 선택 완료. ${waitingFor}님의 선택을 기다립니다.`
-      );
+      return null;
     }
 
     const battle = createBattle(session);
     const logFrom = battle.log.length;
-    battle.choose('p1', pendingChoices.p1);
-    battle.choose('p2', pendingChoices.p2);
+    const p1Accepted = battle.choose('p1', pendingChoices.p1);
+    const p1Errors = collectChoiceErrors(battle, logFrom);
+    const p2LogFrom = battle.log.length;
+    const p2Accepted = battle.choose('p2', pendingChoices.p2);
+    const p2Errors = collectChoiceErrors(battle, p2LogFrom);
+    const turnErrors = [...p1Errors, ...p2Errors];
+
+    if (p1Accepted === false || p2Accepted === false || turnErrors.length) {
+      await db.ref(`gameData/battleSessions/${sessionKey}`).update({
+        pendingChoices: {},
+        updatedAt: new Date().toISOString(),
+      });
+      return withBattleMentions(session, [
+        '선택을 처리하지 못했어요.',
+        formatChoiceError(turnErrors),
+        '이번 턴 선택은 저장하지 않았습니다. 다시 기술을 선택해 주세요.',
+      ].join('\n'));
+    }
 
     const messages = collectTurnMessages(battle, logFrom);
     const nextTurns = [
@@ -368,25 +957,28 @@ const createBattleBot = ({
       { p1: pendingChoices.p1, p2: pendingChoices.p2, createdAt: new Date().toISOString() },
     ];
 
+    const endedByFaint = hasFaintedThisTurn(battle, logFrom);
     const updates = {
       turns: nextTurns,
       pendingChoices: {},
       updatedAt: new Date().toISOString(),
     };
 
-    if (battle.ended) {
+    if (battle.ended || endedByFaint) {
       updates.status = 'completed';
-      updates.winner = battle.winner || '';
+      updates.winner = faintWinner(battle, session);
       updates.completedAt = new Date().toISOString();
     }
 
     await db.ref(`gameData/battleSessions/${sessionKey}`).update(updates);
 
     return withBattleMentions(session, [
-      `결과`,
+      '결과',
       ...messages,
       activeSummary(battle),
-      battle.ended ? '배틀 종료!' : '다음 기술을 선택해 주세요.',
+      updates.status === 'completed'
+        ? `배틀 종료!${updates.winner ? ` ${updates.winner} 승리!` : ''}`
+        : '다음 기술을 선택해 주세요.',
     ].filter(Boolean).join('\n'));
   };
 
@@ -394,6 +986,7 @@ const createBattleBot = ({
     if (command === 'help') return formatHelp();
     if (command === 'challenge') return createChallenge({ status, members, author, authorAccount });
     if (command === 'accept') return acceptChallenge({ author });
+    if (command === 'selectPokemon') return selectPokemon({ author, content });
     if (command === 'decline') return declineChallenge({ author });
     if (command === 'forfeit') return forfeit({ author });
     if (command === 'move') return chooseMove({ author, content });

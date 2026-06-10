@@ -4,6 +4,7 @@ import { database } from '../../firebase';
 import AdvancedBattleSimulator from '../../battle/components/AdvancedBattleSimulator';
 import { toCalcAbilityName } from '../../utils/abilityUtils';
 import allPokemonMaster from '../../data/allPokemon.json';
+import customBattleData from '../../data/customBattleData.json';
 
 const TYPE_MAP = {
   노말: 'Normal',
@@ -32,6 +33,22 @@ const normalizeLookupKey = (value) => String(value || '')
   .toLowerCase()
   .replace(/[\s_\-'.:]/g, '')
   .replace(/[^\p{L}\p{N}]/gu, '');
+
+const CUSTOM_ABILITY_ALIASES = Object.entries(customBattleData.aliases?.abilities || {}).reduce((map, [key, value]) => {
+  map[normalizeLookupKey(key)] = value;
+  return map;
+}, {});
+
+const CUSTOM_ITEM_ALIASES = Object.entries(customBattleData.aliases?.items || {}).reduce((map, [key, value]) => {
+  map[normalizeLookupKey(key)] = value;
+  return map;
+}, {});
+
+const resolveCustomAbility = (value) =>
+  CUSTOM_ABILITY_ALIASES[normalizeLookupKey(value)] || toCalcAbilityName(value) || value || 'Adaptability';
+
+const resolveCustomItem = (value) =>
+  CUSTOM_ITEM_ALIASES[normalizeLookupKey(value)] || value || '';
 
 const POKEMON_NAME_MAP = allPokemonMaster.reduce((map, pokemon) => {
   [
@@ -113,8 +130,8 @@ const toBattleFormat = (pokemon) => {
       normalizeType(pokemon.type || template?.type),
       pokemon.type2 || template?.type2 ? normalizeType(pokemon.type2 || template?.type2) : null
     ].filter(Boolean),
-    ability: toCalcAbilityName(pokemon.ability) || pokemon.ability || 'Adaptability',
-    item: pokemon.heldItem || '',
+    ability: resolveCustomAbility(pokemon.ability),
+    item: resolveCustomItem(pokemon.heldItem || pokemon.item || pokemon.heldItemName),
     nature: pokemon.nature || 'Hardy',
     stats,
     baseStats: stats,

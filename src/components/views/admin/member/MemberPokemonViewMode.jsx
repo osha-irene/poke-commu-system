@@ -1,14 +1,14 @@
-// src/components/views/admin/member/MemberPokemonViewMode.jsx
 import React from 'react';
-import { Edit, Trash2, Sparkles, Gift, Plus } from 'lucide-react';
+import { ArrowRightLeft, Edit, Gift, Plus, Sparkles, Trash2 } from 'lucide-react';
 
-export default function MemberPokemonViewMode({ 
-  member, 
-  onStartEdit, 
+export default function MemberPokemonViewMode({
+  member,
+  onStartEdit,
   onDelete,
-  onStartGive 
+  onStartGive,
+  onStartTransfer
 }) {
-  const memberPokemon = member?.caughtPokemon?.filter(p => p && p.uniqueId) || [];
+  const memberPokemon = member?.caughtPokemon?.filter(pokemon => pokemon && pokemon.uniqueId) || [];
 
   return (
     <div className="space-y-4">
@@ -17,6 +17,7 @@ export default function MemberPokemonViewMode({
           보유 포켓몬 ({memberPokemon.length}/26)
         </h3>
         <button
+          type="button"
           onClick={onStartGive}
           className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-semibold"
         >
@@ -34,13 +35,13 @@ export default function MemberPokemonViewMode({
           {memberPokemon.map((pokemon, index) => (
             <div key={pokemon.uniqueId || index} className="bg-white rounded-lg border p-3">
               <div className="flex items-start gap-3">
-                <img 
-                  src={pokemon.spriteUrl || pokemon.sprite || ''} 
+                <img
+                  src={pokemon.spriteUrl || pokemon.sprite || ''}
                   alt={pokemon.name || '포켓몬'}
                   className="w-20 h-20"
                   style={{ imageRendering: 'pixelated' }}
-                  onError={(e) => { 
-                    e.target.src = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/0.png'; 
+                  onError={(event) => {
+                    event.currentTarget.src = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/0.png';
                   }}
                 />
                 <div className="flex-1 min-w-0">
@@ -60,25 +61,36 @@ export default function MemberPokemonViewMode({
                   )}
                 </div>
               </div>
-              <div className="flex gap-2 mt-3">
+
+              <div className="grid grid-cols-3 gap-2 mt-3">
                 <button
+                  type="button"
                   onClick={() => onStartEdit(pokemon)}
-                  className="flex-1 bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs font-semibold hover:bg-blue-100"
+                  className="bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs font-semibold hover:bg-blue-100"
                 >
                   <Edit size={12} className="inline mr-1" />
                   편집
                 </button>
                 <button
-                onClick={() => {
-                  if (window.confirm(`${pokemon.nickname || pokemon.name}을(를) 삭제하시겠습니까?`)) {
-                    onDelete(pokemon.uniqueId);  // ⭐ member.id 제거
-                  }
-                }}
-                className="flex-1 bg-red-50 text-red-600 px-2 py-1 rounded text-xs font-semibold hover:bg-red-100"
-              >
-                <Trash2 size={12} className="inline mr-1" />
-                삭제
-              </button>
+                  type="button"
+                  onClick={() => onStartTransfer?.(pokemon)}
+                  className="bg-indigo-50 text-indigo-600 px-2 py-1 rounded text-xs font-semibold hover:bg-indigo-100"
+                >
+                  <ArrowRightLeft size={12} className="inline mr-1" />
+                  이전
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm(`${pokemon.nickname || pokemon.name}을(를) 삭제하시겠습니까?`)) {
+                      onDelete(pokemon.uniqueId);
+                    }
+                  }}
+                  className="bg-red-50 text-red-600 px-2 py-1 rounded text-xs font-semibold hover:bg-red-100"
+                >
+                  <Trash2 size={12} className="inline mr-1" />
+                  삭제
+                </button>
               </div>
             </div>
           ))}

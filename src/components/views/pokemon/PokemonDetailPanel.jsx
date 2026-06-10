@@ -325,6 +325,42 @@ const ballImage = getBallImage();
     setIsEditingNickname(false);
   };
 
+  const buildCurrentMoveData = () => (
+    pokemon.moves?.map((moveEntry) => {
+      const moveData = allMoves.find(move => move.id === moveEntry.moveId);
+      return moveData ? { ...moveData, moveId: moveEntry.moveId, currentPp: moveEntry.currentPp, learnedAt: moveEntry.learnedAt } : null;
+    }).filter(Boolean) || []
+  );
+
+  const openLevelUpMoveQueue = (pokemonId, newLevel, newMoves = []) => {
+    const moves = newMoves.filter(Boolean);
+    if (!moves.length) return;
+    setLevelUpData({
+      pokemonId,
+      newLevel,
+      pendingMoves: moves,
+      currentMove: moves[0],
+      currentMoves: buildCurrentMoveData(),
+    });
+    setShowLevelUpMoveModal(true);
+  };
+
+  const advanceLevelUpMoveQueue = (nextCurrentMoves = levelUpData?.currentMoves || []) => {
+    const remainingMoves = levelUpData?.pendingMoves?.slice(1) || [];
+    if (!remainingMoves.length) {
+      setShowLevelUpMoveModal(false);
+      setLevelUpData(null);
+      return;
+    }
+
+    setLevelUpData({
+      ...levelUpData,
+      pendingMoves: remainingMoves,
+      currentMove: remainingMoves[0],
+      currentMoves: nextCurrentMoves,
+    });
+  };
+
   const handleLearnMove = (newMove, oldMoveId) => {
     if (typeof onLearnMove !== 'function') {
       alert('⚠️ 기술을 배울 수 없습니다!');
@@ -332,8 +368,14 @@ const ballImage = getBallImage();
     }
     
     onLearnMove(pokemon.uniqueId, newMove, oldMoveId);
-    setShowLevelUpMoveModal(false);
-    setLevelUpData(null);
+
+    const currentMoves = levelUpData?.currentMoves || [];
+    const nextMove = { ...newMove, moveId: newMove.moveId || newMove.id };
+    const nextCurrentMoves = oldMoveId
+      ? currentMoves.map(move => ((move.moveId || move.id) === oldMoveId ? nextMove : move))
+      : [...currentMoves, nextMove].slice(0, 4);
+
+    advanceLevelUpMoveQueue(nextCurrentMoves);
   };
 
   const handleEvolve = () => {
@@ -457,10 +499,7 @@ const ballImage = getBallImage();
                           type="button"
                           onClick={() => {
                             if (!canAllocateExp) return;
-                            onUseCandy(pokemon.uniqueId, (pokemonId, newLevel, newMoves) => {
-                              setLevelUpData({ pokemonId, newLevel, newMoves });
-                              setShowLevelUpMoveModal(true);
-                            }, selectedExpAmount);
+                            onUseCandy(pokemon.uniqueId, openLevelUpMoveQueue, selectedExpAmount);
                             setExpInput('');
                             setShowExpPanel(false);
                           }}
@@ -904,18 +943,16 @@ const ballImage = getBallImage();
 
       {showLevelUpMoveModal && levelUpData && (
         <LevelUpMoveModal
+          key={levelUpData.currentMove?.id || levelUpData.currentMove?.moveId || levelUpData.pendingMoves?.length}
           pokemon={pokemon}
           newLevel={levelUpData.newLevel}
-          learnableMoves={levelUpData.newMoves}
-          currentMoves={pokemon.moves?.map(m => {
-            const moveData = allMoves.find(move => move.id === m.moveId);
-            return moveData ? { ...moveData, currentPp: m.currentPp, learnedAt: m.learnedAt } : null;
-          }).filter(Boolean) || []}
+          learnableMoves={[levelUpData.currentMove].filter(Boolean)}
+          remainingCount={levelUpData.pendingMoves?.length || 1}
+          currentMoves={levelUpData.currentMoves || []}
           onLearn={handleLearnMove}
           onSkip={() => {
-            setShowLevelUpMoveModal(false);
-            setLevelUpData(null);
-            alert(`${pokemon.nickname || pokemon.name}은(는) ${levelUpData.newMoves[0]?.name}을(를) 배우지 않았습니다.`);
+            alert(`${pokemon.nickname || pokemon.name}은(는) ${levelUpData.currentMove?.name}을(를) 배우지 않았습니다.`);
+            advanceLevelUpMoveQueue(levelUpData.currentMoves || []);
           }}
         />
       )}

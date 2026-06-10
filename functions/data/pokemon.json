@@ -48305,5 +48305,60 @@
     "isRegionalForm": true,
     "regionalForm": "paldea",
     "formVariant": "wooper-paldea"
+  },
+  {
+    "id": "custom-milotic-mega",
+    "number": 350,
+    "originalNumber": 350,
+    "displayNumber": "350-M",
+    "name": "메가밀로틱",
+    "nameEn": "Milotic-Mega",
+    "species": "Milotic-Mega",
+    "type": "물",
+    "type2": "페어리",
+    "catchRate": "0",
+    "baseHp": 95,
+    "baseAttack": 70,
+    "baseDefense": 119,
+    "baseSpAttack": 130,
+    "baseSpDefense": 155,
+    "baseSpeed": 71,
+    "generation": "custom",
+    "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/350.png",
+    "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/350.png",
+    "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/350.png",
+    "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/350.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 62,
+    "weight": 1620,
+    "abilities": [
+      "쾌청"
+    ],
+    "abilitiesEn": [
+      "Drought"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "수중1",
+      "드래곤"
+    ],
+    "eggGroupsEn": [
+      "water1",
+      "dragon"
+    ],
+    "hatchSteps": 5100,
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "isCustom": true,
+    "isMega": true,
+    "baseSpecies": "밀로틱",
+    "baseSpeciesEn": "Milotic",
+    "requiredItem": "밀로틱나이트",
+    "requiredItemEn": "Milotite"
   }
 ]

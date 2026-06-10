@@ -1,18 +1,43 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const http = require('http');
 const https = require('https');
 const { createBattleBot } = require('./battleBot');
 
-admin.initializeApp();
+const getFirebaseConfig = () => {
+  try {
+    return process.env.FIREBASE_CONFIG ? JSON.parse(process.env.FIREBASE_CONFIG) : {};
+  } catch (error) {
+    console.warn('FIREBASE_CONFIG was not valid JSON:', error.message);
+    return {};
+  }
+};
+
+const firebaseConfig = getFirebaseConfig();
+const projectId =
+  firebaseConfig.projectId ||
+  process.env.GCLOUD_PROJECT ||
+  process.env.GCP_PROJECT ||
+  process.env.REACT_APP_FIREBASE_PROJECT_ID ||
+  'poke-commu-system';
+
+const databaseURL =
+  firebaseConfig.databaseURL ||
+  process.env.FIREBASE_DATABASE_URL ||
+  process.env.REACT_APP_FIREBASE_DATABASE_URL ||
+  (projectId ? `https://${projectId}-default-rtdb.firebaseio.com` : undefined);
+
+admin.initializeApp(databaseURL ? { databaseURL } : undefined);
 const db = admin.database();
 
-const MASTODON_BASE_URL = 'https://poketodon.monster';
-const MASTODON_HOST = 'poketodon.monster';
+const MASTODON_BASE_URL =
+  process.env.MASTODON_INSTANCE_URL ||
+  process.env.MASTODON_BASE_URL ||
+  'https://poketodon.monster';
+const MASTODON_HOST = new URL(MASTODON_BASE_URL).host;
 const BOT_ACCOUNT = (process.env.MASTODON_ACCOUNT || 'system').toLowerCase();
 const SYSTEM_ACCOUNT = BOT_ACCOUNT;
-const MASTODON_TOKEN =
-  process.env.MASTODON_TOKEN ||
-  '3Qqp8l3XaqOkOq8qRuiShTObQwjYveQF5GH1ZwXeyQs';
+const MASTODON_TOKEN = process.env.MASTODON_TOKEN || '';
 
 let pokemonData = [];
 try {
@@ -181,10 +206,11 @@ const loadCampingSettings = async () => {
 const makeMastodonRequest = (path, method = 'GET', data = null) => {
   return new Promise((resolve, reject) => {
     const url = new URL(path, MASTODON_BASE_URL);
+    const client = url.protocol === 'http:' ? http : https;
     const postData = data ? JSON.stringify(data) : null;
     const options = {
       hostname: url.hostname,
-      port: 443,
+      port: url.port || (url.protocol === 'http:' ? 80 : 443),
       path: `${url.pathname}${url.search}`,
       method,
       headers: {
@@ -196,7 +222,7 @@ const makeMastodonRequest = (path, method = 'GET', data = null) => {
 
     if (postData) options.headers['Content-Length'] = Buffer.byteLength(postData);
 
-    const request = https.request(options, response => {
+    const request = client.request(options, response => {
       let responseData = '';
       response.on('data', chunk => responseData += chunk);
       response.on('end', () => {
@@ -695,7 +721,7 @@ const processStatus = async (status, source = 'webhook') => {
   const command = getCommand(content);
   if (!battleCommand && !command) {
     await processedRef.set({ processedAt: Date.now(), source, ignored: 'unknown command' });
-    await replyToStatus(status, '알 수 없는 명령어예요. [캠핑 시작], [계속], [만족], [배틀 신청], [배틀 수락], 1:[기술1] 중 하나를 사용해 주세요.');
+    await replyToStatus(status, '알 수 없는 명령어예요. [캠핑 시작], [계속], [만족], [배틀 신청], [배틀 수락], [포켓몬 1], [기술 1] 또는 [기술명] 중 하나를 사용해 주세요.');
     return { ignored: true, reason: 'unknown command' };
   }
 
@@ -724,7 +750,7 @@ const processStatus = async (status, source = 'webhook') => {
       command: `battle:${battleCommand}`,
       account: authorAccount
     });
-    await replyToStatus(status, response);
+    if (response) await replyToStatus(status, response);
     return { processed: true, command: `battle:${battleCommand}` };
   }
 

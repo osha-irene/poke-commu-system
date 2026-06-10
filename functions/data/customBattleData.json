@@ -1,0 +1,59 @@
+{
+  "logFeatures": [
+    "메가진화 후 같은 턴 로그와 HP 요약에 메가폼 이름을 유지합니다.",
+    "메가스톤 발광, 메가폼 변화, 특성 변경, 날씨/랭크/상태/반사 로그를 분리해 표시합니다.",
+    "매직미러 반사 로그는 원래 사용자의 기술이 반사된 것으로 표시합니다.",
+    "기술 선택 완료 중간 멘션은 생략하고 턴 결과만 출력합니다."
+  ],
+  "customMegaEvolutions": [
+    {
+      "id": "miloticmega",
+      "name": "Milotic-Mega",
+      "displayName": "메가밀로틱",
+      "baseSpecies": "Milotic",
+      "baseSpeciesKo": "밀로틱",
+      "forme": "Mega",
+      "types": ["Water", "Fairy"],
+      "typesKo": ["물", "페어리"],
+      "ability": "Drought",
+      "abilityKo": "쾌청",
+      "item": "Milotite",
+      "itemKo": "밀로틱나이트",
+      "baseStats": {
+        "hp": 95,
+        "atk": 70,
+        "def": 119,
+        "spa": 130,
+        "spd": 155,
+        "spe": 71
+      },
+      "heightm": 6.2,
+      "weightkg": 162,
+      "color": "Pink",
+      "eggGroups": ["Water 1", "Dragon"]
+    }
+  ],
+  "aliases": {
+    "abilities": {
+      "쾌청": "Drought",
+      "가뭄": "Drought",
+      "매직미러": "Magic Bounce"
+    },
+    "abilityLabels": {
+      "Drought": "쾌청",
+      "drought": "쾌청",
+      "Magic Bounce": "매직미러",
+      "magic-bounce": "매직미러"
+    },
+    "items": {
+      "밀로틱나이트": "Milotite",
+      "밀로틱이트": "Milotite",
+      "Milotite": "Milotite",
+      "디안시나이트": "Diancite"
+    },
+    "speciesLabels": {
+      "Milotic-Mega": "메가밀로틱",
+      "메가밀로틱": "메가밀로틱"
+    }
+  }
+}

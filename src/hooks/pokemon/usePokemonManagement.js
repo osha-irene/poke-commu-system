@@ -4,6 +4,14 @@ import { ref, get } from 'firebase/database';
 import { database } from '../../firebase';
 import { getRequiredExpForLevel } from '../../utils/experience';
 import { getPokemonLearnset } from '../../utils/pokemonLearnsets';
+import itemsData from '../../data/items.json';
+
+const getItemList = (items) => {
+  if (Array.isArray(items)) return items;
+  if (Array.isArray(items?.items)) return items.items;
+  if (Array.isArray(itemsData)) return itemsData;
+  return itemsData.items || [];
+};
 
 const usePokemonManagement = (
   currentUser, 
@@ -513,11 +521,12 @@ const usePokemonManagement = (
     const itemName = pokemon.heldItem;
     const itemIndex = currentUser.inventory.findIndex(i => i.name === itemName);
     
+    const itemList = getItemList(allItems);
     const newInventory = [...currentUser.inventory];
     if (itemIndex !== -1) {
       newInventory[itemIndex] = { ...newInventory[itemIndex], count: newInventory[itemIndex].count + 1 };
     } else {
-      const itemData = allItems.find(i => i.name === itemName);
+      const itemData = itemList.find(i => i.name === itemName || i.nameEn === itemName || i.id === itemName);
       newInventory.push({ name: itemName, count: 1, imageUrl: itemData?.spriteUrl || '/default-item.png' });
     }
     

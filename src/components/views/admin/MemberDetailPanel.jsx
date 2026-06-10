@@ -8,6 +8,7 @@ import MemberItemTab from './member/MemberItemTab';
 function MemberDetailPanel({ member, onClose }) {
   const {
     currentUser: trainer,
+    members,
     allItems,
     allPokemonMaster,
     allMoves,
@@ -16,6 +17,7 @@ function MemberDetailPanel({ member, onClose }) {
     updateCurrentUser,
     giveItemToMember,
     givePokemonToMember,
+    transferMemberPokemon,
     editMemberPokemon,
     deleteMemberPokemon, // ⭐ 추가
     hatchMemberEgg,
@@ -152,6 +154,7 @@ function MemberDetailPanel({ member, onClose }) {
           {selectedTab === 'pokemon' && (
             <MemberPokemonTab
               member={member}
+              members={members}
               trainer={trainer}
               allItems={allItems}  
               allPokemonMaster={allPokemonMaster}
@@ -161,6 +164,7 @@ function MemberDetailPanel({ member, onClose }) {
               onEditPokemon={editMemberPokemon}
               onDeletePokemon={handleDeletePokemon}
               onHatchEgg={hatchMemberEgg}
+              onTransferPokemon={transferMemberPokemon}
             />
           )}
 

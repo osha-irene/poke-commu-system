@@ -528,27 +528,29 @@ function HomeDashboard({
             </div>
           )}
           {index === 2 && (
-            <div className="home-calendar" aria-label="Korea time calendar">
-              <div className="home-calendar__header">
-                <span>Calendar</span>
-                <strong>{calendarLabel}</strong>
+            <>
+              <div className="home-calendar" aria-label="Korea time calendar">
+                <div className="home-calendar__header">
+                  <span>Calendar</span>
+                  <strong>{calendarLabel}</strong>
+                </div>
+                <div className="home-calendar__weekdays">
+                  {weekDays.map((day, dayIndex) => (
+                    <span key={`${day}-${dayIndex}`} className={dayIndex === 0 ? 'is-sunday' : dayIndex === 6 ? 'is-saturday' : ''}>{day}</span>
+                  ))}
+                </div>
+                <div className="home-calendar__grid">
+                  {calendarDays.map((day, dayIndex) => (
+                    <span
+                      key={`${day.muted ? 'muted' : 'current'}-${day.day}-${dayIndex}`}
+                      className={[day.day === koreaToday.day && !day.muted ? 'is-today' : '', dayIndex % 7 === 0 ? 'is-sunday' : dayIndex % 7 === 6 ? 'is-saturday' : '', day.muted ? 'is-muted' : ''].filter(Boolean).join(' ')}
+                    >
+                      {day.day}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="home-calendar__weekdays">
-                {weekDays.map((day, dayIndex) => (
-                  <span key={`${day}-${dayIndex}`} className={dayIndex === 0 ? 'is-sunday' : dayIndex === 6 ? 'is-saturday' : ''}>{day}</span>
-                ))}
-              </div>
-              <div className="home-calendar__grid">
-                {calendarDays.map((day, dayIndex) => (
-                  <span
-                    key={`${day.muted ? 'muted' : 'current'}-${day.day}-${dayIndex}`}
-                    className={[day.day === koreaToday.day && !day.muted ? 'is-today' : '', dayIndex % 7 === 0 ? 'is-sunday' : dayIndex % 7 === 6 ? 'is-saturday' : '', day.muted ? 'is-muted' : ''].filter(Boolean).join(' ')}
-                  >
-                    {day.day}
-                  </span>
-                ))}
-              </div>
-            </div>
+            </>
           )}
         </article>
       ))}

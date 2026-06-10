@@ -24,6 +24,7 @@ export default function LevelUpMoveModal({
   newLevel,
   learnableMoves = [],
   currentMoves = [],
+  remainingCount = 1,
   onLearn,
   onSkip
 }) {
@@ -43,9 +44,9 @@ export default function LevelUpMoveModal({
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-4 border-lime-300">
+      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden border-4 border-lime-300 flex flex-col">
         {/* 헤더 */}
-        <div className="border-b-2 border-lime-300 bg-white/95 p-6 rounded-t-lg">
+        <div className="border-b-2 border-lime-300 bg-white/95 p-6 rounded-t-lg flex-shrink-0">
           <div className="flex justify-between items-start">
             <div className="flex items-center gap-3">
               <div className="border-2 border-lime-300 bg-white/55 p-3 rounded-full">
@@ -56,6 +57,11 @@ export default function LevelUpMoveModal({
                 <p className="text-green-800 text-sm">
                   {pokemon.nickname || pokemon.name}이(가) Lv.{newLevel}이 되었습니다!
                 </p>
+                {remainingCount > 1 && (
+                  <p className="mt-1 text-xs font-semibold text-lime-700">
+                    배울 기술이 {remainingCount}개 남아 있습니다.
+                  </p>
+                )}
               </div>
             </div>
             <button
@@ -67,7 +73,7 @@ export default function LevelUpMoveModal({
           </div>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="min-h-0 flex-1 overflow-y-auto p-6 space-y-6">
           {/* 새로 배울 수 있는 기술 */}
           <div>
             <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
@@ -174,7 +180,7 @@ export default function LevelUpMoveModal({
           )}
 
           {/* 버튼 */}
-          <div className="flex gap-3">
+          <div className="sticky bottom-0 -mx-6 -mb-6 flex gap-3 border-t border-gray-200 bg-white/95 p-4">
             <button
               onClick={handleConfirm}
               disabled={isFull && !selectedOldMove}

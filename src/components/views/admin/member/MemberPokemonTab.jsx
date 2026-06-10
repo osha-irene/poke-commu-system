@@ -4,10 +4,12 @@ import ItemSelectorModal from '../../../modals/ItemSelectorModal';
 import MemberPokemonViewMode from './MemberPokemonViewMode';
 import MemberPokemonEditMode from './MemberPokemonEditMode';
 import MemberPokemonGiveMode from './MemberPokemonGiveMode';
+import MemberPokemonTransferMode from './MemberPokemonTransferMode';
 import { getLearnsetTmMoves, getPokemonLearnset } from '../../../../utils/pokemonLearnsets';
 
 function MemberPokemonTab({ 
   member, 
+  members = {},
   trainer,
   allPokemonMaster = [], 
   allMoves = [], 
@@ -16,7 +18,8 @@ function MemberPokemonTab({
   onGivePokemon,
   onEditPokemon,
   onDeletePokemon,
-  onHatchEgg
+  onHatchEgg,
+  onTransferPokemon
 }) {
   const [mode, setMode] = useState('view');
   const [selectedPokemon, setSelectedPokemon] = useState(null);
@@ -24,6 +27,7 @@ function MemberPokemonTab({
   const [showGiveMoveModal, setShowGiveMoveModal] = useState(false);
   const [showEditItemModal, setShowEditItemModal] = useState(false);
   const [showGiveItemModal, setShowGiveItemModal] = useState(false);
+  const [transferTarget, setTransferTarget] = useState(null);
   
   const [editData, setEditData] = useState({
     level: 5,
@@ -252,6 +256,32 @@ function MemberPokemonTab({
     setSelectedPokemon(null);
   };
 
+  const handleStartTransferPokemon = (pokemon) => {
+    setTransferTarget({ type: 'pokemon', pokemon });
+    setShowMoveModal(false);
+    setShowEditItemModal(false);
+    setShowGiveMoveModal(false);
+    setShowGiveItemModal(false);
+    setMode('transfer');
+  };
+
+  const handleStartTransferEgg = () => {
+    setTransferTarget({ type: 'egg', egg: member.egg });
+    setShowMoveModal(false);
+    setShowEditItemModal(false);
+    setShowGiveMoveModal(false);
+    setShowGiveItemModal(false);
+    setMode('transfer');
+  };
+
+  const handleTransfer = async (targetMemberId, target) => {
+    const success = await onTransferPokemon?.(member.id, targetMemberId, target);
+    if (success) {
+      setTransferTarget(null);
+      setMode('view');
+    }
+  };
+
   const handleGivePokemon = () => {
   if (!giveData.selectedPokemon) {
     alert('포켓몬을 선택해주세요!');
@@ -324,21 +354,31 @@ console.log('📋 최종 기술:', {
           <div>
             <div className="text-sm font-semibold text-amber-700">보유 알</div>
             <div className="text-lg font-bold text-gray-800">
-              {member.egg.species || member.egg.name || '포켓몬'}의 알
+              {member.egg.species || member.egg.name || '포켓몬'} 알
             </div>
             <div className="text-xs text-gray-600">
-              관리자 확인 시 빈 엔트리 칸에 먼저 추가되고, 빈칸이 없으면 박스로 이동합니다.
+              관리자 확인 후 부화하거나 다른 멤버에게 이전할 수 있습니다.
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => onHatchEgg?.(member.id)}
-            className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-semibold transition-colors"
-          >
-            부화 처리
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => onHatchEgg?.(member.id)}
+              className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-semibold transition-colors"
+            >
+              부화 처리
+            </button>
+            <button
+              type="button"
+              onClick={handleStartTransferEgg}
+              className="px-4 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-semibold transition-colors"
+            >
+              알 이전
+            </button>
+          </div>
         </div>
       )}
+
       {/* 모달들 */}
       {showMoveModal && selectedPokemon && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999 }}>
@@ -431,6 +471,7 @@ console.log('📋 최종 기술:', {
             setShowGiveItemModal(false);
             setMode('give');
           }}
+          onStartTransfer={handleStartTransferPokemon}
         />
       )}
 
@@ -468,8 +509,22 @@ console.log('📋 최종 기술:', {
           onOpenMoveModal={() => setShowGiveMoveModal(true)}
         />
       )}
+
+      {mode === 'transfer' && transferTarget && (
+        <MemberPokemonTransferMode
+          member={member}
+          members={members}
+          transferTarget={transferTarget}
+          onTransfer={handleTransfer}
+          onCancel={() => {
+            setTransferTarget(null);
+            setMode('view');
+          }}
+        />
+      )}
     </div>
   );
 }
 
 export default MemberPokemonTab;
+

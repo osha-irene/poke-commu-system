@@ -86,9 +86,9 @@ export default function LearnMoveModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* 헤더 */}
-        <div className="border-b-2 border-lime-300 bg-white/95 p-6 rounded-t-xl">
+        <div className="border-b-2 border-lime-300 bg-white/95 p-6 rounded-t-xl flex-shrink-0">
           <div className="flex justify-between items-start">
             <div>
               <h2 className="text-2xl font-bold mb-1 text-green-950">새로운 기술!</h2>
@@ -105,7 +105,7 @@ export default function LearnMoveModal({
           </div>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="min-h-0 flex-1 overflow-y-auto p-6 space-y-6">
           {/* 새로운 기술 */}
           <div>
             <h3 className="text-sm font-semibold text-gray-600 mb-2">🆕 배울 기술</h3>
@@ -230,7 +230,7 @@ export default function LearnMoveModal({
           )}
 
           {/* 버튼 */}
-          <div className="flex gap-3">
+          <div className="sticky bottom-0 -mx-6 -mb-6 flex gap-3 border-t border-gray-200 bg-white/95 p-4">
             <button
               onClick={() => {
                 console.log('🔘 기술 교체하기 버튼 클릭!');
