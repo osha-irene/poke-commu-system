@@ -7,6 +7,8 @@ import { ref, set } from 'firebase/database';
 import { auth, database } from '../../firebase';
 import { POKEBALL_LIST } from '../../styles/theme';
 import { normalizePokemonGender } from '../../utils/pokemonGender';
+import movesData from '../../data/moves.json';
+import evolutionsData from '../../data/evolutions.json';
 
 export const useAdminMembers = (
   currentUser,
@@ -17,6 +19,213 @@ export const useAdminMembers = (
   allPokemonMaster,
   systemSettings = {}
 ) => {
+  const isEmptyPokemonSlot = (pokemon) => (
+    pokemon === null || pokemon === undefined || pokemon === 'null'
+  );
+
+  const getSpeciesNumber = (pokemon) => Number(pokemon?.originalNumber || pokemon?.displayNumber || pokemon?.number);
+
+  const findPokemonTemplateByNumber = (number, regionalForm = null) => {
+    const numericNumber = Number(number);
+    if (!Number.isFinite(numericNumber)) return null;
+
+    if (regionalForm) {
+      const regionalMatch = (allPokemonMaster || []).find(template =>
+        Number(template.originalNumber || template.displayNumber || template.number) === numericNumber &&
+        template.regionalForm === regionalForm
+      );
+      if (regionalMatch) return regionalMatch;
+    }
+
+    return (allPokemonMaster || []).find(template =>
+      Number(template.number) === numericNumber &&
+      !template.regionalForm
+    ) || (allPokemonMaster || []).find(template =>
+      Number(template.originalNumber || template.displayNumber || template.number) === numericNumber
+    );
+  };
+
+  const normalizeTemplateKey = (value) => String(value || '').toLowerCase();
+
+  const findPokemonTemplateForOwned = (pokemon) => {
+    if (!pokemon) return null;
+    const pokemonRegionalForm = normalizeTemplateKey(pokemon.regionalForm);
+    const pokemonFormVariant = normalizeTemplateKey(pokemon.formVariant);
+    const pokemonNameEn = normalizeTemplateKey(pokemon.nameEn);
+    const pokemonNumber = Number(pokemon.number);
+    const pokemonOriginalNumber = Number(pokemon.originalNumber || pokemon.number);
+    const pokemonId = Number(pokemon.pokemonId || pokemon.id);
+
+    const candidates = (allPokemonMaster || [])
+      .map(template => {
+        const templateRegionalForm = normalizeTemplateKey(template.regionalForm);
+        const templateFormVariant = normalizeTemplateKey(template.formVariant);
+        const templateNameEn = normalizeTemplateKey(template.nameEn);
+        const templateNumber = Number(template.number);
+        const templateOriginalNumber = Number(template.originalNumber || template.number);
+        const templateId = Number(template.id);
+        let score = 0;
+
+        if (pokemonFormVariant && templateFormVariant === pokemonFormVariant) score += 100;
+        if (pokemonNameEn && templateNameEn === pokemonNameEn) score += 90;
+        if (pokemonId && templateId === pokemonId) score += 80;
+        if (pokemonRegionalForm && templateRegionalForm === pokemonRegionalForm) score += 40;
+        if (pokemonNumber && templateNumber === pokemonNumber) score += 20;
+        if (pokemonOriginalNumber && templateOriginalNumber === pokemonOriginalNumber) score += 10;
+        if (!pokemonRegionalForm && !templateRegionalForm && pokemonNumber && templateNumber === pokemonNumber) score += 30;
+        if (template.name === pokemon.name) score += 5;
+
+        return { template, score };
+      })
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score);
+
+    return candidates[0]?.template || pokemon;
+  };
+
+  const getBaseSpeciesNumber = (number) => {
+    let baseNumber = Number(number);
+    let changed = true;
+
+    while (changed) {
+      changed = false;
+      let previousEvolution = null;
+      for (const evolution of (evolutionsData.evolutions || [])) {
+        if (Number(evolution.to) === baseNumber) {
+          previousEvolution = evolution;
+          break;
+        }
+      }
+      if (previousEvolution) {
+        baseNumber = Number(previousEvolution.from);
+        changed = true;
+      }
+    }
+
+    return baseNumber;
+  };
+
+  const getEggHatchTemplate = (egg) => {
+    const motherRegionalForm = egg?.motherRegionalForm || egg?.regionalForm || null;
+    const sourceNumber = Number(
+      egg?.motherOriginalNumber ||
+      egg?.originalNumber ||
+      egg?.speciesOriginalNumber ||
+      egg?.speciesNumber
+    );
+    const sourceTemplate = findPokemonTemplateByNumber(
+      Number.isFinite(sourceNumber) ? sourceNumber : egg?.speciesNumber,
+      motherRegionalForm
+    ) || (allPokemonMaster || []).find(template =>
+      Number(template.number) === Number(egg?.speciesNumber)
+    );
+
+    if (!sourceTemplate) return null;
+
+    const baseNumber = getBaseSpeciesNumber(getSpeciesNumber(sourceTemplate));
+    return findPokemonTemplateByNumber(baseNumber, sourceTemplate.regionalForm) ||
+      findPokemonTemplateByNumber(baseNumber);
+  };
+
+  const getRandomParentBall = (egg) => {
+    const parentBalls = [
+      egg?.parent1Ball,
+      egg?.parent2Ball,
+      ...(Array.isArray(egg?.parentBalls) ? egg.parentBalls : [])
+    ].filter(ball => ball?.caughtWithBall || ball?.ballImageUrl);
+
+    if (!parentBalls.length) {
+      return {
+        caughtWithBall: egg?.caughtWithBall || '몬스터볼',
+        ballImageUrl: egg?.ballImageUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'
+      };
+    }
+
+    const ball = parentBalls[Math.floor(Math.random() * parentBalls.length)];
+    return {
+      caughtWithBall: ball.caughtWithBall || '몬스터볼',
+      ballImageUrl: ball.ballImageUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'
+    };
+  };
+
+  const createPokemonFromEgg = (egg) => {
+    const pokemonTemplate = getEggHatchTemplate(egg);
+
+    if (!pokemonTemplate) {
+      throw new Error('알에 해당하는 포켓몬 데이터를 찾을 수 없습니다.');
+    }
+
+    const inheritedBall = getRandomParentBall(egg);
+    const learnset = movesData.pokemonLearnsets?.[pokemonTemplate.number] ||
+      movesData.pokemonLearnsets?.[pokemonTemplate.originalNumber] ||
+      [];
+    const startingMoves = Array.isArray(learnset)
+      ? learnset
+          .filter(entry => Number(entry.level || 0) <= 1)
+          .sort((a, b) => Number(b.level || 0) - Number(a.level || 0))
+          .slice(0, 4)
+          .map(entry => {
+            const move = (movesData.moves || []).find(item => item.id === entry.moveId);
+            return move ? {
+              moveId: move.id,
+              currentPp: move.pp,
+              learnedAt: 1
+            } : null;
+          })
+          .filter(Boolean)
+      : [];
+
+    return {
+      uniqueId: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      pokemonId: pokemonTemplate.id,
+      name: pokemonTemplate.name,
+      nameEn: pokemonTemplate.nameEn,
+      number: pokemonTemplate.number,
+      originalNumber: pokemonTemplate.originalNumber || pokemonTemplate.number,
+      regionalForm: pokemonTemplate.regionalForm || null,
+      formVariant: pokemonTemplate.formVariant || null,
+      type: pokemonTemplate.type,
+      type2: pokemonTemplate.type2 || null,
+      level: 1,
+      hp: pokemonTemplate.baseHp || pokemonTemplate.hp || 10,
+      maxHp: pokemonTemplate.baseHp || pokemonTemplate.hp || 10,
+      exp: 0,
+      friendship: 120,
+      heldItem: null,
+      moves: startingMoves,
+      caughtWithBall: inheritedBall.caughtWithBall,
+      ballImageUrl: inheritedBall.ballImageUrl,
+      isPartner: false,
+      isShiny: Math.random() < 0.001,
+      gender: Math.random() < 0.5 ? 'male' : 'female',
+      ability: pokemonTemplate.abilities?.[0] || '없음',
+      condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
+      effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
+      imageUrl: pokemonTemplate.imageUrl,
+      iconUrl: pokemonTemplate.iconUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`,
+      spriteUrl: pokemonTemplate.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`,
+      isFromEgg: true,
+      hatchedAt: new Date().toISOString(),
+      parents: {
+        parent1: egg.parent1Name || null,
+        parent2: egg.parent2Name || null
+      }
+    };
+  };
+
+  const addPokemonToAvailableSlot = (caughtPokemon = [], pokemon) => {
+    const nextPokemon = [...caughtPokemon];
+    while (nextPokemon.length < 6) nextPokemon.push(null);
+
+    const emptyPartyIndex = nextPokemon.slice(0, 6).findIndex(isEmptyPokemonSlot);
+    if (emptyPartyIndex >= 0) {
+      nextPokemon[emptyPartyIndex] = pokemon;
+      return { caughtPokemon: nextPokemon, addedToParty: true };
+    }
+
+    nextPokemon.push(pokemon);
+    return { caughtPokemon: nextPokemon, addedToParty: false };
+  };
   
   // ========== 회원 추가 ==========
   const addMember = async (id, password, name) => {
@@ -555,12 +764,7 @@ export const useAdminMembers = (
 
     const updatedPokemon = member.caughtPokemon.map(p => {
       if (p && p.uniqueId === pokemonUniqueId) {
-        const pokemonTemplate = (allPokemonMaster || []).find(template =>
-          template.number === p.number ||
-          template.id === p.pokemonId ||
-          template.nameEn === p.nameEn ||
-          template.name === p.name
-        ) || p;
+        const pokemonTemplate = findPokemonTemplateForOwned(p);
 
         const currentCondition = p.condition || {
           elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0
@@ -580,6 +784,8 @@ export const useAdminMembers = (
           caughtWithBall: safeValue(updates.caughtWithBall, p.caughtWithBall),
           ballImageUrl: safeValue(updates.ballImage, p.ballImageUrl),
           gender: normalizePokemonGender(safeValue(updates.gender, p.gender), pokemonTemplate),
+          ability: safeValue(updates.ability, p.ability),
+          isHiddenAbility: safeValue(updates.isHiddenAbility, p.isHiddenAbility || false),
           sizeRank: safeValue(updates.sizeRank, p.sizeRank),
           heightVariation: updates.heightVariation !== undefined 
             ? parseFloat(updates.heightVariation) 
@@ -668,6 +874,48 @@ export const useAdminMembers = (
     } catch (error) {
       console.error('포켓몬 편집 실패:', error);
       alert('포켓몬 수정 중 오류가 발생했습니다: ' + error.message);
+    }
+  };
+
+  const hatchMemberEgg = async (memberId) => {
+    if (!currentUser?.isAdmin) return false;
+
+    const member = members[memberId];
+    if (!member?.egg) {
+      alert('부화할 알이 없습니다.');
+      return false;
+    }
+
+    try {
+      const hatchedPokemon = createPokemonFromEgg(member.egg);
+      const placement = addPokemonToAvailableSlot(member.caughtPokemon || [], hatchedPokemon);
+      const updatedMember = {
+        ...member,
+        caughtPokemon: placement.caughtPokemon,
+        egg: null
+      };
+
+      const { id, ...dataToSave } = updatedMember;
+      await set(ref(database, `members/${memberId}`), JSON.parse(JSON.stringify(dataToSave)));
+
+      setMembers(prev => ({
+        ...prev,
+        [memberId]: updatedMember
+      }));
+
+      if (memberId === currentUser?.id) {
+        updateCurrentUser({
+          caughtPokemon: placement.caughtPokemon,
+          egg: null
+        });
+      }
+
+      alert(`${hatchedPokemon.nickname || hatchedPokemon.name}이(가) 부화했습니다.\n${placement.addedToParty ? '빈 엔트리 칸' : '박스'}에 추가되었습니다.`);
+      return true;
+    } catch (error) {
+      console.error('알 부화 실패:', error);
+      alert(`알 부화 중 오류가 발생했습니다: ${error.message}`);
+      return false;
     }
   };
 
@@ -783,6 +1031,7 @@ export const useAdminMembers = (
     resetAllWalkCounts,
     givePokemonToMember,
     deleteMemberPokemon,
+    hatchMemberEgg,
     editMemberPokemon,
     addPokemonToSelf,
     updateMemberMoney,

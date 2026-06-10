@@ -1,10 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Map as MapIcon, Building2, X } from 'lucide-react';
 
-export default function MapView({ regions, onRegionClick }) {
+const toDexNumber = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+};
+
+export default function MapView({
+  regions,
+  onRegionClick,
+  gamePokedex = [],
+  allPokemonMaster = [],
+  pokedexData = {},
+  caughtPokemon = []
+}) {
   const [viewMode, setViewMode] = useState('default');
   const [selectedTown, setSelectedTown] = useState(null);
   const [placeSelectRegion, setPlaceSelectRegion] = useState(null);
+  const [hoveredPlaceId, setHoveredPlaceId] = useState(null);
 
   useEffect(() => {
     const defaultTown = regions.find(r => r.groupId && r.isDefaultTown === true);
@@ -49,6 +62,47 @@ export default function MapView({ regions, onRegionClick }) {
   })();
 
   const currentTown = towns.find(t => t.groupId === selectedTown);
+  const caughtNumbers = new Set(
+    caughtPokemon
+      .flatMap(pokemon => pokemon ? [pokemon.number, pokemon.originalNumber] : [])
+      .map(toDexNumber)
+      .filter(Boolean)
+  );
+  const unlockedNumbers = new Set([
+    ...Object.keys(pokedexData || {}).map(toDexNumber).filter(Boolean),
+    ...caughtNumbers
+  ]);
+  const gamePokedexNumbers = new Set(
+    gamePokedex.map(pokemon => toDexNumber(pokemon.number)).filter(Boolean)
+  );
+
+  const isPokemonUnlocked = (pokemon = {}) => {
+    const number = toDexNumber(pokemon.number);
+    const originalNumber = toDexNumber(pokemon.originalNumber);
+
+    if (number && unlockedNumbers.has(number)) return true;
+    if (originalNumber && unlockedNumbers.has(originalNumber)) return true;
+
+    return allPokemonMaster.some(form => (
+      form.originalNumber === pokemon.number &&
+      gamePokedexNumbers.has(toDexNumber(form.number)) &&
+      unlockedNumbers.has(toDexNumber(form.number))
+    ));
+  };
+
+  const getPlacePokemonList = (place = {}) => {
+    const pokemonIds = Array.isArray(place.pokemons) ? place.pokemons : [];
+    return pokemonIds.map((pokemonId) => {
+      const pokemon = allPokemonMaster.find(candidate => (
+        String(candidate.number) === String(pokemonId) ||
+        String(candidate.originalNumber) === String(pokemonId) ||
+        candidate.id === pokemonId
+      ));
+
+      if (!pokemon) return '??';
+      return isPokemonUnlocked(pokemon) ? pokemon.name : '??';
+    });
+  };
 
   const handleRegionButtonClick = (region) => {
     const places = Array.isArray(region.places) ? region.places.filter(place => place?.name) : [];
@@ -221,17 +275,38 @@ export default function MapView({ regions, onRegionClick }) {
 
             <div className="grid gap-2">
               {placeSelectRegion.places.map((place) => (
-                <button
-                  key={place.id}
-                  type="button"
-                  onClick={() => handlePlaceClick(placeSelectRegion, place)}
-                  className="flex items-center justify-between rounded-lg border-2 border-lime-200 bg-lime-50 px-4 py-3 text-left font-bold text-lime-950 transition-colors hover:border-lime-600 hover:bg-white"
-                >
-                  <span>{place.name}</span>
-                  <span className="text-xs font-semibold text-lime-800">
-                    {(place.pokemons || []).length}종 / {place.encounterRate ?? 0}%
-                  </span>
-                </button>
+                <div key={place.id} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => handlePlaceClick(placeSelectRegion, place)}
+                    onMouseEnter={() => setHoveredPlaceId(place.id)}
+                    onMouseLeave={() => setHoveredPlaceId(null)}
+                    onFocus={() => setHoveredPlaceId(place.id)}
+                    onBlur={() => setHoveredPlaceId(null)}
+                    className="flex w-full items-center justify-between rounded-lg border-2 border-lime-200 bg-lime-50 px-4 py-3 text-left font-bold text-lime-950 transition-colors hover:border-lime-600 hover:bg-white"
+                  >
+                    <span>{place.name}</span>
+                    <span className="text-xs font-semibold text-lime-800">
+                      {(place.pokemons || []).length}종 / {place.encounterRate ?? 0}%
+                    </span>
+                  </button>
+                  {hoveredPlaceId === place.id && (
+                    <div className="absolute left-0 top-full z-20 mt-2 w-full rounded-lg border border-lime-300 bg-white p-3 text-xs text-gray-700 shadow-xl">
+                      <div className="mb-2 font-bold text-lime-900">출현 포켓몬</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {getPlacePokemonList(place).length > 0 ? (
+                          getPlacePokemonList(place).map((name, index) => (
+                            <span key={`${place.id}-${index}`} className="rounded border border-lime-200 bg-lime-50 px-2 py-1 font-semibold">
+                              {name}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-gray-400">등록된 포켓몬 없음</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>

@@ -109,8 +109,10 @@ export default function PokemonDetailPanel({
   };
   const trainerExp = Number(currentUser?.trainerExp) || 0;
   const requiredLevelExp = getRequiredExpForLevel(pokemon.level);
+  const expToNextLevel = requiredLevelExp === null
+    ? null
+    : Math.max(0, requiredLevelExp - (Number(pokemon.exp) || 0));
   const selectedExpAmount = Math.max(0, Math.floor(Number(expInput) || 0));
-  const remainingTrainerExp = Math.max(0, trainerExp - Math.min(selectedExpAmount, trainerExp));
   const canAllocateExp = selectedExpAmount > 0 && trainerExp >= selectedExpAmount;
   const levelExpTitle = requiredLevelExp === null
     ? '현재 레벨에서는 경험치 배분으로 더 이상 레벨업할 수 없습니다'
@@ -398,6 +400,7 @@ const ballImage = getBallImage();
 
               {/* 아이콘 버튼 그룹 */}
               <div className="flex items-center gap-2">
+                {!pokemon.isPartner && (
                 <div className="relative">
                   <button
                     type="button"
@@ -472,31 +475,31 @@ const ballImage = getBallImage();
                         </button>
                       </div>
                       <div className="mt-2 text-xs font-semibold text-[#9a6b00]">
-                        (남은 경험치: {remainingTrainerExp})
+                        다음 레벨업까지 필요 경험치 {expToNextLevel ?? '-'}
                       </div>
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={onMove}
-                  className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                  title={isInParty ? '박스로 이동' : '엔트리로 이동'}
-                >
-                  {isInParty ? <ArrowDownCircle size={20} /> : <ArrowUpCircle size={20} />}
-                </button>
+                )}
+                {!pokemon.isPartner && (
+                  <>
+                    <button
+                      onClick={onMove}
+                      className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                      title={isInParty ? '박스로 이동' : '엔트리로 이동'}
+                    >
+                      {isInParty ? <ArrowDownCircle size={20} /> : <ArrowUpCircle size={20} />}
+                    </button>
 
-                <button
-                  onClick={onRelease}
-                  disabled={pokemon.isPartner}
-                  className={`p-2 rounded-lg transition-colors ${
-                    pokemon.isPartner
-                      ? 'text-gray-300 cursor-not-allowed'
-                      : 'text-[#6f8f25] hover:bg-[#eef7df]'
-                  }`}
-                  title={pokemon.isPartner ? '파트너 포켓몬은 방생할 수 없습니다' : '포켓몬 방생'}
-                >
-                  <Trees size={20} />
-                </button>
+                    <button
+                      onClick={onRelease}
+                      className="p-2 rounded-lg transition-colors text-[#6f8f25] hover:bg-[#eef7df]"
+                      title="포켓몬 방생"
+                    >
+                      <Trees size={20} />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
             
@@ -559,8 +562,7 @@ const ballImage = getBallImage();
             
             <div className="text-lg text-gray-600">Lv. {pokemon.level}</div>
             <div className="text-xs font-semibold text-yellow-700">
-              보유 경험치 {trainerExp}
-              {requiredLevelExp !== null ? ` / 다음 레벨 ${requiredLevelExp}` : ' / 레벨업 불가'}
+              {expToNextLevel !== null ? `다음 레벨업까지 필요 경험치 ${expToNextLevel}` : '레벨업 불가'}
             </div>
           </div>
             {/* ⭐ 크기/특성 정보 추가 */}
@@ -578,16 +580,6 @@ const ballImage = getBallImage();
             {getSizeRarity(pokemon.sizeRank)}
           </span>
         </div>
-        {pokemon.height && (
-          <div className="text-xs text-gray-600">
-            키: {(pokemon.height / 10).toFixed(1)}m
-          </div>
-        )}
-        {pokemon.weight && (
-          <div className="text-xs text-gray-600">
-            무게: {(pokemon.weight / 10).toFixed(1)}kg
-          </div>
-        )}
       </div>
     )}
 

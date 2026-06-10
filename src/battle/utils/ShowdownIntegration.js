@@ -17,8 +17,8 @@ class ShowdownIntegration {
     this.currentGen = this.gens.get(9); // 9세대 기본
     
     // 로컬 데이터 캐시
-    this.localMoves = this._indexLocalData(movesData.moves, 'nameEn');
-    this.localAbilities = this._indexLocalData(abilitiesData.abilities, 'nameEn');
+    this.localMoves = this._indexLocalData(movesData.moves, ['id', 'nameEn', 'name']);
+    this.localAbilities = this._indexLocalData(abilitiesData.abilities, ['id', 'nameEn', 'name']);
     
     console.log('[ShowdownIntegration] 초기화 완료', {
       generation: 9,
@@ -30,13 +30,20 @@ class ShowdownIntegration {
   /**
    * 로컬 데이터를 키로 인덱싱
    */
-  _indexLocalData(dataArray, keyField) {
+  normalizeKey(value) {
+    return String(value || '')
+      .toLowerCase()
+      .replace(/[\s_\-'.:]/g, '')
+      .replace(/[^\p{L}\p{N}]/gu, '');
+  }
+
+  _indexLocalData(dataArray, keyFields) {
     const indexed = {};
     dataArray.forEach(item => {
-      const key = item[keyField]?.toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (key) {
-        indexed[key] = item;
-      }
+      keyFields.forEach(keyField => {
+        const key = this.normalizeKey(item[keyField]);
+        if (key) indexed[key] = item;
+      });
     });
     return indexed;
   }
@@ -56,12 +63,10 @@ class ShowdownIntegration {
   getMove(moveName) {
     if (!moveName) return null;
 
-    // 쇼다운 데이터
-    const normalizedName = moveName.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const showdownMove = this.currentGen.moves.get(normalizedName);
-    
-    // 로컬 데이터
+    const normalizedName = this.normalizeKey(moveName);
     const localMove = this.localMoves[normalizedName];
+    const showdownLookupName = localMove?.nameEn || localMove?.id || moveName;
+    const showdownMove = this.currentGen.moves.get(this.normalizeKey(showdownLookupName));
 
     if (!showdownMove && !localMove) {
       console.warn(`[ShowdownIntegration] 기술을 찾을 수 없음: ${moveName}`);
@@ -71,9 +76,9 @@ class ShowdownIntegration {
     // 데이터 병합
     return {
       // 기본 정보
-      id: normalizedName,
+      id: showdownMove?.id || localMove?.id || normalizedName,
       name: localMove?.name || showdownMove?.name || moveName,
-      nameEn: showdownMove?.name || moveName,
+      nameEn: showdownMove?.name || localMove?.nameEn || moveName,
       nameKo: localMove?.name || moveName,
       
       // 타입 및 분류
@@ -152,9 +157,10 @@ class ShowdownIntegration {
   getAbility(abilityName) {
     if (!abilityName) return null;
 
-    const normalizedName = abilityName.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const showdownAbility = this.currentGen.abilities.get(normalizedName);
+    const normalizedName = this.normalizeKey(abilityName);
     const localAbility = this.localAbilities[normalizedName];
+    const showdownLookupName = localAbility?.nameEn || localAbility?.id || abilityName;
+    const showdownAbility = this.currentGen.abilities.get(this.normalizeKey(showdownLookupName));
 
     if (!showdownAbility && !localAbility) {
       console.warn(`[ShowdownIntegration] 특성을 찾을 수 없음: ${abilityName}`);
@@ -162,9 +168,9 @@ class ShowdownIntegration {
     }
 
     return {
-      id: normalizedName,
+      id: showdownAbility?.id || localAbility?.id || normalizedName,
       name: localAbility?.name || showdownAbility?.name || abilityName,
-      nameEn: showdownAbility?.name || abilityName,
+      nameEn: showdownAbility?.name || localAbility?.nameEn || abilityName,
       nameKo: localAbility?.name || abilityName,
       desc: showdownAbility?.desc || localAbility?.effect || '',
       shortDesc: showdownAbility?.shortDesc || localAbility?.shortEffect || '',
@@ -181,7 +187,7 @@ class ShowdownIntegration {
   getItem(itemName) {
     if (!itemName) return null;
 
-    const normalizedName = itemName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const normalizedName = this.normalizeKey(itemName);
     const item = this.currentGen.items.get(normalizedName);
 
     if (!item) {
@@ -216,7 +222,7 @@ class ShowdownIntegration {
   getSpecies(speciesName) {
     if (!speciesName) return null;
 
-    const normalizedName = speciesName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const normalizedName = this.normalizeKey(speciesName);
     const species = this.currentGen.species.get(normalizedName);
 
     if (!species) {
@@ -277,7 +283,7 @@ class ShowdownIntegration {
     try {
       // 포켓몬 이름 정규화
       let speciesName = pokemon.species || pokemon.name || 'bulbasaur';
-      speciesName = speciesName.toLowerCase().trim().replace(/\s+/g, '');
+      speciesName = this.normalizeKey(speciesName);
       
       console.log('[createCalcPokemon] 정규화된 이름:', speciesName);
       
@@ -336,10 +342,7 @@ class ShowdownIntegration {
   createCalcMove(moveName, options = {}) {
     try {
       // 기술 이름 정규화
-      let normalizedMove = moveName;
-      if (typeof moveName === 'string') {
-        normalizedMove = moveName.toLowerCase().trim().replace(/\s+/g, '');
-      }
+      let normalizedMove = typeof moveName === 'string' ? this.normalizeKey(moveName) : moveName;
       
       const moveData = this.getMove(normalizedMove);
       if (!moveData) {
@@ -347,7 +350,7 @@ class ShowdownIntegration {
         normalizedMove = 'tackle';
       }
 
-      return new Move(this.currentGen.num, normalizedMove, {
+      return new Move(this.currentGen.num, moveData?.nameEn || moveData?.id || normalizedMove, {
         ability: options.ability,
         item: options.item,
         species: options.species,

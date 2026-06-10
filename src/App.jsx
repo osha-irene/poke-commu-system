@@ -1301,6 +1301,10 @@ return (
             <MapView 
               regions={regions} 
               onRegionClick={handleRegionClick} 
+              gamePokedex={gamePokedex}
+              allPokemonMaster={allPokemonMaster}
+              pokedexData={sharedPokedexData}
+              caughtPokemon={caughtPokemon.filter(p => p !== null)}
             />
           )}
           
@@ -1409,6 +1413,10 @@ return (
 			<MapView 
 			  regions={regions} 
 			  onRegionClick={handleRegionClick} 
+			  gamePokedex={gamePokedex}
+			  allPokemonMaster={allPokemonMaster}
+			  pokedexData={sharedPokedexData}
+			  caughtPokemon={caughtPokemon.filter(p => p !== null)}
 			/>
 		  )}
 		  

@@ -99,13 +99,22 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin }) {
         </button>
 
         {isAdmin && (
-          <button
-            type="button"
-            onClick={() => setCurrentTab('admin')}
-            className={`brush-nav-button trainer-nav__button ${currentTab === 'admin' ? 'is-active' : ''}`}
-          >
-            관리자
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => setCurrentTab('admin')}
+              className={`brush-nav-button trainer-nav__button ${currentTab === 'admin' ? 'is-active' : ''}`}
+            >
+              관리자
+            </button>
+            <button
+              type="button"
+              onClick={() => setCurrentTab('battle')}
+              className={`brush-nav-button trainer-nav__button ${currentTab === 'battle' ? 'is-active' : ''}`}
+            >
+              배틀 임시
+            </button>
+          </>
         )}
       </nav>
     </aside>

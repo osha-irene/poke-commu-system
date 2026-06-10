@@ -21,6 +21,11 @@ export default function MemberPokemonEditMode({
   const genderOptions = getPokemonGenderOptions(pokemonTemplate || pokemon);
   const isGenderless = genderOptions.length === 1 && genderOptions[0] === 'none';
   const genderValue = genderOptions.includes(editData.gender) ? editData.gender : 'random';
+  const abilityOptions = Array.from(new Set([
+    ...(pokemonTemplate?.abilities || []),
+    ...(editData.ability ? [editData.ability] : [])
+  ]));
+  const hiddenAbility = pokemonTemplate?.hiddenAbility || '';
 
   return (
     <div className="bg-white rounded-lg border p-4 space-y-4">
@@ -129,6 +134,33 @@ export default function MemberPokemonEditMode({
                   {genderOptions.includes('male') && <option value="male">수컷 (♂)</option>}
                   {genderOptions.includes('female') && <option value="female">암컷 (♀)</option>}
                   {isGenderless && <option value="none">무성</option>}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2 flex items-center gap-1">
+                  <Zap size={14} />
+                  특성
+                </label>
+                <select
+                  value={editData.ability || abilityOptions[0] || ''}
+                  onChange={(e) => {
+                    const selectedAbility = e.target.value;
+                    setEditData(prev => ({
+                      ...prev,
+                      ability: selectedAbility,
+                      isHiddenAbility: Boolean(hiddenAbility && selectedAbility === hiddenAbility)
+                    }));
+                  }}
+                  className="w-full px-3 py-2 border rounded"
+                >
+                  {abilityOptions.length === 0 && <option value="">특성 없음</option>}
+                  {abilityOptions.map((ability, index) => (
+                    <option key={`${ability}-${index}`} value={ability}>{ability}</option>
+                  ))}
+                  {hiddenAbility && (
+                    <option value={hiddenAbility}>{hiddenAbility} (숨특)</option>
+                  )}
                 </select>
               </div>
 

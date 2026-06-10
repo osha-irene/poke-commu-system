@@ -18,6 +18,7 @@ function MemberDetailPanel({ member, onClose }) {
     givePokemonToMember,
     editMemberPokemon,
     deleteMemberPokemon, // ⭐ 추가
+    hatchMemberEgg,
     deleteMember,
     resetMemberWalkCount,
     toggleAdminStatus,
@@ -159,6 +160,7 @@ function MemberDetailPanel({ member, onClose }) {
               onGivePokemon={givePokemonToMember}
               onEditPokemon={editMemberPokemon}
               onDeletePokemon={handleDeletePokemon}
+              onHatchEgg={hatchMemberEgg}
             />
           )}
 

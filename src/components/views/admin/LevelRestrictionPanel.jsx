@@ -3,7 +3,7 @@ import { Lock, Unlock } from 'lucide-react';
 import { ref, set, get } from 'firebase/database';
 import { database } from '../../../firebase';
 
-export default function LevelRestrictionPanel() {
+export default function LevelRestrictionPanel({ embedded = false }) {
   const [isEnabled, setIsEnabled] = useState(false);
   const [minLevel, setMinLevel] = useState(1);
   const [maxLevel, setMaxLevel] = useState(100);
@@ -53,16 +53,20 @@ export default function LevelRestrictionPanel() {
     }
   };
 
+  const containerClass = embedded
+    ? 'rounded-lg border border-lime-200 bg-white/40 p-5'
+    : 'bg-white rounded-lg border-2 border-gray-200 p-6';
+
   if (loading) {
     return (
-      <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
+      <div className={containerClass}>
         <div className="text-center text-gray-500">로딩 중...</div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
+    <div className={containerClass}>
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">

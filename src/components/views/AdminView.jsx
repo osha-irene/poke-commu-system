@@ -568,9 +568,14 @@ export default function AdminView() {
             </div>
           </Card>
 
-          {/* 전체 멤버 탐험 횟수 일괄 설정 */}
-          <Card className="p-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">⚙️ 전체 멤버 탐험 횟수 일괄 설정</h3>
+          <Card className="p-6 space-y-6">
+            <div>
+              <h3 className="text-xl font-bold text-gray-800">시스템 설정</h3>
+              <p className="text-sm text-gray-600 mt-1">탐험, 보유 제한, 레벨 제한, 도망 시스템을 한 곳에서 관리합니다.</p>
+            </div>
+
+            <section className="rounded-lg border border-lime-200 bg-white/40 p-5">
+            <h4 className="text-lg font-bold text-gray-800 mb-4">⚙️ 전체 멤버 탐험 횟수 일괄 설정</h4>
             <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-4">
               <p className="text-sm text-blue-800">
                 💡 모든 회원의 최대 탐험 횟수를 동일하게 설정합니다. 개별 회원은 "멤버 관리"에서 수정할 수 있습니다.
@@ -596,10 +601,10 @@ export default function AdminView() {
             <div className="mt-3 text-sm text-gray-600">
               현재 설정: 모든 회원 최대 <strong>{Object.values(members)[0]?.maxDailyWalks || 5}회</strong>
             </div>
-          </Card>
+            </section>
 
-          <Card className="p-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">포켓몬 보유 제한</h3>
+            <section className="rounded-lg border border-lime-200 bg-white/40 p-5">
+            <h4 className="text-lg font-bold text-gray-800 mb-4">포켓몬 보유 제한</h4>
             <div className="bg-lime-50 border-2 border-lime-200 rounded-lg p-4 mb-4">
               <p className="text-sm text-lime-900">
                 회원 1명이 보유할 수 있는 포켓몬 수를 설정합니다. 파트너 포켓몬은 이 제한에 포함되지 않고, 엔트리와 박스의 포켓몬을 합산합니다.
@@ -625,15 +630,15 @@ export default function AdminView() {
             <div className="mt-3 text-sm text-gray-600">
               현재 설정: 파트너 제외 최대 <strong>{systemSettings.maxNonPartnerPokemon || 18}마리</strong>
             </div>
-          </Card>
+            </section>
 
-          <LevelRestrictionPanel />
+            <LevelRestrictionPanel embedded />
 
           {/* 도망 시스템 설정 */}
-          <Card className="p-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">🏃 포켓몬 도망 시스템</h3>
+            <section className="rounded-lg border border-lime-200 bg-white/40 p-5">
+            <h4 className="text-lg font-bold text-gray-800 mb-4">🏃 포켓몬 도망 시스템</h4>
 
-            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-5 border-2 border-indigo-200">
+            <div className="rounded-lg p-5 border border-lime-200 bg-white/40">
               <div className="flex items-start justify-between gap-6">
                 <div className="flex-1">
                   <div className="font-bold text-gray-800 mb-2">포획 실패 시 동작</div>
@@ -698,6 +703,7 @@ export default function AdminView() {
                 </div>
               </div>
             </div>
+            </section>
           </Card>
         </>
       )}
@@ -705,6 +711,8 @@ export default function AdminView() {
 		{adminTab === 'camping' && (
 		  <CampingAdminPanel
 			campingSessions={camping?.campingSessions || []}
+			systemSettings={systemSettings}
+			onSaveSettings={updateSystemSettings}
 			onProgressSession={camping.progressSession}
 			onCompleteCooking={camping.completeCooking}
 			onApplyResults={camping.applyResultsToMember}

@@ -83,7 +83,7 @@ export default function ProfileView({ trainer, caughtPokemon, items }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
               <div className="text-sm text-gray-600 mb-1">포획한 포켓몬</div>
               <div className="text-4xl font-bold text-blue-600">{caughtCount}마리</div>
@@ -95,6 +95,10 @@ export default function ProfileView({ trainer, caughtPokemon, items }) {
             <div className="bg-purple-50 rounded-lg p-6 border border-purple-200">
               <div className="text-sm text-gray-600 mb-1">오늘 탐험</div>
               <div className="text-4xl font-bold text-purple-600">{todayWalksUsed}회</div>
+            </div>
+            <div className="bg-yellow-50 rounded-lg p-6 border border-yellow-200">
+              <div className="text-sm text-gray-600 mb-1">보유 경험치</div>
+              <div className="text-4xl font-bold text-yellow-700">{(trainer.trainerExp || 0).toLocaleString()}</div>
             </div>
           </div>
 

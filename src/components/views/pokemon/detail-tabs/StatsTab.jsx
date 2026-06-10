@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { 
   TrendingUp, Activity, Dumbbell, BarChart3, 
-  Heart, Ruler, Scale, Star, Sparkles
+  Heart, Ruler, Star, Sparkles
 } from 'lucide-react';
 import { 
   RadarChart, 
@@ -15,36 +15,6 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { getAbilityByName } from '../../../../utils/abilityUtils';
-
-// 크기 비교 계산 함수
-const calculateSizeComparison = (pokemon, allPokemonMaster) => {
-  if (!allPokemonMaster || !pokemon.height || !pokemon.weight) return null;
-  
-  // 해당 포켓몬의 기본 데이터 찾기
-  const basePokemon = allPokemonMaster.find(p => 
-    p.number === pokemon.number || p.name === pokemon.name
-  );
-  
-  if (!basePokemon) return null;
-  
-  const baseHeight = basePokemon.height || basePokemon.baseHeight;
-  const baseWeight = basePokemon.weight || basePokemon.baseWeight;
-  
-  if (!baseHeight || !baseWeight) return null;
-  
-  // 퍼센트 차이 계산
-  const heightDiff = ((pokemon.height - baseHeight) / baseHeight) * 100;
-  const weightDiff = ((pokemon.weight - baseWeight) / baseWeight) * 100;
-  
-  return {
-    baseHeight,
-    baseWeight,
-    heightDiff: heightDiff.toFixed(1),
-    weightDiff: weightDiff.toFixed(1),
-    isLarger: heightDiff > 0,
-    isHeavier: weightDiff > 0
-  };
-};
 
 // 크기 등급별 색상
 const getSizeColor = (rank) => {
@@ -80,8 +50,6 @@ export default function StatsTab({ pokemon, allPokemonMaster = [] }) {
   // 특성 데이터
   const abilityData = getAbilityByName(pokemon.ability);
   
-  // 크기 비교
-  const sizeComparison = calculateSizeComparison(pokemon, allPokemonMaster);
   const rarity = getSizeRarity(pokemon.sizeRank);
   const RarityIcon = rarity.icon;
   
@@ -206,43 +174,8 @@ export default function StatsTab({ pokemon, allPokemonMaster = [] }) {
             )}
           </div>
           
-          {pokemon.height || pokemon.weight ? (
+          {pokemon.sizeRank ? (
             <div className="space-y-1.5">
-              {/* 현재 크기 */}
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-600 flex items-center gap-1">
-                  <Ruler size={10} /> 키
-                </span>
-                <span className="font-semibold text-gray-800">
-                  {(pokemon.height / 10).toFixed(2)}m
-                  {sizeComparison && (
-                    <span className={`ml-1 ${sizeComparison.isLarger ? 'text-orange-500' : 'text-blue-500'}`}>
-                      ({sizeComparison.isLarger ? '+' : ''}{sizeComparison.heightDiff}%)
-                    </span>
-                  )}
-                </span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-600 flex items-center gap-1">
-                  <Scale size={10} /> 무게
-                </span>
-                <span className="font-semibold text-gray-800">
-                  {(pokemon.weight / 10).toFixed(2)}kg
-                  {sizeComparison && (
-                    <span className={`ml-1 ${sizeComparison.isHeavier ? 'text-orange-500' : 'text-blue-500'}`}>
-                      ({sizeComparison.isHeavier ? '+' : ''}{sizeComparison.weightDiff}%)
-                    </span>
-                  )}
-                </span>
-              </div>
-              
-              {/* 평균 대비 */}
-              {sizeComparison && (
-                <div className="text-xs text-gray-400 pt-1 border-t border-blue-100">
-                  평균: {(sizeComparison.baseHeight / 10).toFixed(2)}m / {(sizeComparison.baseWeight / 10).toFixed(2)}kg
-                </div>
-              )}
-              
               {/* 희귀도 */}
               {pokemon.sizeRank && rarity.text !== '일반' && (
                 <div className={`flex items-center gap-1 text-xs ${

@@ -204,7 +204,8 @@ export const useGameData = (allPokemonData) => {
           : 'none';
         const normalizedSystemSettings = {
           maxNonPartnerPokemon: Number(savedSystemSettings.maxNonPartnerPokemon) || 18,
-          escapeMode: savedEscapeMode
+          escapeMode: savedEscapeMode,
+          campingSettings: savedSystemSettings.campingSettings || {}
         };
         await set(systemSettingsRef, normalizedSystemSettings);
         setSystemSettings(normalizedSystemSettings);
@@ -227,7 +228,7 @@ export const useGameData = (allPokemonData) => {
         setGamePokedex(allPokemonData.filter(p => parseInt(p.generation) === 1));
         setSharedPokedexData({});
         setMaintenanceMode(false);
-        setSystemSettings({ maxNonPartnerPokemon: 18, escapeMode: 'none' });
+        setSystemSettings({ maxNonPartnerPokemon: 18, escapeMode: 'none', campingSettings: {} });
       } finally {
         setIsLoading(false);
       }

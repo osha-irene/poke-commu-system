@@ -1,7 +1,159 @@
 import React, { useState, useEffect } from 'react';
 import { ref, get } from 'firebase/database';
 import { database } from '../../firebase';
-import { BattleArena } from '../../battle/components/BattleArena';
+import AdvancedBattleSimulator from '../../battle/components/AdvancedBattleSimulator';
+import { toCalcAbilityName } from '../../utils/abilityUtils';
+import allPokemonMaster from '../../data/allPokemon.json';
+
+const TYPE_MAP = {
+  노말: 'Normal',
+  불꽃: 'Fire',
+  물: 'Water',
+  전기: 'Electric',
+  풀: 'Grass',
+  얼음: 'Ice',
+  격투: 'Fighting',
+  독: 'Poison',
+  땅: 'Ground',
+  비행: 'Flying',
+  에스퍼: 'Psychic',
+  벌레: 'Bug',
+  바위: 'Rock',
+  고스트: 'Ghost',
+  드래곤: 'Dragon',
+  악: 'Dark',
+  강철: 'Steel',
+  페어리: 'Fairy'
+};
+
+const normalizeType = (type) => TYPE_MAP[type] || type || 'Normal';
+
+const normalizeLookupKey = (value) => String(value || '')
+  .toLowerCase()
+  .replace(/[\s_\-'.:]/g, '')
+  .replace(/[^\p{L}\p{N}]/gu, '');
+
+const POKEMON_NAME_MAP = allPokemonMaster.reduce((map, pokemon) => {
+  [
+    pokemon.name,
+    pokemon.nameEn,
+    pokemon.id,
+    pokemon.number,
+    pokemon.displayNumber
+  ].forEach(key => {
+    const normalizedKey = normalizeLookupKey(key);
+    if (normalizedKey) map[normalizedKey] = pokemon;
+  });
+  return map;
+}, {});
+
+const resolvePokemonTemplate = (pokemon) => {
+  const candidates = [
+    pokemon.nameEn,
+    pokemon.species,
+    pokemon.name,
+    pokemon.pokemonId,
+    pokemon.id,
+    pokemon.number,
+    pokemon.originalNumber
+  ];
+
+  return candidates
+    .map(candidate => POKEMON_NAME_MAP[normalizeLookupKey(candidate)])
+    .find(Boolean);
+};
+
+const toBattleMoveName = (move) => {
+  if (!move) return null;
+  if (typeof move === 'string') return move;
+  return move.nameEn || move.name || move.id || move.moveId || null;
+};
+
+const calculateBattleHP = (baseHp, level, iv = 31, ev = 0) => (
+  Math.floor(((2 * baseHp + iv + Math.floor(ev / 4)) * level) / 100) + level + 10
+);
+
+const calculateBattleStat = (baseStat, level, iv = 31, ev = 0) => (
+  Math.floor(((2 * baseStat + iv + Math.floor(ev / 4)) * level) / 100) + 5
+);
+
+const toBattleStats = (pokemon, template) => {
+  const level = Number(pokemon.level || 50);
+  const hpIv = pokemon.ivs?.hp ?? 31;
+  const hpEv = pokemon.effort?.hp ?? pokemon.evs?.hp ?? 0;
+  const baseHp = Number(pokemon.baseHp || template?.baseHp || 50);
+
+  return {
+    hp: Number(pokemon.maxHp || calculateBattleHP(baseHp, level, hpIv, hpEv)),
+    atk: Number(pokemon.stats?.atk || pokemon.stats?.attack || calculateBattleStat(Number(pokemon.baseAttack || template?.baseAttack || 50), level, pokemon.ivs?.attack ?? pokemon.ivs?.atk ?? 31, pokemon.effort?.attack ?? pokemon.evs?.atk ?? 0)),
+    def: Number(pokemon.stats?.def || pokemon.stats?.defense || calculateBattleStat(Number(pokemon.baseDefense || template?.baseDefense || 50), level, pokemon.ivs?.defense ?? pokemon.ivs?.def ?? 31, pokemon.effort?.defense ?? pokemon.evs?.def ?? 0)),
+    spa: Number(pokemon.stats?.spa || pokemon.stats?.spAttack || calculateBattleStat(Number(pokemon.baseSpAttack || pokemon.baseSpecialAttack || template?.baseSpAttack || template?.baseSpecialAttack || 50), level, pokemon.ivs?.specialAttack ?? pokemon.ivs?.spa ?? 31, pokemon.effort?.specialAttack ?? pokemon.evs?.spa ?? 0)),
+    spd: Number(pokemon.stats?.spd || pokemon.stats?.spDefense || calculateBattleStat(Number(pokemon.baseSpDefense || pokemon.baseSpecialDefense || template?.baseSpDefense || template?.baseSpecialDefense || 50), level, pokemon.ivs?.specialDefense ?? pokemon.ivs?.spd ?? 31, pokemon.effort?.specialDefense ?? pokemon.evs?.spd ?? 0)),
+    spe: Number(pokemon.stats?.spe || pokemon.stats?.speed || calculateBattleStat(Number(pokemon.baseSpeed || template?.baseSpeed || 50), level, pokemon.ivs?.speed ?? pokemon.ivs?.spe ?? 31, pokemon.effort?.speed ?? pokemon.evs?.spe ?? 0))
+  };
+};
+
+const toBattleFormat = (pokemon) => {
+  const template = resolvePokemonTemplate(pokemon);
+  const speciesName = pokemon.nameEn || template?.nameEn || pokemon.species || pokemon.name || 'ditto';
+  const stats = toBattleStats(pokemon, template);
+  const moves = (pokemon.moves || [])
+    .map(toBattleMoveName)
+    .filter(Boolean)
+    .slice(0, 4)
+    .map(name => ({ name, id: name }));
+
+  return {
+    ...pokemon,
+    name: speciesName,
+    species: speciesName,
+    nickname: pokemon.nickname || pokemon.name,
+    level: Number(pokemon.level || 50),
+    types: [
+      normalizeType(pokemon.type || template?.type),
+      pokemon.type2 || template?.type2 ? normalizeType(pokemon.type2 || template?.type2) : null
+    ].filter(Boolean),
+    ability: toCalcAbilityName(pokemon.ability) || pokemon.ability || 'Adaptability',
+    item: pokemon.heldItem || '',
+    nature: pokemon.nature || 'Hardy',
+    stats,
+    baseStats: stats,
+    ivs: {
+      hp: pokemon.ivs?.hp ?? 31,
+      atk: pokemon.ivs?.attack ?? pokemon.ivs?.atk ?? 31,
+      def: pokemon.ivs?.defense ?? pokemon.ivs?.def ?? 31,
+      spa: pokemon.ivs?.specialAttack ?? pokemon.ivs?.spa ?? 31,
+      spd: pokemon.ivs?.specialDefense ?? pokemon.ivs?.spd ?? 31,
+      spe: pokemon.ivs?.speed ?? pokemon.ivs?.spe ?? 31
+    },
+    evs: {
+      hp: pokemon.effort?.hp ?? pokemon.evs?.hp ?? 0,
+      atk: pokemon.effort?.attack ?? pokemon.evs?.atk ?? 0,
+      def: pokemon.effort?.defense ?? pokemon.evs?.def ?? 0,
+      spa: pokemon.effort?.specialAttack ?? pokemon.evs?.spa ?? 0,
+      spd: pokemon.effort?.specialDefense ?? pokemon.evs?.spd ?? 0,
+      spe: pokemon.effort?.speed ?? pokemon.evs?.spe ?? 0
+    },
+    hp: stats.hp,
+    maxHP: stats.hp,
+    currentHP: stats.hp,
+    moves: moves.length > 0 ? moves : [{ name: 'tackle', id: 'tackle' }]
+  };
+};
+
+const buildBattleTeam = (pokemonList, selectedPokemon) => {
+  const orderedPokemon = selectedPokemon
+    ? [
+        selectedPokemon,
+        ...pokemonList.filter(pokemon => pokemon?.uniqueId !== selectedPokemon.uniqueId)
+      ]
+    : pokemonList;
+
+  return orderedPokemon
+    .filter(pokemon => pokemon && pokemon.uniqueId)
+    .slice(0, 6)
+    .map(toBattleFormat);
+};
 
 /**
  * 배틀 뷰 - 완전 독립 버전 (Context 불필요)
@@ -81,16 +233,20 @@ export function BattleView() {
       setSelectedPokemon1(null);
       setBattleStarted(false);
 
-      // members에서 해당 유저의 caughtPokemon 가져오기
-      const memberRef = ref(database, `members/${userId}/caughtPokemon`);
+      // members에서 해당 유저의 포켓몬 전체 가져오기
+      const memberRef = ref(database, `members/${userId}`);
       const snapshot = await get(memberRef);
 
       if (snapshot.exists()) {
-        const pokemonData = snapshot.val();
-        // 배열이면 그대로, 객체면 배열로 변환
-        const pokemonList = Array.isArray(pokemonData) 
-          ? pokemonData.filter(p => p !== null)
-          : Object.values(pokemonData).filter(p => p !== null);
+        const memberData = snapshot.val();
+        const pokemonData = memberData.caughtPokemon || [];
+        const pokemonList = Array.isArray(pokemonData)
+          ? pokemonData.filter(p => p && p.uniqueId)
+          : Object.values(pokemonData).filter(p => p && p.uniqueId);
+
+        if (memberData.partnerPokemon?.uniqueId) {
+          pokemonList.unshift(memberData.partnerPokemon);
+        }
         
         setUser1Pokemon(pokemonList);
         console.log('✅ Player 1 포켓몬:', pokemonList.length, '마리');
@@ -113,16 +269,20 @@ export function BattleView() {
       setSelectedPokemon2(null);
       setBattleStarted(false);
 
-      // members에서 해당 유저의 caughtPokemon 가져오기
-      const memberRef = ref(database, `members/${userId}/caughtPokemon`);
+      // members에서 해당 유저의 포켓몬 전체 가져오기
+      const memberRef = ref(database, `members/${userId}`);
       const snapshot = await get(memberRef);
 
       if (snapshot.exists()) {
-        const pokemonData = snapshot.val();
-        // 배열이면 그대로, 객체면 배열로 변환
+        const memberData = snapshot.val();
+        const pokemonData = memberData.caughtPokemon || [];
         const pokemonList = Array.isArray(pokemonData)
-          ? pokemonData.filter(p => p !== null)
-          : Object.values(pokemonData).filter(p => p !== null);
+          ? pokemonData.filter(p => p && p.uniqueId)
+          : Object.values(pokemonData).filter(p => p && p.uniqueId);
+
+        if (memberData.partnerPokemon?.uniqueId) {
+          pokemonList.unshift(memberData.partnerPokemon);
+        }
         
         setUser2Pokemon(pokemonList);
         console.log('✅ Player 2 포켓몬:', pokemonList.length, '마리');
@@ -137,58 +297,8 @@ export function BattleView() {
     }
   };
 
-  // Firebase → 배틀 형식 변환
-  const convertToBattleFormat = (pokemon) => {
-    console.log('🔄 변환할 포켓몬:', pokemon);
-    
-    // moves 처리: moveId를 name으로 변환
-    const moves = (pokemon.moves || [])
-      .filter(move => move && move.moveId)
-      .slice(0, 4)
-      .map(move => ({ 
-        name: move.moveId  // moveId가 실제 기술 이름
-      }));
-
-    // 타입 처리
-    const types = [];
-    if (pokemon.type) types.push(pokemon.type);
-    if (pokemon.type2) types.push(pokemon.type2);
-
-    // 노력치 변환: Firebase의 effort → EVs
-    const evs = pokemon.effort ? {
-      hp: pokemon.effort.hp || 0,
-      atk: pokemon.effort.attack || 0,
-      def: pokemon.effort.defense || 0,
-      spa: pokemon.effort.specialAttack || 0,
-      spd: pokemon.effort.specialDefense || 0,
-      spe: pokemon.effort.speed || 0
-    } : { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
-
-    const converted = {
-      name: pokemon.nameEn || pokemon.name,  // 영문명 우선
-      level: pokemon.level || 50,
-      types: types.length > 0 ? types : ['Normal'],
-      ability: pokemon.ability || 'Overgrow',
-      item: pokemon.heldItem || null,
-      stats: {
-        hp: pokemon.maxHp || pokemon.hp || 100,
-        attack: 50,  // Firebase에 종족값이 없으므로 기본값
-        defense: 50,
-        spAttack: 50,
-        spDefense: 50,
-        speed: 50
-      },
-      evs: evs,  // 노력치 전달
-      moves: moves.length > 0 ? moves : [{ name: 'tackle' }]  // 최소 1개
-    };
-
-    console.log('✅ 변환된 포켓몬:', converted);
-    console.log('  노력치:', evs);
-    return converted;
-  };
-
   const startBattle = () => {
-    if (selectedPokemon1 && selectedPokemon2) {
+    if (user1Pokemon.length > 0 && user2Pokemon.length > 0) {
       console.log('⚔️ 배틀 시작!');
       setBattleStarted(true);
     }
@@ -199,7 +309,10 @@ export function BattleView() {
   };
 
   // 배틀 중
-  if (battleStarted && selectedPokemon1 && selectedPokemon2) {
+  if (battleStarted && user1Pokemon.length > 0 && user2Pokemon.length > 0) {
+    const player1Team = buildBattleTeam(user1Pokemon, selectedPokemon1);
+    const player2Team = buildBattleTeam(user2Pokemon, selectedPokemon2);
+
     return (
       <div className="p-6">
         <button
@@ -208,9 +321,9 @@ export function BattleView() {
         >
           ← 포켓몬 재선택
         </button>
-        <BattleArena
-          player1Pokemon={convertToBattleFormat(selectedPokemon1)}
-          player2Pokemon={convertToBattleFormat(selectedPokemon2)}
+        <AdvancedBattleSimulator
+          player1Team={player1Team}
+          player2Team={player2Team}
         />
       </div>
     );
@@ -347,9 +460,9 @@ export function BattleView() {
           <div className="mt-8 text-center">
             <button
               onClick={startBattle}
-              disabled={!selectedPokemon1 || !selectedPokemon2}
+              disabled={user1Pokemon.length === 0 || user2Pokemon.length === 0}
               className={`px-8 py-4 rounded-lg font-bold text-xl transition-colors ${
-                selectedPokemon1 && selectedPokemon2
+                user1Pokemon.length > 0 && user2Pokemon.length > 0
                   ? 'bg-green-500 hover:bg-green-600 text-white'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}

@@ -2,6 +2,20 @@ import React, { useState } from 'react';
 import { Swords, Shield, Heart, Zap, RefreshCw, Users, TrendingUp } from 'lucide-react';
 import useAdvancedBattle from '../hooks/useAdvancedBattle';
 
+const BOOST_LABELS = {
+  atk: '공격',
+  def: '방어',
+  spa: '특공',
+  spd: '특방',
+  spe: '스피드',
+  accuracy: '명중',
+  evasion: '회피',
+};
+
+const formatBoosts = (boosts = {}) => Object.entries(boosts)
+  .filter(([, value]) => value !== 0)
+  .map(([stat, value]) => `${BOOST_LABELS[stat] || stat} ${value > 0 ? '+' : ''}${value}`);
+
 /**
  * 완전한 배틀 시뮬레이터
  * - 1~6마리 자유 선택
@@ -12,7 +26,6 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
     battleState,
     startBattle,
     selectMove,
-    selectSwitch,
     resetBattle,
     previewDamage,
   } = useAdvancedBattle({
@@ -277,6 +290,24 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
                   {p1Active.status}
                 </div>
               )}
+              {formatBoosts(p1Active.boosts).length > 0 && (
+                <div className="mt-2 flex flex-wrap justify-center gap-1">
+                  {formatBoosts(p1Active.boosts).map(boost => (
+                    <span key={boost} className="text-xs bg-blue-100 text-blue-900 px-2 py-1 rounded-full">
+                      {boost}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {p1Active.volatileStatus?.length > 0 && (
+                <div className="mt-2 flex flex-wrap justify-center gap-1">
+                  {p1Active.volatileStatus.map(status => (
+                    <span key={status} className="text-xs bg-purple-100 text-purple-900 px-2 py-1 rounded-full">
+                      {status}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
             
             {/* 기술 선택 */}
@@ -296,9 +327,9 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
                     setShowDamagePreview({ player: 1, move: move.name || move.id, preview });
                   }}
                   onMouseLeave={() => setShowDamagePreview(null)}
-                  disabled={!battleState.waitingForP1}
+                  disabled={!battleState.waitingForP1 || move.disabled}
                   className={`w-full px-4 py-3 rounded-lg font-semibold transition-all ${
-                    battleState.waitingForP1
+                    battleState.waitingForP1 && !move.disabled
                       ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
@@ -306,7 +337,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
                   <div className="flex items-center justify-between">
                     <span>{move.name || move.id}</span>
                     <span className="text-xs opacity-80">
-                      {move.type} | {move.category}
+                      {move.disabled ? `봉인됨 ${move.disabledSource ? `(${move.disabledSource})` : ''}` : `${move.type} | ${move.category}`}
                     </span>
                   </div>
                 </button>
@@ -376,6 +407,24 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
                   {p2Active.status}
                 </div>
               )}
+              {formatBoosts(p2Active.boosts).length > 0 && (
+                <div className="mt-2 flex flex-wrap justify-center gap-1">
+                  {formatBoosts(p2Active.boosts).map(boost => (
+                    <span key={boost} className="text-xs bg-red-100 text-red-900 px-2 py-1 rounded-full">
+                      {boost}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {p2Active.volatileStatus?.length > 0 && (
+                <div className="mt-2 flex flex-wrap justify-center gap-1">
+                  {p2Active.volatileStatus.map(status => (
+                    <span key={status} className="text-xs bg-purple-100 text-purple-900 px-2 py-1 rounded-full">
+                      {status}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -394,9 +443,9 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
                     setShowDamagePreview({ player: 2, move: move.name || move.id, preview });
                   }}
                   onMouseLeave={() => setShowDamagePreview(null)}
-                  disabled={!battleState.waitingForP2}
+                  disabled={!battleState.waitingForP2 || move.disabled}
                   className={`w-full px-4 py-3 rounded-lg font-semibold transition-all ${
-                    battleState.waitingForP2
+                    battleState.waitingForP2 && !move.disabled
                       ? 'bg-red-600 hover:bg-red-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
@@ -404,7 +453,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
                   <div className="flex items-center justify-between">
                     <span>{move.name || move.id}</span>
                     <span className="text-xs opacity-80">
-                      {move.type} | {move.category}
+                      {move.disabled ? `봉인됨 ${move.disabledSource ? `(${move.disabledSource})` : ''}` : `${move.type} | ${move.category}`}
                     </span>
                   </div>
                 </button>

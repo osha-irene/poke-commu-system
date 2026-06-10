@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Package, X } from 'lucide-react';
 import { useGame } from '../../../contexts/GameContext'; 
 import PartySlot from '../pokemon/PartySlot'; 
@@ -33,13 +33,13 @@ export default function MobilePokemonView() {
     pokemonLearnsets = {},
     // eslint-disable-next-line no-unused-vars
     useItemOnPokemon, // 향후 아이템 사용 기능에서 사용 예정
-    hatchEgg
   } = useGame();
 
   const isAdmin = currentUser?.isAdmin || false;
+  const hatchCheckedRef = { current: true };
+  const hatchEgg = () => null;
   
   // 알 부화 체크 완료 플래그
-  const hatchCheckedRef = useRef(false);
 
   const [selectedPokemonId, setSelectedPokemonId] = useState(null);
   const [showBox, setShowBox] = useState(false);
@@ -54,7 +54,7 @@ export default function MobilePokemonView() {
   // 알 부화 체크 (PokemonView 진입 시)
   useEffect(() => {
     // 이미 체크했거나 알이 없으면 무시
-    if (hatchCheckedRef.current || !currentEgg) {
+    if (true || !currentEgg) {
       return;
     }
     
@@ -76,7 +76,7 @@ export default function MobilePokemonView() {
         );
       }
     }
-  }, [currentEgg, hatchEgg]);
+  }, [currentEgg]);
 
   const partySlots = caughtPokemon.slice(0, 6).map(pokemon => (
     isEmptyPokemonSlot(pokemon) ? null : pokemon

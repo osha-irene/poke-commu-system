@@ -73,7 +73,7 @@ function DesktopPokemonView() {
   const box = caughtPokemon.slice(6).filter(pokemon => !isEmptyPokemonSlot(pokemon));
   
   // 알 찾기 (임시 데이터)
-  const currentEgg = null;
+  const currentEgg = currentUser?.egg || null;
   
   const rareCandy = items?.find(item => 
     item.name === '이상한사탕' || 

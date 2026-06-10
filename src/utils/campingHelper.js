@@ -90,7 +90,8 @@ export function canGetEgg(member1Pokemon, member2Pokemon, allPokemonMaster) {
  */
 export function createEgg(parent1, parent2, allPokemonMaster) {
   // 어미 포켓몬 (일반적으로 암컷이거나 첫 번째)
-  const motherData = allPokemonMaster.find(p => p.number === parent1.number);
+  const mother = String(parent2?.gender || '').toLowerCase() === 'female' ? parent2 : parent1;
+  const motherData = allPokemonMaster.find(p => p.number === mother.number);
   
   if (!motherData) {
     console.error('어미 포켓몬 데이터를 찾을 수 없습니다');
@@ -105,8 +106,31 @@ export function createEgg(parent1, parent2, allPokemonMaster) {
     eggId: `egg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     species: motherData.name,
     speciesNumber: motherData.number,
+    speciesOriginalNumber: motherData.originalNumber || motherData.displayNumber || motherData.number,
+    motherSpeciesNumber: motherData.number,
+    motherOriginalNumber: motherData.originalNumber || motherData.displayNumber || motherData.number,
+    motherRegionalForm: motherData.regionalForm || null,
+    motherFormVariant: motherData.formVariant || null,
     parent1Name: parent1.name || parent1.nickname,
     parent2Name: parent2.name || parent2.nickname,
+    parent1Ball: {
+      caughtWithBall: parent1.caughtWithBall || '몬스터볼',
+      ballImageUrl: parent1.ballImageUrl || null
+    },
+    parent2Ball: {
+      caughtWithBall: parent2.caughtWithBall || '몬스터볼',
+      ballImageUrl: parent2.ballImageUrl || null
+    },
+    parentBalls: [
+      {
+        caughtWithBall: parent1.caughtWithBall || '몬스터볼',
+        ballImageUrl: parent1.ballImageUrl || null
+      },
+      {
+        caughtWithBall: parent2.caughtWithBall || '몬스터볼',
+        ballImageUrl: parent2.ballImageUrl || null
+      }
+    ],
     eggGroups: motherData.eggGroups,
     hatchSteps: hatchSteps,
     stepsRemaining: hatchSteps,

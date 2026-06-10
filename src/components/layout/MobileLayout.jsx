@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { 
   Menu, X, Map, Users, Bot, BookOpen, Smile, Package, 
   ShoppingBag, ChefHat, User, MessageSquare, Settings, 
-  LogOut, Volume2, VolumeX, Footprints, Coins, Tent, ChevronDown, Home
+  LogOut, Volume2, VolumeX, Footprints, Coins, Tent, ChevronDown, Home, Sword
 } from 'lucide-react';
 
 export default function MobileLayout({ 
@@ -349,6 +349,17 @@ export default function MobileLayout({
                   >
                     <Settings size={20} />
                     <span>관리자</span>
+                  </button>
+                  <button
+                    onClick={() => handleMenuClick('battle')}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all ${
+                      currentTab === 'battle'
+                        ? 'bg-lime-100 text-lime-800'
+                        : 'text-gray-700 hover:bg-lime-50'
+                    }`}
+                  >
+                    <Sword size={20} />
+                    <span>배틀 임시</span>
                   </button>
                 </>
               )}

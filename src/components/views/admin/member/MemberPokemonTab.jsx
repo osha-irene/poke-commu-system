@@ -15,7 +15,8 @@ function MemberPokemonTab({
   pokemonLearnsets = {},
   onGivePokemon,
   onEditPokemon,
-  onDeletePokemon
+  onDeletePokemon,
+  onHatchEgg
 }) {
   const [mode, setMode] = useState('view');
   const [selectedPokemon, setSelectedPokemon] = useState(null);
@@ -31,6 +32,8 @@ function MemberPokemonTab({
     ballImage: '',
     isShiny: false,
     heldItem: null,
+    ability: '',
+    isHiddenAbility: false,
     moves: [],
     ivs: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
     effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
@@ -80,14 +83,42 @@ function MemberPokemonTab({
   } 
 });
 
+  const normalizeKey = (value) => String(value || '').toLowerCase();
+
   const getPokemonTemplate = (pokemon) => {
     if (!pokemon) return null;
-    return (allPokemonMaster || []).find(template =>
-      template.number === pokemon.number ||
-      template.id === pokemon.pokemonId ||
-      template.nameEn === pokemon.nameEn ||
-      template.name === pokemon.name
-    ) || null;
+    const pokemonRegionalForm = normalizeKey(pokemon.regionalForm);
+    const pokemonFormVariant = normalizeKey(pokemon.formVariant);
+    const pokemonNameEn = normalizeKey(pokemon.nameEn);
+    const pokemonNumber = Number(pokemon.number);
+    const pokemonOriginalNumber = Number(pokemon.originalNumber || pokemon.number);
+    const pokemonId = Number(pokemon.pokemonId || pokemon.id);
+
+    const candidates = (allPokemonMaster || [])
+      .map(template => {
+        const templateRegionalForm = normalizeKey(template.regionalForm);
+        const templateFormVariant = normalizeKey(template.formVariant);
+        const templateNameEn = normalizeKey(template.nameEn);
+        const templateNumber = Number(template.number);
+        const templateOriginalNumber = Number(template.originalNumber || template.number);
+        const templateId = Number(template.id);
+        let score = 0;
+
+        if (pokemonFormVariant && templateFormVariant === pokemonFormVariant) score += 100;
+        if (pokemonNameEn && templateNameEn === pokemonNameEn) score += 90;
+        if (pokemonId && templateId === pokemonId) score += 80;
+        if (pokemonRegionalForm && templateRegionalForm === pokemonRegionalForm) score += 40;
+        if (pokemonNumber && templateNumber === pokemonNumber) score += 20;
+        if (pokemonOriginalNumber && templateOriginalNumber === pokemonOriginalNumber) score += 10;
+        if (!pokemonRegionalForm && !templateRegionalForm && pokemonNumber && templateNumber === pokemonNumber) score += 30;
+        if (template.name === pokemon.name) score += 5;
+
+        return { template, score };
+      })
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score);
+
+    return candidates[0]?.template || null;
   };
 
   const withPokemonTemplateData = (pokemon) => {
@@ -155,6 +186,8 @@ function MemberPokemonTab({
       caughtWithBall: pokemon.caughtWithBall || '몬스터볼',
       isShiny: pokemon.isShiny || false,
       heldItem: pokemon.heldItem || null,
+      ability: pokemon.ability || '',
+      isHiddenAbility: pokemon.isHiddenAbility || false,
       friendship: pokemon.friendship || 0,
      gender: pokemon.gender || 'random', 
     sizeRank: pokemon.sizeRank || 'M', 
@@ -170,6 +203,8 @@ function MemberPokemonTab({
 
   const handleSaveEdit = () => {
     if (!selectedPokemon) return;
+    const pokemonTemplate = getPokemonTemplate(selectedPokemon);
+    const finalAbility = editData.ability || pokemonTemplate?.abilities?.[0] || selectedPokemon.ability || '없음';
 
     let finalSpriteUrl = editData.spriteUrl;
     if (editData.isShiny !== selectedPokemon.isShiny) {
@@ -189,6 +224,8 @@ function MemberPokemonTab({
       caughtWithBall: editData.caughtWithBall, 
       isShiny: editData.isShiny,
       heldItem: editData.heldItem,
+      ability: finalAbility,
+      isHiddenAbility: Boolean(pokemonTemplate?.hiddenAbility && finalAbility === pokemonTemplate.hiddenAbility),
       friendship: editData.friendship,
        gender: editData.gender, 
     sizeRank: editData.sizeRank,  
@@ -282,6 +319,26 @@ console.log('📋 최종 기술:', {
 
   return (
     <div className="space-y-4">
+      {member?.egg && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 flex items-center justify-between gap-4">
+          <div>
+            <div className="text-sm font-semibold text-amber-700">보유 알</div>
+            <div className="text-lg font-bold text-gray-800">
+              {member.egg.species || member.egg.name || '포켓몬'}의 알
+            </div>
+            <div className="text-xs text-gray-600">
+              관리자 확인 시 빈 엔트리 칸에 먼저 추가되고, 빈칸이 없으면 박스로 이동합니다.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => onHatchEgg?.(member.id)}
+            className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-semibold transition-colors"
+          >
+            부화 처리
+          </button>
+        </div>
+      )}
       {/* 모달들 */}
       {showMoveModal && selectedPokemon && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999 }}>

@@ -2,7 +2,7 @@
 // 기본 정보 탭 (레벨, 타입, 크기, 특성)
 
 import React from 'react';
-import { Ruler, Scale, Star, Sparkles, Heart, Edit2, Check, X } from 'lucide-react';
+import { Ruler, Star, Sparkles, Heart, Edit2, Check, X } from 'lucide-react';
 import AbilityTooltip from '../AbilityTooltip';
 import { getTypeColor, POKEBALL_LIST } from '../../../../styles/theme';
 
@@ -213,20 +213,6 @@ export default function InfoTab({
                   {RarityIcon && <RarityIcon size={10} />}
                   {rarity.text}
                 </span>
-              </div>
-              <div className="space-y-1">
-                {pokemon.height && (
-                  <div className="flex items-center gap-2 text-xs text-gray-600">
-                    <Ruler size={10} className="text-gray-400" />
-                    키: {(pokemon.height / 10).toFixed(1)}m
-                  </div>
-                )}
-                {pokemon.weight && (
-                  <div className="flex items-center gap-2 text-xs text-gray-600">
-                    <Scale size={10} className="text-gray-400" />
-                    무게: {(pokemon.weight / 10).toFixed(1)}kg
-                  </div>
-                )}
               </div>
             </>
           ) : (

@@ -99,6 +99,48 @@ class BattleEngine {
     return { canUse: true };
   }
 
+  getEntryWeatherEffect(pokemon) {
+    const weatherSetters = {
+      'Drizzle': { weather: 'Rain', message: '비가 내리기 시작했다!' },
+      'Drought': { weather: 'Sun', message: '햇살이 강해졌다!' },
+      'Sand Stream': { weather: 'Sand', message: '모래바람이 불기 시작했다!' },
+      'Snow Warning': { weather: 'Snow', message: '눈이 내리기 시작했다!' },
+    };
+
+    return weatherSetters[pokemon.ability] || null;
+  }
+
+  processEntryAbility(pokemon, fieldState) {
+    const weatherEffect = this.getEntryWeatherEffect(pokemon);
+    if (!weatherEffect || fieldState.weather === weatherEffect.weather) return null;
+
+    fieldState.weather = weatherEffect.weather;
+    fieldState.weatherTurns = 5;
+
+    const message = `${pokemon.nickname || pokemon.name}의 ${pokemon.ability}! ${weatherEffect.message}`;
+    this.log(message, 'weather');
+    return { ...weatherEffect, message };
+  }
+
+  normalizeVolatileStatus(status) {
+    const statusMap = {
+      disable: 'Disable',
+      confusion: 'Confusion',
+      flinch: 'Flinch',
+      attract: 'Infatuation',
+      leechseed: 'Leech Seed',
+      encore: 'Encore',
+      taunt: 'Taunt',
+      torment: 'Torment',
+      yawn: 'Yawn',
+      substitute: 'Substitute',
+      protect: 'Protect',
+    };
+
+    const key = String(status || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    return statusMap[key] || status;
+  }
+
   /**
    * 명중 판정
    */
@@ -109,7 +151,6 @@ class BattleEngine {
       return true;
     }
     
-    const baseAccuracy = typeof move.accuracy === 'number' ? move.accuracy : 100;
     const accuracy = statusManager.calculateAccuracy(attacker, defender, move, fieldState);
     const roll = Math.random() * 100;
     
@@ -158,10 +199,11 @@ class BattleEngine {
       return baseResult;
     }
 
-    // 추가 효과 적용
-    let finalDamage = Array.isArray(baseResult.damage) ? 
-      baseResult.damage[Math.floor(baseResult.damage.length / 2)] : 
-      baseResult.damage;
+    const damageRolls = Array.isArray(baseResult.damage) ? baseResult.damage : [baseResult.damage];
+    const rollIndex = options.skipRandom
+      ? Math.floor(damageRolls.length / 2)
+      : Math.floor(Math.random() * damageRolls.length);
+    let finalDamage = Number(damageRolls[rollIndex] || 0);
 
     const moveData = baseResult.moveData;
     const effects = [];
@@ -210,18 +252,8 @@ class BattleEngine {
       effects.push(`사이드 효과`);
     }
 
-    // 크리티컬 판정
-    const isCritical = options.isCritical || this.checkCritical(attacker, moveData);
-    if (isCritical) {
-      finalDamage *= 1.5;
-      effects.push(`급소!`);
-    }
-
-    // 랜덤 요소 (85~100%)
-    if (!options.skipRandom) {
-      const randomMultiplier = 0.85 + Math.random() * 0.15;
-      finalDamage *= randomMultiplier;
-    }
+    const isCritical = Boolean(options.isCritical || options.isCrit);
+    if (isCritical) effects.push(`급소!`);
 
     finalDamage = Math.floor(finalDamage);
 
@@ -287,11 +319,13 @@ class BattleEngine {
 
     // 데미지 기술
     if (moveData.category !== 'Status' && moveData.basePower > 0) {
+      const isCritical = this.checkCritical(attacker, moveData);
       const damageResult = this.calculateDamage(
         attacker,
         defender,
         moveName,
-        fieldState
+        fieldState,
+        { isCritical, isCrit: isCritical }
       );
 
       result.damage = damageResult.damage;
@@ -319,6 +353,31 @@ class BattleEngine {
         result.statusInflicted = moveData.status;
         const statusName = statusManager.getStatusName(moveData.status);
         this.log(`${defender.nickname || defender.name}은(는) ${statusName} 상태가 되었다!`, 'status');
+      }
+    }
+
+    if (moveData.volatileStatus) {
+      const volatileStatus = this.normalizeVolatileStatus(moveData.volatileStatus);
+      if (statusManager.canApplyVolatileStatus(defender, volatileStatus)) {
+        result.volatileStatusInflicted = volatileStatus;
+
+        if (volatileStatus === 'Disable') {
+          if (!defender.lastMove) {
+            this.log('하지만 실패했다!', 'fail');
+            return {
+              success: false,
+              failed: true,
+              message: '하지만 실패했다!',
+            };
+          }
+
+          result.disabledMove = defender.lastMove;
+          result.disableTurns = statusManager.volatileStatus.Disable?.duration || 4;
+          this.log(`${defender.nickname || defender.name}의 ${defender.lastMove}이(가) 봉인됐다!`, 'status');
+        } else {
+          const statusName = statusManager.getStatusName(volatileStatus, true);
+          this.log(`${defender.nickname || defender.name}은(는) ${statusName} 상태가 되었다!`, 'status');
+        }
       }
     }
 
@@ -353,6 +412,8 @@ class BattleEngine {
       this.log(`필드가 ${moveData.terrain}(으)로 바뀌었다!`, 'terrain');
     }
 
+    attacker.lastMove = moveData.id;
+
     return result;
   }
 
@@ -364,6 +425,18 @@ class BattleEngine {
     
     let totalDamage = 0;
     let totalHealing = 0;
+
+    if (pokemon.disableTurns > 0) {
+      pokemon.disableTurns -= 1;
+      if (pokemon.disableTurns <= 0) {
+        pokemon.volatileStatus = (pokemon.volatileStatus || []).filter(status => status !== 'Disable');
+        pokemon.disabledMove = null;
+        effects.push({
+          type: 'volatile_end',
+          message: `${pokemon.nickname || pokemon.name}의 사슬묶기가 풀렸다.`,
+        });
+      }
+    }
 
     effects.forEach(effect => {
       if (effect.damage) totalDamage += effect.damage;

@@ -244,17 +244,6 @@ export function EggSlot({
           <span className="text-xs text-amber-700 font-semibold">포켓몬 알</span>
         </div>
         <div className="font-bold text-lg text-gray-800">{egg.name || '???의 알'}</div>
-        <div className="text-sm text-gray-600">
-          부화까지 {egg.stepsRemaining || egg.steps || 0}보
-        </div>
-        {egg.hatchProgress !== undefined && (
-          <div className="mt-2 w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-            <div 
-              className="bg-gradient-to-r from-yellow-400 to-amber-500 h-full transition-all duration-300"
-              style={{ width: `${egg.hatchProgress}%` }}
-            />
-          </div>
-        )}
       </div>
     </div>
   );

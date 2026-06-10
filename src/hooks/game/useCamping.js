@@ -333,7 +333,7 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
         `친밀도 +${stageData.friendshipBonus}\n` +
         `경험치 +${stageData.expBonus}\n` +
         (bonusItem ? `보너스 아이템: ${bonusItem.name} 획득!\n` : '') +
-        (eggObtained ? `🥚 특별 보상: ${eggObtained.species}의 알 획득!` : '')
+        (eggObtained ? '어라? 포켓몬의 알이 있다!' : '')
       );
     } catch (error) {
       console.error('결과 반영 실패:', error);
