@@ -14,6 +14,8 @@ import {
   translateTypeName,
   translateVolatileName,
   translateWeatherName,
+  translateItemName,
+  toShowdownItemName,
 } from '../utils/battleTranslations';
 
 const FORMAT_ID = 'gen9customgame';
@@ -61,7 +63,7 @@ const toShowdownMoveId = (move) => {
 const toPackedSet = (pokemon) => ({
   name: pokemon.nickname || pokemon.nameKo || pokemon.name || pokemon.species || 'Pokemon',
   species: pokemon.species || pokemon.nameEn || pokemon.name || 'Ditto',
-  item: pokemon.item || pokemon.heldItem || '',
+  item: toShowdownItemName(pokemon.item || pokemon.heldItem || ''),
   ability: pokemon.abilityEn || pokemon.ability || 'No Ability',
   moves: (pokemon.moves || []).map(toShowdownMoveId).filter(Boolean).slice(0, 4),
   nature: pokemon.nature || 'Hardy',
@@ -146,6 +148,8 @@ const protocolToLog = (line) => {
       return { message: `${extractName(parts[2])}의 특성 ${translateAbilityName(parts[3])}!`, type: 'ability' };
     case '-activate':
       return { message: `${extractName(parts[2])}의 ${translateEffectName(parts[3])} 발동!`, type: 'ability' };
+    case '-mega':
+      return { message: `${extractName(parts[2])}은(는) 메가진화했다!`, type: 'mega' };
     case 'switch':
       return { message: `${extractName(parts[2])} 등장!`, type: 'switch' };
     case 'faint':
@@ -206,6 +210,10 @@ const convertPokemon = (battle, pokemon) => {
     types: (pokemon.getTypes ? pokemon.getTypes() : pokemon.types || []).map(translateTypeName),
     ability: translateAbilityName(abilityName),
     abilityEn: abilityName,
+    item: translateItemName(pokemon.item),
+    itemEn: pokemon.item,
+    canMegaEvolve: Boolean(pokemon.canMegaEvo || pokemon.canMegaEvoX || pokemon.canMegaEvoY),
+    megaSpecies: pokemon.canMegaEvo || pokemon.canMegaEvoX || pokemon.canMegaEvoY || null,
     status: pokemon.status ? translateStatusName(pokemon.status) : null,
     volatileStatus: Object.keys(pokemon.volatiles || {}).map(translateVolatileName),
     boosts: { ...pokemon.boosts },
@@ -302,13 +310,13 @@ export function useAdvancedBattle(initialOptions = {}) {
     setBattleState(stateFromBattle(battle, initialState, 0));
   }, [player1Team, player2Team]);
 
-  const selectMove = useCallback((player, activeIndex, moveIndex) => {
+  const selectMove = useCallback((player, activeIndex, moveIndex, options = {}) => {
     const battle = battleRef.current;
     if (!battle || battle.ended) return;
 
     const side = player === 'player1' ? 'p1' : 'p2';
     const logFrom = battle.log.length;
-    battle.choose(side, `move ${moveIndex + 1}`);
+    battle.choose(side, `move ${moveIndex + 1}${options.mega ? ' mega' : ''}`);
 
     setBattleState(prev => stateFromBattle(battle, {
       ...prev,

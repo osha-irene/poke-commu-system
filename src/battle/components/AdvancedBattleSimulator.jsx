@@ -35,6 +35,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
   const [selectedP1Pokemon, setSelectedP1Pokemon] = useState([0]);
   const [selectedP2Pokemon, setSelectedP2Pokemon] = useState([0]);
   const [showDamagePreview, setShowDamagePreview] = useState(null);
+  const [megaIntent, setMegaIntent] = useState({ player1: false, player2: false });
 
   const toggleSelection = (index, setter) => {
     setter((prev) => {
@@ -210,6 +211,11 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
     const buttonClass = color === 'blue'
       ? 'bg-blue-600 hover:bg-blue-700'
       : 'bg-red-600 hover:bg-red-700';
+    const megaSelected = Boolean(megaIntent[player]);
+    const handleMoveSelect = (moveIndex) => {
+      selectMove(player, 0, moveIndex, { mega: megaSelected && active.canMegaEvolve });
+      setMegaIntent(prev => ({ ...prev, [player]: false }));
+    };
 
     return (
       <div className={`${borderClass} border-4 rounded-2xl p-6 shadow-xl`}>
@@ -266,10 +272,26 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
             <Swords size={20} />
             기술 선택:
           </h3>
+          {active.canMegaEvolve && (
+            <button
+              type="button"
+              onClick={() => setMegaIntent(prev => ({ ...prev, [player]: !prev[player] }))}
+              disabled={!waiting}
+              className={`w-full px-4 py-2 rounded-lg font-semibold border transition-all ${
+                megaSelected
+                  ? 'bg-fuchsia-600 border-fuchsia-700 text-white shadow-md'
+                  : waiting
+                    ? 'bg-white border-fuchsia-300 text-fuchsia-700 hover:bg-fuchsia-50'
+                    : 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              메가진화 {megaSelected ? 'ON' : 'OFF'}
+            </button>
+          )}
           {active.moves?.map((move, i) => (
             <button
               key={i}
-              onClick={() => selectMove(player, 0, i)}
+              onClick={() => handleMoveSelect(i)}
               onMouseEnter={() => {
                 const preview = previewDamage(active, opponent, move.nameEn || move.id || move.name);
                 setShowDamagePreview({ player, move: move.name || move.id, preview });

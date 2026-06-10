@@ -1,5 +1,6 @@
 import movesData from '../../data/moves.json';
 import abilitiesData from '../../data/abilities.json';
+import itemsData from '../../data/items.json';
 
 export const normalizeBattleKey = (value) => String(value || '')
   .toLowerCase()
@@ -16,6 +17,8 @@ const addTranslation = (map, keys, value) => {
 
 const moveNames = {};
 const abilityNames = {};
+const itemNames = {};
+const showdownItemNames = {};
 
 (movesData.moves || []).forEach((move) => {
   addTranslation(moveNames, [move.id, move.nameEn, move.name], move.name);
@@ -23,6 +26,16 @@ const abilityNames = {};
 
 (abilitiesData.abilities || []).forEach((ability) => {
   addTranslation(abilityNames, [ability.id, ability.nameEn, ability.name], ability.name);
+});
+
+const items = Array.isArray(itemsData) ? itemsData : (itemsData.items || []);
+
+items.forEach((item) => {
+  addTranslation(itemNames, [item.id, item.nameEn, item.name], item.name);
+  [item.id, item.nameEn, item.name].forEach((key) => {
+    const normalized = normalizeBattleKey(key);
+    if (normalized && item.nameEn) showdownItemNames[normalized] = item.nameEn;
+  });
 });
 
 export const translateMoveName = (value) => {
@@ -33,6 +46,16 @@ export const translateMoveName = (value) => {
 export const translateAbilityName = (value) => {
   const normalized = normalizeBattleKey(value);
   return abilityNames[normalized] || value || '특성';
+};
+
+export const translateItemName = (value) => {
+  const normalized = normalizeBattleKey(value);
+  return itemNames[normalized] || value || '도구';
+};
+
+export const toShowdownItemName = (value) => {
+  const normalized = normalizeBattleKey(value);
+  return showdownItemNames[normalized] || value || '';
 };
 
 export const translateTypeName = (type) => ({
@@ -118,4 +141,3 @@ export const translateEffectName = (effect) => {
   }
   return translateMoveName(text);
 };
-
