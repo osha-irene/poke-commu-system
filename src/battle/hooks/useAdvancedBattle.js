@@ -3,6 +3,18 @@ import { Battle, Teams } from '@pkmn/sim';
 import showdownIntegration from '../utils/ShowdownIntegration';
 import fieldEffectsManager from '../utils/FieldEffectsManager';
 import statusManager from '../utils/StatusManager';
+import {
+  normalizeBattleKey,
+  translateAbilityName,
+  translateCategoryName,
+  translateEffectName,
+  translateMoveName,
+  translateStatusName,
+  translateTerrainName,
+  translateTypeName,
+  translateVolatileName,
+  translateWeatherName,
+} from '../utils/battleTranslations';
 
 const FORMAT_ID = 'gen9customgame';
 
@@ -33,29 +45,24 @@ const emptyBattleState = (player1Team = [], player2Team = []) => ({
 const statLabel = {
   atk: '공격',
   def: '방어',
-  spa: '특공',
-  spd: '특방',
+  spa: '특수공격',
+  spd: '특수방어',
   spe: '스피드',
   accuracy: '명중률',
   evasion: '회피율',
 };
 
-const normalizeId = (value) => String(value || '')
-  .toLowerCase()
-  .replace(/[\s_\-'.:]/g, '')
-  .replace(/[^\p{L}\p{N}]/gu, '');
-
 const toShowdownMoveId = (move) => {
-  const moveName = typeof move === 'string' ? move : (move?.id || move?.name || move?.nameEn || move?.moveId);
+  const moveName = typeof move === 'string' ? move : (move?.id || move?.nameEn || move?.name || move?.moveId);
   const moveData = showdownIntegration.getMove(moveName);
-  return moveData?.id || normalizeId(moveData?.nameEn || moveName) || 'tackle';
+  return moveData?.id || normalizeBattleKey(moveData?.nameEn || moveName) || 'tackle';
 };
 
 const toPackedSet = (pokemon) => ({
-  name: pokemon.nickname || pokemon.name || pokemon.species || 'Pokemon',
+  name: pokemon.nickname || pokemon.nameKo || pokemon.name || pokemon.species || 'Pokemon',
   species: pokemon.species || pokemon.nameEn || pokemon.name || 'Ditto',
   item: pokemon.item || pokemon.heldItem || '',
-  ability: pokemon.ability || 'No Ability',
+  ability: pokemon.abilityEn || pokemon.ability || 'No Ability',
   moves: (pokemon.moves || []).map(toShowdownMoveId).filter(Boolean).slice(0, 4),
   nature: pokemon.nature || 'Hardy',
   evs: pokemon.evs || {
@@ -97,7 +104,7 @@ const protocolToLog = (line) => {
 
   switch (command) {
     case 'move':
-      return { message: `${extractName(parts[2])}의 ${parts[3]}!`, type: 'move' };
+      return { message: `${extractName(parts[2])}의 ${translateMoveName(parts[3])}!`, type: 'move' };
     case '-damage':
       return { message: `${extractName(parts[2])} HP ${parts[3]}`, type: 'damage' };
     case '-heal':
@@ -107,13 +114,22 @@ const protocolToLog = (line) => {
     case '-unboost':
       return { message: `${extractName(parts[2])}의 ${statLabel[parts[3]] || parts[3]}이(가) ${parts[4]}단계 떨어졌다!`, type: 'boost' };
     case '-weather':
-      return { message: parts[3] === '[upkeep]' ? `${parts[2]} 날씨가 계속된다.` : `${parts[2]} 날씨가 시작됐다!`, type: 'weather' };
+      return {
+        message: parts[3] === '[upkeep]'
+          ? `${translateWeatherName(parts[2])} 날씨가 계속된다.`
+          : `${translateWeatherName(parts[2])} 날씨가 시작됐다!`,
+        type: 'weather',
+      };
+    case '-fieldstart':
+      return { message: `${translateTerrainName(parts[2])} 효과가 시작됐다!`, type: 'field' };
+    case '-fieldend':
+      return { message: `${translateTerrainName(parts[2])} 효과가 끝났다.`, type: 'field' };
     case '-status':
-      return { message: `${extractName(parts[2])}은(는) ${parts[3]} 상태가 됐다!`, type: 'status' };
+      return { message: `${extractName(parts[2])}은(는) ${translateStatusName(parts[3])} 상태가 됐다!`, type: 'status' };
     case '-start':
-      return { message: `${extractName(parts[2])}에게 ${parts[3]} 효과가 시작됐다!`, type: 'status' };
+      return { message: `${extractName(parts[2])}에게 ${translateEffectName(parts[3])} 효과가 시작됐다!`, type: 'status' };
     case '-end':
-      return { message: `${extractName(parts[2])}의 ${parts[3]} 효과가 끝났다.`, type: 'status' };
+      return { message: `${extractName(parts[2])}의 ${translateEffectName(parts[3])} 효과가 끝났다.`, type: 'status' };
     case '-miss':
       return { message: `${extractName(parts[2])}의 공격이 빗나갔다!`, type: 'miss' };
     case '-fail':
@@ -127,7 +143,9 @@ const protocolToLog = (line) => {
     case '-crit':
       return { message: '급소에 맞았다!', type: 'critical' };
     case '-ability':
-      return { message: `${extractName(parts[2])}의 특성 ${parts[3]}!`, type: 'ability' };
+      return { message: `${extractName(parts[2])}의 특성 ${translateAbilityName(parts[3])}!`, type: 'ability' };
+    case '-activate':
+      return { message: `${extractName(parts[2])}의 ${translateEffectName(parts[3])} 발동!`, type: 'ability' };
     case 'switch':
       return { message: `${extractName(parts[2])} 등장!`, type: 'switch' };
     case 'faint':
@@ -141,39 +159,55 @@ const protocolToLog = (line) => {
   }
 };
 
-const collectLogs = (battle, fromIndex = 0) => battle.log
-  .slice(fromIndex)
-  .map(protocolToLog)
-  .filter(Boolean);
+const collectLogs = (battle, fromIndex = 0) => {
+  const seenInBatch = new Set();
+
+  return battle.log
+    .slice(fromIndex)
+    .map(protocolToLog)
+    .filter(Boolean)
+    .filter((entry) => {
+      const key = `${entry.type}:${entry.message}`;
+      if (seenInBatch.has(key)) return false;
+      seenInBatch.add(key);
+      return true;
+    });
+};
 
 const getMoveData = (battle, moveSlot) => {
   const moveData = battle.dex.moves.get(moveSlot.id);
   return {
-    name: moveSlot.move,
+    name: translateMoveName(moveSlot.id || moveSlot.move),
+    nameEn: moveData?.name || moveSlot.move,
     id: moveSlot.id,
-    type: moveData?.type || 'Normal',
-    category: moveData?.category || 'Status',
+    type: translateTypeName(moveData?.type || 'Normal'),
+    typeEn: moveData?.type || 'Normal',
+    category: translateCategoryName(moveData?.category || 'Status'),
+    categoryEn: moveData?.category || 'Status',
     basePower: moveData?.basePower || 0,
     accuracy: moveData?.accuracy === true ? 100 : (moveData?.accuracy ?? true),
     pp: moveSlot.maxpp,
     currentPP: moveSlot.pp,
     disabled: moveSlot.disabled,
-    disabledSource: moveSlot.disabledSource,
+    disabledSource: moveSlot.disabledSource ? translateEffectName(moveSlot.disabledSource) : '',
   };
 };
 
 const convertPokemon = (battle, pokemon) => {
   if (!pokemon) return null;
   const ability = battle.dex.abilities.get(pokemon.ability || pokemon.baseAbility);
+  const abilityName = ability?.name || pokemon.ability || pokemon.baseAbility;
+
   return {
     name: pokemon.name,
     species: pokemon.species?.name || pokemon.species,
     nickname: pokemon.name,
     level: pokemon.level,
-    types: pokemon.getTypes ? pokemon.getTypes() : pokemon.types,
-    ability: ability?.name || pokemon.ability,
-    status: pokemon.status || null,
-    volatileStatus: Object.keys(pokemon.volatiles || {}),
+    types: (pokemon.getTypes ? pokemon.getTypes() : pokemon.types || []).map(translateTypeName),
+    ability: translateAbilityName(abilityName),
+    abilityEn: abilityName,
+    status: pokemon.status ? translateStatusName(pokemon.status) : null,
+    volatileStatus: Object.keys(pokemon.volatiles || {}).map(translateVolatileName),
     boosts: { ...pokemon.boosts },
     currentHP: pokemon.hp,
     maxHP: pokemon.maxhp,
@@ -193,16 +227,18 @@ const convertSide = (battle, side) => ({
   fainted: side.pokemon
     .filter(pokemon => pokemon.fainted)
     .map(pokemon => convertPokemon(battle, pokemon)),
-  sideConditions: Object.keys(side.sideConditions || {}),
+  sideConditions: Object.keys(side.sideConditions || {}).map(translateVolatileName),
 });
 
 const convertField = (battle) => ({
-  weather: battle.field.weather || null,
-  terrain: battle.field.terrain || null,
+  weather: battle.field.weather ? translateWeatherName(battle.field.weather) : null,
+  weatherEn: battle.field.weather || null,
+  terrain: battle.field.terrain ? translateTerrainName(battle.field.terrain) : null,
+  terrainEn: battle.field.terrain || null,
   weatherTurns: 0,
   terrainTurns: 0,
-  p1SideConditions: Object.keys(battle.p1.sideConditions || {}),
-  p2SideConditions: Object.keys(battle.p2.sideConditions || {}),
+  p1SideConditions: Object.keys(battle.p1.sideConditions || {}).map(translateVolatileName),
+  p2SideConditions: Object.keys(battle.p2.sideConditions || {}).map(translateVolatileName),
 });
 
 const stateFromBattle = (battle, baseState, logFrom = 0) => {
@@ -226,7 +262,9 @@ const stateFromBattle = (battle, baseState, logFrom = 0) => {
     field: convertField(battle),
     waitingForP1: battle.requestState === 'move' || battle.requestState === 'switch',
     waitingForP2: battle.requestState === 'move' || battle.requestState === 'switch',
-    log: [...baseState.log, ...newLogs],
+    log: [...baseState.log, ...newLogs].filter((entry, index, logs) => (
+      index === 0 || entry.message !== logs[index - 1].message || entry.type !== logs[index - 1].type
+    )),
   };
 };
 

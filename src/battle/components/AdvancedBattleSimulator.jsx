@@ -1,26 +1,23 @@
 import React, { useState } from 'react';
-import { Swords, Shield, Heart, Zap, RefreshCw, Users, TrendingUp } from 'lucide-react';
+import { Heart, RefreshCw, Shield, Swords, TrendingUp, Users, Zap } from 'lucide-react';
 import useAdvancedBattle from '../hooks/useAdvancedBattle';
 
 const BOOST_LABELS = {
   atk: '공격',
   def: '방어',
-  spa: '특공',
-  spd: '특방',
+  spa: '특수공격',
+  spd: '특수방어',
   spe: '스피드',
-  accuracy: '명중',
-  evasion: '회피',
+  accuracy: '명중률',
+  evasion: '회피율',
 };
 
 const formatBoosts = (boosts = {}) => Object.entries(boosts)
   .filter(([, value]) => value !== 0)
   .map(([stat, value]) => `${BOOST_LABELS[stat] || stat} ${value > 0 ? '+' : ''}${value}`);
 
-/**
- * 완전한 배틀 시뮬레이터
- * - 1~6마리 자유 선택
- * - 완전한 쇼다운 계산
- */
+const pokemonLabel = (pokemon) => pokemon.nickname || pokemon.name || pokemon.species || '포켓몬';
+
 export function AdvancedBattleSimulator({ player1Team, player2Team }) {
   const {
     battleState,
@@ -39,9 +36,14 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
   const [selectedP2Pokemon, setSelectedP2Pokemon] = useState([0]);
   const [showDamagePreview, setShowDamagePreview] = useState(null);
 
-  /**
-   * 팀 선택 화면
-   */
+  const toggleSelection = (index, setter) => {
+    setter((prev) => {
+      if (prev.includes(index)) return prev.filter(i => i !== index);
+      if (prev.length < 6) return [...prev, index];
+      return prev;
+    });
+  };
+
   if (battleState.phase === 'team_selection') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8">
@@ -52,33 +54,23 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
               포켓몬 배틀 시뮬레이터
               <Users className="text-red-600" size={36} />
             </h1>
-            <p className="text-gray-600">각 플레이어는 1~6마리의 포켓몬을 선택할 수 있습니다</p>
+            <p className="text-gray-600">각 플레이어의 포켓몬을 1~6마리 선택하세요.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            {/* Player 1 팀 선택 */}
             <div className="bg-blue-50 border-4 border-blue-500 rounded-2xl p-6">
               <h2 className="text-2xl font-bold text-blue-900 mb-4 flex items-center gap-2">
                 <Shield className="text-blue-600" size={24} />
                 Player 1 팀 선택
               </h2>
               <p className="text-sm text-gray-600 mb-4">
-                선택된 포켓몬: {selectedP1Pokemon.length}마리
+                선택한 포켓몬 {selectedP1Pokemon.length}마리
               </p>
               <div className="space-y-2">
                 {player1Team.map((pokemon, idx) => (
                   <button
                     key={idx}
-                    onClick={() => {
-                      setSelectedP1Pokemon(prev => {
-                        if (prev.includes(idx)) {
-                          return prev.filter(i => i !== idx);
-                        } else if (prev.length < 6) {
-                          return [...prev, idx];
-                        }
-                        return prev;
-                      });
-                    }}
+                    onClick={() => toggleSelection(idx, setSelectedP1Pokemon)}
                     className={`w-full p-4 rounded-lg font-semibold transition-all flex items-center justify-between ${
                       selectedP1Pokemon.includes(idx)
                         ? 'bg-blue-600 text-white shadow-lg'
@@ -90,9 +82,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
                         {selectedP1Pokemon.includes(idx) ? '✓' : '○'}
                       </div>
                       <div className="text-left">
-                        <div className="font-bold">
-                          {pokemon.nickname || pokemon.name || pokemon.species}
-                        </div>
+                        <div className="font-bold">{pokemonLabel(pokemon)}</div>
                         <div className="text-sm opacity-80">
                           Lv.{pokemon.level} {pokemon.types?.join('/')}
                         </div>
@@ -106,29 +96,19 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
               </div>
             </div>
 
-            {/* Player 2 팀 선택 */}
             <div className="bg-red-50 border-4 border-red-500 rounded-2xl p-6">
               <h2 className="text-2xl font-bold text-red-900 mb-4 flex items-center gap-2">
                 <Swords className="text-red-600" size={24} />
                 Player 2 팀 선택
               </h2>
               <p className="text-sm text-gray-600 mb-4">
-                선택된 포켓몬: {selectedP2Pokemon.length}마리
+                선택한 포켓몬 {selectedP2Pokemon.length}마리
               </p>
               <div className="space-y-2">
                 {player2Team.map((pokemon, idx) => (
                   <button
                     key={idx}
-                    onClick={() => {
-                      setSelectedP2Pokemon(prev => {
-                        if (prev.includes(idx)) {
-                          return prev.filter(i => i !== idx);
-                        } else if (prev.length < 6) {
-                          return [...prev, idx];
-                        }
-                        return prev;
-                      });
-                    }}
+                    onClick={() => toggleSelection(idx, setSelectedP2Pokemon)}
                     className={`w-full p-4 rounded-lg font-semibold transition-all flex items-center justify-between ${
                       selectedP2Pokemon.includes(idx)
                         ? 'bg-red-600 text-white shadow-lg'
@@ -140,9 +120,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
                         {selectedP2Pokemon.includes(idx) ? '✓' : '○'}
                       </div>
                       <div className="text-left">
-                        <div className="font-bold">
-                          {pokemon.nickname || pokemon.name || pokemon.species}
-                        </div>
+                        <div className="font-bold">{pokemonLabel(pokemon)}</div>
                         <div className="text-sm opacity-80">
                           Lv.{pokemon.level} {pokemon.types?.join('/')}
                         </div>
@@ -157,14 +135,13 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
             </div>
           </div>
 
-          {/* 배틀 시작 버튼 */}
           <div className="text-center">
             <button
               onClick={() => {
                 if (selectedP1Pokemon.length > 0 && selectedP2Pokemon.length > 0) {
                   startBattle(selectedP1Pokemon, selectedP2Pokemon);
                 } else {
-                  alert('각 플레이어는 최소 1마리의 포켓몬을 선택해야 합니다!');
+                  alert('각 플레이어는 최소 1마리의 포켓몬을 선택해야 합니다.');
                 }
               }}
               disabled={selectedP1Pokemon.length === 0 || selectedP2Pokemon.length === 0}
@@ -180,9 +157,6 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
     );
   }
 
-  /**
-   * 승리 화면
-   */
   if (battleState.phase === 'finished') {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
@@ -208,9 +182,6 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
     );
   }
 
-  /**
-   * 배틀 화면
-   */
   const p1Active = battleState.player1.active[0];
   const p2Active = battleState.player2.active[0];
 
@@ -231,10 +202,126 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
     );
   }
 
+  const renderPokemonPanel = (player, active, opponent, color) => {
+    const waiting = player === 'player1' ? battleState.waitingForP1 : battleState.waitingForP2;
+    const side = player === 'player1' ? battleState.player1 : battleState.player2;
+    const borderClass = color === 'blue' ? 'border-blue-500 bg-blue-50' : 'border-red-500 bg-red-50';
+    const titleClass = color === 'blue' ? 'text-blue-900' : 'text-red-900';
+    const buttonClass = color === 'blue'
+      ? 'bg-blue-600 hover:bg-blue-700'
+      : 'bg-red-600 hover:bg-red-700';
+
+    return (
+      <div className={`${borderClass} border-4 rounded-2xl p-6 shadow-xl`}>
+        <div className="text-center mb-4">
+          <h2 className={`text-2xl font-bold ${titleClass} mb-2`}>
+            {player === 'player1' ? 'Player 1' : 'Player 2'}: {pokemonLabel(active)}
+          </h2>
+          <div className="text-sm text-gray-600 mb-2">
+            Lv.{active.level} | {active.types?.join('/')} | {active.ability}
+          </div>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Heart className="text-red-500" size={20} />
+            <div className="font-semibold">
+              HP: {active.currentHP} / {active.maxHP}
+            </div>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+            <div
+              className={`h-full transition-all duration-500 ${
+                active.currentHP / active.maxHP > 0.5 ? 'bg-green-500'
+                  : active.currentHP / active.maxHP > 0.2 ? 'bg-yellow-500'
+                    : 'bg-red-500'
+              }`}
+              style={{ width: `${(active.currentHP / active.maxHP) * 100}%` }}
+            />
+          </div>
+          {active.status && (
+            <div className="mt-2 text-sm bg-red-100 text-red-800 px-3 py-1 rounded-full inline-block">
+              {active.status}
+            </div>
+          )}
+          {formatBoosts(active.boosts).length > 0 && (
+            <div className="mt-2 flex flex-wrap justify-center gap-1">
+              {formatBoosts(active.boosts).map(boost => (
+                <span key={boost} className="text-xs bg-white text-gray-900 px-2 py-1 rounded-full">
+                  {boost}
+                </span>
+              ))}
+            </div>
+          )}
+          {active.volatileStatus?.length > 0 && (
+            <div className="mt-2 flex flex-wrap justify-center gap-1">
+              {active.volatileStatus.map(status => (
+                <span key={status} className="text-xs bg-purple-100 text-purple-900 px-2 py-1 rounded-full">
+                  {status}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <h3 className={`font-bold ${titleClass} mb-3 flex items-center gap-2`}>
+            <Swords size={20} />
+            기술 선택:
+          </h3>
+          {active.moves?.map((move, i) => (
+            <button
+              key={i}
+              onClick={() => selectMove(player, 0, i)}
+              onMouseEnter={() => {
+                const preview = previewDamage(active, opponent, move.nameEn || move.id || move.name);
+                setShowDamagePreview({ player, move: move.name || move.id, preview });
+              }}
+              onMouseLeave={() => setShowDamagePreview(null)}
+              disabled={!waiting || move.disabled}
+              className={`w-full px-4 py-3 rounded-lg font-semibold transition-all ${
+                waiting && !move.disabled
+                  ? `${buttonClass} text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5`
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span>{move.name || move.id}</span>
+                <span className="text-xs opacity-80">
+                  {move.disabled ? `봉인됨${move.disabledSource ? ` (${move.disabledSource})` : ''}` : `${move.type} | ${move.category}`}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {waiting && (
+          <div className={`mt-4 border-2 rounded-lg p-3 text-center ${color === 'blue' ? 'bg-blue-100 border-blue-300' : 'bg-red-100 border-red-300'}`}>
+            <div className={`${color === 'blue' ? 'text-blue-800' : 'text-red-800'} font-semibold animate-pulse`}>
+              기술을 선택하세요!
+            </div>
+          </div>
+        )}
+
+        {side.bench.length > 0 && (
+          <div className="mt-4">
+            <h3 className={`font-bold ${titleClass} mb-2 text-sm`}>대기 중</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {side.bench.map((pokemon, idx) => (
+                <div key={idx} className="bg-white p-2 rounded text-xs text-center">
+                  <div className="font-semibold truncate">{pokemonLabel(pokemon)}</div>
+                  <div className="text-gray-600">
+                    HP: {pokemon.currentHP}/{pokemon.maxHP}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8">
       <div className="max-w-7xl mx-auto">
-        {/* 헤더 */}
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-3">
             <Swords className="text-red-600" size={32} />
@@ -256,242 +343,11 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
           </div>
         </div>
 
-        {/* 배틀 필드 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
-          {/* Player 1 */}
-          <div className="bg-blue-50 border-4 border-blue-500 rounded-2xl p-6 shadow-xl">
-            <div className="text-center mb-4">
-              <h2 className="text-2xl font-bold text-blue-900 mb-2">
-                Player 1: {p1Active.nickname || p1Active.name}
-              </h2>
-              <div className="text-sm text-gray-600 mb-2">
-                Lv.{p1Active.level} | {p1Active.types?.join('/')} | {p1Active.ability}
-              </div>
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Heart className="text-red-500" size={20} />
-                <div className="font-semibold">
-                  HP: {p1Active.currentHP} / {p1Active.maxHP}
-                </div>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-                <div 
-                  className={`h-full transition-all duration-500 ${
-                    p1Active.currentHP / p1Active.maxHP > 0.5 ? 'bg-green-500' :
-                    p1Active.currentHP / p1Active.maxHP > 0.2 ? 'bg-yellow-500' :
-                    'bg-red-500'
-                  }`}
-                  style={{ 
-                    width: `${(p1Active.currentHP / p1Active.maxHP) * 100}%` 
-                  }}
-                />
-              </div>
-              {p1Active.status && (
-                <div className="mt-2 text-sm bg-red-100 text-red-800 px-3 py-1 rounded-full inline-block">
-                  {p1Active.status}
-                </div>
-              )}
-              {formatBoosts(p1Active.boosts).length > 0 && (
-                <div className="mt-2 flex flex-wrap justify-center gap-1">
-                  {formatBoosts(p1Active.boosts).map(boost => (
-                    <span key={boost} className="text-xs bg-blue-100 text-blue-900 px-2 py-1 rounded-full">
-                      {boost}
-                    </span>
-                  ))}
-                </div>
-              )}
-              {p1Active.volatileStatus?.length > 0 && (
-                <div className="mt-2 flex flex-wrap justify-center gap-1">
-                  {p1Active.volatileStatus.map(status => (
-                    <span key={status} className="text-xs bg-purple-100 text-purple-900 px-2 py-1 rounded-full">
-                      {status}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-            
-            {/* 기술 선택 */}
-            <div className="space-y-2">
-              <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
-                <Swords size={20} />
-                기술 선택:
-              </h3>
-              {p1Active.moves?.map((move, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    selectMove('player1', 0, i);
-                  }}
-                  onMouseEnter={() => {
-                    const preview = previewDamage(p1Active, p2Active, move.name || move.id);
-                    setShowDamagePreview({ player: 1, move: move.name || move.id, preview });
-                  }}
-                  onMouseLeave={() => setShowDamagePreview(null)}
-                  disabled={!battleState.waitingForP1 || move.disabled}
-                  className={`w-full px-4 py-3 rounded-lg font-semibold transition-all ${
-                    battleState.waitingForP1 && !move.disabled
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span>{move.name || move.id}</span>
-                    <span className="text-xs opacity-80">
-                      {move.disabled ? `봉인됨 ${move.disabledSource ? `(${move.disabledSource})` : ''}` : `${move.type} | ${move.category}`}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-            
-            {battleState.waitingForP1 && (
-              <div className="mt-4 bg-blue-100 border-2 border-blue-300 rounded-lg p-3 text-center">
-                <div className="text-blue-800 font-semibold animate-pulse">
-                  기술을 선택하세요!
-                </div>
-              </div>
-            )}
-
-            {/* 벤치 포켓몬 */}
-            {battleState.player1.bench.length > 0 && (
-              <div className="mt-4">
-                <h3 className="font-bold text-blue-900 mb-2 text-sm">대기 중:</h3>
-                <div className="grid grid-cols-3 gap-2">
-                  {battleState.player1.bench.map((pokemon, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-white p-2 rounded text-xs text-center"
-                    >
-                      <div className="font-semibold truncate">
-                        {pokemon.nickname || pokemon.name}
-                      </div>
-                      <div className="text-gray-600">
-                        HP: {pokemon.currentHP}/{pokemon.maxHP}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Player 2 */}
-          <div className="bg-red-50 border-4 border-red-500 rounded-2xl p-6 shadow-xl">
-            <div className="text-center mb-4">
-              <h2 className="text-2xl font-bold text-red-900 mb-2">
-                Player 2: {p2Active.nickname || p2Active.name}
-              </h2>
-              <div className="text-sm text-gray-600 mb-2">
-                Lv.{p2Active.level} | {p2Active.types?.join('/')} | {p2Active.ability}
-              </div>
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Heart className="text-red-500" size={20} />
-                <div className="font-semibold">
-                  HP: {p2Active.currentHP} / {p2Active.maxHP}
-                </div>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-                <div 
-                  className={`h-full transition-all duration-500 ${
-                    p2Active.currentHP / p2Active.maxHP > 0.5 ? 'bg-green-500' :
-                    p2Active.currentHP / p2Active.maxHP > 0.2 ? 'bg-yellow-500' :
-                    'bg-red-500'
-                  }`}
-                  style={{ 
-                    width: `${(p2Active.currentHP / p2Active.maxHP) * 100}%` 
-                  }}
-                />
-              </div>
-              {p2Active.status && (
-                <div className="mt-2 text-sm bg-red-100 text-red-800 px-3 py-1 rounded-full inline-block">
-                  {p2Active.status}
-                </div>
-              )}
-              {formatBoosts(p2Active.boosts).length > 0 && (
-                <div className="mt-2 flex flex-wrap justify-center gap-1">
-                  {formatBoosts(p2Active.boosts).map(boost => (
-                    <span key={boost} className="text-xs bg-red-100 text-red-900 px-2 py-1 rounded-full">
-                      {boost}
-                    </span>
-                  ))}
-                </div>
-              )}
-              {p2Active.volatileStatus?.length > 0 && (
-                <div className="mt-2 flex flex-wrap justify-center gap-1">
-                  {p2Active.volatileStatus.map(status => (
-                    <span key={status} className="text-xs bg-purple-100 text-purple-900 px-2 py-1 rounded-full">
-                      {status}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <h3 className="font-bold text-red-900 mb-3 flex items-center gap-2">
-                <Swords size={20} />
-                기술 선택:
-              </h3>
-              {p2Active.moves?.map((move, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    selectMove('player2', 0, i);
-                  }}
-                  onMouseEnter={() => {
-                    const preview = previewDamage(p2Active, p1Active, move.name || move.id);
-                    setShowDamagePreview({ player: 2, move: move.name || move.id, preview });
-                  }}
-                  onMouseLeave={() => setShowDamagePreview(null)}
-                  disabled={!battleState.waitingForP2 || move.disabled}
-                  className={`w-full px-4 py-3 rounded-lg font-semibold transition-all ${
-                    battleState.waitingForP2 && !move.disabled
-                      ? 'bg-red-600 hover:bg-red-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span>{move.name || move.id}</span>
-                    <span className="text-xs opacity-80">
-                      {move.disabled ? `봉인됨 ${move.disabledSource ? `(${move.disabledSource})` : ''}` : `${move.type} | ${move.category}`}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-            
-            {battleState.waitingForP2 && (
-              <div className="mt-4 bg-red-100 border-2 border-red-300 rounded-lg p-3 text-center">
-                <div className="text-red-800 font-semibold animate-pulse">
-                  기술을 선택하세요!
-                </div>
-              </div>
-            )}
-
-            {battleState.player2.bench.length > 0 && (
-              <div className="mt-4">
-                <h3 className="font-bold text-red-900 mb-2 text-sm">대기 중:</h3>
-                <div className="grid grid-cols-3 gap-2">
-                  {battleState.player2.bench.map((pokemon, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-white p-2 rounded text-xs text-center"
-                    >
-                      <div className="font-semibold truncate">
-                        {pokemon.nickname || pokemon.name}
-                      </div>
-                      <div className="text-gray-600">
-                        HP: {pokemon.currentHP}/{pokemon.maxHP}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          {renderPokemonPanel('player1', p1Active, p2Active, 'blue')}
+          {renderPokemonPanel('player2', p2Active, p1Active, 'red')}
         </div>
 
-        {/* 데미지 미리보기 */}
         {showDamagePreview && !showDamagePreview.preview?.error && (
           <div className="bg-white rounded-lg shadow-lg p-4 mb-6 border-2 border-yellow-400">
             <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
@@ -509,13 +365,12 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
           </div>
         )}
 
-        {/* 배틀 로그 */}
         <div className="bg-white rounded-2xl shadow-xl p-6">
           <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
             <Zap size={24} className="text-yellow-500" />
             배틀 로그
           </h3>
-          
+
           <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
             {battleState.log.length === 0 ? (
               <p className="text-gray-500 text-center py-8">
@@ -524,14 +379,14 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
             ) : (
               <div className="space-y-1">
                 {battleState.log.map((entry, i) => (
-                  <div 
-                    key={i} 
+                  <div
+                    key={i}
                     className={`px-3 py-2 rounded text-sm ${
-                      entry.type === 'system' ? 'bg-blue-100 font-bold' :
-                      entry.type === 'damage' ? 'bg-red-50' :
-                      entry.type === 'faint' ? 'bg-gray-200 font-semibold' :
-                      entry.type === 'winner' ? 'bg-yellow-100 font-bold text-lg' :
-                      'bg-white'
+                      entry.type === 'system' ? 'bg-blue-100 font-bold'
+                        : entry.type === 'damage' ? 'bg-red-50'
+                          : entry.type === 'faint' ? 'bg-gray-200 font-semibold'
+                            : entry.type === 'winner' ? 'bg-yellow-100 font-bold text-lg'
+                              : 'bg-white'
                     }`}
                   >
                     {entry.message}
