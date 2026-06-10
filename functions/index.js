@@ -1,13 +1,15 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const https = require('https');
+const { createBattleBot } = require('./battleBot');
 
 admin.initializeApp();
 const db = admin.database();
 
 const MASTODON_BASE_URL = 'https://poketodon.monster';
 const MASTODON_HOST = 'poketodon.monster';
-const SYSTEM_ACCOUNT = 'system';
+const BOT_ACCOUNT = (process.env.MASTODON_ACCOUNT || 'system').toLowerCase();
+const SYSTEM_ACCOUNT = BOT_ACCOUNT;
 const MASTODON_TOKEN =
   process.env.MASTODON_TOKEN ||
   '3Qqp8l3XaqOkOq8qRuiShTObQwjYveQF5GH1ZwXeyQs';
@@ -284,7 +286,8 @@ const extractMentionAccounts = status =>
 const isSystemMentioned = status => {
   const content = stripHtml(status?.content);
   const mentions = extractMentionAccounts(status);
-  return mentions.some(account => localUsername(account) === SYSTEM_ACCOUNT) || /@system\b/i.test(content);
+  const botMentionPattern = new RegExp(`@${BOT_ACCOUNT}\\b`, 'i');
+  return mentions.some(account => localUsername(account) === BOT_ACCOUNT) || botMentionPattern.test(content);
 };
 
 const getAuthorAccount = status => status?.account?.acct || status?.account?.username || '';
@@ -655,6 +658,19 @@ const findTaggedPartner = (members, status, authorAccount) => {
   return null;
 };
 
+const battleBot = createBattleBot({
+  db,
+  pokemonData,
+  getMembers,
+  findMemberByAccount,
+  getAuthorAccount,
+  getParticipantPokemon,
+  extractMentionAccounts,
+  normalizeAccount,
+  localUsername,
+  botAccount: BOT_ACCOUNT
+});
+
 const processStatus = async (status, source = 'webhook') => {
   if (!status?.id) return { ignored: true, reason: 'missing status id' };
   if (!isSystemMentioned(status)) return { ignored: true, reason: 'system not mentioned' };
@@ -664,10 +680,11 @@ const processStatus = async (status, source = 'webhook') => {
   if (processedSnapshot.exists()) return { ignored: true, reason: 'already processed' };
 
   const content = stripHtml(status.content);
+  const battleCommand = battleBot.getCommand(content);
   const command = getCommand(content);
-  if (!command) {
+  if (!battleCommand && !command) {
     await processedRef.set({ processedAt: Date.now(), source, ignored: 'unknown command' });
-    await replyToStatus(status, '알 수 없는 명령어예요. [캠핑 시작], [계속], [만족] 중 하나를 사용해 주세요.');
+    await replyToStatus(status, '알 수 없는 명령어예요. [캠핑 시작], [계속], [만족], [배틀 신청], [배틀 수락], 1:[기술1] 중 하나를 사용해 주세요.');
     return { ignored: true, reason: 'unknown command' };
   }
 
@@ -678,6 +695,26 @@ const processStatus = async (status, source = 'webhook') => {
     await processedRef.set({ processedAt: Date.now(), source, ignored: 'unlinked account' });
     await replyToStatus(status, '연동된 계정을 찾을 수 없어요. 웹 프로필 설정에서 마스토돈 계정을 먼저 연결해 주세요.');
     return { ignored: true, reason: 'unlinked account' };
+  }
+
+  if (battleCommand) {
+    const response = await battleBot.handle({
+      status,
+      content,
+      command: battleCommand,
+      members,
+      author,
+      authorAccount
+    });
+
+    await processedRef.set({
+      processedAt: Date.now(),
+      source,
+      command: `battle:${battleCommand}`,
+      account: authorAccount
+    });
+    await replyToStatus(status, response);
+    return { processed: true, command: `battle:${battleCommand}` };
   }
 
   const settings = await loadCampingSettings();
