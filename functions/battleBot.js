@@ -191,6 +191,21 @@ const formatHelp = () => [
   `[기권]`,
 ].join('\n');
 
+const accountMention = (account) => {
+  const cleaned = String(account || '').trim().replace(/^@/, '');
+  return cleaned ? `@${cleaned}` : '';
+};
+
+const battleMentions = (session) => Array.from(new Set([
+  accountMention(session?.player1Account),
+  accountMention(session?.player2Account),
+].filter(Boolean))).join(' ');
+
+const withBattleMentions = (session, message) => {
+  const mentions = battleMentions(session);
+  return mentions ? `${mentions}\n${message}` : message;
+};
+
 const createBattleBot = ({
   db,
   pokemonData,
@@ -211,7 +226,7 @@ const createBattleBot = ({
 
     for (const account of accounts) {
       const match = findMemberByAccount(members, account);
-      if (match) return match;
+      if (match) return { ...match, account };
     }
     return null;
   };
@@ -258,7 +273,7 @@ const createBattleBot = ({
       player1Team: packTeam(pokemonData, player1Pokemon),
       player2Id: opponent.id,
       player2Name: opponent.member.name || opponent.member.nickname || opponent.id,
-      player2Account: normalizeAccount(opponent.member.mastodonAccount || opponent.member.mastodonId || ''),
+      player2Account: normalizeAccount(opponent.account || opponent.member.mastodonAccount || opponent.member.mastodonId || ''),
       player2Team: packTeam(pokemonData, player2Pokemon),
       pendingChoices: {},
       turns: [],
@@ -269,10 +284,10 @@ const createBattleBot = ({
 
     const ref = db.ref('gameData/battleSessions').push();
     await ref.set(session);
-    return [
+    return withBattleMentions(session, [
       `${session.player2Name}님에게 배틀을 신청했어요.`,
       '상대가 [배틀 수락]을 보내면 시작합니다.',
-    ].join('\n');
+    ].join('\n'));
   };
 
   const acceptChallenge = async ({ author }) => {
@@ -286,12 +301,12 @@ const createBattleBot = ({
       updatedAt: new Date().toISOString(),
     });
 
-    return [
+    return withBattleMentions(pending.session, [
       '배틀 시작!',
       `${pending.session.player1Name} vs ${pending.session.player2Name}`,
       activeSummary(battle),
       '각자 1:[기술1] / 2:[기술4] 형식으로 기술을 선택해 주세요.',
-    ].filter(Boolean).join('\n');
+    ].filter(Boolean).join('\n'));
   };
 
   const declineChallenge = async ({ author }) => {
@@ -301,7 +316,7 @@ const createBattleBot = ({
       status: 'declined',
       updatedAt: new Date().toISOString(),
     });
-    return '배틀 신청을 거절했어요.';
+    return withBattleMentions(pending.session, '배틀 신청을 거절했어요.');
   };
 
   const forfeit = async ({ author }) => {
@@ -313,7 +328,7 @@ const createBattleBot = ({
       winner,
       updatedAt: new Date().toISOString(),
     });
-    return `${winner} 승리! 상대가 기권했습니다.`;
+    return withBattleMentions(active.session, `${winner} 승리! 상대가 기권했습니다.`);
   };
 
   const chooseMove = async ({ author, content }) => {
@@ -336,7 +351,10 @@ const createBattleBot = ({
         updatedAt: new Date().toISOString(),
       });
       const waitingFor = side === 'p1' ? session.player2Name : session.player1Name;
-      return `${side === 'p1' ? '1' : '2'}P 선택 완료. ${waitingFor}님의 선택을 기다립니다.`;
+      return withBattleMentions(
+        session,
+        `${side === 'p1' ? '1' : '2'}P 선택 완료. ${waitingFor}님의 선택을 기다립니다.`
+      );
     }
 
     const battle = createBattle(session);
@@ -364,12 +382,12 @@ const createBattleBot = ({
 
     await db.ref(`gameData/battleSessions/${sessionKey}`).update(updates);
 
-    return [
+    return withBattleMentions(session, [
       `결과`,
       ...messages,
       activeSummary(battle),
       battle.ended ? '배틀 종료!' : '다음 기술을 선택해 주세요.',
-    ].filter(Boolean).join('\n');
+    ].filter(Boolean).join('\n'));
   };
 
   const handle = async ({ status, content, command, members, author, authorAccount }) => {
@@ -391,4 +409,3 @@ const createBattleBot = ({
 module.exports = {
   createBattleBot,
 };
-

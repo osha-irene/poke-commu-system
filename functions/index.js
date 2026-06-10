@@ -233,7 +233,7 @@ const makeMastodonRequest = (path, method = 'GET', data = null) => {
 const replyToStatus = async (status, content, visibility = 'public') => {
   const acct = status?.account?.acct;
   const mention = acct ? `@${acct}` : '';
-  const body = mention && !content.startsWith(mention) ? `${mention} ${content}` : content;
+  const body = mention && !content.includes(mention) ? `${mention} ${content}` : content;
 
   await makeMastodonRequest('/api/v1/statuses', 'POST', {
     status: body,
@@ -291,6 +291,11 @@ const isSystemMentioned = status => {
 };
 
 const getAuthorAccount = status => status?.account?.acct || status?.account?.username || '';
+
+const isFromBotAccount = status => {
+  const account = getAuthorAccount(status);
+  return localUsername(account) === BOT_ACCOUNT;
+};
 
 const getParticipantPokemon = member => {
   const caught = Array.isArray(member?.caughtPokemon) ? member.caughtPokemon.filter(Boolean).slice(0, 6) : [];
@@ -673,11 +678,17 @@ const battleBot = createBattleBot({
 
 const processStatus = async (status, source = 'webhook') => {
   if (!status?.id) return { ignored: true, reason: 'missing status id' };
+  if (isFromBotAccount(status)) return { ignored: true, reason: 'bot self status' };
   if (!isSystemMentioned(status)) return { ignored: true, reason: 'system not mentioned' };
 
   const processedRef = db.ref(`mastodonBot/processedStatuses/${status.id}`);
   const processedSnapshot = await processedRef.once('value');
   if (processedSnapshot.exists()) return { ignored: true, reason: 'already processed' };
+  await processedRef.set({
+    processingStartedAt: Date.now(),
+    source,
+    status: 'processing'
+  });
 
   const content = stripHtml(status.content);
   const battleCommand = battleBot.getCommand(content);
