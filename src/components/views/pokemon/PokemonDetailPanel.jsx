@@ -9,7 +9,8 @@ import {
   Edit2, 
   Check,
   Sparkles,
-  Zap
+  Zap,
+  RefreshCw
 } from 'lucide-react';
 import { 
   RadarChart, 
@@ -23,7 +24,9 @@ import { getTypeColor, POKEBALL_LIST } from '../../../styles/theme';
 import MovesList from './MovesList';
 import MoveSelectModal from './MoveSelectModal';
 import LevelUpMoveModal from './LevelUpMoveModal';
+import FormIconSprite from './FormIconSprite';
 import { getRequiredExpForLevel } from '../../../utils/experience';
+import { getAbilityByName } from '../../../utils/abilityUtils';
 
 const getPokemonSpriteUrl = (number) => 
   `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`;
@@ -86,7 +89,9 @@ export default function PokemonDetailPanel({
   onUseItemOnPokemon,
   checkEvolution,
   manualEvolve,
-  allPokemonMaster = []
+  allPokemonMaster = [],
+  getPokemonFormCandidates,
+  onChangeForm
 }) {
   // State
   const [isEditingNickname, setIsEditingNickname] = useState(false);
@@ -96,6 +101,7 @@ export default function PokemonDetailPanel({
   const [levelUpData, setLevelUpData] = useState(null);
   const [expInput, setExpInput] = useState('');
   const [showExpPanel, setShowExpPanel] = useState(false);
+  const [showFormPanel, setShowFormPanel] = useState(false);
   
   // 툴팁용 state 추가
   const [hoveredCondition, setHoveredCondition] = useState(null);
@@ -114,6 +120,15 @@ export default function PokemonDetailPanel({
     : Math.max(0, requiredLevelExp - (Number(pokemon.exp) || 0));
   const selectedExpAmount = Math.max(0, Math.floor(Number(expInput) || 0));
   const canAllocateExp = selectedExpAmount > 0 && trainerExp >= selectedExpAmount;
+  const abilityData = getAbilityByName(pokemon.abilityEn || pokemon.ability);
+  const abilityDescription = abilityData
+    ? abilityData.effectKo ||
+      abilityData.flavorTextKo ||
+      abilityData.shortEffectKo ||
+      abilityData.shortEffect ||
+      abilityData.effect ||
+      ''
+    : '';
   const levelExpTitle = requiredLevelExp === null
     ? '현재 레벨에서는 경험치 배분으로 더 이상 레벨업할 수 없습니다'
     : canAllocateExp
@@ -303,6 +318,16 @@ const ballImage = getBallImage();
   };
 
   const evolvedPokemon = getEvolvedPokemon();
+  const formCandidates = typeof getPokemonFormCandidates === 'function'
+    ? getPokemonFormCandidates(pokemon)
+    : [];
+  const currentFormKey = pokemon.pokemonId || pokemon.id || pokemon.nameEn || pokemon.name;
+  const availableForms = formCandidates.filter(form => (
+    (form.id || form.nameEn || form.name) !== currentFormKey &&
+    form.nameEn !== pokemon.nameEn &&
+    form.name !== pokemon.name
+  ));
+  const canChangeForm = isAdmin && availableForms.length > 0 && typeof onChangeForm === 'function';
 
   // Effects
   useEffect(() => {
@@ -310,6 +335,7 @@ const ballImage = getBallImage();
     setIsEditingNickname(false);
     setExpInput('');
     setShowExpPanel(false);
+    setShowFormPanel(false);
   }, [pokemon.uniqueId, pokemon.nickname, pokemon.name]);
 
   // Handlers
@@ -376,6 +402,14 @@ const ballImage = getBallImage();
       : [...currentMoves, nextMove].slice(0, 4);
 
     advanceLevelUpMoveQueue(nextCurrentMoves);
+  };
+
+  const handleChangeForm = (form) => {
+    if (!isAdmin || !form || !onChangeForm) return;
+    const formName = form.name || form.nameEn;
+    if (!window.confirm(`${pokemon.nickname || pokemon.name}을(를) ${formName} 폼으로 변경하시겠습니까?`)) return;
+    const changed = onChangeForm(pokemon.uniqueId, form.id || form.nameEn || form.name);
+    if (changed) setShowFormPanel(false);
   };
 
   const handleEvolve = () => {
@@ -530,6 +564,57 @@ const ballImage = getBallImage();
                       {isInParty ? <ArrowDownCircle size={20} /> : <ArrowUpCircle size={20} />}
                     </button>
 
+                    {canChangeForm && (
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setShowFormPanel((value) => !value)}
+                          className="p-2 text-teal-700 hover:bg-teal-50 rounded-lg transition-colors"
+                          title="폼체인지"
+                        >
+                          <RefreshCw size={20} />
+                        </button>
+
+                        {showFormPanel && (
+                          <div className="pokemon-detail-exp-popover right-0 left-auto w-60">
+                            <div className="flex items-center justify-between gap-3">
+                              <strong>폼체인지</strong>
+                              <button
+                                type="button"
+                                onClick={() => setShowFormPanel(false)}
+                                className="text-[#789252] hover:text-[#2f4a24]"
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                            <div className="mt-3 space-y-2">
+                              {availableForms.map((form) => (
+                                <button
+                                  key={form.id || form.nameEn || form.name}
+                                  type="button"
+                                  onClick={() => handleChangeForm(form)}
+                                  className="flex w-full items-center gap-3 rounded-lg border border-[#c8dda4] bg-[#f8fbef] px-3 py-2 text-left transition-colors hover:bg-[#eef7df]"
+                                >
+                                  <FormIconSprite
+                                    form={form}
+                                    size={36}
+                                    fallbackUrl={form.iconUrl || form.spriteUrl || form.imageUrl || getPokemonSpriteUrl(form.originalNumber || form.number)}
+                                    className="h-9 w-9"
+                                  />
+                                  <span className="min-w-0">
+                                    <span className="block truncate text-sm font-bold text-[#26351f]">{form.name}</span>
+                                    <span className="block truncate text-xs text-[#6f8150]">
+                                      {form.type}{form.type2 ? ` / ${form.type2}` : ''}
+                                    </span>
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     <button
                       onClick={onRelease}
                       className="p-2 rounded-lg transition-colors text-[#6f8f25] hover:bg-[#eef7df]"
@@ -576,7 +661,9 @@ const ballImage = getBallImage();
                       }}
                     />
                   )}
-                  <h2 className="text-2xl font-bold text-gray-800">{nickname}</h2>
+                  <h2 className="flex min-w-0 items-baseline gap-1 text-2xl font-bold text-gray-800">
+                    <span className="truncate">{nickname}</span>
+                  </h2>
 
                   {/* ⭐ 성별 아이콘 추가 */}
                   {(pokemon.gender === 'male' || pokemon.gender === 'female') && (
@@ -638,8 +725,13 @@ const ballImage = getBallImage();
         <div className={`font-bold text-sm ${
           pokemon.isHiddenAbility ? 'text-yellow-700' : 'text-indigo-700'
         }`}>
-          {pokemon.ability}
+          {abilityData?.name || pokemon.ability}
         </div>
+        {abilityDescription && (
+          <p className="mt-2 text-xs leading-relaxed text-gray-600">
+            {abilityDescription}
+          </p>
+        )}
       </div>
     )}
   </div>

@@ -17,6 +17,7 @@ function MemberPokemonTab({
   pokemonLearnsets = {},
   onGivePokemon,
   onEditPokemon,
+  getPokemonFormCandidates,
   onDeletePokemon,
   onHatchEgg,
   onTransferPokemon
@@ -128,6 +129,46 @@ function MemberPokemonTab({
   const withPokemonTemplateData = (pokemon) => {
     const template = getPokemonTemplate(pokemon);
     return template ? { ...pokemon, ...template } : pokemon;
+  };
+
+  const buildFormChangeUpdates = (pokemon, template) => ({
+    pokemonId: template.id || pokemon.pokemonId,
+    number: template.number,
+    originalNumber: template.originalNumber || template.number,
+    displayNumber: template.displayNumber || pokemon.displayNumber,
+    name: template.name || pokemon.name,
+    nameEn: template.nameEn || pokemon.nameEn,
+    species: template.species || template.nameEn || pokemon.species,
+    type: template.type || pokemon.type,
+    type2: template.type2 || null,
+    abilities: template.abilities || pokemon.abilities,
+    abilitiesEn: template.abilitiesEn || pokemon.abilitiesEn,
+    ability: template.abilities?.[0] || pokemon.ability,
+    abilityEn: template.abilitiesEn?.[0] || pokemon.abilityEn,
+    hiddenAbility: template.hiddenAbility ?? pokemon.hiddenAbility,
+    hiddenAbilityEn: template.hiddenAbilityEn ?? pokemon.hiddenAbilityEn,
+    baseHp: template.baseHp ?? pokemon.baseHp,
+    baseAttack: template.baseAttack ?? pokemon.baseAttack,
+    baseDefense: template.baseDefense ?? pokemon.baseDefense,
+    baseSpAttack: template.baseSpAttack ?? pokemon.baseSpAttack,
+    baseSpDefense: template.baseSpDefense ?? pokemon.baseSpDefense,
+    baseSpeed: template.baseSpeed ?? pokemon.baseSpeed,
+    imageUrl: template.imageUrl || pokemon.imageUrl,
+    spriteUrl: template.spriteUrl || template.imageUrl || pokemon.spriteUrl,
+    iconUrl: template.iconUrl || pokemon.iconUrl,
+    shinySprite: template.shinySprite || pokemon.shinySprite,
+    isRegionalForm: Boolean(template.isRegionalForm),
+    regionalForm: template.regionalForm || null,
+    formVariant: template.formVariant || null,
+    baseSpecies: template.baseSpecies || pokemon.baseSpecies,
+    baseSpeciesEn: template.baseSpeciesEn || pokemon.baseSpeciesEn,
+  });
+
+  const handleChangePokemonForm = (pokemon, form) => {
+    if (!pokemon || !form || !trainer?.isAdmin) return;
+    const formName = form.name || form.nameEn;
+    if (!window.confirm(`${pokemon.nickname || pokemon.name}을(를) ${formName} 폼으로 변경하시겠습니까?`)) return;
+    onEditPokemon(member.id, pokemon.uniqueId, buildFormChangeUpdates(pokemon, form));
   };
 
   // 지급용 기술 목록
@@ -464,7 +505,9 @@ console.log('📋 최종 기술:', {
       {mode === 'view' && (
         <MemberPokemonViewMode
           member={member}
+          getPokemonFormCandidates={getPokemonFormCandidates}
           onStartEdit={handleStartEdit}
+          onChangeForm={handleChangePokemonForm}
           onDelete={(uniqueId) => onDeletePokemon(uniqueId)}
           onStartGive={() => {
             setShowGiveMoveModal(false);

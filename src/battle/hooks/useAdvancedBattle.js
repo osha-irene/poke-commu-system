@@ -4,6 +4,7 @@ import showdownIntegration from '../utils/ShowdownIntegration';
 import fieldEffectsManager from '../utils/FieldEffectsManager';
 import statusManager from '../utils/StatusManager';
 import customBattleData from '../../data/customBattleData.json';
+import { toCalcAbilityName } from '../../utils/abilityUtils';
 import {
   normalizeBattleKey,
   translateAbilityName,
@@ -47,7 +48,7 @@ const registerCustomBattleData = () => {
     Dex.data.Items[itemId] = {
       name: mega.item,
       spritenum: 0,
-      megaStone: mega.name,
+      megaStone: { [mega.baseSpecies]: mega.name },
       megaEvolves: mega.baseSpecies,
       itemUser: [mega.baseSpecies],
       onTakeItem: false,
@@ -90,15 +91,14 @@ const emptyBattleState = (player1Team = [], player2Team = []) => ({
 });
 
 const statLabel = {
-  atk: '공격',
-  def: '방어',
-  spa: '특수공격',
-  spd: '특수방어',
-  spe: '스피드',
-  accuracy: '명중률',
-  evasion: '회피율',
+  atk: '\uacf5\uaca9',
+  def: '\ubc29\uc5b4',
+  spa: '\ud2b9\uc218\uacf5\uaca9',
+  spd: '\ud2b9\uc218\ubc29\uc5b4',
+  spe: '\uc2a4\ud53c\ub4dc',
+  accuracy: '\uba85\uc911\ub960',
+  evasion: '\ud68c\ud53c\uc728',
 };
-
 const lockVolatiles = new Set(['lockedmove', 'rollout', 'iceball', 'uproar']);
 
 const isLockedMoveRequest = (pokemon, activeRequest) => {
@@ -123,7 +123,7 @@ const toPackedSet = (pokemon) => ({
   name: pokemon.nickname || pokemon.nameKo || pokemon.name || pokemon.species || 'Pokemon',
   species: pokemon.species || pokemon.nameEn || pokemon.name || 'Ditto',
   item: toShowdownItemName(pokemon.item || pokemon.heldItem || ''),
-  ability: pokemon.abilityEn || pokemon.ability || 'No Ability',
+  ability: toCalcAbilityName(pokemon.abilityEn || pokemon.ability) || 'No Ability',
   moves: (pokemon.moves || []).map(toShowdownMoveId).filter(Boolean).slice(0, 4),
   nature: pokemon.nature || 'Hardy',
   evs: pokemon.evs || {
@@ -158,80 +158,148 @@ const teamPreviewOrder = (selectedIndices, teamLength) => {
 
 const extractName = (value = '') => value.replace(/^p[12][a-z]?:\s*/, '') || value;
 
+const battleSlotKey = (value = '') => {
+  const match = String(value).match(/^(p[12][a-z]?):\s*/);
+  return match ? match[1] : '';
+};
+
+const customSpeciesLabels = Object.entries(customBattleData.aliases?.speciesLabels || {}).reduce((labels, [key, value]) => {
+  labels[normalizeBattleKey(key)] = value;
+  return labels;
+}, {});
+
+const translateBattlePokemonName = (value) => {
+  const normalized = normalizeBattleKey(value);
+  return customSpeciesLabels[normalized] || value || '\ud3ec\ucf13\ubaac';
+};
+const formatSpeciesDetails = (details = '') => String(details).split(',')[0].trim();
+
+const formatMegaSpeciesName = (details = '') => {
+  const species = formatSpeciesDetails(details);
+  const customLabel = customSpeciesLabels[normalizeBattleKey(species)];
+  if (customLabel) return customLabel;
+
+  const megaMatch = species.match(/^(.+)-Mega(?:-[XY])?$/i);
+  if (!megaMatch) return translateBattlePokemonName(species);
+  const suffix = /-Mega-X$/i.test(species) ? ' X' : /-Mega-Y$/i.test(species) ? ' Y' : '';
+  return `\uba54\uac00${translateBattlePokemonName(megaMatch[1])}${suffix}`;
+};
+const formatBattleSpeciesName = (species = '') =>
+  /-Mega(?:-[XY])?$/i.test(formatSpeciesDetails(species))
+    ? formatMegaSpeciesName(species)
+    : translateBattlePokemonName(formatSpeciesDetails(species));
+
+const applyDisplayNamesToLine = (line, displayNames) => {
+  let nextLine = line;
+  for (const [slot, name] of displayNames.entries()) {
+    nextLine = nextLine.replace(new RegExp(`${slot}: [^|]+`, 'g'), `${slot}: ${name}`);
+  }
+  return nextLine;
+};
+
+const initialDisplayNames = (battle) => {
+  const displayNames = new Map();
+  [
+    ['p1a', battle.p1.active[0]],
+    ['p2a', battle.p2.active[0]],
+  ].forEach(([slot, pokemon]) => {
+    const speciesName = pokemon?.species?.name || '';
+    if (/-Mega(?:-[XY])?$/i.test(speciesName)) {
+      displayNames.set(slot, formatMegaSpeciesName(speciesName));
+    }
+  });
+  return displayNames;
+};
+
 const protocolToLog = (line) => {
   if (!line || !line.startsWith('|')) return null;
   const parts = line.split('|');
   const command = parts[1];
 
   switch (command) {
+    case '-mega':
+      return { message: `${extractName(parts[2])}\uc758 \uba54\uac00\uc2a4\ud1a4\uc774 \ube5b\ub0ac\ub2e4!`, type: 'mega' };
+    case 'detailschange': {
+      const changedTo = formatSpeciesDetails(parts[3]);
+      if (/-Mega(?:-[XY])?$/i.test(changedTo)) {
+        const megaName = formatMegaSpeciesName(parts[3]);
+        return { message: `${extractName(parts[2])}\uc740(\ub294) ${megaName}\ub85c \uba54\uac00\uc9c4\ud654\ud588\ub2e4!`, type: 'mega' };
+      }
+      return { message: `${extractName(parts[2])}\uc740(\ub294) ${translateBattlePokemonName(changedTo)}\ub85c \ubaa8\uc2b5\uc744 \ubc14\uafc4\ub2e4!`, type: 'switch' };
+    }
     case 'move':
-      return { message: `${extractName(parts[2])}의 ${translateMoveName(parts[3])}!`, type: 'move' };
+      return { message: `${extractName(parts[2])}\uc758 ${translateMoveName(parts[3])}!`, type: 'move' };
     case '-damage':
       return { message: `${extractName(parts[2])} HP ${parts[3]}`, type: 'damage' };
     case '-heal':
-      return { message: `${extractName(parts[2])} HP 회복 ${parts[3]}`, type: 'healing' };
+      return { message: `${extractName(parts[2])}\uc758 HP\uac00 \ud68c\ubcf5\ub418\uc5c8\ub2e4. HP ${parts[3]}`, type: 'healing' };
     case '-boost':
-      return { message: `${extractName(parts[2])}의 ${statLabel[parts[3]] || parts[3]}이(가) ${parts[4]}랭크 올랐다!`, type: 'boost' };
+      return { message: `${extractName(parts[2])}\uc758 ${statLabel[parts[3]] || parts[3]}\uc774(\uac00) ${parts[4]}\ub7ad\ud06c \uc62c\ub790\ub2e4!`, type: 'boost' };
     case '-unboost':
-      return { message: `${extractName(parts[2])}의 ${statLabel[parts[3]] || parts[3]}이(가) ${parts[4]}랭크 내려갔다!`, type: 'boost' };
+      return { message: `${extractName(parts[2])}\uc758 ${statLabel[parts[3]] || parts[3]}\uc774(\uac00) ${parts[4]}\ub7ad\ud06c \ub5a8\uc5b4\uc84c\ub2e4!`, type: 'boost' };
     case '-weather':
-      return {
-        message: parts[3] === '[upkeep]'
-          ? `${translateWeatherName(parts[2])} 날씨가 계속된다.`
-          : `${translateWeatherName(parts[2])} 날씨가 시작됐다!`,
-        type: 'weather',
-      };
+      if (parts[3] === '[upkeep]') return null;
+      return { message: `${translateWeatherName(parts[2])} \ub0a0\uc528\uac00 \uc2dc\uc791\ub410\ub2e4!`, type: 'weather' };
     case '-fieldstart':
-      return { message: `${translateTerrainName(parts[2])} 효과가 시작됐다!`, type: 'field' };
+      return { message: `${translateTerrainName(parts[2])} \ud6a8\uacfc\uac00 \uc2dc\uc791\ub410\ub2e4!`, type: 'field' };
     case '-fieldend':
-      return { message: `${translateTerrainName(parts[2])} 효과가 끝났다.`, type: 'field' };
+      return { message: `${translateTerrainName(parts[2])} \ud6a8\uacfc\uac00 \uc0ac\ub77c\uc84c\ub2e4.`, type: 'field' };
     case '-status':
-      return { message: `${extractName(parts[2])}은(는) ${translateStatusName(parts[3])} 상태가 됐다!`, type: 'status' };
+      return { message: `${extractName(parts[2])}\uc740(\ub294) ${translateStatusName(parts[3])} \uc0c1\ud0dc\uac00 \ub418\uc5c8\ub2e4!`, type: 'status' };
     case '-start':
-      return { message: `${extractName(parts[2])}에게 ${translateEffectName(parts[3])} 효과가 시작됐다!`, type: 'status' };
+      return { message: `${extractName(parts[2])}\uc5d0\uac8c ${translateEffectName(parts[3])} \ud6a8\uacfc\uac00 \ub098\ud0c0\ub0ac\ub2e4!`, type: 'status' };
     case '-end':
-      return { message: `${extractName(parts[2])}의 ${translateEffectName(parts[3])} 효과가 끝났다.`, type: 'status' };
+      return { message: `${extractName(parts[2])}\uc758 ${translateEffectName(parts[3])} \ud6a8\uacfc\uac00 \uc0ac\ub77c\uc84c\ub2e4.`, type: 'status' };
     case '-miss':
-      return { message: `${extractName(parts[2])}의 공격은 빗나갔다!`, type: 'miss' };
+      return { message: `${extractName(parts[2])}\uc758 \uacf5\uaca9\uc740 \ube57\ub098\uac14\ub2e4!`, type: 'miss' };
     case '-fail':
-      return { message: `${extractName(parts[2])}에게는 효과가 없었다.`, type: 'fail' };
+      return { message: `${extractName(parts[2])}\uc5d0\uac8c\ub294 \ud6a8\uacfc\uac00 \uc5c6\uc5c8\ub2e4...`, type: 'fail' };
     case '-immune':
-      return { message: `${extractName(parts[2])}에게는 효과가 없다!`, type: 'fail' };
+      return { message: `${extractName(parts[2])}\uc5d0\uac8c\ub294 \ud1b5\ud558\uc9c0 \uc54a\uc558\ub2e4!`, type: 'fail' };
     case '-supereffective':
-      return { message: '효과가 굉장했다!', type: 'damage' };
+      return { message: '\ud6a8\uacfc\uac00 \uad49\uc7a5\ud588\ub2e4!', type: 'damage' };
     case '-resisted':
-      return { message: '효과가 별로인 것 같다...', type: 'damage' };
+      return { message: '\ud6a8\uacfc\uac00 \ubcc4\ub85c\uc778 \uac83 \uac19\ub2e4...', type: 'damage' };
     case '-crit':
-      return { message: '급소에 맞았다!', type: 'critical' };
+      return { message: '\uae09\uc18c\uc5d0 \ub9de\uc558\ub2e4!', type: 'critical' };
     case '-ability':
-      return { message: `${extractName(parts[2])}의 특성 ${translateAbilityName(parts[3])}!`, type: 'ability' };
+      return { message: `${extractName(parts[2])}\uc758 \ud2b9\uc131 ${translateAbilityName(parts[3])}!`, type: 'ability' };
     case '-activate':
-      return { message: `${extractName(parts[2])}의 ${translateEffectName(parts[3])} 발동!`, type: 'ability' };
+      return { message: `${extractName(parts[2])}\uc758 ${translateEffectName(parts[3])} \ubc1c\ub3d9!`, type: 'ability' };
     case '-item':
-      return { message: `${extractName(parts[2])}의 ${translateItemName(parts[3])} 발동!`, type: 'item' };
+      return { message: `${extractName(parts[2])}\uc758 ${translateItemName(parts[3])} \ubc1c\ub3d9!`, type: 'item' };
     case '-enditem':
-      return { message: `${extractName(parts[2])}의 ${translateItemName(parts[3])}을(를) 사용했다.`, type: 'item' };
-    case '-mega':
-      return { message: `${extractName(parts[2])}은(는) 메가진화했다!`, type: 'mega' };
+      return { message: `${extractName(parts[2])}\uc758 ${translateItemName(parts[3])}\uc744(\ub97c) \uc0ac\uc6a9\ud588\ub2e4.`, type: 'item' };
     case 'switch':
-      return { message: `${extractName(parts[2])} 등장!`, type: 'switch' };
+      return { message: `${extractName(parts[2])} \ub4f1\uc7a5!`, type: 'switch' };
     case 'faint':
-      return { message: `${extractName(parts[2])}은(는) 쓰러졌다!`, type: 'faint' };
+      return { message: `${extractName(parts[2])}\uc740(\ub294) \uc4f0\ub7ec\uc84c\ub2e4!`, type: 'faint' };
     case 'turn':
-      return { message: `${parts[2]}턴`, type: 'system' };
+      return { message: `${parts[2]}\ud134`, type: 'system' };
     case 'win':
-      return { message: `${parts[2]} 승리!`, type: 'winner' };
+      return { message: `${parts[2]} \uc2b9\ub9ac!`, type: 'winner' };
     default:
       return null;
   }
 };
-
 const collectLogs = (battle, fromIndex = 0) => {
   const seenInBatch = new Set();
+  const displayNames = initialDisplayNames(battle);
 
   return battle.log
     .slice(fromIndex)
-    .map(protocolToLog)
+    .map((line) => {
+      const message = protocolToLog(applyDisplayNamesToLine(line, displayNames));
+
+      if (line?.startsWith('|detailschange|') || line?.startsWith('|-formechange|')) {
+        const parts = line.split('|');
+        const slot = battleSlotKey(parts[2]);
+        const nextName = formatBattleSpeciesName(parts[3]);
+        if (slot && nextName) displayNames.set(slot, nextName);
+      }
+
+      return message;
+    })
     .filter(Boolean)
     .filter((entry) => {
       const key = `${entry.type}:${entry.message}`;
@@ -324,12 +392,18 @@ const convertPokemon = (battle, pokemon, activeRequest = null, forceSwitch = fal
   const abilityName = ability?.name || pokemon.ability || pokemon.baseAbility;
   const builtInMegaSpecies = activeRequest?.canMegaEvo || pokemon.canMegaEvo || pokemon.canMegaEvoX || pokemon.canMegaEvoY || null;
   const customMega = builtInMegaSpecies ? null : getCustomMegaEvolution(pokemon);
+  const speciesName = pokemon.species?.name || pokemon.species;
+  const speciesLabel = /-Mega(?:-[XY])?$/i.test(speciesName)
+    ? formatMegaSpeciesName(speciesName)
+    : formatBattleSpeciesName(speciesName);
+  const displayName = pokemon.name || speciesLabel;
 
   return {
     slot: pokemon.position + 1,
-    name: pokemon.name,
-    species: pokemon.species?.name || pokemon.species,
-    nickname: pokemon.name,
+    name: displayName,
+    species: speciesName,
+    nickname: displayName === speciesLabel ? '' : displayName,
+    speciesName: speciesLabel,
     level: pokemon.level,
     types: (pokemon.getTypes ? pokemon.getTypes() : pokemon.types || []).map(translateTypeName),
     ability: translateAbilityName(abilityName),
@@ -438,7 +512,7 @@ const applyAutomaticChoices = (battle) => {
       if (!autoChoice || battle.ended) continue;
       battle.choose(sideId, autoChoice.choice);
       messages.push({
-        message: `${side.name}은(는) ${autoChoice.moveName}를 계속 사용합니다.`,
+        message: `${side.name}\uc740(\ub294) ${autoChoice.moveName}\uc744(\ub97c) \uacc4\uc18d \uc0ac\uc6a9\ud569\ub2c8\ub2e4.`,
         type: 'system',
       });
       progressed = true;
@@ -505,7 +579,7 @@ export function useAdvancedBattle(initialOptions = {}) {
     const initialState = {
       ...emptyBattleState(player1Team, player2Team),
       log: [
-        { message: '배틀 시작!', type: 'system' },
+        { message: '\ubc30\ud2c0 \uc2dc\uc791!', type: 'system' },
       ],
     };
 

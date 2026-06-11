@@ -1,14 +1,29 @@
-import React from 'react';
-import { ArrowRightLeft, Edit, Gift, Plus, Sparkles, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowRightLeft, Edit, Gift, Plus, RefreshCw, Sparkles, Trash2, X } from 'lucide-react';
+import FormIconSprite from '../../pokemon/FormIconSprite';
+import { getOwnedPokemonDisplayParts } from '../../../../utils/ownedPokemonDisplay';
 
 export default function MemberPokemonViewMode({
   member,
+  getPokemonFormCandidates,
   onStartEdit,
+  onChangeForm,
   onDelete,
   onStartGive,
   onStartTransfer
 }) {
+  const [openFormPokemonId, setOpenFormPokemonId] = useState(null);
   const memberPokemon = member?.caughtPokemon?.filter(pokemon => pokemon && pokemon.uniqueId) || [];
+
+  const getAvailableForms = (pokemon) => {
+    if (typeof getPokemonFormCandidates !== 'function') return [];
+    const currentFormKey = pokemon.pokemonId || pokemon.id || pokemon.nameEn || pokemon.name;
+    return getPokemonFormCandidates(pokemon).filter(form => (
+      (form.id || form.nameEn || form.name) !== currentFormKey &&
+      form.nameEn !== pokemon.nameEn &&
+      form.name !== pokemon.name
+    ));
+  };
 
   return (
     <div className="space-y-4">
@@ -32,7 +47,9 @@ export default function MemberPokemonViewMode({
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3">
-          {memberPokemon.map((pokemon, index) => (
+          {memberPokemon.map((pokemon, index) => {
+            const displayName = getOwnedPokemonDisplayParts(pokemon);
+            return (
             <div key={pokemon.uniqueId || index} className="bg-white rounded-lg border p-3">
               <div className="flex items-start gap-3">
                 <img
@@ -47,10 +64,13 @@ export default function MemberPokemonViewMode({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1 mb-1">
                     <h4 className="font-bold text-sm truncate">
-                      {pokemon.nickname || pokemon.name || '???'}
+                      {displayName.primary || '???'}
                     </h4>
                     {pokemon.isShiny && <Sparkles size={14} className="text-yellow-500" />}
                   </div>
+                  {displayName.hasNickname && (
+                    <p className="text-xs font-semibold text-gray-500 truncate">{displayName.species}</p>
+                  )}
                   <p className="text-xs text-gray-600">Lv.{pokemon.level || 1}</p>
                   <p className="text-xs text-gray-500">No.{pokemon.number || '???'}</p>
                   {pokemon.heldItem && (
@@ -62,7 +82,7 @@ export default function MemberPokemonViewMode({
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 mt-3">
+              <div className="grid grid-cols-4 gap-2 mt-3">
                 <button
                   type="button"
                   onClick={() => onStartEdit(pokemon)}
@@ -71,6 +91,60 @@ export default function MemberPokemonViewMode({
                   <Edit size={12} className="inline mr-1" />
                   편집
                 </button>
+                {getAvailableForms(pokemon).length > 0 && (
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setOpenFormPokemonId(value => value === pokemon.uniqueId ? null : pokemon.uniqueId)}
+                      className="w-full bg-teal-50 text-teal-700 px-2 py-1 rounded text-xs font-semibold hover:bg-teal-100"
+                      title="폼체인지"
+                    >
+                      <RefreshCw size={12} className="inline mr-1" />
+                      폼
+                    </button>
+
+                    {openFormPokemonId === pokemon.uniqueId && (
+                      <div className="absolute right-0 top-full z-30 mt-2 w-56 rounded-lg border border-lime-200 bg-white p-3 shadow-xl">
+                        <div className="mb-2 flex items-center justify-between gap-2">
+                          <strong className="text-sm text-green-950">폼체인지</strong>
+                          <button
+                            type="button"
+                            onClick={() => setOpenFormPokemonId(null)}
+                            className="text-gray-500 hover:text-gray-700"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                        <div className="max-h-64 space-y-2 overflow-y-auto">
+                          {getAvailableForms(pokemon).map(form => (
+                            <button
+                              key={form.id || form.nameEn || form.name}
+                              type="button"
+                              onClick={() => {
+                                onChangeForm?.(pokemon, form);
+                                setOpenFormPokemonId(null);
+                              }}
+                              className="flex w-full items-center gap-2 rounded-md border border-lime-100 bg-lime-50/60 px-2 py-2 text-left hover:bg-lime-100"
+                            >
+                              <FormIconSprite
+                                form={form}
+                                size={32}
+                                fallbackUrl={form.iconUrl || form.spriteUrl || form.imageUrl || ''}
+                                className="h-8 w-8"
+                              />
+                              <span className="min-w-0">
+                                <span className="block truncate text-xs font-bold text-green-950">{form.name || form.nameEn}</span>
+                                <span className="block truncate text-[11px] text-green-700">
+                                  {form.type}{form.type2 ? ` / ${form.type2}` : ''}
+                                </span>
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => onStartTransfer?.(pokemon)}
@@ -93,7 +167,8 @@ export default function MemberPokemonViewMode({
                 </button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

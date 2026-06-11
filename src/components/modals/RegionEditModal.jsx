@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
 
 export default function RegionEditModal({ region, allPokemon, onClose, onSave }) {
   const [activeTab, setActiveTab] = useState('rates'); // 'rates' or 'edit'
@@ -440,6 +441,7 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
                 {filteredPokemon.map((pokemon) => {
                   const id = pokemon.id || pokemon.number;
                   const isSelected = selectedPokemon.has(id);
+                  const displayNameParts = getPokemonDisplayParts(pokemon);
                   
                   return (
                     <button
@@ -472,7 +474,10 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
                         <div className="text-xs text-gray-500">
                           #{pokemon.newNumber || pokemon.number}
                         </div>
-                        <div className="font-semibold text-xs truncate">{pokemon.name}</div>
+                        <div className="font-semibold text-xs truncate">{displayNameParts.name}</div>
+                        {displayNameParts.formLabel && (
+                          <div className="text-[10px] text-gray-500 truncate">{displayNameParts.formLabel}</div>
+                        )}
                         <div className="flex gap-0.5 justify-center mt-1">
                           <span className={`text-white text-xs px-1 py-0.5 rounded ${typeColors[pokemon.type] || 'bg-gray-400'}`}>
                             {pokemon.type}

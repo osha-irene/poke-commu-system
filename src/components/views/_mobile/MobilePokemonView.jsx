@@ -22,6 +22,8 @@ export default function MobilePokemonView() {
     releasePokemon,
     useRareCandy: onUseRareCandy,
     updatePokemonNickname,
+    getPokemonFormCandidates,
+    changePokemonForm,
     giveItemToPokemon,
     takeItemFromPokemon,
     setPartnerPokemon,
@@ -228,6 +230,9 @@ export default function MobilePokemonView() {
               onUseCandy={handleUseCandy}
               onMove={handleMove}
               onRelease={handleRelease}
+              allPokemonMaster={allPokemonMaster}
+              getPokemonFormCandidates={getPokemonFormCandidates}
+              onChangeForm={changePokemonForm}
               onUpdateNickname={updatePokemonNickname}
               onGiveItem={giveItemToPokemon}
               onTakeItem={takeItemFromPokemon}

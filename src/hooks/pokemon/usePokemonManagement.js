@@ -38,6 +38,78 @@ const usePokemonManagement = (
     return template ? { ...pokemon, ...template } : pokemon;
   };
 
+  const getPokemonFormCandidates = (pokemon) => {
+    const currentTemplate = getPokemonTemplate(pokemon);
+    const baseNumber = currentTemplate?.originalNumber || pokemon?.originalNumber || currentTemplate?.number || pokemon?.number;
+    const baseSpeciesEn = currentTemplate?.baseSpeciesEn || pokemon?.baseSpeciesEn || currentTemplate?.nameEn || pokemon?.nameEn;
+
+    return (allPokemonMaster || [])
+      .filter((template) => {
+        if (!template || template.isMega) return false;
+
+        const sameNumber = baseNumber && (
+          template.number === baseNumber ||
+          template.originalNumber === baseNumber ||
+          template.number === currentTemplate?.number ||
+          template.originalNumber === currentTemplate?.number
+        );
+        const sameBaseSpecies = baseSpeciesEn && (
+          template.baseSpeciesEn === baseSpeciesEn ||
+          template.nameEn === baseSpeciesEn ||
+          template.species === baseSpeciesEn
+        );
+        const isFormLike = Boolean(
+          template.formVariant ||
+          template.regionalForm ||
+          template.isRegionalForm ||
+          template.baseSpeciesEn ||
+          template.displayNumber
+        );
+
+        return (sameNumber || sameBaseSpecies) && isFormLike;
+      })
+      .filter((template, index, list) => (
+        index === list.findIndex(item => (
+          (item.id || item.nameEn || item.name) === (template.id || template.nameEn || template.name)
+        ))
+      ))
+      .sort((a, b) => String(a.displayNumber || a.number).localeCompare(String(b.displayNumber || b.number)));
+  };
+
+  const applyTemplateToOwnedPokemon = (pokemon, template) => ({
+    ...pokemon,
+    pokemonId: template.id || pokemon.pokemonId,
+    number: template.number,
+    originalNumber: template.originalNumber || template.number,
+    displayNumber: template.displayNumber || pokemon.displayNumber,
+    name: template.name || pokemon.name,
+    nameEn: template.nameEn || pokemon.nameEn,
+    species: template.species || template.nameEn || pokemon.species,
+    type: template.type || pokemon.type,
+    type2: template.type2 || null,
+    abilities: template.abilities || pokemon.abilities,
+    abilitiesEn: template.abilitiesEn || pokemon.abilitiesEn,
+    ability: template.abilities?.[0] || pokemon.ability,
+    abilityEn: template.abilitiesEn?.[0] || pokemon.abilityEn,
+    hiddenAbility: template.hiddenAbility ?? pokemon.hiddenAbility,
+    hiddenAbilityEn: template.hiddenAbilityEn ?? pokemon.hiddenAbilityEn,
+    baseHp: template.baseHp ?? pokemon.baseHp,
+    baseAttack: template.baseAttack ?? pokemon.baseAttack,
+    baseDefense: template.baseDefense ?? pokemon.baseDefense,
+    baseSpAttack: template.baseSpAttack ?? pokemon.baseSpAttack,
+    baseSpDefense: template.baseSpDefense ?? pokemon.baseSpDefense,
+    baseSpeed: template.baseSpeed ?? pokemon.baseSpeed,
+    imageUrl: template.imageUrl || pokemon.imageUrl,
+    spriteUrl: template.spriteUrl || template.imageUrl || pokemon.spriteUrl,
+    iconUrl: template.iconUrl || pokemon.iconUrl,
+    shinySprite: template.shinySprite || pokemon.shinySprite,
+    isRegionalForm: Boolean(template.isRegionalForm),
+    regionalForm: template.regionalForm || null,
+    formVariant: template.formVariant || null,
+    baseSpecies: template.baseSpecies || pokemon.baseSpecies,
+    baseSpeciesEn: template.baseSpeciesEn || pokemon.baseSpeciesEn,
+  });
+
   const isEmptyPokemonSlot = (pokemon) => (
     pokemon === null || pokemon === undefined || pokemon === 'null'
   );
@@ -441,6 +513,45 @@ const usePokemonManagement = (
     }, 100);
   };
 
+  const changePokemonForm = (uniqueId, formId) => {
+    if (!currentUser) return false;
+
+    const targetTemplate = (allPokemonMaster || []).find(template => (
+      template.id === formId ||
+      template.nameEn === formId ||
+      template.name === formId
+    ));
+
+    if (!targetTemplate) {
+      alert('변경할 폼 데이터를 찾을 수 없습니다.');
+      return false;
+    }
+
+    let changed = false;
+    const updatePokemon = (pokemon) => {
+      if (!pokemon || pokemon.uniqueId !== uniqueId) return pokemon;
+      changed = true;
+      return applyTemplateToOwnedPokemon(pokemon, targetTemplate);
+    };
+
+    const newCaughtPokemon = (currentUser.caughtPokemon || []).map(updatePokemon);
+    const newPartnerPokemon = currentUser.partnerPokemon?.uniqueId === uniqueId
+      ? updatePokemon(currentUser.partnerPokemon)
+      : currentUser.partnerPokemon;
+
+    if (!changed) {
+      alert('포켓몬을 찾을 수 없습니다.');
+      return false;
+    }
+
+    updateCurrentUser({
+      caughtPokemon: newCaughtPokemon,
+      partnerPokemon: newPartnerPokemon,
+    });
+    alert(`${targetTemplate.name || targetTemplate.nameEn} 폼으로 변경했습니다!`);
+    return true;
+  };
+
   // 닉네임 변경
   const updatePokemonNickname = (uniqueId, nickname) => {
     if (!currentUser) return;
@@ -592,6 +703,8 @@ const usePokemonManagement = (
     setPartnerPokemon,
     useRareCandy,
     updatePokemonNickname,
+    getPokemonFormCandidates,
+    changePokemonForm,
     giveItemToPokemon,
     takeItemFromPokemon,
     reorderPartyPokemon,

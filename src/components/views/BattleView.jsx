@@ -3,6 +3,7 @@ import { ref, get } from 'firebase/database';
 import { database } from '../../firebase';
 import AdvancedBattleSimulator from '../../battle/components/AdvancedBattleSimulator';
 import { toCalcAbilityName } from '../../utils/abilityUtils';
+import { getOwnedPokemonDisplayParts } from '../../utils/ownedPokemonDisplay';
 import allPokemonMaster from '../../data/allPokemon.json';
 import customBattleData from '../../data/customBattleData.json';
 
@@ -124,13 +125,14 @@ const toBattleFormat = (pokemon) => {
     ...pokemon,
     name: speciesName,
     species: speciesName,
-    nickname: pokemon.nickname || pokemon.name,
+    nickname: pokemon.nickname || '',
+    speciesName: pokemon.name || template?.name || speciesName,
     level: Number(pokemon.level || 50),
     types: [
       normalizeType(pokemon.type || template?.type),
       pokemon.type2 || template?.type2 ? normalizeType(pokemon.type2 || template?.type2) : null
     ].filter(Boolean),
-    ability: resolveCustomAbility(pokemon.ability),
+    ability: resolveCustomAbility(pokemon.abilityEn || pokemon.ability),
     item: resolveCustomItem(pokemon.heldItem || pokemon.item || pokemon.heldItemName),
     nature: pokemon.nature || 'Hardy',
     stats,
@@ -170,6 +172,19 @@ const buildBattleTeam = (pokemonList, selectedPokemon) => {
     .filter(pokemon => pokemon && pokemon.uniqueId)
     .slice(0, 6)
     .map(toBattleFormat);
+};
+
+const SelectedPokemonName = ({ pokemon }) => {
+  if (!pokemon) return <p className="font-semibold">-</p>;
+  const displayName = getOwnedPokemonDisplayParts(pokemon);
+  return (
+    <div>
+      <p className="font-semibold">{displayName.primary} Lv.{pokemon.level}</p>
+      {displayName.hasNickname && (
+        <p className="text-xs text-gray-500">{displayName.species}</p>
+      )}
+    </div>
+  );
 };
 
 /**
@@ -394,24 +409,30 @@ export function BattleView() {
                     <p className="text-gray-500">포켓몬이 없습니다.</p>
                   ) : (
                     <div className="space-y-2 max-h-96 overflow-y-auto">
-                      {user1Pokemon.map((pokemon, idx) => (
-                        <button
-                          key={pokemon.uniqueId || idx}
-                          onClick={() => setSelectedPokemon1(pokemon)}
-                          className={`w-full p-3 rounded text-left transition-colors ${
-                            selectedPokemon1?.uniqueId === pokemon.uniqueId
-                              ? 'bg-blue-500 text-white'
-                              : 'bg-white hover:bg-blue-100'
-                          }`}
-                        >
-                          <div className="font-bold">
-                            {pokemon.nickname || pokemon.name} Lv.{pokemon.level}
-                          </div>
-                          <div className="text-sm opacity-80">
-                            HP: {pokemon.hp || pokemon.maxHp || '?'} / 기술: {pokemon.moves?.length || 0}개
-                          </div>
-                        </button>
-                      ))}
+                      {user1Pokemon.map((pokemon, idx) => {
+                        const displayName = getOwnedPokemonDisplayParts(pokemon);
+                        return (
+                          <button
+                            key={pokemon.uniqueId || idx}
+                            onClick={() => setSelectedPokemon1(pokemon)}
+                            className={`w-full p-3 rounded text-left transition-colors ${
+                              selectedPokemon1?.uniqueId === pokemon.uniqueId
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-white hover:bg-blue-100'
+                            }`}
+                          >
+                            <div className="font-bold">
+                              {displayName.primary} Lv.{pokemon.level}
+                            </div>
+                            {displayName.hasNickname && (
+                              <div className="text-xs opacity-75">{displayName.species}</div>
+                            )}
+                            <div className="text-sm opacity-80">
+                              HP: {pokemon.hp || pokemon.maxHp || '?'} / 기술: {pokemon.moves?.length || 0}개
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -448,24 +469,30 @@ export function BattleView() {
                     <p className="text-gray-500">포켓몬이 없습니다.</p>
                   ) : (
                     <div className="space-y-2 max-h-96 overflow-y-auto">
-                      {user2Pokemon.map((pokemon, idx) => (
-                        <button
-                          key={pokemon.uniqueId || idx}
-                          onClick={() => setSelectedPokemon2(pokemon)}
-                          className={`w-full p-3 rounded text-left transition-colors ${
-                            selectedPokemon2?.uniqueId === pokemon.uniqueId
-                              ? 'bg-red-500 text-white'
-                              : 'bg-white hover:bg-red-100'
-                          }`}
-                        >
-                          <div className="font-bold">
-                            {pokemon.nickname || pokemon.name} Lv.{pokemon.level}
-                          </div>
-                          <div className="text-sm opacity-80">
-                            HP: {pokemon.hp || pokemon.maxHp || '?'} / 기술: {pokemon.moves?.length || 0}개
-                          </div>
-                        </button>
-                      ))}
+                      {user2Pokemon.map((pokemon, idx) => {
+                        const displayName = getOwnedPokemonDisplayParts(pokemon);
+                        return (
+                          <button
+                            key={pokemon.uniqueId || idx}
+                            onClick={() => setSelectedPokemon2(pokemon)}
+                            className={`w-full p-3 rounded text-left transition-colors ${
+                              selectedPokemon2?.uniqueId === pokemon.uniqueId
+                                ? 'bg-red-500 text-white'
+                                : 'bg-white hover:bg-red-100'
+                            }`}
+                          >
+                            <div className="font-bold">
+                              {displayName.primary} Lv.{pokemon.level}
+                            </div>
+                            {displayName.hasNickname && (
+                              <div className="text-xs opacity-75">{displayName.species}</div>
+                            )}
+                            <div className="text-sm opacity-80">
+                              HP: {pokemon.hp || pokemon.maxHp || '?'} / 기술: {pokemon.moves?.length || 0}개
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -495,21 +522,11 @@ export function BattleView() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-600">Player 1:</p>
-                  <p className="font-semibold">
-                    {selectedPokemon1 
-                      ? `${selectedPokemon1.nickname || selectedPokemon1.name} Lv.${selectedPokemon1.level}`
-                      : '-'
-                    }
-                  </p>
+                  <SelectedPokemonName pokemon={selectedPokemon1} />
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Player 2:</p>
-                  <p className="font-semibold">
-                    {selectedPokemon2
-                      ? `${selectedPokemon2.nickname || selectedPokemon2.name} Lv.${selectedPokemon2.level}`
-                      : '-'
-                    }
-                  </p>
+                  <SelectedPokemonName pokemon={selectedPokemon2} />
                 </div>
               </div>
             </div>

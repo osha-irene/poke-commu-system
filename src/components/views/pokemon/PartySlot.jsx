@@ -1,6 +1,7 @@
 import React from 'react';
 import { Heart, Egg } from 'lucide-react';
 import { getTypeColor, POKEBALL_LIST } from '../../../styles/theme';
+import { getPokemonLocalIconUrl } from '../../../utils/pokemonIconUtils';
 
 const getLocalIconUrl = (pokemon, allPokemonMaster) => {
   let englishName = pokemon.nameEn;
@@ -12,11 +13,10 @@ const getLocalIconUrl = (pokemon, allPokemonMaster) => {
     englishName = template?.nameEn;
   }
   
-  englishName = englishName || pokemon.name || 'UNKNOWN';
-  
-  const fileName = englishName.toUpperCase();
-  const basePath = window.location.pathname.includes('/poke-commu-system') ? '/poke-commu-system' : '';
-  return `${basePath}/img/icons/${fileName}.png`;
+  return getPokemonLocalIconUrl({
+    ...pokemon,
+    nameEn: englishName || pokemon.nameEn || pokemon.name || 'UNKNOWN',
+  });
 };
 
 // ⭐ 볼 이미지 가져오기 헬퍼 함수 (디버깅 추가)
@@ -120,21 +120,12 @@ export function PartnerSlot({
   
   const imageUrl = getLocalIconUrl(pokemon, allPokemonMaster);
   const ballImage = getBallImageUrl(pokemon, allItems);  // ⭐ 함수 호출
-  const animId = `partnerSprite-${pokemon.uniqueId}`;
 
   return (
     <div 
       onClick={onClick}
       className={`flex items-center gap-4 rounded-lg p-4 ${STYLES.partner} cursor-pointer hover:shadow-lg transition-all`}
     >
-      <style>{`
-        @keyframes ${animId} {
-          0% { background-position: left center; }
-          49.99% { background-position: left center; }
-          50% { background-position: right center; }
-          100% { background-position: right center; }
-        }
-      `}</style>
 
       <div 
         className="flex-shrink-0 w-10 h-10 rounded-full overflow-hidden flex items-center justify-center"
@@ -162,9 +153,8 @@ export function PartnerSlot({
             height: '40px',
             backgroundImage: `url(${imageUrl})`,
             backgroundSize: '80px 40px',
-            backgroundPosition: 'right center',
+            backgroundPosition: 'left center',
             backgroundRepeat: 'no-repeat',
-            animation: `${animId} 0.8s steps(1) infinite`,
             imageRendering: 'pixelated'
           }}
         />
@@ -285,7 +275,6 @@ export default function PartySlot({
   
   const imageUrl = getLocalIconUrl(pokemon, allPokemonMaster);
   const ballImage = getBallImageUrl(pokemon, allItems);  // ⭐ 함수 호출
-  const animId = `pokemonSprite-${pokemon.uniqueId || index}`;
 
   return (
     <div 
@@ -322,11 +311,8 @@ export default function PartySlot({
             height: '32px',
             backgroundImage: `url(${imageUrl})`,
             backgroundSize: '64px 32px',
-            backgroundPosition: 'right center',
+            backgroundPosition: 'left center',
             backgroundRepeat: 'no-repeat',
-            WebkitAnimation: isSelected ? `${animId} 0.8s steps(1) infinite` : 'none',
-            MozAnimation: isSelected ? `${animId} 0.8s steps(1) infinite` : 'none',
-            animation: isSelected ? `${animId} 0.8s steps(1) infinite` : 'none',
             imageRendering: 'pixelated',
             WebkitImageRendering: '-webkit-crisp-edges',
             MozImageRendering: '-moz-crisp-edges',

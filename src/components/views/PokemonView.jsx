@@ -27,6 +27,8 @@ function DesktopPokemonView() {
     releasePokemon: onReleasePokemon,
     useRareCandy: onUseRareCandy,
     updatePokemonNickname: onUpdateNickname,
+    getPokemonFormCandidates,
+    changePokemonForm: onChangeForm,
     giveItemToPokemon: onGiveItem,
     takeItemFromPokemon: onTakeItem,
     setPartnerPokemon: onSetPartner,
@@ -657,6 +659,8 @@ function DesktopPokemonView() {
             checkEvolution={checkEvolution}
             manualEvolve={manualEvolve}
             allPokemonMaster={allPokemonMaster}
+            getPokemonFormCandidates={getPokemonFormCandidates}
+            onChangeForm={onChangeForm}
             onUpdateNickname={onUpdateNickname}
             onGiveItem={onGiveItem}
             onTakeItem={onTakeItem}

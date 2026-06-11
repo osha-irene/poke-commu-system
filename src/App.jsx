@@ -39,6 +39,7 @@ import logoCompass from './assets/logo_compass.png';
 import mainNpcPanel from './assets/main_npc.png';
 import { User, Lock, LogOut, Music, X, Play, Pause, SkipBack, SkipForward, Volume2, Package, Gift, ChefHat, Sparkles } from 'lucide-react';
 import { DAILY_ATTENDANCE_EXP, getKoreaDateKey } from './utils/experience';
+import { getPokemonLocalIconUrl } from './utils/pokemonIconUtils';
 
 const DAILY_ATTENDANCE_MONEY = 2000;
 
@@ -233,20 +234,6 @@ function PlaylistWidget() {
       </button>
     </div>
   );
-}
-
-function getPokemonLocalIconUrl(pokemon = {}) {
-  const rawName = pokemon.nameEn || pokemon.nameEnglish || pokemon.speciesNameEn || '';
-  if (!rawName) return '';
-
-  const fileName = rawName
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[.'?]/g, '')
-    .replace(/\s+/g, '-')
-    .toUpperCase();
-
-  return fileName ? '/img/icons/' + fileName + '.png' : '';
 }
 
 function getKoreaDateParts(date = new Date()) {
@@ -955,6 +942,8 @@ export default function App() {
     updatePokedexMemo,
     giveItemToPokemon,
     takeItemFromPokemon,
+    getPokemonFormCandidates,
+    changePokemonForm,
     setPartnerPokemon,
     forgetMove,
     learnMove,
@@ -1186,6 +1175,8 @@ export default function App() {
     updatePokemonNickname,
     giveItemToPokemon,
     takeItemFromPokemon,
+    getPokemonFormCandidates,
+    changePokemonForm,
     setPartnerPokemon,
     learnMove,
     forgetMove,
@@ -1362,7 +1353,7 @@ return (
           )}
           
           {currentTab === 'admin' && isAdmin && <AdminView />}
-          {currentTab === 'battle' && <BattleView />}
+          {currentTab === 'battle' && isAdmin && <BattleView />}
         </MobileLayout>
       ) : (
         <div className={`main-shell ${currentTab === 'home' ? 'main-shell--home' : ''}`}>
@@ -1476,7 +1467,7 @@ return (
 		  )}
 		  
 		  {currentTab === 'admin' && isAdmin && <AdminView />}
-      {currentTab === 'battle' && <BattleView />} 
+      {currentTab === 'battle' && isAdmin && <BattleView />} 
 		</main>
           </div>
         </div>

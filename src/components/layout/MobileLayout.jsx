@@ -67,7 +67,8 @@ export default function MobileLayout({
     cooking: { label: '요리', icon: ChefHat },
     profile: { label: '프로필', icon: User },
     qna: { label: 'Q&A', icon: MessageSquare },
-    admin: { label: '관리자', icon: Settings }
+    admin: { label: '관리자', icon: Settings },
+    battle: { label: '배틀', icon: Sword }
   };
 
   const CurrentTitleIcon = titleMap[currentTab]?.icon || Menu;
@@ -359,7 +360,7 @@ export default function MobileLayout({
                     }`}
                   >
                     <Sword size={20} />
-                    <span>배틀 임시</span>
+                    <span>배틀</span>
                   </button>
                 </>
               )}

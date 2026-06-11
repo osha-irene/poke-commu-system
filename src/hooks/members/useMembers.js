@@ -5,6 +5,8 @@ import { ref, get, set } from 'firebase/database';
 import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { database, auth } from '../../firebase';
 import itemsData from '../../data/items.json';
+import { fillMissingBaseStats, findPokemonTemplate } from '../../utils/pokemonBaseStats';
+import { getAbilityEnglishName } from '../../utils/abilityUtils';
 
 export const useMembers = (allPokemonData) => {
   const [members, setMembers] = useState({});
@@ -25,14 +27,15 @@ export const useMembers = (allPokemonData) => {
             
             const updatedCaughtPokemon = member.caughtPokemon?.map(pokemon => {
               if (!pokemon) return pokemon;
-              if (pokemon.nameEn) return pokemon;
               
-              const template = allPokemonData.find(p => 
-                p.number === pokemon.number || p.id === pokemon.pokemonId
-              );
+              const template = findPokemonTemplate(pokemon, allPokemonData);
               
-              if (template && template.nameEn) {
-                return { ...pokemon, nameEn: template.nameEn };
+              if (template) {
+                return fillMissingBaseStats({
+                  ...pokemon,
+                  nameEn: pokemon.nameEn || template.nameEn,
+                  abilityEn: pokemon.abilityEn || getAbilityEnglishName(pokemon.ability) || template.abilitiesEn?.[0] || null
+                }, template);
               }
               
               return pokemon;

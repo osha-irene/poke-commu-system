@@ -6,6 +6,8 @@ import { createUserWithEmailAndPassword, getAuth, signOut } from 'firebase/auth'
 import { ref, set } from 'firebase/database';
 import { auth, database } from '../../firebase';
 import { POKEBALL_LIST } from '../../styles/theme';
+import { getBaseStatPatch } from '../../utils/pokemonBaseStats';
+import { getAbilityEnglishName } from '../../utils/abilityUtils';
 import { normalizePokemonGender } from '../../utils/pokemonGender';
 import movesData from '../../data/moves.json';
 import evolutionsData from '../../data/evolutions.json';
@@ -186,6 +188,7 @@ export const useAdminMembers = (
       formVariant: pokemonTemplate.formVariant || null,
       type: pokemonTemplate.type,
       type2: pokemonTemplate.type2 || null,
+      ...getBaseStatPatch(pokemonTemplate),
       level: 1,
       hp: pokemonTemplate.baseHp || pokemonTemplate.hp || 10,
       maxHp: pokemonTemplate.baseHp || pokemonTemplate.hp || 10,
@@ -536,6 +539,7 @@ export const useAdminMembers = (
     
     const finalAbility = ability || (pokemonTemplate.abilities && pokemonTemplate.abilities.length > 0 ? 
       pokemonTemplate.abilities[0] : '없음');
+    const finalAbilityEn = getAbilityEnglishName(finalAbility) || pokemonTemplate.abilitiesEn?.[0] || null;
     
     const baseHeight = pokemonTemplate.height || 10;
     const baseWeight = pokemonTemplate.weight || 100;
@@ -554,6 +558,7 @@ export const useAdminMembers = (
       formVariant: pokemonTemplate.formVariant || null,
       type: pokemonTemplate.type,
       type2: pokemonTemplate.type2 || null,
+      ...getBaseStatPatch(pokemonTemplate),
       level,
       hp: pokemonTemplate.baseHp,
       maxHp: pokemonTemplate.baseHp,
@@ -567,6 +572,7 @@ export const useAdminMembers = (
       ballImageUrl,
       gender: finalGender,
       ability: finalAbility,
+      abilityEn: finalAbilityEn,
       isHiddenAbility: false,
       height: parseFloat(finalHeight.toFixed(1)),
       weight: parseFloat(finalWeight.toFixed(1)),
@@ -909,6 +915,15 @@ export const useAdminMembers = (
 
         return {
           ...p,
+          pokemonId: safeValue(updates.pokemonId, p.pokemonId),
+          number: safeValue(updates.number, p.number),
+          originalNumber: safeValue(updates.originalNumber, p.originalNumber),
+          displayNumber: safeValue(updates.displayNumber, p.displayNumber),
+          name: safeValue(updates.name, p.name),
+          nameEn: safeValue(updates.nameEn, p.nameEn),
+          species: safeValue(updates.species, p.species),
+          type: safeValue(updates.type, p.type),
+          type2: safeValue(updates.type2, p.type2),
           nickname: safeValue(updates.nickname, p.nickname),
           level: updates.level !== undefined 
             ? Math.min(100, Math.max(1, updates.level)) 
@@ -918,7 +933,25 @@ export const useAdminMembers = (
           ballImageUrl: safeValue(updates.ballImage, p.ballImageUrl),
           gender: normalizePokemonGender(safeValue(updates.gender, p.gender), pokemonTemplate),
           ability: safeValue(updates.ability, p.ability),
+          abilityEn: safeValue(updates.abilityEn, p.abilityEn),
+          abilities: safeValue(updates.abilities, p.abilities),
+          abilitiesEn: safeValue(updates.abilitiesEn, p.abilitiesEn),
+          hiddenAbility: safeValue(updates.hiddenAbility, p.hiddenAbility),
+          hiddenAbilityEn: safeValue(updates.hiddenAbilityEn, p.hiddenAbilityEn),
           isHiddenAbility: safeValue(updates.isHiddenAbility, p.isHiddenAbility || false),
+          baseHp: safeValue(updates.baseHp, p.baseHp),
+          baseAttack: safeValue(updates.baseAttack, p.baseAttack),
+          baseDefense: safeValue(updates.baseDefense, p.baseDefense),
+          baseSpAttack: safeValue(updates.baseSpAttack, p.baseSpAttack),
+          baseSpDefense: safeValue(updates.baseSpDefense, p.baseSpDefense),
+          baseSpeed: safeValue(updates.baseSpeed, p.baseSpeed),
+          imageUrl: safeValue(updates.imageUrl, p.imageUrl),
+          shinySprite: safeValue(updates.shinySprite, p.shinySprite),
+          isRegionalForm: safeValue(updates.isRegionalForm, p.isRegionalForm || false),
+          regionalForm: safeValue(updates.regionalForm, p.regionalForm),
+          formVariant: safeValue(updates.formVariant, p.formVariant),
+          baseSpecies: safeValue(updates.baseSpecies, p.baseSpecies),
+          baseSpeciesEn: safeValue(updates.baseSpeciesEn, p.baseSpeciesEn),
           sizeRank: safeValue(updates.sizeRank, p.sizeRank),
           heightVariation: updates.heightVariation !== undefined 
             ? parseFloat(updates.heightVariation) 

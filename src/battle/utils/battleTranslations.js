@@ -21,17 +21,17 @@ const itemNames = {};
 const showdownItemNames = {};
 
 (movesData.moves || []).forEach((move) => {
-  addTranslation(moveNames, [move.id, move.nameEn, move.name], move.name);
+  addTranslation(moveNames, [move.id, move.nameEn, move.name], move.name || move.nameEn || move.id);
 });
 
 (abilitiesData.abilities || []).forEach((ability) => {
-  addTranslation(abilityNames, [ability.id, ability.nameEn, ability.name], ability.name);
+  addTranslation(abilityNames, [ability.id, ability.nameEn, ability.name], ability.name || ability.nameEn || ability.id);
 });
 
 const items = Array.isArray(itemsData) ? itemsData : (itemsData.items || []);
 
 items.forEach((item) => {
-  addTranslation(itemNames, [item.id, item.nameEn, item.name], item.name);
+  addTranslation(itemNames, [item.id, item.nameEn, item.name], item.name || item.nameEn || item.id);
   [item.id, item.nameEn, item.name].forEach((key) => {
     const normalized = normalizeBattleKey(key);
     if (normalized && item.nameEn) showdownItemNames[normalized] = item.nameEn;

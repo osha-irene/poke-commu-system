@@ -48,7 +48,7 @@ export default function StatsTab({ pokemon, allPokemonMaster = [] }) {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   
   // 특성 데이터
-  const abilityData = getAbilityByName(pokemon.ability);
+  const abilityData = getAbilityByName(pokemon.abilityEn || pokemon.ability);
   
   const rarity = getSizeRarity(pokemon.sizeRank);
   const RarityIcon = rarity.icon;

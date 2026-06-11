@@ -1,6 +1,9 @@
 // src/hooks/game/usePokemonCatch.js
 // 포켓몬 포획 시스템
 
+import { getBaseStatPatch } from '../../utils/pokemonBaseStats';
+import { getAbilityEnglishName } from '../../utils/abilityUtils';
+
 export const usePokemonCatch = (
   currentUser,
   updateCurrentUser,
@@ -59,6 +62,7 @@ export const usePokemonCatch = (
     const gender = generateGender(pokemonTemplate);
     const size = generateSize(pokemonTemplate);
     const ability = generateAbility(pokemonTemplate, false);
+    const abilityEn = getAbilityEnglishName(ability) || pokemonTemplate.abilitiesEn?.[0] || null;
     
     const newPokemon = {
       uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -70,6 +74,7 @@ export const usePokemonCatch = (
       formVariant: pokemonTemplate.formVariant || null,
       type: pokemonTemplate.type,
       type2: pokemonTemplate.type2 || null,
+      ...getBaseStatPatch(pokemonTemplate),
       level: level,
       hp: pokemonTemplate.baseHp,
       maxHp: pokemonTemplate.baseHp,
@@ -90,6 +95,7 @@ export const usePokemonCatch = (
       heightVariation: size.heightVariation,
       weightVariation: size.weightVariation,
       ability: ability,
+      abilityEn,
       isHiddenAbility: false,
       
       condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },

@@ -3464,8 +3464,8 @@ img[src*="serebii.net/pokemon"] {
 .mobile-home-feed__pokemon {
   display: block;
   background-repeat: no-repeat;
-  background-position: center;
-  background-size: 96px 96px;
+  background-position: left center;
+  background-size: 108px 54px;
   image-rendering: pixelated;
 }
 

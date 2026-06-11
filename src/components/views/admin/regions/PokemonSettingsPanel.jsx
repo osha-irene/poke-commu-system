@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Settings, Percent, TrendingUp, Sparkles, Package, Plus, X, Save, ShieldCheck } from 'lucide-react';
 import { useGame } from '../../../../contexts/GameContext';
+import { getPokemonDisplayParts } from '../../../../utils/pokemonDisplayName';
 
 const toPercent = (value, fallback = 100) => {
   const parsed = Number(value);
@@ -586,6 +587,7 @@ export default function PokemonSettingsPanel({
             </div>
           ) : filteredSelectablePokemon.map((pokemon) => {
             const isSelected = selectedPokemon.includes(pokemon.number);
+            const displayNameParts = getPokemonDisplayParts(pokemon);
 
             return (
               <button
@@ -607,7 +609,10 @@ export default function PokemonSettingsPanel({
                     style={{ imageRendering: 'pixelated' }}
                   />
                 </div>
-                <div className="text-xs text-center truncate">{pokemon.name}</div>
+                <div className="text-xs text-center font-semibold truncate">{displayNameParts.name}</div>
+                {displayNameParts.formLabel && (
+                  <div className="text-[10px] text-center text-gray-500 truncate">{displayNameParts.formLabel}</div>
+                )}
               </button>
             );
           })}

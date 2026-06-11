@@ -112,7 +112,7 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin }) {
               onClick={() => setCurrentTab('battle')}
               className={`brush-nav-button trainer-nav__button ${currentTab === 'battle' ? 'is-active' : ''}`}
             >
-              배틀 임시
+              배틀
             </button>
           </>
         )}

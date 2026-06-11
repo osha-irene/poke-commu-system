@@ -41,7 +41,12 @@ const MASTODON_TOKEN = process.env.MASTODON_TOKEN || '';
 
 let pokemonData = [];
 try {
-  const loaded = require('./data/pokemon.json');
+  let loaded;
+  try {
+    loaded = require('./data/allPokemon.json');
+  } catch (allPokemonError) {
+    loaded = require('./data/pokemon.json');
+  }
   pokemonData = Array.isArray(loaded) ? loaded : loaded?.pokemon || [];
 } catch (error) {
   console.warn('Pokemon data was not loaded:', error.message);
@@ -689,6 +694,360 @@ const findTaggedPartner = (members, status, authorAccount) => {
   return null;
 };
 
+const TRADE_EXPIRATION_MS = 7 * 24 * 60 * 60 * 1000;
+
+const accountMention = (account) => {
+  const cleaned = String(account || '').trim().replace(/^@/, '');
+  return cleaned ? `@${cleaned}` : '';
+};
+
+const getTradeCommand = (content = '') => {
+  const text = String(content || '');
+  if (/\[\s*교환\s*신청\s*\]|\b교환\s*신청\b/i.test(text)) return 'request';
+  if (/\[\s*교환\s*수락\s*\]|\b교환\s*수락\b/i.test(text)) return 'accept';
+  if (/\[\s*교환\s*거절\s*\]|\b교환\s*거절\b/i.test(text)) return 'decline';
+  return extractTradePokemonName(text) ? 'selectPokemon' : null;
+};
+
+const extractTradePokemonName = (content = '') => {
+  const text = String(content || '');
+  const bracketMatch = text.match(/\[\s*교환\s*[:：]\s*([^\]]+)\]/i);
+  if (bracketMatch) {
+    const value = bracketMatch[1].trim();
+    return /^(신청|수락|거절)$/i.test(value) ? null : value;
+  }
+
+  const looseMatch = text.match(/교환\s*[:：]\s*([^\n\r\[]+)/i);
+  if (!looseMatch) return null;
+  const value = looseMatch[1].replace(/@\S+/g, '').trim();
+  return /^(신청|수락|거절)$/i.test(value) ? null : value;
+};
+
+const normalizePokemonSearchText = (value = '') => String(value || '')
+  .toLowerCase()
+  .replace(/\s+/g, '')
+  .replace(/[()[\]{}'"`.,:;!?_\-]/g, '');
+
+const tradePokemonLabel = pokemon =>
+  pokemon?.nickname || pokemon?.name || pokemon?.nameEn || `No.${pokemon?.number || '?'}`;
+
+const getTradePokemonKey = pokemon =>
+  pokemon?.uniqueId || pokemon?.id || pokemon?.pokemonId || `${pokemon?.number}_${pokemon?.name}`;
+
+const getTradeSearchFields = pokemon => [
+  pokemon?.nickname,
+  pokemon?.name,
+  pokemon?.nameEn,
+  pokemon?.species,
+  pokemon?.baseSpecies,
+  pokemon?.number ? `No.${pokemon.number}` : '',
+  pokemon?.number ? String(pokemon.number) : ''
+].filter(Boolean);
+
+const findOwnedPokemonForTrade = (member, query) => {
+  const normalizedQuery = normalizePokemonSearchText(query);
+  if (!normalizedQuery) {
+    return { error: '교환할 포켓몬 이름을 찾을 수 없어요. [교환: 피카츄]처럼 적어 주세요.' };
+  }
+
+  const caughtPokemon = Array.isArray(member?.caughtPokemon) ? member.caughtPokemon : [];
+  const candidates = caughtPokemon
+    .map((pokemon, index) => ({ pokemon, index }))
+    .filter(({ pokemon }) => pokemon && !pokemon.isPartner);
+
+  const exactMatches = candidates.filter(({ pokemon }) =>
+    getTradeSearchFields(pokemon).some(field => normalizePokemonSearchText(field) === normalizedQuery)
+  );
+  const matches = exactMatches.length ? exactMatches : candidates.filter(({ pokemon }) =>
+    getTradeSearchFields(pokemon).some(field => normalizePokemonSearchText(field).includes(normalizedQuery))
+  );
+
+  if (!matches.length) {
+    return { error: `${query}을(를) 보유 포켓몬에서 찾을 수 없어요.` };
+  }
+
+  if (matches.length > 1) {
+    const labels = matches.slice(0, 5).map(({ pokemon }) => tradePokemonLabel(pokemon)).join(', ');
+    return { error: `${query}에 해당하는 포켓몬이 여러 마리예요. 닉네임으로 다시 지정해 주세요. (${labels})` };
+  }
+
+  return matches[0];
+};
+
+const findPendingTrade = async (targetId, requesterId = null) => {
+  const snapshot = await db.ref('gameData/tradeRequests').once('value');
+  const trades = snapshot.val() || {};
+  const now = Date.now();
+  const pending = Object.entries(trades)
+    .filter(([, trade]) =>
+      trade.status === 'pending' &&
+      trade.targetId === targetId &&
+      (!requesterId || trade.requesterId === requesterId) &&
+      now - Number(trade.createdAt || 0) <= TRADE_EXPIRATION_MS
+    )
+    .sort((a, b) => Number(b[1].createdAt || 0) - Number(a[1].createdAt || 0));
+
+  if (!pending.length) return null;
+  return { tradeKey: pending[0][0], trade: pending[0][1] };
+};
+
+const findActiveTradeForMember = async (memberId, otherMemberId = null) => {
+  const snapshot = await db.ref('gameData/tradeRequests').once('value');
+  const trades = snapshot.val() || {};
+  const now = Date.now();
+  const active = Object.entries(trades)
+    .filter(([, trade]) => {
+      if (!['pending', 'accepted'].includes(trade.status)) return false;
+      if (now - Number(trade.createdAt || 0) > TRADE_EXPIRATION_MS) return false;
+      const isParticipant = trade.requesterId === memberId || trade.targetId === memberId;
+      const matchesOther = !otherMemberId || trade.requesterId === otherMemberId || trade.targetId === otherMemberId;
+      return isParticipant && matchesOther;
+    })
+    .sort((a, b) => Number(b[1].updatedAt || b[1].createdAt || 0) - Number(a[1].updatedAt || a[1].createdAt || 0));
+
+  if (!active.length) return null;
+  return { tradeKey: active[0][0], trade: active[0][1] };
+};
+
+const withTradeOwner = (pokemon, fromMemberId, toMemberId) => ({
+  ...pokemon,
+  ownerId: toMemberId,
+  ...(Object.prototype.hasOwnProperty.call(pokemon || {}, 'memberId') ? { memberId: toMemberId } : {}),
+  ...(Object.prototype.hasOwnProperty.call(pokemon || {}, 'trainerId') ? { trainerId: toMemberId } : {}),
+  isPartner: false,
+  tradedAt: new Date().toISOString(),
+  tradedFrom: fromMemberId,
+  tradedTo: toMemberId
+});
+
+const completeTrade = async ({ tradeKey, trade }) => {
+  const requesterRef = db.ref(`members/${trade.requesterId}`);
+  const targetRef = db.ref(`members/${trade.targetId}`);
+  const [requesterSnapshot, targetSnapshot] = await Promise.all([
+    requesterRef.once('value'),
+    targetRef.once('value')
+  ]);
+
+  if (!requesterSnapshot.exists() || !targetSnapshot.exists()) {
+    await db.ref(`gameData/tradeRequests/${tradeKey}`).update({
+      status: 'failed',
+      failedReason: 'member_not_found',
+      updatedAt: Date.now()
+    });
+    return '교환할 회원 정보를 찾을 수 없어서 신청을 취소했어요.';
+  }
+
+  const requester = requesterSnapshot.val();
+  const target = targetSnapshot.val();
+  const requesterCaughtPokemon = Array.isArray(requester.caughtPokemon) ? [...requester.caughtPokemon] : [];
+  const targetCaughtPokemon = Array.isArray(target.caughtPokemon) ? [...target.caughtPokemon] : [];
+  const requesterIndex = requesterCaughtPokemon.findIndex(pokemon =>
+    pokemon && getTradePokemonKey(pokemon) === trade.requesterPokemonKey
+  );
+
+  if (requesterIndex < 0) {
+    await db.ref(`gameData/tradeRequests/${tradeKey}`).update({
+      status: 'failed',
+      failedReason: 'requester_pokemon_missing',
+      updatedAt: Date.now()
+    });
+    return `${trade.requesterPokemonName || '상대 포켓몬'}을(를) 더 이상 찾을 수 없어서 교환을 취소했어요.`;
+  }
+
+  const targetIndex = targetCaughtPokemon.findIndex(pokemon =>
+    pokemon && getTradePokemonKey(pokemon) === trade.targetPokemonKey
+  );
+
+  if (targetIndex < 0) {
+    await db.ref(`gameData/tradeRequests/${tradeKey}`).update({
+      status: 'failed',
+      failedReason: 'target_pokemon_missing',
+      updatedAt: Date.now()
+    });
+    return `${trade.targetPokemonName || '상대 포켓몬'}을(를) 더 이상 찾을 수 없어서 교환을 취소했어요.`;
+  }
+
+  const requesterPokemon = requesterCaughtPokemon[requesterIndex];
+  const targetPokemon = targetCaughtPokemon[targetIndex];
+  requesterCaughtPokemon[requesterIndex] = withTradeOwner(targetPokemon, trade.targetId, trade.requesterId);
+  targetCaughtPokemon[targetIndex] = withTradeOwner(requesterPokemon, trade.requesterId, trade.targetId);
+
+  await Promise.all([
+    requesterRef.update({ caughtPokemon: requesterCaughtPokemon }),
+    targetRef.update({ caughtPokemon: targetCaughtPokemon }),
+    db.ref(`gameData/tradeRequests/${tradeKey}`).update({
+      status: 'completed',
+      targetPokemonKey: getTradePokemonKey(targetPokemon),
+      targetPokemonName: tradePokemonLabel(targetPokemon),
+      completedAt: Date.now(),
+      updatedAt: Date.now()
+    })
+  ]);
+
+  const requesterMention = accountMention(trade.requesterAccount);
+  const targetMention = accountMention(trade.targetAccount);
+  return [
+    [requesterMention, targetMention].filter(Boolean).join(' '),
+    '교환 완료!',
+    `${trade.requesterName || '신청자'}의 ${tradePokemonLabel(requesterPokemon)} ↔ ${trade.targetName || '상대'}의 ${tradePokemonLabel(targetPokemon)}`
+  ].filter(Boolean).join('\n');
+};
+
+const createTradeRequest = async ({ status, author, authorAccount, target, targetAccount, offeredName }) => {
+  if (!target) return '교환할 상대를 멘션으로 태그해 주세요. 예: @상대 [교환: 피카츄]';
+  if (target.id === author.id) return '자기 자신과는 교환할 수 없어요.';
+
+  const offeredPokemonResult = offeredName ? findOwnedPokemonForTrade(author.member, offeredName) : null;
+  if (offeredPokemonResult?.error) return offeredPokemonResult.error;
+
+  const existing = await findPendingTrade(target.id, author.id);
+  if (existing) {
+    await db.ref(`gameData/tradeRequests/${existing.tradeKey}`).update({
+      status: 'cancelled',
+      cancelledAt: Date.now(),
+      updatedAt: Date.now()
+    });
+  }
+
+  const offeredPokemon = offeredPokemonResult?.pokemon || null;
+  const trade = {
+    id: `trade_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+    status: 'pending',
+    requesterId: author.id,
+    requesterName: author.member.name || author.member.nickname || author.id,
+    requesterAccount: normalizeAccount(authorAccount),
+    requesterPokemonKey: offeredPokemon ? getTradePokemonKey(offeredPokemon) : null,
+    requesterPokemonName: offeredPokemon ? tradePokemonLabel(offeredPokemon) : null,
+    targetId: target.id,
+    targetName: target.member.name || target.member.nickname || target.id,
+    targetAccount: normalizeAccount(targetAccount || target.member.mastodonAccount || target.member.mastodonId || ''),
+    mastodonStatusId: status.id,
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  };
+
+  await db.ref('gameData/tradeRequests').push().set(trade);
+
+  const mention = accountMention(trade.targetAccount);
+  return [
+    mention,
+    `${trade.targetName}에게 교환을 신청했어요.`,
+    trade.requesterPokemonName ? `${trade.requesterName}의 ${trade.requesterPokemonName}` : null,
+    `두 사람 모두 [교환: 내보낼 포켓몬 이름]을 보내면 교환이 완료돼요.`
+  ].filter(Boolean).join('\n');
+};
+
+const declineTrade = async ({ tradeKey, trade, author }) => {
+  await db.ref(`gameData/tradeRequests/${tradeKey}`).update({
+    status: 'declined',
+    declinedBy: author.id,
+    updatedAt: Date.now()
+  });
+  return [
+    [accountMention(trade.requesterAccount), accountMention(trade.targetAccount)].filter(Boolean).join(' '),
+    '교환 신청을 거절했어요.'
+  ].filter(Boolean).join('\n');
+};
+
+const saveTradePokemonSelection = async ({ tradeKey, trade, author, offeredName }) => {
+  const isRequester = author.id === trade.requesterId;
+  const isTarget = author.id === trade.targetId;
+  if (!isRequester && !isTarget) return '이 교환의 참가자가 아니에요.';
+
+  const pokemonResult = findOwnedPokemonForTrade(author.member, offeredName);
+  if (pokemonResult.error) return pokemonResult.error;
+
+  const pokemon = pokemonResult.pokemon;
+  const updates = {
+    status: 'accepted',
+    updatedAt: Date.now()
+  };
+  if (isRequester) {
+    updates.requesterPokemonKey = getTradePokemonKey(pokemon);
+    updates.requesterPokemonName = tradePokemonLabel(pokemon);
+  } else {
+    updates.targetPokemonKey = getTradePokemonKey(pokemon);
+    updates.targetPokemonName = tradePokemonLabel(pokemon);
+  }
+
+  await db.ref(`gameData/tradeRequests/${tradeKey}`).update(updates);
+  const updatedTrade = { ...trade, ...updates };
+  if (updatedTrade.requesterPokemonKey && updatedTrade.targetPokemonKey) {
+    return completeTrade({ tradeKey, trade: updatedTrade });
+  }
+
+  const waitingFor = updatedTrade.requesterPokemonKey ? updatedTrade.targetAccount : updatedTrade.requesterAccount;
+  return [
+    accountMention(waitingFor),
+    `${tradePokemonLabel(pokemon)}을(를) 교환 포켓몬으로 선택했어요.`,
+    '상대도 [교환: 포켓몬이름]을 보내면 교환이 완료돼요.'
+  ].filter(Boolean).join('\n');
+};
+
+const handleTrade = async ({ status, content, members, author, authorAccount }) => {
+  const tradeCommand = getTradeCommand(content);
+  const offeredName = extractTradePokemonName(content);
+
+  const authorNormalized = normalizeAccount(authorAccount);
+  const taggedAccount = extractMentionAccounts(status)
+    .map(normalizeAccount)
+    .find(account => localUsername(account) !== SYSTEM_ACCOUNT && account !== authorNormalized);
+  const taggedMember = taggedAccount ? findMemberByAccount(members, taggedAccount) : null;
+
+  if (tradeCommand === 'request') {
+    return createTradeRequest({
+      status,
+      author,
+      authorAccount,
+      target: taggedMember,
+      targetAccount: taggedAccount,
+      offeredName
+    });
+  }
+
+  const active = await findActiveTradeForMember(author.id, taggedMember?.id || null);
+  if (tradeCommand === 'decline') {
+    if (!active) return '거절할 교환 신청이 없어요.';
+    return declineTrade({ tradeKey: active.tradeKey, trade: active.trade, author });
+  }
+
+  if (tradeCommand === 'accept') {
+    if (!active) return '수락할 교환 신청이 없어요.';
+    await db.ref(`gameData/tradeRequests/${active.tradeKey}`).update({
+      status: 'accepted',
+      acceptedAt: Date.now(),
+      updatedAt: Date.now()
+    });
+    return [
+      [accountMention(active.trade.requesterAccount), accountMention(active.trade.targetAccount)].filter(Boolean).join(' '),
+      '교환을 수락했어요.',
+      '두 사람 모두 [교환: 내보낼 포켓몬 이름]을 보내 주세요.'
+    ].filter(Boolean).join('\n');
+  }
+
+  if (offeredName && active) {
+    return saveTradePokemonSelection({
+      tradeKey: active.tradeKey,
+      trade: active.trade,
+      author,
+      offeredName
+    });
+  }
+
+  if (!taggedMember) {
+    return '받은 교환 신청이 없어요. 새로 신청하려면 @상대 [교환: 포켓몬이름]으로 보내 주세요.';
+  }
+
+  return createTradeRequest({
+    status,
+    author,
+    authorAccount,
+    target: taggedMember,
+    targetAccount: taggedAccount,
+    offeredName
+  });
+};
+
 const battleBot = createBattleBot({
   db,
   pokemonData,
@@ -709,7 +1068,13 @@ const processStatus = async (status, source = 'webhook') => {
 
   const processedRef = db.ref(`mastodonBot/processedStatuses/${status.id}`);
   const processedSnapshot = await processedRef.once('value');
-  if (processedSnapshot.exists()) return { ignored: true, reason: 'already processed' };
+  if (processedSnapshot.exists()) {
+    const processed = processedSnapshot.val() || {};
+    const isStaleProcessing =
+      processed.status === 'processing' &&
+      Date.now() - Number(processed.processingStartedAt || 0) > 5 * 60 * 1000;
+    if (!isStaleProcessing) return { ignored: true, reason: 'already processed' };
+  }
   await processedRef.set({
     processingStartedAt: Date.now(),
     source,
@@ -717,11 +1082,13 @@ const processStatus = async (status, source = 'webhook') => {
   });
 
   const content = stripHtml(status.content);
-  const battleCommand = battleBot.getCommand(content);
+  const tradeCommand = getTradeCommand(content);
+  const tradePokemonName = extractTradePokemonName(content);
+  const battleCommand = tradeCommand ? null : battleBot.getCommand(content);
   const command = getCommand(content);
-  if (!battleCommand && !command) {
+  if (!tradeCommand && !battleCommand && !command) {
     await processedRef.set({ processedAt: Date.now(), source, ignored: 'unknown command' });
-    await replyToStatus(status, '알 수 없는 명령어예요. [캠핑 시작], [계속], [만족], [배틀 신청], [배틀 수락], [포켓몬 1], [기술 1] 또는 [기술명] 중 하나를 사용해 주세요.');
+    await replyToStatus(status, '알 수 없는 명령어예요. [캠핑 시작], [계속], [만족], [교환: 포켓몬이름], [배틀 신청], [배틀 수락], [포켓몬 1], [기술 1] 또는 [기술명] 중 하나를 사용해 주세요.');
     return { ignored: true, reason: 'unknown command' };
   }
 
@@ -732,6 +1099,25 @@ const processStatus = async (status, source = 'webhook') => {
     await processedRef.set({ processedAt: Date.now(), source, ignored: 'unlinked account' });
     await replyToStatus(status, '연동된 계정을 찾을 수 없어요. 웹 프로필 설정에서 마스토돈 계정을 먼저 연결해 주세요.');
     return { ignored: true, reason: 'unlinked account' };
+  }
+
+  if (tradeCommand) {
+    const response = await handleTrade({
+      status,
+      content,
+      members,
+      author,
+      authorAccount
+    });
+
+    await processedRef.set({
+      processedAt: Date.now(),
+      source,
+      command: `trade:${tradeCommand}`,
+      account: authorAccount
+    });
+    if (response) await replyToStatus(status, response);
+    return { processed: true, command: `trade:${tradeCommand}` };
   }
 
   if (battleCommand) {

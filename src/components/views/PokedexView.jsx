@@ -1,32 +1,14 @@
 import React, { useState } from 'react';
 import { Search, Lock, CheckCircle, Edit2, MapPin } from 'lucide-react';
 import { COLORS } from '../../styles/theme';
+import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
 
 const TYPE_COLORS = COLORS.types;
 
-const REGIONAL_FORM_LABELS = {
-  alola: '알로라',
-  galar: '가라르',
-  hisui: '히스이',
-  paldea: '팔데아'
-};
 
 function getRegionalFormLabel(pokemon = {}) {
-  const explicitRegionalForm = pokemon.regionalForm?.toLowerCase();
-  if (REGIONAL_FORM_LABELS[explicitRegionalForm]) {
-    return REGIONAL_FORM_LABELS[explicitRegionalForm];
-  }
-
-  const variantSource = `${pokemon.formVariant || ''} ${pokemon.nameEn || ''}`.toLowerCase();
-  const matchedRegion = Object.keys(REGIONAL_FORM_LABELS).find(region => (
-    variantSource.includes(`-${region}`) || variantSource.includes(` ${region}`)
-  ));
-
-  if (matchedRegion) {
-    return REGIONAL_FORM_LABELS[matchedRegion];
-  }
-
-  return pokemon.name.match(/\(([^)]+)\)/)?.[1] || pokemon.name;
+  const displayParts = getPokemonDisplayParts(pokemon);
+  return displayParts.formLabel || displayParts.name;
 }
 
 const toDexNumber = (value) => {
@@ -446,6 +428,7 @@ export default function PokedexView({
               } else if (!unlockedNumbers.has(currentNumber) && unlockedRegionalForm) {
                 displayPokemon = unlockedRegionalForm;
               }
+              const displayNameParts = getPokemonDisplayParts(displayPokemon);
 
               return (
                 <div
@@ -481,8 +464,15 @@ export default function PokedexView({
                   </div>
 
                   {isUnlocked && (
-                    <div className="truncate text-sm font-bold text-[#26351f]">
-                      {displayPokemon.name}
+                    <div className="min-h-[36px]">
+                      <div className="truncate text-sm font-bold text-[#26351f]">
+                        {displayNameParts.name}
+                      </div>
+                      {displayNameParts.formLabel && (
+                        <div className="mt-0.5 truncate text-[11px] font-semibold text-[#7c9157]">
+                          {displayNameParts.formLabel}
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -601,7 +591,7 @@ export default function PokedexView({
                             : 'bg-[#e2edc6] text-[#2f4a24] hover:bg-[#d0e69b]'
                         }`}
                       >
-                        원종
+                        {getPokemonDisplayParts(originalForm).formLabel || '원종'}
                       </button>
                     )}
 
@@ -638,7 +628,14 @@ export default function PokedexView({
               />
 
               {/* 이름 */}
-              <h3 className="mb-2 text-2xl font-bold text-[#26351f]">{selectedForm.name}</h3>
+              <h3 className="mb-2 text-2xl font-bold text-[#26351f]">
+                {getPokemonDisplayParts(selectedForm).name}
+              </h3>
+              {getPokemonDisplayParts(selectedForm).formLabel && (
+                <div className="mb-3 text-sm font-semibold text-[#7c9157]">
+                  {getPokemonDisplayParts(selectedForm).formLabel}
+                </div>
+              )}
               {/* 타입 */}
               <div className="flex gap-2 justify-center mb-4">
                 <span

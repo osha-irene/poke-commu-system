@@ -1,0 +1,334 @@
+# Form icon file names
+# Rule: use formVariant/nameEn uppercased, keep hyphen, .png
+# Format: Korean name | nameEn | baseSpeciesEn | icon filename
+
+킬가르도 (블레이드폼) | aegislash-blade | aegislash | AEGISLASH-BLADE.png
+킬가르도 (실드폼) | aegislash-shield | aegislash | AEGISLASH-SHIELD.png
+윈디 | arcanine-hisui | arcanine | ARCANINE-HISUI.png
+아르세우스 | arceus-bug | arceus | ARCEUS-BUG.png
+아르세우스 | arceus-dark | arceus | ARCEUS-DARK.png
+아르세우스 | arceus-dragon | arceus | ARCEUS-DRAGON.png
+아르세우스 | arceus-electric | arceus | ARCEUS-ELECTRIC.png
+아르세우스 | arceus-fairy | arceus | ARCEUS-FAIRY.png
+아르세우스 | arceus-fighting | arceus | ARCEUS-FIGHTING.png
+아르세우스 | arceus-fire | arceus | ARCEUS-FIRE.png
+아르세우스 | arceus-flying | arceus | ARCEUS-FLYING.png
+아르세우스 | arceus-ghost | arceus | ARCEUS-GHOST.png
+아르세우스 | arceus-grass | arceus | ARCEUS-GRASS.png
+아르세우스 | arceus-ground | arceus | ARCEUS-GROUND.png
+아르세우스 | arceus-ice | arceus | ARCEUS-ICE.png
+아르세우스 | arceus-poison | arceus | ARCEUS-POISON.png
+아르세우스 | arceus-psychic | arceus | ARCEUS-PSYCHIC.png
+아르세우스 | arceus-rock | arceus | ARCEUS-ROCK.png
+아르세우스 | arceus-steel | arceus | ARCEUS-STEEL.png
+아르세우스 | arceus-water | arceus | ARCEUS-WATER.png
+프리져 (가라르의 모습) | articuno-galar | articuno | ARTICUNO-GALAR.png
+크레베이스 | avalugg-hisui | avalugg | AVALUGG-HISUI.png
+대쓰여너 | basculegion-female | basculegion | BASCULEGION-FEMALE.png
+대쓰여너 | basculegion-male | basculegion | BASCULEGION-MALE.png
+배쓰나이 (청색근의 모습) | basculin-blue-striped | basculin | BASCULIN-BLUE-STRIPED.png
+배쓰나이 (적색근의 모습) | basculin-red-striped | basculin | BASCULIN-RED-STRIPED.png
+배쓰나이 | basculin-white-striped | basculin | BASCULIN-WHITE-STRIPED.png
+워글 | braviary-hisui | braviary | BRAVIARY-HISUI.png
+사나운버섯 | brute-bonnet | - | BRUTE-BONNET.png
+도롱충이 (모래땅도롱) | burmy-sandy | burmy | BURMY-SANDY.png
+도롱충이 (슈레도롱) | burmy-trash | burmy | BURMY-TRASH.png
+버드렉스 (백마 탄 모습) | calyrex-ice | calyrex | CALYREX-ICE.png
+버드렉스 (흑마 탄 모습) | calyrex-shadow | calyrex | CALYREX-SHADOW.png
+캐스퐁 (빗방울의 모습) | castform-rainy | castform | CASTFORM-RAINY.png
+캐스퐁 (설운의 모습) | castform-snowy | castform | CASTFORM-SNOWY.png
+캐스퐁 (태양의 모습) | castform-sunny | castform | CASTFORM-SUNNY.png
+체리꼬 (포지폼) | cherrim-sunshine | cherrim | CHERRIM-SUNSHINE.png
+위유이 | chi-yu | - | CHI-YU.png
+파오젠 | chien-pao | - | CHIEN-PAO.png
+코산호 (가라르의 모습) | corsola-galar | corsola | CORSOLA-GALAR.png
+불비달마 (가라르의 모습) | darmanitan-galar-standard | darmanitan | DARMANITAN-GALAR-STANDARD.png
+불비달마 (달마모드) | darmanitan-galar-zen | darmanitan | DARMANITAN-GALAR-ZEN.png
+불비달마 (노말모드) | darmanitan-standard | darmanitan | DARMANITAN-STANDARD.png
+불비달마 (달마모드) | darmanitan-zen | darmanitan | DARMANITAN-ZEN.png
+달막화 (가라르의 모습) | darumaka-galar | darumaka | DARUMAKA-GALAR.png
+모크나이퍼 | decidueye-hisui | decidueye | DECIDUEYE-HISUI.png
+사철록 (가을의 모습) | deerling-autumn | deerling | DEERLING-AUTUMN.png
+사철록 (여름의 모습) | deerling-summer | deerling | DEERLING-SUMMER.png
+사철록 (겨울의 모습) | deerling-winter | deerling | DEERLING-WINTER.png
+테오키스 (어택폼) | deoxys-attack | deoxys | DEOXYS-ATTACK.png
+테오키스 (디펜스폼) | deoxys-defense | deoxys | DEOXYS-DEFENSE.png
+테오키스 (노말폼) | deoxys-normal | deoxys | DEOXYS-NORMAL.png
+테오키스 (스피드폼) | deoxys-speed | deoxys | DEOXYS-SPEED.png
+디아루가 | dialga-origin | dialga | DIALGA-ORIGIN.png
+디그다 (알로라의 모습) | diglett-alola | diglett | DIGLETT-ALOLA.png
+노고고치 | dudunsparce-three-segment | dudunsparce | DUDUNSPARCE-THREE-SEGMENT.png
+노고고치 | dudunsparce-two-segment | dudunsparce | DUDUNSPARCE-TWO-SEGMENT.png
+닥트리오 (알로라의 모습) | dugtrio-alola | dugtrio | DUGTRIO-ALOLA.png
+빙큐보 (아이스페이스) | eiscue-ice | eiscue | EISCUE-ICE.png
+빙큐보 (나이스페이스) | eiscue-noice | eiscue | EISCUE-NOICE.png
+붐볼 | electrode-hisui | electrode | ELECTRODE-HISUI.png
+러브로스 | enamorus-incarnate | enamorus | ENAMORUS-INCARNATE.png
+러브로스 | enamorus-therian | enamorus | ENAMORUS-THERIAN.png
+나시 (알로라의 모습) | exeggutor-alola | exeggutor | EXEGGUTOR-ALOLA.png
+파오리 (가라르의 모습) | farfetchd-galar | farfetchd | FARFETCHD-GALAR.png
+플라베베 (파란 꽃) | flabebe-blue | flabebe | FLABEBE-BLUE.png
+플라베베 (오렌지색 꽃) | flabebe-orange | flabebe | FLABEBE-ORANGE.png
+플라베베 (하얀 꽃) | flabebe-white | flabebe | FLABEBE-WHITE.png
+플라베베 (노란 꽃) | flabebe-yellow | flabebe | FLABEBE-YELLOW.png
+플라엣테 (파란 꽃) | floette-blue | floette | FLOETTE-BLUE.png
+플라엣테 (영원의 꽃) | floette-eternal | floette | FLOETTE-ETERNAL.png
+플라엣테 | floette-mega | floette | FLOETTE-MEGA.png
+플라엣테 (오렌지색 꽃) | floette-orange | floette | FLOETTE-ORANGE.png
+플라엣테 (하얀 꽃) | floette-white | floette | FLOETTE-WHITE.png
+플라엣테 (노란 꽃) | floette-yellow | floette | FLOETTE-YELLOW.png
+플라제스 (파란 꽃) | florges-blue | florges | FLORGES-BLUE.png
+플라제스 (오렌지색 꽃) | florges-orange | florges | FLORGES-ORANGE.png
+플라제스 (하얀 꽃) | florges-white | florges | FLORGES-WHITE.png
+플라제스 (노란 꽃) | florges-yellow | florges | FLORGES-YELLOW.png
+날개치는머리 | flutter-mane | - | FLUTTER-MANE.png
+트리미앙 (젠틀컷) | furfrou-dandy | furfrou | FURFROU-DANDY.png
+트리미앙 (레이디컷) | furfrou-debutante | furfrou | FURFROU-DEBUTANTE.png
+트리미앙 (다이아컷) | furfrou-diamond | furfrou | FURFROU-DIAMOND.png
+트리미앙 (하트컷) | furfrou-heart | furfrou | FURFROU-HEART.png
+트리미앙 (가부키컷) | furfrou-kabuki | furfrou | FURFROU-KABUKI.png
+트리미앙 (퀸컷) | furfrou-la-reine | furfrou | FURFROU-LA-REINE.png
+트리미앙 (마담컷) | furfrou-matron | furfrou | FURFROU-MATRON.png
+트리미앙 (킹덤컷) | furfrou-pharaoh | furfrou | FURFROU-PHARAOH.png
+트리미앙 (스타컷) | furfrou-star | furfrou | FURFROU-STAR.png
+트리토돈 (동쪽바다) | gastrodon-east | gastrodon | GASTRODON-EAST.png
+꼬마돌 (알로라의 모습) | geodude-alola | geodude | GEODUDE-ALOLA.png
+모으령 | gimmighoul-roaming | gimmighoul | GIMMIGHOUL-ROAMING.png
+기라티나 (어나더폼) | giratina-altered | giratina | GIRATINA-ALTERED.png
+기라티나 (오리진폼) | giratina-origin | giratina | GIRATINA-ORIGIN.png
+딱구리 (알로라의 모습) | golem-alola | golem | GOLEM-ALOLA.png
+미끄래곤 | goodra-hisui | goodra | GOODRA-HISUI.png
+꿰뚫는화염 | gouging-fire | - | GOUGING-FIRE.png
+펌킨인 (보통 사이즈) | gourgeist-average | gourgeist | GOURGEIST-AVERAGE.png
+펌킨인 (큰 사이즈) | gourgeist-large | gourgeist | GOURGEIST-LARGE.png
+펌킨인 (작은 사이즈) | gourgeist-small | gourgeist | GOURGEIST-SMALL.png
+펌킨인 (특대 사이즈) | gourgeist-super | gourgeist | GOURGEIST-SUPER.png
+데구리 (알로라의 모습) | graveler-alola | graveler | GRAVELER-ALOLA.png
+위대한엄니 | great-tusk | - | GREAT-TUSK.png
+질퍽이 (알로라의 모습) | grimer-alola | grimer | GRIMER-ALOLA.png
+가디 | growlithe-hisui | growlithe | GROWLITHE-HISUI.png
+짜랑고우 | hakamo-o | - | HAKAMO-O.png
+칠색조 | ho-oh | - | HO-OH.png
+굴레를 벗어난 후파 | hoopa-unbound | hoopa | HOOPA-UNBOUND.png
+에써르 (암컷의 모습) | indeedee-female | indeedee | INDEEDEE-FEMALE.png
+에써르 (수컷의 모습) | indeedee-male | indeedee | INDEEDEE-MALE.png
+무쇠암석 | iron-boulder | - | IRON-BOULDER.png
+무쇠보따리 | iron-bundle | - | IRON-BUNDLE.png
+무쇠감투 | iron-crown | - | IRON-CROWN.png
+무쇠손 | iron-hands | - | IRON-HANDS.png
+무쇠머리 | iron-jugulis | - | IRON-JUGULIS.png
+무쇠잎새 | iron-leaves | - | IRON-LEAVES.png
+무쇠독나방 | iron-moth | - | IRON-MOTH.png
+무쇠가시 | iron-thorns | - | IRON-THORNS.png
+무쇠바퀴 | iron-treads | - | IRON-TREADS.png
+무쇠무인 | iron-valiant | - | IRON-VALIANT.png
+짜랑꼬 | jangmo-o | - | JANGMO-O.png
+케르디오 (평상시 모습) | keldeo-ordinary | keldeo | KELDEO-ORDINARY.png
+케르디오 (각오의 모습) | keldeo-resolute | keldeo | KELDEO-RESOLUTE.png
+짜랑고우거 | kommo-o | - | KOMMO-O.png
+코라이돈 | koraidon-gliding-build | koraidon | KORAIDON-GLIDING-BUILD.png
+코라이돈 | koraidon-limited-build | koraidon | KORAIDON-LIMITED-BUILD.png
+코라이돈 | koraidon-sprinting-build | koraidon | KORAIDON-SPRINTING-BUILD.png
+코라이돈 | koraidon-swimming-build | koraidon | KORAIDON-SWIMMING-BUILD.png
+블랙큐레무 | kyurem-black | kyurem | KYUREM-BLACK.png
+화이트큐레무 | kyurem-white | kyurem | KYUREM-WHITE.png
+랜드로스 (화신폼) | landorus-incarnate | landorus | LANDORUS-INCARNATE.png
+랜드로스 (영물폼) | landorus-therian | landorus | LANDORUS-THERIAN.png
+드레디어 | lilligant-hisui | lilligant | LILLIGANT-HISUI.png
+직구리 (가라르의 모습) | linoone-galar | linoone | LINOONE-GALAR.png
+루가루암 (황혼의 모습) | lycanroc-dusk | lycanroc | LYCANROC-DUSK.png
+루가루암 (한낮의 모습) | lycanroc-midday | lycanroc | LYCANROC-MIDDAY.png
+루가루암 (한밤중의 모습) | lycanroc-midnight | lycanroc | LYCANROC-MIDNIGHT.png
+텅구리 (알로라의 모습) | marowak-alola | marowak | MAROWAK-ALOLA.png
+파밀리쥐 | maushold-family-of-four | maushold | MAUSHOLD-FAMILY-OF-FOUR.png
+파밀리쥐 | maushold-family-of-three | maushold | MAUSHOLD-FAMILY-OF-THREE.png
+메로엣타 (보이스폼) | meloetta-aria | meloetta | MELOETTA-ARIA.png
+메로엣타 (스텝폼) | meloetta-pirouette | meloetta | MELOETTA-PIROUETTE.png
+냐오닉스 (암컷의 모습) | meowstic-female | meowstic | MEOWSTIC-FEMALE.png
+냐오닉스 (수컷의 모습) | meowstic-male | meowstic | MEOWSTIC-MALE.png
+냐오닉스 | meowstic-mega | meowstic | MEOWSTIC-MEGA.png
+나옹 (알로라의 모습) | meowth-alola | meowth | MEOWTH-ALOLA.png
+나옹 (가라르의 모습) | meowth-galar | meowth | MEOWTH-GALAR.png
+나옹 | meowth-gmax | meowth | MEOWTH-GMAX.png
+흉내내 | mime-jr | - | MIME-JR.png
+따라큐 (들킨 모습) | mimikyu-busted | mimikyu | MIMIKYU-BUSTED.png
+따라큐 (둔갑한 모습) | mimikyu-disguised | mimikyu | MIMIKYU-DISGUISED.png
+메테노 (옥색 코어) | minior-blue | minior | MINIOR-BLUE.png
+메테노 (유성의 모습) | minior-blue-meteor | minior | MINIOR-BLUE-METEOR.png
+메테노 (초록색 코어) | minior-green | minior | MINIOR-GREEN.png
+메테노 (유성의 모습) | minior-green-meteor | minior | MINIOR-GREEN-METEOR.png
+메테노 (파란색 코어) | minior-indigo | minior | MINIOR-INDIGO.png
+메테노 (유성의 모습) | minior-indigo-meteor | minior | MINIOR-INDIGO-METEOR.png
+메테노 (주황색 코어) | minior-orange | minior | MINIOR-ORANGE.png
+메테노 (유성의 모습) | minior-orange-meteor | minior | MINIOR-ORANGE-METEOR.png
+메테노 (빨간색 코어) | minior-red | minior | MINIOR-RED.png
+메테노 (유성의 모습) | minior-red-meteor | minior | MINIOR-RED-METEOR.png
+메테노 (보라색 코어) | minior-violet | minior | MINIOR-VIOLET.png
+메테노 (유성의 모습) | minior-violet-meteor | minior | MINIOR-VIOLET-METEOR.png
+메테노 (노란색 코어) | minior-yellow | minior | MINIOR-YELLOW.png
+메테노 (유성의 모습) | minior-yellow-meteor | minior | MINIOR-YELLOW-METEOR.png
+미라이돈 | miraidon-aquatic-mode | miraidon | MIRAIDON-AQUATIC-MODE.png
+미라이돈 | miraidon-drive-mode | miraidon | MIRAIDON-DRIVE-MODE.png
+미라이돈 | miraidon-glide-mode | miraidon | MIRAIDON-GLIDE-MODE.png
+미라이돈 | miraidon-low-power-mode | miraidon | MIRAIDON-LOW-POWER-MODE.png
+파이어 (가라르의 모습) | moltres-galar | moltres | MOLTRES-GALAR.png
+모르페코 (배부른 모양) | morpeko-full-belly | morpeko | MORPEKO-FULL-BELLY.png
+모르페코 (배고픈 모양) | morpeko-hangry | morpeko | MORPEKO-HANGRY.png
+마임맨 | mr-mime | - | MR-MIME.png
+마임맨 (가라르의 모습) | mr-mime-galar | mr-mime | MR-MIME-GALAR.png
+마임꽁꽁 | mr-rime | - | MR-RIME.png
+질뻐기 (알로라의 모습) | muk-alola | muk | MUK-ALOLA.png
+네크로즈마 (새벽의 날개) | necrozma-dawn | necrozma | NECROZMA-DAWN.png
+네크로즈마 (황혼의 갈기) | necrozma-dusk | necrozma | NECROZMA-DUSK.png
+울트라네크로즈마 | necrozma-ultra | necrozma | NECROZMA-ULTRA.png
+니드런♀ | nidoran-f | - | NIDORAN-F.png
+니드런♂ | nidoran-m | - | NIDORAN-M.png
+나인테일 (알로라의 모습) | ninetales-alola | ninetales | NINETALES-ALOLA.png
+오거폰 (주춧돌의가면) | ogerpon-cornerstone-mask | ogerpon | OGERPON-CORNERSTONE-MASK.png
+오거폰 (화덕의가면) | ogerpon-hearthflame-mask | ogerpon | OGERPON-HEARTHFLAME-MASK.png
+오거폰 (우물의가면) | ogerpon-wellspring-mask | ogerpon | OGERPON-WELLSPRING-MASK.png
+퍼퓨돈 | oinkologne-female | oinkologne | OINKOLOGNE-FEMALE.png
+퍼퓨돈 | oinkologne-male | oinkologne | OINKOLOGNE-MALE.png
+춤추새 (이글이글스타일) | oricorio-baile | oricorio | ORICORIO-BAILE.png
+춤추새 (훌라훌라스타일) | oricorio-pau | oricorio | ORICORIO-PAU.png
+춤추새 (파칙파칙스타일) | oricorio-pom-pom | oricorio | ORICORIO-POM-POM.png
+춤추새 (하늘하늘스타일) | oricorio-sensu | oricorio | ORICORIO-SENSU.png
+돌핀맨 | palafin-hero | palafin | PALAFIN-HERO.png
+돌핀맨 | palafin-zero | palafin | PALAFIN-ZERO.png
+펄기아 | palkia-origin | palkia | PALKIA-ORIGIN.png
+페르시온 (알로라의 모습) | persian-alola | persian | PERSIAN-ALOLA.png
+포니타 (가라르의 모습) | ponyta-galar | ponyta | PONYTA-GALAR.png
+폴리곤Z | porygon-z | - | PORYGON-Z.png
+호바귀 (보통 사이즈) | pumpkaboo-average | pumpkaboo | PUMPKABOO-AVERAGE.png
+호바귀 (큰 사이즈) | pumpkaboo-large | pumpkaboo | PUMPKABOO-LARGE.png
+호바귀 (작은 사이즈) | pumpkaboo-small | pumpkaboo | PUMPKABOO-SMALL.png
+호바귀 (특대 사이즈) | pumpkaboo-super | pumpkaboo | PUMPKABOO-SUPER.png
+침바루 | qwilfish-hisui | qwilfish | QWILFISH-HISUI.png
+날뛰는우레 | raging-bolt | - | RAGING-BOLT.png
+라이츄 (알로라의 모습) | raichu-alola | raichu | RAICHU-ALOLA.png
+라이츄 | raichu-mega-x | raichu | RAICHU-MEGA-X.png
+라이츄 | raichu-mega-y | raichu | RAICHU-MEGA-Y.png
+날쌩마 (가라르의 모습) | rapidash-galar | rapidash | RAPIDASH-GALAR.png
+레트라 (알로라의 모습) | raticate-alola | raticate | RATICATE-ALOLA.png
+꼬렛 (알로라의 모습) | rattata-alola | rattata | RATTATA-ALOLA.png
+고동치는달 | roaring-moon | - | ROARING-MOON.png
+스핀로토무 | rotom-fan | rotom | ROTOM-FAN.png
+프로스트로토무 | rotom-frost | rotom | ROTOM-FROST.png
+히트로토무 | rotom-heat | rotom | ROTOM-HEAT.png
+커트로토무 | rotom-mow | rotom | ROTOM-MOW.png
+워시로토무 | rotom-wash | rotom | ROTOM-WASH.png
+대검귀 | samurott-hisui | samurott | SAMUROTT-HISUI.png
+모래두지 (알로라의 모습) | sandshrew-alola | sandshrew | SANDSHREW-ALOLA.png
+고지 (알로라의 모습) | sandslash-alola | sandslash | SANDSLASH-ALOLA.png
+모래털가죽 | sandy-shocks | - | SANDY-SHOCKS.png
+바라철록 (가을의 모습) | sawsbuck-autumn | sawsbuck | SAWSBUCK-AUTUMN.png
+바라철록 (여름의 모습) | sawsbuck-summer | sawsbuck | SAWSBUCK-SUMMER.png
+바라철록 (겨울의 모습) | sawsbuck-winter | sawsbuck | SAWSBUCK-WINTER.png
+우렁찬꼬리 | scream-tail | - | SCREAM-TAIL.png
+쉐이미 (랜드폼) | shaymin-land | shaymin | SHAYMIN-LAND.png
+쉐이미 (스카이폼) | shaymin-sky | shaymin | SHAYMIN-SKY.png
+깝질무 (동쪽바다) | shellos-east | shellos | SHELLOS-EAST.png
+실버디 (타입:버그) | silvally-bug | silvally | SILVALLY-BUG.png
+실버디 (타입:다크) | silvally-dark | silvally | SILVALLY-DARK.png
+실버디 (타입:드래곤) | silvally-dragon | silvally | SILVALLY-DRAGON.png
+실버디 (타입:일렉트릭) | silvally-electric | silvally | SILVALLY-ELECTRIC.png
+실버디 (타입:페어리) | silvally-fairy | silvally | SILVALLY-FAIRY.png
+실버디 (타입:파이팅) | silvally-fighting | silvally | SILVALLY-FIGHTING.png
+실버디 (타입:파이어) | silvally-fire | silvally | SILVALLY-FIRE.png
+실버디 (타입:플라잉) | silvally-flying | silvally | SILVALLY-FLYING.png
+실버디 (타입:고스트) | silvally-ghost | silvally | SILVALLY-GHOST.png
+실버디 (타입:그래스) | silvally-grass | silvally | SILVALLY-GRASS.png
+실버디 (타입:그라운드) | silvally-ground | silvally | SILVALLY-GROUND.png
+실버디 (타입:아이스) | silvally-ice | silvally | SILVALLY-ICE.png
+실버디 (타입:포이즌) | silvally-poison | silvally | SILVALLY-POISON.png
+실버디 (타입:사이킥) | silvally-psychic | silvally | SILVALLY-PSYCHIC.png
+실버디 (타입:락) | silvally-rock | silvally | SILVALLY-ROCK.png
+실버디 (타입:스틸) | silvally-steel | silvally | SILVALLY-STEEL.png
+실버디 (타입:워터) | silvally-water | silvally | SILVALLY-WATER.png
+미끄네일 | sliggoo-hisui | sliggoo | SLIGGOO-HISUI.png
+땅을기는날개 | slither-wing | - | SLITHER-WING.png
+야도란 (가라르의 모습) | slowbro-galar | slowbro | SLOWBRO-GALAR.png
+메가야도란 | slowbro-mega | slowbro | SLOWBRO-MEGA.png
+야도킹 (가라르의 모습) | slowking-galar | slowking | SLOWKING-GALAR.png
+야돈 (가라르의 모습) | slowpoke-galar | slowpoke | SLOWPOKE-GALAR.png
+포푸니 | sneasel-hisui | sneasel | SNEASEL-HISUI.png
+시비꼬 | squawkabilly-blue-plumage | squawkabilly | SQUAWKABILLY-BLUE-PLUMAGE.png
+시비꼬 | squawkabilly-green-plumage | squawkabilly | SQUAWKABILLY-GREEN-PLUMAGE.png
+시비꼬 | squawkabilly-white-plumage | squawkabilly | SQUAWKABILLY-WHITE-PLUMAGE.png
+시비꼬 | squawkabilly-yellow-plumage | squawkabilly | SQUAWKABILLY-YELLOW-PLUMAGE.png
+메더 (가라르의 모습) | stunfisk-galar | stunfisk | STUNFISK-GALAR.png
+카푸브루루 | tapu-bulu | - | TAPU-BULU.png
+카푸느지느 | tapu-fini | - | TAPU-FINI.png
+카푸꼬꼬꼭 | tapu-koko | - | TAPU-KOKO.png
+카푸나비나 | tapu-lele | - | TAPU-LELE.png
+싸리용 | tatsugiri-curly | tatsugiri | TATSUGIRI-CURLY.png
+싸리용 | tatsugiri-curly-mega | tatsugiri | TATSUGIRI-CURLY-MEGA.png
+싸리용 | tatsugiri-droopy | tatsugiri | TATSUGIRI-DROOPY.png
+싸리용 | tatsugiri-droopy-mega | tatsugiri | TATSUGIRI-DROOPY-MEGA.png
+싸리용 | tatsugiri-stretchy | tatsugiri | TATSUGIRI-STRETCHY.png
+싸리용 | tatsugiri-stretchy-mega | tatsugiri | TATSUGIRI-STRETCHY-MEGA.png
+켄타로스 | tauros-paldea-aqua-breed | tauros | TAUROS-PALDEA-AQUA-BREED.png
+켄타로스 | tauros-paldea-blaze-breed | tauros | TAUROS-PALDEA-BLAZE-BREED.png
+켄타로스 | tauros-paldea-combat-breed | tauros | TAUROS-PALDEA-COMBAT-BREED.png
+테라파고스 | terapagos-stellar | terapagos | TERAPAGOS-STELLAR.png
+테라파고스 | terapagos-terastal | terapagos | TERAPAGOS-TERASTAL.png
+볼트로스 (화신폼) | thundurus-incarnate | thundurus | THUNDURUS-INCARNATE.png
+볼트로스 (영물폼) | thundurus-therian | thundurus | THUNDURUS-THERIAN.png
+딩루 | ting-lu | - | TING-LU.png
+토네로스 (화신폼) | tornadus-incarnate | tornadus | TORNADUS-INCARNATE.png
+토네로스 (영물폼) | tornadus-therian | tornadus | TORNADUS-THERIAN.png
+스트린더 (하이한 모습) | toxtricity-amped | toxtricity | TOXTRICITY-AMPED.png
+스트린더 | toxtricity-amped-gmax | toxtricity | TOXTRICITY-AMPED-GMAX.png
+스트린더 (로우한 모습) | toxtricity-low-key | toxtricity | TOXTRICITY-LOW-KEY.png
+스트린더 | toxtricity-low-key-gmax | toxtricity | TOXTRICITY-LOW-KEY-GMAX.png
+타입:널 | type-null | - | TYPE-NULL.png
+블레이범 | typhlosion-hisui | typhlosion | TYPHLOSION-HISUI.png
+우라오스 (연격의 태세) | urshifu-rapid-strike | urshifu | URSHIFU-RAPID-STRIKE.png
+우라오스 | urshifu-rapid-strike-gmax | urshifu | URSHIFU-RAPID-STRIKE-GMAX.png
+우라오스 (일격의 태세) | urshifu-single-strike | urshifu | URSHIFU-SINGLE-STRIKE.png
+우라오스 | urshifu-single-strike-gmax | urshifu | URSHIFU-SINGLE-STRIKE-GMAX.png
+비비용 (대륙의 모양) | vivillon-continental | vivillon | VIVILLON-CONTINENTAL.png
+비비용 (우아한 모양) | vivillon-elegant | vivillon | VIVILLON-ELEGANT.png
+비비용 (팬시한 모양) | vivillon-fancy | vivillon | VIVILLON-FANCY.png
+비비용 (정원의 모양) | vivillon-garden | vivillon | VIVILLON-GARDEN.png
+비비용 (황야의 모양) | vivillon-high-plains | vivillon | VIVILLON-HIGH-PLAINS.png
+비비용 (빙설의 모양) | vivillon-icy-snow | vivillon | VIVILLON-ICY-SNOW.png
+비비용 (정글의 모양) | vivillon-jungle | vivillon | VIVILLON-JUNGLE.png
+비비용 (마린의 모양) | vivillon-marine | vivillon | VIVILLON-MARINE.png
+비비용 (모던한 모양) | vivillon-modern | vivillon | VIVILLON-MODERN.png
+비비용 (스콜의 모양) | vivillon-monsoon | vivillon | VIVILLON-MONSOON.png
+비비용 (오션의 모양) | vivillon-ocean | vivillon | VIVILLON-OCEAN.png
+비비용 (볼의 모양) | vivillon-poke-ball | vivillon | VIVILLON-POKE-BALL.png
+비비용 (설국의 모양) | vivillon-polar | vivillon | VIVILLON-POLAR.png
+비비용 (대하의 모양) | vivillon-river | vivillon | VIVILLON-RIVER.png
+비비용 (사진의 모양) | vivillon-sandstorm | vivillon | VIVILLON-SANDSTORM.png
+비비용 (사바나의 모양) | vivillon-savanna | vivillon | VIVILLON-SAVANNA.png
+비비용 (태양의 모양) | vivillon-sun | vivillon | VIVILLON-SUN.png
+비비용 (설원의 모양) | vivillon-tundra | vivillon | VIVILLON-TUNDRA.png
+찌리리공 | voltorb-hisui | voltorb | VOLTORB-HISUI.png
+식스테일 (알로라의 모습) | vulpix-alola | vulpix | VULPIX-ALOLA.png
+굽이치는물결 | walking-wake | - | WALKING-WAKE.png
+또도가스 (가라르의 모습) | weezing-galar | weezing | WEEZING-GALAR.png
+약어리 (군집의 모습) | wishiwashi-school | wishiwashi | WISHIWASHI-SCHOOL.png
+약어리 (단독의 모습) | wishiwashi-solo | wishiwashi | WISHIWASHI-SOLO.png
+총지엔 | wo-chien | - | WO-CHIEN.png
+우파 | wooper-paldea | wooper | WOOPER-PALDEA.png
+도롱마담 (초목도롱) | wormadam-plant | wormadam | WORMADAM-PLANT.png
+도롱마담 (모래땅도롱) | wormadam-sandy | wormadam | WORMADAM-SANDY.png
+도롱마담 (슈레도롱) | wormadam-trash | wormadam | WORMADAM-TRASH.png
+제르네아스 (액티브모드) | xerneas-active | xerneas | XERNEAS-ACTIVE.png
+데스마스 (가라르의 모습) | yamask-galar | yamask | YAMASK-GALAR.png
+자시안 (검왕) | zacian-crowned | zacian | ZACIAN-CROWNED.png
+자마젠타 (방패왕) | zamazenta-crowned | zamazenta | ZAMAZENTA-CROWNED.png
+썬더 (가라르의 모습) | zapdos-galar | zapdos | ZAPDOS-GALAR.png
+지그제구리 (가라르의 모습) | zigzagoon-galar | zigzagoon | ZIGZAGOON-GALAR.png
+조로아크 | zoroark-hisui | zoroark | ZOROARK-HISUI.png
+조로아 | zorua-hisui | zorua | ZORUA-HISUI.png
+지가르데 (10%폼) | zygarde-10 | zygarde | ZYGARDE-10.png
+지가르데 (10%폼) | zygarde-10-power-construct | zygarde | ZYGARDE-10-POWER-CONSTRUCT.png
+지가르데 (50%폼) | zygarde-50 | zygarde | ZYGARDE-50.png
+지가르데 (50%폼) | zygarde-50-power-construct | zygarde | ZYGARDE-50-POWER-CONSTRUCT.png
+지가르데 (퍼펙트폼) | zygarde-complete | zygarde | ZYGARDE-COMPLETE.png
+지가르데 | zygarde-mega | zygarde | ZYGARDE-MEGA.png
+
+Total: 328

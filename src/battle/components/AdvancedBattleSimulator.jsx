@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   CloudSun,
   Heart,
@@ -15,6 +15,7 @@ import {
   Zap,
 } from 'lucide-react';
 import useAdvancedBattle from '../hooks/useAdvancedBattle';
+import { getOwnedPokemonDisplayParts } from '../../utils/ownedPokemonDisplay';
 
 const BOOST_LABELS = {
   atk: '공격',
@@ -30,7 +31,19 @@ const formatBoosts = (boosts = {}) => Object.entries(boosts)
   .filter(([, value]) => value !== 0)
   .map(([stat, value]) => `${BOOST_LABELS[stat] || stat} ${value > 0 ? '+' : ''}${value}`);
 
-const pokemonLabel = pokemon => pokemon?.nickname || pokemon?.name || pokemon?.species || '포켓몬';
+const PokemonNameText = ({ pokemon, className = '', speciesClassName = '' }) => {
+  const displayName = getOwnedPokemonDisplayParts(pokemon);
+  return (
+    <span className={className}>
+      <span>{displayName.primary}</span>
+      {displayName.hasNickname && (
+        <span className={`ml-1 text-xs font-semibold opacity-70 ${speciesClassName}`}>
+          {displayName.species}
+        </span>
+      )}
+    </span>
+  );
+};
 
 const requestLabel = {
   move: '기술 선택',
@@ -78,7 +91,7 @@ const BattleInfoPanel = ({ battleState, onClose }) => {
         <div>
           <div className="mb-1 font-semibold text-gray-700">현재 포켓몬</div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-bold">{pokemonLabel(active)}</span>
+            <PokemonNameText pokemon={active} className="font-bold" />
             <span>HP {active?.currentHP}/{active?.maxHP}</span>
             {active?.status && <span className="rounded-full bg-red-100 px-2 py-1 text-red-800">{active.status}</span>}
           </div>
@@ -165,6 +178,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
   const [selectedP2Pokemon, setSelectedP2Pokemon] = useState([0]);
   const [showDamagePreview, setShowDamagePreview] = useState(null);
   const [megaIntent, setMegaIntent] = useState({ player1: false, player2: false });
+  const megaIntentRef = useRef({ player1: false, player2: false });
   const [showBattleInfo, setShowBattleInfo] = useState(false);
 
   const toggleSelection = (index, setter) => {
@@ -174,6 +188,33 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
       return prev;
     });
   };
+
+  const setMegaIntentForPlayer = (player, value) => {
+    setMegaIntent((prev) => {
+      const next = { ...prev, [player]: value };
+      megaIntentRef.current = next;
+      return next;
+    });
+  };
+
+  const toggleMegaIntent = (player) => {
+    const nextValue = !megaIntentRef.current[player];
+    setMegaIntentForPlayer(player, nextValue);
+  };
+
+  useEffect(() => {
+    const p1CanMega = battleState.player1.active[0]?.canMegaEvolve;
+    const p2CanMega = battleState.player2.active[0]?.canMegaEvolve;
+
+    setMegaIntent((prev) => {
+      const next = {
+        player1: p1CanMega ? prev.player1 : false,
+        player2: p2CanMega ? prev.player2 : false,
+      };
+      megaIntentRef.current = next;
+      return next.player1 === prev.player1 && next.player2 === prev.player2 ? prev : next;
+    });
+  }, [battleState.player1.active, battleState.player2.active]);
 
   if (battleState.phase === 'team_selection') {
     return (
@@ -208,7 +249,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
                     }`}
                   >
                     <div className="text-left">
-                      <div className="font-bold">{pokemonLabel(pokemon)}</div>
+                      <PokemonNameText pokemon={pokemon} className="font-bold" />
                       <div className="text-sm opacity-80">Lv.{pokemon.level} {pokemon.types?.join('/')}</div>
                     </div>
                     <div className="text-sm opacity-80">
@@ -238,7 +279,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
                     }`}
                   >
                     <div className="text-left">
-                      <div className="font-bold">{pokemonLabel(pokemon)}</div>
+                      <PokemonNameText pokemon={pokemon} className="font-bold" />
                       <div className="text-sm opacity-80">Lv.{pokemon.level} {pokemon.types?.join('/')}</div>
                     </div>
                     <div className="text-sm opacity-80">
@@ -332,15 +373,14 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
         : '';
 
     const handleMoveSelect = (moveIndex) => {
-      selectMove(player, 0, moveIndex, { mega: megaSelected && active.canMegaEvolve });
-      setMegaIntent(prev => ({ ...prev, [player]: false }));
+      selectMove(player, 0, moveIndex, { mega: megaIntentRef.current[player] && active.canMegaEvolve });
     };
 
     return (
       <div className={`${borderClass} rounded-2xl border-4 p-6 shadow-xl`}>
         <div className="mb-4 text-center">
           <h2 className={`mb-2 text-2xl font-bold ${titleClass}`}>
-            {player === 'player1' ? 'Player 1' : 'Player 2'}: {pokemonLabel(active)}
+            {player === 'player1' ? 'Player 1' : 'Player 2'}: <PokemonNameText pokemon={active} />
           </h2>
           <div className="mb-2 text-sm text-gray-600">
             Lv.{active.level} | {active.types?.join('/')} | {active.ability}
@@ -403,7 +443,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
           {active.canMegaEvolve && (
             <button
               type="button"
-              onClick={() => setMegaIntent(prev => ({ ...prev, [player]: !prev[player] }))}
+              onClick={() => toggleMegaIntent(player)}
               disabled={!canChooseMove}
               className={`w-full rounded-lg border px-4 py-2 font-semibold transition-all ${
                 megaSelected
@@ -466,7 +506,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold">{pokemonLabel(pokemon)}</span>
+                    <PokemonNameText pokemon={pokemon} className="font-bold" />
                     <span>HP {pokemon.currentHP}/{pokemon.maxHP}</span>
                   </div>
                   <div className="mt-1 flex items-center justify-between gap-2 text-xs">

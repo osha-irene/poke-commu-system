@@ -1,6 +1,19 @@
-const { Battle, Dex, Teams } = require('@pkmn/sim');
-
 const FORMAT_ID = 'gen9customgame';
+let pokemonSim = null;
+let customBattleDataRegistered = false;
+let movesDataCache = null;
+let pokemonDataForNamesCache = null;
+let abilitiesDataCache = null;
+let itemsDataCache = null;
+let customBattleDataCache = null;
+let translationMapsReady = false;
+
+const getPokemonSim = () => {
+  if (!pokemonSim) {
+    pokemonSim = require('@pkmn/sim');
+  }
+  return pokemonSim;
+};
 
 const loadMovesData = () => {
   const candidates = ['./data/moves.json', '../src/data/moves.json'];
@@ -15,7 +28,12 @@ const loadMovesData = () => {
 };
 
 const loadPokemonData = () => {
-  const candidates = ['./data/pokemon.json', '../src/data/pokemon.json'];
+  const candidates = [
+    './data/allPokemon.json',
+    '../src/data/allPokemon.json',
+    './data/pokemon.json',
+    '../src/data/pokemon.json',
+  ];
   for (const path of candidates) {
     try {
       const loaded = require(path);
@@ -38,11 +56,40 @@ const loadJsonData = (candidates, fallback) => {
   return fallback;
 };
 
-const movesData = loadMovesData();
-const pokemonDataForNames = loadPokemonData();
-const abilitiesData = loadJsonData(['./data/abilities.json', '../src/data/abilities.json'], []);
-const itemsData = loadJsonData(['./data/items.json', '../src/data/items.json'], []);
-const customBattleData = loadJsonData(['./data/customBattleData.json', '../src/data/customBattleData.json'], {});
+const getMovesData = () => {
+  if (!movesDataCache) movesDataCache = loadMovesData();
+  return movesDataCache;
+};
+
+const getPokemonDataForNames = () => {
+  if (!pokemonDataForNamesCache) pokemonDataForNamesCache = loadPokemonData();
+  return pokemonDataForNamesCache;
+};
+
+const getAbilitiesData = () => {
+  if (!abilitiesDataCache) {
+    abilitiesDataCache = loadJsonData(['./data/abilities.json', '../src/data/abilities.json'], []);
+  }
+  return abilitiesDataCache;
+};
+
+const getItemsData = () => {
+  if (!itemsDataCache) {
+    itemsDataCache = loadJsonData(['./data/items.json', '../src/data/items.json'], []);
+  }
+  return itemsDataCache;
+};
+
+const getCustomBattleData = () => {
+  if (!customBattleDataCache) {
+    customBattleDataCache = loadJsonData(['./data/customBattleData.json', '../src/data/customBattleData.json'], {});
+  }
+  return customBattleDataCache;
+};
+
+const customBattleData = { aliases: {} };
+const abilitiesData = [];
+const itemsData = [];
 
 const normalizeId = (value) => String(value || '')
   .toLowerCase()
@@ -50,6 +97,10 @@ const normalizeId = (value) => String(value || '')
   .replace(/[^\p{L}\p{N}]/gu, '');
 
 const registerCustomBattleData = () => {
+  if (customBattleDataRegistered) return;
+  const { Dex } = getPokemonSim();
+  const customBattleData = getCustomBattleData();
+
   (customBattleData.customMegaEvolutions || []).forEach((mega) => {
     Dex.data.Species[normalizeId(mega.name)] = {
       num: 350,
@@ -73,37 +124,19 @@ const registerCustomBattleData = () => {
     Dex.data.Items[normalizeId(mega.item)] = {
       name: mega.item,
       spritenum: 0,
-      megaStone: mega.name,
+      megaStone: { [mega.baseSpecies]: mega.name },
       megaEvolves: mega.baseSpecies,
       itemUser: [mega.baseSpecies],
       onTakeItem: false,
     };
   });
-};
 
-registerCustomBattleData();
+  customBattleDataRegistered = true;
+};
 
 const moveNameMap = new Map();
 const moveIdMap = new Map();
-(movesData.moves || []).forEach((move) => {
-  [move.id, move.nameEn, move.name].forEach((key) => {
-    const normalized = normalizeId(key);
-    if (normalized) moveNameMap.set(normalized, move.name || move.nameEn || move.id);
-    if (normalized) moveIdMap.set(normalized, move.nameEn || move.id);
-  });
-});
-
 const pokemonNameMap = new Map();
-pokemonDataForNames.forEach((pokemon) => {
-  [pokemon.id, pokemon.nameEn, pokemon.name, pokemon.species].forEach((key) => {
-    const normalized = normalizeId(key);
-    if (normalized) pokemonNameMap.set(normalized, pokemon.name || pokemon.nameEn || pokemon.id);
-  });
-});
-Object.entries(customBattleData.aliases?.speciesLabels || {}).forEach(([key, label]) => {
-  pokemonNameMap.set(normalizeId(key), label);
-});
-
 const abilityIdMap = new Map([
   [normalizeId('매직미러'), 'Magic Bounce'],
 ]);
@@ -139,32 +172,91 @@ Object.entries(customBattleData.aliases?.items || {}).forEach(([key, value]) => 
   });
 });
 
+const ensureBattleDataMaps = () => {
+  if (translationMapsReady) return;
+
+  const movesData = getMovesData();
+  (movesData.moves || []).forEach((move) => {
+    [move.id, move.nameEn, move.name].forEach((key) => {
+      const normalized = normalizeId(key);
+      if (normalized) moveNameMap.set(normalized, move.name || move.nameEn || move.id);
+      if (normalized) moveIdMap.set(normalized, move.nameEn || move.id);
+    });
+  });
+
+  getPokemonDataForNames().forEach((pokemon) => {
+    [pokemon.id, pokemon.nameEn, pokemon.name, pokemon.species].forEach((key) => {
+      const normalized = normalizeId(key);
+      if (normalized) pokemonNameMap.set(normalized, pokemon.name || pokemon.nameEn || pokemon.id);
+    });
+  });
+
+  const loadedCustomBattleData = getCustomBattleData();
+  Object.entries(loadedCustomBattleData.aliases?.speciesLabels || {}).forEach(([key, label]) => {
+    pokemonNameMap.set(normalizeId(key), label);
+  });
+  Object.entries(loadedCustomBattleData.aliases?.abilities || {}).forEach(([key, value]) => {
+    abilityIdMap.set(normalizeId(key), value);
+  });
+  Object.entries(loadedCustomBattleData.aliases?.abilityLabels || {}).forEach(([key, value]) => {
+    abilityNameMap.set(normalizeId(key), value);
+  });
+  Object.entries(loadedCustomBattleData.aliases?.items || {}).forEach(([key, value]) => {
+    itemIdMap.set(normalizeId(key), value);
+  });
+
+  const loadedAbilitiesData = getAbilitiesData();
+  (Array.isArray(loadedAbilitiesData) ? loadedAbilitiesData : loadedAbilitiesData.abilities || []).forEach((ability) => {
+    [ability.id, ability.nameEn, ability.name].forEach((key) => {
+      const normalized = normalizeId(key);
+      if (normalized) abilityIdMap.set(normalized, ability.nameEn || ability.id);
+      if (normalized) abilityNameMap.set(normalized, ability.name || ability.nameEn || ability.id);
+    });
+  });
+
+  const loadedItemsData = getItemsData();
+  (Array.isArray(loadedItemsData) ? loadedItemsData : loadedItemsData.items || []).forEach((item) => {
+    [item.id, item.nameEn, item.name].forEach((key) => {
+      const normalized = normalizeId(key);
+      if (normalized) itemIdMap.set(normalized, item.nameEn || item.id);
+    });
+  });
+
+  translationMapsReady = true;
+};
+
 const translateMoveName = (value) => {
+  ensureBattleDataMaps();
   const normalized = normalizeId(value);
   return moveNameMap.get(normalized) || value || '기술';
 };
 
 const translateAbilityName = (value) => {
+  ensureBattleDataMaps();
   const normalized = normalizeId(value);
   return abilityNameMap.get(normalized) || value || '특성';
 };
 
 const resolveMoveId = (value) => {
+  ensureBattleDataMaps();
   const normalized = normalizeId(value);
   return moveIdMap.get(normalized) || normalized;
 };
 
 const resolveAbilityName = (value, fallback = 'No Ability') => {
+  ensureBattleDataMaps();
   const normalized = normalizeId(value);
   return abilityIdMap.get(normalized) || value || fallback;
 };
 
 const resolveItemName = (value) => {
+  ensureBattleDataMaps();
   const normalized = normalizeId(value);
   return itemIdMap.get(normalized) || value || '';
 };
 
 const translatePokemonName = (value) => {
+  ensureBattleDataMaps();
   const normalized = normalizeId(value);
   return pokemonNameMap.get(normalized) || value || '포켓몬';
 };
@@ -185,6 +277,8 @@ const formatBattleSpeciesName = (species = '') =>
     : translatePokemonName(formatSpeciesDetails(species));
 
 const getSpeciesPrimaryAbility = (species = '') => {
+  registerCustomBattleData();
+  const { Dex } = getPokemonSim();
   const dexSpecies = Dex.species.get(species);
   if (!dexSpecies?.exists) return '';
   return dexSpecies.abilities?.['0'] || Object.values(dexSpecies.abilities || {})[0] || '';
@@ -230,7 +324,7 @@ const teamChoiceFromText = (content) => {
 const isBattleMoveLikeText = (content) => {
   const text = extractBracketText(content);
   if (!text) return false;
-  if (/^(캠핑|계속|만족|배틀\s*(신청|수락|거절|도움말|help)|기권)/i.test(text)) return false;
+  if (/^(캠핑|계속|만족|교환|배틀\s*(신청|수락|거절|도움말|help)|기권)/i.test(text)) return false;
   if (/^(포켓몬|엔트리|선택)\s*[1-6]$/i.test(text)) return false;
   return Boolean(moveChoiceTokenFromText(content));
 };
@@ -309,7 +403,7 @@ const toPackedSet = (pokemonData, pokemon) => {
 };
 
 const packTeam = (pokemonData, pokemonList) =>
-  Teams.pack(pokemonList.slice(0, 6).map((pokemon) => toPackedSet(pokemonData, pokemon)));
+  getPokemonSim().Teams.pack(pokemonList.slice(0, 6).map((pokemon) => toPackedSet(pokemonData, pokemon)));
 
 const extractName = (value = '') => String(value).replace(/^p[12][a-z]?:\s*/, '') || value;
 
@@ -560,7 +654,13 @@ const activeSummary = (battle) => {
   if (!p1 || !p2) return '';
   const activeName = pokemon => {
     const speciesName = pokemon?.species?.name || pokemon?.species?.baseSpecies || '';
-    return /-Mega(?:-[XY])?$/i.test(speciesName) ? formatMegaSpeciesName(speciesName) : pokemon.name;
+    const speciesLabel = /-Mega(?:-[XY])?$/i.test(speciesName)
+      ? formatMegaSpeciesName(speciesName)
+      : formatBattleSpeciesName(speciesName);
+    const nickname = pokemon?.name || speciesLabel;
+    return speciesLabel && normalizeDisplayName(nickname) !== normalizeDisplayName(speciesLabel)
+      ? `${nickname} (${speciesLabel})`
+      : nickname;
   };
   return [
     '',
@@ -597,6 +697,8 @@ const faintWinner = (battle, session) => {
 };
 
 const createBattle = (session) => {
+  registerCustomBattleData();
+  const { Battle } = getPokemonSim();
   const battle = new Battle({ formatid: FORMAT_ID });
   battle.setPlayer('p1', { name: session.player1Name || '1P', team: session.player1Team });
   battle.setPlayer('p2', { name: session.player2Name || '2P', team: session.player2Team });
@@ -636,7 +738,15 @@ const withBattleMentions = (session, message) => {
   return mentions ? `${mentions}\n${message}` : message;
 };
 
-const formatPokemonName = (pokemon) => pokemon?.nickname || pokemon?.name || `No.${pokemon?.number || '?'}`;
+const normalizeDisplayName = (value = '') => String(value || '').trim().toLowerCase().replace(/\s+/g, '');
+
+const formatPokemonName = (pokemon) => {
+  const species = pokemon?.name || pokemon?.species || pokemon?.nameEn || `No.${pokemon?.number || '?'}`;
+  const nickname = String(pokemon?.nickname || '').trim();
+  return nickname && normalizeDisplayName(nickname) !== normalizeDisplayName(species)
+    ? `${nickname} (${species})`
+    : species;
+};
 
 const formatEntryList = (label, pokemonList = []) => [
   `${label} 엔트리`,

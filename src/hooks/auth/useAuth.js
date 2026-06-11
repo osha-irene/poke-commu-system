@@ -10,8 +10,10 @@ import {
   updatePassword
 } from 'firebase/auth';
 import { auth, database } from '../../firebase';
+import { fillMissingBaseStats, findPokemonTemplate } from '../../utils/pokemonBaseStats';
+import { getAbilityEnglishName } from '../../utils/abilityUtils';
 
-const ensurePartyPadding = (caughtPokemon) => {
+const ensurePartyPadding = (caughtPokemon, allPokemonMaster = []) => {
   if (caughtPokemon && typeof caughtPokemon === 'object' && !Array.isArray(caughtPokemon)) {
     const numericKeys = Object.keys(caughtPokemon)
       .map(key => Number(key))
@@ -27,9 +29,16 @@ const ensurePartyPadding = (caughtPokemon) => {
     return [null, null, null, null, null, null];
   }
   
-  const cleanedPokemon = caughtPokemon.map(p => 
-    (p === 'null' || p === null || p === undefined) ? null : p
-  );
+  const cleanedPokemon = caughtPokemon.map(p => {
+    if (p === 'null' || p === null || p === undefined) return null;
+    const template = findPokemonTemplate(p, allPokemonMaster);
+    if (!template) return p;
+    return fillMissingBaseStats({
+      ...p,
+      nameEn: p.nameEn || template.nameEn,
+      abilityEn: p.abilityEn || getAbilityEnglishName(p.ability) || template.abilitiesEn?.[0] || null
+    }, template);
+  });
   
   const party = cleanedPokemon.slice(0, 6);
   const box = cleanedPokemon.slice(6);
@@ -41,7 +50,7 @@ const ensurePartyPadding = (caughtPokemon) => {
   return [...party, ...box];
 };
 
-export const useAuth = (members, setMembers) => {
+export const useAuth = (members, setMembers, allPokemonMaster = []) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
@@ -65,7 +74,7 @@ export const useAuth = (members, setMembers) => {
               ...memberData,
               id: firebaseUser.uid,
               email: firebaseUser.email,
-              caughtPokemon: ensurePartyPadding(memberData.caughtPokemon || [])
+              caughtPokemon: ensurePartyPadding(memberData.caughtPokemon || [], allPokemonMaster)
             };
             
             console.log('✅ 회원 데이터 로드:', paddedUser.name);
@@ -94,7 +103,7 @@ export const useAuth = (members, setMembers) => {
       isSubscribed = false;
       unsubscribe();
     };
-  }, [setMembers]);
+  }, [allPokemonMaster, setMembers]);
 
   const handleLogin = async (userId, password) => {
     try {
@@ -168,7 +177,7 @@ export const useAuth = (members, setMembers) => {
     };
     
     if (updates.caughtPokemon) {
-      updatedUser.caughtPokemon = ensurePartyPadding(updates.caughtPokemon);
+      updatedUser.caughtPokemon = ensurePartyPadding(updates.caughtPokemon, allPokemonMaster);
     }
     
     // ⭐ 로컬 상태 먼저 업데이트

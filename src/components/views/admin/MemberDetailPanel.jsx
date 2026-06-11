@@ -19,6 +19,7 @@ function MemberDetailPanel({ member, onClose }) {
     givePokemonToMember,
     transferMemberPokemon,
     editMemberPokemon,
+    getPokemonFormCandidates,
     deleteMemberPokemon, // ⭐ 추가
     hatchMemberEgg,
     deleteMember,
@@ -162,6 +163,7 @@ function MemberDetailPanel({ member, onClose }) {
               pokemonLearnsets={pokemonLearnsets}
               onGivePokemon={givePokemonToMember}
               onEditPokemon={editMemberPokemon}
+              getPokemonFormCandidates={getPokemonFormCandidates}
               onDeletePokemon={handleDeletePokemon}
               onHatchEgg={hatchMemberEgg}
               onTransferPokemon={transferMemberPokemon}

@@ -6,7 +6,6 @@ import { ref, get, set, update } from 'firebase/database';
 import { database } from '../firebase';
 
 // 데이터 (JSON 파일들 먼저)
-import pokemonData from '../data/pokemon.json';
 import allPokemonDataRaw from '../data/allPokemon.json';
 import itemsData from '../data/items.json';
 import movesData from '../data/moves.json';
@@ -44,10 +43,10 @@ export default function useGameState() {
   const [encounterPokemon, setEncounterPokemon] = useState(null);
   const [firstCatchPokemon, setFirstCatchPokemon] = useState(null);
   
-  const [allPokemon] = useState(pokemonData.pokemon);
   const allPokemonDataParsed = Array.isArray(allPokemonDataRaw) 
     ? allPokemonDataRaw 
     : (allPokemonDataRaw.pokemon || []);
+  const [allPokemon] = useState(allPokemonDataParsed);
   const [allPokemonMaster] = useState(allPokemonDataParsed);
   const [allMoves] = useState(movesData.moves || []);
   const [pokemonLearnsets] = useState(movesData.pokemonLearnsets || {});
@@ -78,7 +77,7 @@ export default function useGameState() {
     updateCurrentUser,
     changeCurrentUserPassword,
     isLoading: isAuthLoading
-  } = useAuth(members, setMembers);
+  } = useAuth(members, setMembers, allPokemonDataParsed);
 
   // 상점
   const {
@@ -372,6 +371,8 @@ export default function useGameState() {
     reorderPartyPokemon: restPokemonManagement.reorderPartyPokemon,
     useRareCandy: useRareCandy,
     updatePokemonNickname: restPokemonManagement.updatePokemonNickname,
+    getPokemonFormCandidates: restPokemonManagement.getPokemonFormCandidates,
+    changePokemonForm: restPokemonManagement.changePokemonForm,
     setPartnerPokemon: restPokemonManagement.setPartnerPokemon,
     giveItemToPokemon: restPokemonManagement.giveItemToPokemon,
     takeItemFromPokemon: restPokemonManagement.takeItemFromPokemon,

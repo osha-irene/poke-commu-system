@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import evolutionsData from '../../data/evolutions.json';
+import { getBaseStatPatch } from '../../utils/pokemonBaseStats';
 
 export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) => {
   const [evolutionModal, setEvolutionModal] = useState(null);
@@ -257,6 +258,7 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
           nameEn: evolvedTemplate.nameEn,
           type: evolvedTemplate.type,
           type2: evolvedTemplate.type2 || null,
+          ...getBaseStatPatch(evolvedTemplate),
           imageUrl: evolvedTemplate.imageUrl,
           iconUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${evolvedTemplate.number}.png`,
           spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${evolvedTemplate.number}.png`,
