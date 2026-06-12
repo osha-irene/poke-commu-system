@@ -57,6 +57,10 @@ export const usePokemonCatch = (
     const ballItem = allItems.find(item => 
       item.name === ballUsed.name || item.id === ballUsed.id
     );
+    const ballName = ballUsed.name || ballItem?.name || '';
+    const ballNameEn = ballUsed.nameEn || ballItem?.nameEn || '';
+    const isFriendBall = ballName.includes('프렌드') || ballNameEn === 'friend-ball';
+    const isLuxuryBall = ballName.includes('럭셔리') || ballNameEn === 'luxury-ball';
     
     // 개체값 생성
     const gender = generateGender(pokemonTemplate);
@@ -80,7 +84,10 @@ export const usePokemonCatch = (
       hp: pokemonTemplate.baseHp,
       maxHp: pokemonTemplate.baseHp,
       exp: 0,
-      friendship: 0,
+      friendship: isFriendBall ? 200 : 0,
+      friendshipGainMultiplier: isLuxuryBall ? 2 : 1,
+      caughtWithFriendBall: isFriendBall,
+      caughtWithLuxuryBall: isLuxuryBall,
       heldItem: null,
       moves: getStartingMoves(pokemonTemplate, level, movesData),
       caughtWithBall: ballUsed.name,

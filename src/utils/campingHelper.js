@@ -329,7 +329,8 @@ export function applyFriendshipBonus(entryPokemon, friendshipBonus) {
   return entryPokemon.map(pokemon => {
     if (!pokemon) return null;
     
-    const newFriendship = Math.min(255, (pokemon.friendship || 0) + friendshipBonus);
+    const adjustedBonus = Math.max(0, Math.floor(friendshipBonus * (pokemon.friendshipGainMultiplier || 1)));
+    const newFriendship = Math.min(255, (pokemon.friendship || 0) + adjustedBonus);
     
     return {
       ...pokemon,

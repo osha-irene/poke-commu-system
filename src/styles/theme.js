@@ -132,7 +132,7 @@ export const POKEBALL_LIST = [
   { name: '루어볼', nameEn: 'lure-ball' },
   { name: '문볼', nameEn: 'moon-ball' },
   { name: '프렌드볼', nameEn: 'friend-ball' },
-  { name: '러브볼', nameEn: 'love-ball' },
+  { name: '러브러브볼', nameEn: 'love-ball' },
   { name: '헤비볼', nameEn: 'heavy-ball' },
   { name: '스피드볼', nameEn: 'fast-ball' },
   { name: '스포츠볼', nameEn: 'sport-ball' },

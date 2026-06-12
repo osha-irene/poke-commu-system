@@ -64,13 +64,19 @@ export default function RegionManagementPanel({
     y: 50,
     color: '#87CEEB',
     groupId: '',
-    maxCatchRate: 1
+    maxCatchRate: 1,
+    isCave: false,
+    isWaterside: false,
+    isSafari: false
   });
   const [placeForm, setPlaceForm] = useState({
     name: '',
     encounterRate: 90,
     minLevel: 5,
-    maxLevel: 20
+    maxLevel: 20,
+    isCave: false,
+    isWaterside: false,
+    isSafari: false
   });
 
   const selectedRegionPlaces = Array.isArray(selectedRegion?.places) ? selectedRegion.places : [];
@@ -92,6 +98,9 @@ export default function RegionManagementPanel({
       shinyRate: 4096,
       allowNationalPokedex: false,
       lootConfig: null,
+      isCave: false,
+      isWaterside: false,
+      isSafari: false,
       ...overrides
     };
 
@@ -141,7 +150,10 @@ export default function RegionManagementPanel({
       name: trimmedName,
       encounterRate: parseFloat(placeForm.encounterRate) || 0,
       minLevel: parseInt(placeForm.minLevel, 10) || 1,
-      maxLevel: parseInt(placeForm.maxLevel, 10) || 1
+      maxLevel: parseInt(placeForm.maxLevel, 10) || 1,
+      isCave: placeForm.isCave,
+      isWaterside: placeForm.isWaterside,
+      isSafari: placeForm.isSafari
     });
 
     const nextPlaces = editingPlace
@@ -152,7 +164,7 @@ export default function RegionManagementPanel({
     setSelectedPlaceId(nextPlace.id);
     setShowPlaceModal(false);
     setEditingPlace(null);
-    setPlaceForm({ name: '', encounterRate: 90, minLevel: 5, maxLevel: 20 });
+    setPlaceForm({ name: '', encounterRate: 90, minLevel: 5, maxLevel: 20, isCave: false, isWaterside: false, isSafari: false });
   };
 
   const openCreatePlaceModal = (targetRegion = selectedRegion) => {
@@ -167,7 +179,10 @@ export default function RegionManagementPanel({
       name: '',
       encounterRate: targetRegion?.encounterRate ?? 90,
       minLevel: targetRegion?.minLevel || 5,
-      maxLevel: targetRegion?.maxLevel || 20
+      maxLevel: targetRegion?.maxLevel || 20,
+      isCave: targetRegion?.isCave === true,
+      isWaterside: targetRegion?.isWaterside === true,
+      isSafari: targetRegion?.isSafari === true
     });
     setShowPlaceModal(true);
   };
@@ -178,7 +193,10 @@ export default function RegionManagementPanel({
       name: place.name || '',
       encounterRate: place.encounterRate ?? 90,
       minLevel: place.minLevel || selectedRegion?.minLevel || 5,
-      maxLevel: place.maxLevel || selectedRegion?.maxLevel || 20
+      maxLevel: place.maxLevel || selectedRegion?.maxLevel || 20,
+      isCave: place.isCave === true,
+      isWaterside: place.isWaterside === true,
+      isSafari: place.isSafari === true
     });
     setShowPlaceModal(true);
   };
@@ -402,7 +420,10 @@ export default function RegionManagementPanel({
       y: 50,
       color: '#87CEEB',
       groupId: '',
-      maxCatchRate: 1
+      maxCatchRate: 1,
+      isCave: false,
+      isWaterside: false,
+      isSafari: false
     });
     alert('지역이 추가되었습니다.');
   };
@@ -478,28 +499,60 @@ export default function RegionManagementPanel({
           <div className="border-t border-lime-200 bg-lime-50/60 px-4 pb-3 pt-2">
             <div className="ml-6 space-y-1">
               {places.length > 0 && (
-                places.map((place) => (
-                  <button
+                places.map((place) => {
+                  const isActivePlace = detailSection === 'places' && selectedPlace?.id === place.id;
+
+                  return (
+                  <div
                     key={place.id}
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setSelectedPlaceId(place.id);
-                      setDetailSection('places');
-                      setEditMode('pokemon');
-                    }}
-                    className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-bold transition-colors ${
-                      detailSection === 'places' && selectedPlace?.id === place.id
+                    className={`flex w-full items-center gap-1 rounded-lg border px-2 py-1.5 text-sm font-bold transition-colors ${
+                      isActivePlace
                         ? 'border border-lime-500 bg-lime-100 text-lime-950 shadow-sm'
                         : 'border border-lime-200 bg-white text-lime-900 hover:bg-lime-50'
                     }`}
                   >
-                    <span className="truncate">{place.name}</span>
-                    <span className="ml-2 shrink-0 text-xs opacity-70">
-                      {(place.pokemons || []).length}종
-                    </span>
-                  </button>
-                ))
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setSelectedPlaceId(place.id);
+                        setDetailSection('places');
+                        setEditMode('pokemon');
+                      }}
+                      className="flex min-w-0 flex-1 items-center justify-between gap-2 rounded px-1 py-1 text-left"
+                    >
+                      <span className="min-w-0 flex-1 truncate">{place.name}</span>
+                      <span className="shrink-0 text-xs opacity-70">
+                        {(place.pokemons || []).length}종
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        openEditPlaceModal(place);
+                      }}
+                      className="shrink-0 rounded p-1 text-lime-800 hover:bg-lime-200"
+                      title="장소 수정"
+                      aria-label="장소 수정"
+                    >
+                      <Edit2 size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleDeletePlace(place);
+                      }}
+                      className="shrink-0 rounded p-1 text-red-700 hover:bg-red-100"
+                      title="장소 삭제"
+                      aria-label="장소 삭제"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                  );
+                })
               )}
             </div>
           </div>
@@ -1186,6 +1239,27 @@ export default function RegionManagementPanel({
                   />
                 </div>
               </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">장소 속성</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { key: 'isCave', label: '동굴' },
+                    { key: 'isWaterside', label: '물가' },
+                    { key: 'isSafari', label: '사파리' },
+                  ].map((flag) => (
+                    <label key={flag.key} className="flex items-center justify-center gap-2 rounded-lg border-2 border-gray-200 px-3 py-2 text-sm font-semibold">
+                      <input
+                        type="checkbox"
+                        checked={placeForm[flag.key]}
+                        onChange={(event) => setPlaceForm({ ...placeForm, [flag.key]: event.target.checked })}
+                        className="h-4 w-4 accent-lime-700"
+                      />
+                      {flag.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-3 mt-6">
@@ -1302,6 +1376,27 @@ export default function RegionManagementPanel({
                     min="1"
                     max="100"
                   />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">장소 속성</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { key: 'isCave', label: '동굴' },
+                    { key: 'isWaterside', label: '물가' },
+                    { key: 'isSafari', label: '사파리' },
+                  ].map((flag) => (
+                    <label key={flag.key} className="flex items-center justify-center gap-2 rounded-lg border-2 border-gray-200 px-3 py-2 text-sm font-semibold">
+                      <input
+                        type="checkbox"
+                        checked={newRegionForm[flag.key]}
+                        onChange={(event) => setNewRegionForm({ ...newRegionForm, [flag.key]: event.target.checked })}
+                        className="h-4 w-4 accent-indigo-600"
+                      />
+                      {flag.label}
+                    </label>
+                  ))}
                 </div>
               </div>
 

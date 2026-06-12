@@ -1494,6 +1494,9 @@ return (
           allPokemonMaster={allPokemonMaster} 
           maxNonPartnerPokemon={systemSettings?.maxNonPartnerPokemon || 18}
           escapeMode={systemSettings?.escapeMode || 'none'}
+          isCave={encounterPokemon.isCave === true}
+          isWaterside={encounterPokemon.isWaterside === true}
+          isSafari={encounterPokemon.isSafari === true}
         />
       )}
 

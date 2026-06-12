@@ -244,6 +244,7 @@ html {
   --layout-gap: 24px;
   --sidebar-sticky-top: 304px;
   --sidebar-shift: -55px;
+  --sidebar-scale: 1.08;
   --content-padding: 34px 28px 24px;
   --top-panel-lift: -30px;
   --npc-shift-x: 85px;
@@ -803,6 +804,8 @@ img[style*="pixelated"],
   gap: 0;
   flex: 1 1 auto;
   align-items: center;
+  transform: scale(var(--sidebar-scale));
+  transform-origin: top center;
 }
 
 .trainer-nav__button {
@@ -1040,7 +1043,7 @@ img[style*="pixelated"],
 }
 
 .board h2 {
-  margin: 12px 0 28px;
+  margin-bottom: -20px;
   color: #ffffff;
   font-family: 'Paperozi', Batang, serif;
   font-size: clamp(20px, 7vw, 34px);
@@ -1050,13 +1053,14 @@ img[style*="pixelated"],
   text-shadow:
     0 0 6px rgba(117, 146, 45, 0.55),
     0 0 14px rgba(83, 97, 47, 0.32);
+    
 }
 
 .board__content {
   display: grid;
   gap: 18px;
   max-width: 700px;
-  margin-top: 8px;
+  margin-top: 30px;
 }
 
 .board__section {
@@ -1066,23 +1070,42 @@ img[style*="pixelated"],
 }
 
 .board__section-title {
-  margin: 0 0 18px;
   color: #ffffff;
   font-family: 'Paperozi', Batang, serif;
   font-size: clamp(24px, 3.2vw, 42px);
   font-weight: 400;
   line-height: 1.2;
   letter-spacing: 0;
+  margin-top: 30px;
+}
+
+.board__section-title::before {
+  content: '';
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  background-image: url('./assets/main_heading.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.board__section-body > p:first-child,
+.board__section-body > .board__list--standalone:first-child {
+  margin-top: 30px;
+}
+
+.board__section-body > img:first-child{
+  margin-top: 50px;
 }
 
 .board__section-body {
   display: grid;
-  gap: 12px;
-  margin-top: 12px;
+  gap:10px;
 }
 
 .board__section h3 {
-  margin: 0;
   color: #ffffff;
   font-family: 'Paperozi', Batang, serif;
   font-size: clamp(17px, 1.7vw, 23px);
@@ -1090,16 +1113,29 @@ img[style*="pixelated"],
   letter-spacing: 0;
 }
 
+.board__section h3::before {
+  content: '';
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  background-image: url('./assets/sub_heading.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  margin-right: 8px;
+  vertical-align: middle;
+  margin-left: 20px;
+
+}
+
 .board__heading-row {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
   gap: 0.8em;
-  margin-top: 20px;
 }
 
 .board__heading-row h3 {
-  margin: 0; /* wrapper가 margin을 담당하므로 h3 자체 마진은 제거 */
+  margin-top: 40px;
 }
 
 .board__list--inline {
@@ -1122,7 +1158,7 @@ img[style*="pixelated"],
   margin: 0;
   color: #ffffff;
   font-size: 16px;
-  line-height: 1.75;
+  line-height: 1.6;
   white-space: pre-line;
   margin-left: 12px;
   text-indent: 1em;
@@ -1270,14 +1306,14 @@ img[style*="pixelated"],
 .board__list li {
   position: relative;
   padding-left: 1.2em;
-  line-height: 1.6;
+  line-height: 2;
 }
 
 .board__list li::before {
   content: '';
   position: absolute;
   left: 0.15em;
-  top: 0.6em;
+  top: 0.9em;
   width: 3px;
   height: 3px;
   border-radius: 50%;
@@ -1291,9 +1327,9 @@ img[style*="pixelated"],
 }
 
 .board__list--standalone {
-  margin: 0;
+  margin-left: 50px;
   font-size: 16px;
-  line-height: 1;
+  line-height: 1.;
 }
 
 .board__list--standalone li::before {
@@ -1314,6 +1350,15 @@ img[style*="pixelated"],
   border-radius: 3px;
   padding: 0 0.3em;
   color: inherit;
+}
+
+.board__image {
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  align-content: center;
+   display: block;
+  margin: 0 auto;
 }
 
 .home-dashboard {
@@ -2219,6 +2264,7 @@ img[style*="pixelated"],
   .trainer-nav {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    transform: none;
   }
 
   .home-dashboard {

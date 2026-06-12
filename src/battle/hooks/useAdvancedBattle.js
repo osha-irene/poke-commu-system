@@ -87,6 +87,10 @@ const emptyBattleState = (player1Team = [], player2Team = []) => ({
   field: fieldEffectsManager.createInitialField(),
   waitingForP1: false,
   waitingForP2: false,
+  pendingChoices: {
+    player1: null,
+    player2: null,
+  },
   log: [],
 });
 
@@ -327,6 +331,32 @@ const getRequestType = (request) => {
 const hasSubmittedChoice = side => (side?.choice?.actions?.length || 0) > 0;
 
 const isSideWaiting = (request, side) => Boolean(request && !request.wait && !hasSubmittedChoice(side));
+
+const emptyPendingChoices = () => ({
+  player1: null,
+  player2: null,
+});
+
+const playerToSideId = player => (player === 'player1' ? 'p1' : 'p2');
+
+const sideIdToPlayer = sideId => (sideId === 'p1' ? 'player1' : 'player2');
+
+const getRequiredChoicePlayers = (battle) => {
+  if (!battle || battle.ended) return [];
+
+  return [
+    ['p1', battle.p1],
+    ['p2', battle.p2],
+  ]
+    .filter(([, side]) => isSideWaiting(getSideRequest(battle, side), side))
+    .map(([sideId]) => sideIdToPlayer(sideId));
+};
+
+const samePendingChoice = (choiceA, choiceB) => (
+  Boolean(choiceA && choiceB)
+  && choiceA.choice === choiceB.choice
+  && choiceA.type === choiceB.type
+);
 
 const getMoveData = (battle, moveSlot, requestMove = null) => {
   const id = requestMove?.id || moveSlot?.id || moveSlot?.move || requestMove?.move;
@@ -588,12 +618,71 @@ export function useAdvancedBattle(initialOptions = {}) {
   } = initialOptions;
 
   const battleRef = useRef(null);
+  const pendingChoicesRef = useRef(emptyPendingChoices());
   const [battleState, setBattleState] = useState(() => emptyBattleState(player1Team, player2Team));
 
   useEffect(() => {
+    pendingChoicesRef.current = emptyPendingChoices();
     setBattleState(emptyBattleState(player1Team, player2Team));
     battleRef.current = null;
   }, [player1Team, player2Team]);
+
+  const setPendingChoices = useCallback((nextPending) => {
+    pendingChoicesRef.current = nextPending;
+    setBattleState(prev => ({
+      ...prev,
+      pendingChoices: nextPending,
+    }));
+  }, []);
+
+  const commitPendingChoicesIfReady = useCallback((nextPending, logFrom) => {
+    const battle = battleRef.current;
+    if (!battle || battle.ended) {
+      setPendingChoices(nextPending);
+      return;
+    }
+
+    const requiredPlayers = getRequiredChoicePlayers(battle);
+    const readyToCommit = requiredPlayers.length > 0
+      && requiredPlayers.every(player => nextPending[player]);
+
+    if (!readyToCommit) {
+      setPendingChoices(nextPending);
+      return;
+    }
+
+    try {
+      requiredPlayers.forEach((player) => {
+        const pending = nextPending[player];
+        if (pending) battle.choose(playerToSideId(player), pending.choice);
+      });
+    } catch (error) {
+      console.error('배틀 선택 제출 실패:', error);
+      const clearedPending = emptyPendingChoices();
+      pendingChoicesRef.current = clearedPending;
+      setBattleState(prev => ({
+        ...prev,
+        pendingChoices: clearedPending,
+        log: [
+          ...prev.log,
+          {
+            message: '선택 처리 중 오류가 발생했습니다.',
+            type: 'fail',
+          },
+        ],
+      }));
+      return;
+    }
+
+    const clearedPending = emptyPendingChoices();
+    pendingChoicesRef.current = clearedPending;
+    const autoLogs = applyAutomaticChoices(battle);
+
+    setBattleState(prev => stateFromBattle(battle, {
+      ...prev,
+      pendingChoices: clearedPending,
+    }, logFrom, autoLogs));
+  }, [setPendingChoices]);
 
   const startBattle = useCallback((p1ActiveIndices, p2ActiveIndices) => {
     const battle = new Battle({ formatid: FORMAT_ID });
@@ -604,9 +693,11 @@ export function useAdvancedBattle(initialOptions = {}) {
     battle.choose('p2', `team ${teamPreviewOrder(p2ActiveIndices, player2Team.length)}`);
 
     battleRef.current = battle;
+    pendingChoicesRef.current = emptyPendingChoices();
 
     const initialState = {
       ...emptyBattleState(player1Team, player2Team),
+      pendingChoices: emptyPendingChoices(),
       log: [
         { message: '\ubc30\ud2c0 \uc2dc\uc791!', type: 'system' },
       ],
@@ -620,34 +711,20 @@ export function useAdvancedBattle(initialOptions = {}) {
     const battle = battleRef.current;
     if (!battle || battle.ended) return;
 
-    const side = player === 'player1' ? 'p1' : 'p2';
+    const choice = {
+      type: 'move',
+      activeIndex,
+      moveIndex,
+      choice: `move ${moveIndex + 1}${options.mega ? ' mega' : ''}`,
+      mega: Boolean(options.mega),
+    };
+    const currentPending = pendingChoicesRef.current;
+    const nextPending = samePendingChoice(currentPending[player], choice)
+      ? { ...currentPending, [player]: null }
+      : { ...currentPending, [player]: choice };
     const logFrom = battle.log.length;
-    try {
-      battle.choose(side, `move ${moveIndex + 1}${options.mega ? ' mega' : ''}`);
-    } catch (error) {
-      console.error('배틀 기술 선택 실패:', error);
-      setBattleState(prev => ({
-        ...prev,
-        log: [
-          ...prev.log,
-          {
-            message: options.mega
-              ? '메가진화 처리에 실패했습니다. 이 포켓몬의 메가 폼 데이터가 올바른지 확인해주세요.'
-              : '기술 선택 처리 중 오류가 발생했습니다.',
-            type: 'fail',
-          },
-        ],
-      }));
-      return;
-    }
-    const autoLogs = applyAutomaticChoices(battle);
-
-    setBattleState(prev => stateFromBattle(battle, {
-      ...prev,
-      waitingForP1: side === 'p1' ? false : prev.waitingForP1,
-      waitingForP2: side === 'p2' ? false : prev.waitingForP2,
-    }, logFrom, autoLogs));
-  }, []);
+    commitPendingChoicesIfReady(nextPending, logFrom);
+  }, [commitPendingChoicesIfReady]);
 
   const selectSwitch = useCallback((player, activeIndex, slotOrBenchIndex) => {
     const battle = battleRef.current;
@@ -658,21 +735,27 @@ export function useAdvancedBattle(initialOptions = {}) {
     const target = side.pokemon.find(pokemon => pokemon.position + 1 === slotOrBenchIndex) || switchable[slotOrBenchIndex];
     if (!target) return;
 
-    const sideId = player === 'player1' ? 'p1' : 'p2';
     const teamSlot = side.pokemon.indexOf(target) + 1;
+    const choice = {
+      type: 'switch',
+      activeIndex,
+      slot: slotOrBenchIndex,
+      choice: `switch ${teamSlot}`,
+    };
+    const currentPending = pendingChoicesRef.current;
+    const nextPending = samePendingChoice(currentPending[player], choice)
+      ? { ...currentPending, [player]: null }
+      : { ...currentPending, [player]: choice };
     const logFrom = battle.log.length;
-    battle.choose(sideId, `switch ${teamSlot}`);
-    const autoLogs = applyAutomaticChoices(battle);
+    commitPendingChoicesIfReady(nextPending, logFrom);
+  }, [commitPendingChoicesIfReady]);
 
-    setBattleState(prev => stateFromBattle(battle, {
-      ...prev,
-      waitingForP1: sideId === 'p1' ? false : prev.waitingForP1,
-      waitingForP2: sideId === 'p2' ? false : prev.waitingForP2,
-    }, logFrom, autoLogs));
-  }, []);
-
+  const clearPendingChoices = useCallback(() => {
+    setPendingChoices(emptyPendingChoices());
+  }, [setPendingChoices]);
   const resetBattle = useCallback(() => {
     battleRef.current = null;
+    pendingChoicesRef.current = emptyPendingChoices();
     setBattleState(emptyBattleState(player1Team, player2Team));
   }, [player1Team, player2Team]);
 
@@ -689,6 +772,7 @@ export function useAdvancedBattle(initialOptions = {}) {
     startBattle,
     selectMove,
     selectSwitch,
+    clearPendingChoices,
     resetBattle,
     previewDamage,
     compareMoveDamage,

@@ -100,6 +100,9 @@ export const useAdminRegions = (
       x: normalizedData.x !== undefined ? normalizedData.x : 50,
       y: normalizedData.y !== undefined ? normalizedData.y : 50,
       color: normalizedData.color || '#87CEEB',
+      isCave: normalizedData.isCave === true,
+      isWaterside: normalizedData.isWaterside === true,
+      isSafari: normalizedData.isSafari === true,
       places: Array.isArray(normalizedData.places) ? normalizedData.places : []
     };
     

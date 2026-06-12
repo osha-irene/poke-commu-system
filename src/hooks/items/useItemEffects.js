@@ -167,7 +167,8 @@ export const useItemEffects = (
     const effectMessages = [];
 
     if (item.friendshipBoost || itemData?.friendshipBoost) {
-      const boost = item.friendshipBoost || itemData.friendshipBoost;
+      const baseBoost = item.friendshipBoost || itemData.friendshipBoost;
+      const boost = Math.max(0, Math.floor(baseBoost * (pokemon.friendshipGainMultiplier || 1)));
       updatedPokemon.friendship = Math.min(255, (pokemon.friendship || 0) + boost);
       effectMessages.push(`💖 친밀도: ${pokemon.friendship || 0} → ${updatedPokemon.friendship} (+${boost})`);
       itemUsed = true;

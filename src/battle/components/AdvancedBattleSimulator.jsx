@@ -159,12 +159,13 @@ const BattleInfoPanel = ({ battleState, onClose }) => {
   );
 };
 
-export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = false, onExit }) {
+export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = false, onBattleFinished, onExit }) {
   const {
     battleState,
     startBattle,
     selectMove,
     selectSwitch,
+    clearPendingChoices,
     resetBattle,
     previewDamage,
   } = useAdvancedBattle({
@@ -181,6 +182,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = 
   const megaIntentRef = useRef({ player1: false, player2: false });
   const [showBattleInfo, setShowBattleInfo] = useState(false);
   const autoStartedRef = useRef(false);
+  const finishedNotifiedRef = useRef(false);
 
   const toggleSelection = (index, setter) => {
     setter((prev) => {
@@ -219,6 +221,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = 
 
   useEffect(() => {
     autoStartedRef.current = false;
+    finishedNotifiedRef.current = false;
   }, [player1Team, player2Team, autoStart]);
 
   useEffect(() => {
@@ -231,6 +234,30 @@ export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = 
       player2Team.map((_, index) => index)
     );
   }, [autoStart, battleState.phase, player1Team, player2Team, startBattle]);
+
+  useEffect(() => {
+    if (battleState.phase !== 'finished') return;
+    if (finishedNotifiedRef.current) return;
+
+    finishedNotifiedRef.current = true;
+    onBattleFinished?.({
+      winner: battleState.winner,
+      turn: battleState.turn,
+      player1Fainted: battleState.player1.fainted.length,
+      player2Fainted: battleState.player2.fainted.length,
+      log: battleState.log,
+    });
+  }, [
+    battleState.log,
+    battleState.phase,
+    battleState.player1.fainted.length,
+    battleState.player2.fainted.length,
+    battleState.turn,
+    battleState.winner,
+    onBattleFinished,
+  ]);
+
+  const hasPendingChoice = Boolean(battleState.pendingChoices?.player1 || battleState.pendingChoices?.player2);
 
   if (battleState.phase === 'team_selection') {
     if (autoStart) {
@@ -340,29 +367,6 @@ export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = 
     );
   }
 
-  if (battleState.phase === 'finished') {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-100">
-        <div className="max-w-md rounded-lg bg-white p-12 text-center shadow-lg">
-          <h1 className="mb-4 text-4xl font-bold text-gray-800">{battleState.winner} 승리!</h1>
-          <div className="mb-6 text-gray-600">
-            <p className="mb-2">총 {battleState.turn}턴</p>
-            <p>Player 1 기절: {battleState.player1.fainted.length}마리</p>
-            <p>Player 2 기절: {battleState.player2.fainted.length}마리</p>
-          </div>
-          <button
-            type="button"
-            onClick={onExit || resetBattle}
-            className="mx-auto flex items-center gap-2 rounded-lg bg-blue-600 px-8 py-3 font-semibold text-white transition-colors hover:bg-blue-700"
-          >
-            <X size={20} />
-            종료
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   const p1Active = battleState.player1.active[0];
   const p2Active = battleState.player2.active[0];
 
@@ -390,6 +394,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = 
     const titleClass = color === 'blue' ? 'text-blue-900' : 'text-red-900';
     const buttonClass = color === 'blue' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700';
     const megaSelected = Boolean(megaIntent[player]);
+    const pendingChoice = battleState.pendingChoices?.[player];
     const canChooseMove = waiting && side.requestType === 'move';
     const canSwitch = waiting && side.canSwitch && side.bench.length > 0;
     const switchBlockedReason = active.request?.trapped
@@ -482,31 +487,36 @@ export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = 
                 메가진화{active.megaSpecies ? ` -> ${active.megaSpecies}` : ''} {megaSelected ? 'ON' : 'OFF'}
               </button>
             )}
-          {active.moves?.map((move, i) => (
-            <button
-              key={`${move.id}-${i}`}
-              type="button"
-              onClick={() => handleMoveSelect(i)}
-              onMouseEnter={() => {
-                const preview = previewDamage(active, opponent, move.nameEn || move.id || move.name);
-                setShowDamagePreview({ player, move: move.name || move.id, preview });
-              }}
-              onMouseLeave={() => setShowDamagePreview(null)}
-              disabled={!canChooseMove || move.disabled}
-              className={`w-full rounded-lg px-4 py-3 font-semibold transition-all ${
-                canChooseMove && !move.disabled
-                  ? `${buttonClass} text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg`
-                  : 'cursor-not-allowed bg-gray-300 text-gray-500'
-              }`}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <span>{move.name || move.id}</span>
-                <span className="text-xs opacity-80">
-                  {move.disabled ? `봉인됨${move.disabledSource ? ` (${move.disabledSource})` : ''}` : `${move.type} | ${move.category}`}
-                </span>
-              </div>
-            </button>
-          ))}
+          {active.moves?.map((move, i) => {
+            const isSelected = pendingChoice?.type === 'move' && pendingChoice.moveIndex === i;
+            return (
+              <button
+                key={`${move.id}-${i}`}
+                type="button"
+                onClick={() => handleMoveSelect(i)}
+                onMouseEnter={() => {
+                  const preview = previewDamage(active, opponent, move.nameEn || move.id || move.name);
+                  setShowDamagePreview({ player, move: move.name || move.id, preview });
+                }}
+                onMouseLeave={() => setShowDamagePreview(null)}
+                disabled={!canChooseMove || move.disabled}
+                className={`w-full rounded-lg px-4 py-3 font-semibold transition-all ${
+                  isSelected
+                    ? 'bg-gray-950 text-white shadow-lg ring-4 ring-yellow-300'
+                    : canChooseMove && !move.disabled
+                      ? `${buttonClass} text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg`
+                      : 'cursor-not-allowed bg-gray-300 text-gray-500'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span>{move.name || move.id}</span>
+                  <span className="text-xs opacity-80">
+                    {isSelected ? '선택됨' : move.disabled ? `사용 불가${move.disabledSource ? ` (${move.disabledSource})` : ''}` : `${move.type} | ${move.category}`}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
         </div>
 
         <div className="mt-5">
@@ -519,28 +529,33 @@ export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = 
           )}
           {side.bench.length > 0 ? (
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {side.bench.map(pokemon => (
-                <button
-                  key={pokemon.slot}
-                  type="button"
-                  onClick={() => selectSwitch(player, 0, pokemon.slot)}
-                  disabled={!canSwitch}
-                  className={`rounded-lg border p-3 text-left text-sm transition-all ${
-                    canSwitch
-                      ? 'border-gray-300 bg-white hover:border-gray-500 hover:shadow'
-                      : 'cursor-not-allowed border-gray-200 bg-gray-200 text-gray-500'
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <PokemonNameText pokemon={pokemon} className="font-bold" />
-                    <span>HP {pokemon.currentHP}/{pokemon.maxHP}</span>
-                  </div>
-                  <div className="mt-1 flex items-center justify-between gap-2 text-xs">
-                    <span>{pokemon.types?.join('/')}</span>
-                    <span>{pokemon.item || '도구 없음'}</span>
-                  </div>
-                </button>
-              ))}
+              {side.bench.map(pokemon => {
+                const isSelected = pendingChoice?.type === 'switch' && pendingChoice.slot === pokemon.slot;
+                return (
+                  <button
+                    key={pokemon.slot}
+                    type="button"
+                    onClick={() => selectSwitch(player, 0, pokemon.slot)}
+                    disabled={!canSwitch}
+                    className={`rounded-lg border p-3 text-left text-sm transition-all ${
+                      isSelected
+                        ? 'border-yellow-400 bg-gray-950 text-white shadow-lg ring-2 ring-yellow-300'
+                        : canSwitch
+                          ? 'border-gray-300 bg-white hover:border-gray-500 hover:shadow'
+                          : 'cursor-not-allowed border-gray-200 bg-gray-200 text-gray-500'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <PokemonNameText pokemon={pokemon} className="font-bold" />
+                      <span>HP {pokemon.currentHP}/{pokemon.maxHP}</span>
+                    </div>
+                    <div className="mt-1 flex items-center justify-between gap-2 text-xs">
+                      <span>{pokemon.types?.join('/')}</span>
+                      <span>{isSelected ? '선택됨' : pokemon.item || '도구 없음'}</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           ) : (
             <div className="rounded-lg bg-white/80 p-3 text-sm text-gray-600">교체 가능한 포켓몬이 없습니다.</div>
@@ -585,6 +600,13 @@ export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = 
             </button>
           </div>
         </div>
+
+        {battleState.phase === 'finished' && (
+          <div className="mb-6 rounded-lg border-2 border-yellow-300 bg-yellow-50 p-5 text-center shadow-sm">
+            <h2 className="text-2xl font-bold text-gray-900">{battleState.winner} 승리!</h2>
+            <p className="mt-2 text-sm font-semibold text-gray-700">하단의 배틀 완료 버튼을 누르면 배틀 페이지를 종료합니다.</p>
+          </div>
+        )}
 
         <div className="mb-6 grid grid-cols-1 gap-8 md:grid-cols-2">
           {renderPokemonPanel('player1', p1Active, p2Active, 'blue')}
@@ -637,18 +659,36 @@ export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = 
           </div>
         </div>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={clearPendingChoices}
+            disabled={!hasPendingChoice || battleState.phase === 'finished'}
+            className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-amber-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500"
+          >
+            <RotateCcw size={20} />
+            선택 롤백
+          </button>
           <button
             type="button"
             onClick={resetBattle}
-            className="mx-auto flex items-center gap-2 rounded-lg bg-gray-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-gray-700"
+            className="inline-flex items-center gap-2 rounded-lg bg-gray-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-gray-700"
           >
             <RefreshCw size={20} />
             배틀 리셋
           </button>
+          {battleState.phase === 'finished' && (
+            <button
+              type="button"
+              onClick={onExit || resetBattle}
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-8 py-3 font-semibold text-white transition-colors hover:bg-blue-700"
+            >
+              <X size={20} />
+              배틀 완료
+            </button>
+          )}
         </div>
       </div>
-
       {showBattleInfo && (
         <BattleInfoPanel battleState={battleState} onClose={() => setShowBattleInfo(false)} />
       )}
@@ -657,3 +697,4 @@ export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = 
 }
 
 export default AdvancedBattleSimulator;
+

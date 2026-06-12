@@ -261,7 +261,17 @@ export default function PokemonSettingsPanel({
             style={{ imageRendering: 'pixelated' }}
           />
           <div className="w-full min-w-0">
-            <div className="truncate text-sm font-bold text-gray-800">{pokemon.name}</div>
+            <div
+              className="min-h-[2.25rem] text-sm font-bold leading-tight text-gray-800"
+              style={{
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden'
+              }}
+            >
+              {pokemon.name}
+            </div>
             <div className="text-xs text-gray-600">No.{pokemon.number}</div>
           </div>
         </div>
@@ -304,8 +314,8 @@ export default function PokemonSettingsPanel({
 
   return (
     <div className="bg-white rounded-lg border-2 border-indigo-200 p-6 space-y-6">
-      <div className="flex items-center justify-between gap-3">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
           <h4 className="text-xl font-bold text-gray-800 flex items-center gap-2">
             <Settings size={24} />
             {isRegionMode ? '지역 포켓몬 기준 설정' : '장소 출현 설정'}
@@ -318,8 +328,8 @@ export default function PokemonSettingsPanel({
         </div>
 
         {!isRegionMode && (
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-gray-700">전국도감</span>
+        <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
+          <span className="text-sm font-semibold leading-none text-gray-700">전국도감</span>
           <button
             type="button"
             onClick={handleToggleNationalPokedex}
@@ -337,9 +347,9 @@ export default function PokemonSettingsPanel({
         )}
       </div>
 
-      <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-5">
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+      <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
+        <div className="min-w-0">
+          <label className="mb-2 flex items-center gap-1 whitespace-nowrap text-sm font-bold text-gray-700">
             <Percent size={16} />
             조우율 (%)
           </label>
@@ -354,8 +364,8 @@ export default function PokemonSettingsPanel({
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+        <div className="min-w-0">
+          <label className="mb-2 flex items-center gap-1 whitespace-nowrap text-sm font-bold text-gray-700">
             <TrendingUp size={16} />
             최소 레벨
           </label>
@@ -404,8 +414,8 @@ export default function PokemonSettingsPanel({
           </div>
         )}
 
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+        <div className="min-w-0">
+          <label className="mb-2 flex items-center gap-1 whitespace-nowrap text-sm font-bold text-gray-700">
             <TrendingUp size={16} />
             {isRegionMode ? '지역 최대 레벨' : '최대 레벨'}
           </label>
@@ -423,8 +433,8 @@ export default function PokemonSettingsPanel({
         </div>
 
         {isRegionMode && (
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+          <div className="min-w-0">
+            <label className="mb-2 flex items-center gap-1 whitespace-nowrap text-sm font-bold text-gray-700">
               <ShieldCheck size={16} />
               최대 포획률 (%)
             </label>
@@ -439,8 +449,8 @@ export default function PokemonSettingsPanel({
           </div>
         )}
 
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+        <div className="min-w-0">
+          <label className="mb-2 flex items-center gap-1 whitespace-nowrap text-sm font-bold text-gray-700">
             <Sparkles size={16} />
             이로치 확률
           </label>
@@ -523,7 +533,7 @@ export default function PokemonSettingsPanel({
                       {group.title} ({group.ids.length}종)
                     </div>
                   )}
-                  <div className={`grid gap-2 max-h-[420px] overflow-y-auto ${!isRegionMode && availableEncounterPokemon.length > 0 ? 'grid-cols-3' : 'grid-cols-5'}`}>
+                  <div className="grid max-h-[420px] gap-2 overflow-y-auto [grid-template-columns:repeat(auto-fit,minmax(170px,1fr))]">
                     {group.ids.map((pokemonId) => renderPokemonSelectionCard(pokemonId))}
                   </div>
                 </div>
@@ -580,9 +590,9 @@ export default function PokemonSettingsPanel({
           {filteredSelectablePokemon.length}마리 표시 중
         </div>
 
-        <div className="grid grid-cols-5 gap-2 max-h-80 overflow-y-auto p-2 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="grid max-h-80 gap-2 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-2 [grid-template-columns:repeat(auto-fit,minmax(104px,1fr))]">
           {filteredSelectablePokemon.length === 0 ? (
-            <div className="col-span-5 py-8 text-center text-sm font-semibold text-gray-500">
+            <div className="col-span-full py-8 text-center text-sm font-semibold text-gray-500">
               검색 결과가 없습니다.
             </div>
           ) : filteredSelectablePokemon.map((pokemon) => {
@@ -609,9 +619,29 @@ export default function PokemonSettingsPanel({
                     style={{ imageRendering: 'pixelated' }}
                   />
                 </div>
-                <div className="text-xs text-center font-semibold truncate">{displayNameParts.name}</div>
+                <div
+                  className="min-h-[2rem] text-center text-xs font-semibold leading-tight"
+                  style={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden'
+                  }}
+                >
+                  {displayNameParts.name}
+                </div>
                 {displayNameParts.formLabel && (
-                  <div className="text-[10px] text-center text-gray-500 truncate">{displayNameParts.formLabel}</div>
+                  <div
+                    className="min-h-[1.5rem] text-center text-[10px] leading-tight text-gray-500"
+                    style={{
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    {displayNameParts.formLabel}
+                  </div>
                 )}
               </button>
             );

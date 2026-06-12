@@ -3,6 +3,15 @@
 
 import { useIndividualValues } from './useIndividualValues';
 
+const SAFARI_BALL_DAILY_REWARD_COUNT = 10;
+
+const getLocalDateKey = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export const useRegionExplore = (
   currentUser,
   updateCurrentUser,
@@ -20,6 +29,38 @@ export const useRegionExplore = (
     const parsed = Number(value);
     if (!Number.isFinite(parsed)) return fallback;
     return parsed > 1 ? parsed / 100 : parsed;
+  };
+
+  const addInventoryItem = (inventory = [], itemData, count) => {
+    if (!itemData || count <= 0) return inventory;
+
+    const nextInventory = Array.isArray(inventory) ? [...inventory] : [];
+    const existingIndex = nextInventory.findIndex((item) => (
+      item.itemId === itemData.id ||
+      item.name === itemData.name ||
+      item.nameEn === itemData.nameEn
+    ));
+
+    if (existingIndex !== -1) {
+      nextInventory[existingIndex] = {
+        ...nextInventory[existingIndex],
+        count: (Number(nextInventory[existingIndex].count) || 0) + count
+      };
+      return nextInventory;
+    }
+
+    return [
+      ...nextInventory,
+      {
+        itemId: itemData.id,
+        name: itemData.name,
+        nameEn: itemData.nameEn,
+        count,
+        imageUrl: itemData.spriteUrl || itemData.imageUrl,
+        category: itemData.category,
+        onUse: itemData.onUse || null
+      }
+    ];
   };
 
   // 지역 탐험
@@ -50,10 +91,30 @@ export const useRegionExplore = (
       });
 
       const randomEncounter = Math.random();
+      const isSafari = region.isSafari === true;
+      const safariBall = allItems.find((item) => item.nameEn === 'safari-ball' || item.name === '사파리볼');
+      const todayKey = getLocalDateKey();
+      const canReceiveSafariBalls = isSafari
+        && safariBall
+        && currentUser.lastSafariBallRewardDate !== todayKey;
+      const nextDailyWalks = currentUser.dailyWalks - 1;
+      const nextInventory = canReceiveSafariBalls
+        ? addInventoryItem(currentUser.inventory, safariBall, SAFARI_BALL_DAILY_REWARD_COUNT)
+        : currentUser.inventory;
 
       // 탐험 횟수 차감
-      await updateCurrentUser({ dailyWalks: currentUser.dailyWalks - 1 });
-      console.log('✅ 탐험 횟수 차감 완료:', currentUser.dailyWalks - 1);
+      await updateCurrentUser({
+        dailyWalks: nextDailyWalks,
+        ...(canReceiveSafariBalls ? {
+          inventory: nextInventory,
+          lastSafariBallRewardDate: todayKey
+        } : {})
+      });
+      console.log('✅ 탐험 횟수 차감 완료:', nextDailyWalks);
+
+      if (canReceiveSafariBalls) {
+        console.log(`✅ 사파리 장소 일일 입장 보상 지급: 사파리볼 x${SAFARI_BALL_DAILY_REWARD_COUNT}`);
+      }
 
       // 포켓몬 미조우 시
       if (randomEncounter >= encounterRate) {
@@ -65,7 +126,10 @@ export const useRegionExplore = (
         ];
         applyLoot(loot, null);
         const itemText = itemList.length > 0 ? `\n🎁 ${itemList.join(', ')}` : '';
-        alert(`🌿 ${encounterLocationName}을(를) 탐험했지만 포켓몬을 발견하지 못했습니다!\n\n💰 ${loot.money}원을 획득했습니다!${itemText}`);
+        const safariText = canReceiveSafariBalls
+          ? `\n🎁 사파리볼 x${SAFARI_BALL_DAILY_REWARD_COUNT}을 받았습니다!`
+          : '';
+        alert(`🌿 ${encounterLocationName}을(를) 탐험했지만 포켓몬을 발견하지 못했습니다!${safariText}\n\n💰 ${loot.money}원을 획득했습니다!${itemText}`);
         return;
       }
 
@@ -132,6 +196,9 @@ export const useRegionExplore = (
       baseRegionId: region.baseRegionId || region.regionId || region.id,
       placeId: region.placeId || null,
       placeName,
+      isCave: region.isCave === true,
+      isWaterside: region.isWaterside === true,
+      isSafari,
       minLevel,
       maxLevel,
 		};

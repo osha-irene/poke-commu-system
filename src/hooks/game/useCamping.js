@@ -231,7 +231,8 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
       // 엔트리 포켓몬 친밀도 증가 (null 제외)
       const updatedPokemon = memberData.caughtPokemon.map((pokemon, index) => {
         if (index < 6 && pokemon) {
-          const newFriendship = Math.min(255, (pokemon.friendship || 0) + stageData.friendshipBonus);
+          const friendshipBonus = Math.max(0, Math.floor(stageData.friendshipBonus * (pokemon.friendshipGainMultiplier || 1)));
+          const newFriendship = Math.min(255, (pokemon.friendship || 0) + friendshipBonus);
           console.log(`친밀도 업데이트: ${pokemon.name} ${pokemon.friendship || 0} → ${newFriendship}`);
           return {
             ...pokemon,

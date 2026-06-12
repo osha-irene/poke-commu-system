@@ -7,6 +7,26 @@ import { getOwnedPokemonDisplayParts } from '../../utils/ownedPokemonDisplay';
 import allPokemonMaster from '../../data/allPokemon.json';
 import customBattleData from '../../data/customBattleData.json';
 
+const BATTLE_LOG_ARCHIVE_KEY = 'poke-commu-battle-log-archive';
+const MAX_BATTLE_LOG_ARCHIVE = 50;
+
+const readBattleLogArchive = () => {
+  if (typeof window === 'undefined') return [];
+
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(BATTLE_LOG_ARCHIVE_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn('배틀 로그 아카이브를 불러오지 못했습니다:', error);
+    return [];
+  }
+};
+
+const writeBattleLogArchive = (logs) => {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(BATTLE_LOG_ARCHIVE_KEY, JSON.stringify(logs));
+};
+
 const TYPE_MAP = {
   노말: 'Normal',
   불꽃: 'Fire',
@@ -331,6 +351,117 @@ const EntrySelector = ({
   );
 };
 
+const formatBattleLogDate = (value) => {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+
+  return date.toLocaleString('ko-KR', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+const BattleLogArchiveModal = ({ logs, onClose }) => {
+  const [selectedId, setSelectedId] = useState(logs[0]?.id || null);
+  const selectedLog = logs.find(log => log.id === selectedId) || logs[0] || null;
+
+  useEffect(() => {
+    setSelectedId(logs[0]?.id || null);
+  }, [logs]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">역대 배틀 로그</h2>
+            <p className="text-sm text-gray-500">완료된 배틀 기록을 다시 확인합니다.</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-bold text-white hover:bg-gray-700"
+          >
+            닫기
+          </button>
+        </div>
+
+        {logs.length === 0 ? (
+          <div className="p-10 text-center text-gray-500">아직 저장된 배틀 로그가 없습니다.</div>
+        ) : (
+          <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-[280px_minmax(0,1fr)]">
+            <div className="min-h-0 overflow-y-auto border-r border-gray-200 bg-gray-50 p-3">
+              {logs.map(log => (
+                <button
+                  key={log.id}
+                  type="button"
+                  onClick={() => setSelectedId(log.id)}
+                  className={`mb-2 w-full rounded-lg border px-3 py-3 text-left transition-colors ${
+                    selectedLog?.id === log.id
+                      ? 'border-gray-900 bg-white text-gray-950 shadow-sm'
+                      : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-white'
+                  }`}
+                >
+                  <div className="text-sm font-bold">{log.player1Name} vs {log.player2Name}</div>
+                  <div className="mt-1 text-xs text-gray-500">
+                    {formatBattleLogDate(log.createdAt)} · {log.turn}턴 · {log.winner || '-'} 승리
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="min-h-0 overflow-y-auto p-5">
+              {selectedLog && (
+                <>
+                  <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                    <div className="text-lg font-bold text-gray-900">
+                      {selectedLog.player1Name} vs {selectedLog.player2Name}
+                    </div>
+                    <div className="mt-1 text-sm text-gray-600">
+                      {formatBattleLogDate(selectedLog.createdAt)} · 총 {selectedLog.turn}턴 · 승자: {selectedLog.winner || '-'}
+                    </div>
+                    <div className="mt-3 grid gap-3 text-sm md:grid-cols-2">
+                      <div>
+                        <div className="font-bold text-blue-800">Player 1</div>
+                        <div className="text-gray-700">{selectedLog.player1Team?.join(', ') || '-'}</div>
+                      </div>
+                      <div>
+                        <div className="font-bold text-red-800">Player 2</div>
+                        <div className="text-gray-700">{selectedLog.player2Team?.join(', ') || '-'}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 rounded-lg bg-gray-50 p-4">
+                    {(selectedLog.log || []).map((entry, index) => (
+                      <div
+                        key={`${entry.type}-${entry.message}-${index}`}
+                        className={`rounded px-3 py-2 text-sm ${
+                          entry.type === 'system' ? 'bg-blue-100 font-bold'
+                            : entry.type === 'damage' ? 'bg-red-50'
+                              : entry.type === 'faint' ? 'bg-gray-200 font-semibold'
+                                : entry.type === 'winner' ? 'bg-yellow-100 text-lg font-bold'
+                                  : entry.type === 'item' ? 'bg-amber-50'
+                                    : 'bg-white'
+                        }`}
+                      >
+                        {entry.message}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export function BattleView() {
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [loadingPokemon, setLoadingPokemon] = useState({ player1: false, player2: false });
@@ -343,6 +474,8 @@ export function BattleView() {
   const [selectedP1Ids, setSelectedP1Ids] = useState([]);
   const [selectedP2Ids, setSelectedP2Ids] = useState([]);
   const [battleStarted, setBattleStarted] = useState(false);
+  const [battleLogArchive, setBattleLogArchive] = useState(() => readBattleLogArchive());
+  const [showBattleLogArchive, setShowBattleLogArchive] = useState(false);
 
   useEffect(() => {
     const loadMembers = async () => {
@@ -440,22 +573,61 @@ export function BattleView() {
     [player2Data.entryPokemon, player2Data.partnerPokemon, selectedP2Ids]
   );
 
+  const player1Name = getMemberName(members.find(member => member.uid === selectedUser1));
+  const player2Name = getMemberName(members.find(member => member.uid === selectedUser2));
+
+  const handleBattleFinished = (battleSummary) => {
+    const archiveEntry = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      createdAt: new Date().toISOString(),
+      player1Name,
+      player2Name,
+      player1Team: player1Team.map(pokemon => getOwnedPokemonDisplayParts(pokemon).primary),
+      player2Team: player2Team.map(pokemon => getOwnedPokemonDisplayParts(pokemon).primary),
+      ...battleSummary,
+    };
+
+    setBattleLogArchive((prev) => {
+      const next = [archiveEntry, ...prev].slice(0, MAX_BATTLE_LOG_ARCHIVE);
+      writeBattleLogArchive(next);
+      return next;
+    });
+  };
+
+  const renderBattleLogArchiveButton = () => (
+    <button
+      type="button"
+      onClick={() => setShowBattleLogArchive(true)}
+      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-800 shadow-sm hover:bg-gray-100"
+    >
+      역대 배틀 로그
+      <span className="ml-2 rounded-full bg-gray-900 px-2 py-0.5 text-xs text-white">{battleLogArchive.length}</span>
+    </button>
+  );
+
   if (battleStarted && player1Team.length > 0 && player2Team.length > 0) {
     return (
       <div className="p-6">
-        <button
-          type="button"
-          onClick={() => setBattleStarted(false)}
-          className="mb-4 rounded bg-gray-600 px-4 py-2 font-semibold text-white hover:bg-gray-700"
-        >
-          엔트리 다시 고르기
-        </button>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => setBattleStarted(false)}
+            className="rounded bg-gray-600 px-4 py-2 font-semibold text-white hover:bg-gray-700"
+          >
+            엔트리 다시 고르기
+          </button>
+          {renderBattleLogArchiveButton()}
+        </div>
         <AdvancedBattleSimulator
           player1Team={player1Team}
           player2Team={player2Team}
           autoStart
+          onBattleFinished={handleBattleFinished}
           onExit={() => setBattleStarted(false)}
         />
+        {showBattleLogArchive && (
+          <BattleLogArchiveModal logs={battleLogArchive} onClose={() => setShowBattleLogArchive(false)} />
+        )}
       </div>
     );
   }
@@ -467,17 +639,20 @@ export function BattleView() {
           <h1 className="text-3xl font-bold text-gray-900">포켓몬 배틀</h1>
           <p className="mt-1 text-sm text-gray-600">파트너는 별도 표시하고, 배틀에는 각 트레이너의 엔트리 앞 6마리 중 선택한 포켓몬만 참가합니다.</p>
         </div>
-        <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1">
-          {[3, 6].map(size => (
-            <button
-              key={size}
-              type="button"
-              onClick={() => setBattleSize(size)}
-              className={`rounded-md px-4 py-2 text-sm font-bold ${battleSize === size ? 'bg-gray-900 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
-            >
-              {size}마리
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-3">
+          {renderBattleLogArchiveButton()}
+          <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1">
+            {[3, 6].map(size => (
+              <button
+                key={size}
+                type="button"
+                onClick={() => setBattleSize(size)}
+                className={`rounded-md px-4 py-2 text-sm font-bold ${battleSize === size ? 'bg-gray-900 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
+              >
+                {size}마리
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -580,6 +755,9 @@ export function BattleView() {
             )}
           </div>
         </>
+      )}
+      {showBattleLogArchive && (
+        <BattleLogArchiveModal logs={battleLogArchive} onClose={() => setShowBattleLogArchive(false)} />
       )}
     </div>
   );

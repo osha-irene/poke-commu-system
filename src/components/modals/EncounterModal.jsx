@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import PokemonPreviewInfo from '../views/pokemon/PokemonPreviewInfo';
-import { calculateBallMultiplier } from '../../utils/catchMechanics';
+import { calculateBallMultiplier, calculateCaptureChance } from '../../utils/catchMechanics';
 import {
   Footprints,
   Zap,
@@ -19,7 +19,8 @@ export default function EncounterModal({
   onApplyLoot,
   maxNonPartnerPokemon = 18,
   escapeMode = 'none',
-  isCave = false
+  isCave = false,
+  isWaterside = false
 }) {
   const [selectedBall, setSelectedBall] = useState(null);
   const [catching, setCatching] = useState(false);
@@ -45,6 +46,11 @@ export default function EncounterModal({
   // 현재 시간 (밤 판정용)
   const currentHour = new Date().getHours();
   const isNight = currentHour >= 20 || currentHour < 4;
+  const targetSpeciesKey = pokemon.originalNumber || pokemon.number || pokemon.species || pokemon.nameEn || pokemon.name;
+  const hasCaughtBefore = caughtPokemon.some((ownedPokemon) => {
+    const ownedSpeciesKey = ownedPokemon?.originalNumber || ownedPokemon?.number || ownedPokemon?.species || ownedPokemon?.nameEn || ownedPokemon?.name;
+    return ownedSpeciesKey && ownedSpeciesKey === targetSpeciesKey;
+  });
 
   // 인벤토리에서 볼 종류만 필터링하고 배율 계산
   const pokeballs = items
@@ -58,12 +64,15 @@ export default function EncounterModal({
       const multiplier = calculateBallMultiplier(item, pokemon, {
         isNight,
         isCave,
+        isWaterside,
         turnCount: escapeAttempts + 1,
         activePartyPokemon: partnerPokemon || null,
+        hasCaughtBefore,
       });
 
       return {
         name: item.name,
+        nameEn: item.nameEn,
         id: item.itemId,
         multiplier,
         imageUrl: item.imageUrl,
@@ -183,7 +192,15 @@ export default function EncounterModal({
               baseCatchRate = 0.20;
             }
 
-            const catchChance = baseCatchRate * selectedBall.multiplier;
+            const catchChance = calculateCaptureChance(selectedBall, pokemon, {
+              catchRate: baseCatchRate,
+              isNight,
+              isCave,
+              isWaterside,
+              turnCount: escapeAttempts + 1,
+              activePartyPokemon: partnerPokemon || null,
+              hasCaughtBefore,
+            });
             const randomValue = Math.random();
             const success = randomValue < catchChance;
 
@@ -191,7 +208,7 @@ export default function EncounterModal({
             console.log('[포획 시도]', pokemon.name);
             console.log('  - 기본 포획률:', pokemon.catchRate);
             console.log('  - 볼 배율:', selectedBall.multiplier);
-            console.log('  - 최종 포획 확률:', catchChance);
+            console.log('  - 원작식 최종 포획 확률:', catchChance);
             console.log('  - 랜덤 값:', randomValue);
             console.log('  - 결과:', success ? '성공' : '실패');
 

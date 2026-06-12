@@ -86,73 +86,77 @@ export const useLoot = (currentUser, updateCurrentUser, setMembers, allItems) =>
   // 전리품 적용
   const applyLoot = (loot, ballUsed = null) => {
     if (!loot || !currentUser) return;
-    
-    const newMoney = (currentUser.money || 0) + loot.money;
-    let newInventory = [...currentUser.inventory];
-    
-    // 볼 사용 처리
-    if (ballUsed && !currentUser.isSuperAdmin) {
-      newInventory = newInventory.map(item => 
-        (item.itemId === ballUsed.id || item.name === ballUsed.name)
-          ? { ...item, count: Math.max(0, item.count - 1) }
-          : item
-      );
-    }
-    
-    // 전리품 추가
-    const allLootItems = [...loot.items, ...loot.ingredients, ...loot.berries];
-    
-    allLootItems.forEach(lootItem => {
-      const existingIndex = newInventory.findIndex(i => 
-        i.itemId === lootItem.id || i.name === lootItem.name
-      );
-      
-      if (existingIndex !== -1) {
-        newInventory[existingIndex] = {
-          ...newInventory[existingIndex],
-          count: newInventory[existingIndex].count + lootItem.count
-        };
-      } else {
-        const itemData = allItems.find(i => i.id === lootItem.id);
-        if (itemData) {
-          const newItem = {
-            itemId: lootItem.id,
-            name: lootItem.name,
-            count: lootItem.count,
-            imageUrl: itemData.spriteUrl || itemData.imageUrl,
-            category: itemData.category,
-            onUse: itemData.onUse || null
-          };
-          newInventory.push(newItem);
-        }
+
+    const buildLootUpdate = (baseUser) => {
+      const sourceUser = baseUser || currentUser;
+      const newMoney = (Number(sourceUser.money) || 0) + (Number(loot.money) || 0);
+      let newInventory = Array.isArray(sourceUser.inventory) ? [...sourceUser.inventory] : [];
+
+      // 볼 사용 처리
+      if (ballUsed && !sourceUser.isSuperAdmin) {
+        newInventory = newInventory.map(item =>
+          (item.itemId === ballUsed.id || item.name === ballUsed.name)
+            ? { ...item, count: Math.max(0, (Number(item.count) || 0) - 1) }
+            : item
+        );
       }
-    });
-    
-    // dailyWalks 보존
-    const preservedDailyWalks = currentUser.dailyWalks;
-    
-    const updatedUser = {
-      ...currentUser,
-      dailyWalks: preservedDailyWalks,
-      money: newMoney,
-      inventory: newInventory
+
+      // 전리품 추가
+      const allLootItems = [...loot.items, ...loot.ingredients, ...loot.berries];
+
+      allLootItems.forEach(lootItem => {
+        const existingIndex = newInventory.findIndex(i =>
+          i.itemId === lootItem.id || i.name === lootItem.name
+        );
+
+        if (existingIndex !== -1) {
+          newInventory[existingIndex] = {
+            ...newInventory[existingIndex],
+            count: (Number(newInventory[existingIndex].count) || 0) + lootItem.count
+          };
+        } else {
+          const itemData = allItems.find(i => i.id === lootItem.id);
+          if (itemData) {
+            const newItem = {
+              itemId: lootItem.id,
+              name: lootItem.name,
+              nameEn: itemData.nameEn,
+              count: lootItem.count,
+              imageUrl: itemData.spriteUrl || itemData.imageUrl,
+              category: itemData.category,
+              onUse: itemData.onUse || null
+            };
+            newInventory.push(newItem);
+          }
+        }
+      });
+
+      return {
+        ...sourceUser,
+        money: newMoney,
+        inventory: newInventory
+      };
     };
-    
+
     // members state 업데이트
-    setMembers(prev => ({
-      ...prev,
-      [currentUser.id]: updatedUser
-    }));
+    setMembers(prev => {
+      const latestUser = prev[currentUser.id] || currentUser;
+      return {
+        ...prev,
+        [currentUser.id]: buildLootUpdate(latestUser)
+      };
+    });
     
     // Firebase 저장
     const memberRef = ref(database, `members/${currentUser.id}`);
     get(memberRef).then(snapshot => {
       if (snapshot.exists()) {
         const currentData = snapshot.val();
+        const latestUpdatedUser = buildLootUpdate(currentData);
         set(memberRef, {
           ...currentData,
-          money: newMoney,
-          inventory: newInventory
+          money: latestUpdatedUser.money,
+          inventory: latestUpdatedUser.inventory
         }).then(() => {
           console.log('✅ applyLoot: Firebase 저장 완료');
         });
