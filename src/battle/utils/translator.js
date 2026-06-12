@@ -306,8 +306,8 @@ function translateWeather(parts) {
     'RainDance': '비가 내리기 시작했다!',
     'SunnyDay': '햇살이 강해졌다!',
     'Sandstorm': '모래바람이 불기 시작했다!',
-    'Hail': '싸라기눈이 내리기 시작했다!',
-    'Snow': '눈이 내리기 시작했다!',
+    'Hail': '설경이 내리기 시작했다!',
+    'Snow': '설경이 내리기 시작했다!',
     'none': '날씨가 정상으로 돌아왔다.'
   };
   
@@ -317,8 +317,8 @@ function translateWeather(parts) {
       'RainDance': '비가 계속 내리고 있다.',
       'SunnyDay': '햇살이 강하다.',
       'Sandstorm': '모래바람이 세차다.',
-      'Hail': '싸라기눈이 계속 내린다.',
-      'Snow': '눈이 계속 내리고 있다.'
+      'Hail': '설경이 내리기 시작했다!',
+      'Snow': '설경이 내리기 시작했다!'
     };
     return upkeepMap[weather] || null;
   }

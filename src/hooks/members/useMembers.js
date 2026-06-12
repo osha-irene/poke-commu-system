@@ -7,6 +7,7 @@ import { database, auth } from '../../firebase';
 import itemsData from '../../data/items.json';
 import { fillMissingBaseStats, findPokemonTemplate } from '../../utils/pokemonBaseStats';
 import { getAbilityEnglishName } from '../../utils/abilityUtils';
+import { DEFAULT_IVS, withNormalizedIVs } from '../../utils/pokemonIndividualValues';
 
 export const useMembers = (allPokemonData) => {
   const [members, setMembers] = useState({});
@@ -31,20 +32,21 @@ export const useMembers = (allPokemonData) => {
               const template = findPokemonTemplate(pokemon, allPokemonData);
               
               if (template) {
-                return fillMissingBaseStats({
+                return withNormalizedIVs(fillMissingBaseStats({
                   ...pokemon,
                   nameEn: pokemon.nameEn || template.nameEn,
                   abilityEn: pokemon.abilityEn || getAbilityEnglishName(pokemon.ability) || template.abilitiesEn?.[0] || null
-                }, template);
+                }, template), DEFAULT_IVS);
               }
               
-              return pokemon;
+              return withNormalizedIVs(pokemon, DEFAULT_IVS);
             }) || member.caughtPokemon;
             
             updated[userId] = { 
               ...member, 
               id: userId,
-              caughtPokemon: updatedCaughtPokemon 
+              caughtPokemon: updatedCaughtPokemon,
+              partnerPokemon: withNormalizedIVs(member.partnerPokemon, DEFAULT_IVS)
             };
           });
           

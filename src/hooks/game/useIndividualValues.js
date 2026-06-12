@@ -2,6 +2,7 @@
 // 포켓몬 개체값 생성 (성별, 크기, 특성)
 
 import { generatePokemonGender } from '../../utils/pokemonGender';
+import { generateRandomIVs } from '../../utils/pokemonIndividualValues';
 
 export const useIndividualValues = () => {
   // 성별 생성
@@ -68,7 +69,8 @@ export const useIndividualValues = () => {
   return {
     generateGender,
     generateSize,
-    generateAbility
+    generateAbility,
+    generateIVs: generateRandomIVs
   };
 };
 

@@ -1,6 +1,7 @@
 // src/hooks/items/useItemEffects.js
 // 아이템 사용 효과 시스템
 
+import { useRef } from 'react';
 import { isEVItem, applyEVItem } from '../../utils/evItemUtils';
 import { getLearnsetTmMoves, getPokemonLearnset } from '../../utils/pokemonLearnsets';
 
@@ -17,10 +18,28 @@ export const useItemEffects = (
   
   const movesHook = useMoves;
   const evolutionHook = useEvolution;
+  const itemUseLockRef = useRef(null);
 
   // 포켓몬에게 아이템 사용
   const useItemOnPokemon = (item, pokemon) => {
     if (!currentUser || !pokemon) return;
+
+    const itemKey = item?.itemId || item?.id || item?.name || 'unknown-item';
+    const pokemonKey = pokemon?.uniqueId || pokemon?.id || pokemon?.name || 'unknown-pokemon';
+    const useKey = `${itemKey}:${pokemonKey}`;
+
+    if (itemUseLockRef.current === useKey) return;
+    itemUseLockRef.current = useKey;
+
+    const releaseItemUseLock = () => {
+      window.setTimeout(() => {
+        if (itemUseLockRef.current === useKey) {
+          itemUseLockRef.current = null;
+        }
+      }, 750);
+    };
+
+    try {
     
     const itemData = allItems.find(i => 
       i.id === item.itemId || i.name === item.name
@@ -42,7 +61,11 @@ export const useItemEffects = (
       const updatedCaughtPokemon = currentUser.caughtPokemon.map(p => 
         p && p.uniqueId === updatedPokemon.uniqueId ? updatedPokemon : p
       );
-      updateCurrentUser({ caughtPokemon: updatedCaughtPokemon });
+      const updates = { caughtPokemon: updatedCaughtPokemon };
+      if (currentUser.partnerPokemon?.uniqueId === updatedPokemon.uniqueId) {
+        updates.partnerPokemon = updatedPokemon;
+      }
+      updateCurrentUser(updates);
     };
     
     // 기술머신 (TM) 사용 로직
@@ -269,6 +292,9 @@ export const useItemEffects = (
     
     alert(`${pokemon.nickname || pokemon.name}에게 ${item.name}을(를) 사용했습니다!`);
     consumeItem(item);
+    } finally {
+      releaseItemUseLock();
+    }
   };
 
   return {

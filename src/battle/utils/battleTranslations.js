@@ -120,8 +120,8 @@ export const translateWeatherName = (weather) => ({
   raindance: '비',
   sunnyday: '쾌청',
   sandstorm: '모래바람',
-  hail: '싸라기눈',
-  snow: '눈',
+  hail: '설경',
+  snow: '설경',
 }[normalizeBattleKey(weather)] || weather);
 
 export const translateTerrainName = (terrain) => ({

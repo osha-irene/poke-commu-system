@@ -6,6 +6,15 @@ const toDexNumber = (value) => {
   return Number.isFinite(number) ? number : null;
 };
 
+const getTooltipSpeciesKey = (pokemon = {}) => {
+  const speciesNumber = pokemon.originalNumber || pokemon.displayNumber || pokemon.number;
+  const formGroup = pokemon.regionalForm
+    ? `regional:${pokemon.regionalForm}`
+    : 'base';
+
+  return `${speciesNumber || pokemon.baseSpecies || pokemon.name || pokemon.id}:${formGroup}`;
+};
+
 export default function MapView({
   regions,
   onRegionClick,
@@ -92,16 +101,27 @@ export default function MapView({
 
   const getPlacePokemonList = (place = {}) => {
     const pokemonIds = Array.isArray(place.pokemons) ? place.pokemons : [];
-    return pokemonIds.map((pokemonId) => {
+    const pokemonBySpecies = new Map();
+
+    pokemonIds.forEach((pokemonId) => {
       const pokemon = allPokemonMaster.find(candidate => (
         String(candidate.number) === String(pokemonId) ||
         String(candidate.originalNumber) === String(pokemonId) ||
         candidate.id === pokemonId
       ));
 
-      if (!pokemon) return '??';
-      return isPokemonUnlocked(pokemon) ? pokemon.name : '??';
+      if (!pokemon) {
+        pokemonBySpecies.set(`unknown:${pokemonId}`, '??');
+        return;
+      }
+
+      const speciesKey = getTooltipSpeciesKey(pokemon);
+      if (!pokemonBySpecies.has(speciesKey)) {
+        pokemonBySpecies.set(speciesKey, isPokemonUnlocked(pokemon) ? pokemon.name : '??');
+      }
     });
+
+    return Array.from(pokemonBySpecies.values());
   };
 
   const handleRegionButtonClick = (region) => {

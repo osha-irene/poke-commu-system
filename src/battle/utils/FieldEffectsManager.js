@@ -59,7 +59,7 @@ class FieldEffectsManager {
         },
       },
       'Hail': {
-        name: '싸라기눈',
+        name: '설경',
         nameEn: 'Hail',
         duration: 5,
         immuneTypes: ['Ice'],
@@ -74,7 +74,7 @@ class FieldEffectsManager {
         },
       },
       'Snow': {
-        name: '눈',
+        name: '설경',
         nameEn: 'Snow',
         duration: 5,
         statBoosts: {

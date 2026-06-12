@@ -13,7 +13,14 @@ export default function MemberPokemonViewMode({
   onStartTransfer
 }) {
   const [openFormPokemonId, setOpenFormPokemonId] = useState(null);
-  const memberPokemon = member?.caughtPokemon?.filter(pokemon => pokemon && pokemon.uniqueId) || [];
+  const partnerPokemon = member?.partnerPokemon?.uniqueId ? member.partnerPokemon : null;
+  const caughtPokemon = member?.caughtPokemon?.filter(pokemon => pokemon && pokemon.uniqueId) || [];
+  const memberPokemon = partnerPokemon
+    ? [
+        partnerPokemon,
+        ...caughtPokemon.filter(pokemon => pokemon.uniqueId !== partnerPokemon.uniqueId),
+      ]
+    : caughtPokemon;
 
   const getAvailableForms = (pokemon) => {
     if (typeof getPokemonFormCandidates !== 'function') return [];

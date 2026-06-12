@@ -80,8 +80,8 @@ export function getWeatherMessages(oldWeather, newWeather) {
     rain: '비가 내리기 시작했다',
     'heavy-rain': '강한 비가 내리기 시작했다',
     sand: '모래바람이 불기 시작했다',
-    hail: '싸라기눈이 내리기 시작했다',
-    snow: '눈이 내리기 시작했다',
+    hail: '설경이 내리기 시작했다',
+    snow: '설경이 내리기 시작했다',
     'strong-winds': '난기류가 발생했다'
   };
 

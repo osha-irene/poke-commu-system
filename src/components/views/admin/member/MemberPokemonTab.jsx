@@ -6,6 +6,10 @@ import MemberPokemonEditMode from './MemberPokemonEditMode';
 import MemberPokemonGiveMode from './MemberPokemonGiveMode';
 import MemberPokemonTransferMode from './MemberPokemonTransferMode';
 import { getLearnsetTmMoves, getPokemonLearnset } from '../../../../utils/pokemonLearnsets';
+import { DEFAULT_IVS, generateRandomIVs, normalizeIVs } from '../../../../utils/pokemonIndividualValues';
+
+const emptyEffort = { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 };
+const emptyCondition = { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 };
 
 function MemberPokemonTab({ 
   member, 
@@ -40,9 +44,9 @@ function MemberPokemonTab({
     ability: '',
     isHiddenAbility: false,
     moves: [],
-    ivs: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
-    effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
-    condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 }
+    ivs: DEFAULT_IVS,
+    effort: emptyEffort,
+    condition: emptyCondition
   });
 
   const [giveData, setGiveData] = useState({ 
@@ -63,29 +67,9 @@ function MemberPokemonTab({
   sizeRank: 'M', 
   heightVariation: 100, 
   weightVariation: 100, 
-  ivs: { 
-    hp: 0, 
-    attack: 0, 
-    defense: 0, 
-    specialAttack: 0, 
-    specialDefense: 0, 
-    speed: 0 
-  }, 
-  effort: { 
-    hp: 0, 
-    attack: 0, 
-    defense: 0, 
-    specialAttack: 0, 
-    specialDefense: 0, 
-    speed: 0 
-  }, 
-  condition: { 
-    elegance: 0, 
-    beauty: 0, 
-    cuteness: 0, 
-    intelligence: 0, 
-    strength: 0 
-  } 
+  ivs: generateRandomIVs(),
+  effort: emptyEffort,
+  condition: emptyCondition
 });
 
   const normalizeKey = (value) => String(value || '').toLowerCase();
@@ -239,9 +223,9 @@ function MemberPokemonTab({
     heightVariation: pokemon.heightVariation || 100, 
     weightVariation: pokemon.weightVariation || 100, 
       moves: pokemon.moves || [],
-      ivs: pokemon.ivs || { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
-      effort: pokemon.effort || { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
-      condition: pokemon.condition || { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 }
+      ivs: normalizeIVs(pokemon.ivs, DEFAULT_IVS),
+      effort: pokemon.effort || emptyEffort,
+      condition: pokemon.condition || emptyCondition
     });
     setMode('edit');
   };
@@ -277,7 +261,7 @@ function MemberPokemonTab({
     heightVariation: editData.heightVariation,
     weightVariation: editData.weightVariation,  
       moves: editData.moves,
-      ivs: editData.ivs,
+      ivs: normalizeIVs(editData.ivs, DEFAULT_IVS),
       effort: editData.effort,
       condition: editData.condition
     };
@@ -381,9 +365,9 @@ console.log('📋 최종 기술:', {
     sizeRank: 'M',
     heightVariation: 100,
     weightVariation: 100,
-    ivs: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
-    effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
-    condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 }
+    ivs: generateRandomIVs(),
+    effort: emptyEffort,
+    condition: emptyCondition
   });
   setMode('view');
 };

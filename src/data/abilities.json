@@ -700,7 +700,7 @@
       "id": 59,
       "name": "기분파",
       "nameEn": "forecast",
-      "effect": "During rain, strong sunlight, or hail, this Pokémon's type changes to water, fire, or ice, respectively, and its form changes to match.\n\nThis ability has no effect for any Pokémon other than castform.\n\nIf the weather ends or becomes anything that does not trigger this ability, or a Pokémon with air lock or cloud nine enters battle, this Pokémon's type and form revert to their default.  If this ability is lost or disabled, this Pokémon cannot change its current type and form until it regains its ability.",
+      "effect": "During rain, strong sunlight, or snow, this Pokémon's type changes to water, fire, or ice, respectively, and its form changes to match.\n\nThis ability has no effect for any Pokémon other than castform.\n\nIf the weather ends or becomes anything that does not trigger this ability, or a Pokémon with air lock or cloud nine enters battle, this Pokémon's type and form revert to their default.  If this ability is lost or disabled, this Pokémon cannot change its current type and form until it regains its ability.",
       "shortEffect": "Changes castform's type and form to match the weather.",
       "generation": "generation-iii",
       "pokemon": 4,
@@ -964,13 +964,13 @@
       "id": 81,
       "name": "눈숨기",
       "nameEn": "snow-cloak",
-      "effect": "During hail, this Pokémon has 1.25× its evasion, and it does not take hail damage regardless of type.\n\nThe evasion bonus does not count as a stat modifier.\n\nOverworld: If the lead Pokémon has this ability, the wild encounter rate is halved in snow.",
-      "shortEffect": "Increases evasion to 1.25× during hail.  Protects against hail damage.",
+      "effect": "During snow, this Pokémon has 1.25× its evasion, and it does not take snow damage regardless of type.\n\nThe evasion bonus does not count as a stat modifier.\n\nOverworld: If the lead Pokémon has this ability, the wild encounter rate is halved in snow.",
+      "shortEffect": "Increases evasion to 1.25× during snow.  Protects against snow damage.",
       "generation": "generation-iv",
       "pokemon": 15,
-      "effectKo": "날씨가 싸라기눈일 때 회피율이 올라간다.",
-      "shortEffectKo": "날씨가 싸라기눈일 때 회피율이 올라간다.",
-      "flavorTextKo": "날씨가 싸라기눈일 때 회피율이 올라간다."
+      "effectKo": "날씨가 설경일 때 회피율이 올라간다.",
+      "shortEffectKo": "날씨가 설경일 때 회피율이 올라간다.",
+      "flavorTextKo": "날씨가 설경일 때 회피율이 올라간다."
     },
     {
       "id": 82,
@@ -1372,13 +1372,13 @@
       "id": 115,
       "name": "아이스바디",
       "nameEn": "ice-body",
-      "effect": "This Pokémon heals for 1/16 of its maximum HP after each turn during hail, and it does not take hail damage regardless of type.",
-      "shortEffect": "Heals for 1/16 max HP after each turn during hail.  Protects against hail damage.",
+      "effect": "This Pokémon heals for 1/16 of its maximum HP after each turn during snow, and it does not take snow damage regardless of type.",
+      "shortEffect": "Heals for 1/16 max HP after each turn during snow.  Protects against snow damage.",
       "generation": "generation-iv",
       "pokemon": 21,
-      "effectKo": "날씨가 싸라기눈일 때 HP를 조금씩 회복한다.",
-      "shortEffectKo": "날씨가 싸라기눈일 때 HP를 조금씩 회복한다.",
-      "flavorTextKo": "날씨가 싸라기눈일 때 HP를 조금씩 회복한다."
+      "effectKo": "날씨가 설경일 때 HP를 조금씩 회복한다.",
+      "shortEffectKo": "날씨가 설경일 때 HP를 조금씩 회복한다.",
+      "flavorTextKo": "날씨가 설경일 때 HP를 조금씩 회복한다."
     },
     {
       "id": 116,
@@ -1396,13 +1396,13 @@
       "id": 117,
       "name": "눈퍼뜨리기",
       "nameEn": "snow-warning",
-      "effect": "The weather changes to hail when this Pokémon enters battle and does not end unless cancelled by another weather condition.\n\nIf multiple Pokémon with this ability, drizzle, drought, or sand stream are sent out at the same time, the abilities will activate in order of Speed, respecting trick room.  Each ability's weather will cancel the previous weather, and only the weather summoned by the slowest of the Pokémon will stay.",
-      "shortEffect": "Summons hail that lasts indefinitely upon entering battle.",
+      "effect": "The weather changes to snow when this Pokémon enters battle and does not end unless cancelled by another weather condition.\n\nIf multiple Pokémon with this ability, drizzle, drought, or sand stream are sent out at the same time, the abilities will activate in order of Speed, respecting trick room.  Each ability's weather will cancel the previous weather, and only the weather summoned by the slowest of the Pokémon will stay.",
+      "shortEffect": "Summons snow that lasts indefinitely upon entering battle.",
       "generation": "generation-iv",
       "pokemon": 8,
-      "effectKo": "등장했을 때 날씨를 싸라기눈으로 만든다.",
-      "shortEffectKo": "등장했을 때 날씨를 싸라기눈으로 만든다.",
-      "flavorTextKo": "등장했을 때 날씨를 싸라기눈으로 만든다."
+      "effectKo": "등장했을 때 날씨를 설경으로 만든다.",
+      "shortEffectKo": "등장했을 때 날씨를 설경으로 만든다.",
+      "flavorTextKo": "등장했을 때 날씨를 설경으로 만든다."
     },
     {
       "id": 118,
@@ -1700,9 +1700,9 @@
       "shortEffect": "Protects against damage from weather.",
       "generation": "generation-v",
       "pokemon": 26,
-      "effectKo": "모래바람이나 싸라기눈 등의 데미지를 입지 않는다. 가루의 기술을 받지 않는다.",
-      "shortEffectKo": "모래바람이나 싸라기눈 등의 데미지를 입지 않는다. 가루의 기술을 받지 않는다.",
-      "flavorTextKo": "모래바람이나 싸라기눈 등의 데미지를 입지 않는다. 가루의 기술을 받지 않는다."
+      "effectKo": "모래바람이나 설경 등의 데미지를 입지 않는다. 가루의 기술을 받지 않는다.",
+      "shortEffectKo": "모래바람이나 설경 등의 데미지를 입지 않는다. 가루의 기술을 받지 않는다.",
+      "flavorTextKo": "모래바람이나 설경 등의 데미지를 입지 않는다. 가루의 기술을 받지 않는다."
     },
     {
       "id": 143,
@@ -2416,13 +2416,13 @@
       "id": 202,
       "name": "눈치우기",
       "nameEn": "slush-rush",
-      "effect": "During Hail, this Pokémon has double Speed.",
-      "shortEffect": "During Hail, this Pokémon has double Speed.",
+      "effect": "During Snow, this Pokémon has double Speed.",
+      "shortEffect": "During Snow, this Pokémon has double Speed.",
       "generation": "generation-vii",
       "pokemon": 7,
-      "effectKo": "날씨가 싸라기눈일 때 스피드가 올라간다.",
-      "shortEffectKo": "날씨가 싸라기눈일 때 스피드가 올라간다.",
-      "flavorTextKo": "날씨가 싸라기눈일 때 스피드가 올라간다."
+      "effectKo": "날씨가 설경일 때 스피드가 올라간다.",
+      "shortEffectKo": "날씨가 설경일 때 스피드가 올라간다.",
+      "flavorTextKo": "날씨가 설경일 때 스피드가 올라간다."
     },
     {
       "id": 203,
@@ -2968,13 +2968,13 @@
       "id": 248,
       "name": "아이스페이스",
       "nameEn": "ice-face",
-      "effect": "When an Eiscue that's in its Ice Face form is hit by a physical move, it takes no damage and changes into its Noice Face form. If a hailstorm or snowstorm begins while Eiscue is in its Noice Face form, or if it is sent out in its Noice Face form during hail, it will immediately revert to its Ice Face form.",
+      "effect": "When an Eiscue that's in its Ice Face form is hit by a physical move, it takes no damage and changes into its Noice Face form. If a snowstorm or snowstorm begins while Eiscue is in its Noice Face form, or if it is sent out in its Noice Face form during snow, it will immediately revert to its Ice Face form.",
       "shortEffect": "The Pokémon’s ice head can take a physical attack as a substitute, but the attack also changes the Pokémon’s appearance. The ice will be restored when it snows.",
       "generation": "generation-viii",
       "pokemon": 2,
-      "effectKo": "물리공격을 머리의 얼음이 대신 맞아주지만 모습도 바뀐다. 얼음은 싸라기눈이 내리면 원래대로 돌아온다.",
-      "shortEffectKo": "물리공격을 머리의 얼음이 대신 맞아주지만 모습도 바뀐다. 얼음은 싸라기눈이 내리면 원래대로 돌아온다.",
-      "flavorTextKo": "물리공격을 머리의 얼음이 대신 맞아주지만 모습도 바뀐다. 얼음은 싸라기눈이 내리면 원래대로 돌아온다."
+      "effectKo": "물리공격을 머리의 얼음이 대신 맞아주지만 모습도 바뀐다. 얼음은 설경이 내리면 원래대로 돌아온다.",
+      "shortEffectKo": "물리공격을 머리의 얼음이 대신 맞아주지만 모습도 바뀐다. 얼음은 설경이 내리면 원래대로 돌아온다.",
+      "flavorTextKo": "물리공격을 머리의 얼음이 대신 맞아주지만 모습도 바뀐다. 얼음은 설경이 내리면 원래대로 돌아온다."
     },
     {
       "id": 249,

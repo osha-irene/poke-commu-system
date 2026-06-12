@@ -9,6 +9,7 @@ import { POKEBALL_LIST } from '../../styles/theme';
 import { getBaseStatPatch } from '../../utils/pokemonBaseStats';
 import { getAbilityEnglishName } from '../../utils/abilityUtils';
 import { normalizePokemonGender } from '../../utils/pokemonGender';
+import { DEFAULT_IVS, generateRandomIVs, normalizeIVs } from '../../utils/pokemonIndividualValues';
 import movesData from '../../data/moves.json';
 import evolutionsData from '../../data/evolutions.json';
 
@@ -202,6 +203,7 @@ export const useAdminMembers = (
       isShiny: Math.random() < 0.001,
       gender: Math.random() < 0.5 ? 'male' : 'female',
       ability: pokemonTemplate.abilities?.[0] || '없음',
+      ivs: generateRandomIVs(),
       condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
       effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
       imageUrl: pokemonTemplate.imageUrl,
@@ -579,7 +581,7 @@ export const useAdminMembers = (
       sizeRank,
       heightVariation: parseFloat(heightVariation.toFixed(1)),
       weightVariation: parseFloat(weightVariation.toFixed(1)),
-      ivs: ivs || { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
+      ivs: ivs ? normalizeIVs(ivs) : generateRandomIVs(),
       condition: condition || { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
       effort: effort || { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
       imageUrl: pokemonTemplate.imageUrl,
@@ -861,9 +863,14 @@ export const useAdminMembers = (
       p => p && p.uniqueId !== pokemonUniqueId
     );
     
+    const updatedPartnerPokemon = member.partnerPokemon?.uniqueId === pokemonUniqueId
+      ? null
+      : member.partnerPokemon;
+
     const updatedMember = {
       ...member,
-      caughtPokemon: updatedPokemon
+      caughtPokemon: updatedPokemon,
+      partnerPokemon: updatedPartnerPokemon
     };
     
     try {
@@ -960,17 +967,9 @@ export const useAdminMembers = (
             ? parseFloat(updates.weightVariation) 
             : (p.weightVariation || 100),
           
-          ivs: updates.ivs !== undefined ? {
-            hp: Math.min(31, Math.max(0, updates.ivs.hp ?? p.ivs?.hp ?? 0)),
-            attack: Math.min(31, Math.max(0, updates.ivs.attack ?? p.ivs?.attack ?? 0)),
-            defense: Math.min(31, Math.max(0, updates.ivs.defense ?? p.ivs?.defense ?? 0)),
-            specialAttack: Math.min(31, Math.max(0, updates.ivs.specialAttack ?? p.ivs?.specialAttack ?? 0)),
-            specialDefense: Math.min(31, Math.max(0, updates.ivs.specialDefense ?? p.ivs?.specialDefense ?? 0)),
-            speed: Math.min(31, Math.max(0, updates.ivs.speed ?? p.ivs?.speed ?? 0))
-          } : (p.ivs || {
-            hp: 0, attack: 0, defense: 0, 
-            specialAttack: 0, specialDefense: 0, speed: 0
-          }),
+          ivs: updates.ivs !== undefined
+            ? normalizeIVs(updates.ivs, normalizeIVs(p.ivs, DEFAULT_IVS))
+            : normalizeIVs(p.ivs, DEFAULT_IVS),
           
           spriteUrl: safeValue(updates.spriteUrl, p.spriteUrl || p.sprite),
           iconUrl: safeValue(updates.iconUrl, p.iconUrl),
@@ -999,9 +998,42 @@ export const useAdminMembers = (
       return p;
     });
 
+    const updatedPartnerPokemon = member.partnerPokemon?.uniqueId === pokemonUniqueId
+      ? {
+          ...member.partnerPokemon,
+          ...updates,
+          level: updates.level !== undefined
+            ? Math.min(100, Math.max(1, updates.level))
+            : member.partnerPokemon.level,
+          friendship: safeValue(updates.friendship, member.partnerPokemon.friendship || 0),
+          ballImageUrl: safeValue(updates.ballImage, member.partnerPokemon.ballImageUrl),
+          gender: normalizePokemonGender(
+            safeValue(updates.gender, member.partnerPokemon.gender),
+            findPokemonTemplateForOwned(member.partnerPokemon)
+          ),
+          isHiddenAbility: safeValue(updates.isHiddenAbility, member.partnerPokemon.isHiddenAbility || false),
+          heightVariation: updates.heightVariation !== undefined
+            ? parseFloat(updates.heightVariation)
+            : (member.partnerPokemon.heightVariation || 100),
+          weightVariation: updates.weightVariation !== undefined
+            ? parseFloat(updates.weightVariation)
+            : (member.partnerPokemon.weightVariation || 100),
+          ivs: updates.ivs !== undefined
+            ? normalizeIVs(updates.ivs, normalizeIVs(member.partnerPokemon.ivs, DEFAULT_IVS))
+            : normalizeIVs(member.partnerPokemon.ivs, DEFAULT_IVS),
+          effort: updates.effort || member.partnerPokemon.effort || {
+            hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0
+          },
+          condition: updates.condition || member.partnerPokemon.condition || {
+            elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0
+          },
+        }
+      : member.partnerPokemon;
+
     const updatedMember = {
       ...member,
-      caughtPokemon: updatedPokemon
+      caughtPokemon: updatedPokemon,
+      partnerPokemon: updatedPartnerPokemon
     };
     
     try {
@@ -1030,7 +1062,8 @@ export const useAdminMembers = (
       if (memberId === currentUser?.id) {
         console.log('본인 포켓몬 수정 - currentUser 업데이트');
         updateCurrentUser({ 
-          caughtPokemon: updatedPokemon 
+          caughtPokemon: updatedPokemon,
+          partnerPokemon: updatedPartnerPokemon
         });
       }
       

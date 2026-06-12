@@ -10344,8 +10344,8 @@
       "cost": 4000,
       "sellPrice": 2000,
       "canSell": true,
-      "effect": "지니게 한 포켓몬이 싸라기눈을 쓰면 여느 때보다 싸라기눈의 시간이 길어진다.",
-      "description": "지니게 한 포켓몬이 싸라기눈을 쓰면 여느 때보다 싸라기눈의 시간이 길어진다.",
+      "effect": "지니게 한 포켓몬이 설경을 쓰면 여느 때보다 설경의 시간이 길어진다.",
+      "description": "지니게 한 포켓몬이 설경을 쓰면 여느 때보다 설경의 시간이 길어진다.",
       "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/icy-rock.png",
       "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/icy-rock.png",
       "attributes": [

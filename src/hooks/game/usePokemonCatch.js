@@ -17,7 +17,7 @@ export const usePokemonCatch = (
   systemSettings = {}
 ) => {
   
-  const { generateGender, generateSize, generateAbility } = useIndividualValues;
+  const { generateGender, generateSize, generateAbility, generateIVs } = useIndividualValues;
   const { getStartingMoves } = useMoves;
   const { recordFirstCatch } = usePokedex;
 
@@ -63,6 +63,7 @@ export const usePokemonCatch = (
     const size = generateSize(pokemonTemplate);
     const ability = generateAbility(pokemonTemplate, false);
     const abilityEn = getAbilityEnglishName(ability) || pokemonTemplate.abilitiesEn?.[0] || null;
+    const ivs = generateIVs();
     
     const newPokemon = {
       uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -99,6 +100,7 @@ export const usePokemonCatch = (
       isHiddenAbility: false,
       
       condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
+      ivs,
       effort: { 
         hp: 0, 
         attack: 0, 

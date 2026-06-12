@@ -159,7 +159,7 @@ const BattleInfoPanel = ({ battleState, onClose }) => {
   );
 };
 
-export function AdvancedBattleSimulator({ player1Team, player2Team }) {
+export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = false, onExit }) {
   const {
     battleState,
     startBattle,
@@ -180,6 +180,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
   const [megaIntent, setMegaIntent] = useState({ player1: false, player2: false });
   const megaIntentRef = useRef({ player1: false, player2: false });
   const [showBattleInfo, setShowBattleInfo] = useState(false);
+  const autoStartedRef = useRef(false);
 
   const toggleSelection = (index, setter) => {
     setter((prev) => {
@@ -216,9 +217,34 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
     });
   }, [battleState.player1.active, battleState.player2.active]);
 
+  useEffect(() => {
+    autoStartedRef.current = false;
+  }, [player1Team, player2Team, autoStart]);
+
+  useEffect(() => {
+    if (!autoStart || autoStartedRef.current || battleState.phase !== 'team_selection') return;
+    if (!player1Team.length || !player2Team.length) return;
+
+    autoStartedRef.current = true;
+    startBattle(
+      player1Team.map((_, index) => index),
+      player2Team.map((_, index) => index)
+    );
+  }, [autoStart, battleState.phase, player1Team, player2Team, startBattle]);
+
   if (battleState.phase === 'team_selection') {
+    if (autoStart) {
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-gray-100">
+          <div className="rounded-lg bg-white px-6 py-4 font-semibold text-gray-700 shadow">
+            배틀을 준비하는 중입니다.
+          </div>
+        </div>
+      );
+    }
+
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8">
+      <div className="min-h-screen bg-gray-100 p-8">
         <div className="mx-auto max-w-6xl">
           <div className="mb-8 text-center">
             <h1 className="mb-2 flex items-center justify-center gap-3 text-4xl font-bold text-gray-800">
@@ -230,7 +256,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
           </div>
 
           <div className="mb-8 grid grid-cols-1 gap-8 md:grid-cols-2">
-            <div className="rounded-2xl border-4 border-blue-500 bg-blue-50 p-6">
+            <div className="rounded-lg border border-blue-200 bg-white p-6 shadow-sm">
               <h2 className="mb-4 flex items-center gap-2 text-2xl font-bold text-blue-900">
                 <Shield className="text-blue-600" size={24} />
                 Player 1 엔트리 선택
@@ -260,7 +286,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
               </div>
             </div>
 
-            <div className="rounded-2xl border-4 border-red-500 bg-red-50 p-6">
+            <div className="rounded-lg border border-red-200 bg-white p-6 shadow-sm">
               <h2 className="mb-4 flex items-center gap-2 text-2xl font-bold text-red-900">
                 <Swords className="text-red-600" size={24} />
                 Player 2 엔트리 선택
@@ -302,7 +328,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
                 }
               }}
               disabled={selectedP1Pokemon.length === 0 || selectedP2Pokemon.length === 0}
-              className="mx-auto flex items-center gap-3 rounded-lg bg-gradient-to-r from-blue-600 to-red-600 px-12 py-4 text-xl font-bold text-white shadow-lg transition-all hover:from-blue-700 hover:to-red-700 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-500"
+              className="mx-auto flex items-center gap-3 rounded-lg bg-gray-900 px-12 py-4 text-xl font-bold text-white shadow-sm transition-all hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500"
             >
               <Zap size={24} />
               배틀 시작
@@ -316,8 +342,8 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
 
   if (battleState.phase === 'finished') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-yellow-50 to-orange-50">
-        <div className="max-w-md rounded-2xl bg-white p-12 text-center shadow-2xl">
+      <div className="flex min-h-screen items-center justify-center bg-gray-100">
+        <div className="max-w-md rounded-lg bg-white p-12 text-center shadow-lg">
           <h1 className="mb-4 text-4xl font-bold text-gray-800">{battleState.winner} 승리!</h1>
           <div className="mb-6 text-gray-600">
             <p className="mb-2">총 {battleState.turn}턴</p>
@@ -326,11 +352,11 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
           </div>
           <button
             type="button"
-            onClick={resetBattle}
+            onClick={onExit || resetBattle}
             className="mx-auto flex items-center gap-2 rounded-lg bg-blue-600 px-8 py-3 font-semibold text-white transition-colors hover:bg-blue-700"
           >
-            <RefreshCw size={20} />
-            다시 하기
+            <X size={20} />
+            종료
           </button>
         </div>
       </div>
@@ -342,7 +368,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
 
   if (!p1Active || !p2Active) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
+      <div className="flex min-h-screen items-center justify-center bg-gray-100">
         <div className="text-center">
           <h2 className="mb-2 text-2xl font-bold text-gray-800">배틀 가능한 포켓몬이 없습니다</h2>
           <button
@@ -360,7 +386,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
   const renderPokemonPanel = (player, active, opponent, color) => {
     const waiting = player === 'player1' ? battleState.waitingForP1 : battleState.waitingForP2;
     const side = player === 'player1' ? battleState.player1 : battleState.player2;
-    const borderClass = color === 'blue' ? 'border-blue-500 bg-blue-50' : 'border-red-500 bg-red-50';
+    const borderClass = color === 'blue' ? 'border-blue-200 bg-white' : 'border-red-200 bg-white';
     const titleClass = color === 'blue' ? 'text-blue-900' : 'text-red-900';
     const buttonClass = color === 'blue' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700';
     const megaSelected = Boolean(megaIntent[player]);
@@ -377,7 +403,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
     };
 
     return (
-      <div className={`${borderClass} rounded-2xl border-4 p-6 shadow-xl`}>
+      <div className={`${borderClass} rounded-lg border p-6 shadow-sm`}>
         <div className="mb-4 text-center">
           <h2 className={`mb-2 text-2xl font-bold ${titleClass}`}>
             {player === 'player1' ? 'Player 1' : 'Player 2'}: <PokemonNameText pokemon={active} />
@@ -533,9 +559,9 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8">
+    <div className="min-h-screen bg-gray-100 p-6">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-6 text-center">
+        <div className="mb-6 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
           <h1 className="mb-2 flex items-center justify-center gap-3 text-3xl font-bold text-gray-800">
             <Swords className="text-red-600" size={32} />
             포켓몬 배틀
@@ -580,7 +606,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team }) {
           </div>
         )}
 
-        <div className="rounded-2xl bg-white p-6 shadow-xl">
+        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <h3 className="mb-4 flex items-center gap-2 text-xl font-bold text-gray-800">
             <Zap size={24} className="text-yellow-500" />
             배틀 로그

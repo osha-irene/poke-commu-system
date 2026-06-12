@@ -48,7 +48,7 @@ const registerCustomBattleData = () => {
     Dex.data.Items[itemId] = {
       name: mega.item,
       spritenum: 0,
-      megaStone: { [mega.baseSpecies]: mega.name },
+      megaStone: mega.name,
       megaEvolves: mega.baseSpecies,
       itemUser: [mega.baseSpecies],
       onTakeItem: false,
@@ -364,6 +364,31 @@ const convertMoves = (battle, pokemon, activeRequest = null) => {
 
 const customMegaEvolutions = customBattleData.customMegaEvolutions || [];
 
+const getMegaSpeciesName = value => {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object') return Object.values(value).find(item => typeof item === 'string') || null;
+  return null;
+};
+
+const getBuiltInMegaSpeciesName = (pokemon, activeRequest = null) => {
+  const requestMegaSpecies = getMegaSpeciesName(activeRequest?.canMegaEvo);
+  const pokemonMegaSpecies = [
+    pokemon?.canMegaEvo,
+    pokemon?.canMegaEvoX,
+    pokemon?.canMegaEvoY,
+  ].map(getMegaSpeciesName).find(Boolean);
+
+  return requestMegaSpecies || pokemonMegaSpecies;
+};
+
+const hasUsableMegaSpecies = (battle, value) => {
+  const speciesName = getMegaSpeciesName(value);
+  if (!speciesName) return false;
+  const species = battle.dex.species.get(speciesName);
+  return Boolean(species?.exists && species.types?.length);
+};
+
 const getCustomMegaEvolution = (pokemon) => {
   if (!pokemon?.item) return null;
 
@@ -390,8 +415,12 @@ const convertPokemon = (battle, pokemon, activeRequest = null, forceSwitch = fal
   if (!pokemon) return null;
   const ability = battle.dex.abilities.get(pokemon.ability || pokemon.baseAbility);
   const abilityName = ability?.name || pokemon.ability || pokemon.baseAbility;
-  const builtInMegaSpecies = activeRequest?.canMegaEvo || pokemon.canMegaEvo || pokemon.canMegaEvoX || pokemon.canMegaEvoY || null;
-  const customMega = builtInMegaSpecies ? null : getCustomMegaEvolution(pokemon);
+  const requestedMegaSpecies = getBuiltInMegaSpeciesName(pokemon, activeRequest);
+  const builtInMegaSpecies = hasUsableMegaSpecies(battle, requestedMegaSpecies) ? getMegaSpeciesName(requestedMegaSpecies) : null;
+  const customMegaCandidate = builtInMegaSpecies ? null : getCustomMegaEvolution(pokemon);
+  const customMega = customMegaCandidate && hasUsableMegaSpecies(battle, customMegaCandidate.name)
+    ? customMegaCandidate
+    : null;
   const speciesName = pokemon.species?.name || pokemon.species;
   const speciesLabel = /-Mega(?:-[XY])?$/i.test(speciesName)
     ? formatMegaSpeciesName(speciesName)
@@ -593,7 +622,24 @@ export function useAdvancedBattle(initialOptions = {}) {
 
     const side = player === 'player1' ? 'p1' : 'p2';
     const logFrom = battle.log.length;
-    battle.choose(side, `move ${moveIndex + 1}${options.mega ? ' mega' : ''}`);
+    try {
+      battle.choose(side, `move ${moveIndex + 1}${options.mega ? ' mega' : ''}`);
+    } catch (error) {
+      console.error('배틀 기술 선택 실패:', error);
+      setBattleState(prev => ({
+        ...prev,
+        log: [
+          ...prev.log,
+          {
+            message: options.mega
+              ? '메가진화 처리에 실패했습니다. 이 포켓몬의 메가 폼 데이터가 올바른지 확인해주세요.'
+              : '기술 선택 처리 중 오류가 발생했습니다.',
+            type: 'fail',
+          },
+        ],
+      }));
+      return;
+    }
     const autoLogs = applyAutomaticChoices(battle);
 
     setBattleState(prev => stateFromBattle(battle, {

@@ -412,6 +412,39 @@ const battleSlotKey = (value = '') => {
   return match ? match[1] : '';
 };
 
+const isSolarBeamMove = (move = '') => ['solarbeam', 'solar-beam'].includes(normalizeId(move));
+
+const shouldHideResolvedSolarBeamPrepare = (orderedLog, prepareIndex) => {
+  const prepareParts = String(orderedLog[prepareIndex] || '').split('|');
+  if (prepareParts[1] !== '-prepare' || !isSolarBeamMove(prepareParts[3])) return false;
+
+  const userSlot = battleSlotKey(prepareParts[2]);
+  let targetSlot = '';
+
+  for (let index = prepareIndex - 1; index >= 0; index -= 1) {
+    const parts = String(orderedLog[index] || '').split('|');
+    if (parts[1] === 'move') {
+      if (battleSlotKey(parts[2]) === userSlot && isSolarBeamMove(parts[3])) {
+        targetSlot = battleSlotKey(parts[4]);
+      }
+      break;
+    }
+  }
+
+  for (let index = prepareIndex + 1; index < orderedLog.length; index += 1) {
+    const parts = String(orderedLog[index] || '').split('|');
+    if (parts[1] === 'move' || parts[1] === 'turn') break;
+    if (
+      ['-damage', '-supereffective', '-resisted', '-crit', '-immune'].includes(parts[1]) &&
+      (!targetSlot || battleSlotKey(parts[2]) === targetSlot)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
 const applyDisplayNamesToLine = (line, displayNames) => {
   let nextLine = line;
   for (const [slot, name] of displayNames.entries()) {
@@ -448,8 +481,8 @@ const formatWeather = weather => ({
   SunnyDay: '쾌청',
   RainDance: '비',
   Sandstorm: '모래바람',
-  Hail: '싸라기눈',
-  Snow: '눈',
+  Hail: '설경',
+  Snow: '설경',
   DesolateLand: '끝의대지',
   PrimordialSea: '시작의바다',
   DeltaStream: '델타스트림',
@@ -628,6 +661,7 @@ const collectTurnMessages = (battle, fromIndex) => {
   }
 
   return orderedLog
+    .filter((line, index) => !shouldHideResolvedSolarBeamPrepare(orderedLog, index))
     .map((line) => {
       const message = protocolToMessage(applyDisplayNamesToLine(line, displayNames));
 

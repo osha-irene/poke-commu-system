@@ -1,4 +1,4 @@
-@import url('https://cdn.jsdelivr.net/gh/sunn-us/SUIT/fonts/static/woff2/SUIT.css');
+﻿@import url('https://cdn.jsdelivr.net/gh/sunn-us/SUIT/fonts/static/woff2/SUIT.css');
 
 @font-face {
   font-family: 'YeojuCeramic';
@@ -70,7 +70,7 @@
     transform: rotate(360deg);
   }
 }
-/* src/index.css ?�?�� src/App.css???�붽? */
+/* src/index.css ?占?占쏙옙 src/App.css???占쎈떽? */
 
 html {
   overflow-x: hidden;
@@ -117,7 +117,7 @@ html {
   --layout-bottom-gap: 14px;
   --layout-gap: 24px;
   --sidebar-sticky-top: 304px;
-  --sidebar-shift: -104px;
+  --sidebar-shift: -55px;
   --content-padding: 34px 28px 24px;
   --top-panel-lift: -30px;
   --npc-shift-x: 85px;
@@ -182,7 +182,7 @@ body::-webkit-scrollbar-corner {
   box-sizing: border-box;
 }
 
-/* ???�紐??꾩씠????�봽??�씠????�?吏 ???�� ???���?*/
+/* ???占쏙쭗??袁⑹뵠????占쎈늄??占쎌뵠????占?筌왖 ???占쏙옙 ???占쏙옙占?*/
 img[style*="pixelated"],
 .pixelated-sprite {
   image-rendering: -moz-crisp-edges;          /* Firefox */
@@ -191,19 +191,19 @@ img[style*="pixelated"],
   image-rendering: crisp-edges;               /* Opera */
   -ms-interpolation-mode: nearest-neighbor;   /* IE */
   
-  /* ?�뚮??�?�???�?李⑥??諛⑹? */
+  /* ?占쎈슢??占?占???占?筌△뫁??獄쎻뫗? */
   width: auto;
   height: auto;
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
   
-  /* ??�떚??�━??�떛 ?꾩쟾 ??�굅 */
+  /* ??占쎈뼒??占썩봺??占쎈뼓 ?袁⑹읈 ??占쎄탢 */
   -webkit-font-smoothing: none;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ?꾩씠????�?吏 ?꾩슜 ??�???*/
+/* ?袁⑹뵠????占?筌왖 ?袁⑹뒠 ??占???*/
 .item-sprite {
   image-rendering: -moz-crisp-edges;
   image-rendering: -webkit-crisp-edges;
@@ -216,7 +216,7 @@ img[style*="pixelated"],
   background-size: var(--item-sprite-size, 30px) var(--item-sprite-size, 30px) !important;
 }
 
-/* ???�紐??꾩씠???꾩슜 ??�???(?�? ??�? */
+/* ???占쏙쭗??袁⑹뵠???袁⑹뒠 ??占???(?占? ??占? */
 .pokemon-icon {
   image-rendering: -moz-crisp-edges;
   image-rendering: -webkit-crisp-edges;
@@ -226,7 +226,7 @@ img[style*="pixelated"],
   object-fit: contain;
 }
 
-/* ???�紐???�봽??�씠???꾩슜 ??�???(以묎�???�? */
+/* ???占쏙쭗???占쎈늄??占쎌뵠???袁⑹뒠 ??占???(餓λ쵌占???占? */
 .pokemon-sprite {
   image-rendering: -moz-crisp-edges;
   image-rendering: -webkit-crisp-edges;
@@ -236,7 +236,7 @@ img[style*="pixelated"],
   object-fit: contain;
 }
 
-/* 諛곌�???�?吏 諛⑹???(PartySlot, BoxPokemon ?? */
+/* 獄쏄퀗占???占?筌왖 獄쎻뫗???(PartySlot, BoxPokemon ?? */
 .pokemon-bg-sprite {
   background-repeat: no-repeat;
   image-rendering: -moz-crisp-edges;
@@ -252,20 +252,20 @@ img[style*="pixelated"],
     box-shadow: none !important;
 }
 
-/* Recharts Wrapper????�퍡 ?곸슜 */
+/* Recharts Wrapper????占쏀뜞 ?怨몄뒠 */
 .recharts-wrapper:focus {
     outline: none !important;
     box-shadow: none !important;
 }
 
-/* global.css ???��???�붽? */
+/* global.css ???占쏙옙???占쎈떽? */
 .recharts-surface[tabindex="0"]:focus,
 .recharts-surface:focus {
-    /* ?�뚮??�? 湲곕??outline??媛뺤?�濡???�굅 */
+    /* ?占쎈슢??占? 疫꿸퀡??outline??揶쏅벡?占썸에???占쎄탢 */
     outline: none !important;
-    /* Tailwind CSS ring ??�낵????�퍡 ??�굅 */
+    /* Tailwind CSS ring ??占쎈궢????占쏀뜞 ??占쎄탢 */
     box-shadow: none !important; 
-    /* Webkit/Blink 湲곕�??�뚮??�?(Chrome, Edge)??*/
+    /* Webkit/Blink 疫꿸퀡占??占쎈슢??占?(Chrome, Edge)??*/
     -webkit-tap-highlight-color: transparent !important; 
 }
 
@@ -592,8 +592,8 @@ img[style*="pixelated"],
   align-self: start;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  min-height: 0;
+  gap: 0;
+  min-height: min(640px, calc(100vh - var(--sidebar-sticky-top) - 16px));
 }
 
 .trainer-card {
@@ -674,12 +674,71 @@ img[style*="pixelated"],
 .trainer-nav {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0;
+  flex: 1 1 auto;
+  align-items: center;
 }
 
 .trainer-nav__button {
+  display: flex;
+  width: clamp(161px, 10.8vw, 182px);
+  height: auto;
+  padding: 0;
+  font-size: 0;
+  line-height: 0;
+}
+
+.trainer-nav .brush-nav-button img {
+  display: block;
   width: 100%;
-  height: 62px;
+  height: auto;
+}
+
+.trainer-nav__main,
+.trainer-nav__bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+}
+
+.trainer-nav__bottom {
+  margin-top: 0;
+}
+
+.admin-corner-nav {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 200;
+}
+
+.admin-corner-nav .trainer-nav__group {
+  flex-direction: column-reverse;
+  align-items: flex-start;
+}
+
+.admin-corner-nav .trainer-nav__submenu {
+  align-self: auto;
+  margin-left: 60px;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+  transition:
+    max-height 380ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 280ms ease,
+    transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.admin-corner-nav .trainer-nav__group:hover .trainer-nav__submenu,
+.admin-corner-nav .trainer-nav__group:focus-within .trainer-nav__submenu {
+  max-height: 300px;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 .trainer-logout {
@@ -3236,7 +3295,9 @@ img[src*="serebii.net/pokemon"] {
 .trainer-nav__group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0;
+  align-items: center;
+  width: 100%;
 }
 
 .trainer-nav__adventure-label {
@@ -3249,33 +3310,72 @@ img[src*="serebii.net/pokemon"] {
 .trainer-nav__submenu {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 0 4px 4px 14px;
+  bottom-gap: 2px;
+  padding: 0;
+  align-self: flex-end;
+  margin-right: 40px;
 }
 
 .trainer-nav__submenu-button {
-  width: 100%;
-  border: 1px solid rgba(118, 145, 70, 0.45);
-  border-radius: 8px;
-  background: rgba(242, 248, 222, 0.72);
-  color: #20351c;
+  width: clamp(113px, 7.6vw, 128px);
+  border: 0;
+  background: transparent;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 9px;
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 1.15;
-  text-align: left;
+  justify-content: center;
+  padding: 0;
+  font-size: 0;
+  line-height: 0;
   cursor: pointer;
-  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+  transition: filter 150ms ease;
+}
+
+.trainer-nav__submenu-button img {
+  display: block;
+  width: clamp(113px, 7.6vw, 128px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(3px 4px 1px rgba(0, 0, 0, 0.38));
+  pointer-events: none;
 }
 
 .trainer-nav__submenu-button:hover,
 .trainer-nav__submenu-button.is-active {
-  border-color: rgba(96, 137, 32, 0.9);
-  background: rgba(205, 232, 129, 0.9);
-  color: #14270f;
+  filter: brightness(1.06) drop-shadow(3px 4px 1px rgba(0, 0, 0, 0.38));
+}
+
+.trainer-nav__social {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  padding: 0;
+  margin-left:  45px;
+}
+
+.trainer-nav__social-button {
+  width: 85%;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px  1px 10px;
+  cursor: pointer;
+  transition: filter 150ms ease;
+
+}
+
+.trainer-nav__social-button img {
+  width: 80%;
+  height: clamp(43px, 3.5vw, 49px);
+  object-fit: contain;
+  filter: drop-shadow(3px 4px 1px rgba(0, 0, 0, 0.38));
+  pointer-events: none;
+}
+
+.trainer-nav__social-button:hover,
+.trainer-nav__social-button.is-active {
+  filter: brightness(1.06) drop-shadow(3px 4px 1px rgba(0, 0, 0, 0.38));
 }
 
 .mobile-home {
@@ -4370,56 +4470,53 @@ img[src*="serebii.net/pokemon"] {
   max-height: 0;
   opacity: 0;
   overflow: hidden;
-  transform: translateY(-10px);
   pointer-events: none;
   transition:
-    max-height 430ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 320ms ease,
-    transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
-    padding-top 360ms ease,
-    padding-bottom 360ms ease;
+    max-height 480ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 320ms ease;
 }
 
 .trainer-nav__group:hover .trainer-nav__submenu,
 .trainer-nav__group:focus-within .trainer-nav__submenu {
-  max-height: 180px;
+  max-height: 300px;
   opacity: 1;
-  transform: translateY(0);
   pointer-events: auto;
-  padding-top: 2px;
-  padding-bottom: 6px;
+  padding-bottom: 1px;
 }
 
 .trainer-nav__group:hover .trainer-nav__button,
 .trainer-nav__group:focus-within .trainer-nav__button {
-  transform: translateY(-1px);
+  transform: translateY(0);
 }
 
 .trainer-nav__submenu-button {
-  transform: translateY(-6px);
   opacity: 0;
+  transform: translateX(-10px);
   transition:
-    background-color 180ms ease,
-    border-color 180ms ease,
-    color 180ms ease,
-    transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 300ms ease;
+    filter 150ms ease,
+    opacity 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 360ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .trainer-nav__group:hover .trainer-nav__submenu-button,
 .trainer-nav__group:focus-within .trainer-nav__submenu-button {
-  transform: translateY(0);
   opacity: 1;
+  transform: translateX(0);
+}
+
+.trainer-nav__group:hover .trainer-nav__submenu-button:nth-child(1),
+.trainer-nav__group:focus-within .trainer-nav__submenu-button:nth-child(1) {
+  transition-delay: 60ms;
 }
 
 .trainer-nav__group:hover .trainer-nav__submenu-button:nth-child(2),
 .trainer-nav__group:focus-within .trainer-nav__submenu-button:nth-child(2) {
-  transition-delay: 70ms;
+  transition-delay: 130ms;
 }
 
 .trainer-nav__group:hover .trainer-nav__submenu-button:nth-child(3),
 .trainer-nav__group:focus-within .trainer-nav__submenu-button:nth-child(3) {
-  transition-delay: 120ms;
+  transition-delay: 200ms;
 }
 
 @media (min-width: 769px) {
@@ -4668,3 +4765,4 @@ html body button:disabled,
 html body .cursor-not-allowed {
   cursor: not-allowed !important;
 }
+

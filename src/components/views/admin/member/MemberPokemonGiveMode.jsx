@@ -2,7 +2,7 @@
 // src/components/views/admin/member/MemberPokemonGiveMode.jsx
 import React, { useMemo } from 'react';
 import { 
-  X, Gift, Sparkles, Plus, Trash2, Award, Zap, Heart, Star, Check, User, Ruler, Scale, Image as ImageIcon
+  ArrowLeft, X, Gift, Sparkles, Plus, Trash2, Award, Zap, Heart, Star, Check, User, Ruler, Scale, Image as ImageIcon
 } from 'lucide-react';
 import { POKEBALL_LIST } from '../../../../styles/theme';
 import { getPokemonGenderOptions } from '../../../../utils/pokemonGender';
@@ -41,6 +41,8 @@ export default function MemberPokemonGiveMode({
         </button>
       </div>
 
+      {!giveData.selectedPokemon && (
+        <>
       <div>
         <label className="block text-sm font-semibold mb-2">포켓몬 검색</label>
         <input
@@ -55,11 +57,12 @@ export default function MemberPokemonGiveMode({
       <div className="grid grid-cols-4 gap-2 max-h-[300px] overflow-y-auto p-2 border rounded">
         {filteredPokemon.map(pokemon => (
           <button
-            key={pokemon.number}
+            key={pokemon.id || pokemon.number || pokemon.nameEn || pokemon.name}
             onClick={() => {
               const nextGenderOptions = getPokemonGenderOptions(pokemon);
               setGiveData(prev => ({
                 ...prev,
+                searchQuery: '',
                 selectedPokemon: pokemon,
                 nickname: pokemon.name,
                 selectedMoves: [],
@@ -86,9 +89,40 @@ export default function MemberPokemonGiveMode({
           </button>
         ))}
       </div>
+        </>
+      )}
 
       {giveData.selectedPokemon && (
         <>
+          <div className="flex items-center justify-between gap-3 rounded-lg border bg-gray-50 p-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <img
+                src={giveData.selectedPokemon.sprite || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${giveData.selectedPokemon.number}.png`}
+                alt={giveData.selectedPokemon.name}
+                className="h-12 w-12"
+                style={{ imageRendering: 'pixelated' }}
+              />
+              <div className="min-w-0">
+                <div className="truncate text-sm font-bold">{giveData.selectedPokemon.name}</div>
+                <div className="text-xs text-gray-500">No.{giveData.selectedPokemon.number}</div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setGiveData(prev => ({
+                ...prev,
+                selectedPokemon: null,
+                selectedMoves: [],
+                ability: '',
+                nickname: '',
+              }))}
+              className="shrink-0 rounded border bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100"
+            >
+              <ArrowLeft size={14} className="inline mr-1" />
+              다른 포켓몬 선택
+            </button>
+          </div>
+
           <div className="grid grid-cols-2 gap-6">
             {/* 왼쪽 컬럼 */}
             <div className="space-y-4">

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ref, get } from 'firebase/database';
+import React, { useEffect, useMemo, useState } from 'react';
+import { get, ref } from 'firebase/database';
 import { database } from '../../firebase';
 import AdvancedBattleSimulator from '../../battle/components/AdvancedBattleSimulator';
 import { toCalcAbilityName } from '../../utils/abilityUtils';
@@ -25,10 +25,10 @@ const TYPE_MAP = {
   드래곤: 'Dragon',
   악: 'Dark',
   강철: 'Steel',
-  페어리: 'Fairy'
+  페어리: 'Fairy',
 };
 
-const normalizeType = (type) => TYPE_MAP[type] || type || 'Normal';
+const normalizeType = type => TYPE_MAP[type] || type || 'Normal';
 
 const normalizeLookupKey = (value) => String(value || '')
   .toLowerCase()
@@ -45,10 +45,10 @@ const CUSTOM_ITEM_ALIASES = Object.entries(customBattleData.aliases?.items || {}
   return map;
 }, {});
 
-const resolveCustomAbility = (value) =>
+const resolveCustomAbility = value =>
   CUSTOM_ABILITY_ALIASES[normalizeLookupKey(value)] || toCalcAbilityName(value) || value || 'Adaptability';
 
-const resolveCustomItem = (value) =>
+const resolveCustomItem = value =>
   CUSTOM_ITEM_ALIASES[normalizeLookupKey(value)] || value || '';
 
 const POKEMON_NAME_MAP = allPokemonMaster.reduce((map, pokemon) => {
@@ -57,8 +57,8 @@ const POKEMON_NAME_MAP = allPokemonMaster.reduce((map, pokemon) => {
     pokemon.nameEn,
     pokemon.id,
     pokemon.number,
-    pokemon.displayNumber
-  ].forEach(key => {
+    pokemon.displayNumber,
+  ].forEach((key) => {
     const normalizedKey = normalizeLookupKey(key);
     if (normalizedKey) map[normalizedKey] = pokemon;
   });
@@ -73,7 +73,7 @@ const resolvePokemonTemplate = (pokemon) => {
     pokemon.pokemonId,
     pokemon.id,
     pokemon.number,
-    pokemon.originalNumber
+    pokemon.originalNumber,
   ];
 
   return candidates
@@ -97,23 +97,23 @@ const calculateBattleStat = (baseStat, level, iv = 31, ev = 0) => (
 
 const toBattleStats = (pokemon, template) => {
   const level = Number(pokemon.level || 50);
-  const hpIv = pokemon.ivs?.hp ?? 31;
+  const hpIv = pokemon.ivs?.hp ?? pokemon.iv?.hp ?? 31;
   const hpEv = pokemon.effort?.hp ?? pokemon.evs?.hp ?? 0;
   const baseHp = Number(pokemon.baseHp || template?.baseHp || 50);
 
   return {
-    hp: Number(pokemon.maxHp || calculateBattleHP(baseHp, level, hpIv, hpEv)),
-    atk: Number(pokemon.stats?.atk || pokemon.stats?.attack || calculateBattleStat(Number(pokemon.baseAttack || template?.baseAttack || 50), level, pokemon.ivs?.attack ?? pokemon.ivs?.atk ?? 31, pokemon.effort?.attack ?? pokemon.evs?.atk ?? 0)),
-    def: Number(pokemon.stats?.def || pokemon.stats?.defense || calculateBattleStat(Number(pokemon.baseDefense || template?.baseDefense || 50), level, pokemon.ivs?.defense ?? pokemon.ivs?.def ?? 31, pokemon.effort?.defense ?? pokemon.evs?.def ?? 0)),
-    spa: Number(pokemon.stats?.spa || pokemon.stats?.spAttack || calculateBattleStat(Number(pokemon.baseSpAttack || pokemon.baseSpecialAttack || template?.baseSpAttack || template?.baseSpecialAttack || 50), level, pokemon.ivs?.specialAttack ?? pokemon.ivs?.spa ?? 31, pokemon.effort?.specialAttack ?? pokemon.evs?.spa ?? 0)),
-    spd: Number(pokemon.stats?.spd || pokemon.stats?.spDefense || calculateBattleStat(Number(pokemon.baseSpDefense || pokemon.baseSpecialDefense || template?.baseSpDefense || template?.baseSpecialDefense || 50), level, pokemon.ivs?.specialDefense ?? pokemon.ivs?.spd ?? 31, pokemon.effort?.specialDefense ?? pokemon.evs?.spd ?? 0)),
-    spe: Number(pokemon.stats?.spe || pokemon.stats?.speed || calculateBattleStat(Number(pokemon.baseSpeed || template?.baseSpeed || 50), level, pokemon.ivs?.speed ?? pokemon.ivs?.spe ?? 31, pokemon.effort?.speed ?? pokemon.evs?.spe ?? 0))
+    hp: Number(pokemon.maxHp || pokemon.stats?.hp || calculateBattleHP(baseHp, level, hpIv, hpEv)),
+    atk: Number(pokemon.stats?.atk || pokemon.stats?.attack || calculateBattleStat(Number(pokemon.baseAttack || template?.baseAttack || 50), level, pokemon.ivs?.attack ?? pokemon.ivs?.atk ?? pokemon.iv?.attack ?? 31, pokemon.effort?.attack ?? pokemon.evs?.atk ?? 0)),
+    def: Number(pokemon.stats?.def || pokemon.stats?.defense || calculateBattleStat(Number(pokemon.baseDefense || template?.baseDefense || 50), level, pokemon.ivs?.defense ?? pokemon.ivs?.def ?? pokemon.iv?.defense ?? 31, pokemon.effort?.defense ?? pokemon.evs?.def ?? 0)),
+    spa: Number(pokemon.stats?.spa || pokemon.stats?.spAttack || calculateBattleStat(Number(pokemon.baseSpAttack || pokemon.baseSpecialAttack || template?.baseSpAttack || template?.baseSpecialAttack || 50), level, pokemon.ivs?.specialAttack ?? pokemon.ivs?.spa ?? pokemon.iv?.specialAttack ?? 31, pokemon.effort?.specialAttack ?? pokemon.evs?.spa ?? 0)),
+    spd: Number(pokemon.stats?.spd || pokemon.stats?.spDefense || calculateBattleStat(Number(pokemon.baseSpDefense || pokemon.baseSpecialDefense || template?.baseSpDefense || template?.baseSpecialDefense || 50), level, pokemon.ivs?.specialDefense ?? pokemon.ivs?.spd ?? pokemon.iv?.specialDefense ?? 31, pokemon.effort?.specialDefense ?? pokemon.evs?.spd ?? 0)),
+    spe: Number(pokemon.stats?.spe || pokemon.stats?.speed || calculateBattleStat(Number(pokemon.baseSpeed || template?.baseSpeed || 50), level, pokemon.ivs?.speed ?? pokemon.ivs?.spe ?? pokemon.iv?.speed ?? 31, pokemon.effort?.speed ?? pokemon.evs?.spe ?? 0)),
   };
 };
 
 const toBattleFormat = (pokemon) => {
   const template = resolvePokemonTemplate(pokemon);
-  const speciesName = pokemon.nameEn || template?.nameEn || pokemon.species || pokemon.name || 'ditto';
+  const speciesName = pokemon.nameEn || template?.nameEn || pokemon.species || pokemon.name || 'Ditto';
   const stats = toBattleStats(pokemon, template);
   const moves = (pokemon.moves || [])
     .map(toBattleMoveName)
@@ -125,12 +125,12 @@ const toBattleFormat = (pokemon) => {
     ...pokemon,
     name: speciesName,
     species: speciesName,
-    nickname: pokemon.nickname || '',
+    nickname: pokemon.nickname || pokemon.name || speciesName,
     speciesName: pokemon.name || template?.name || speciesName,
     level: Number(pokemon.level || 50),
     types: [
       normalizeType(pokemon.type || template?.type),
-      pokemon.type2 || template?.type2 ? normalizeType(pokemon.type2 || template?.type2) : null
+      pokemon.type2 || template?.type2 ? normalizeType(pokemon.type2 || template?.type2) : null,
     ].filter(Boolean),
     ability: resolveCustomAbility(pokemon.abilityEn || pokemon.ability),
     item: resolveCustomItem(pokemon.heldItem || pokemon.item || pokemon.heldItemName),
@@ -138,12 +138,12 @@ const toBattleFormat = (pokemon) => {
     stats,
     baseStats: stats,
     ivs: {
-      hp: pokemon.ivs?.hp ?? 31,
-      atk: pokemon.ivs?.attack ?? pokemon.ivs?.atk ?? 31,
-      def: pokemon.ivs?.defense ?? pokemon.ivs?.def ?? 31,
-      spa: pokemon.ivs?.specialAttack ?? pokemon.ivs?.spa ?? 31,
-      spd: pokemon.ivs?.specialDefense ?? pokemon.ivs?.spd ?? 31,
-      spe: pokemon.ivs?.speed ?? pokemon.ivs?.spe ?? 31
+      hp: pokemon.ivs?.hp ?? pokemon.iv?.hp ?? 31,
+      atk: pokemon.ivs?.attack ?? pokemon.ivs?.atk ?? pokemon.iv?.attack ?? 31,
+      def: pokemon.ivs?.defense ?? pokemon.ivs?.def ?? pokemon.iv?.defense ?? 31,
+      spa: pokemon.ivs?.specialAttack ?? pokemon.ivs?.spa ?? pokemon.iv?.specialAttack ?? 31,
+      spd: pokemon.ivs?.specialDefense ?? pokemon.ivs?.spd ?? pokemon.iv?.specialDefense ?? 31,
+      spe: pokemon.ivs?.speed ?? pokemon.ivs?.spe ?? pokemon.iv?.speed ?? 31,
     },
     evs: {
       hp: pokemon.effort?.hp ?? pokemon.evs?.hp ?? 0,
@@ -151,386 +151,434 @@ const toBattleFormat = (pokemon) => {
       def: pokemon.effort?.defense ?? pokemon.evs?.def ?? 0,
       spa: pokemon.effort?.specialAttack ?? pokemon.evs?.spa ?? 0,
       spd: pokemon.effort?.specialDefense ?? pokemon.evs?.spd ?? 0,
-      spe: pokemon.effort?.speed ?? pokemon.evs?.spe ?? 0
+      spe: pokemon.effort?.speed ?? pokemon.evs?.spe ?? 0,
     },
     hp: stats.hp,
     maxHP: stats.hp,
     currentHP: stats.hp,
-    moves: moves.length > 0 ? moves : [{ name: 'tackle', id: 'tackle' }]
+    moves: moves.length > 0 ? moves : [{ name: 'tackle', id: 'tackle' }],
   };
 };
 
-const buildBattleTeam = (pokemonList, selectedPokemon) => {
-  const orderedPokemon = selectedPokemon
-    ? [
-        selectedPokemon,
-        ...pokemonList.filter(pokemon => pokemon?.uniqueId !== selectedPokemon.uniqueId)
-      ]
-    : pokemonList;
+const getMemberName = member => member?.name || member?.displayName || member?.email || 'Unknown';
 
-  return orderedPokemon
-    .filter(pokemon => pokemon && pokemon.uniqueId)
-    .slice(0, 6)
-    .map(toBattleFormat);
+const getOwnedPokemonList = (value) => {
+  if (Array.isArray(value)) return value.filter(pokemon => pokemon && pokemon.uniqueId);
+  return Object.values(value || {}).filter(pokemon => pokemon && pokemon.uniqueId);
 };
 
-const SelectedPokemonName = ({ pokemon }) => {
-  if (!pokemon) return <p className="font-semibold">-</p>;
+const pokemonKey = (pokemon, fallback) => pokemon?.uniqueId || pokemon?.id || `${pokemon?.name || 'pokemon'}-${fallback}`;
+
+const getSelectablePokemon = (entryPokemon, partnerPokemon) => {
+  const partnerKey = partnerPokemon?.uniqueId ? pokemonKey(partnerPokemon, 'partner') : null;
+  const partnerList = partnerPokemon?.uniqueId ? [partnerPokemon] : [];
+  const entryList = entryPokemon.filter((pokemon, index) => pokemonKey(pokemon, index) !== partnerKey);
+  return [...partnerList, ...entryList];
+};
+
+const getSelectedPokemon = (entryPokemon, partnerPokemon, selectedIds) => {
+  const selectablePokemon = getSelectablePokemon(entryPokemon, partnerPokemon);
+  return selectedIds
+    .map(id => selectablePokemon.find((pokemon, index) => pokemonKey(pokemon, index) === id))
+    .filter(Boolean);
+};
+
+const buildBattleTeam = (entryPokemon, partnerPokemon, selectedIds) => (
+  getSelectedPokemon(entryPokemon, partnerPokemon, selectedIds).map(toBattleFormat)
+);
+
+const PokemonName = ({ pokemon }) => {
+  if (!pokemon) return <span>-</span>;
   const displayName = getOwnedPokemonDisplayParts(pokemon);
+
   return (
-    <div>
-      <p className="font-semibold">{displayName.primary} Lv.{pokemon.level}</p>
-      {displayName.hasNickname && (
-        <p className="text-xs text-gray-500">{displayName.species}</p>
+    <span>
+      <span className="font-bold">{displayName.primary}</span>
+      {displayName.hasNickname && <span className="ml-1 text-xs text-gray-500">{displayName.species}</span>}
+    </span>
+  );
+};
+
+const PartnerCard = ({ canSelect, onClick, order, pokemon, selected }) => (
+  <button
+    type="button"
+    onClick={pokemon?.uniqueId ? onClick : undefined}
+    disabled={!pokemon?.uniqueId || (!selected && !canSelect)}
+    className={`w-full rounded-lg border p-3 text-left transition-colors ${
+      selected
+        ? 'border-amber-600 bg-amber-500 text-white'
+        : pokemon?.uniqueId && canSelect
+          ? 'border-amber-200 bg-amber-50 hover:border-amber-400 hover:bg-amber-100'
+          : 'border-gray-200 bg-gray-50 text-gray-500'
+    }`}
+  >
+    <div className={`mb-1 text-xs font-bold uppercase tracking-wide ${selected ? 'text-white' : 'text-amber-700'}`}>파트너</div>
+    {pokemon?.uniqueId ? (
+      <div className="flex items-center justify-between gap-2 text-sm">
+        <div>
+          <PokemonName pokemon={pokemon} /> <span className={selected ? 'text-white/80' : 'text-gray-600'}>Lv.{pokemon.level || '?'}</span>
+        </div>
+        {selected && (
+          <span className="rounded-full bg-white px-2 py-1 text-xs font-bold text-gray-900">
+            {order === 1 ? '선봉' : `${order}번`}
+          </span>
+        )}
+      </div>
+    ) : (
+      <div className="text-sm text-gray-500">파트너 없음</div>
+    )}
+  </button>
+);
+
+const EntrySelector = ({
+  accent,
+  entryPokemon,
+  loading,
+  partnerPokemon,
+  requiredCount,
+  selectedIds,
+  setSelectedIds,
+}) => {
+  const partnerKey = partnerPokemon?.uniqueId ? pokemonKey(partnerPokemon, 'partner') : null;
+  const partnerOrder = partnerKey ? selectedIds.indexOf(partnerKey) + 1 : 0;
+  const partnerSelected = partnerOrder > 0;
+  const entryList = partnerKey
+    ? entryPokemon.filter((pokemon, index) => pokemonKey(pokemon, index) !== partnerKey)
+    : entryPokemon;
+  const accentClass = accent === 'blue'
+    ? {
+        border: 'border-blue-500 bg-blue-50',
+        selected: 'border-blue-600 bg-blue-600 text-white',
+        idle: 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-100',
+        text: 'text-blue-900',
+      }
+    : {
+        border: 'border-red-500 bg-red-50',
+        selected: 'border-red-600 bg-red-600 text-white',
+        idle: 'border-gray-200 bg-white hover:border-red-300 hover:bg-red-100',
+        text: 'text-red-900',
+      };
+
+  const togglePokemon = (pokemon, index) => {
+    const key = pokemonKey(pokemon, index);
+    setSelectedIds((prev) => {
+      if (prev.includes(key)) return prev.filter(id => id !== key);
+      if (prev.length >= requiredCount) return prev;
+      return [...prev, key];
+    });
+  };
+
+  return (
+    <div className={`rounded-lg border-2 p-5 ${accentClass.border}`}>
+      <PartnerCard
+        canSelect={selectedIds.length < requiredCount}
+        onClick={() => togglePokemon(partnerPokemon, 'partner')}
+        order={partnerOrder}
+        pokemon={partnerPokemon}
+        selected={partnerSelected}
+      />
+
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <h3 className={`font-bold ${accentClass.text}`}>엔트리 선택</h3>
+        <span className="text-sm font-semibold text-gray-600">
+          {selectedIds.length}/{requiredCount}
+        </span>
+      </div>
+
+      {loading ? (
+        <p className="mt-3 text-sm text-gray-500">포켓몬을 불러오는 중입니다.</p>
+      ) : entryList.length === 0 ? (
+        <p className="mt-3 text-sm text-gray-500">엔트리에 포켓몬이 없습니다.</p>
+      ) : (
+        <div className="mt-3 grid max-h-[28rem] gap-2 overflow-y-auto">
+          {entryList.map((pokemon, index) => {
+            const key = pokemonKey(pokemon, index);
+            const order = selectedIds.indexOf(key) + 1;
+            const selected = order > 0;
+            const displayName = getOwnedPokemonDisplayParts(pokemon);
+
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => togglePokemon(pokemon, index)}
+                className={`rounded-lg border p-3 text-left transition-colors ${selected ? accentClass.selected : accentClass.idle}`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-bold">
+                      {displayName.primary} <span className="text-sm opacity-80">Lv.{pokemon.level || '?'}</span>
+                    </div>
+                    {displayName.hasNickname && (
+                      <div className="text-xs opacity-75">{displayName.species}</div>
+                    )}
+                    <div className="mt-1 text-xs opacity-80">
+                      HP {pokemon.hp || pokemon.maxHp || '?'} · 기술 {pokemon.moves?.length || 0}개
+                    </div>
+                  </div>
+                  {selected && (
+                    <span className="rounded-full bg-white px-2 py-1 text-xs font-bold text-gray-900">
+                      {order === 1 ? '선봉' : `${order}번`}
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
       )}
     </div>
   );
 };
 
-/**
- * 배틀 뷰 - 완전 독립 버전 (Context 불필요)
- */
 export function BattleView() {
-  const [loading, setLoading] = useState(false);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [loadingPokemon, setLoadingPokemon] = useState({ player1: false, player2: false });
   const [members, setMembers] = useState([]);
-  const [selectedUser1, setSelectedUser1] = useState(null);
-  const [selectedUser2, setSelectedUser2] = useState(null);
-  const [user1Pokemon, setUser1Pokemon] = useState([]);
-  const [user2Pokemon, setUser2Pokemon] = useState([]);
-  const [selectedPokemon1, setSelectedPokemon1] = useState(null);
-  const [selectedPokemon2, setSelectedPokemon2] = useState(null);
+  const [battleSize, setBattleSize] = useState(3);
+  const [selectedUser1, setSelectedUser1] = useState('');
+  const [selectedUser2, setSelectedUser2] = useState('');
+  const [player1Data, setPlayer1Data] = useState({ entryPokemon: [], partnerPokemon: null });
+  const [player2Data, setPlayer2Data] = useState({ entryPokemon: [], partnerPokemon: null });
+  const [selectedP1Ids, setSelectedP1Ids] = useState([]);
+  const [selectedP2Ids, setSelectedP2Ids] = useState([]);
   const [battleStarted, setBattleStarted] = useState(false);
 
-  // 회원 목록 로드
   useEffect(() => {
+    const loadMembers = async () => {
+      try {
+        setLoadingMembers(true);
+
+        const membersSnapshot = await get(ref(database, 'members'));
+        let membersList = [];
+
+        if (membersSnapshot.exists()) {
+          membersList = Object.entries(membersSnapshot.val())
+            .filter(([, data]) => data !== null)
+            .map(([uid, data]) => ({ uid, ...data }));
+        }
+
+        const usersSnapshot = await get(ref(database, 'users'));
+        if (usersSnapshot.exists()) {
+          const existingUids = membersList.map(member => member.uid);
+          const additionalUsers = Object.entries(usersSnapshot.val())
+            .filter(([uid]) => !existingUids.includes(uid))
+            .map(([uid, data]) => ({
+              uid,
+              name: data.name || data.displayName || data.email || uid.substring(0, 8),
+              email: data.email,
+            }));
+          membersList = [...membersList, ...additionalUsers];
+        }
+
+        setMembers(membersList.sort((a, b) => getMemberName(a).localeCompare(getMemberName(b), 'ko')));
+      } catch (error) {
+        console.error('회원 로드 실패:', error);
+      } finally {
+        setLoadingMembers(false);
+      }
+    };
+
     loadMembers();
   }, []);
 
-  const loadMembers = async () => {
-    try {
-      setLoading(true);
-      
-      // 1. members에서 로드
-      const membersRef = ref(database, 'members');
-      const membersSnapshot = await get(membersRef);
-      
-      let membersList = [];
-      
-      if (membersSnapshot.exists()) {
-        const membersData = membersSnapshot.val();
-        membersList = Object.entries(membersData)
-          .filter(([_, data]) => data !== null)
-          .map(([uid, data]) => ({
-            uid,
-            ...data
-          }));
-        console.log('📋 members에서 로드:', membersList.length, '명');
-      }
-      
-      // 2. users에서 로드 (members에 없는 유저 추가)
-      const usersRef = ref(database, 'users');
-      const usersSnapshot = await get(usersRef);
-      
-      if (usersSnapshot.exists()) {
-        const usersData = usersSnapshot.val();
-        const existingUids = membersList.map(m => m.uid);
-        
-        const additionalUsers = Object.entries(usersData)
-          .filter(([uid]) => !existingUids.includes(uid))
-          .map(([uid, data]) => ({
-            uid,
-            name: data.name || data.displayName || data.email || uid.substring(0, 8),
-            email: data.email
-          }));
-        
-        membersList = [...membersList, ...additionalUsers];
-        console.log('👥 users에서 추가:', additionalUsers.length, '명');
-      }
-      
-      setMembers(membersList);
-      console.log('✅ 전체 회원:', membersList.length, '명', membersList);
-      
-    } catch (err) {
-      console.error('❌ 회원 로드 실패:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loadPlayerPokemon = async (player, userId) => {
+    const setUser = player === 'player1' ? setSelectedUser1 : setSelectedUser2;
+    const setData = player === 'player1' ? setPlayer1Data : setPlayer2Data;
+    const setSelectedIds = player === 'player1' ? setSelectedP1Ids : setSelectedP2Ids;
 
-  // User 1 포켓몬 로드
-  const loadUser1Pokemon = async (userId) => {
-    try {
-      setLoading(true);
-      setSelectedUser1(userId);
-      setSelectedPokemon1(null);
-      setBattleStarted(false);
-
-      // members에서 해당 유저의 포켓몬 전체 가져오기
-      const memberRef = ref(database, `members/${userId}`);
-      const snapshot = await get(memberRef);
-
-      if (snapshot.exists()) {
-        const memberData = snapshot.val();
-        const pokemonData = memberData.caughtPokemon || [];
-        const pokemonList = Array.isArray(pokemonData)
-          ? pokemonData.filter(p => p && p.uniqueId)
-          : Object.values(pokemonData).filter(p => p && p.uniqueId);
-
-        if (memberData.partnerPokemon?.uniqueId) {
-          pokemonList.unshift(memberData.partnerPokemon);
-        }
-        
-        setUser1Pokemon(pokemonList);
-        console.log('✅ Player 1 포켓몬:', pokemonList.length, '마리');
-      } else {
-        setUser1Pokemon([]);
-        console.warn('⚠️ Player 1의 포켓몬이 없습니다.');
-      }
-    } catch (err) {
-      console.error('❌ 포켓몬 로드 실패:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // User 2 포켓몬 로드
-  const loadUser2Pokemon = async (userId) => {
-    try {
-      setLoading(true);
-      setSelectedUser2(userId);
-      setSelectedPokemon2(null);
-      setBattleStarted(false);
-
-      // members에서 해당 유저의 포켓몬 전체 가져오기
-      const memberRef = ref(database, `members/${userId}`);
-      const snapshot = await get(memberRef);
-
-      if (snapshot.exists()) {
-        const memberData = snapshot.val();
-        const pokemonData = memberData.caughtPokemon || [];
-        const pokemonList = Array.isArray(pokemonData)
-          ? pokemonData.filter(p => p && p.uniqueId)
-          : Object.values(pokemonData).filter(p => p && p.uniqueId);
-
-        if (memberData.partnerPokemon?.uniqueId) {
-          pokemonList.unshift(memberData.partnerPokemon);
-        }
-        
-        setUser2Pokemon(pokemonList);
-        console.log('✅ Player 2 포켓몬:', pokemonList.length, '마리');
-      } else {
-        setUser2Pokemon([]);
-        console.warn('⚠️ Player 2의 포켓몬이 없습니다.');
-      }
-    } catch (err) {
-      console.error('❌ 포켓몬 로드 실패:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const startBattle = () => {
-    if (user1Pokemon.length > 0 && user2Pokemon.length > 0) {
-      console.log('⚔️ 배틀 시작!');
-      setBattleStarted(true);
-    }
-  };
-
-  const backToSelection = () => {
+    setUser(userId);
+    setData({ entryPokemon: [], partnerPokemon: null });
+    setSelectedIds([]);
     setBattleStarted(false);
+
+    if (!userId) return;
+
+    try {
+      setLoadingPokemon(prev => ({ ...prev, [player]: true }));
+      const snapshot = await get(ref(database, `members/${userId}`));
+
+      if (!snapshot.exists()) return;
+
+      const memberData = snapshot.val();
+      const entryPokemon = getOwnedPokemonList(memberData.caughtPokemon).slice(0, 6);
+
+      setData({
+        entryPokemon,
+        partnerPokemon: memberData.partnerPokemon || null,
+      });
+    } catch (error) {
+      console.error('포켓몬 로드 실패:', error);
+    } finally {
+      setLoadingPokemon(prev => ({ ...prev, [player]: false }));
+    }
   };
 
-  // 배틀 중
-  if (battleStarted && user1Pokemon.length > 0 && user2Pokemon.length > 0) {
-    const player1Team = buildBattleTeam(user1Pokemon, selectedPokemon1);
-    const player2Team = buildBattleTeam(user2Pokemon, selectedPokemon2);
+  useEffect(() => {
+    const p1SelectableIds = getSelectablePokemon(player1Data.entryPokemon, player1Data.partnerPokemon)
+      .map((pokemon, index) => pokemonKey(pokemon, index));
+    const p2SelectableIds = getSelectablePokemon(player2Data.entryPokemon, player2Data.partnerPokemon)
+      .map((pokemon, index) => pokemonKey(pokemon, index));
 
+    setSelectedP1Ids(prev => prev.filter(id => p1SelectableIds.includes(id)).slice(0, Math.min(battleSize, p1SelectableIds.length)));
+    setSelectedP2Ids(prev => prev.filter(id => p2SelectableIds.includes(id)).slice(0, Math.min(battleSize, p2SelectableIds.length)));
+  }, [battleSize, player1Data.entryPokemon, player1Data.partnerPokemon, player2Data.entryPokemon, player2Data.partnerPokemon]);
+
+  const p1RequiredCount = Math.min(battleSize, getSelectablePokemon(player1Data.entryPokemon, player1Data.partnerPokemon).length);
+  const p2RequiredCount = Math.min(battleSize, getSelectablePokemon(player2Data.entryPokemon, player2Data.partnerPokemon).length);
+  const canStart = p1RequiredCount > 0
+    && p2RequiredCount > 0
+    && selectedP1Ids.length === p1RequiredCount
+    && selectedP2Ids.length === p2RequiredCount;
+
+  const player1Team = useMemo(
+    () => buildBattleTeam(player1Data.entryPokemon, player1Data.partnerPokemon, selectedP1Ids),
+    [player1Data.entryPokemon, player1Data.partnerPokemon, selectedP1Ids]
+  );
+  const player2Team = useMemo(
+    () => buildBattleTeam(player2Data.entryPokemon, player2Data.partnerPokemon, selectedP2Ids),
+    [player2Data.entryPokemon, player2Data.partnerPokemon, selectedP2Ids]
+  );
+
+  if (battleStarted && player1Team.length > 0 && player2Team.length > 0) {
     return (
       <div className="p-6">
         <button
-          onClick={backToSelection}
-          className="mb-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          type="button"
+          onClick={() => setBattleStarted(false)}
+          className="mb-4 rounded bg-gray-600 px-4 py-2 font-semibold text-white hover:bg-gray-700"
         >
-          ← 포켓몬 재선택
+          엔트리 다시 고르기
         </button>
         <AdvancedBattleSimulator
           player1Team={player1Team}
           player2Team={player2Team}
+          autoStart
+          onExit={() => setBattleStarted(false)}
         />
       </div>
     );
   }
 
-  // 선택 화면
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">포켓몬 배틀</h1>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">포켓몬 배틀</h1>
+          <p className="mt-1 text-sm text-gray-600">파트너는 별도 표시하고, 배틀에는 각 트레이너의 엔트리 앞 6마리 중 선택한 포켓몬만 참가합니다.</p>
+        </div>
+        <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1">
+          {[3, 6].map(size => (
+            <button
+              key={size}
+              type="button"
+              onClick={() => setBattleSize(size)}
+              className={`rounded-md px-4 py-2 text-sm font-bold ${battleSize === size ? 'bg-gray-900 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
+            >
+              {size}마리
+            </button>
+          ))}
+        </div>
+      </div>
 
-      {loading && members.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-4xl mb-4">⚡</div>
-          <p className="text-lg text-gray-600">회원 데이터를 불러오는 중...</p>
-        </div>
+      {loadingMembers ? (
+        <div className="rounded-lg bg-white p-8 text-center text-gray-600 shadow">회원 데이터를 불러오는 중입니다.</div>
       ) : members.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-4xl mb-4">😥</div>
-          <p className="text-lg text-gray-600">회원이 없습니다.</p>
-        </div>
+        <div className="rounded-lg bg-white p-8 text-center text-gray-600 shadow">회원이 없습니다.</div>
       ) : (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Player 1 */}
-            <div className="border rounded-lg p-6 bg-blue-50">
-              <h2 className="text-xl font-bold mb-4 text-blue-800">Player 1</h2>
-              
-              <div className="mb-4">
-                <label className="block font-semibold mb-2">트레이너 선택:</label>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="space-y-4">
+              <div>
+                <label className="mb-2 block font-semibold text-gray-800">Player 1 트레이너</label>
                 <select
-                  value={selectedUser1 || ''}
-                  onChange={(e) => loadUser1Pokemon(e.target.value)}
-                  className="w-full p-2 border rounded bg-white"
-                  disabled={loading}
+                  value={selectedUser1}
+                  onChange={event => loadPlayerPokemon('player1', event.target.value)}
+                  className="w-full rounded border bg-white p-2"
                 >
-                  <option value="">-- 선택하세요 --</option>
-                  {members.map((member, idx) => (
-                    <option key={member.uid || idx} value={member.uid}>
-                      {member.name || member.displayName || member.email || 'Unknown'}
-                    </option>
+                  <option value="">트레이너 선택</option>
+                  {members.map(member => (
+                    <option key={member.uid} value={member.uid}>{getMemberName(member)}</option>
                   ))}
                 </select>
               </div>
-
               {selectedUser1 && (
-                <div>
-                  <label className="block font-semibold mb-2">포켓몬 선택:</label>
-                  {loading ? (
-                    <p className="text-gray-500">로딩 중...</p>
-                  ) : user1Pokemon.length === 0 ? (
-                    <p className="text-gray-500">포켓몬이 없습니다.</p>
-                  ) : (
-                    <div className="space-y-2 max-h-96 overflow-y-auto">
-                      {user1Pokemon.map((pokemon, idx) => {
-                        const displayName = getOwnedPokemonDisplayParts(pokemon);
-                        return (
-                          <button
-                            key={pokemon.uniqueId || idx}
-                            onClick={() => setSelectedPokemon1(pokemon)}
-                            className={`w-full p-3 rounded text-left transition-colors ${
-                              selectedPokemon1?.uniqueId === pokemon.uniqueId
-                                ? 'bg-blue-500 text-white'
-                                : 'bg-white hover:bg-blue-100'
-                            }`}
-                          >
-                            <div className="font-bold">
-                              {displayName.primary} Lv.{pokemon.level}
-                            </div>
-                            {displayName.hasNickname && (
-                              <div className="text-xs opacity-75">{displayName.species}</div>
-                            )}
-                            <div className="text-sm opacity-80">
-                              HP: {pokemon.hp || pokemon.maxHp || '?'} / 기술: {pokemon.moves?.length || 0}개
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+                <EntrySelector
+                  accent="blue"
+                  entryPokemon={player1Data.entryPokemon}
+                  loading={loadingPokemon.player1}
+                  partnerPokemon={player1Data.partnerPokemon}
+                  requiredCount={p1RequiredCount}
+                  selectedIds={selectedP1Ids}
+                  setSelectedIds={setSelectedP1Ids}
+                />
               )}
             </div>
 
-            {/* Player 2 */}
-            <div className="border rounded-lg p-6 bg-red-50">
-              <h2 className="text-xl font-bold mb-4 text-red-800">Player 2</h2>
-              
-              <div className="mb-4">
-                <label className="block font-semibold mb-2">트레이너 선택:</label>
+            <div className="space-y-4">
+              <div>
+                <label className="mb-2 block font-semibold text-gray-800">Player 2 트레이너</label>
                 <select
-                  value={selectedUser2 || ''}
-                  onChange={(e) => loadUser2Pokemon(e.target.value)}
-                  className="w-full p-2 border rounded bg-white"
-                  disabled={loading}
+                  value={selectedUser2}
+                  onChange={event => loadPlayerPokemon('player2', event.target.value)}
+                  className="w-full rounded border bg-white p-2"
                 >
-                  <option value="">-- 선택하세요 --</option>
-                  {members.map((member, idx) => (
-                    <option key={member.uid || idx} value={member.uid}>
-                      {member.name || member.displayName || member.email || 'Unknown'}
-                    </option>
+                  <option value="">트레이너 선택</option>
+                  {members.map(member => (
+                    <option key={member.uid} value={member.uid}>{getMemberName(member)}</option>
                   ))}
                 </select>
               </div>
-
               {selectedUser2 && (
-                <div>
-                  <label className="block font-semibold mb-2">포켓몬 선택:</label>
-                  {loading ? (
-                    <p className="text-gray-500">로딩 중...</p>
-                  ) : user2Pokemon.length === 0 ? (
-                    <p className="text-gray-500">포켓몬이 없습니다.</p>
-                  ) : (
-                    <div className="space-y-2 max-h-96 overflow-y-auto">
-                      {user2Pokemon.map((pokemon, idx) => {
-                        const displayName = getOwnedPokemonDisplayParts(pokemon);
-                        return (
-                          <button
-                            key={pokemon.uniqueId || idx}
-                            onClick={() => setSelectedPokemon2(pokemon)}
-                            className={`w-full p-3 rounded text-left transition-colors ${
-                              selectedPokemon2?.uniqueId === pokemon.uniqueId
-                                ? 'bg-red-500 text-white'
-                                : 'bg-white hover:bg-red-100'
-                            }`}
-                          >
-                            <div className="font-bold">
-                              {displayName.primary} Lv.{pokemon.level}
-                            </div>
-                            {displayName.hasNickname && (
-                              <div className="text-xs opacity-75">{displayName.species}</div>
-                            )}
-                            <div className="text-sm opacity-80">
-                              HP: {pokemon.hp || pokemon.maxHp || '?'} / 기술: {pokemon.moves?.length || 0}개
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+                <EntrySelector
+                  accent="red"
+                  entryPokemon={player2Data.entryPokemon}
+                  loading={loadingPokemon.player2}
+                  partnerPokemon={player2Data.partnerPokemon}
+                  requiredCount={p2RequiredCount}
+                  selectedIds={selectedP2Ids}
+                  setSelectedIds={setSelectedP2Ids}
+                />
               )}
             </div>
           </div>
 
-          {/* 배틀 시작 버튼 */}
+          <div className="mt-8 rounded-lg bg-gray-50 p-4">
+            <div className="grid gap-3 md:grid-cols-2">
+              <div>
+                <div className="text-sm font-semibold text-gray-600">Player 1 선봉</div>
+                <div className="mt-1 text-gray-900">
+                  <PokemonName pokemon={getSelectedPokemon(player1Data.entryPokemon, player1Data.partnerPokemon, selectedP1Ids)[0]} />
+                </div>
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-gray-600">Player 2 선봉</div>
+                <div className="mt-1 text-gray-900">
+                  <PokemonName pokemon={getSelectedPokemon(player2Data.entryPokemon, player2Data.partnerPokemon, selectedP2Ids)[0]} />
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="mt-8 text-center">
             <button
-              onClick={startBattle}
-              disabled={user1Pokemon.length === 0 || user2Pokemon.length === 0}
-              className={`px-8 py-4 rounded-lg font-bold text-xl transition-colors ${
-                user1Pokemon.length > 0 && user2Pokemon.length > 0
-                  ? 'bg-green-500 hover:bg-green-600 text-white'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              type="button"
+              onClick={() => setBattleStarted(true)}
+              disabled={!canStart}
+              className={`rounded-lg px-8 py-4 text-xl font-bold transition-colors ${
+                canStart
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'cursor-not-allowed bg-gray-300 text-gray-500'
               }`}
             >
-              배틀 시작!
+              배틀 시작
             </button>
+            {!canStart && (
+              <p className="mt-2 text-sm text-gray-500">
+                양쪽 모두 필요한 엔트리 수만큼 선택해야 합니다.
+              </p>
+            )}
           </div>
-
-          {/* 선택 상태 */}
-          {(selectedPokemon1 || selectedPokemon2) && (
-            <div className="mt-6 p-4 bg-gray-100 rounded-lg">
-              <h3 className="font-bold mb-2">선택된 포켓몬:</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600">Player 1:</p>
-                  <SelectedPokemonName pokemon={selectedPokemon1} />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Player 2:</p>
-                  <SelectedPokemonName pokemon={selectedPokemon2} />
-                </div>
-              </div>
-            </div>
-          )}
         </>
       )}
     </div>

@@ -12,6 +12,7 @@ import {
 import { auth, database } from '../../firebase';
 import { fillMissingBaseStats, findPokemonTemplate } from '../../utils/pokemonBaseStats';
 import { getAbilityEnglishName } from '../../utils/abilityUtils';
+import { DEFAULT_IVS, withNormalizedIVs } from '../../utils/pokemonIndividualValues';
 
 const ensurePartyPadding = (caughtPokemon, allPokemonMaster = []) => {
   if (caughtPokemon && typeof caughtPokemon === 'object' && !Array.isArray(caughtPokemon)) {
@@ -32,12 +33,12 @@ const ensurePartyPadding = (caughtPokemon, allPokemonMaster = []) => {
   const cleanedPokemon = caughtPokemon.map(p => {
     if (p === 'null' || p === null || p === undefined) return null;
     const template = findPokemonTemplate(p, allPokemonMaster);
-    if (!template) return p;
-    return fillMissingBaseStats({
+    if (!template) return withNormalizedIVs(p, DEFAULT_IVS);
+    return withNormalizedIVs(fillMissingBaseStats({
       ...p,
       nameEn: p.nameEn || template.nameEn,
       abilityEn: p.abilityEn || getAbilityEnglishName(p.ability) || template.abilitiesEn?.[0] || null
-    }, template);
+    }, template), DEFAULT_IVS);
   });
   
   const party = cleanedPokemon.slice(0, 6);
@@ -74,7 +75,8 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
               ...memberData,
               id: firebaseUser.uid,
               email: firebaseUser.email,
-              caughtPokemon: ensurePartyPadding(memberData.caughtPokemon || [], allPokemonMaster)
+              caughtPokemon: ensurePartyPadding(memberData.caughtPokemon || [], allPokemonMaster),
+              partnerPokemon: withNormalizedIVs(memberData.partnerPokemon, DEFAULT_IVS)
             };
             
             console.log('✅ 회원 데이터 로드:', paddedUser.name);
@@ -178,6 +180,10 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
     
     if (updates.caughtPokemon) {
       updatedUser.caughtPokemon = ensurePartyPadding(updates.caughtPokemon, allPokemonMaster);
+    }
+
+    if (updates.partnerPokemon !== undefined) {
+      updatedUser.partnerPokemon = withNormalizedIVs(updates.partnerPokemon, DEFAULT_IVS);
     }
     
     // ⭐ 로컬 상태 먼저 업데이트
