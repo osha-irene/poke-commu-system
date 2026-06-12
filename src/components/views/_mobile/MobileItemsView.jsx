@@ -146,7 +146,15 @@ export default function MobileItemsView() {
     }
   };
 
-  let filteredItems = items.filter(item => {
+  const isSafariBallItem = (item) => {
+    const normalizedNames = [item?.name, item?.nameEn, item?.id, item?.itemId]
+      .map(value => String(value || '').toLowerCase().replace(/[\s-_]/g, ''));
+    return normalizedNames.includes('사파리볼') || normalizedNames.includes('safariball');
+  };
+
+  const visibleBagItems = items.filter(item => !isSafariBallItem(item));
+
+  let filteredItems = visibleBagItems.filter(item => {
     if (selectedCategory !== 'all') {
       const details = getItemDetails(item);
       if (details.pocket !== selectedCategory) {
@@ -186,7 +194,7 @@ export default function MobileItemsView() {
           </div>
           <div className="text-right">
             <div className="text-sm opacity-90">총 아이템</div>
-            <div className="text-2xl font-bold">{items.reduce((sum, item) => sum + item.count, 0)}개</div>
+            <div className="text-2xl font-bold">{visibleBagItems.reduce((sum, item) => sum + item.count, 0)}개</div>
           </div>
         </div>
       </div>

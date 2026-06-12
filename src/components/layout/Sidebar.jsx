@@ -23,8 +23,8 @@ const adventureTabs = [
 ];
 
 const trainerTabs = [
-  { id: 'items', label: '가방', icon: bagIcon },
   { id: 'pokemon', label: '엔트리', icon: entryIcon },
+  { id: 'items', label: '가방', icon: bagIcon },
 ];
 
 const adminTabs = [

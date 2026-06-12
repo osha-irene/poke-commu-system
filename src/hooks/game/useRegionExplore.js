@@ -2,6 +2,7 @@
 // 지역 탐험 시스템
 
 import { useIndividualValues } from './useIndividualValues';
+import { DEFAULT_IVS } from '../../utils/pokemonIndividualValues';
 
 const SAFARI_BALL_DAILY_REWARD_COUNT = 10;
 
@@ -191,6 +192,7 @@ export const useRegionExplore = (
 		  isShiny,
 		  gender,
 		  ability,
+      ivs: DEFAULT_IVS,
       catchRate,
       regionName: encounterLocationName,
       baseRegionId: region.baseRegionId || region.regionId || region.id,

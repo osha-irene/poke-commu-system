@@ -1,6 +1,7 @@
 import useMediaQuery from '../../hooks/useMediaQuery';
 import MobileItemsView from './_mobile/MobileItemsView';
 import { getItemPocket, canUseItem, CATEGORIES } from '../../utils/itemUtils';
+import { canUseItemOnPokemonTarget } from '../../utils/itemUsageRules';
 import { Package, Circle, Heart, Dumbbell, Apple, Disc, Backpack, Sparkles, Sword, Key, Search, X,Trash2, ShoppingCart } from 'lucide-react'; 
 import React, { useState } from 'react';
 
@@ -12,6 +13,8 @@ function DesktopItemsView() {
     items = [],
     allItems = [],
     caughtPokemon = [],
+    allMoves = [],
+    pokemonLearnsets = {},
     sellItem: onSellItem,
     useItemOnPokemon: onUseItem,
     currentUser: trainer,
@@ -157,6 +160,43 @@ const categories = CATEGORIES.map(cat => {
   };
 });
 
+  const isSafariBallItem = (item) => {
+    const normalizedNames = [item?.name, item?.nameEn, item?.id, item?.itemId]
+      .map(value => String(value || '').toLowerCase().replace(/[\s-_]/g, ''));
+    return normalizedNames.includes('사파리볼') || normalizedNames.includes('safariball');
+  };
+
+  const visibleBagItems = items.filter(item => !isSafariBallItem(item));
+
+  const mergeItemStacks = (inventoryItems) => {
+    const mergedMap = new Map();
+
+    inventoryItems.forEach((item) => {
+      const details = getItemDetails(item);
+      const key = details.itemData?.id != null
+        ? `id:${details.itemData.id}`
+        : `name:${item.nameEn || item.name || item.itemId}`;
+      const existing = mergedMap.get(key);
+
+      if (existing) {
+        mergedMap.set(key, {
+          ...existing,
+          count: Number(existing.count || 0) + Number(item.count || 0)
+        });
+      } else {
+        mergedMap.set(key, {
+          ...item,
+          itemId: item.itemId ?? details.itemData?.id,
+          nameEn: item.nameEn ?? details.itemData?.nameEn,
+          imageUrl: item.imageUrl || details.imageUrl,
+          count: Number(item.count || 0)
+        });
+      }
+    });
+
+    return Array.from(mergedMap.values());
+  };
+
   const handleItemClick = (item) => {
     const details = getItemDetails(item);
     
@@ -176,6 +216,17 @@ const categories = CATEGORIES.map(cat => {
       return;
     }
     
+    const details = getItemDetails(selectedItem);
+    if (!canUseItemOnPokemonTarget({
+      item: selectedItem,
+      itemData: details.itemData,
+      pokemon: selectedPokemon,
+      allMoves,
+      pokemonLearnsets
+    })) {
+      return;
+    }
+
     if (onUseItem && selectedItem) {
       onUseItem(selectedItem, selectedPokemon);
       setSelectedItem(null);
@@ -231,7 +282,7 @@ const categories = CATEGORIES.map(cat => {
     }
   };
 
-  let filteredItems = items.filter(item => {
+  let filteredItems = visibleBagItems.filter(item => {
     if (selectedCategory !== 'all') {
       const details = getItemDetails(item);
       if (details.pocket !== selectedCategory) {
@@ -247,7 +298,7 @@ const categories = CATEGORIES.map(cat => {
     return true;
   });
 
-  filteredItems = [...filteredItems].sort((a, b) => {
+  filteredItems = mergeItemStacks(filteredItems).sort((a, b) => {
     if (sortBy === 'category') {
       const detailsA = getItemDetails(a);
       const detailsB = getItemDetails(b);
@@ -282,7 +333,7 @@ const categories = CATEGORIES.map(cat => {
               <span className="text-lg font-bold text-yellow-600">{(trainer.money || 0).toLocaleString()}원</span>
             </div>
             <div className="text-sm text-gray-500">
-              총 {items.reduce((sum, item) => sum + item.count, 0)}개
+              총 {visibleBagItems.reduce((sum, item) => sum + item.count, 0)}개
             </div>
           </div>
         </div>
@@ -476,15 +527,27 @@ const categories = CATEGORIES.map(cat => {
                           </div>
                         ) : (
                           <div className="grid grid-cols-3 gap-2">
-                            {caughtPokemon.filter(p => p !== null).map((pokemon) => (
+                            {caughtPokemon.filter(p => p !== null).map((pokemon) => {
+                              const canUseTarget = canUseItemOnPokemonTarget({
+                                item: selectedItem,
+                                itemData: details.itemData,
+                                pokemon,
+                                allMoves,
+                                pokemonLearnsets
+                              });
+
+                              return (
                               <button
                                 key={pokemon.uniqueId}
-                                onClick={() => setSelectedPokemon(pokemon)}
-                                className={`flex flex-col items-center p-3 rounded-lg border-2 transition-all ${
+                                onClick={() => {
+                                  if (canUseTarget) setSelectedPokemon(pokemon);
+                                }}
+                                disabled={!canUseTarget}
+                                className={`item-use-pokemon-card flex flex-col items-center p-3 rounded-lg transition-all ${
                                   selectedPokemon?.uniqueId === pokemon.uniqueId
-                                    ? 'border-indigo-500 bg-indigo-50'
-                                    : 'border-gray-200 hover:border-indigo-300 bg-white'
-                                }`}
+                                    ? 'is-selected'
+                                    : ''
+                                } ${!canUseTarget ? 'is-disabled' : ''}`}
                               >
                                 <img
                                   src={pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`}
@@ -499,7 +562,8 @@ const categories = CATEGORIES.map(cat => {
                                   Lv.{pokemon.level}
                                 </div>
                               </button>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
                       </div>

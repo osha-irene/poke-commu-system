@@ -3,6 +3,7 @@
 
 import { getBaseStatPatch } from '../../utils/pokemonBaseStats';
 import { getAbilityEnglishName } from '../../utils/abilityUtils';
+import { normalizeIVs } from '../../utils/pokemonIndividualValues';
 
 export const usePokemonCatch = (
   currentUser,
@@ -67,7 +68,7 @@ export const usePokemonCatch = (
     const size = generateSize(pokemonTemplate);
     const ability = generateAbility(pokemonTemplate, false);
     const abilityEn = getAbilityEnglishName(ability) || pokemonTemplate.abilitiesEn?.[0] || null;
-    const ivs = generateIVs();
+    const ivs = pokemon.ivs ? normalizeIVs(pokemon.ivs) : generateIVs();
     
     const newPokemon = {
       uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,

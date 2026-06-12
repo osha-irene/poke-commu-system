@@ -964,6 +964,9 @@ img[style*="pixelated"],
 .content-stage--world {
   isolation: auto;
   z-index: auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 .community-panel {
   min-height: 420px;
@@ -1013,6 +1016,7 @@ img[style*="pixelated"],
 
 .board {
   min-height: 420px;
+  height: 100%;
   position: relative;
   overflow-x: clip;
   color: #ffffff;
@@ -1026,10 +1030,16 @@ img[style*="pixelated"],
 .board__overlay {
   position: relative;
   z-index: 1;
-  min-height: 420px;
+  min-height: 100%;
   padding: clamp(28px, 6vw, 72px);
   background: transparent;
   backdrop-filter: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.board__overlay > .board__content {
+  flex: 1;
 }
 
 .board__eyebrow,
@@ -1057,10 +1067,12 @@ img[style*="pixelated"],
 }
 
 .board__content {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 18px;
   max-width: 700px;
   margin-top: 30px;
+  min-height: 0;
 }
 
 .board__section {
@@ -1111,6 +1123,7 @@ img[style*="pixelated"],
   font-size: clamp(17px, 1.7vw, 23px);
   font-weight: 700;
   letter-spacing: 0;
+
 }
 
 .board__section h3::before {
@@ -1124,6 +1137,7 @@ img[style*="pixelated"],
   margin-right: 8px;
   vertical-align: middle;
   margin-left: 20px;
+  margin-top: -7px;
 
 }
 
@@ -1136,6 +1150,10 @@ img[style*="pixelated"],
 
 .board__heading-row h3 {
   margin-top: 40px;
+}
+
+.board__list--standalone + .board__heading-row h3 {
+  margin-top: 16px;
 }
 
 .board__list--inline {
@@ -1162,6 +1180,13 @@ img[style*="pixelated"],
   white-space: pre-line;
   margin-left: 12px;
   text-indent: 1em;
+}
+
+.board__section p.board__p--centered {
+  text-align: center !important;
+  margin-left: 0 !important;
+  text-indent: 0 !important;
+  max-width: 100%;
 }
 
 .board__section p.board__legend-source {
@@ -1306,6 +1331,7 @@ img[style*="pixelated"],
 .board__list li {
   position: relative;
   padding-left: 1.2em;
+  bottom:-3px;
   line-height: 1.6;
 }
 
@@ -1313,7 +1339,7 @@ img[style*="pixelated"],
   content: '';
   position: absolute;
   left: 0.15em;
-  top: 0.9em;
+  top: 0.6em;
   width: 3px;
   height: 3px;
   border-radius: 50%;
@@ -1333,7 +1359,7 @@ img[style*="pixelated"],
 
 
 .board__list li > .board__list--sub:first-child{
-  margin-top: 10px;
+  margin-top: -3px;
 }
 
 .board__list--standalone {
@@ -1341,10 +1367,20 @@ img[style*="pixelated"],
   font-size: 16px;
   line-height: 1.;
   margin-bottom: 16px;
+  margin-top: 4px;
 }
 
 .board__list--standalone li {
   padding-left: 1.3em;
+  margin-bottom: 10px;
+}
+
+.board__list--standalone li:last-child {
+  margin-bottom: 0;
+}
+
+.board__heading-row + .board__list--standalone {
+  margin-top: -15px;
 }
 
 .board__list--standalone li::before {
@@ -1362,7 +1398,7 @@ img[style*="pixelated"],
 
 .board__list--sub li::before {
   content: '';
-  width: 5px;
+  width: 4px;
   height: 4px;
   border-radius: 100%;
   background-color: rgb(136, 197, 67);
@@ -1385,12 +1421,24 @@ img.emoji {
   opacity: 0.8;
 }
 
-.board__credits {
-  margin-top: 60px;
-  padding-bottom: 16px;
+.board__image {
+  display: block;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-top: 0;
+  margin-bottom: 0;
+  max-width: 600px;
+  height: auto;
+  image-rendering: auto;
+  -webkit-font-smoothing: antialiased;
 }
 
-.board__section p.board__credit {
+.board__credits {
+  position: sticky;
+  bottom: 50px;
+  margin-top: 60px;
+  padding-top: 0;
+  padding-bottom: 0;
   text-align: center !important;
   font-size:  0.8em !important;
   color: rgba(222, 255, 168, 0.5) !important;
@@ -1398,19 +1446,33 @@ img.emoji {
   text-indent: 0 !important;
 }
 
-#board-section-origin-beyond .board__section-body {
+.board__section--centered .board__section-body {
   text-align: center;
 }
 
-#board-section-origin-beyond .board__list {
+.board__section--centered .board__section-body p {
+  margin-left: 0 !important;
+  text-indent: 0 !important;
+  max-width: 100%;
+}
+
+.board__section--centered .board__section-body .board__heading-row {
+  justify-content: center;
+}
+
+.board__section--centered .board__list {
   width: fit-content;
   margin-left: auto;
   margin-right: auto;
   text-align: left;
 }
 
+.board__section--centered .board__section-body .board__list--standalone li {
+  padding-left: 1.6em;
+}
+
 .board__highlight-green {
-  background-color: rgba(120, 220, 120, 0.35);
+  background-color: #00ff0059;
   border-radius: 3px;
   padding: 0 0.15em;
   color: inherit;
@@ -1423,14 +1485,6 @@ img.emoji {
   color: inherit;
 }
 
-.board__image {
-  width: 100%;
-  max-width: 600px;
-  height: auto;
-  align-content: center;
-   display: block;
-  margin: 0 auto;
-}
 
 .home-dashboard {
   position: relative;
@@ -1626,14 +1680,36 @@ img.emoji {
   z-index: 0;
 }
 
+.home-issue-board__pokeball {
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: center;
+  align-self: center;
+  width: 55px;
+  height: 55px;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 0;
+}
+
 .home-issue-board__heading {
   display: block;
   width: 100%;
   color: #2d4221;
   font-size: 14px;
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1.2;
-  text-shadow: 0 1px 0 rgba(255, 255, 238, 0.72);
+}
+
+.home-issue-board__heading img {
+  display: block;
+  width: 80px;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  object-fit: contain;
+  pointer-events: none;
+  margin-top: -4px;
 }
 
 .home-issue-board__heading strong {
@@ -1656,7 +1732,6 @@ img.emoji {
   border-radius: 0;
   background: transparent;
   color: #26371f;
-  text-shadow: 0 1px 0 rgba(255, 255, 238, 0.78);
 }
 
 .home-issue-item img,
@@ -1716,7 +1791,7 @@ img.emoji {
   background: transparent;
   color: #3d5a28;
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .home-issue-item__text {
@@ -1733,6 +1808,7 @@ img.emoji {
   font-size: 14px;
   font-weight: 900;
   line-height: 1.35;
+  margin-top: -6px;
 }
 
 .home-issue-item__text > span {
@@ -1749,7 +1825,7 @@ img.emoji {
   grid-row: 3;
   width: 100%;
   max-width: var(--home-issue-column-width);
-  margin: 10px auto 0;
+  margin: 0 auto 0;
   color: rgba(49, 70, 35, 0.74);
   font-size: 14px;
   font-weight: 900;
@@ -1758,7 +1834,6 @@ img.emoji {
   white-space: normal;
   word-break: keep-all;
   overflow-wrap: anywhere;
-  text-shadow: 0 1px 0 rgba(255, 255, 238, 0.72);
 }
 
 .home-dashboard__news-button {
@@ -3799,6 +3874,7 @@ img[src*="serebii.net/pokemon"] {
   color: #6d922a;
 }
 
+
 .mobile-home__section-title strong {
   color: #1d3619;
   font-size: 15px;
@@ -5066,6 +5142,32 @@ img[src*="serebii.net/pokemon"] {
   background: rgba(132, 168, 64, 0.9) !important;
   border: 2px solid rgba(236, 248, 213, 0.95) !important;
   border-radius: 999px !important;
+}
+
+.item-action-modal-overlay {
+  background: rgba(0, 0, 0, 0.64) !important;
+}
+
+.item-use-pokemon-card {
+  border: 2px solid #e5e7eb;
+  background: #ffffff;
+}
+
+.item-use-pokemon-card:hover,
+.item-use-pokemon-card:focus-visible {
+  border-color: #a5b4fc;
+}
+
+.item-use-pokemon-card.is-selected {
+  border-width: 3px;
+  border-color: #6b46c1;
+  background: #eef2ff;
+}
+
+.item-use-pokemon-card.is-disabled {
+  opacity: 0.42;
+  filter: grayscale(1);
+  cursor: not-allowed !important;
 }
 
 html body #root .main-shell .item-selector-category-scroll,

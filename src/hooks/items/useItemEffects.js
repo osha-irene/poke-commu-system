@@ -1,9 +1,9 @@
 // src/hooks/items/useItemEffects.js
-// 아이템 사용 효과 시스템
-
+// ?꾩씠???ъ슜 ?④낵 ?쒖뒪??
 import { useRef } from 'react';
 import { isEVItem, applyEVItem } from '../../utils/evItemUtils';
 import { getLearnsetTmMoves, getPokemonLearnset } from '../../utils/pokemonLearnsets';
+import { isRareCandyItem, resolveItemData } from '../../utils/itemUsageRules';
 
 export const useItemEffects = (
   currentUser,
@@ -20,8 +20,8 @@ export const useItemEffects = (
   const evolutionHook = useEvolution;
   const itemUseLockRef = useRef(null);
 
-  // 포켓몬에게 아이템 사용
-  const useItemOnPokemon = (item, pokemon) => {
+  // ?ъ폆紐ъ뿉寃??꾩씠???ъ슜
+  const useItemOnPokemon = async (item, pokemon) => {
     if (!currentUser || !pokemon) return;
 
     const itemKey = item?.itemId || item?.id || item?.name || 'unknown-item';
@@ -41,18 +41,39 @@ export const useItemEffects = (
 
     try {
     
-    const itemData = allItems.find(i => 
-      i.id === item.itemId || i.name === item.name
-    );
+    const itemData = resolveItemData(allItems, item);
     
     const consumeItem = (item) => {
       if (currentUser.isSuperAdmin) return;
+
+      const targetItemData = resolveItemData(allItems, item);
+      const matchesItem = (inventoryItem) => {
+        const inventoryItemData = resolveItemData(allItems, inventoryItem);
+
+        if (targetItemData?.id != null && inventoryItemData?.id != null) {
+          return targetItemData.id === inventoryItemData.id;
+        }
+
+        if (item.itemId != null && inventoryItem.itemId != null) {
+          return item.itemId === inventoryItem.itemId;
+        }
+
+        return (
+          (item.name && inventoryItem.name === item.name) ||
+          (item.nameEn && inventoryItem.nameEn === item.nameEn)
+        );
+      };
+
+      let consumed = false;
       
       const newInventory = currentUser.inventory
-        .map(i => (i.itemId === item.itemId || i.name === item.name)
-          ? { ...i, count: i.count - 1 }
-          : i
-        )
+        .map(i => {
+          if (!consumed && matchesItem(i)) {
+            consumed = true;
+            return { ...i, count: i.count - 1 };
+          }
+          return i;
+        })
         .filter(i => i.count > 0);
       updateCurrentUser({ inventory: newInventory });
     };
@@ -68,14 +89,14 @@ export const useItemEffects = (
       updateCurrentUser(updates);
     };
     
-    // 기술머신 (TM) 사용 로직
+    // 湲곗닠癒몄떊 (TM) ?ъ슜 濡쒖쭅
     if (itemData?.isTM) {
-      console.log('💿 기술머신 사용:', itemData);
+      console.log('?뮸 湲곗닠癒몄떊 ?ъ슜:', itemData);
       
       let moveData = allMoves.find(m => m.id === itemData.moveId);
       
       if (!moveData && typeof itemData.moveId === 'number') {
-        console.log('⚠️ moveId가 숫자입니다. nameEn으로 찾습니다:', itemData.nameEn);
+        console.log('?좑툘 moveId媛 ?レ옄?낅땲?? nameEn?쇰줈 李얠뒿?덈떎:', itemData.nameEn);
         moveData = allMoves.find(m => 
           m.id === itemData.nameEn || 
           m.nameEn === itemData.nameEn ||
@@ -84,7 +105,7 @@ export const useItemEffects = (
       }
       
       if (!moveData) {
-        console.log('⚠️ ID로 못 찾음. 이름으로 재시도:', itemData.name, itemData.nameEn);
+        console.log('?좑툘 ID濡?紐?李얠쓬. ?대쫫?쇰줈 ?ъ떆??', itemData.name, itemData.nameEn);
         moveData = allMoves.find(m => 
           m.name === itemData.name ||
           m.nameEn === itemData.nameEn
@@ -92,36 +113,36 @@ export const useItemEffects = (
       }
       
       if (!moveData) {
-        console.error('❌ 기술을 찾을 수 없습니다:', {
+        console.error('??湲곗닠??李얠쓣 ???놁뒿?덈떎:', {
           tmMoveId: itemData.moveId,
           tmName: itemData.name,
           tmNameEn: itemData.nameEn
         });
-        alert('기술 정보를 찾을 수 없습니다!');
+        alert('湲곗닠 ?뺣낫瑜?李얠쓣 ???놁뒿?덈떎!');
         return;
       }
       
-      console.log('✅ 기술 찾음:', moveData);
+      console.log('??湲곗닠 李얠쓬:', moveData);
       
       const learnset = getPokemonLearnset(pokemonLearnsets, pokemon);
       
       if (!learnset) {
-        console.warn('⚠️ 이 포켓몬의 학습 데이터가 없습니다:', pokemon.number);
-        alert(`${pokemon.nickname || pokemon.name}의 기술 학습 정보를 찾을 수 없습니다!`);
+        console.warn('?좑툘 ???ъ폆紐ъ쓽 ?숈뒿 ?곗씠?곌? ?놁뒿?덈떎:', pokemon.number);
+        alert(`${pokemon.nickname || pokemon.name}??湲곗닠 ?숈뒿 ?뺣낫瑜?李얠쓣 ???놁뒿?덈떎!`);
         return;
       }
       
       if (!getLearnsetTmMoves(learnset).includes(moveData.id)) {
-        alert(`${pokemon.nickname || pokemon.name}은(는) ${moveData.name}을(를) 배울 수 없습니다!`);
+        alert(`${pokemon.nickname || pokemon.name}?(?? ${moveData.name}??瑜? 諛곗슱 ???놁뒿?덈떎!`);
         return;
       }
       
-      console.log('✅ 배울 수 있는 TM 확인됨!');
+      console.log('??諛곗슱 ???덈뒗 TM ?뺤씤??');
       
       const currentMoves = pokemon.moves || [];
       
       if (currentMoves.some(m => m.moveId === moveData.id)) {
-        alert(`${pokemon.nickname || pokemon.name}은(는) 이미 ${moveData.name}을(를) 알고 있습니다!`);
+        alert(`${pokemon.nickname || pokemon.name}?(?? ?대? ${moveData.name}??瑜? ?뚭퀬 ?덉뒿?덈떎!`);
         return;
       }
       
@@ -139,7 +160,7 @@ export const useItemEffects = (
       }).join('\n');
       
       const choice = window.prompt(
-        `${pokemon.nickname || pokemon.name}의 기술이 가득 찼습니다!\n\n현재 기술:\n${moveNames}\n\n교체할 기술 번호를 입력하세요 (1-4)\n취소하려면 0을 입력하세요:`
+        `${pokemon.nickname || pokemon.name}??湲곗닠??媛??李쇱뒿?덈떎!\n\n?꾩옱 湲곗닠:\n${moveNames}\n\n援먯껜??湲곗닠 踰덊샇瑜??낅젰?섏꽭??(1-4)\n痍⑥냼?섎젮硫?0???낅젰?섏꽭??`
       );
       
       if (choice === null || choice === '0') {
@@ -148,7 +169,7 @@ export const useItemEffects = (
       
       const choiceNum = parseInt(choice);
       if (isNaN(choiceNum) || choiceNum < 1 || choiceNum > 4) {
-        alert('잘못된 입력입니다!');
+        alert('?섎せ???낅젰?낅땲??');
         return;
       }
       
@@ -161,7 +182,7 @@ export const useItemEffects = (
       return;
     }
 
-    // 기존 아이템 로직들
+    // 湲곗〈 ?꾩씠??濡쒖쭅??
     const updatedPokemon = { ...pokemon };
     let itemUsed = false;
     const effectMessages = [];
@@ -170,7 +191,7 @@ export const useItemEffects = (
       const baseBoost = item.friendshipBoost || itemData.friendshipBoost;
       const boost = Math.max(0, Math.floor(baseBoost * (pokemon.friendshipGainMultiplier || 1)));
       updatedPokemon.friendship = Math.min(255, (pokemon.friendship || 0) + boost);
-      effectMessages.push(`💖 친밀도: ${pokemon.friendship || 0} → ${updatedPokemon.friendship} (+${boost})`);
+      effectMessages.push(`?뮇 移쒕??? ${pokemon.friendship || 0} ??${updatedPokemon.friendship} (+${boost})`);
       itemUsed = true;
     }
 
@@ -181,7 +202,7 @@ export const useItemEffects = (
           const current = updatedPokemon.ivs[stat] || 0;
           const newValue = Math.min(31, current + boost[stat]);
           updatedPokemon.ivs[stat] = newValue;
-          effectMessages.push(`🌟 ${stat}: ${current} → ${newValue} (+${boost[stat]})`);
+          effectMessages.push(`?뙚 ${stat}: ${current} ??${newValue} (+${boost[stat]})`);
           itemUsed = true;
         }
       });
@@ -200,7 +221,7 @@ export const useItemEffects = (
           if (actualBoost > 0) {
             const newValue = current + actualBoost;
             updatedPokemon.effortValues[stat] = newValue;
-            effectMessages.push(`⚡ ${stat}: ${current} → ${newValue} (+${actualBoost})`);
+            effectMessages.push(`??${stat}: ${current} ??${newValue} (+${actualBoost})`);
             itemUsed = true;
           }
         }
@@ -223,26 +244,26 @@ export const useItemEffects = (
           const current = updatedPokemon.condition[mappedKey] || 0;
           const newValue = Math.min(255, current + boost[condKey]);
           updatedPokemon.condition[mappedKey] = newValue;
-          effectMessages.push(`✨ ${condKey}: ${current} → ${newValue} (+${boost[condKey]})`);
+          effectMessages.push(`??${condKey}: ${current} ??${newValue} (+${boost[condKey]})`);
           itemUsed = true;
         }
       });
     }
 
     if (item.specialEffect || itemData?.specialEffect) {
-      effectMessages.push(`⚡ ${item.specialEffect || itemData.specialEffect}`);
+      effectMessages.push(`??${item.specialEffect || itemData.specialEffect}`);
       itemUsed = true;
     }
 
     if (itemUsed) {
       updatePokemonInUser(updatedPokemon);
-      const message = `${pokemon.nickname || pokemon.name}에게 ${item.name}을(를) 사용했습니다!\n\n${effectMessages.join('\n')}`;
+      const message = `${pokemon.nickname || pokemon.name}?먭쾶 ${item.name}??瑜? ?ъ슜?덉뒿?덈떎!\n\n${effectMessages.join('\n')}`;
       alert(message);
       consumeItem(item);
       return;
     }
     
-    // EV 아이템
+    // EV ?꾩씠??
     if (isEVItem(itemData?.nameEn || itemData?.name)) {
       const result = applyEVItem(
         pokemon, 
@@ -260,38 +281,28 @@ export const useItemEffects = (
     }
     
     // 이상한사탕
-    if (itemData?.name === '이상한사탕' || 
-        itemData?.nameEn?.toLowerCase().includes('rare candy')) {
-      const availableExp = Number(currentUser.trainerExp) || 0;
-      const input = window.prompt(`배분할 경험치를 입력해주세요.\n보유 경험치: ${availableExp}`, '');
-      if (input === null) return;
-
-      const expAmount = Math.floor(Number(input) || 0);
-      if (expAmount <= 0) {
-        alert('배분할 경험치를 입력해주세요.');
-        return;
+    if (isRareCandyItem(item, itemData)) {
+      const success = await handleRareCandyWithEvolution(pokemon.uniqueId);
+      if (success) {
+        consumeItem(item);
       }
-
-      handleRareCandyWithEvolution(pokemon.uniqueId, undefined, expAmount);
       return;
     }
      
-    // 진화의 돌
+    // 吏꾪솕????
     if (itemData?.category?.includes('evolution')) {
-      console.log('🪨 진화의 돌 사용:', itemData.name, itemData.nameEn);
+      console.log('?え 吏꾪솕?????ъ슜:', itemData.name, itemData.nameEn);
       
       const success = evolutionHook.evolveWithItem(pokemon, itemData.nameEn || itemData.name);
-      console.log('✅ 진화 체크 결과:', success);
+      console.log('??吏꾪솕 泥댄겕 寃곌낵:', success);
       
       if (success) {
         consumeItem(item);
-      } else {
-        alert('이 포켓몬은 해당 아이템으로 진화할 수 없습니다.');
       }
       return;
     }
     
-    alert(`${pokemon.nickname || pokemon.name}에게 ${item.name}을(를) 사용했습니다!`);
+    alert(`${pokemon.nickname || pokemon.name}?먭쾶 ${item.name}??瑜? ?ъ슜?덉뒿?덈떎!`);
     consumeItem(item);
     } finally {
       releaseItemUseLock();
@@ -304,3 +315,4 @@ export const useItemEffects = (
 };
 
 export default useItemEffects;
+

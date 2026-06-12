@@ -123,6 +123,23 @@ const parseBoardContent = (content) => {
       return;
     }
 
+    const centeredMatch = line.match(/^<>\s+(.*)$/);
+    if (centeredMatch) {
+      flushParagraph();
+      flushList();
+
+      if (!currentSection) {
+        currentSection = createFallbackSection(result);
+      }
+
+      currentSection.blocks.push({
+        type: 'centered',
+        text: centeredMatch[1],
+        segments: parseInlineHighlights(centeredMatch[1])
+      });
+      return;
+    }
+
     const creditMatch = line.match(/^%%\s+(.*)$/);
     if (creditMatch) {
       flushParagraph();
@@ -140,7 +157,7 @@ const parseBoardContent = (content) => {
       return;
     }
 
-    const imageMatch = line.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    const imageMatch = line.match(/^!\[([^\]]*)\]\(([^)]+?)(?:\s+=(\d+)(?:x(\d+))?)?\)$/);
     if (imageMatch) {
       flushParagraph();
       flushList();
@@ -152,7 +169,9 @@ const parseBoardContent = (content) => {
       currentSection.blocks.push({
         type: 'image',
         alt: imageMatch[1],
-        src: imageMatch[2]
+        src: imageMatch[2],
+        width: imageMatch[3] ? parseInt(imageMatch[3], 10) : null,
+        height: imageMatch[4] ? parseInt(imageMatch[4], 10) : null
       });
       return;
     }
@@ -239,10 +258,13 @@ const parseBoardContent = (content) => {
 
     if (line.startsWith('## ')) {
       flushParagraph();
-      const label = line.slice(3).trim();
+      let raw = line.slice(3).trim();
+      const centered = raw.startsWith('{center}');
+      const label = centered ? raw.slice(8).trim() : raw;
       currentSection = {
         id: createSectionId(label, result.sections.length),
         label,
+        centered,
         blocks: []
       };
       result.sections.push(currentSection);
@@ -489,16 +511,12 @@ export default function BoardView({
 
       <div className="board__overlay">
         <div className="board__content">
-          {(() => {
-            const allCredits = parsedBoard.sections.flatMap((s) => s.blocks.filter((b) => b.type === 'credit'));
-            return (
-              <>
-                {parsedBoard.sections.map((section) => {
+          {parsedBoard.sections.map((section) => {
                   const bodyBlocks = section.blocks.filter((b) => b.type !== 'credit');
                   const creditBlocks = [];
 
             return (
-              <article key={section.id} id={section.id} className="board__section">
+              <article key={section.id} id={section.id} className={`board__section${section.centered ? ' board__section--centered' : ''}`}>
                 {shouldShowSectionTitle(section.label, hiddenSectionTitles) && (
                   <h2 className="board__section-title">{section.label}</h2>
                 )}
@@ -533,6 +551,14 @@ export default function BoardView({
                       );
                     }
 
+                    if (block.type === 'centered') {
+                      return (
+                        <p key={`${block.type}-${index}`} className="board__p--centered">
+                          {renderSegments(block.segments)}
+                        </p>
+                      );
+                    }
+
                     if (block.type === 'list-standalone') {
                       return (
                         <ul key={`${block.type}-${index}`} className="board__list board__list--standalone">
@@ -548,12 +574,16 @@ export default function BoardView({
                     }
 
                     if (block.type === 'image') {
+                      const imgStyle = {};
+                      if (block.width) { imgStyle.width = `${block.width}px`; imgStyle.maxWidth = `${block.width}px`; }
+                      if (block.height) imgStyle.height = `${block.height}px`;
                       return (
                         <img
                           key={`${block.type}-${index}`}
                           src={block.src}
                           alt={block.alt}
                           className="board__image"
+                          style={Object.keys(imgStyle).length ? imgStyle : undefined}
                         />
                       );
                     }
@@ -570,21 +600,21 @@ export default function BoardView({
                 </div>
               </article>
                 );
-              })}
-                {allCredits.length > 0 && (
-                  <div className="board__credits">
-                    {allCredits.map((block, index) => (
-                      <p key={`credit-${index}`} className="board__credit">
-                        {renderSegments(block.segments)}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </>
-            );
-          })()}
+          })}
         </div>
       </div>
+      {(() => {
+        const allCredits = parsedBoard.sections.flatMap((s) => s.blocks.filter((b) => b.type === 'credit'));
+        return allCredits.length > 0 ? (
+          <div className="board__credits">
+            {allCredits.map((block, index) => (
+              <p key={`credit-${index}`} className="board__credit">
+                {renderSegments(block.segments)}
+              </p>
+            ))}
+          </div>
+        ) : null;
+      })()}
     </section>
   );
 }

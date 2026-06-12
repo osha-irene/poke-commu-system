@@ -122,12 +122,12 @@ const toBattleStats = (pokemon, template) => {
   const baseHp = Number(pokemon.baseHp || template?.baseHp || 50);
 
   return {
-    hp: Number(pokemon.maxHp || pokemon.stats?.hp || calculateBattleHP(baseHp, level, hpIv, hpEv)),
-    atk: Number(pokemon.stats?.atk || pokemon.stats?.attack || calculateBattleStat(Number(pokemon.baseAttack || template?.baseAttack || 50), level, pokemon.ivs?.attack ?? pokemon.ivs?.atk ?? pokemon.iv?.attack ?? 31, pokemon.effort?.attack ?? pokemon.evs?.atk ?? 0)),
-    def: Number(pokemon.stats?.def || pokemon.stats?.defense || calculateBattleStat(Number(pokemon.baseDefense || template?.baseDefense || 50), level, pokemon.ivs?.defense ?? pokemon.ivs?.def ?? pokemon.iv?.defense ?? 31, pokemon.effort?.defense ?? pokemon.evs?.def ?? 0)),
-    spa: Number(pokemon.stats?.spa || pokemon.stats?.spAttack || calculateBattleStat(Number(pokemon.baseSpAttack || pokemon.baseSpecialAttack || template?.baseSpAttack || template?.baseSpecialAttack || 50), level, pokemon.ivs?.specialAttack ?? pokemon.ivs?.spa ?? pokemon.iv?.specialAttack ?? 31, pokemon.effort?.specialAttack ?? pokemon.evs?.spa ?? 0)),
-    spd: Number(pokemon.stats?.spd || pokemon.stats?.spDefense || calculateBattleStat(Number(pokemon.baseSpDefense || pokemon.baseSpecialDefense || template?.baseSpDefense || template?.baseSpecialDefense || 50), level, pokemon.ivs?.specialDefense ?? pokemon.ivs?.spd ?? pokemon.iv?.specialDefense ?? 31, pokemon.effort?.specialDefense ?? pokemon.evs?.spd ?? 0)),
-    spe: Number(pokemon.stats?.spe || pokemon.stats?.speed || calculateBattleStat(Number(pokemon.baseSpeed || template?.baseSpeed || 50), level, pokemon.ivs?.speed ?? pokemon.ivs?.spe ?? pokemon.iv?.speed ?? 31, pokemon.effort?.speed ?? pokemon.evs?.spe ?? 0)),
+    hp: calculateBattleHP(baseHp, level, hpIv, hpEv),
+    atk: calculateBattleStat(Number(pokemon.baseAttack || template?.baseAttack || 50), level, pokemon.ivs?.attack ?? pokemon.ivs?.atk ?? pokemon.iv?.attack ?? 31, pokemon.effort?.attack ?? pokemon.evs?.atk ?? 0),
+    def: calculateBattleStat(Number(pokemon.baseDefense || template?.baseDefense || 50), level, pokemon.ivs?.defense ?? pokemon.ivs?.def ?? pokemon.iv?.defense ?? 31, pokemon.effort?.defense ?? pokemon.evs?.def ?? 0),
+    spa: calculateBattleStat(Number(pokemon.baseSpAttack || pokemon.baseSpecialAttack || template?.baseSpAttack || template?.baseSpecialAttack || 50), level, pokemon.ivs?.specialAttack ?? pokemon.ivs?.spa ?? pokemon.iv?.specialAttack ?? 31, pokemon.effort?.specialAttack ?? pokemon.evs?.spa ?? 0),
+    spd: calculateBattleStat(Number(pokemon.baseSpDefense || pokemon.baseSpecialDefense || template?.baseSpDefense || template?.baseSpecialDefense || 50), level, pokemon.ivs?.specialDefense ?? pokemon.ivs?.spd ?? pokemon.iv?.specialDefense ?? 31, pokemon.effort?.specialDefense ?? pokemon.evs?.spd ?? 0),
+    spe: calculateBattleStat(Number(pokemon.baseSpeed || template?.baseSpeed || 50), level, pokemon.ivs?.speed ?? pokemon.ivs?.spe ?? pokemon.iv?.speed ?? 31, pokemon.effort?.speed ?? pokemon.evs?.spe ?? 0),
   };
 };
 

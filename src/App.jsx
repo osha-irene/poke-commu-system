@@ -327,6 +327,7 @@ function isLocalRuntime() {
 }
 
 function getHomeFeeds(members = {}) {
+  const todayKey = getKoreaDateKey();
   const getEventTime = (value, fallbackIndex = 0) => {
     const parsed = Date.parse(value || '');
     if (!Number.isNaN(parsed)) return parsed;
@@ -336,7 +337,8 @@ function getHomeFeeds(members = {}) {
   };
   const shouldFilterDeployedFeed = !isLocalRuntime();
   const isAllowedHomeFeedEntry = (entry) => (
-    !shouldFilterDeployedFeed || entry.eventTime >= DEPLOYED_HOME_FEED_START_TIME
+    (!shouldFilterDeployedFeed || entry.eventTime >= DEPLOYED_HOME_FEED_START_TIME) &&
+    getKoreaDateKey(new Date(entry.eventTime)) === todayKey
   );
 
   const cookingFeed = Object.values(members || {})
@@ -504,9 +506,12 @@ function HomeDashboard({
             <div className="home-issue-board" aria-label="home issue feed">
               <section className="home-issue-board__section" aria-label="cooking news">
                 <div className="home-issue-board__heading">
-                  <span>{'\uC624\uB298\uC758 \uC694\uB9AC'}</span>
+                  <img src="/today-recipe.png" alt="오늘의 요리" />
                   <strong>COOK</strong>
                 </div>
+                {!cookingFeed.some((entry) => entry.image) && (
+                  <img className="home-issue-board__pokeball" src="/pokeball.png" alt="" aria-hidden="true" />
+                )}
                 {cookingFeed.length > 0 ? (
                   <ul className="home-issue-list">
                     {cookingFeed.map((entry) => (
@@ -526,9 +531,12 @@ function HomeDashboard({
               </section>
               <section className="home-issue-board__section" aria-label="evolution news">
                 <div className="home-issue-board__heading">
-                  <span>{'\uC624\uB298\uC758 \uC9C4\uD654'}</span>
+                  <img src="/today-evolve.png" alt="오늘의 진화" />
                   <strong>EVOLVE</strong>
                 </div>
+                {!evolutionFeed.some((entry) => entry.spriteUrl) && (
+                  <img className="home-issue-board__pokeball" src="/pokeball.png" alt="" aria-hidden="true" />
+                )}
                 {evolutionFeed.length > 0 ? (
                   <ul className="home-issue-list">
                     {evolutionFeed.map((entry) => (
