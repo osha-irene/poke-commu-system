@@ -1296,17 +1296,17 @@ img[style*="pixelated"],
 }
 
 .board__list {
-  margin: 0;
   padding-left: 0;
   list-style: none;
   display: flex;
   flex-direction: column;
+  
 }
 
 .board__list li {
   position: relative;
   padding-left: 1.2em;
-  line-height: 2;
+  line-height: 1.6;
 }
 
 .board__list li::before {
@@ -1321,21 +1321,92 @@ img[style*="pixelated"],
 }
 
 .board__list--sub {
-  margin: 0.3em 0 0;
+  margin: 1em 0 1m;
   padding-left: 1em;
-    font-size: 13px;
+  font-size: 14px;
+  gap: 10px
+}
+
+.board__section-body > .board__list li:first-child {
+  margin-top: 10px;
+}
+
+
+.board__list li > .board__list--sub:first-child{
+  margin-top: 10px;
 }
 
 .board__list--standalone {
   margin-left: 50px;
   font-size: 16px;
   line-height: 1.;
+  margin-bottom: 16px;
+}
+
+.board__list--standalone li {
+  padding-left: 1.3em;
 }
 
 .board__list--standalone li::before {
+  content: '✦';
+  width: auto;
+  height: auto;
+  background: none;
+  top: 0;
+  color: rgb(191, 248, 125);
+}
+
+.board__list--sub li {
+  padding-left: 1.2em;
+}
+
+.board__list--sub li::before {
+  content: '';
   width: 5px;
-  height: 5px;
-  top: 0.65em;
+  height: 4px;
+  border-radius: 100%;
+  background-color: rgb(136, 197, 67);
+  top: 0.6em;
+}
+
+.board__link {
+  color: rgb(144, 209, 70);
+  text-decoration: none;
+}
+
+img.emoji {
+  height: 1.2em;
+  width: 1.2em;
+  vertical-align: -0.2em;
+  display: inline;
+}
+
+.board__link:hover {
+  opacity: 0.8;
+}
+
+.board__credits {
+  margin-top: 60px;
+  padding-bottom: 16px;
+}
+
+.board__section p.board__credit {
+  text-align: center !important;
+  font-size:  0.8em !important;
+  color: rgba(222, 255, 168, 0.5) !important;
+  margin: 2px 0 !important;
+  text-indent: 0 !important;
+}
+
+#board-section-origin-beyond .board__section-body {
+  text-align: center;
+}
+
+#board-section-origin-beyond .board__list {
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
 }
 
 .board__highlight-green {
@@ -1434,6 +1505,7 @@ img[style*="pixelated"],
   pointer-events: none;
   z-index: 0;
   filter: drop-shadow(3px 4px 1px rgba(0, 0, 0, 0.38));
+  top:100px;
 }
 
 .home-dashboard__panel:nth-child(1)::before {
@@ -4923,6 +4995,56 @@ img[src*="serebii.net/pokemon"] {
 .item-selector-category-scroll::-webkit-scrollbar-thumb {
   background: rgba(132, 168, 64, 0.9) !important;
   border-radius: 999px !important;
+}
+
+.access-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.60);
+  cursor: pointer;
+}
+
+.access-modal-popover {
+  position: relative;
+  display: inline-flex;
+  transform: translateY(0vh);
+  animation: accessModalPop 160ms ease-out;
+}
+
+.access-modal-img {
+  display: block;
+  max-width: 35vw;
+  max-height: 40vh;
+  object-fit: contain;
+  cursor: default;
+  filter: drop-shadow(0 10px 18px rgba(20, 28, 18, 0.28));
+}
+
+.access-modal-hitbox {
+  position: absolute;
+  right: 63px;
+  bottom: 45px;
+  width: 30%;
+  height: 20%;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+@keyframes accessModalPop {
+  from {
+    opacity: 0;
+    transform: translateY(calc(0vh + 6px)) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0vh) scale(1);
+  }
 }
 
 .item-selector-list-scroll {

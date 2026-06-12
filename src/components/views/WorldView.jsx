@@ -27,7 +27,7 @@ const createFallbackSection = (result) => {
 const parseInlineHighlights = (text) => {
   const segments = [];
   let remaining = text;
-  const regex = /(==(.+?)==|\^\^(.+?)\^\^)/;
+  const regex = /(==(.+?)==|\^\^(.+?)\^\^|\[([^\]]+)\]\(([^)]+)\))/;
 
   while (remaining.length > 0) {
     const match = remaining.match(regex);
@@ -44,8 +44,10 @@ const parseInlineHighlights = (text) => {
 
     if (match[2] !== undefined) {
       segments.push({ type: 'highlight-green', text: match[2] });
-    } else {
+    } else if (match[3] !== undefined) {
       segments.push({ type: 'highlight-red', text: match[3] });
+    } else {
+      segments.push({ type: 'link', text: match[4], href: match[5] });
     }
 
     remaining = remaining.slice(match.index + match[0].length);
@@ -102,6 +104,39 @@ const parseBoardContent = (content) => {
     if (!line) {
       flushParagraph();
       flushList();
+      return;
+    }
+
+    const spacerMatch = line.match(/^\{br(?::(\d+))?\}$/);
+    if (spacerMatch) {
+      flushParagraph();
+      flushList();
+
+      if (!currentSection) {
+        currentSection = createFallbackSection(result);
+      }
+
+      currentSection.blocks.push({
+        type: 'spacer',
+        size: parseInt(spacerMatch[1] || '24', 10)
+      });
+      return;
+    }
+
+    const creditMatch = line.match(/^%%\s+(.*)$/);
+    if (creditMatch) {
+      flushParagraph();
+      flushList();
+
+      if (!currentSection) {
+        currentSection = createFallbackSection(result);
+      }
+
+      currentSection.blocks.push({
+        type: 'credit',
+        text: creditMatch[1],
+        segments: parseInlineHighlights(creditMatch[1])
+      });
       return;
     }
 
@@ -265,6 +300,14 @@ const renderSegments = (segments) => (
         <mark key={segIndex} className="board__highlight-red">
           {segment.text}
         </mark>
+      );
+    }
+
+    if (segment.type === 'link') {
+      return (
+        <a key={segIndex} href={segment.href} target="_blank" rel="noopener noreferrer" className="board__link">
+          {segment.text}
+        </a>
       );
     }
 
@@ -446,73 +489,100 @@ export default function BoardView({
 
       <div className="board__overlay">
         <div className="board__content">
-          {parsedBoard.sections.map((section) => (
-            <article key={section.id} id={section.id} className="board__section">
-              {shouldShowSectionTitle(section.label, hiddenSectionTitles) && (
-                <h2 className="board__section-title">{section.label}</h2>
-              )}
-              <div className="board__section-body">
-                {section.blocks.map((block, index) => {
-                  if (block.type === 'heading') {
-                    const nextBlock = section.blocks[index + 1];
-                    const inlineList = nextBlock && nextBlock.type === 'list' ? nextBlock : null;
+          {(() => {
+            const allCredits = parsedBoard.sections.flatMap((s) => s.blocks.filter((b) => b.type === 'credit'));
+            return (
+              <>
+                {parsedBoard.sections.map((section) => {
+                  const bodyBlocks = section.blocks.filter((b) => b.type !== 'credit');
+                  const creditBlocks = [];
 
-                    return (
-                      <div className="board__heading-row" key={`${block.type}-${index}`}>
-                        <h3 id={block.id}>{block.text}</h3>
-                        {inlineList && (
-                          <ul className="board__list board__list--inline">
-                            {renderListItems(inlineList.items)}
-                          </ul>
-                        )}
-                      </div>
-                    );
-                  }
+            return (
+              <article key={section.id} id={section.id} className="board__section">
+                {shouldShowSectionTitle(section.label, hiddenSectionTitles) && (
+                  <h2 className="board__section-title">{section.label}</h2>
+                )}
+                <div className="board__section-body">
+                  {bodyBlocks.map((block, index) => {
+                    if (block.type === 'heading') {
+                      const nextBlock = bodyBlocks[index + 1];
+                      const inlineList = nextBlock && nextBlock.type === 'list' ? nextBlock : null;
 
-                  if (block.type === 'list') {
-                    const prevBlock = section.blocks[index - 1];
-                    if (prevBlock && prevBlock.type === 'heading') {
-                      return null;
+                      return (
+                        <div className="board__heading-row" key={`${block.type}-${index}`}>
+                          <h3 id={block.id}>{block.text}</h3>
+                          {inlineList && (
+                            <ul className="board__list board__list--inline">
+                              {renderListItems(inlineList.items)}
+                            </ul>
+                          )}
+                        </div>
+                      );
+                    }
+
+                    if (block.type === 'list') {
+                      const prevBlock = bodyBlocks[index - 1];
+                      if (prevBlock && prevBlock.type === 'heading') {
+                        return null;
+                      }
+
+                      return (
+                        <ul key={`${block.type}-${index}`} className="board__list">
+                          {renderListItems(block.items)}
+                        </ul>
+                      );
+                    }
+
+                    if (block.type === 'list-standalone') {
+                      return (
+                        <ul key={`${block.type}-${index}`} className="board__list board__list--standalone">
+                          {renderListItems(block.items)}
+                        </ul>
+                      );
+                    }
+
+                    if (block.type === 'spacer') {
+                      return (
+                        <div key={`${block.type}-${index}`} style={{ height: `${block.size}px` }} aria-hidden="true" />
+                      );
+                    }
+
+                    if (block.type === 'image') {
+                      return (
+                        <img
+                          key={`${block.type}-${index}`}
+                          src={block.src}
+                          alt={block.alt}
+                          className="board__image"
+                        />
+                      );
                     }
 
                     return (
-                      <ul key={`${block.type}-${index}`} className="board__list">
-                        {renderListItems(block.items)}
-                      </ul>
-                    );
-                  }
-
-                  if (block.type === 'list-standalone') {
-                    return (
-                      <ul key={`${block.type}-${index}`} className="board__list board__list--standalone">
-                        {renderListItems(block.items)}
-                      </ul>
-                    );
-                  }
-
-                  if (block.type === 'image') {
-                    return (
-                      <img
+                      <p
                         key={`${block.type}-${index}`}
-                        src={block.src}
-                        alt={block.alt}
-                        className="board__image"
-                      />
+                        className={isLegendSource(block.text) ? 'board__legend-source' : undefined}
+                      >
+                        {renderSegments(block.segments)}
+                      </p>
                     );
-                  }
-
-                  return (
-                    <p
-                      key={`${block.type}-${index}`}
-                      className={isLegendSource(block.text) ? 'board__legend-source' : undefined}
-                    >
-                      {renderSegments(block.segments)}
-                    </p>
-                  );
-                })}
-              </div>
-            </article>
-          ))}
+                  })}
+                </div>
+              </article>
+                );
+              })}
+                {allCredits.length > 0 && (
+                  <div className="board__credits">
+                    {allCredits.map((block, index) => (
+                      <p key={`credit-${index}`} className="board__credit">
+                        {renderSegments(block.segments)}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
       </div>
     </section>

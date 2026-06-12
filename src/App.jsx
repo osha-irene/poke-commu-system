@@ -43,6 +43,46 @@ import { getPokemonLocalIconUrl } from './utils/pokemonIconUtils';
 
 const DAILY_ATTENDANCE_MONEY = 2000;
 
+function useTwemoji() {
+  useEffect(() => {
+    let isParsing = false;
+    let timer = null;
+
+    const parse = () => {
+      if (typeof window.twemoji === 'undefined' || isParsing) return;
+      isParsing = true;
+      window.twemoji.parse(document.body, { folder: 'svg', ext: '.svg' });
+      isParsing = false;
+    };
+
+    const scheduleparse = () => {
+      clearTimeout(timer);
+      timer = setTimeout(parse, 100);
+    };
+
+    scheduleparse();
+
+    const observer = new MutationObserver((mutations) => {
+      if (isParsing) return;
+      const hasNewContent = mutations.some((m) =>
+        [...m.addedNodes].some((n) => {
+          if (n.nodeType === Node.TEXT_NODE) return true;
+          if (n.nodeType === Node.ELEMENT_NODE && !n.classList?.contains('emoji')) return true;
+          return false;
+        })
+      );
+      if (hasNewContent) scheduleparse();
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      clearTimeout(timer);
+      observer.disconnect();
+    };
+  }, []);
+}
+
 function getYouTubeEmbedTarget(value = '') {
   const trimmed = value.trim();
   if (!trimmed) return { kind: '', id: '' };
@@ -886,7 +926,7 @@ export default function App() {
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
   const isMobile = useMediaQuery('(max-width: 768px)');
 
-  
+  useTwemoji();
 
   useEffect(() => {
     const updateSiteScale = () => {
@@ -973,8 +1013,29 @@ export default function App() {
   const [isLoadingOverlayVisible, setIsLoadingOverlayVisible] = useState(true);
   const [isLoadingOverlayFading, setIsLoadingOverlayFading] = useState(false);
   const [isClaimingAttendance, setIsClaimingAttendance] = useState(false);
+  const [showAccessModal, setShowAccessModal] = useState(false);
+  const getRandomAccessModalImg = () =>
+    Math.random() < 0.5 ? '/pre-popup1.png' : '/pre-popup2.png';
+  const [accessModalImg, setAccessModalImg] = useState(getRandomAccessModalImg);
   const todayAttendanceKey = getKoreaDateKey();
   const attendanceClaimed = currentUser?.lastAttendanceDate === todayAttendanceKey;
+
+  useEffect(() => {
+    if (!showAccessModal) return undefined;
+
+    const handleAccessModalKeyDown = (event) => {
+      const key = event.key.toLowerCase();
+
+      if (key === 'a' || key === 'ㅁ' || event.code === 'KeyA') {
+        setShowAccessModal(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleAccessModalKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleAccessModalKeyDown);
+    };
+  }, [showAccessModal]);
 
   const handleClaimAttendance = async () => {
     if (!currentUser?.id || isClaimingAttendance) return;
@@ -1213,7 +1274,8 @@ export default function App() {
   if (!currentUser || !currentUser.id) {
     const handlePublicNavigation = (nextTab) => {
       if (nextTab !== 'home') {
-        alert('아직 접근할 수 없습니다.');
+        setAccessModalImg(getRandomAccessModalImg());
+        setShowAccessModal(true);
       }
     };
 
@@ -1249,6 +1311,23 @@ export default function App() {
           </main>
         </div>
       </div>
+      {showAccessModal && (
+        <div className="access-modal-overlay">
+          <div className="access-modal-popover" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={accessModalImg}
+              alt="접근 불가"
+              className="access-modal-img"
+            />
+            <button
+              type="button"
+              className="access-modal-hitbox"
+              aria-label="팝업 닫기"
+              onClick={() => setShowAccessModal(false)}
+            />
+          </div>
+        </div>
+      )}
       {isLoadingOverlayVisible && <LoadingOverlay overlay fading={isLoadingOverlayFading} />}
       </>
     );
