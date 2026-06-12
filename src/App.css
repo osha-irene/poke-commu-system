@@ -1,137 +1,137 @@
 ﻿@import url('https://cdn.jsdelivr.net/gh/sunn-us/SUIT/fonts/static/woff2/SUIT.css');
 
 @font-face {
-  font-family: 'Paperozi';
+  font-family: 'YeojuCeramic';
   src: url('./assets/fonts/YeojuCeramic.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
-  font-display: swap;
+  font-display: block;
 }
 
 @font-face {
     font-family: 'Paperozi';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-1Thin.woff2') format('woff2');
     font-weight: 100;
-    font-display: swap;
+    font-display: block;
 }
 
 @font-face {
     font-family: 'Paperozi';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-2ExtraLight.woff2') format('woff2');
     font-weight: 200;
-    font-display: swap;
+    font-display: block;
 }
 
 @font-face {
     font-family: 'Paperozi';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-3Light.woff2') format('woff2');
     font-weight: 300;
-    font-display: swap;
+    font-display: block;
 }
 
 @font-face {
     font-family: 'Paperozi';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-4Regular.woff2') format('woff2');
     font-weight: 400;
-    font-display: swap;
+    font-display: block;
 }
 
 @font-face {
     font-family: 'Paperozi';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2') format('woff2');
     font-weight: 500;
-    font-display: swap;
+    font-display: block;
 }
 
 @font-face {
     font-family: 'Paperozi';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-6SemiBold.woff2') format('woff2');
     font-weight: 600;
-    font-display: swap;
+    font-display: block;
 }
 
 @font-face {
     font-family: 'Paperozi';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-7Bold.woff2') format('woff2');
     font-weight: 700;
-    font-display: swap;
+    font-display: block;
 }
 
 @font-face {
     font-family: 'Paperozi';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-8ExtraBold.woff2') format('woff2');
     font-weight: 800;
-    font-display: swap;
+    font-display: block;
 }
 
 @font-face {
     font-family: 'Paperozi';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-9Black.woff2') format('woff2');
     font-weight: 900;
-    font-display: swap;
+    font-display: block;
 }
 
 @font-face {
     font-family: 'Pretendard';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Thin.woff2') format('woff2');
     font-weight: 100;
-    font-display: swap;
+    font-display: block;
 }
 
 @font-face {
     font-family: 'Pretendard';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-ExtraLight.woff2') format('woff2');
     font-weight: 200;
-    font-display: swap;
+    font-display: block;
 }
 
 @font-face {
     font-family: 'Pretendard';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Light.woff2') format('woff2');
     font-weight: 300;
-    font-display: swap;
+    font-display: block;
 }
 
 @font-face {
     font-family: 'Pretendard';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Regular.woff2') format('woff2');
     font-weight: 400;
-    font-display: swap;
+    font-display: block;
 }
 
 @font-face {
     font-family: 'Pretendard';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Medium.woff2') format('woff2');
     font-weight: 500;
-    font-display: swap;
+    font-display: block;
 }
 
 @font-face {
     font-family: 'Pretendard';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-SemiBold.woff2') format('woff2');
     font-weight: 600;
-    font-display: swap;
+    font-display: block;
 }
 
 @font-face {
     font-family: 'Pretendard';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Bold.woff2') format('woff2');
     font-weight: 700;
-    font-display: swap;
+    font-display: block;
 }
 
 @font-face {
     font-family: 'Pretendard';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-ExtraBold.woff2') format('woff2');
     font-weight: 800;
-    font-display: swap;
+    font-display: block;
 }
 
 @font-face {
     font-family: 'Pretendard';
     src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Black.woff2') format('woff2');
     font-weight: 900;
-    font-display: swap;
+    font-display: block;
 }
 
 @font-face {
@@ -962,7 +962,6 @@ img[style*="pixelated"],
   isolation: auto;
   z-index: auto;
 }
-
 .community-panel {
   min-height: 420px;
   display: grid;
@@ -1009,7 +1008,7 @@ img[style*="pixelated"],
   white-space: pre-line;
 }
 
-.world-view {
+.board {
   min-height: 420px;
   position: relative;
   overflow-x: clip;
@@ -1017,11 +1016,11 @@ img[style*="pixelated"],
   font-family: 'PRETENDARD', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
-.world-view::before {
+.board::before {
   content: none;
 }
 
-.world-view__overlay {
+.board__overlay {
   position: relative;
   z-index: 1;
   min-height: 420px;
@@ -1030,18 +1029,17 @@ img[style*="pixelated"],
   backdrop-filter: none;
 }
 
-.world-view__eyebrow,
-.world-view__section-label {
+.board__eyebrow,
+.board__section-label {
   color: #c7e57d;
   font-family: 'Paperozi', Batang, serif;
   font-size: 32px;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  
 }
 
-.world-view h2 {
+.board h2 {
   margin: 12px 0 28px;
   color: #ffffff;
   font-family: 'Paperozi', Batang, serif;
@@ -1049,25 +1047,25 @@ img[style*="pixelated"],
   line-height: 1;
   font-weight: 900;
   letter-spacing: 0;
-    text-shadow:
+  text-shadow:
     0 0 6px rgba(117, 146, 45, 0.55),
     0 0 14px rgba(83, 97, 47, 0.32);
 }
 
-.world-view__content {
+.board__content {
   display: grid;
   gap: 18px;
   max-width: 700px;
   margin-top: 8px;
 }
 
-.world-view__section {
+.board__section {
   padding: 22px 0 0;
   border-top: 1px solid rgba(199, 229, 125, 0.22);
   scroll-margin-top: 120px;
 }
 
-.world-view__section-title {
+.board__section-title {
   margin: 0 0 18px;
   color: #ffffff;
   font-family: 'Paperozi', Batang, serif;
@@ -1077,35 +1075,60 @@ img[style*="pixelated"],
   letter-spacing: 0;
 }
 
-.world-view__section-body {
+.board__section-body {
   display: grid;
   gap: 12px;
   margin-top: 12px;
 }
 
-.world-view__section h3 {
+.board__section h3 {
   margin: 0;
   color: #ffffff;
   font-family: 'Paperozi', Batang, serif;
   font-size: clamp(17px, 1.7vw, 23px);
   font-weight: 700;
   letter-spacing: 0;
-  margin-top:20px;
-  margin-bottom:-10px;
 }
 
-.world-view__section p {
+.board__heading-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.8em;
+  margin-top: 20px;
+}
+
+.board__heading-row h3 {
+  margin: 0; /* wrapper가 margin을 담당하므로 h3 자체 마진은 제거 */
+}
+
+.board__list--inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.board__list--inline li {
+  padding-left: 1em;
+  line-height: 1.6;
+  transform: translateY(-4px);
+}
+
+.board__section p {
   max-width: 680px;
   margin: 0;
   color: #ffffff;
   font-size: 16px;
   line-height: 1.75;
   white-space: pre-line;
-  margin-left:12px;
+  margin-left: 12px;
   text-indent: 1em;
 }
 
-.world-view__section p.world-view__legend-source {
+.board__section p.board__legend-source {
   max-width: 100%;
   margin-top: 8px;
   font-family: 'GapyeongHanseokbongBigBrush', 'SUITE', sans-serif;
@@ -1120,7 +1143,7 @@ img[style*="pixelated"],
     0 0 14px rgba(199, 229, 125, 0.32);
 }
 
-.world-view__toc {
+.board__toc {
   position: fixed;
   top: clamp(154px, calc(18vh + 16px), 194px);
   right: max(18px, calc((100vw - var(--page-max)) / 2 + 42px));
@@ -1140,7 +1163,7 @@ img[style*="pixelated"],
   transform: none;
 }
 
-.world-view__toc-title {
+.board__toc-title {
   font-family: 'Paperozi', Batang, serif;
   color: #c7e57d;
   font-size: 12px;
@@ -1149,7 +1172,7 @@ img[style*="pixelated"],
   text-transform: uppercase;
 }
 
-.world-view__toc-list {
+.board__toc-list {
   min-height: 0;
   display: grid;
   gap: 5px;
@@ -1159,25 +1182,25 @@ img[style*="pixelated"],
   scrollbar-color: rgba(199, 229, 125, 0.48) transparent;
 }
 
-.world-view__toc-list::-webkit-scrollbar {
+.board__toc-list::-webkit-scrollbar {
   width: 5px;
 }
 
-.world-view__toc-list::-webkit-scrollbar-track {
+.board__toc-list::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.world-view__toc-list::-webkit-scrollbar-thumb {
+.board__toc-list::-webkit-scrollbar-thumb {
   background: rgba(199, 229, 125, 0.48);
   border-radius: 999px;
 }
 
-.world-view__toc-group {
+.board__toc-group {
   display: grid;
   min-width: 0;
 }
 
-.world-view__toc-sublist {
+.board__toc-sublist {
   display: grid;
   gap: 3px;
   max-height: 0;
@@ -1189,7 +1212,7 @@ img[style*="pixelated"],
   transition: max-height 170ms ease-out, margin 170ms ease-out, opacity 140ms ease, transform 160ms ease-out;
 }
 
-.world-view__toc-group.is-expanded .world-view__toc-sublist {
+.board__toc-group.is-expanded .board__toc-sublist {
   max-height: 640px;
   margin: 3px 0 7px;
   opacity: 1;
@@ -1197,7 +1220,7 @@ img[style*="pixelated"],
   pointer-events: auto;
 }
 
-.world-view__toc-button {
+.board__toc-button {
   width: 100%;
   min-height: 30px;
   min-width: 0;
@@ -1206,7 +1229,9 @@ img[style*="pixelated"],
   padding: 6px 7px 6px 10px;
   background: transparent;
   color: rgba(255, 255, 255, 0.68);
-  font: 700 12px/1.35 'SUITE', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1.35;
   text-align: left;
   word-break: keep-all;
   overflow-wrap: anywhere;
@@ -1214,7 +1239,7 @@ img[style*="pixelated"],
   transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
 }
 
-.world-view__toc-button--heading {
+.board__toc-button--heading {
   min-height: 24px;
   padding-left: 20px;
   color: rgba(255, 255, 255, 0.54);
@@ -1222,16 +1247,73 @@ img[style*="pixelated"],
   font-weight: 600;
 }
 
-.world-view__toc-button:hover {
+.board__toc-button:hover {
   color: #ffffff;
   border-left-color: rgba(199, 229, 125, 0.62);
   background: rgba(255, 255, 255, 0.05);
 }
 
-.world-view__toc-button.is-active {
+.board__toc-button.is-active {
   color: #ffffff;
   border-left-color: #c7e57d;
   background: rgba(199, 229, 125, 0.13);
+}
+
+.board__list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.board__list li {
+  position: relative;
+  padding-left: 1.2em;
+  line-height: 1.6;
+}
+
+.board__list li::before {
+  content: '';
+  position: absolute;
+  left: 0.15em;
+  top: 0.6em;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background-color: rgb(144, 209, 70);
+}
+
+.board__list--sub {
+  margin: 0.3em 0 0;
+  padding-left: 1em;
+    font-size: 13px;
+}
+
+.board__list--standalone {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.board__list--standalone li::before {
+  width: 5px;
+  height: 5px;
+  top: 0.65em;
+}
+
+.board__highlight-green {
+  background-color: rgba(120, 220, 120, 0.35);
+  border-radius: 3px;
+  padding: 0 0.15em;
+  color: inherit;
+}
+
+.board__highlight-red {
+  background-color: rgba(173, 8, 8, 0.7);
+  border-radius: 3px;
+  padding: 0 0.3em;
+  color: inherit;
 }
 
 .home-dashboard {

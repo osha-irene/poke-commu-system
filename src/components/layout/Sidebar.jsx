@@ -114,26 +114,26 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin }) {
           </button>
         </div>
 
-        <div className="trainer-nav__bottom">
-          <div className="trainer-nav__social" aria-label="커뮤니티 링크">
-            <button
-              type="button"
-              onClick={() => setCurrentTab('qna')}
-              className={`trainer-nav__social-button ${currentTab === 'qna' ? 'is-active' : ''}`}
-              aria-label="Q&A"
-            >
-              <IconImage src={qnaIcon} />
-            </button>
-            <button type="button" className="trainer-nav__social-button" aria-label="Twitter">
-              <IconImage src={twitterIcon} />
-            </button>
-            <button type="button" className="trainer-nav__social-button" aria-label="Mastodon">
-              <IconImage src={mastodonIcon} />
-            </button>
-          </div>
-        </div>
-      </nav>
+<div className="trainer-nav__bottom">
+  <div className="trainer-nav__social" aria-label="커뮤니티 링크">
+    <button
+      type="button"
+      onClick={() => setCurrentTab('qna')}
+      className={`trainer-nav__social-button ${currentTab === 'qna' ? 'is-active' : ''}`}
+      aria-label="Q&A"
+    >
+      <IconImage src={qnaIcon} />
+    </button>
+    <a href="https://x.com/Poke_OriginB" target="_blank" rel="noopener noreferrer" className="trainer-nav__social-button" aria-label="Twitter">
+          <IconImage src={twitterIcon} />
+        </a>
 
+    <button type="button" className="trainer-nav__social-button" aria-label="Mastodon">
+          <IconImage src={mastodonIcon} />
+        </button>
+      </div>
+     </div>
+  </nav>
     </aside>
 
       {isAdmin && (

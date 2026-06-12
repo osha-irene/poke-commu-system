@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
-import worldContent from '../../data/worldContent';
+import boardContent from '../../data/worldContent';
 
 const createSectionId = (label, index) => {
   const normalized = label
@@ -7,7 +7,7 @@ const createSectionId = (label, index) => {
     .replace(/[^a-z0-9가-힣]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-  return `world-section-${normalized || index}`;
+  return `board-section-${normalized || index}`;
 };
 
 const isLegendSource = (text) => (
@@ -19,14 +19,44 @@ const shouldShowSectionTitle = (label, hiddenSectionTitles) => (
 );
 
 const createFallbackSection = (result) => {
-  const section = { id: createSectionId('World', result.sections.length), label: 'World', blocks: [] };
+  const section = { id: createSectionId('Board', result.sections.length), label: 'Board', blocks: [] };
   result.sections.push(section);
   return section;
 };
 
-const parseWorldContent = (content) => {
+const parseInlineHighlights = (text) => {
+  const segments = [];
+  let remaining = text;
+  const regex = /(==(.+?)==|\^\^(.+?)\^\^)/;
+
+  while (remaining.length > 0) {
+    const match = remaining.match(regex);
+
+    if (!match) {
+      segments.push({ type: 'text', text: remaining });
+      break;
+    }
+
+    const before = remaining.slice(0, match.index);
+    if (before) {
+      segments.push({ type: 'text', text: before });
+    }
+
+    if (match[2] !== undefined) {
+      segments.push({ type: 'highlight-green', text: match[2] });
+    } else {
+      segments.push({ type: 'highlight-red', text: match[3] });
+    }
+
+    remaining = remaining.slice(match.index + match[0].length);
+  }
+
+  return segments;
+};
+
+const parseBoardContent = (content) => {
   const result = {
-    title: '세계관',
+    title: '게시판',
     sections: [],
     tocItems: []
   };
@@ -45,36 +75,126 @@ const parseWorldContent = (content) => {
 
     currentSection.blocks.push({
       type: 'paragraph',
-      text: paragraphLines.join('\n')
+      text: paragraphLines.join('\n'),
+      segments: parseInlineHighlights(paragraphLines.join('\n'))
     });
     paragraphLines = [];
   };
 
-content.split(/\r?\n/).forEach((rawLine) => {
-  const line = rawLine.trim();
+  let currentList = null;
 
-  if (!line) {
-    flushParagraph();
-    return;
-  }
-
-  // 이미지 라인 감지: ![alt](src)
-  const imageMatch = line.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
-  if (imageMatch) {
-    flushParagraph();
+  const flushList = () => {
+    if (!currentList) {
+      return;
+    }
 
     if (!currentSection) {
       currentSection = createFallbackSection(result);
     }
 
-    currentSection.blocks.push({
-      type: 'image',
-      alt: imageMatch[1],
-      src: imageMatch[2]
-    });
-    return;
-  }
+    currentSection.blocks.push(currentList);
+    currentList = null;
+  };
 
+  content.split(/\r?\n/).forEach((rawLine) => {
+    const line = rawLine.trim();
+
+    if (!line) {
+      flushParagraph();
+      flushList();
+      return;
+    }
+
+    const imageMatch = line.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if (imageMatch) {
+      flushParagraph();
+      flushList();
+
+      if (!currentSection) {
+        currentSection = createFallbackSection(result);
+      }
+
+      currentSection.blocks.push({
+        type: 'image',
+        alt: imageMatch[1],
+        src: imageMatch[2]
+      });
+      return;
+    }
+
+    const subBulletMatch = line.match(/^\*\*\s+(.*)$/);
+    if (subBulletMatch) {
+      flushParagraph();
+
+      if (!currentSection) {
+        currentSection = createFallbackSection(result);
+      }
+
+      const itemText = subBulletMatch[1];
+      const item = {
+        text: itemText,
+        segments: parseInlineHighlights(itemText)
+      };
+
+      if (currentList && (currentList.type === 'list' || currentList.type === 'list-standalone') && currentList.items.length) {
+        const parentItem = currentList.items[currentList.items.length - 1];
+        if (!parentItem.children) {
+          parentItem.children = [];
+        }
+        parentItem.children.push(item);
+      } else {
+        if (!currentList || currentList.type !== 'list') {
+          flushList();
+          currentList = { type: 'list', items: [] };
+        }
+        currentList.items.push(item);
+      }
+      return;
+    }
+
+    const bulletMatch = line.match(/^\*\s+(.*)$/);
+    if (bulletMatch) {
+      flushParagraph();
+
+      if (!currentSection) {
+        currentSection = createFallbackSection(result);
+      }
+
+      if (!currentList || currentList.type !== 'list') {
+        flushList();
+        currentList = { type: 'list', items: [] };
+      }
+
+      const itemText = bulletMatch[1];
+      currentList.items.push({
+        text: itemText,
+        segments: parseInlineHighlights(itemText)
+      });
+      return;
+    }
+
+    const standaloneBulletMatch = line.match(/^&\s+(.*)$/);
+    if (standaloneBulletMatch) {
+      flushParagraph();
+
+      if (!currentSection) {
+        currentSection = createFallbackSection(result);
+      }
+
+      if (!currentList || currentList.type !== 'list-standalone') {
+        flushList();
+        currentList = { type: 'list-standalone', items: [] };
+      }
+
+      const itemText = standaloneBulletMatch[1];
+      currentList.items.push({
+        text: itemText,
+        segments: parseInlineHighlights(itemText)
+      });
+      return;
+    }
+
+    flushList();
 
     if (line.startsWith('# ')) {
       flushParagraph();
@@ -125,24 +245,60 @@ content.split(/\r?\n/).forEach((rawLine) => {
   });
 
   flushParagraph();
+  flushList();
 
   return result;
 };
 
-export default function WorldView({
-  content = worldContent,
-  tocLabel = '세계관 섹션',
+const renderSegments = (segments) => (
+  segments.map((segment, segIndex) => {
+    if (segment.type === 'highlight-green') {
+      return (
+        <mark key={segIndex} className="board__highlight-green">
+          {segment.text}
+        </mark>
+      );
+    }
+
+    if (segment.type === 'highlight-red') {
+      return (
+        <mark key={segIndex} className="board__highlight-red">
+          {segment.text}
+        </mark>
+      );
+    }
+
+    return <React.Fragment key={segIndex}>{segment.text}</React.Fragment>;
+  })
+);
+
+const renderListItems = (items) => (
+  items.map((item, itemIndex) => (
+    <li key={itemIndex}>
+      {renderSegments(item.segments)}
+      {item.children && item.children.length > 0 && (
+        <ul className="board__list board__list--sub">
+          {renderListItems(item.children)}
+        </ul>
+      )}
+    </li>
+  ))
+);
+
+export default function BoardView({
+  content = boardContent,
+  tocLabel = '게시판 섹션',
   hiddenSectionTitles = ['영운설화']
 }) {
-  const parsedWorld = useMemo(() => parseWorldContent(content), [content]);
-  const [activeSectionId, setActiveSectionId] = useState(parsedWorld.tocItems[0]?.id || '');
-  const [expandedSectionId, setExpandedSectionId] = useState(parsedWorld.sections[0]?.id || '');
+  const parsedBoard = useMemo(() => parseBoardContent(content), [content]);
+  const [activeSectionId, setActiveSectionId] = useState(parsedBoard.tocItems[0]?.id || '');
+  const [expandedSectionId, setExpandedSectionId] = useState(parsedBoard.sections[0]?.id || '');
   const [tocTop, setTocTop] = useState(null);
   const clickScrollLockRef = useRef('');
   const clickScrollTimerRef = useRef(null);
 
   const sectionHeadingMap = useMemo(() => (
-    parsedWorld.sections.reduce((acc, section) => {
+    parsedBoard.sections.reduce((acc, section) => {
       acc[section.id] = section.blocks
         .filter((block) => block.type === 'heading')
         .map((block) => ({
@@ -151,10 +307,10 @@ export default function WorldView({
         }));
       return acc;
     }, {})
-  ), [parsedWorld.sections]);
+  ), [parsedBoard.sections]);
 
   const tocItemParentMap = useMemo(() => (
-    parsedWorld.sections.reduce((acc, section) => {
+    parsedBoard.sections.reduce((acc, section) => {
       acc[section.id] = section.id;
       section.blocks.forEach((block) => {
         if (block.type === 'heading') {
@@ -163,7 +319,7 @@ export default function WorldView({
       });
       return acc;
     }, {})
-  ), [parsedWorld.sections]);
+  ), [parsedBoard.sections]);
 
   useLayoutEffect(() => {
     const updateActiveSection = () => {
@@ -172,7 +328,7 @@ export default function WorldView({
       setTocTop(Math.round(Math.max(baseTop, surfaceTop + 16)));
 
       const viewportMarker = window.innerHeight * 0.35;
-      const sectionPositions = parsedWorld.tocItems
+      const sectionPositions = parsedBoard.tocItems
         .map((item) => {
           const element = document.getElementById(item.id);
           return element ? { id: item.id, top: element.getBoundingClientRect().top } : null;
@@ -210,7 +366,7 @@ export default function WorldView({
       window.removeEventListener('resize', updateActiveSection);
       window.clearTimeout(clickScrollTimerRef.current);
     };
-  }, [parsedWorld.tocItems, tocItemParentMap]);
+  }, [parsedBoard.tocItems, tocItemParentMap]);
 
   const handleSectionClick = (sectionId, lockedExpandedSectionId = tocItemParentMap[sectionId] || sectionId) => {
     const element = document.getElementById(sectionId);
@@ -237,16 +393,16 @@ export default function WorldView({
   };
 
   return (
-    <section className="world-view">
-      {parsedWorld.tocItems.length > 0 && (
+    <section className="board">
+      {parsedBoard.tocItems.length > 0 && (
         <nav
-          className="world-view__toc"
+          className="board__toc"
           style={tocTop === null ? undefined : { top: `${tocTop}px` }}
           aria-label={tocLabel}
         >
-          <span className="world-view__toc-title">Sections</span>
-          <div className="world-view__toc-list">
-            {parsedWorld.sections.map((section) => {
+          <span className="board__toc-title">Sections</span>
+          <div className="board__toc-list">
+            {parsedBoard.sections.map((section) => {
               const headings = sectionHeadingMap[section.id] || [];
               const isExpanded = expandedSectionId === section.id;
               const isSectionActive = activeSectionId === section.id || tocItemParentMap[activeSectionId] === section.id;
@@ -254,11 +410,11 @@ export default function WorldView({
               return (
                 <div
                   key={section.id}
-                  className={`world-view__toc-group ${isExpanded ? 'is-expanded' : ''}`}
+                  className={`board__toc-group ${isExpanded ? 'is-expanded' : ''}`}
                 >
                   <button
                     type="button"
-                    className={`world-view__toc-button world-view__toc-button--section ${isSectionActive ? 'is-active' : ''}`}
+                    className={`board__toc-button board__toc-button--section ${isSectionActive ? 'is-active' : ''}`}
                     onClick={() => handleTopSectionClick(section.id)}
                     aria-expanded={isExpanded}
                     aria-current={activeSectionId === section.id ? 'true' : undefined}
@@ -267,12 +423,12 @@ export default function WorldView({
                   </button>
 
                   {headings.length > 0 && (
-                    <div className="world-view__toc-sublist" aria-hidden={!isExpanded}>
+                    <div className="board__toc-sublist" aria-hidden={!isExpanded}>
                       {headings.map((heading) => (
                         <button
                           key={heading.id}
                           type="button"
-                          className={`world-view__toc-button world-view__toc-button--heading ${activeSectionId === heading.id ? 'is-active' : ''}`}
+                          className={`board__toc-button board__toc-button--heading ${activeSectionId === heading.id ? 'is-active' : ''}`}
                           onClick={() => handleSectionClick(heading.id)}
                           aria-current={activeSectionId === heading.id ? 'true' : undefined}
                         >
@@ -288,33 +444,72 @@ export default function WorldView({
         </nav>
       )}
 
-      <div className="world-view__overlay">
-        <div className="world-view__content">
-          {parsedWorld.sections.map((section) => (
-            <article key={section.id} id={section.id} className="world-view__section">
+      <div className="board__overlay">
+        <div className="board__content">
+          {parsedBoard.sections.map((section) => (
+            <article key={section.id} id={section.id} className="board__section">
               {shouldShowSectionTitle(section.label, hiddenSectionTitles) && (
-                <h2 className="world-view__section-title">{section.label}</h2>
+                <h2 className="board__section-title">{section.label}</h2>
               )}
-              <div className="world-view__section-body">
-               {section.blocks.map((block, index) => (
-				  block.type === 'heading' ? (
-					<h3 id={block.id} key={`${block.type}-${index}`}>{block.text}</h3>
-				  ) : block.type === 'image' ? (
-					<img
-					  key={`${block.type}-${index}`}
-					  src={block.src}
-					  alt={block.alt}
-					  className="world-view__image"
-					/>
-				  ) : (
-					<p
-					  key={`${block.type}-${index}`}
-					  className={isLegendSource(block.text) ? 'world-view__legend-source' : undefined}
-					>
-					  {block.text}
-					</p>
-				  )
-				))}
+              <div className="board__section-body">
+                {section.blocks.map((block, index) => {
+                  if (block.type === 'heading') {
+                    const nextBlock = section.blocks[index + 1];
+                    const inlineList = nextBlock && nextBlock.type === 'list' ? nextBlock : null;
+
+                    return (
+                      <div className="board__heading-row" key={`${block.type}-${index}`}>
+                        <h3 id={block.id}>{block.text}</h3>
+                        {inlineList && (
+                          <ul className="board__list board__list--inline">
+                            {renderListItems(inlineList.items)}
+                          </ul>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  if (block.type === 'list') {
+                    const prevBlock = section.blocks[index - 1];
+                    if (prevBlock && prevBlock.type === 'heading') {
+                      return null;
+                    }
+
+                    return (
+                      <ul key={`${block.type}-${index}`} className="board__list">
+                        {renderListItems(block.items)}
+                      </ul>
+                    );
+                  }
+
+                  if (block.type === 'list-standalone') {
+                    return (
+                      <ul key={`${block.type}-${index}`} className="board__list board__list--standalone">
+                        {renderListItems(block.items)}
+                      </ul>
+                    );
+                  }
+
+                  if (block.type === 'image') {
+                    return (
+                      <img
+                        key={`${block.type}-${index}`}
+                        src={block.src}
+                        alt={block.alt}
+                        className="board__image"
+                      />
+                    );
+                  }
+
+                  return (
+                    <p
+                      key={`${block.type}-${index}`}
+                      className={isLegendSource(block.text) ? 'board__legend-source' : undefined}
+                    >
+                      {renderSegments(block.segments)}
+                    </p>
+                  );
+                })}
               </div>
             </article>
           ))}

@@ -886,6 +886,8 @@ export default function App() {
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
   const isMobile = useMediaQuery('(max-width: 768px)');
 
+  
+
   useEffect(() => {
     const updateSiteScale = () => {
       const root = document.documentElement;
@@ -996,6 +998,8 @@ export default function App() {
     }
   };
 
+  
+
   useEffect(() => {
     let isCancelled = false;
 
@@ -1030,6 +1034,7 @@ export default function App() {
     });
 
     return () => {
+      
       isCancelled = true;
     };
   }, [isCoreLoading, currentUser?.id]);
@@ -1223,8 +1228,12 @@ export default function App() {
       );
     }
 
+    
+
     return (
       <>
+
+      
       <PlaylistWidget />
       <div className="main-shell main-shell--home">
         <SakuraEffect />
