@@ -1,6 +1,6 @@
 export const noticeContent = String.raw`
 ## {center}Origin Beyond
-{br:90}
+{br:70}
 게임프리크 社의 〈포켓몬스터〉 시리즈 기반
 {br}
 ![notice](/notice1.png =800)
@@ -113,10 +113,10 @@ export const noticeContent = String.raw`
 ** 메가진화 조건에 따라 ==특정 주차까지 최종 진화를 이루지 못한 파트너 포켓몬은 스토리 진행 중 진화가 이루어질 수 있습니다.== 해당 내용은 사전에 공지를 통해 안내드릴 예정입니다.
 
 ### 파트너 포켓몬
-![partnerpkm](/partner.png)
+![partnerpkm](/partner.png =600)
 {br}
 ### 합격 관련 요소
-![minorsector](/minor.png)
+![minorsector](/minor.png =600)
 
 
 %% ⓒ2026 · 포켓몬스터 오리진 비욘드`;
