@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.648e7b3d.css",
-    "main.js": "/static/js/main.5fd4b042.js",
+    "main.css": "/static/css/main.8f7cf57b.css",
+    "main.js": "/static/js/main.a87ba9cd.js",
     "static/js/623.69c45dc4.chunk.js": "/static/js/623.69c45dc4.chunk.js",
     "static/media/forest-bg (2).png": "/static/media/forest-bg (2).023aaebd6df83a1d1128.png",
     "static/media/YeojuCeramic.ttf": "/static/media/YeojuCeramic.95ed01e4fba0f8c0a443.ttf",
@@ -14,6 +14,7 @@
     "static/media/logo_text.png": "/static/media/logo_text.fdb1298f93a712fc16a5.png",
     "static/media/main_news.png": "/static/media/main_news.1610334b488bf668eaef.png",
     "static/media/logo_compass.png": "/static/media/logo_compass.5e060dd19119f1f61b6d.png",
+    "static/media/main_heading.png": "/static/media/main_heading.d0a2d6b1e34bd6c29720.png",
     "static/media/shop.png": "/static/media/shop.cc5ee513c61a15a159c6.png",
     "static/media/trainercard.png": "/static/media/trainercard.e2eae1016f14eff54c38.png",
     "static/media/dex.png": "/static/media/dex.af4ff9e1d9c3a41576c1.png",
@@ -27,12 +28,12 @@
     "static/media/bag.png": "/static/media/bag.1a11c2f1fe8c7374a447.png",
     "index.html": "/index.html",
     "static/media/pokemon-icon.svg": "/static/media/pokemon-icon.d36b6f0655c180980d5acb3287a88011.svg",
-    "main.648e7b3d.css.map": "/static/css/main.648e7b3d.css.map",
-    "main.5fd4b042.js.map": "/static/js/main.5fd4b042.js.map",
+    "main.8f7cf57b.css.map": "/static/css/main.8f7cf57b.css.map",
+    "main.a87ba9cd.js.map": "/static/js/main.a87ba9cd.js.map",
     "623.69c45dc4.chunk.js.map": "/static/js/623.69c45dc4.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.648e7b3d.css",
-    "static/js/main.5fd4b042.js"
+    "static/css/main.8f7cf57b.css",
+    "static/js/main.a87ba9cd.js"
   ]
 }
