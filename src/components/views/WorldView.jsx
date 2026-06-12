@@ -50,13 +50,31 @@ const parseWorldContent = (content) => {
     paragraphLines = [];
   };
 
-  content.split(/\r?\n/).forEach((rawLine) => {
-    const line = rawLine.trim();
+content.split(/\r?\n/).forEach((rawLine) => {
+  const line = rawLine.trim();
 
-    if (!line) {
-      flushParagraph();
-      return;
+  if (!line) {
+    flushParagraph();
+    return;
+  }
+
+  // 이미지 라인 감지: ![alt](src)
+  const imageMatch = line.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+  if (imageMatch) {
+    flushParagraph();
+
+    if (!currentSection) {
+      currentSection = createFallbackSection(result);
     }
+
+    currentSection.blocks.push({
+      type: 'image',
+      alt: imageMatch[1],
+      src: imageMatch[2]
+    });
+    return;
+  }
+
 
     if (line.startsWith('# ')) {
       flushParagraph();
@@ -278,18 +296,25 @@ export default function WorldView({
                 <h2 className="world-view__section-title">{section.label}</h2>
               )}
               <div className="world-view__section-body">
-                {section.blocks.map((block, index) => (
-                  block.type === 'heading' ? (
-                    <h3 id={block.id} key={`${block.type}-${index}`}>{block.text}</h3>
-                  ) : (
-                    <p
-                      key={`${block.type}-${index}`}
-                      className={isLegendSource(block.text) ? 'world-view__legend-source' : undefined}
-                    >
-                      {block.text}
-                    </p>
-                  )
-                ))}
+               {section.blocks.map((block, index) => (
+				  block.type === 'heading' ? (
+					<h3 id={block.id} key={`${block.type}-${index}`}>{block.text}</h3>
+				  ) : block.type === 'image' ? (
+					<img
+					  key={`${block.type}-${index}`}
+					  src={block.src}
+					  alt={block.alt}
+					  className="world-view__image"
+					/>
+				  ) : (
+					<p
+					  key={`${block.type}-${index}`}
+					  className={isLegendSource(block.text) ? 'world-view__legend-source' : undefined}
+					>
+					  {block.text}
+					</p>
+				  )
+				))}
               </div>
             </article>
           ))}

@@ -1,11 +1,137 @@
 ﻿@import url('https://cdn.jsdelivr.net/gh/sunn-us/SUIT/fonts/static/woff2/SUIT.css');
 
 @font-face {
-  font-family: 'YeojuCeramic';
+  font-family: 'Paperozi';
   src: url('./assets/fonts/YeojuCeramic.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
+}
+
+@font-face {
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-1Thin.woff2') format('woff2');
+    font-weight: 100;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-2ExtraLight.woff2') format('woff2');
+    font-weight: 200;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-3Light.woff2') format('woff2');
+    font-weight: 300;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-4Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-6SemiBold.woff2') format('woff2');
+    font-weight: 600;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-7Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-8ExtraBold.woff2') format('woff2');
+    font-weight: 800;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-9Black.woff2') format('woff2');
+    font-weight: 900;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Thin.woff2') format('woff2');
+    font-weight: 100;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-ExtraLight.woff2') format('woff2');
+    font-weight: 200;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Light.woff2') format('woff2');
+    font-weight: 300;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-SemiBold.woff2') format('woff2');
+    font-weight: 600;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-ExtraBold.woff2') format('woff2');
+    font-weight: 800;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Black.woff2') format('woff2');
+    font-weight: 900;
+    font-display: swap;
 }
 
 @font-face {
@@ -864,7 +990,7 @@ img[style*="pixelated"],
   max-width: 700px;
   margin: 0;
   color: #ffffff;
-  font-family: 'YeojuCeramic', Batang, serif;
+  font-family: 'Paperozi', Batang, serif;
   font-size: clamp(36px, 7vw, 72px);
   line-height: 1.05;
   font-weight: 400;
@@ -888,7 +1014,7 @@ img[style*="pixelated"],
   position: relative;
   overflow-x: clip;
   color: #ffffff;
-  font-family: 'SUITE', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family: 'PRETENDARD', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
 .world-view::before {
@@ -907,7 +1033,7 @@ img[style*="pixelated"],
 .world-view__eyebrow,
 .world-view__section-label {
   color: #c7e57d;
-  font-family: 'YeojuCeramic', Batang, serif;
+  font-family: 'Paperozi', Batang, serif;
   font-size: 32px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -918,7 +1044,7 @@ img[style*="pixelated"],
 .world-view h2 {
   margin: 12px 0 28px;
   color: #ffffff;
-  font-family: 'YeojuCeramic', Batang, serif;
+  font-family: 'Paperozi', Batang, serif;
   font-size: clamp(20px, 7vw, 34px);
   line-height: 1;
   font-weight: 900;
@@ -944,7 +1070,7 @@ img[style*="pixelated"],
 .world-view__section-title {
   margin: 0 0 18px;
   color: #ffffff;
-  font-family: 'YeojuCeramic', Batang, serif;
+  font-family: 'Paperozi', Batang, serif;
   font-size: clamp(24px, 3.2vw, 42px);
   font-weight: 400;
   line-height: 1.2;
@@ -960,9 +1086,9 @@ img[style*="pixelated"],
 .world-view__section h3 {
   margin: 0;
   color: #ffffff;
-  font-family: 'YeojuCeramic', Batang, serif;
+  font-family: 'Paperozi', Batang, serif;
   font-size: clamp(17px, 1.7vw, 23px);
-  font-weight: 850;
+  font-weight: 700;
   letter-spacing: 0;
   margin-top:20px;
   margin-bottom:-10px;
@@ -1015,7 +1141,7 @@ img[style*="pixelated"],
 }
 
 .world-view__toc-title {
-  font-family: 'YeojuCeramic', Batang, serif;
+  font-family: 'Paperozi', Batang, serif;
   color: #c7e57d;
   font-size: 12px;
   font-weight: 400;
