@@ -27,7 +27,7 @@ const createFallbackSection = (result) => {
 const parseInlineHighlights = (text) => {
   const segments = [];
   let remaining = text;
-  const regex = /(==(.+?)==|\^\^(.+?)\^\^|\[([^\]]+)\]\(([^)]+)\))/;
+  const regex = /(===(.+?)===|==(.+?)==|\^\^(.+?)\^\^|\[([^\]]+)\]\(([^)]+)\))/;
 
   while (remaining.length > 0) {
     const match = remaining.match(regex);
@@ -43,11 +43,13 @@ const parseInlineHighlights = (text) => {
     }
 
     if (match[2] !== undefined) {
-      segments.push({ type: 'highlight-green', text: match[2] });
+      segments.push({ type: 'highlight-blue', text: match[2] });
     } else if (match[3] !== undefined) {
-      segments.push({ type: 'highlight-red', text: match[3] });
+      segments.push({ type: 'highlight-green', text: match[3] });
+    } else if (match[4] !== undefined) {
+      segments.push({ type: 'highlight-red', text: match[4] });
     } else {
-      segments.push({ type: 'link', text: match[4], href: match[5] });
+      segments.push({ type: 'link', text: match[5], href: match[6] });
     }
 
     remaining = remaining.slice(match.index + match[0].length);
@@ -309,6 +311,14 @@ const parseBoardContent = (content) => {
 
 const renderSegments = (segments) => (
   segments.map((segment, segIndex) => {
+    if (segment.type === 'highlight-blue') {
+      return (
+        <mark key={segIndex} className="board__highlight-blue">
+          {segment.text}
+        </mark>
+      );
+    }
+
     if (segment.type === 'highlight-green') {
       return (
         <mark key={segIndex} className="board__highlight-green">

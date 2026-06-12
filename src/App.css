@@ -1471,8 +1471,15 @@ img.emoji {
   padding-left: 1.6em;
 }
 
+.board__highlight-blue {
+  background-color: rgba(120, 220, 120, 0.35);
+  border-radius: 3px;
+  padding: 0 0.15em;
+  color: inherit;
+}
+
 .board__highlight-green {
-  background-color: #00ff0059;
+  background-color: #14c21459;
   border-radius: 3px;
   padding: 0 0.15em;
   color: inherit;
