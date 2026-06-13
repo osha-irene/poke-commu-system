@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Sketch from '@uiw/react-color-sketch';
 import { ref, get, set } from 'firebase/database';
 import { database } from '../../../firebase';
 
@@ -14,6 +15,16 @@ function toDateKey(y, m, d) {
   return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }
 
+const COLOR_HISTORY_KEY = 'schedule_color_history';
+
+function loadColorHistory() {
+  try { return JSON.parse(localStorage.getItem(COLOR_HISTORY_KEY) || '[]'); } catch { return []; }
+}
+
+function saveColorHistory(history) {
+  localStorage.setItem(COLOR_HISTORY_KEY, JSON.stringify(history));
+}
+
 export default function ScheduleAdminPanel() {
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
@@ -24,7 +35,41 @@ export default function ScheduleAdminPanel() {
   const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [form, setForm] = useState({ title: '', desc: '', start: '', color: EVENT_COLORS[0], important: false });
+  const [colorHistory, setColorHistory] = useState(loadColorHistory);
   const tooltipTimer = useRef(null);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [pickerColor, setPickerColor] = useState(form.color);
+  const colorPickerWrapRef = useRef(null);
+
+  useEffect(() => {
+    if (!showColorPicker) return;
+    const onDown = (e) => {
+      if (!colorPickerWrapRef.current?.contains(e.target)) setShowColorPicker(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [showColorPicker]);
+
+  const openPicker = () => {
+    setPickerColor(form.color);
+    setShowColorPicker(v => !v);
+  };
+
+  const selectColor = (color, addToHistory = false) => {
+    setForm(f => ({ ...f, color }));
+    if (addToHistory) {
+      setColorHistory(prev => {
+        const next = [color, ...prev.filter(c => c !== color)].slice(0, 20);
+        saveColorHistory(next);
+        return next;
+      });
+    }
+  };
+
+  const confirmPickerColor = () => {
+    setShowColorPicker(false);
+    selectColor(pickerColor, true);
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -191,28 +236,56 @@ export default function ScheduleAdminPanel() {
               <input type="date" value={form.start} onChange={(e) => setForm(f => ({ ...f, start: e.target.value }))} />
             </label>
             <label>색상
-              <div className="schedule-modal__color-row">
-                <div className="schedule-modal__colors">
+              <div className="schedule-modal__color-section">
+                <div className="schedule-modal__color-row">
                   {EVENT_COLORS.map((c) => (
                     <button
                       key={c}
                       type="button"
                       className={`schedule-modal__color-btn ${form.color === c ? 'is-selected' : ''}`}
                       style={{ background: c }}
-                      onClick={() => setForm(f => ({ ...f, color: c }))}
+                      onClick={() => selectColor(c, true)}
                     />
                   ))}
                 </div>
-                <div className="schedule-modal__color-picker-wrap">
-                  <span className="schedule-modal__color-preview" style={{ background: form.color }} />
-                  <input
-                    type="color"
-                    value={form.color}
-                    onChange={(e) => setForm(f => ({ ...f, color: e.target.value }))}
-                    className="schedule-modal__color-picker"
-                    title="직접 색상 선택"
-                  />
+                <div className="schedule-modal__color-custom" ref={colorPickerWrapRef}>
+                  <button
+                    type="button"
+                    className="schedule-modal__color-add-btn"
+                    onClick={openPicker}
+                  >+</button>
+                  {showColorPicker && (
+                    <div className="schedule-modal__colorful-popup">
+                      <Sketch
+                        color={pickerColor}
+                        onChange={(c) => {
+                          const hex = (c.hex || c.hexa || '').slice(0, 7);
+                          if (/^#[0-9a-fA-F]{6}$/.test(hex)) setPickerColor(hex);
+                        }}
+                        disableAlpha
+                        presetColors={[]}
+                      />
+                      <button
+                        type="button"
+                        className="schedule-modal__color-confirm-btn"
+                        onClick={confirmPickerColor}
+                      >확인</button>
+                    </div>
+                  )}
                 </div>
+                {colorHistory.length > 0 && (
+                  <div className="schedule-modal__color-history">
+                    {colorHistory.map((c, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        className={`schedule-modal__color-btn ${form.color === c ? 'is-selected' : ''}`}
+                        style={{ background: c }}
+                        onClick={() => selectColor(c, true)}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </label>
             <div className="schedule-modal__actions">
