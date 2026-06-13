@@ -359,10 +359,10 @@ export default function PokedexView({
 
   if (isMobile) {
     return (
-      <div style={{ padding: '56px 12px 12px', minHeight: '100%', color: 'rgba(215,238,170,0.95)' }}>
+      <div style={{ padding: '72px 12px 80px', minHeight: '100%', color: '#2a3d1a' }}>
         {/* 검색 */}
         <div style={{ position: 'relative', marginBottom: 14 }}>
-          <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'rgba(150,185,110,0.6)' }} />
+          <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#7a9a50' }} />
           <input
             type="text"
             placeholder="포켓몬 이름 검색"
@@ -370,20 +370,22 @@ export default function PokedexView({
             onChange={e => setSearchTerm(e.target.value)}
             style={{
               width: '100%', boxSizing: 'border-box',
-              padding: '8px 12px 8px 32px',
-              background: 'rgba(20,38,18,0.82)',
-              border: '1px solid rgba(130,185,65,0.3)',
-              borderRadius: 10, color: 'rgba(225,248,185,0.95)',
+              padding: '9px 12px 9px 34px',
+              background: 'rgba(255,255,255,0.88)',
+              border: '1px solid rgba(120,175,60,0.35)',
+              borderRadius: 12, color: '#2a3d1a',
               fontSize: 13, outline: 'none',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
             }}
           />
         </div>
 
         {/* 그리드 */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 7 }}>
           {filteredPokedex.map((pokemon) => {
             const currentNumber = toDexNumber(pokemon.number);
             const isUnlocked = isPokemonUnlocked(pokemon);
+            const isCaught = myCaughtNumbers.has(currentNumber);
 
             let displayPokemon = pokemon;
             const unlockedRegionalForm = allPokedex.find(p =>
@@ -409,37 +411,38 @@ export default function PokedexView({
                 onClick={() => handlePokemonClick(pokemon)}
                 style={{
                   display: 'flex', flexDirection: 'column', alignItems: 'center',
-                  padding: '10px 8px 8px',
-                  background: 'rgba(20,38,18,0.82)',
-                  border: '1px solid rgba(130,185,65,0.25)',
+                  padding: '8px 6px 7px',
+                  background: isCaught
+                    ? 'rgba(220,245,195,0.95)'
+                    : isUnlocked
+                    ? 'rgba(255,255,255,0.88)'
+                    : 'rgba(255,255,255,0.50)',
+                  border: `1px solid ${isCaught ? 'rgba(90,154,30,0.35)' : 'rgba(180,210,140,0.4)'}`,
                   borderRadius: 12,
                   cursor: isUnlocked ? 'pointer' : 'default',
-                  opacity: isUnlocked ? 1 : 0.38,
-                  gap: 4,
+                  opacity: isUnlocked ? 1 : 1,
+                  gap: 3,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
                 }}
               >
-                <div style={{ width: 72, height: 72, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 64, height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {isUnlocked ? (
                     <img
                       src={getPokemonSpriteUrl(displayPokemon)}
                       alt={displayPokemon.name}
-                      style={{ width: 72, height: 72, imageRendering: 'pixelated', objectFit: 'contain' }}
+                      style={{ width: 64, height: 64, imageRendering: 'pixelated', objectFit: 'contain' }}
                       loading="lazy"
                     />
                   ) : (
-                    <span style={{ fontSize: 32, fontWeight: 900, color: 'rgba(150,185,110,0.35)' }}>?</span>
+                    <span style={{ fontSize: 28, fontWeight: 900, color: 'rgba(120,160,80,0.35)' }}>?</span>
                   )}
                 </div>
-                <span style={{
-                  fontSize: 10, fontWeight: 700,
-                  color: 'rgba(170,210,125,0.65)',
-                  letterSpacing: '0.04em',
-                }}>
-                  No.{String(currentNumber).padStart(3, '0')}
+                <span style={{ fontSize: 9, fontWeight: 700, color: '#8aaa60', letterSpacing: '0.04em' }}>
+                  {pokemon.newNumber ? `No.${String(pokemon.newNumber).padStart(3, '0')}` : `No.${String(currentNumber).padStart(3, '0')}`}
                 </span>
                 <span style={{
-                  fontSize: 11, fontWeight: 600,
-                  color: isUnlocked ? 'rgba(225,248,185,0.95)' : 'rgba(150,185,110,0.4)',
+                  fontSize: 10, fontWeight: 600,
+                  color: isUnlocked ? '#2a3d1a' : 'rgba(80,110,50,0.65)',
                   lineHeight: 1.2, textAlign: 'center',
                   width: '100%',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',

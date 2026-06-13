@@ -4,6 +4,7 @@ import { useGame } from '../../contexts/GameContext';
 import { ref as dbRef, get, set } from 'firebase/database';
 import { database } from '../../firebase';
 import { User, ChevronRight } from 'lucide-react';
+import useMediaQuery from '../../hooks/useMediaQuery';
 import RegionEditModal from '../modals/RegionEditModal';
 import PokedexAdminPanel from './admin/PokedexAdminPanel';
 import ShopAdminPanel from '../admin/ShopAdminPanel';
@@ -70,6 +71,7 @@ export default function AdminView() {
 	camping
   } = gameContext;
 
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [adminTab, setAdminTab] = useState('members');
   const [maxWalks, setMaxWalks] = useState(trainer?.maxDailyWalks || 5);
   const [maxNonPartnerPokemon, setMaxNonPartnerPokemon] = useState(systemSettings.maxNonPartnerPokemon || 18);
@@ -329,44 +331,67 @@ export default function AdminView() {
     );
   }
 
+  const ADMIN_TABS = [
+    { id: 'members',  label: '👥 멤버' },
+    { id: 'regions',  label: '🗺️ 지역' },
+    { id: 'pokedex',  label: '📖 도감' },
+    { id: 'shop',     label: '🏪 상점' },
+    { id: 'cooking',  label: '🍳 요리' },
+    { id: 'camping',  label: '⛺ 캠핑' },
+    { id: 'schedule', label: '📅 일정' },
+    { id: 'settings', label: '⚙️ 시스템' },
+    ...(trainer?.isSuperAdmin ? [{ id: 'danger', label: '⚠️ 위험', variant: 'danger' }] : []),
+  ];
+
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-4" style={isMobile ? { padding: '72px 10px 80px' } : {}}>
       {/* 서브메뉴 탭 */}
-      <Card className="p-2 flex gap-2 overflow-x-auto flex-nowrap admin-tab-bar">
-        <TabButton active={adminTab === 'members'} onClick={() => setAdminTab('members')}>
-          👥 멤버
-        </TabButton>
-        <TabButton active={adminTab === 'regions'} onClick={() => setAdminTab('regions')}>
-          🗺️ 지역
-        </TabButton>
-        <TabButton active={adminTab === 'pokedex'} onClick={() => setAdminTab('pokedex')}>
-          📖 도감
-        </TabButton>
-        <TabButton active={adminTab === 'shop'} onClick={() => setAdminTab('shop')}>
-          🏪 상점
-        </TabButton>
-        <TabButton active={adminTab === 'cooking'} onClick={() => setAdminTab('cooking')}>
-          🍳 요리
-        </TabButton>
-		<TabButton active={adminTab === 'camping'} onClick={() => setAdminTab('camping')}>
-		  ⛺ 캠핑
-		</TabButton>
-        <TabButton active={adminTab === 'schedule'} onClick={() => setAdminTab('schedule')}>
-          📅 일정
-        </TabButton>
-        <TabButton active={adminTab === 'settings'} onClick={() => setAdminTab('settings')}>
-          ⚙️ 시스템
-        </TabButton>
-        {trainer?.isSuperAdmin && (
-          <TabButton
-            active={adminTab === 'danger'}
-            onClick={() => setAdminTab('danger')}
-            variant="danger"
-          >
-            ⚠️ 위험
-          </TabButton>
-        )}
-      </Card>
+      {isMobile ? (
+        <div style={{
+          display: 'flex', gap: 6, overflowX: 'auto', flexWrap: 'nowrap',
+          padding: '6px 2px', scrollbarWidth: 'none',
+        }}>
+          {ADMIN_TABS.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setAdminTab(tab.id)}
+              style={{
+                flexShrink: 0,
+                padding: '7px 13px',
+                borderRadius: 20,
+                border: 'none',
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                background: adminTab === tab.id
+                  ? (tab.variant === 'danger' ? '#dc2626' : '#4a9a08')
+                  : 'rgba(255,255,255,0.85)',
+                color: adminTab === tab.id
+                  ? '#fff'
+                  : (tab.variant === 'danger' ? '#dc2626' : '#3a5a20'),
+                boxShadow: adminTab === tab.id ? '0 2px 8px rgba(0,0,0,0.15)' : 'none',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <Card className="p-2 flex gap-2 overflow-x-auto flex-nowrap admin-tab-bar">
+          {ADMIN_TABS.map(tab => (
+            <TabButton
+              key={tab.id}
+              active={adminTab === tab.id}
+              onClick={() => setAdminTab(tab.id)}
+              variant={tab.variant}
+            >
+              {tab.label}
+            </TabButton>
+          ))}
+        </Card>
+      )}
 
       {/* 멤버 관리 탭 */}
       {adminTab === 'members' && (
@@ -728,6 +753,7 @@ export default function AdminView() {
 			onCompleteCooking={camping.completeCooking}
 			onApplyResults={camping.applyResultsToMember}
 			onDeleteSession={camping.deleteSession}
+			allItems={allItems}
 		  />
 		)}
 

@@ -1,7 +1,7 @@
 // src/hooks/useGameState.js - 리팩토링 버전
 // 모든 게임 로직을 통합하는 메인 훅
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ref, get, set, update } from 'firebase/database';
 import { database } from '../firebase';
 
@@ -39,7 +39,24 @@ import { useAdminRegions } from './admin/useAdminRegions';
 import { useAdminItems } from './admin/useAdminItems';
 
 export default function useGameState() {
-  const [currentTab, setCurrentTab] = useState('home');
+  const [currentTab, setCurrentTab] = useState(() => {
+    const s = window.history.state;
+    return (s && s.tab) ? s.tab : 'home';
+  });
+
+  const navigateTab = useCallback((tab) => {
+    window.history.pushState({ tab }, '', window.location.href);
+    setCurrentTab(tab);
+  }, []);
+
+  useEffect(() => {
+    const onPop = (e) => {
+      const tab = e.state?.tab || 'home';
+      setCurrentTab(tab);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
   const [encounterPokemon, setEncounterPokemon] = useState(null);
   const [firstCatchPokemon, setFirstCatchPokemon] = useState(null);
   
@@ -322,7 +339,7 @@ export default function useGameState() {
 
   return {
     currentTab,
-    setCurrentTab,
+    setCurrentTab: navigateTab,
     currentUser,
     isAdmin: currentUser?.isAdmin || false,
     trainer: currentUser || {},

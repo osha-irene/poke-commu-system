@@ -401,6 +401,12 @@ export const useGameData = (allPokemonData) => {
 
     const systemSettingsRef = ref(database, 'gameData/systemSettings');
     await set(systemSettingsRef, normalizedSettings);
+
+    // 봇이 gameData/campingSettings를 우선 참조하므로 동기화
+    if (normalizedSettings.campingSettings) {
+      await set(ref(database, 'gameData/campingSettings'), normalizedSettings.campingSettings);
+    }
+
     console.log('💾 시스템 설정 저장:', normalizedSettings);
   };
 

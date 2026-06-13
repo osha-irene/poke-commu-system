@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { get, ref, set } from 'firebase/database';
+import { get, ref, set, query, orderByChild, limitToLast } from 'firebase/database';
+import { getAuth } from 'firebase/auth';
 import { database } from '../../firebase';
 import AdvancedBattleSimulator from '../../battle/components/AdvancedBattleSimulator';
 import { toCalcAbilityName } from '../../utils/abilityUtils';
@@ -364,7 +365,7 @@ const formatBattleLogDate = (value) => {
   });
 };
 
-const BattleLogArchiveModal = ({ logs, onClose, onDelete }) => {
+const BattleLogArchiveModal = ({ logs, onClose, onDelete, loading }) => {
   const [selectedId, setSelectedId] = useState(logs[0]?.id || null);
   const selectedLog = logs.find(log => log.id === selectedId) || logs[0] || null;
   const [collapsedDates, setCollapsedDates] = useState({});
@@ -422,7 +423,7 @@ const BattleLogArchiveModal = ({ logs, onClose, onDelete }) => {
       <div className="flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-gray-900">역대 배틀 로그</h2>
+            <h2 className="text-xl font-bold text-gray-900">배틀 로그</h2>
             <div className="mt-1 flex gap-2">
               <input
                 type="text"
@@ -454,7 +455,9 @@ const BattleLogArchiveModal = ({ logs, onClose, onDelete }) => {
           </button>
         </div>
 
-        {logs.length === 0 ? (
+        {loading ? (
+          <div className="p-10 text-center text-gray-500">로그 불러오는 중...</div>
+        ) : logs.length === 0 ? (
           <div className="p-10 text-center text-gray-500">아직 저장된 배틀 로그가 없습니다.</div>
         ) : (
           <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-[280px_minmax(0,1fr)]">
@@ -595,6 +598,7 @@ export function BattleView() {
   const [battleStarted, setBattleStarted] = useState(false);
   const [battleLogArchive, setBattleLogArchive] = useState(() => readBattleLogArchive());
   const [showBattleLogArchive, setShowBattleLogArchive] = useState(false);
+  const [logsLoading, setLogsLoading] = useState(false);
 
   useEffect(() => {
     const loadMembers = async () => {
@@ -712,9 +716,12 @@ export function BattleView() {
       return next;
     });
 
-    // Firebase에도 저장 (공유용)
+    // Firebase에 저장 (유저별 + 전체 공용)
     try {
-      await set(ref(database, `battleLogs/${archiveEntry.id}`), archiveEntry);
+      const uid = getAuth().currentUser?.uid;
+      if (uid) {
+        await set(ref(database, `battleLogs/${uid}/${archiveEntry.id}`), archiveEntry);
+      }
     } catch (e) {
       console.warn('배틀 로그 Firebase 저장 실패:', e);
     }
@@ -728,13 +735,33 @@ export function BattleView() {
     });
   };
 
+  const handleOpenLogs = async () => {
+    setShowBattleLogArchive(true);
+    const uid = getAuth().currentUser?.uid;
+    if (!uid) return;
+    setLogsLoading(true);
+    try {
+      const snap = await get(ref(database, `battleLogs/${uid}`));
+      if (snap.exists()) {
+        const data = snap.val();
+        const fbLogs = Object.values(data).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setBattleLogArchive(fbLogs);
+        writeBattleLogArchive(fbLogs.slice(0, MAX_BATTLE_LOG_ARCHIVE));
+      }
+    } catch (e) {
+      console.warn('배틀 로그 Firebase 로드 실패:', e);
+    } finally {
+      setLogsLoading(false);
+    }
+  };
+
   const renderBattleLogArchiveButton = () => (
     <button
       type="button"
-      onClick={() => setShowBattleLogArchive(true)}
+      onClick={handleOpenLogs}
       className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-800 shadow-sm hover:bg-gray-100"
     >
-      역대 배틀 로그
+      로그
       <span className="ml-2 rounded-full bg-gray-900 px-2 py-0.5 text-xs text-white">{battleLogArchive.length}</span>
     </button>
   );
@@ -760,7 +787,7 @@ export function BattleView() {
           onExit={() => setBattleStarted(false)}
         />
         {showBattleLogArchive && (
-          <BattleLogArchiveModal logs={battleLogArchive} onClose={() => setShowBattleLogArchive(false)} onDelete={handleDeleteBattleLog} />
+          <BattleLogArchiveModal logs={battleLogArchive} onClose={() => setShowBattleLogArchive(false)} onDelete={handleDeleteBattleLog} loading={logsLoading} />
         )}
       </div>
     );
@@ -891,7 +918,7 @@ export function BattleView() {
         </>
       )}
       {showBattleLogArchive && (
-        <BattleLogArchiveModal logs={battleLogArchive} onClose={() => setShowBattleLogArchive(false)} onDelete={handleDeleteBattleLog} />
+        <BattleLogArchiveModal logs={battleLogArchive} onClose={() => setShowBattleLogArchive(false)} onDelete={handleDeleteBattleLog} loading={logsLoading} />
       )}
     </div>
   );

@@ -77,6 +77,11 @@ export default function MobileMapView({
     setSelectedPlace(places.length > 0 ? places[0] : null);
   };
 
+  const handleBack = () => {
+    setSelectedArea(null);
+    setSelectedPlace(null);
+  };
+
   const handleExplore = () => {
     if (!onRegionClick) return;
     if (selectedPlace) {
@@ -109,25 +114,26 @@ export default function MobileMapView({
         {/* 헤더 */}
         <div style={{
           position: 'sticky', top: 0, zIndex: 10,
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '14px 14px 12px',
+          display: 'flex', alignItems: 'center',
+          padding: '12px 14px',
           background: 'rgba(255,255,255,0.94)',
           borderBottom: `1px solid ${P.border}`,
           backdropFilter: 'blur(12px)',
+          minHeight: 56,
         }}>
-          <button onClick={() => setSelectedArea(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px 4px 0', color: P.muted, ...TAP }}>
+          <button onClick={handleBack} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px 10px', color: P.muted, flexShrink: 0, position: 'relative', zIndex: 2, ...TAP }}>
             <ChevronLeft size={22} />
           </button>
-          <div style={{ flex: 1 }}>
+          <div style={{ position: 'absolute', left: 0, right: 0, textAlign: 'center', pointerEvents: 'none', zIndex: 0 }}>
             <div style={{ fontSize: 16, fontWeight: 800, color: P.text }}>{selectedArea.name}</div>
             <div style={{ fontSize: 11, color: P.muted, marginTop: 1 }}>{selectedArea.groupName}</div>
           </div>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: P.accent, background: P.accentBg, borderRadius: 20, padding: '3px 9px' }}>
+          <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, flexShrink: 0, zIndex: 1 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: P.accent, background: P.accentBg, borderRadius: 20, padding: '2px 8px' }}>
               Lv.{activeLevel.min}–{activeLevel.max}
             </span>
             {activeRate !== undefined && (
-              <span style={{ fontSize: 11, fontWeight: 700, color: P.muted, background: 'rgba(255,255,255,0.85)', borderRadius: 20, padding: '3px 9px', border: `1px solid ${P.border}` }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: P.muted, background: 'rgba(255,255,255,0.85)', borderRadius: 20, padding: '2px 8px', border: `1px solid ${P.border}` }}>
                 {activeRate < 1 ? Math.round(activeRate * 100) : activeRate}%
               </span>
             )}
@@ -246,56 +252,41 @@ export default function MobileMapView({
   /* ── 마을/구역 목록 ── */
   return (
     <div style={{ paddingBottom: 88 }}>
-      {/* 헤더 */}
-      <div style={{
-        position: 'sticky', top: 0, zIndex: 10,
-        display: 'flex', alignItems: 'center', gap: 10,
-        padding: '14px 14px 12px',
-        background: 'rgba(255,255,255,0.94)',
-        borderBottom: `1px solid ${P.border}`,
-        backdropFilter: 'blur(12px)',
-      }}>
-        {onBack && (
-          <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px 4px 0', color: P.muted, ...TAP }}>
-            <ChevronLeft size={22} />
-          </button>
-        )}
-        <MapPin size={16} style={{ color: P.accent, flexShrink: 0 }} />
-        <span style={{ fontSize: 16, fontWeight: 800, color: P.text }}>탐험</span>
-      </div>
-    <div style={{ padding: '14px 14px 0' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ padding: '14px 52px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: 'calc(100vh - 120px)', justifyContent: 'center' }}>
         {towns.map(town => {
           const isOpen      = expandedTown === town.groupId;
           const rgb         = hexToRgb(town.color);
           const accentColor = town.color || P.accent;
 
           return (
-            <div key={town.groupId} style={{ borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 5px rgba(0,0,0,0.06)' }}>
+            <div key={town.groupId} style={{ borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 5px rgba(0,0,0,0.10)' }}>
               <button
                 onClick={() => setExpandedTown(isOpen ? null : town.groupId)}
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                   padding: '11px 14px',
-                  background: isOpen ? `rgba(${rgb},0.14)` : P.bg,
-                  border: `1.5px solid ${isOpen ? accentColor : P.border}`,
+                  background: isOpen ? '#1e4a08' : 'rgba(255,255,255,0.95)',
+                  border: `1.5px solid ${isOpen ? '#1e4a08' : 'rgba(0,0,0,0.12)'}`,
                   borderBottom: isOpen ? 'none' : undefined,
                   borderRadius: isOpen ? '12px 12px 0 0' : 12,
                   cursor: 'pointer', textAlign: 'left',
                   ...TAP,
                 }}
               >
-                <MapPin size={16} style={{ color: accentColor, flexShrink: 0 }} />
-                <span style={{ flex: 1, fontSize: 14, fontWeight: 700, color: P.text }}>{town.groupName}</span>
-                <span style={{ fontSize: 11, color: P.muted, marginRight: 2 }}>{town.areas.length}</span>
-                {isOpen ? <ChevronDown size={15} style={{ color: P.muted }} /> : <ChevronRight size={15} style={{ color: P.muted }} />}
+                <MapPin size={16} style={{ color: isOpen ? '#a8d878' : '#1a2e10', flexShrink: 0 }} />
+                <span style={{ flex: 1, fontSize: 14, fontWeight: 700, color: isOpen ? '#fff' : '#1a2e10' }}>{town.groupName}</span>
+                <span style={{ fontSize: 11, color: isOpen ? 'rgba(255,255,255,0.6)' : '#3a5a20', marginRight: 2 }}>{town.areas.length}</span>
+                {isOpen
+                  ? <ChevronDown size={15} style={{ color: 'rgba(255,255,255,0.6)' }} />
+                  : <ChevronRight size={15} style={{ color: '#3a5a20' }} />}
               </button>
 
               {isOpen && (
                 <div style={{
-                  background: 'rgba(248,254,240,0.98)',
+                  background: 'rgba(255,255,255,0.95)',
                   border: `1.5px solid ${accentColor}`,
-                  borderTop: `1px solid rgba(120,180,60,0.10)`,
+                  borderTop: `1px solid rgba(120,180,60,0.12)`,
                   borderRadius: '0 0 12px 12px',
                 }}>
                   {town.areas.map((area, i) => {
@@ -313,7 +304,7 @@ export default function MobileMapView({
                           ...TAP,
                         }}
                       >
-                        <div style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: accentColor, opacity: 0.55 }} />
+                        <div style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: accentColor, opacity: 0.6 }} />
                         <span style={{ fontSize: 13, fontWeight: 600, color: P.text, flex: 1 }}>{area.name}</span>
                         {places.length > 0 && (
                           <span style={{ fontSize: 10, color: P.muted, background: P.accentBg, borderRadius: 10, padding: '1px 6px', marginRight: 4 }}>

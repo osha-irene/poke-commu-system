@@ -59,10 +59,8 @@ const DEFAULT_CAMPING_SETTINGS = {
   eggChance: 0.05,
   minFriendshipForBonus: 160,
   bonusItems: [
-    { itemId: 101, name: '진화의돌', weight: 5 },
-    { itemId: 102, name: '기술머신', weight: 10 },
-    { itemId: 103, name: '레어사탕', weight: 15 },
-    { itemId: 104, name: '금구슬', weight: 20 }
+    { itemId: 50, name: '이상한사탕', weight: 15 },
+    { itemId: 92, name: '금구슬', weight: 20 }
   ],
   eggHatchStepsByGroup: {
     monster: 5000,
@@ -195,8 +193,8 @@ const normalizeSettings = (raw = {}) => {
 
 const loadCampingSettings = async () => {
   const refs = [
-    db.ref('gameData/campingSettings'),
     db.ref('gameData/systemSettings/campingSettings'),
+    db.ref('gameData/campingSettings'),
     db.ref('gameData/systemSettings/camping')
   ];
 
@@ -490,8 +488,11 @@ const rollEgg = (memberPokemon, partnerPokemon, settings) => {
   return null;
 };
 
-const rollBonusItem = settings => {
-  const items = settings.bonusItems.filter(item => Number(item.weight) > 0);
+const rollBonusItem = (settings, currentStage) => {
+  const stageIndex = typeof currentStage === 'number' ? currentStage - 1 : -1;
+  const stageItems = stageIndex >= 0 ? settings.stages?.[stageIndex]?.bonusItems : null;
+  const pool = (Array.isArray(stageItems) && stageItems.length > 0) ? stageItems : settings.bonusItems;
+  const items = (pool || []).filter(item => Number(item.weight) > 0);
   const totalWeight = items.reduce((sum, item) => sum + Number(item.weight), 0);
   if (!totalWeight) return null;
 
@@ -543,8 +544,8 @@ const applyRewardsToMember = async ({ sessionKey, session, settings, success }) 
 
   const memberData = memberSnapshot.val();
   const participantKeys = (session.entryPokemon || []).map(pokemonKey).filter(Boolean);
-  const friendshipBonus = success ? stageSettings.friendshipBonus : 0;
-  const expBonus = success ? stageSettings.expBonus : 0;
+  const friendshipBonus = stageSettings.friendshipBonus || 0;
+  const expBonus = stageSettings.expBonus || 0;
   const friendshipResult = applyFriendship(memberData, participantKeys, friendshipBonus);
   const highFriendship = getParticipantPokemon({
     ...memberData,
@@ -555,7 +556,7 @@ const applyRewardsToMember = async ({ sessionKey, session, settings, success }) 
   let inventory = memberData.inventory || [];
   let bonusItem = null;
   if (success && highFriendship) {
-    bonusItem = rollBonusItem(settings);
+    bonusItem = rollBonusItem(settings, session.currentStage);
     inventory = addInventoryItem(inventory, bonusItem);
   }
 
@@ -586,7 +587,7 @@ const applyRewardsToMember = async ({ sessionKey, session, settings, success }) 
 
   await memberRef.update(updates);
   await db.ref(`gameData/campingSessions/${sessionKey}`).update({
-    status: success ? 'applied' : 'failed',
+    status: 'applied',
     appliedAt: new Date().toISOString(),
     success,
     reward: {
@@ -603,7 +604,15 @@ const applyRewardsToMember = async ({ sessionKey, session, settings, success }) 
 
 const finishSession = async ({ sessionKey, session, settings, success }) => {
   const rewards = await applyRewardsToMember({ sessionKey, session, settings, success });
-  if (!success) return '캠핑이 중단되었어요. 이번에는 보상이 적용되지 않았습니다.';
+  if (!success) {
+    const lines = [
+      `캠핑 종료! 단계 ${session.currentStage} 보상을 지급합니다.`,
+      `친밀도 +${rewards.friendshipBonus}`,
+      `경험치 +${rewards.expBonus}`
+    ];
+    if (rewards.bonusItem) lines.push(`보너스 아이템: ${rewards.bonusItem.name}`);
+    return lines.join('\n');
+  }
 
   const lines = [
     `캠핑 완료! 단계 ${session.currentStage}`,
@@ -659,10 +668,16 @@ const continueCamping = async ({ memberId, settings }) => {
     return finishSession({ sessionKey, session, settings, success: true });
   }
 
+  const updatedSession = { ...session, currentStage: nextStage };
   await db.ref(`gameData/campingSessions/${sessionKey}`).update({
     currentStage: nextStage,
     lastUpdatedAt: new Date().toISOString()
   });
+
+  // 최고 단계 도달 시 자동 지급
+  if (nextStage === settings.maxCampingCount) {
+    return finishSession({ sessionKey, session: updatedSession, settings, success: true });
+  }
 
   const nextStageSettings = getStageSettings(settings, nextStage);
   return nextStageSettings.message || `단계 ${nextStage}로 진행했어요. [만족] 또는 [계속]을 선택해 주세요.`;
