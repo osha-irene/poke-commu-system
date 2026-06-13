@@ -3,7 +3,7 @@
 
 import { initializeApp, deleteApp } from 'firebase/app';
 import { createUserWithEmailAndPassword, getAuth, signOut } from 'firebase/auth';
-import { ref, set } from 'firebase/database';
+import { ref, set, update } from 'firebase/database';
 import { auth, database } from '../../firebase';
 import { POKEBALL_LIST } from '../../styles/theme';
 import { getBaseStatPatch } from '../../utils/pokemonBaseStats';
@@ -467,11 +467,24 @@ export const useAdminMembers = (
   // ========== 포켓몬 지급 ==========
   const givePokemonToMember = async (memberId, pokemonTemplate, options = {}) => {
     if (!currentUser?.isAdmin) return;
-    
+
     const member = members[memberId];
-    if (!member) { 
-      alert('회원을 찾을 수 없습니다!'); 
-      return; 
+    if (!member) {
+      alert('회원을 찾을 수 없습니다!');
+      return;
+    }
+
+    // 알로 지급
+    if (options.asEgg && options.eggData) {
+      const eggData = {
+        ...options.eggData,
+        id: `egg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        givenAt: new Date().toISOString(),
+      };
+      const memberRef = ref(database, `members/${memberId}`);
+      await update(memberRef, { egg: eggData });
+      alert(`${member.name}님에게 ${pokemonTemplate.name} 알을 지급했습니다!`);
+      return;
     }
 
     if (!member.caughtPokemon) {
@@ -855,12 +868,19 @@ export const useAdminMembers = (
 
   const deleteMemberPokemon = async (memberId, pokemonUniqueId) => {
     if (!currentUser?.isAdmin) return;
-    
+
     const member = members[memberId];
-    if (!member) return;
-    
-    const updatedPokemon = member.caughtPokemon.filter(
-      p => p && p.uniqueId !== pokemonUniqueId
+    if (!member) {
+      console.error('삭제 실패: 멤버를 찾을 수 없음', memberId);
+      return;
+    }
+    if (!pokemonUniqueId) {
+      console.error('삭제 실패: uniqueId 없음');
+      return;
+    }
+
+    const updatedPokemon = (member.caughtPokemon || []).filter(
+      p => p && String(p.uniqueId) !== String(pokemonUniqueId)
     );
     
     const updatedPartnerPokemon = member.partnerPokemon?.uniqueId === pokemonUniqueId
@@ -875,17 +895,25 @@ export const useAdminMembers = (
     
     try {
       const { id, ...dataToSave } = updatedMember;
+      const cleanData = JSON.parse(
+        JSON.stringify(dataToSave, (key, value) => value === undefined ? null : value)
+      );
       const memberRef = ref(database, `members/${memberId}`);
-      await set(memberRef, dataToSave);
-      
+      await set(memberRef, cleanData);
+
       setMembers(prev => ({
         ...prev,
         [memberId]: updatedMember
       }));
-      
+
+      if (memberId === currentUser?.id) {
+        updateCurrentUser({ caughtPokemon: updatedPokemon, partnerPokemon: updatedPartnerPokemon });
+      }
+
       alert('포켓몬이 삭제되었습니다.');
     } catch (error) {
       console.error('❌ 포켓몬 삭제 실패:', error);
+      alert('포켓몬 삭제 중 오류가 발생했습니다: ' + error.message);
     }
   };
 

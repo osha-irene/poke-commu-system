@@ -71,6 +71,11 @@ export default function MemberPokemonGiveMode({
 
       {giveData.selectedPokemon && (
         <>
+          {giveData.asEgg && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              🥚 알로 지급합니다. 부화 시 아래 설정(개체값·성별·특성·기술 등)이 적용됩니다. 레벨·닉네임·파트너 설정은 무시됩니다.
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-6">
             {/* 왼쪽 컬럼 */}
@@ -99,16 +104,31 @@ export default function MemberPokemonGiveMode({
                 </div>
               </div>
               {/* ⭐ 파트너 체크박스 추가 */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="givePartner"
-                  checked={giveData.isPartner || false}
-                  onChange={(e) => setGiveData(prev => ({ ...prev, isPartner: e.target.checked }))}
-                />
-                <label htmlFor="givePartner" className="text-sm font-semibold flex items-center gap-1">
-                  💖 파트너 포켓몬으로 설정
-                </label>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="giveAsEgg"
+                    checked={giveData.asEgg || false}
+                    onChange={(e) => setGiveData(prev => ({ ...prev, asEgg: e.target.checked }))}
+                  />
+                  <label htmlFor="giveAsEgg" className="text-sm font-semibold flex items-center gap-1">
+                    🥚 알로 지급
+                  </label>
+                </div>
+                {!giveData.asEgg && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="givePartner"
+                      checked={giveData.isPartner || false}
+                      onChange={(e) => setGiveData(prev => ({ ...prev, isPartner: e.target.checked }))}
+                    />
+                    <label htmlFor="givePartner" className="text-sm font-semibold flex items-center gap-1">
+                      💖 파트너 포켓몬으로 설정
+                    </label>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -486,7 +506,7 @@ export default function MemberPokemonGiveMode({
             className="w-full bg-green-500 text-white px-4 py-3 rounded font-bold hover:bg-green-600"
           >
             <Gift size={16} className="inline mr-2" />
-            포켓몬 지급하기
+            {giveData.asEgg ? '알로 지급하기 🥚' : '포켓몬 지급하기'}
           </button>
         </>
       )}

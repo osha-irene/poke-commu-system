@@ -105,33 +105,21 @@ function MemberDetailPanel({ member, onClose }) {
 
         {/* 탭 */}
         <div className="border-b border-gray-200 flex px-6 bg-gray-50">
-          <button 
-            onClick={() => setSelectedTab('info')} 
-            className={`flex-1 py-3 font-semibold ${
-              selectedTab === 'info' 
-                ? 'border-b-2 border-indigo-600 text-indigo-600' 
-                : 'text-gray-600'
-            }`}
+          <button
+            onClick={() => setSelectedTab('info')}
+            className={`flex-1 py-3 font-semibold ${selectedTab === 'info' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-600'}`}
           >
             기본정보
           </button>
-          <button 
-            onClick={() => setSelectedTab('pokemon')} 
-            className={`flex-1 py-3 font-semibold ${
-              selectedTab === 'pokemon' 
-                ? 'border-b-2 border-indigo-600 text-indigo-600' 
-                : 'text-gray-600'
-            }`}
+          <button
+            onClick={() => setSelectedTab('pokemon')}
+            className={`flex-1 py-3 font-semibold ${selectedTab === 'pokemon' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-600'}`}
           >
             포켓몬 ({member.caughtPokemon?.filter(p => p && !p.isPartner).length || 0})
           </button>
-          <button 
-            onClick={() => setSelectedTab('items')} 
-            className={`flex-1 py-3 font-semibold ${
-              selectedTab === 'items' 
-                ? 'border-b-2 border-indigo-600 text-indigo-600' 
-                : 'text-gray-600'
-            }`}
+          <button
+            onClick={() => setSelectedTab('items')}
+            className={`flex-1 py-3 font-semibold ${selectedTab === 'items' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-600'}`}
           >
             아이템 ({member.inventory?.length || 0})
           </button>
@@ -157,7 +145,7 @@ function MemberDetailPanel({ member, onClose }) {
               member={member}
               members={members}
               trainer={trainer}
-              allItems={allItems}  
+              allItems={allItems}
               allPokemonMaster={allPokemonMaster}
               allMoves={allMoves}
               pokemonLearnsets={pokemonLearnsets}

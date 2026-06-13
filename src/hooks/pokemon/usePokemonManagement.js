@@ -214,7 +214,7 @@ const usePokemonManagement = (
     if (!currentUser) return;
 
     if (currentUser.partnerPokemon && currentUser.partnerPokemon.uniqueId === uniqueId) {
-      alert('?뮇 ?뚰듃???ъ폆紐ъ? 諛⑹깮?????놁뒿?덈떎!');
+      alert('파트너 포켓몬은 방생할 수 없습니다!');
       return;
     }
     
@@ -224,7 +224,7 @@ const usePokemonManagement = (
     const pokemon = currentUser.caughtPokemon[pokemonIndex];
     if (!pokemon) return;
     
-    if (!window.confirm(`?뺣쭚 ${pokemon.nickname || pokemon.name}??瑜? 諛⑹깮?섏떆寃좎뒿?덇퉴?\n?섎룎由????놁뒿?덈떎!`)) {
+    if (!window.confirm('정말 ' + (pokemon.nickname || pokemon.name) + '을(를) 방생하시겠습니까?\n되돌릴 수 없습니다!')) {
       return;
     }
   
@@ -242,7 +242,7 @@ const usePokemonManagement = (
       updateCurrentUser({ caughtPokemon: newCaughtPokemon });
     }
     
-    alert(`${pokemon.nickname || pokemon.name}??瑜? 諛⑹깮?덉뒿?덈떎.`);
+    alert((pokemon.nickname || pokemon.name) + '을(를) 방생했습니다.');
   };
 
   // ?뚰듃???ㅼ젙

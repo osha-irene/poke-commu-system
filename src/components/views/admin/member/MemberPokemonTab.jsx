@@ -70,9 +70,10 @@ function MemberPokemonTab({
   sizeRank: 'M', 
   heightVariation: 100, 
   weightVariation: 100, 
-  ivs: generateRandomIVs(),
+  ivs: { hp: 31, attack: 31, defense: 31, specialAttack: 31, specialDefense: 31, speed: 31 },
   effort: emptyEffort,
-  condition: emptyCondition
+  condition: emptyCondition,
+  asEgg: false,
 });
 
   const normalizeKey = (value) => String(value || '').toLowerCase();
@@ -310,48 +311,7 @@ function MemberPokemonTab({
     }
   };
 
-  const handleGivePokemon = () => {
-  if (!giveData.selectedPokemon) {
-    alert('포켓몬을 선택해주세요!');
-    return;
-  }
-
-  // ⭐ 랜덤 기술 생성
-  const moves = giveData.randomMoves ? getRandomMoves() : giveData.selectedMoves;
-
-console.log('📋 최종 기술:', {
-  randomMoves: giveData.randomMoves,
-  moves: moves.map(m => m.name || m.id)
-});
-
-  const pokemonData = {
-    level: giveData.level,
-    nickname: giveData.nickname || giveData.selectedPokemon.name,
-    caughtWithBall: giveData.caughtWithBall,
-    customBallImage: giveData.customBallImage,
-    isShiny: giveData.isShiny,
-    isPartner: giveData.isPartner,  // ⭐ 추가
-    friendship: giveData.friendship,
-    heldItem: giveData.heldItem,
-    gender: giveData.gender,
-    ability: giveData.ability,
-    sizeRank: giveData.sizeRank,
-    heightVariation: giveData.heightVariation,
-    weightVariation: giveData.weightVariation,
-    ivs: giveData.ivs,
-    effort: giveData.effort,
-    condition: giveData.condition,
-    moves: moves.map(m => ({
-      moveId: m.id,
-      currentPp: m.pp,
-      learnedAt: giveData.level
-    }))
-  };
-
-  onGivePokemon(member.id, giveData.selectedPokemon, pokemonData);
-  
-  // 초기화
-  setGiveData({
+  const resetGiveData = () => setGiveData({
     searchQuery: '',
     selectedPokemon: null,
     level: 5,
@@ -359,7 +319,7 @@ console.log('📋 최종 기술:', {
     caughtWithBall: '몬스터볼',
     customBallImage: null,
     isShiny: false,
-    isPartner: false,  // ⭐ 추가
+    isPartner: false,
     heldItem: null,
     selectedMoves: [],
     randomMoves: false,
@@ -368,12 +328,75 @@ console.log('📋 최종 기술:', {
     sizeRank: 'M',
     heightVariation: 100,
     weightVariation: 100,
-    ivs: generateRandomIVs(),
+    ivs: { hp: 31, attack: 31, defense: 31, specialAttack: 31, specialDefense: 31, speed: 31 },
     effort: emptyEffort,
-    condition: emptyCondition
+    condition: emptyCondition,
+    asEgg: false,
   });
-  setMode('view');
-};
+
+  const handleGivePokemon = () => {
+    if (!giveData.selectedPokemon) {
+      alert('포켓몬을 선택해주세요!');
+      return;
+    }
+
+    // 알로 지급
+    if (giveData.asEgg) {
+      const p = giveData.selectedPokemon;
+      const eggData = {
+        species: p.name,
+        speciesEn: p.nameEn,
+        speciesNumber: p.number,
+        speciesOriginalNumber: p.originalNumber || p.number,
+        regionalForm: p.regionalForm || null,
+        formVariant: p.formVariant || null,
+        isShiny: giveData.isShiny,
+        gender: giveData.gender,
+        ivs: giveData.ivs,
+        caughtWithBall: giveData.caughtWithBall,
+        ballImageUrl: null,
+        heldItem: giveData.heldItem,
+        friendship: giveData.friendship,
+        ability: giveData.ability || null,
+        moves: giveData.selectedMoves.map(m => ({ moveId: m.id, currentPp: m.pp, learnedAt: 1 })),
+        givenAt: new Date().toISOString(),
+      };
+      onGivePokemon(member.id, giveData.selectedPokemon, { asEgg: true, eggData });
+      resetGiveData();
+      setMode('view');
+      return;
+    }
+
+    const moves = giveData.randomMoves ? getRandomMoves() : giveData.selectedMoves;
+
+    const pokemonData = {
+      level: giveData.level,
+      nickname: giveData.nickname || giveData.selectedPokemon.name,
+      caughtWithBall: giveData.caughtWithBall,
+      customBallImage: giveData.customBallImage,
+      isShiny: giveData.isShiny,
+      isPartner: giveData.isPartner,
+      friendship: giveData.friendship,
+      heldItem: giveData.heldItem,
+      gender: giveData.gender,
+      ability: giveData.ability,
+      sizeRank: giveData.sizeRank,
+      heightVariation: giveData.heightVariation,
+      weightVariation: giveData.weightVariation,
+      ivs: giveData.ivs,
+      effort: giveData.effort,
+      condition: giveData.condition,
+      moves: moves.map(m => ({
+        moveId: m.id,
+        currentPp: m.pp,
+        learnedAt: giveData.level
+      }))
+    };
+
+    onGivePokemon(member.id, giveData.selectedPokemon, pokemonData);
+    resetGiveData();
+    setMode('view');
+  };
 
   return (
     <div className="space-y-4">
