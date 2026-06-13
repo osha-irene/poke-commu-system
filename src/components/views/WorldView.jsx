@@ -435,6 +435,10 @@ export default function BoardView({
 
       setActiveSectionId(activeSection.id);
 
+      if (clickScrollLockRef.current === '__top__') {
+        return;
+      }
+
       if (clickScrollLockRef.current) {
         setExpandedSectionId(clickScrollLockRef.current);
         return;
@@ -534,7 +538,16 @@ export default function BoardView({
         </nav>
         <button
           className="board__top-btn"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          onClick={() => {
+            const firstId = parsedBoard.sections[0]?.id || '';
+            clickScrollLockRef.current = '__top__';
+            window.clearTimeout(clickScrollTimerRef.current);
+            setExpandedSectionId('');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            clickScrollTimerRef.current = window.setTimeout(() => {
+              clickScrollLockRef.current = '';
+            }, 900);
+          }}
           aria-label="맨 위로"
         >
           <img src="/topbutton.png" alt="위로" draggable={false} />
