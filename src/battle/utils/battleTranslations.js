@@ -117,11 +117,13 @@ export const translateVolatileName = (status) => ({
 }[normalizeBattleKey(status)] || translateMoveName(status));
 
 export const translateWeatherName = (weather) => ({
-  raindance: '비',
+  raindance: '비바라기',
   sunnyday: '쾌청',
   sandstorm: '모래바람',
-  hail: '설경',
+  hail: '싸라기눈',
   snow: '설경',
+  snowscape: '설경',
+  none: '맑음',
 }[normalizeBattleKey(weather)] || weather);
 
 export const translateTerrainName = (terrain) => ({

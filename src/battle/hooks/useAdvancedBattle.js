@@ -243,6 +243,7 @@ const protocolToLog = (line) => {
       return { message: `${extractName(parts[2])}\uc758 ${statLabel[parts[3]] || parts[3]}\uc774(\uac00) ${parts[4]}\ub7ad\ud06c \ub5a8\uc5b4\uc84c\ub2e4!`, type: 'boost' };
     case '-weather':
       if (parts[3] === '[upkeep]') return null;
+      if (parts[2] === 'none') return { message: '\ub0a0\uc528\uac00 \uc6d0\ub798\ub300\ub85c \ub3cc\uc544\uc654\ub2e4!', type: 'weather' };
       return { message: `${translateWeatherName(parts[2])} \ub0a0\uc528\uac00 \uc2dc\uc791\ub410\ub2e4!`, type: 'weather' };
     case '-fieldstart':
       return { message: `${translateTerrainName(parts[2])} \ud6a8\uacfc\uac00 \uc2dc\uc791\ub410\ub2e4!`, type: 'field' };
@@ -279,7 +280,7 @@ const protocolToLog = (line) => {
     case 'faint':
       return { message: `${extractName(parts[2])}\uc740(\ub294) \uc4f0\ub7ec\uc84c\ub2e4!`, type: 'faint' };
     case 'turn':
-      return { message: `${parts[2]}\ud134`, type: 'system' };
+      return { message: `\u2014 ${parts[2]}\ud134 \u2014`, type: 'turn' };
     case 'win':
       return { message: `${parts[2]} \uc2b9\ub9ac!`, type: 'winner' };
     default:

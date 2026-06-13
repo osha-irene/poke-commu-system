@@ -1,6 +1,7 @@
 import showdownIntegration from './ShowdownIntegration';
 import fieldEffectsManager from './FieldEffectsManager';
 import statusManager from './StatusManager';
+import { translateWeatherName } from './battleTranslations';
 
 /**
  * 완전한 포켓몬 배틀 엔진
@@ -405,7 +406,10 @@ class BattleEngine {
     // 날씨/지형 변경
     if (moveData.weather) {
       result.weather = moveData.weather;
-      this.log(`날씨가 ${moveData.weather}(으)로 바뀌었다!`, 'weather');
+      const weatherMsg = moveData.weather === 'none'
+        ? '날씨가 원래대로 돌아왔다!'
+        : `${translateWeatherName(moveData.weather)} 날씨가 시작됐다!`;
+      this.log(weatherMsg, 'weather');
     }
     if (moveData.terrain) {
       result.terrain = moveData.terrain;

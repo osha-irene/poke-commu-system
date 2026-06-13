@@ -440,12 +440,24 @@ const BattleLogArchiveModal = ({ logs, onClose }) => {
                       <div
                         key={`${entry.type}-${entry.message}-${index}`}
                         className={`rounded px-3 py-2 text-sm ${
-                          entry.type === 'system' ? 'bg-blue-100 font-bold'
-                            : entry.type === 'damage' ? 'bg-red-50'
-                              : entry.type === 'faint' ? 'bg-gray-200 font-semibold'
-                                : entry.type === 'winner' ? 'bg-yellow-100 text-lg font-bold'
-                                  : entry.type === 'item' ? 'bg-amber-50'
-                                    : 'bg-white'
+                          entry.type === 'turn'        ? 'bg-gray-700 font-bold text-white text-center tracking-widest'
+                          : entry.type === 'system'      ? 'bg-blue-100 font-bold text-blue-900'
+                          : entry.type === 'damage'    ? 'bg-red-50 text-red-800'
+                          : entry.type === 'faint'     ? 'bg-gray-200 font-semibold text-gray-700'
+                          : entry.type === 'winner'    ? 'bg-yellow-100 text-lg font-bold text-yellow-900'
+                          : entry.type === 'item'      ? 'bg-amber-50 text-amber-800'
+                          : entry.type === 'status'    ? 'bg-yellow-50 text-yellow-800 font-medium'
+                          : entry.type === 'boost'     ? 'bg-indigo-50 text-indigo-700'
+                          : entry.type === 'weather'   ? 'bg-sky-50 text-sky-700'
+                          : entry.type === 'terrain'   ? 'bg-green-50 text-green-700'
+                          : entry.type === 'critical'  ? 'bg-orange-50 text-orange-700 font-semibold'
+                          : entry.type === 'miss'      ? 'bg-gray-100 text-gray-500 italic'
+                          : entry.type === 'fail'      ? 'bg-gray-100 text-gray-500 italic'
+                          : entry.type === 'recoil'    ? 'bg-red-50 text-red-600'
+                          : entry.type === 'drain'     ? 'bg-green-50 text-green-600'
+                          : entry.type === 'blocked'   ? 'bg-gray-100 text-gray-500 italic'
+                          : entry.type === 'error'     ? 'bg-red-100 text-red-700 font-semibold'
+                          : 'bg-white text-gray-700'
                         }`}
                       >
                         {entry.message}
