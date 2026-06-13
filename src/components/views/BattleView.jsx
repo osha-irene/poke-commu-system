@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { get, ref } from 'firebase/database';
+import { get, ref, set } from 'firebase/database';
 import { database } from '../../firebase';
 import AdvancedBattleSimulator from '../../battle/components/AdvancedBattleSimulator';
 import { toCalcAbilityName } from '../../utils/abilityUtils';
@@ -368,6 +368,38 @@ const BattleLogArchiveModal = ({ logs, onClose, onDelete }) => {
   const [selectedId, setSelectedId] = useState(logs[0]?.id || null);
   const selectedLog = logs.find(log => log.id === selectedId) || logs[0] || null;
   const [collapsedDates, setCollapsedDates] = useState({});
+  const [shareInput, setShareInput] = useState('');
+  const [sharedLog, setSharedLog] = useState(null);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
+
+  const handleCopyId = (id, e) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(id).then(() => {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 1500);
+    });
+  };
+
+  const handleLoadShared = async () => {
+    const id = shareInput.trim();
+    if (!id) return;
+    setShareLoading(true);
+    try {
+      const snap = await get(ref(database, `battleLogs/${id}`));
+      if (snap.exists()) {
+        setSharedLog(snap.val());
+      } else {
+        alert('해당 ID의 배틀 로그를 찾을 수 없습니다.');
+      }
+    } catch {
+      alert('로드 실패. ID를 다시 확인해주세요.');
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
+  const displayLog = sharedLog || selectedLog;
 
   useEffect(() => {
     setSelectedId(logs[0]?.id || null);
@@ -389,9 +421,29 @@ const BattleLogArchiveModal = ({ logs, onClose, onDelete }) => {
     <div className="fixed inset-0 flex items-center justify-center bg-black/60 p-4" style={{ zIndex: 9000 }}>
       <div className="flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
-          <div>
+          <div className="flex-1">
             <h2 className="text-xl font-bold text-gray-900">역대 배틀 로그</h2>
-            <p className="text-sm text-gray-500">완료된 배틀 기록을 다시 확인합니다.</p>
+            <div className="mt-1 flex gap-2">
+              <input
+                type="text"
+                value={shareInput}
+                onChange={e => { setShareInput(e.target.value); setSharedLog(null); }}
+                placeholder="공유 ID 입력..."
+                className="rounded border border-gray-300 px-3 py-1.5 text-sm w-64 outline-none focus:border-gray-500"
+                onKeyDown={e => e.key === 'Enter' && handleLoadShared()}
+              />
+              <button
+                type="button"
+                onClick={handleLoadShared}
+                disabled={shareLoading}
+                className="rounded bg-gray-700 px-3 py-1.5 text-sm font-bold text-white hover:bg-gray-600 disabled:opacity-50"
+              >
+                {shareLoading ? '...' : '불러오기'}
+              </button>
+              {sharedLog && (
+                <button type="button" onClick={() => { setSharedLog(null); setShareInput(''); }} className="rounded bg-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-300">내 기록으로</button>
+              )}
+            </div>
           </div>
           <button
             type="button"
@@ -434,14 +486,24 @@ const BattleLogArchiveModal = ({ logs, onClose, onDelete }) => {
                           {formatBattleLogDate(log.createdAt)} · {log.turn}턴 · {log.winner || '-'} 승리
                         </div>
                       </button>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); onDelete(log.id); }}
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity rounded p-0.5 text-gray-400 hover:text-red-500 hover:bg-red-50"
-                        title="삭제"
-                      >
-                        ✕
-                      </button>
+                      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          type="button"
+                          onClick={(e) => handleCopyId(log.id, e)}
+                          className="rounded p-0.5 text-xs text-gray-400 hover:text-blue-500 hover:bg-blue-50"
+                          title="ID 복사"
+                        >
+                          {copiedId === log.id ? '✓' : '🔗'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); onDelete(log.id); }}
+                          className="rounded p-0.5 text-gray-400 hover:text-red-500 hover:bg-red-50"
+                          title="삭제"
+                        >
+                          ✕
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -449,29 +511,39 @@ const BattleLogArchiveModal = ({ logs, onClose, onDelete }) => {
             </div>
 
             <div className="min-h-0 overflow-y-auto p-5">
-              {selectedLog && (
+              {displayLog && (
                 <>
                   <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
-                    <div className="text-lg font-bold text-gray-900">
-                      {selectedLog.player1Name} vs {selectedLog.player2Name}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="text-lg font-bold text-gray-900">
+                        {displayLog.player1Name} vs {displayLog.player2Name}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => handleCopyId(displayLog.id, e)}
+                        className="flex-shrink-0 rounded bg-gray-200 px-2 py-1 text-xs text-gray-600 hover:bg-blue-100 hover:text-blue-700"
+                        title="ID 복사"
+                      >
+                        {copiedId === displayLog.id ? '✓ 복사됨' : '🔗 ID 공유'}
+                      </button>
                     </div>
                     <div className="mt-1 text-sm text-gray-600">
-                      {formatBattleLogDate(selectedLog.createdAt)} · 총 {selectedLog.turn}턴 · 승자: {selectedLog.winner || '-'}
+                      {formatBattleLogDate(displayLog.createdAt)} · 총 {displayLog.turn}턴 · 승자: {displayLog.winner || '-'}
                     </div>
                     <div className="mt-3 grid gap-3 text-sm md:grid-cols-2">
                       <div>
                         <div className="font-bold text-blue-800">Player 1</div>
-                        <div className="text-gray-700">{selectedLog.player1Team?.join(', ') || '-'}</div>
+                        <div className="text-gray-700">{displayLog.player1Team?.join(', ') || '-'}</div>
                       </div>
                       <div>
                         <div className="font-bold text-red-800">Player 2</div>
-                        <div className="text-gray-700">{selectedLog.player2Team?.join(', ') || '-'}</div>
+                        <div className="text-gray-700">{displayLog.player2Team?.join(', ') || '-'}</div>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-1 rounded-lg bg-gray-50 p-4">
-                    {(selectedLog.log || []).map((entry, index) => (
+                    {(displayLog.log || []).map((entry, index) => (
                       <div
                         key={`${entry.type}-${entry.message}-${index}`}
                         className={`rounded px-3 py-2 text-sm ${
@@ -623,7 +695,7 @@ export function BattleView() {
   const player1Name = getMemberName(members.find(member => member.uid === selectedUser1));
   const player2Name = getMemberName(members.find(member => member.uid === selectedUser2));
 
-  const handleBattleFinished = (battleSummary) => {
+  const handleBattleFinished = async (battleSummary) => {
     const archiveEntry = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       createdAt: new Date().toISOString(),
@@ -639,6 +711,13 @@ export function BattleView() {
       writeBattleLogArchive(next);
       return next;
     });
+
+    // Firebase에도 저장 (공유용)
+    try {
+      await set(ref(database, `battleLogs/${archiveEntry.id}`), archiveEntry);
+    } catch (e) {
+      console.warn('배틀 로그 Firebase 저장 실패:', e);
+    }
   };
 
   const handleDeleteBattleLog = (id) => {

@@ -3,19 +3,19 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Menu, X, Map, Users, Bot, BookOpen, Smile, Package,
   ShoppingBag, ChefHat, User, MessageSquare, Settings,
-  LogOut, Volume2, VolumeX, Footprints, Coins, Tent, Home, Sword, ChevronRight
+  LogOut, Footprints, Coins, Tent, Home, Sword, ChevronRight
 } from 'lucide-react';
 import pokeballImg from '../../assets/pokeball.png';
 
 const P = {
-  bg:          'rgba(18,32,18,0.88)',
-  bgDrawer:    'rgba(14,26,14,0.95)',
-  border:      'rgba(120,175,60,0.28)',
-  textPrimary: 'rgba(225,248,185,0.97)',
-  textMuted:   'rgba(170,215,120,0.75)',
-  accent:      'rgba(185,240,90,1.0)',
-  accentBg:    'rgba(90,155,35,0.28)',
-  inactive:    'rgba(170,210,125,0.7)',
+  bg:          'rgba(255,255,255,0.88)',
+  bgDrawer:    'rgba(255,255,255,0.97)',
+  border:      'rgba(90,150,30,0.18)',
+  textPrimary: '#1a2e10',
+  textMuted:   '#5a7a40',
+  accent:      '#4a9a08',
+  accentBg:    'rgba(80,160,16,0.12)',
+  inactive:    '#8aaa60',
 };
 
 export default function MobileLayout({
@@ -101,7 +101,7 @@ export default function MobileLayout({
     {
       label: '모험',
       items: [
-        { id: 'map',     icon: Map,         label: '지도 (포획)' },
+        { id: 'map',     icon: Map,         label: '지도' },
         { id: 'camping', icon: Tent,        label: '캠핑' },
         { id: 'cooking', icon: ChefHat,     label: '요리' },
         { id: 'shop',    icon: ShoppingBag, label: '상점' },
@@ -118,8 +118,29 @@ export default function MobileLayout({
 
   const handleMenuClick = (tabId) => { setCurrentTab(tabId); setMenuOpen(false); };
 
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
+    if (dx > 60 && dy < 60 && touchStartX.current < 40) setMenuOpen(true);
+    if (dx < -60 && dy < 60 && menuOpen) setMenuOpen(false);
+    touchStartX.current = null;
+  };
+
   return (
-    <div style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column', background: 'transparent', color: P.textPrimary, overflowX: 'hidden' }}>
+    <div
+      style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column', background: 'transparent', color: P.textPrimary, overflowX: 'hidden' }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
 
       {/* ── 플로팅 메뉴 버튼 ── */}
       <button
@@ -129,7 +150,7 @@ export default function MobileLayout({
           width: 40, height: 40, borderRadius: 10,
           background: P.bg,
           border: `1px solid ${P.border}`,
-          boxShadow: '0 2px 10px rgba(0,0,0,0.4)',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.12)',
           backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
           cursor: 'pointer', color: P.inactive,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -150,7 +171,7 @@ export default function MobileLayout({
         background: P.bg,
         backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
         borderTop: `1px solid ${P.border}`,
-        boxShadow: '0 -2px 16px rgba(0,0,0,0.5)',
+        boxShadow: '0 -2px 16px rgba(0,0,0,0.10)',
         transition: 'transform 0.28s ease, opacity 0.28s ease',
         zIndex: 40,
       }}>
@@ -169,8 +190,10 @@ export default function MobileLayout({
                   alt="포켓몬"
                   style={{
                     width: 18, height: 18,
-                    opacity: active ? 1 : 0.55,
-                    transition: 'opacity 0.18s ease',
+                    filter: active
+                      ? 'brightness(0) invert(40%) sepia(100%) saturate(1100%) hue-rotate(80deg) brightness(88%)'
+                      : 'brightness(0) invert(58%) sepia(28%) saturate(490%) hue-rotate(55deg) brightness(97%)',
+                    transition: 'filter 0.18s ease',
                   }}
                 />
               ) : (
@@ -192,7 +215,7 @@ export default function MobileLayout({
             position: 'fixed', top: 0, left: 0, height: '100%', width: 272,
             background: P.bgDrawer,
             borderRight: `1px solid ${P.border}`,
-            boxShadow: '4px 0 32px rgba(0,0,0,0.7)',
+            boxShadow: '4px 0 32px rgba(0,0,0,0.15)',
             zIndex: 100001, display: 'flex', flexDirection: 'column',
             animation: 'mob-slide-in 0.24s ease-out',
           }}>
@@ -231,19 +254,6 @@ export default function MobileLayout({
               </button>
             </div>
 
-            {/* 사운드 */}
-            <div style={{ padding: '10px 14px', borderBottom: `1px solid ${P.border}` }}>
-              <button onClick={toggleSound} style={{
-                width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-                padding: '9px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                background: soundEnabled ? P.accentBg : 'rgba(50,50,50,0.2)',
-                color: soundEnabled ? P.accent : P.inactive,
-                fontSize: 13, fontWeight: 600, transition: 'all 0.18s',
-              }}>
-                {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-                {soundEnabled ? '사운드 ON' : '사운드 OFF'}
-              </button>
-            </div>
 
             {/* 메뉴 그룹 */}
             <nav className="mob-drawer-nav" style={{ flex: 1, overflowY: 'auto', padding: '8px 12px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
@@ -281,8 +291,8 @@ export default function MobileLayout({
               <button onClick={() => { setMenuOpen(false); onLogout(); }} style={{
                 width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 padding: '10px 14px', borderRadius: 8,
-                border: '1px solid rgba(180,60,60,0.25)',
-                background: 'rgba(120,30,30,0.15)', color: 'rgba(215,120,110,0.85)',
+                border: '1px solid rgba(200,60,60,0.2)',
+                background: 'rgba(255,240,240,0.8)', color: 'rgba(180,50,50,0.9)',
                 fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s',
               }}>
                 <LogOut size={15} />

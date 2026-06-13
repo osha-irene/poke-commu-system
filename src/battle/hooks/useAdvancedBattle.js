@@ -587,7 +587,8 @@ const stateFromBattle = (battle, baseState, logFrom = 0, extraLogs = []) => {
   const p2Request = getSideRequest(battle, battle.p2);
   const player1 = convertSide(battle, battle.p1, p1Request);
   const player2 = convertSide(battle, battle.p2, p2Request);
-  const newLogs = [...extraLogs, ...collectLogs(battle, logFrom)];
+  let _logSeq = Date.now();
+  const newLogs = [...extraLogs, ...collectLogs(battle, logFrom)].map(e => ({ ...e, _uid: _logSeq++ }));
 
   return {
     ...baseState,
@@ -606,9 +607,9 @@ const stateFromBattle = (battle, baseState, logFrom = 0, extraLogs = []) => {
     field: convertField(battle),
     waitingForP1: isSideWaiting(p1Request, battle.p1),
     waitingForP2: isSideWaiting(p2Request, battle.p2),
-    log: [...baseState.log, ...newLogs].filter((entry, index, logs) => (
-      index === 0 || entry.message !== logs[index - 1].message || entry.type !== logs[index - 1].type
-    )),
+    log: [...baseState.log, ...newLogs].filter((entry, index, logs) =>
+      index === 0 || entry._uid !== logs[index - 1]._uid
+    ),
   };
 };
 

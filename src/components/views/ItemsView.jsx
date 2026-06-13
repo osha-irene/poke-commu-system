@@ -527,7 +527,7 @@ const categories = CATEGORIES.map(cat => {
                           </div>
                         ) : (
                           <div className="grid grid-cols-3 gap-2">
-                            {caughtPokemon.filter(p => p !== null).map((pokemon) => {
+                            {caughtPokemon.filter(p => p && p !== 'null' && p.uniqueId).map((pokemon) => {
                               const canUseTarget = canUseItemOnPokemonTarget({
                                 item: selectedItem,
                                 itemData: details.itemData,

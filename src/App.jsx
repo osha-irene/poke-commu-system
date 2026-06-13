@@ -12,6 +12,7 @@ import { database } from './firebase';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import MapView from './components/views/MapView';
+import MobileMapView from './components/views/_mobile/MobileMapView';
 import PokedexView from './components/views/PokedexView';
 import PokemonView from './components/views/PokemonView';
 import ItemsView from './components/views/ItemsView';
@@ -1411,6 +1412,7 @@ export default function App() {
 
     const handleGlobalClick = () => {
       if (!soundEnabled) return;
+      if (window.innerWidth <= 768) return;
       audio.currentTime = 0;
       audio.play().catch(() => {});
     };
@@ -1688,9 +1690,9 @@ return (
           )}
 
           {currentTab === 'map' && (
-            <MapView 
-              regions={regions} 
-              onRegionClick={handleRegionClick} 
+            <MobileMapView
+              regions={regions}
+              onRegionClick={handleRegionClick}
               gamePokedex={gamePokedex}
               allPokemonMaster={allPokemonMaster}
               pokedexData={sharedPokedexData}

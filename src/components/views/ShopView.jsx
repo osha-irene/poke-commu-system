@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ShoppingCart, Star, Coins, Calendar, Package, CircleDot, X } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
 import { getItemPocket } from '../../utils/itemUtils';
@@ -6,20 +6,19 @@ import RandomBoxShop from './RandomBoxShop';
 import useMediaQuery from '../../hooks/useMediaQuery';
 
 const P = {
-  bg:        'rgba(22,42,16,0.75)',
-  card:      'rgba(255,255,255,0.0)',
-  cardSel:   'rgba(185,240,90,0.22)',
-  border:    'rgba(255,255,255,0.28)',
-  borderSel: 'rgba(185,240,90,0.8)',
-  text:      'rgba(255,255,255,1)',
-  muted:     'rgba(255,255,255,0.65)',
-  accent:    'rgba(185,240,90,1)',
-  accentBg:  'rgba(100,175,45,0.)',
-  price:     '#f0d060',
-  daily:     'rgba(100,180,255,1)',
-  dailyBg:   'rgba(60,120,220,0.25)',
-  rare:      'rgba(210,130,255,1)',
-  rareBg:    'rgba(140,60,220,0.28)',
+  card:      'rgba(255,255,255,0.90)',
+  cardSel:   'rgba(205,230,170,1)',
+  border:    'rgba(0,0,0,0.10)',
+  borderSel: 'rgba(80,150,20,0.8)',
+  text:      '#1a2e10',
+  muted:     '#5a7a40',
+  accent:    '#4a9a08',
+  accentBg:  'rgba(74,154,8,0.15)',
+  price:     '#a05000',
+  daily:     '#1050b8',
+  dailyBg:   'rgba(16,80,184,0.12)',
+  rare:      '#7010b0',
+  rareBg:    'rgba(112,16,176,0.10)',
 };
 
 export default function ShopView() {
@@ -34,7 +33,23 @@ export default function ShopView() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [filterType, setFilterType] = useState('all');
-  
+  const [isNavHidden, setIsNavHidden] = useState(false);
+  const lastScrollYRef = useRef(0);
+
+  useEffect(() => {
+    lastScrollYRef.current = window.scrollY;
+    const handleScroll = () => {
+      const y = Math.max(0, window.scrollY);
+      const d = y - lastScrollYRef.current;
+      if (y < 24)      setIsNavHidden(false);
+      else if (d > 8)  setIsNavHidden(true);
+      else if (d < -8) setIsNavHidden(false);
+      lastScrollYRef.current = y;
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const today = new Date();
   const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   const dayNamesKo = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
@@ -88,7 +103,23 @@ export default function ShopView() {
   
   const handlePurchase = () => {
     if (!selectedItem) return;
-    
+
+    // 랜덤박스 구매
+    if (selectedItem.type === 'randombox') {
+      if (trainer.money < selectedItem.price) { alert('돈이 부족합니다!'); return; }
+      const items = Array.isArray(selectedItem.items) ? selectedItem.items : [];
+      if (items.length === 0) { alert('이 랜덤박스에는 아이템이 없습니다!'); return; }
+      if (!window.confirm(`${selectedItem.name}을(를) ${selectedItem.price?.toLocaleString()}원에 구매하시겠습니까?`)) return;
+      const totalWeight = items.reduce((s, i) => s + (i.weight || 1), 0);
+      let r = Math.random() * totalWeight;
+      const picked = items.find(i => { r -= (i.weight || 1); return r <= 0; }) || items[0];
+      const result = { itemId: picked.itemId, name: picked.name, count: picked.count || 1 };
+      buyRandomBox(selectedItem, result);
+      setSelectedItem(null);
+      setQuantity(1);
+      return;
+    }
+
     // 규토리볼 가챠 구매
     if (selectedItem.type === 'gachaball') {
       if (trainer.money < 200) {
@@ -336,7 +367,7 @@ export default function ShopView() {
       <div style={{ paddingTop: 56, paddingBottom: 80, minHeight: '100%', color: P.text }}>
 
         {/* 보유 금액 */}
-        <div style={{ margin: '0 12px 14px', padding: '12px 16px', background: 'rgba(255,255,255,0.22)', border: `1px solid rgba(255,255,255,0.35)`, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ margin: '0 12px 14px', padding: '12px 16px', background: 'rgba(255,255,255,1)', border: `1px solid rgba(90,160,30,0.3)`, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ fontSize: 13, color: P.muted, fontWeight: 600 }}>보유 금액</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 20, fontWeight: 800, color: P.text }}>
             <Coins size={18} style={{ color: P.accent }} />
@@ -347,19 +378,21 @@ export default function ShopView() {
         {/* 한정 아이템 */}
         {rareData && (
           <div style={{ margin: '0 12px 14px' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: P.rare, letterSpacing: '0.07em', marginBottom: 6 }}>★ 한정 아이템</div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 8, background: '#8020c0', borderRadius: 6, padding: '4px 10px' }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>★ 한정 아이템</span>
+            </div>
             <button
               onClick={() => { if (!rareData.alreadyPurchased) { setSelectedItem({ ...rareData.item, type: 'rare', price: shopData.rareDailyItem.price, stock: 1 }); setQuantity(1); }}}
               disabled={rareData.alreadyPurchased}
               style={{
                 width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-                padding: '12px 14px', borderRadius: 12, border: `1px solid ${selectedItem?.itemId === shopData.rareDailyItem.itemId ? P.rare : 'rgba(210,130,255,0.4)'}`,
-                background: selectedItem?.itemId === shopData.rareDailyItem.itemId ? P.rareBg : 'rgba(140,60,220,0.18)',
+                padding: '12px 14px', borderRadius: 12, border: `1px solid ${selectedItem?.itemId === shopData.rareDailyItem.itemId ? P.rare : 'rgba(180,120,230,0.35)'}`,
+                background: selectedItem?.itemId === shopData.rareDailyItem.itemId ? 'rgba(200,178,225,0.97)' : 'rgba(248,244,255,0.97)',
                 cursor: rareData.alreadyPurchased ? 'not-allowed' : 'pointer',
                 opacity: rareData.alreadyPurchased ? 0.5 : 1, textAlign: 'left',
               }}
             >
-              <div style={{ width: 48, height: 48, background: 'rgba(255,255,255,0.18)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: 48, height: 48, background: 'rgba(255,255,255,0.7)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <img src={rareData.item.spriteUrl} alt={rareData.item.name} style={{ width: 36, height: 36, imageRendering: 'pixelated', objectFit: 'contain' }} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -374,14 +407,92 @@ export default function ShopView() {
           </div>
         )}
 
+        {/* 규토리볼 가챠 + 랜덤박스 2열 */}
+        {(() => {
+          const gachaEnabled = shopData.gachaBall?.enabled;
+          const gachaBalls = shopData.gachaBall?.balls || [];
+          const boxes = (shopData.randomBoxes || []).filter(b => b.enabled);
+          const hasGacha = gachaEnabled && gachaBalls.length >= 2;
+          if (!hasGacha && boxes.length === 0) return null;
+          return (
+            <div style={{ margin: '0 12px 14px', display: 'grid', gridTemplateColumns: hasGacha && boxes.length > 0 ? '1fr 1fr' : '1fr', gap: 10 }}>
+
+              {/* 규토리볼 가챠 */}
+              {hasGacha && (() => {
+                const isSelected = selectedItem?.type === 'gachaball';
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ display: 'inline-flex', alignSelf: 'flex-start', alignItems: 'center', marginBottom: 6, background: '#b05510', borderRadius: 6, padding: '4px 10px' }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>규토리볼 가챠</span>
+                    </div>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: isSelected ? 'rgba(220,185,150,0.97)' : 'rgba(255,250,244,0.97)', border: `2px solid ${isSelected ? '#b05510' : 'rgba(190,110,30,0.3)'}`, borderRadius: 12, padding: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+                        {gachaBalls.map(ballItem => {
+                          const item = allItems.find(i => i.id === ballItem.itemId);
+                          if (!item) return null;
+                          return (
+                            <div key={ballItem.itemId} style={{ background: 'rgba(255,255,255,0.88)', borderRadius: 8, padding: '8px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <img src={item.imageUrl || item.spriteUrl} alt={item.name} style={{ width: 30, height: 30, imageRendering: 'pixelated', objectFit: 'contain', flexShrink: 0 }} />
+                              <div style={{ minWidth: 0 }}>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: '#3a2010' }}>{item.name}</div>
+                                {item.description && <div style={{ fontSize: 10, color: '#7a5030', lineHeight: 1.3, marginTop: 2 }}>{item.description}</div>}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <button
+                        onClick={() => { setSelectedItem({ type: 'gachaball', name: '규토리볼 가챠', price: 200, gachaBalls, stock: 99 }); setQuantity(1); }}
+                        style={{ width: '100%', padding: '7px', borderRadius: 8, border: 'none', background: '#b05510', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        200원 뽑기
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* 랜덤박스 */}
+              {boxes.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'inline-flex', alignSelf: 'flex-start', alignItems: 'center', marginBottom: 6, background: '#5828a0', borderRadius: 6, padding: '4px 10px' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>랜덤박스</span>
+                  </div>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {boxes.map(box => {
+                      const isSelected = selectedItem?.type === 'randombox' && selectedItem?.id === box.id;
+                      return (
+                        <button
+                          key={box.id}
+                          onClick={() => { setSelectedItem({ ...box, type: 'randombox' }); setQuantity(1); }}
+                          style={{ flex: 1, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 12, border: `2px solid ${isSelected ? '#5828a0' : 'rgba(100,50,180,0.28)'}`, background: isSelected ? 'rgba(244,238,255,0.99)' : 'rgba(250,246,255,0.97)', cursor: 'pointer', textAlign: 'left', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', width: '100%' }}
+                        >
+                          <span style={{ fontSize: 24, flexShrink: 0 }}>🎁</span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#2a1040' }}>{box.name}</div>
+                            <div style={{ fontSize: 10, color: '#6848a0', lineHeight: 1.4 }}>{box.description || `${box.items?.length || 0}종 랜덤`}</div>
+                          </div>
+                          <div style={{ fontSize: 11, fontWeight: 800, color: P.price, flexShrink: 0 }}>{box.price?.toLocaleString()}원</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         {/* 탭 */}
         <div style={{ display: 'flex', gap: 6, padding: '0 12px', marginBottom: 12 }}>
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setFilterType(tab.id)} style={{
-              flex: 1, padding: '7px 4px', borderRadius: 10, border: `1px solid ${filterType === tab.id ? P.accent : P.border}`,
-              background: filterType === tab.id ? P.accentBg : 'transparent',
-              color: filterType === tab.id ? P.accent : P.muted,
+              flex: 1, padding: '8px 4px', borderRadius: 10,
+              border: `1.5px solid ${filterType === tab.id ? P.accent : 'rgba(0,0,0,0.12)'}`,
+              background: filterType === tab.id ? P.accent : 'rgba(255,255,255,0.90)',
+              color: filterType === tab.id ? '#fff' : '#3a5a20',
               fontSize: 11, fontWeight: 700, cursor: 'pointer',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
             }}>{tab.label}</button>
           ))}
         </div>
@@ -410,7 +521,7 @@ export default function ShopView() {
                   opacity: isSoldOut ? 0.45 : 1, textAlign: 'left',
                 }}
               >
-                <div style={{ width: 48, height: 48, background: 'rgba(255,255,255,0.14)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ width: 48, height: 48, background: 'rgba(255,255,255,0.75)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <img src={item.spriteUrl} alt={item.name} style={{ width: 36, height: 36, imageRendering: 'pixelated', objectFit: 'contain' }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -434,16 +545,22 @@ export default function ShopView() {
         </div>
 
         {/* 구매 바텀 시트 */}
-        {selectedItem && selectedItem.type !== 'randombox' && (
+        {selectedItem && (
           <div style={{
-            position: 'fixed', bottom: 64, left: 0, right: 0, zIndex: 200,
-            background: 'rgba(14,26,14,0.98)', backdropFilter: 'blur(12px)',
-            borderTop: `1px solid ${P.border}`,
+            position: 'fixed', bottom: isNavHidden ? 0 : 64, left: 0, right: 0, zIndex: 200,
+            transition: 'bottom 0.28s ease',
+            background: 'rgba(248,254,240,1)', backdropFilter: 'blur(12px)',
+            borderTop: `1px solid rgba(90,160,30,0.2)`,
             padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 48, height: 48, background: 'rgba(255,255,255,0.08)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <img src={selectedItem.spriteUrl} alt={selectedItem.name} style={{ width: 36, height: 36, imageRendering: 'pixelated', objectFit: 'contain' }} />
+              <div style={{ width: 48, height: 48, background: 'rgba(255,255,255,0.75)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: selectedItem.type === 'randombox' ? 24 : 'unset' }}>
+                {selectedItem.type === 'randombox'
+                  ? '🎁'
+                  : selectedItem.type === 'gachaball'
+                    ? <span style={{ fontSize: 22 }}>✦</span>
+                    : <img src={selectedItem.spriteUrl} alt={selectedItem.name} style={{ width: 36, height: 36, imageRendering: 'pixelated', objectFit: 'contain' }} />
+                }
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 2, color: P.text }}>{selectedItem.name}</div>
@@ -456,6 +573,23 @@ export default function ShopView() {
                 <X size={20} />
               </button>
             </div>
+            {selectedItem.type === 'randombox' && Array.isArray(selectedItem.items) && selectedItem.items.length > 0 && (
+              <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, scrollbarWidth: 'none' }}>
+                {selectedItem.items.map((boxItem, idx) => {
+                  const found = allItems.find(i => i.id === boxItem.itemId || i.nameEn === boxItem.itemId);
+                  return (
+                    <div key={idx} style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, background: 'rgba(255,255,255,0.85)', borderRadius: 8, padding: '6px 8px', minWidth: 52 }}>
+                      {found ? (
+                        <img src={found.imageUrl || found.spriteUrl} alt={found.name} style={{ width: 28, height: 28, imageRendering: 'pixelated', objectFit: 'contain' }} />
+                      ) : (
+                        <span style={{ fontSize: 20 }}>📦</span>
+                      )}
+                      <span style={{ fontSize: 9, color: P.muted, textAlign: 'center', lineHeight: 1.2 }}>{boxItem.name || found?.name || ''}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             <div style={{ display: 'flex', gap: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', border: `1px solid ${P.border}`, borderRadius: 10, overflow: 'hidden' }}>
                 <button onClick={() => setQuantity(q => Math.max(1, q - 1))} style={{ width: 36, height: 36, background: 'transparent', border: 'none', color: P.text, fontSize: 18, cursor: 'pointer' }}>−</button>
@@ -464,7 +598,7 @@ export default function ShopView() {
               </div>
               <button onClick={handlePurchase} style={{
                 flex: 1, padding: '10px', borderRadius: 10, border: 'none',
-                background: 'rgba(100,160,42,0.5)', color: P.accent,
+                background: 'rgba(80,160,20,1)', color: '#fff',
                 fontSize: 15, fontWeight: 800, cursor: 'pointer',
               }}>구매하기</button>
             </div>

@@ -77,8 +77,8 @@ const getBallImageUrl = (pokemon, allItems = []) => {
 const STYLES = {
   empty: "flex items-center gap-4 bg-gray-50 rounded-lg p-3 border border-dashed border-gray-300 text-gray-400",
   filled: "flex items-center gap-4 rounded-lg p-3 border transition-all cursor-move",
-  selected: "bg-indigo-100 border-indigo-400 shadow-md",
-  unselected: "bg-indigo-50 border-indigo-200 hover:shadow-md hover:border-indigo-300",
+  selected: "border-lime-400 shadow-md",
+  unselected: "border-transparent hover:shadow-md",
   partner: "bg-white/40 border-lime-300 shadow-sm",
   partnerEmpty: "bg-white/40 border-2 border-dashed border-lime-300",
   egg: "bg-white/40 border-lime-300 shadow-sm",
@@ -171,14 +171,14 @@ export function PartnerSlot({
             <span style={{ fontSize: 11, color: 'rgba(240,130,150,0.75)', fontWeight: 700 }}>파트너</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 11, color: 'rgba(170,210,125,0.65)' }}>No.{displayNumber.toString().padStart(3, '0')}</span>
+            <span style={{ fontSize: 11, color: '#5a7a40', fontWeight: 600 }}>No.{displayNumber.toString().padStart(3, '0')}</span>
             <span style={{ fontSize: 16, fontWeight: 800, color: '#1a2e10' }}>{pokemon.nickname || pokemon.name}</span>
             <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 6, backgroundColor: typeColors.bg, color: typeColors.text }}>{pokemon.type}</span>
             {pokemon.type2 && type2Colors && (
               <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 6, backgroundColor: type2Colors.bg, color: type2Colors.text }}>{pokemon.type2}</span>
             )}
           </div>
-          <div style={{ fontSize: 12, color: 'rgba(170,210,125,0.7)', marginTop: 2 }}>Lv.{pokemon.level}</div>
+          <div style={{ fontSize: 12, color: '#5a7a40', fontWeight: 600, marginTop: 2 }}>Lv.{pokemon.level}</div>
         </div>
       </div>
     );
@@ -254,7 +254,7 @@ export function PartnerSlot({
             )}
           </div>
         </div>
-        <div className="text-sm text-gray-600">Lv.{pokemon.level}</div>
+        <div className="text-sm" style={{ color: '#5a7a40', fontWeight: 600 }}>Lv.{pokemon.level}</div>
       </div>
     </div>
   );
@@ -321,7 +321,9 @@ export default function PartySlot({
         <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-sm">
           {index + 1}
         </div>
-        <div className="w-12 h-12 bg-gray-100 rounded"></div>
+        <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
+          <img src="/pokeball.png" alt="" style={{ width: 24, height: 24, opacity: 1 }} />
+        </div>
         <div className="flex-1 text-sm">빈 슬롯</div>
       </div>
     );
@@ -386,7 +388,7 @@ export default function PartySlot({
       
       <div className="flex-1">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">No.{displayNumber.toString().padStart(3, '0')}</span>
+          <span className="text-xs" style={{ color: '#5a7a40', fontWeight: 600 }}>No.{displayNumber.toString().padStart(3, '0')}</span>
           <span className="font-bold text-lg" style={{ color: '#1a2e10' }}>{pokemon.nickname || pokemon.name}</span>
           <div className="flex gap-1">
             <span
@@ -411,7 +413,7 @@ export default function PartySlot({
             )}
           </div>
         </div>
-        <div className="text-sm text-gray-600">Lv.{pokemon.level}</div>
+        <div className="text-sm" style={{ color: '#5a7a40', fontWeight: 600 }}>Lv.{pokemon.level}</div>
       </div>
     </div>
   );
