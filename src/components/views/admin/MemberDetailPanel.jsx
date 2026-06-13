@@ -13,6 +13,7 @@ function MemberDetailPanel({ member, onClose }) {
     allPokemonMaster,
     allMoves,
     pokemonLearnsets,
+    systemSettings,
     setMembers,
     updateCurrentUser,
     giveItemToMember,
@@ -20,7 +21,7 @@ function MemberDetailPanel({ member, onClose }) {
     transferMemberPokemon,
     editMemberPokemon,
     getPokemonFormCandidates,
-    deleteMemberPokemon, // ⭐ 추가
+    deleteMemberPokemon,
     hatchMemberEgg,
     deleteMember,
     resetMemberWalkCount,
@@ -155,6 +156,7 @@ function MemberDetailPanel({ member, onClose }) {
               onDeletePokemon={handleDeletePokemon}
               onHatchEgg={hatchMemberEgg}
               onTransferPokemon={transferMemberPokemon}
+              maxNonPartnerPokemon={systemSettings?.maxNonPartnerPokemon || 18}
             />
           )}
 

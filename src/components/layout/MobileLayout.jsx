@@ -5,17 +5,17 @@ import {
   ShoppingBag, ChefHat, User, MessageSquare, Settings,
   LogOut, Volume2, VolumeX, Footprints, Coins, Tent, Home, Sword, ChevronRight
 } from 'lucide-react';
+import pokeballImg from '../../assets/pokeball.png';
 
-// ── 팔레트 ──────────────────────────────────────────────
 const P = {
-  bg:          'rgba(12,21,12,0.93)',      // 헤더·하단바 배경
-  bgDrawer:    'rgba(10,18,10,0.97)',      // 드로어 배경
-  border:      'rgba(105,148,52,0.2)',     // 공통 테두리
-  textPrimary: 'rgba(215,238,170,0.95)',   // 주요 텍스트
-  textMuted:   'rgba(150,185,110,0.6)',    // 흐린 텍스트
-  accent:      'rgba(175,225,85,0.95)',    // 활성 액센트 (아이콘·레이블)
-  accentBg:    'rgba(88,138,38,0.22)',     // 활성 배경
-  inactive:    'rgba(148,178,108,0.55)',   // 비활성 아이콘·레이블
+  bg:          'rgba(18,32,18,0.88)',
+  bgDrawer:    'rgba(14,26,14,0.95)',
+  border:      'rgba(120,175,60,0.28)',
+  textPrimary: 'rgba(225,248,185,0.97)',
+  textMuted:   'rgba(170,215,120,0.75)',
+  accent:      'rgba(185,240,90,1.0)',
+  accentBg:    'rgba(90,155,35,0.28)',
+  inactive:    'rgba(170,210,125,0.7)',
 };
 
 export default function MobileLayout({
@@ -37,9 +37,9 @@ export default function MobileLayout({
     const handleScroll = () => {
       const y = Math.max(0, window.scrollY);
       const d = y - lastScrollYRef.current;
-      if (y < 24)       setIsBottomNavHidden(false);
-      else if (d > 8)   setIsBottomNavHidden(true);
-      else if (d < -8)  setIsBottomNavHidden(false);
+      if (y < 24)      setIsBottomNavHidden(false);
+      else if (d > 8)  setIsBottomNavHidden(true);
+      else if (d < -8) setIsBottomNavHidden(false);
       lastScrollYRef.current = y;
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -73,10 +73,10 @@ export default function MobileLayout({
   };
 
   const bottomNavItems = [
+    { id: 'pokemon', icon: null, pokeball: true },
+    { id: 'items',   icon: Package },
     { id: 'home',    icon: Home },
     { id: 'map',     icon: Map },
-    { id: 'pokemon', icon: Smile },
-    { id: 'items',   icon: Package },
     { id: 'shop',    icon: ShoppingBag },
   ];
 
@@ -117,52 +117,36 @@ export default function MobileLayout({
   ];
 
   const handleMenuClick = (tabId) => { setCurrentTab(tabId); setMenuOpen(false); };
-  const CurrentIcon = titleMap[currentTab]?.icon || Home;
 
   return (
     <div style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column', background: 'transparent', color: P.textPrimary, overflowX: 'hidden' }}>
 
-      {/* ── 헤더 ── */}
-      <header style={{
-        position: 'sticky', top: 0, zIndex: 40,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 12px', height: 52,
-        background: P.bg,
-        backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
-        borderBottom: `1px solid ${P.border}`,
-        boxShadow: '0 2px 12px rgba(0,0,0,0.45)',
-      }}>
-        <button onClick={() => setMenuOpen(true)}
-          style={{ padding: 8, borderRadius: 8, background: 'transparent', border: 'none', cursor: 'pointer', color: P.inactive, display: 'flex', alignItems: 'center' }}>
-          <Menu size={22} />
-        </button>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 700, fontSize: 15, color: P.textPrimary, letterSpacing: '0.04em' }}>
-          <CurrentIcon size={17} style={{ color: P.accent, opacity: 0.85 }} />
-          {titleMap[currentTab]?.label || '메뉴'}
-        </div>
-
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 5,
-          background: P.accentBg, border: `1px solid ${P.border}`,
-          borderRadius: 20, padding: '4px 10px',
-        }}>
-          <Footprints size={13} style={{ color: P.accent }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: P.accent }}>
-            {trainer.dailyWalks}/{trainer.maxDailyWalks}
-          </span>
-        </div>
-      </header>
+      {/* ── 플로팅 메뉴 버튼 ── */}
+      <button
+        onClick={() => setMenuOpen(true)}
+        style={{
+          position: 'fixed', top: 14, left: 14, zIndex: 38,
+          width: 40, height: 40, borderRadius: 10,
+          background: P.bg,
+          border: `1px solid ${P.border}`,
+          boxShadow: '0 2px 10px rgba(0,0,0,0.4)',
+          backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+          cursor: 'pointer', color: P.inactive,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}
+      >
+        <Menu size={20} />
+      </button>
 
       {/* ── 콘텐츠 ── */}
       <main style={{ flex: 1 }}>
         {children}
       </main>
 
-      {/* ── 하단 네비 ── */}
+      {/* ── 하단 네비 (아이콘만) ── */}
       <nav className={`mobile-bottom-nav ${isBottomNavHidden ? 'is-hidden' : ''}`} style={{
         display: 'flex', justifyContent: 'space-around', alignItems: 'center',
-        padding: '6px 4px',
+        padding: '8px 4px',
         background: P.bg,
         backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
         borderTop: `1px solid ${P.border}`,
@@ -170,21 +154,28 @@ export default function MobileLayout({
         transition: 'transform 0.28s ease, opacity 0.28s ease',
         zIndex: 40,
       }}>
-        {bottomNavItems.map(({ id, icon: Icon }) => {
+        {bottomNavItems.map(({ id, icon: Icon, pokeball }) => {
           const active = currentTab === id;
           return (
             <button key={id} onClick={() => setCurrentTab(id)} style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              gap: 3, padding: '6px 10px', borderRadius: 10, border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: 44, height: 44, borderRadius: 12, border: 'none', cursor: 'pointer',
               background: active ? P.accentBg : 'transparent',
-              color: active ? P.accent : P.inactive,
               transition: 'all 0.18s ease',
-              minWidth: 52,
             }}>
-              <Icon size={22} />
-              <span style={{ fontSize: 10, fontWeight: active ? 700 : 500, letterSpacing: '0.02em' }}>
-                {titleMap[id]?.label || id}
-              </span>
+              {pokeball ? (
+                <img
+                  src={pokeballImg}
+                  alt="포켓몬"
+                  style={{
+                    width: 18, height: 18,
+                    opacity: active ? 1 : 0.55,
+                    transition: 'opacity 0.18s ease',
+                  }}
+                />
+              ) : (
+                <Icon size={id === 'home' ? 28 : 24} color={active ? P.accent : P.inactive} />
+              )}
             </button>
           );
         })}
@@ -193,8 +184,10 @@ export default function MobileLayout({
       {/* ── 드로어 ── */}
       {menuOpen && (
         <>
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100000, backdropFilter: 'blur(2px)' }}
-            onClick={() => setMenuOpen(false)} />
+          <div
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100000, backdropFilter: 'blur(2px)' }}
+            onClick={() => setMenuOpen(false)}
+          />
           <aside style={{
             position: 'fixed', top: 0, left: 0, height: '100%', width: 272,
             background: P.bgDrawer,
@@ -205,7 +198,11 @@ export default function MobileLayout({
           }}>
 
             {/* 드로어 헤더 */}
-            <div style={{ padding: '20px 20px 16px', borderBottom: `1px solid ${P.border}`, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+            <div style={{
+              padding: '20px 20px 16px',
+              borderBottom: `1px solid ${P.border}`,
+              display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+            }}>
               <div>
                 <p style={{ margin: 0, fontWeight: 700, fontSize: 16, color: P.textPrimary, letterSpacing: '0.03em' }}>
                   {trainer.name}
@@ -214,9 +211,22 @@ export default function MobileLayout({
                   <Coins size={13} />
                   {trainer.money?.toLocaleString()}원
                 </p>
+                {/* 탐험 횟수 */}
+                <div style={{
+                  marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 5,
+                  background: P.accentBg, border: `1px solid ${P.border}`,
+                  borderRadius: 20, padding: '4px 10px',
+                }}>
+                  <Footprints size={13} style={{ color: P.accent }} />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: P.accent }}>
+                    탐험 {trainer.dailyWalks}/{trainer.maxDailyWalks}
+                  </span>
+                </div>
               </div>
-              <button onClick={() => setMenuOpen(false)}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: P.inactive, padding: 4, marginTop: -2 }}>
+              <button
+                onClick={() => setMenuOpen(false)}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: P.inactive, padding: 4, marginTop: -2 }}
+              >
                 <X size={22} />
               </button>
             </div>
@@ -236,7 +246,7 @@ export default function MobileLayout({
             </div>
 
             {/* 메뉴 그룹 */}
-            <nav style={{ flex: 1, overflowY: 'auto', padding: '8px 12px' }}>
+            <nav className="mob-drawer-nav" style={{ flex: 1, overflowY: 'auto', padding: '8px 12px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {menuGroups.map((group, gi) => (
                 <div key={gi} style={{ marginBottom: 4 }}>
                   {group.label && (
@@ -288,6 +298,7 @@ export default function MobileLayout({
           from { transform: translateX(-100%); }
           to   { transform: translateX(0); }
         }
+        .mob-drawer-nav::-webkit-scrollbar { display: none; }
       `}</style>
     </div>
   );

@@ -17,7 +17,7 @@ export default function MobileItemsView() {
   const isSuperAdmin = trainer?.isSuperAdmin || false;
   const onTrashItem = null;
   
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('pokeballs');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
   const [actionMode, setActionMode] = useState(null);

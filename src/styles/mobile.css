@@ -159,8 +159,8 @@
   width: 100%;
   border: 0;
   border-radius: 12px;
-  background: rgba(28, 46, 18, 0.6);
-  color: rgba(195, 225, 148, 0.9);
+  background: rgba(30, 52, 20, 0.65);
+  color: rgba(210, 240, 165, 0.95);
   display: grid;
   grid-template-columns: 54px minmax(0, 1fr);
   align-items: center;
@@ -213,20 +213,20 @@
 
 .mobile-home-feed__item small {
   margin-top: 3px;
-  color: rgba(148, 178, 108, 0.65);
+  color: rgba(170, 210, 125, 0.8);
   font-size: 12px;
   line-height: 1.35;
 }
 
 .mobile-home-feed__fallback {
-  color: rgba(148, 178, 108, 0.65);
+  color: rgba(170, 210, 125, 0.8);
 }
 
 .mobile-home-feed__empty {
   margin: 0;
   border-radius: 12px;
-  background: rgba(28, 46, 18, 0.45);
-  color: rgba(148, 178, 108, 0.65);
+  background: rgba(30, 52, 20, 0.5);
+  color: rgba(170, 210, 125, 0.8);
   padding: 14px;
   font-size: 13px;
   font-weight: 600;
@@ -399,8 +399,8 @@
 .mobile-home-login {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  background: rgba(12, 21, 12, 0.88) !important;
-  border: 1px solid rgba(105, 148, 52, 0.2) !important;
+  background: rgba(20, 38, 18, 0.82) !important;
+  border: 1px solid rgba(130, 185, 65, 0.3) !important;
   border-radius: 14px !important;
 }
 
@@ -472,10 +472,10 @@
   position: relative;
   margin-top: 12px !important;
   padding: 16px !important;
-  border: 1px solid rgba(105, 148, 52, 0.2) !important;
+  border: 1px solid rgba(130, 185, 65, 0.3) !important;
   border-radius: 14px !important;
-  background: rgba(12, 21, 12, 0.88) !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+  background: rgba(20, 38, 18, 0.82) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
   overflow: visible !important;
@@ -497,18 +497,18 @@
 }
 
 .mobile-home-calendar .home-calendar__header {
-  margin-bottom: 4px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(100, 150, 50, 0.2);
+  margin-bottom: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(105, 148, 52, 0.2);
 }
 
 .mobile-home-calendar .home-calendar__header span {
-  color: rgba(150, 185, 110, 0.6) !important;
+  color: rgba(175, 218, 125, 0.8) !important;
 }
 
 .mobile-home-calendar .home-calendar__header strong {
   font-size: 20px;
-  color: rgba(215, 238, 170, 0.95) !important;
+  color: rgba(225, 248, 185, 1) !important;
 }
 
 .mobile-home-calendar .home-calendar__weekdays,
@@ -518,19 +518,19 @@
 }
 
 .mobile-home-calendar .home-calendar__weekdays {
-  margin: 14px 0 8px;
-  color: rgba(150, 185, 110, 0.6) !important;
+  margin: 10px 0 6px;
+  color: rgba(175, 218, 125, 0.8) !important;
 }
 
 .mobile-home-calendar .home-calendar__grid > span {
   border-radius: 8px;
-  background: rgba(28, 46, 18, 0.55) !important;
-  color: rgba(195, 225, 148, 0.85) !important;
+  background: rgba(35, 60, 22, 0.65) !important;
+  color: rgba(210, 240, 165, 0.92) !important;
 }
 
 .mobile-home-calendar .home-calendar__grid > span.is-muted {
-  background: rgba(18, 30, 12, 0.35) !important;
-  color: rgba(148, 178, 108, 0.4) !important;
+  background: rgba(22, 38, 14, 0.4) !important;
+  color: rgba(160, 200, 115, 0.5) !important;
 }
 
 .mobile-home-calendar .home-calendar__grid > span.is-sunday {
@@ -542,9 +542,9 @@
 }
 
 .mobile-home-calendar .home-calendar__grid > span.is-today {
-  background: rgba(88, 138, 38, 0.38) !important;
-  color: rgba(175, 225, 85, 1) !important;
-  outline: 1px solid rgba(105, 148, 52, 0.55) !important;
+  background: rgba(100, 160, 42, 0.5) !important;
+  color: rgba(195, 245, 100, 1) !important;
+  outline: 1px solid rgba(140, 200, 65, 0.7) !important;
 }
 
 .mobile-home__npc {
@@ -600,16 +600,9 @@
   display: none !important;
 }
 
-.mobile-home__calendar::before {
-  top: -6px !important;
-  width: calc(var(--mobile-panel-width) * 2.36) !important;
-  height: 430px !important;
-  transform: translateX(calc(-25% - 34px)) !important;
-}
-
 .mobile-home-calendar {
-  margin-top: 76px !important;
-  margin-left: 14px !important;
+  margin-top: 0 !important;
+  margin-left: 0 !important;
 }
 
 .mobile-home__logo img:not(.mobile-home__logo-compass) {
@@ -839,6 +832,12 @@
     background: transparent !important;
   }
 
+  /* 모바일 모달 스크롤바 숨김 */
+  .pokedex-mobile-modal::-webkit-scrollbar,
+  .mobile-detail-scroll::-webkit-scrollbar {
+    display: none !important;
+  }
+
   html::-webkit-scrollbar-thumb,
   body::-webkit-scrollbar-thumb,
   html::-webkit-scrollbar-track,
@@ -1003,9 +1002,6 @@
     bottom: 0 !important;
     gap: 4px !important;
     padding: 6px 8px calc(6px + env(safe-area-inset-bottom)) !important;
-    border-color: rgba(151, 190, 78, 0.72) !important;
-    background: rgba(247, 251, 236, 0.9) !important;
-    box-shadow: 0 -10px 26px rgba(28, 48, 18, 0.18) !important;
     transform: translateY(0) !important;
     transition: transform 220ms ease, opacity 180ms ease, box-shadow 180ms ease !important;
     will-change: transform;

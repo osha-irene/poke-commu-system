@@ -204,7 +204,7 @@ export const systemContent = String.raw`
 
 ### 기술
 & 콘테스트에서는 배틀과는 다른 효과를 지닙니다.
-& 효과 및 콤보 기술 조합은 해당 사이트를 참고로 하고 있습니다. [기술 효과 / 콤보 기술 조합]
+& 효과 및 콤보 기술 조합은 해당 사이트를 참고로 하고 있습니다. [기술 효과](https://podic.kr/Gen6/move_list_type-clever.html) · [콤보 기술 조합](https://pokemon.fandom.com/ko/wiki/%EC%BD%98%ED%85%8C%EC%8A%A4%ED%8A%B8_%EC%97%B0%EC%86%8D_%EC%BD%A4%EB%B3%B4)
 
 ## 메가진화
 특정 주차이후 엔트리 내 포켓몬의 메가진화가 해금되며 체육관 관장NPC의 엔트리에도 적용됩니다.

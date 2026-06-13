@@ -10,7 +10,8 @@ export default function MemberPokemonViewMode({
   onChangeForm,
   onDelete,
   onStartGive,
-  onStartTransfer
+  onStartTransfer,
+  maxNonPartnerPokemon = 18,
 }) {
   const [openFormPokemonId, setOpenFormPokemonId] = useState(null);
   const partnerPokemon = member?.partnerPokemon?.uniqueId ? member.partnerPokemon : null;
@@ -36,7 +37,7 @@ export default function MemberPokemonViewMode({
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="font-bold text-lg">
-          보유 포켓몬 ({memberPokemon.length}/26)
+          보유 포켓몬 ({caughtPokemon.filter(p => !p.isPartner).length}/{maxNonPartnerPokemon})
         </h3>
         <button
           type="button"

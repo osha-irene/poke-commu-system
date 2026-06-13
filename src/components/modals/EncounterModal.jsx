@@ -20,7 +20,8 @@ export default function EncounterModal({
   maxNonPartnerPokemon = 18,
   escapeMode = 'none',
   isCave = false,
-  isWaterside = false
+  isWaterside = false,
+  isSafari = false,
 }) {
   const [selectedBall, setSelectedBall] = useState(null);
   const [catching, setCatching] = useState(false);
@@ -57,7 +58,10 @@ export default function EncounterModal({
     .filter(item => {
       if (!item || !item.name) return false;
       const name = item.name.toLowerCase();
-      return name.includes('볼') || name.includes('ball');
+      if (!(name.includes('볼') || name.includes('ball'))) return false;
+      const isSafariBall = name.includes('사파리') || name.includes('safari');
+      if (isSafariBall && !isSafari) return false;
+      return true;
     })
     .filter(item => item.count > 0)
     .map(item => {
@@ -283,7 +287,7 @@ export default function EncounterModal({
       className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
     >
       <div
-        className="w-full max-w-5xl mx-4 max-h-[95vh] overflow-y-auto"
+        className="w-full max-w-2xl mx-4 max-h-[95vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {!result && !catching && (
@@ -435,9 +439,9 @@ export default function EncounterModal({
                   </button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1">
+                <div className="grid grid-cols-5 gap-2 max-h-48 overflow-y-auto pr-1">
                   {pokeballs.length === 0 ? (
-                    <div className="col-span-3 text-center py-8 text-gray-500">
+                    <div className="col-span-5 text-center py-8 text-gray-500">
                       사용 가능한 볼이 없습니다!
                     </div>
                   ) : (
@@ -451,7 +455,7 @@ export default function EncounterModal({
                           key={i}
                           onClick={(e) => !disabled && handleBallSelect(e, ball)}
                           disabled={disabled}
-                          className={`flex items-center gap-2 bg-white rounded-lg p-2 border-2 transition-all ${
+                          className={`relative flex flex-col items-center gap-1 bg-white rounded-lg p-2 border-2 transition-all ${
                             disabled
                               ? 'opacity-30 cursor-not-allowed border-gray-300'
                               : selectedBall?.name === ball.name
@@ -459,8 +463,11 @@ export default function EncounterModal({
                                 : 'border-gray-300 hover:border-gray-400 hover:shadow-md'
                           }`}
                         >
+                          <div className="absolute top-1 right-1 bg-gray-800 text-white px-1 py-0 rounded text-xs font-bold leading-tight">
+                            {count}
+                          </div>
                           <div
-                            className="item-sprite w-10 h-10 flex-shrink-0"
+                            className="item-sprite w-8 h-8 flex-shrink-0"
                             style={{
                               backgroundImage: `url(${ball.imageUrl})`,
                               backgroundSize: 'contain',
@@ -469,11 +476,8 @@ export default function EncounterModal({
                               imageRendering: 'pixelated'
                             }}
                           />
-                          <div className="flex-1 text-left min-w-0">
-                            <div className="font-bold text-xs text-gray-800 truncate">{ball.name}</div>
-                          </div>
-                          <div className="bg-gray-800 text-white px-1.5 py-0.5 rounded text-xs font-bold flex-shrink-0">
-                            {count}
+                          <div className="text-center w-full">
+                            <div className="font-bold text-xs text-gray-800 leading-tight break-keep">{ball.name}</div>
                           </div>
                         </button>
                       );

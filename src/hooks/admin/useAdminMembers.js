@@ -474,7 +474,7 @@ export const useAdminMembers = (
       return;
     }
 
-    // 알로 지급
+    // 알로 지급 — egg 필드에 별도 저장, 포켓몬 수 제한 무관
     if (options.asEgg && options.eggData) {
       const eggData = {
         ...options.eggData,
@@ -483,7 +483,7 @@ export const useAdminMembers = (
       };
       const memberRef = ref(database, `members/${memberId}`);
       await update(memberRef, { egg: eggData });
-      alert(`${member.name}님에게 ${pokemonTemplate.name} 알을 지급했습니다!`);
+      alert(`${member.name}님에게 ${pokemonTemplate?.name || '포켓몬'} 알을 지급했습니다!`);
       return;
     }
 

@@ -108,6 +108,7 @@ function getYouTubeEmbedTarget(value = '') {
 }
 
 function PlaylistWidget() {
+  const [isMobileDevice] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
   const [isOpen, setIsOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState(65);
@@ -216,6 +217,8 @@ function PlaylistWidget() {
       ? `https://www.youtube.com/embed/${encodeURIComponent(playlistSettings.id)}?enablejsapi=1&autoplay=1&loop=1&playlist=${encodeURIComponent(playlistSettings.id)}${originParam}`
       : `https://www.youtube.com/embed/videoseries?list=${encodeURIComponent(playlistSettings.id)}&enablejsapi=1&autoplay=1&loop=1${originParam}`
     : '';
+
+  if (isMobileDevice) return null;
 
   return (
     <div className={`playlist-widget ${isOpen ? 'is-open' : ''}`}>
@@ -1696,18 +1699,19 @@ return (
           )}
           
           {currentTab === 'pokedex' && (
-            <PokedexView 
+            <PokedexView
               pokedex={gamePokedex}
-              allPokedex={allPokemonMaster} 
+              allPokedex={allPokemonMaster}
               caughtPokemon={caughtPokemon.filter(p => p !== null)}
               pokedexData={sharedPokedexData}
               regions={regions}
               currentUser={currentUser}
               onUpdateMemo={updatePokedexMemo}
               onUpdatePokedexRegions={updatePokedexRegions}
+              isMobile
             />
           )}
-          
+
           {currentTab === 'members' && <MembersView members={members} isLoading={isMembersLoading} />}
           {currentTab === 'npcs' && <NPCsView />}
           {currentTab === 'pokemon' && <PokemonView />}

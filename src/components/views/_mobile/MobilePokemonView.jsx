@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Package, X } from 'lucide-react';
-import { useGame } from '../../../contexts/GameContext'; 
-import PartySlot from '../pokemon/PartySlot'; 
-import BoxPokemon from '../pokemon/BoxPokemon'; 
+import { useGame } from '../../../contexts/GameContext';
+import PartySlot, { PartnerSlot } from '../pokemon/PartySlot';
+import BoxPokemon from '../pokemon/BoxPokemon';
 import PokemonDetailPanel from '../pokemon/PokemonDetailPanel';
 import { getRequiredExpForLevel } from '../../../utils/experience';
 
@@ -39,6 +39,8 @@ export default function MobilePokemonView() {
   const [showBox, setShowBox] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
 
+  const partnerPokemon = currentUser?.partnerPokemon || null;
+
   const partySlots = caughtPokemon.slice(0, 6).map(pokemon => (
     isEmptyPokemonSlot(pokemon) ? null : pokemon
   ));
@@ -53,8 +55,9 @@ export default function MobilePokemonView() {
   );
   const rareCandyImage = rareCandy?.imageUrl;
 
-  const selectedPokemon = selectedPokemonId 
-    ? caughtPokemon.find(p => p && p.uniqueId === selectedPokemonId)
+  const selectedPokemon = selectedPokemonId
+    ? (caughtPokemon.find(p => p && p.uniqueId === selectedPokemonId) ||
+       (partnerPokemon?.uniqueId === selectedPokemonId ? partnerPokemon : null))
     : null;
   const trainerExp = Number(currentUser?.trainerExp) || 0;
   const selectedRequiredExp = selectedPokemon ? getRequiredExpForLevel(selectedPokemon.level) : null;
@@ -124,9 +127,32 @@ export default function MobilePokemonView() {
 
   return (
     <div className="relative pb-4">
+      {/* 파트너 포켓몬 */}
+      <div className="px-4 pb-2" style={{ paddingTop: 64 }}>
+        <h3 style={{ fontSize: 13, fontWeight: 700, color: 'rgba(170,210,125,0.8)', marginBottom: 8, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+          파트너
+        </h3>
+        <div style={{
+          background: 'rgba(255,245,248,1)',
+          border: '1px solid rgba(240,140,160,0.5)',
+          borderRadius: 12,
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+        }}>
+          <PartnerSlot
+            pokemon={partnerPokemon}
+            onClick={() => partnerPokemon && handlePokemonClick(partnerPokemon)}
+            gamePokedex={gamePokedex}
+            allPokemonMaster={allPokemonMaster}
+            allItems={allItems}
+            mobile
+          />
+        </div>
+      </div>
+
       {/* 파티 슬롯 */}
       <div className="px-4 py-4">
-        <h3 className="text-lg font-bold text-gray-800 mb-3">
+        <h3 style={{ fontSize: 13, fontWeight: 700, color: 'rgba(170,210,125,0.8)', marginBottom: 8, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
           파티 ({partyCount}/6)
         </h3>
         
@@ -217,7 +243,7 @@ export default function MobilePokemonView() {
           </div>
 
           {/* 디테일 패널 */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto mobile-detail-scroll" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <PokemonDetailPanel
               pokemon={selectedPokemon}
               hasRareCandy={hasRareCandy}

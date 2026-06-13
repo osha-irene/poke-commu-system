@@ -13,12 +13,12 @@ import { getPokemonGenderOptions } from '../../../../utils/pokemonGender';
 const emptyEffort = { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 };
 const emptyCondition = { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 };
 
-function MemberPokemonTab({ 
-  member, 
+function MemberPokemonTab({
+  member,
   members = {},
   trainer,
-  allPokemonMaster = [], 
-  allMoves = [], 
+  allPokemonMaster = [],
+  allMoves = [],
   allItems = [],
   pokemonLearnsets = {},
   onGivePokemon,
@@ -26,7 +26,8 @@ function MemberPokemonTab({
   getPokemonFormCandidates,
   onDeletePokemon,
   onHatchEgg,
-  onTransferPokemon
+  onTransferPokemon,
+  maxNonPartnerPokemon = 18,
 }) {
   const [mode, setMode] = useState('view');
   const [selectedPokemon, setSelectedPokemon] = useState(null);
@@ -544,6 +545,7 @@ function MemberPokemonTab({
             setShowGivePokemonPicker(true);
           }}
           onStartTransfer={handleStartTransferPokemon}
+          maxNonPartnerPokemon={maxNonPartnerPokemon}
         />
       )}
 

@@ -86,14 +86,34 @@ const STYLES = {
 };
 
 // 파트너 포켓몬 슬롯
-export function PartnerSlot({ 
-  pokemon, 
-  onClick, 
-  gamePokedex, 
+export function PartnerSlot({
+  pokemon,
+  onClick,
+  gamePokedex,
   allPokemonMaster,
-  allItems = []
+  allItems = [],
+  mobile = false,
 }) {
+  const mobileCard = {
+    display: 'flex', alignItems: 'center', gap: 12,
+    borderRadius: 12, padding: '12px 14px',
+    background: 'transparent',
+  };
+  const mobileText = { color: 'rgba(225,248,185,0.92)' };
+  const mobileMuted = { color: 'rgba(170,210,125,0.65)', fontSize: 12 };
+
   if (!pokemon) {
+    if (mobile) {
+      return (
+        <div style={{ ...mobileCard, opacity: 0.7 }}>
+          <Heart size={22} style={{ color: 'rgba(240,130,150,0.7)', flexShrink: 0 }} />
+          <div>
+            <div style={{ ...mobileText, fontWeight: 700, fontSize: 14 }}>파트너 포켓몬</div>
+            <div style={mobileMuted}>파트너를 설정해주세요</div>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className={`flex items-center gap-4 rounded-lg p-4 ${STYLES.partnerEmpty}`}>
         <div className="w-12 h-12 bg-pink-200 rounded-full flex items-center justify-center">
@@ -121,13 +141,56 @@ export function PartnerSlot({
   const imageUrl = getLocalIconUrl(pokemon, allPokemonMaster);
   const ballImage = getBallImageUrl(pokemon, allItems);  // ⭐ 함수 호출
 
+  if (mobile) {
+    return (
+      <div
+        onClick={onClick}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 12,
+          borderRadius: 12, padding: '12px 14px',
+          cursor: 'pointer',
+        }}
+      >
+        <div style={{ width: 36, height: 36, flexShrink: 0 }}>
+          <div style={{
+            width: '100%', height: '100%',
+            backgroundImage: `url(${ballImage})`,
+            backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
+            borderRadius: '50%',
+          }} />
+        </div>
+        <div style={{
+          width: 48, height: 48, flexShrink: 0,
+          backgroundImage: `url(${imageUrl})`,
+          backgroundSize: '96px 48px', backgroundPosition: 'left center',
+          backgroundRepeat: 'no-repeat', imageRendering: 'pixelated',
+        }} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+            <Heart size={12} style={{ color: 'rgba(240,130,150,0.85)', flexShrink: 0 }} />
+            <span style={{ fontSize: 11, color: 'rgba(240,130,150,0.75)', fontWeight: 700 }}>파트너</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 11, color: 'rgba(170,210,125,0.65)' }}>No.{displayNumber.toString().padStart(3, '0')}</span>
+            <span style={{ fontSize: 16, fontWeight: 800, color: '#1a2e10' }}>{pokemon.nickname || pokemon.name}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 6, backgroundColor: typeColors.bg, color: typeColors.text }}>{pokemon.type}</span>
+            {pokemon.type2 && type2Colors && (
+              <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 6, backgroundColor: type2Colors.bg, color: type2Colors.text }}>{pokemon.type2}</span>
+            )}
+          </div>
+          <div style={{ fontSize: 12, color: 'rgba(170,210,125,0.7)', marginTop: 2 }}>Lv.{pokemon.level}</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div 
+    <div
       onClick={onClick}
       className={`flex items-center gap-4 rounded-lg p-4 ${STYLES.partner} cursor-pointer hover:shadow-lg transition-all`}
     >
 
-      <div 
+      <div
         className="flex-shrink-0 w-10 h-10 rounded-full overflow-hidden flex items-center justify-center"
         style={{ backgroundColor: 'transparent' }}
       >
@@ -141,8 +204,8 @@ export function PartnerSlot({
           }}
         />
       </div>
-      
-      <div 
+
+      <div
         className="w-14 h-14 flex-shrink-0 flex items-center justify-center"
         style={{ padding: '4px' }}
       >
@@ -159,7 +222,7 @@ export function PartnerSlot({
           }}
         />
       </div>
-      
+
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-1">
           <Heart size={14} className="text-pink-500" />
@@ -169,9 +232,9 @@ export function PartnerSlot({
           <span className="text-xs text-gray-500">No.{displayNumber.toString().padStart(3, '0')}</span>
           <span className="font-bold text-lg">{pokemon.nickname || pokemon.name}</span>
           <div className="flex gap-1">
-            <span 
+            <span
               className="text-xs px-2 py-1 rounded font-bold shadow-sm"
-              style={{ 
+              style={{
                 backgroundColor: typeColors.bg,
                 color: typeColors.text
               }}
@@ -179,9 +242,9 @@ export function PartnerSlot({
               {pokemon.type}
             </span>
             {pokemon.type2 && type2Colors && (
-              <span 
+              <span
                 className="text-xs px-2 py-1 rounded font-bold shadow-sm"
-                style={{ 
+                style={{
                   backgroundColor: type2Colors.bg,
                   color: type2Colors.text
                 }}
@@ -324,11 +387,11 @@ export default function PartySlot({
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500">No.{displayNumber.toString().padStart(3, '0')}</span>
-          <span className="font-bold text-lg">{pokemon.nickname || pokemon.name}</span>
+          <span className="font-bold text-lg" style={{ color: '#1a2e10' }}>{pokemon.nickname || pokemon.name}</span>
           <div className="flex gap-1">
-            <span 
+            <span
               className="text-xs px-2 py-1 rounded font-bold shadow-sm"
-              style={{ 
+              style={{
                 backgroundColor: typeColors.bg,
                 color: typeColors.text
               }}

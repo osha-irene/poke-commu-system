@@ -55,8 +55,8 @@ export default function PokemonPreviewInfo({ pokemon }) {
       {pokemon.isShiny && (
         <>
           <span className="text-gray-400 mx-1">|</span>
-          <span className="text-yellow-500 font-bold">
-            ★ 이로치
+          <span style={{ fontWeight: 800, color: '#c084fc' }}>
+            ★ 색이 다른 포켓몬
           </span>
         </>
       )}
