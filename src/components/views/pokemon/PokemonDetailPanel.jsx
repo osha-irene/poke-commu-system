@@ -547,8 +547,9 @@ const ballImage = getBallImage();
                           배분
                         </button>
                       </div>
-                      <div className="mt-2 text-xs font-semibold text-[#9a6b00]">
-                        다음 레벨업까지 필요 경험치 {expToNextLevel ?? '-'}
+                      <div className="mt-2 space-y-0.5 text-xs font-semibold text-[#9a6b00]">
+                        <div>나의 남은 경험치: {trainerExp - (selectedExpAmount || 0) < 0 ? 0 : trainerExp - (selectedExpAmount || 0)} <span className="text-[#b0b0b0] font-normal">(보유 {trainerExp})</span></div>
+                        <div>다음 레벨업까지 필요 경험치: {expToNextLevel ?? '-'}</div>
                       </div>
                     </div>
                   )}

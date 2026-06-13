@@ -35,6 +35,9 @@ export default function AdminView() {
     removeDailyItem,
     toggleItemPersistent,
     maintenanceMode = false,
+    maintenanceScheduledAt = null,
+    scheduleMaintenanceMode,
+    cancelScheduledMaintenance,
     systemSettings = { maxNonPartnerPokemon: 18, escapeMode: 'none' },
     createTown,
     updateTown,
@@ -272,15 +275,15 @@ export default function AdminView() {
   };
 
   const handleToggleMaintenance = () => {
-    const newMode = !maintenanceMode;
-    if (newMode) {
-      if (window.confirm('⚠️ 점검 모드를 활성화하시겠습니까?\n\n관리자를 제외한 모든 유저의 접근이 차단됩니다.')) {
-        setMaintenanceMode?.(true);
-        alert('✅ 점검 모드가 활성화되었습니다.');
-      }
-    } else {
+    if (maintenanceMode) {
       setMaintenanceMode?.(false);
-      alert('✅ 점검 모드가 해제되었습니다.');
+      cancelScheduledMaintenance?.();
+    } else if (maintenanceScheduledAt) {
+      cancelScheduledMaintenance?.();
+    } else {
+      if (window.confirm('⚠️ 5분 후 점검 모드를 시작하시겠습니까?\n\n모든 유저에게 카운트다운이 표시됩니다.')) {
+        scheduleMaintenanceMode?.();
+      }
     }
   };
 
@@ -514,16 +517,20 @@ export default function AdminView() {
                 <div>
                   <div className="font-bold text-gray-800">시스템 점검 모드</div>
                   <div className="text-sm text-gray-600">
-                    {maintenanceMode ? '⚠️ 점검 중 - 일반 유저 접근 차단됨' : '✅ 정상 운영 중'}
+                    {maintenanceMode
+                      ? '⚠️ 점검 중 - 일반 유저 접근 차단됨'
+                      : maintenanceScheduledAt
+                      ? `⏳ 점검 예약됨 - ${Math.max(0, Math.ceil((maintenanceScheduledAt - Date.now()) / 60000))}분 후 시작`
+                      : '✅ 정상 운영 중'}
                   </div>
                 </div>
               </div>
               <Button
-                variant={maintenanceMode ? 'success' : 'warning'}
+                variant={maintenanceMode || maintenanceScheduledAt ? 'success' : 'warning'}
                 size="md"
                 onClick={handleToggleMaintenance}
               >
-                {maintenanceMode ? '점검 종료' : '점검 시작'}
+                {maintenanceMode ? '점검 종료' : maintenanceScheduledAt ? '점검 예약 취소' : '점검 시작'}
               </Button>
             </div>
           </Card>

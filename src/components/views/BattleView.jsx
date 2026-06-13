@@ -364,16 +364,29 @@ const formatBattleLogDate = (value) => {
   });
 };
 
-const BattleLogArchiveModal = ({ logs, onClose }) => {
+const BattleLogArchiveModal = ({ logs, onClose, onDelete }) => {
   const [selectedId, setSelectedId] = useState(logs[0]?.id || null);
   const selectedLog = logs.find(log => log.id === selectedId) || logs[0] || null;
+  const [collapsedDates, setCollapsedDates] = useState({});
 
   useEffect(() => {
     setSelectedId(logs[0]?.id || null);
   }, [logs]);
 
+  const dateGroups = useMemo(() => {
+    const groups = {};
+    [...logs].sort((a, b) => b.createdAt - a.createdAt).forEach(log => {
+      const date = new Date(log.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+      if (!groups[date]) groups[date] = [];
+      groups[date].push(log);
+    });
+    return Object.entries(groups);
+  }, [logs]);
+
+  const toggleDate = (date) => setCollapsedDates(prev => ({ ...prev, [date]: !prev[date] }));
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/60 p-4" style={{ zIndex: 9000 }}>
       <div className="flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
           <div>
@@ -394,22 +407,44 @@ const BattleLogArchiveModal = ({ logs, onClose }) => {
         ) : (
           <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-[280px_minmax(0,1fr)]">
             <div className="min-h-0 overflow-y-auto border-r border-gray-200 bg-gray-50 p-3">
-              {logs.map(log => (
-                <button
-                  key={log.id}
-                  type="button"
-                  onClick={() => setSelectedId(log.id)}
-                  className={`mb-2 w-full rounded-lg border px-3 py-3 text-left transition-colors ${
-                    selectedLog?.id === log.id
-                      ? 'border-gray-900 bg-white text-gray-950 shadow-sm'
-                      : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-white'
-                  }`}
-                >
-                  <div className="text-sm font-bold">{log.player1Name} vs {log.player2Name}</div>
-                  <div className="mt-1 text-xs text-gray-500">
-                    {formatBattleLogDate(log.createdAt)} · {log.turn}턴 · {log.winner || '-'} 승리
-                  </div>
-                </button>
+              {dateGroups.map(([date, dateLogs]) => (
+                <div key={date} className="mb-2">
+                  <button
+                    type="button"
+                    onClick={() => toggleDate(date)}
+                    className="flex w-full items-center justify-between rounded px-2 py-1.5 text-xs font-bold text-gray-500 hover:bg-gray-200 transition-colors"
+                  >
+                    <span>{date}</span>
+                    <span className="text-gray-400">{collapsedDates[date] ? '▶' : '▼'} {dateLogs.length}건</span>
+                  </button>
+                  {!collapsedDates[date] && dateLogs.map(log => (
+                    <div key={log.id} className="relative mt-1 mb-1 group">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedId(log.id)}
+                        className={`w-full rounded-lg border px-3 py-3 text-left transition-colors pr-8 ${
+                          selectedLog?.id === log.id
+                            ? 'border-transparent text-white shadow-sm'
+                            : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-white'
+                        }`}
+                        style={selectedLog?.id === log.id ? { backgroundColor: '#2d4a35' } : {}}
+                      >
+                        <div className="text-sm font-bold">{log.player1Name} vs {log.player2Name}</div>
+                        <div className="mt-1 text-xs text-gray-500">
+                          {formatBattleLogDate(log.createdAt)} · {log.turn}턴 · {log.winner || '-'} 승리
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onDelete(log.id); }}
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity rounded p-0.5 text-gray-400 hover:text-red-500 hover:bg-red-50"
+                        title="삭제"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
               ))}
             </div>
 
@@ -606,6 +641,14 @@ export function BattleView() {
     });
   };
 
+  const handleDeleteBattleLog = (id) => {
+    setBattleLogArchive((prev) => {
+      const next = prev.filter(log => log.id !== id);
+      writeBattleLogArchive(next);
+      return next;
+    });
+  };
+
   const renderBattleLogArchiveButton = () => (
     <button
       type="button"
@@ -638,7 +681,7 @@ export function BattleView() {
           onExit={() => setBattleStarted(false)}
         />
         {showBattleLogArchive && (
-          <BattleLogArchiveModal logs={battleLogArchive} onClose={() => setShowBattleLogArchive(false)} />
+          <BattleLogArchiveModal logs={battleLogArchive} onClose={() => setShowBattleLogArchive(false)} onDelete={handleDeleteBattleLog} />
         )}
       </div>
     );
@@ -769,7 +812,7 @@ export function BattleView() {
         </>
       )}
       {showBattleLogArchive && (
-        <BattleLogArchiveModal logs={battleLogArchive} onClose={() => setShowBattleLogArchive(false)} />
+        <BattleLogArchiveModal logs={battleLogArchive} onClose={() => setShowBattleLogArchive(false)} onDelete={handleDeleteBattleLog} />
       )}
     </div>
   );

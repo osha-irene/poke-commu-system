@@ -3,6 +3,7 @@
 import { ref, get } from 'firebase/database';
 import { database } from '../../firebase';
 import { getPokemonLearnset } from '../../utils/pokemonLearnsets';
+import { getRequiredExpForLevel } from '../../utils/experience';
 import itemsData from '../../data/items.json';
 
 const getItemList = (items) => {
@@ -324,7 +325,7 @@ const usePokemonManagement = (
   };
 
   // ?덈꺼??(?댁긽?쒖궗??+ 吏꾪솕 泥댄겕 ?듯빀)
-  const useRareCandy = async (uniqueId, onLevelUp) => {
+  const useRareCandy = async (uniqueId, onLevelUp, expAmount = 0) => {
     if (!currentUser) return false;
 
     let pokemon;
@@ -360,26 +361,52 @@ const usePokemonManagement = (
     }
 
     const oldLevel = Number(pokemon.level) || 1;
-    const newLevel = Math.min(oldLevel + 1, maxAllowedLevel);
-    const learnedLevels = [newLevel];
-    const updatedPokemonPatch = { ...pokemon, level: newLevel };
+
+    // 기존 누적 exp + 이번에 배분할 exp 합산
+    let currentLevel = oldLevel;
+    let accExp = (Number(pokemon.exp) || 0) + (Number(expAmount) || 0);
+    const learnedLevels = [];
+
+    if (Number(expAmount) > 0) {
+      while (currentLevel < maxAllowedLevel) {
+        const required = getRequiredExpForLevel(currentLevel);
+        if (required === null || accExp < required) break;
+        accExp -= required;
+        currentLevel++;
+        learnedLevels.push(currentLevel);
+      }
+    } else {
+      // expAmount 없이 호출된 경우 (이상한사탕 단독) — 기존 +1 동작
+      currentLevel = Math.min(oldLevel + 1, maxAllowedLevel);
+      learnedLevels.push(currentLevel);
+      accExp = 0;
+    }
+
+    const newLevel = currentLevel;
+    if (newLevel === oldLevel && accExp === (Number(pokemon.exp) || 0)) return false;
+
     const isPartnerPokemon = currentUser.partnerPokemon?.uniqueId === uniqueId;
+    // 남은 exp를 pokemon에 저장
+    const updatedPokemonPatch = { ...pokemon, level: newLevel, exp: accExp };
+
+    // trainerExp에서 배분한 만큼만 차감
+    const newTrainerExp = Math.max(0, (Number(currentUser.trainerExp) || 0) - (Number(expAmount) || 0));
 
     if (isPartnerPokemon) {
-      updateCurrentUser({
-        partnerPokemon: updatedPokemonPatch,
-      });
+      updateCurrentUser({ partnerPokemon: updatedPokemonPatch, trainerExp: newTrainerExp });
     } else {
       const newCaughtPokemon = currentUser.caughtPokemon.map(p =>
         p && p.uniqueId === uniqueId ? updatedPokemonPatch : p
       );
-
-      updateCurrentUser({
-        caughtPokemon: newCaughtPokemon,
-      });
+      updateCurrentUser({ caughtPokemon: newCaughtPokemon, trainerExp: newTrainerExp });
     }
 
-    alert(`${pokemon.nickname || pokemon.name}의 레벨이 올랐다!\nLv.${oldLevel} → Lv.${newLevel}`);
+    if (newLevel > oldLevel) {
+      const levelMsg = newLevel > oldLevel + 1
+        ? `Lv.${oldLevel} → Lv.${newLevel} (${newLevel - oldLevel}레벨 상승!)`
+        : `Lv.${oldLevel} → Lv.${newLevel}`;
+      alert(`${pokemon.nickname || pokemon.name}의 레벨이 올랐다!\n${levelMsg}`);
+    }
 
     setTimeout(async () => {
       try {

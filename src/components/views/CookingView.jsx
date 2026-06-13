@@ -84,7 +84,10 @@ export default function CookingView() {
   const [cookingMode, setCookingMode] = useState('fixed');
 
   const fixedRecipes = recipes.filter(r => recipeSupports(r, 'fixed'));
-  const statRecipes = recipes.filter(r => recipeSupports(r, 'stat'));
+  const statRecipes = [
+    ...recipes.filter(r => recipeSupports(r, 'stat')),
+    ...(recipesData.statBasedRecipes || []),
+  ];
 
   // ✅ ingredientStats 가져오기
   const ingredientStats = recipesData.ingredientStats || [];
@@ -207,11 +210,8 @@ export default function CookingView() {
 
     let matchedRecipe = null;
 
-    if (cookingMode === 'fixed') {
-      matchedRecipe = matchFixedRecipe();
-    } else {
-      matchedRecipe = matchStatRecipe();
-    }
+    matchedRecipe = matchFixedRecipe();
+    if (!matchedRecipe) matchedRecipe = matchStatRecipe();
 
     console.log('매칭된 레시피:', matchedRecipe);
 

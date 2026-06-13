@@ -32,6 +32,7 @@ import { noticeContent, systemContent } from './data/communityContent';
 import { PokemonProvider } from './contexts/PokemonContext';
 import { GameProvider } from './contexts/GameContext';
 import BattleView from './components/views/BattleView';
+import MaintenanceScreen from './components/layout/MaintenanceScreen';
 import mainNewsButton from './assets/main_news.png';
 import doctorWpenImage from './assets/npc/doctor_wpen.png';
 import pokemonIcon from './assets/pokemon-icon.svg';
@@ -1102,6 +1103,33 @@ export default function App() {
       window.removeEventListener('orientationchange', updateSiteScale);
     };
   }, []);
+  // 점검 상태 독립 fetch (비로그인 포함 모든 유저)
+  const [publicMaintenanceMode, setPublicMaintenanceMode] = useState(false);
+  const [publicMaintenanceScheduledAt, setPublicMaintenanceScheduledAt] = useState(null);
+  useEffect(() => {
+    const dbUrl = process.env.REACT_APP_FIREBASE_DATABASE_URL;
+    if (!dbUrl) return;
+    const base = dbUrl.replace(/\/$/, '');
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const [mRes, sRes] = await Promise.all([
+          fetch(`${base}/gameData/maintenanceMode.json`),
+          fetch(`${base}/gameData/maintenanceScheduledAt.json`),
+        ]);
+        const mVal = await mRes.json();
+        const sVal = await sRes.json();
+        if (!cancelled) {
+          setPublicMaintenanceMode(!!mVal);
+          setPublicMaintenanceScheduledAt(sVal || null);
+        }
+      } catch (_) {}
+      if (!cancelled) setTimeout(poll, 10000);
+    };
+    poll();
+    return () => { cancelled = true; };
+  }, []);
+
   // ??useGameState ?몄텧 (湲곗〈怨??숈씪)
   const gameState = useGameState();
   
@@ -1145,6 +1173,9 @@ export default function App() {
     allMoves,
     pokemonLearnsets,
     maintenanceMode,
+    maintenanceScheduledAt,
+    scheduleMaintenanceMode,
+    cancelScheduledMaintenance,
     systemSettings,
     applyLoot,
     updateCurrentUser,
@@ -1162,6 +1193,27 @@ export default function App() {
   const hasContentSurface = isFeaturePage && !isMembersPage;
   const isCoreLoading = isAuthLoading || isMembersLoading;
   const [isInitialPageReady, setIsInitialPageReady] = useState(false);
+
+  const [maintenanceCountdown, setMaintenanceCountdown] = useState(null);
+
+  useEffect(() => {
+    const scheduled = maintenanceScheduledAt || publicMaintenanceScheduledAt;
+    if (!scheduled) {
+      setMaintenanceCountdown(null);
+      return;
+    }
+    const tick = () => {
+      const remaining = Math.ceil((scheduled - Date.now()) / 1000);
+      setMaintenanceCountdown(remaining <= 0 ? 0 : remaining);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [maintenanceScheduledAt, publicMaintenanceScheduledAt]);
+
+  const effectiveMaintenanceMode = maintenanceMode || publicMaintenanceMode;
+  const effectiveScheduledAt = maintenanceScheduledAt || publicMaintenanceScheduledAt;
+  const isMaintenanceActive = effectiveMaintenanceMode || (effectiveScheduledAt && Date.now() >= effectiveScheduledAt);
   const [isLoadingOverlayVisible, setIsLoadingOverlayVisible] = useState(true);
   const [isLoadingOverlayFading, setIsLoadingOverlayFading] = useState(false);
   const [isClaimingAttendance, setIsClaimingAttendance] = useState(false);
@@ -1407,29 +1459,34 @@ export default function App() {
     pokemonLearnsets
   };
 
+  if (isMaintenanceActive && !isAdmin) {
+    return <MaintenanceScreen onLogout={currentUser ? handleLogout : undefined} />;
+  }
+
   if (isCoreLoading) {
     return <LoadingOverlay />;
   }
 
-  if (false && isCoreLoading) {
-    return (
-      <div className="app-loading-screen">
-        <div className="app-loading-indicator" aria-label="로딩 중">
-          <span />
-          <span />
-          <span />
-        </div>
-      </div>
-    );
-  }
-
   if (!currentUser || !currentUser.id) {
     const handlePublicNavigation = (nextTab) => {
-      if (nextTab !== 'home') {
+      if (!['home', 'notice', 'world', 'system'].includes(nextTab)) {
         setAccessModalImg(getRandomAccessModalImg());
         setShowAccessModal(true);
       }
     };
+
+    const MaintenanceCountdownBanner = maintenanceCountdown > 0 ? (
+      <div style={{
+        position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+        zIndex: 9999, background: '#1e293b', color: '#fff',
+        borderRadius: 12, padding: '14px 28px', boxShadow: '0 4px 24px rgba(0,0,0,0.35)',
+        display: 'flex', alignItems: 'center', gap: 14, fontSize: 15, fontWeight: 600,
+        whiteSpace: 'nowrap',
+      }}>
+        <span style={{ fontSize: 22 }}>🔧</span>
+        <span>{Math.floor(maintenanceCountdown / 60)}분 {maintenanceCountdown % 60}초 후 점검이 시작됩니다</span>
+      </div>
+    ) : null;
 
     if (isMobile) {
       return (
@@ -1438,16 +1495,13 @@ export default function App() {
           <MobilePublicHomeDashboard members={members} onLogin={handleLogin} />
           <MobileScrollIndicator />
           {isLoadingOverlayVisible && <LoadingOverlay overlay fading={isLoadingOverlayFading} />}
+          {MaintenanceCountdownBanner}
         </>
       );
     }
 
-    
-
     return (
       <>
-
-      
       <PlaylistWidget />
       <div className="main-shell main-shell--home">
         <SakuraEffect />
@@ -1481,30 +1535,11 @@ export default function App() {
         </div>
       )}
       {isLoadingOverlayVisible && <LoadingOverlay overlay fading={isLoadingOverlayFading} />}
+      {MaintenanceCountdownBanner}
       </>
     );
   }
 
-  if (maintenanceMode && !isAdmin) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
-          <div className="text-6xl mb-4">점검</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">시스템 점검 중</h2>
-          <p className="text-gray-600 mb-6">
-            현재 시스템 점검이 진행 중입니다.<br />
-            잠시 후 다시 접속해주세요.
-          </p>
-          <button
-            onClick={handleLogout}
-            className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            로그아웃
-          </button>
-        </div>
-      </div>
-    );
-  }
 return (
   <>
   <PlaylistWidget />
@@ -1754,6 +1789,28 @@ return (
     </PokemonProvider>
   </GameProvider>
   {isLoadingOverlayVisible && <LoadingOverlay overlay fading={isLoadingOverlayFading} />}
+  {maintenanceCountdown !== null && maintenanceCountdown > 0 && (
+    <div style={{
+      position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+      zIndex: 9999, background: '#1e293b', color: '#fff',
+      borderRadius: 12, padding: '14px 28px', boxShadow: '0 4px 24px rgba(0,0,0,0.35)',
+      display: 'flex', alignItems: 'center', gap: 14, fontSize: 15, fontWeight: 600,
+      whiteSpace: 'nowrap',
+    }}>
+      <span style={{ fontSize: 22 }}>🔧</span>
+      <span>
+        {Math.floor(maintenanceCountdown / 60)}분 {maintenanceCountdown % 60}초 후 점검이 시작됩니다
+      </span>
+      {isAdmin && (
+        <button
+          onClick={cancelScheduledMaintenance}
+          style={{ marginLeft: 8, background: '#ef4444', border: 'none', color: '#fff', borderRadius: 8, padding: '4px 12px', cursor: 'pointer', fontWeight: 700 }}
+        >
+          취소
+        </button>
+      )}
+    </div>
+  )}
   </>
 );
 }

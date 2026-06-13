@@ -1,12 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import MoveSelectModal from '../../pokemon/MoveSelectModal';
 import ItemSelectorModal from '../../../modals/ItemSelectorModal';
+import PokemonPickerModal from '../../../modals/PokemonPickerModal';
 import MemberPokemonViewMode from './MemberPokemonViewMode';
 import MemberPokemonEditMode from './MemberPokemonEditMode';
 import MemberPokemonGiveMode from './MemberPokemonGiveMode';
 import MemberPokemonTransferMode from './MemberPokemonTransferMode';
 import { getLearnsetTmMoves, getPokemonLearnset } from '../../../../utils/pokemonLearnsets';
 import { DEFAULT_IVS, generateRandomIVs, normalizeIVs } from '../../../../utils/pokemonIndividualValues';
+import { getPokemonGenderOptions } from '../../../../utils/pokemonGender';
 
 const emptyEffort = { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 };
 const emptyCondition = { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 };
@@ -32,6 +34,7 @@ function MemberPokemonTab({
   const [showGiveMoveModal, setShowGiveMoveModal] = useState(false);
   const [showEditItemModal, setShowEditItemModal] = useState(false);
   const [showGiveItemModal, setShowGiveItemModal] = useState(false);
+  const [showGivePokemonPicker, setShowGivePokemonPicker] = useState(false);
   const [transferTarget, setTransferTarget] = useState(null);
   
   const [editData, setEditData] = useState({
@@ -485,6 +488,25 @@ console.log('📋 최종 기술:', {
         </div>
       )}
 
+      {showGivePokemonPicker && (
+        <PokemonPickerModal
+          allPokemon={allPokemonMaster}
+          onSelect={(pokemon) => {
+            const nextGenderOptions = getPokemonGenderOptions(pokemon);
+            setGiveData(prev => ({
+              ...prev,
+              selectedPokemon: pokemon,
+              nickname: pokemon.name,
+              selectedMoves: [],
+              gender: nextGenderOptions.length === 1 && nextGenderOptions[0] === 'none' ? 'none' : 'random',
+            }));
+            setShowGivePokemonPicker(false);
+            setMode('give');
+          }}
+          onClose={() => setShowGivePokemonPicker(false)}
+        />
+      )}
+
       {/* 화면 모드별 렌더링 */}
       {mode === 'view' && (
         <MemberPokemonViewMode
@@ -496,7 +518,7 @@ console.log('📋 최종 기술:', {
           onStartGive={() => {
             setShowGiveMoveModal(false);
             setShowGiveItemModal(false);
-            setMode('give');
+            setShowGivePokemonPicker(true);
           }}
           onStartTransfer={handleStartTransferPokemon}
         />
@@ -534,6 +556,7 @@ console.log('📋 최종 기술:', {
           }}
           onOpenItemModal={() => setShowGiveItemModal(true)}
           onOpenMoveModal={() => setShowGiveMoveModal(true)}
+          onOpenPokemonPicker={() => setShowGivePokemonPicker(true)}
         />
       )}
 

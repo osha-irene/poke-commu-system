@@ -55,6 +55,7 @@ export const useGameData = (allPokemonData) => {
   const [gamePokedex, setGamePokedex] = useState([]);
   const [sharedPokedexData, setSharedPokedexData] = useState({});
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [maintenanceScheduledAt, setMaintenanceScheduledAt] = useState(null);
   const [systemSettings, setSystemSettings] = useState({
     maxNonPartnerPokemon: 18,
     escapeMode: 'none'
@@ -184,16 +185,7 @@ export const useGameData = (allPokemonData) => {
           console.log('🔧 공유 도감 초기화');
         }
 
-        // 6. 점검 모드 로드
-        const maintenanceRef = ref(database, 'gameData/maintenanceMode');
-        const maintenanceSnapshot = await get(maintenanceRef);
-        if (maintenanceSnapshot.exists()) {
-          setMaintenanceMode(maintenanceSnapshot.val());
-        } else {
-          await set(maintenanceRef, false);
-          setMaintenanceMode(false);
-        }
-        console.log('🔧 점검 모드:', maintenanceSnapshot.exists() ? maintenanceSnapshot.val() : false);
+        // 6. 점검 모드 로드 (onValue로 실시간 처리, 별도 useEffect에서 구독)
 
         // 7. 시스템 설정 로드
         const systemSettingsRef = ref(database, 'gameData/systemSettings');
@@ -323,6 +315,35 @@ export const useGameData = (allPokemonData) => {
     saveSharedPokedex();
   }, [sharedPokedexData, isLoading]);
 
+  // 🔥 점검 모드 실시간 리스너
+  useEffect(() => {
+    const maintenanceRef = ref(database, 'gameData/maintenanceMode');
+    const unsub = onValue(maintenanceRef, (snapshot) => {
+      setMaintenanceMode(snapshot.exists() ? snapshot.val() : false);
+    });
+    return () => unsub();
+  }, []);
+
+  // 🔥 점검 예약 시각 실시간 리스너
+  useEffect(() => {
+    const scheduledRef = ref(database, 'gameData/maintenanceScheduledAt');
+    const unsub = onValue(scheduledRef, (snapshot) => {
+      setMaintenanceScheduledAt(snapshot.exists() ? snapshot.val() : null);
+    });
+    return () => unsub();
+  }, []);
+
+  const scheduleMaintenanceMode = async (delayMs = 5 * 60 * 1000) => {
+    const scheduledAt = Date.now() + delayMs;
+    const scheduledRef = ref(database, 'gameData/maintenanceScheduledAt');
+    await set(scheduledRef, scheduledAt);
+  };
+
+  const cancelScheduledMaintenance = async () => {
+    const scheduledRef = ref(database, 'gameData/maintenanceScheduledAt');
+    await set(scheduledRef, null);
+  };
+
   // 🔥 점검 모드 변경 시 Firebase에 저장
   useEffect(() => {
     const saveMaintenanceMode = async () => {
@@ -394,6 +415,9 @@ export const useGameData = (allPokemonData) => {
     setSharedPokedexData,
     maintenanceMode,
     setMaintenanceMode,
+    maintenanceScheduledAt,
+    scheduleMaintenanceMode,
+    cancelScheduledMaintenance,
     systemSettings,
     updateSystemSettings,
     updatePokedexMemo,
