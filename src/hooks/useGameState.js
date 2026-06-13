@@ -256,7 +256,23 @@ export default function useGameState() {
       pokemon.regionName,
       regions
     );
-    
+
+    // 사파리 구역 일일 보상: 포획 시 사파리볼 조용히 지급
+    if (result && pokemon.pendingSafariBallReward > 0) {
+      const safariBall = allItems.find(item => item.nameEn === 'safari-ball' || item.name === '사파리볼');
+      if (safariBall) {
+        const inv = currentUser.inventory || [];
+        const idx = inv.findIndex(i => i.id === safariBall.id || i.nameEn === safariBall.nameEn);
+        let newInv;
+        if (idx >= 0) {
+          newInv = inv.map((i, n) => n === idx ? { ...i, count: (i.count || 0) + pokemon.pendingSafariBallReward } : i);
+        } else {
+          newInv = [...inv, { ...safariBall, count: pokemon.pendingSafariBallReward }];
+        }
+        await updateCurrentUser({ inventory: newInv });
+      }
+    }
+
     if (result && result.isFirstCatch) {
       setFirstCatchPokemon({
         ...result.pokemonTemplate,

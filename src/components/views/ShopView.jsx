@@ -6,17 +6,20 @@ import RandomBoxShop from './RandomBoxShop';
 import useMediaQuery from '../../hooks/useMediaQuery';
 
 const P = {
-  bg:       'rgba(22,42,16,0.75)',
-  card:     'rgba(255,255,255,0.10)',
-  cardSel:  'rgba(255,255,255,0.18)',
-  border:   'rgba(255,255,255,0.15)',
-  borderSel:'rgba(185,240,90,0.7)',
-  text:     'rgba(255,255,255,0.95)',
-  muted:    'rgba(255,255,255,0.55)',
-  accent:   'rgba(185,240,90,1)',
-  accentBg: 'rgba(100,175,45,0.3)',
-  price:    '#f0d060',
-  tag:      'rgba(255,255,255,0.18)',
+  bg:        'rgba(22,42,16,0.75)',
+  card:      'rgba(255,255,255,0.0)',
+  cardSel:   'rgba(185,240,90,0.22)',
+  border:    'rgba(255,255,255,0.28)',
+  borderSel: 'rgba(185,240,90,0.8)',
+  text:      'rgba(255,255,255,1)',
+  muted:     'rgba(255,255,255,0.65)',
+  accent:    'rgba(185,240,90,1)',
+  accentBg:  'rgba(100,175,45,0.)',
+  price:     '#f0d060',
+  daily:     'rgba(100,180,255,1)',
+  dailyBg:   'rgba(60,120,220,0.25)',
+  rare:      'rgba(210,130,255,1)',
+  rareBg:    'rgba(140,60,220,0.28)',
 };
 
 export default function ShopView() {
@@ -333,9 +336,9 @@ export default function ShopView() {
       <div style={{ paddingTop: 56, paddingBottom: 80, minHeight: '100%', color: P.text }}>
 
         {/* 보유 금액 */}
-        <div style={{ margin: '0 12px 14px', padding: '12px 16px', background: 'rgba(30,58,22,0.97)', border: `1px solid rgba(160,220,90,0.5)`, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', backdropFilter: 'blur(8px)' }}>
-          <div style={{ fontSize: 13, color: 'rgba(210,240,160,1)', fontWeight: 600 }}>보유 금액</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 20, fontWeight: 800, color: 'rgba(210,250,110,1)' }}>
+        <div style={{ margin: '0 12px 14px', padding: '12px 16px', background: 'rgba(255,255,255,0.22)', border: `1px solid rgba(255,255,255,0.35)`, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ fontSize: 13, color: P.muted, fontWeight: 600 }}>보유 금액</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 20, fontWeight: 800, color: P.text }}>
             <Coins size={18} style={{ color: P.accent }} />
             {trainer.money?.toLocaleString() || 0}원
           </div>
@@ -344,14 +347,14 @@ export default function ShopView() {
         {/* 한정 아이템 */}
         {rareData && (
           <div style={{ margin: '0 12px 14px' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(200,150,240,0.85)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 6 }}>한정 아이템</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: P.rare, letterSpacing: '0.07em', marginBottom: 6 }}>★ 한정 아이템</div>
             <button
               onClick={() => { if (!rareData.alreadyPurchased) { setSelectedItem({ ...rareData.item, type: 'rare', price: shopData.rareDailyItem.price, stock: 1 }); setQuantity(1); }}}
               disabled={rareData.alreadyPurchased}
               style={{
                 width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-                padding: '12px 14px', borderRadius: 12, border: `1px solid rgba(180,120,240,0.4)`,
-                background: selectedItem?.itemId === shopData.rareDailyItem.itemId ? 'rgba(160,100,220,0.55)' : 'rgba(110,60,175,0.52)',
+                padding: '12px 14px', borderRadius: 12, border: `1px solid ${selectedItem?.itemId === shopData.rareDailyItem.itemId ? P.rare : 'rgba(210,130,255,0.4)'}`,
+                background: selectedItem?.itemId === shopData.rareDailyItem.itemId ? P.rareBg : 'rgba(140,60,220,0.18)',
                 cursor: rareData.alreadyPurchased ? 'not-allowed' : 'pointer',
                 opacity: rareData.alreadyPurchased ? 0.5 : 1, textAlign: 'left',
               }}
@@ -360,8 +363,8 @@ export default function ShopView() {
                 <img src={rareData.item.spriteUrl} alt={rareData.item.name} style={{ width: 36, height: 36, imageRendering: 'pixelated', objectFit: 'contain' }} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2, color: P.important }}>{rareData.item.name}</div>
-                <div style={{ fontSize: 11, color: P.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{rareData.item.effect?.replace(/\n/g, ' ')}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2, color: P.text }}>{rareData.item.name}</div>
+                <div style={{ fontSize: 11, color: P.muted, whiteSpace: 'normal', lineHeight: 1.4 }}>{rareData.item.effect?.replace(/\n/g, ' ')}</div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: P.price }}>{shopData.rareDailyItem.price?.toLocaleString()}원</div>
@@ -390,7 +393,9 @@ export default function ShopView() {
             if (!item) return null;
             const isSoldOut = shopItem.stock !== 99 && shopItem.stock <= 0;
             const isSelected = selectedItem?.itemId === shopItem.itemId;
-            const typeColor = shopItem.type === 'daily' ? 'rgba(100,160,240,0.9)' : P.muted;
+            const isDaily = shopItem.type === 'daily';
+            const tagColor = isDaily ? P.daily : P.muted;
+            const tagBg = isDaily ? P.dailyBg : 'rgba(255,255,255,0.10)';
             return (
               <button
                 key={`${shopItem.itemId}-${shopItem.type}`}
@@ -399,23 +404,23 @@ export default function ShopView() {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 12,
                   padding: '11px 14px', borderRadius: 12,
-                  border: `1px solid ${isSelected ? P.accent : P.border}`,
-                  background: isSelected ? P.accentBg : P.card,
+                  border: `1px solid ${isSelected ? P.borderSel : P.border}`,
+                  background: isSelected ? P.cardSel : P.card,
                   cursor: isSoldOut ? 'not-allowed' : 'pointer',
                   opacity: isSoldOut ? 0.45 : 1, textAlign: 'left',
                 }}
               >
-                <div style={{ width: 48, height: 48, background: 'rgba(255,255,255,0.08)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ width: 48, height: 48, background: 'rgba(255,255,255,0.14)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <img src={item.spriteUrl} alt={item.name} style={{ width: 36, height: 36, imageRendering: 'pixelated', objectFit: 'contain' }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: P.important }}>{item.name}</span>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: typeColor, border: `1px solid ${typeColor}`, borderRadius: 4, padding: '1px 5px' }}>
-                      {shopItem.type === 'daily' ? `${todayNameKo} 한정` : '상시'}
+                    <span style={{ fontSize: 14, fontWeight: 700, color: P.text }}>{item.name}</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: tagColor, background: tagBg, borderRadius: 4, padding: '1px 6px' }}>
+                      {isDaily ? `${todayNameKo} 한정` : '상시'}
                     </span>
                   </div>
-                  <div style={{ fontSize: 11, color: P.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.effect?.replace(/\n/g, ' ')}</div>
+                  <div style={{ fontSize: 11, color: P.muted, whiteSpace: 'normal', lineHeight: 1.4 }}>{item.effect?.replace(/\n/g, ' ')}</div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: P.price }}>{shopItem.price?.toLocaleString()}원</div>
@@ -441,7 +446,7 @@ export default function ShopView() {
                 <img src={selectedItem.spriteUrl} alt={selectedItem.name} style={{ width: 36, height: 36, imageRendering: 'pixelated', objectFit: 'contain' }} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 2, color: P.important }}>{selectedItem.name}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 2, color: P.text }}>{selectedItem.name}</div>
                 <div style={{ fontSize: 13, color: P.price, fontWeight: 800 }}>
                   {(selectedItem.price * quantity).toLocaleString()}원
                   {quantity > 1 && <span style={{ fontSize: 11, color: P.muted, marginLeft: 4 }}>({selectedItem.price.toLocaleString()}원 × {quantity})</span>}

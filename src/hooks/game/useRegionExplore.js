@@ -99,23 +99,13 @@ export const useRegionExplore = (
         && safariBall
         && currentUser.lastSafariBallRewardDate !== todayKey;
       const nextDailyWalks = currentUser.dailyWalks - 1;
-      const nextInventory = canReceiveSafariBalls
-        ? addInventoryItem(currentUser.inventory, safariBall, SAFARI_BALL_DAILY_REWARD_COUNT)
-        : currentUser.inventory;
 
-      // 탐험 횟수 차감
+      // 탐험 횟수 차감 (사파리볼은 포획 시 지급)
       await updateCurrentUser({
         dailyWalks: nextDailyWalks,
-        ...(canReceiveSafariBalls ? {
-          inventory: nextInventory,
-          lastSafariBallRewardDate: todayKey
-        } : {})
+        ...(canReceiveSafariBalls ? { lastSafariBallRewardDate: todayKey } : {})
       });
       console.log('✅ 탐험 횟수 차감 완료:', nextDailyWalks);
-
-      if (canReceiveSafariBalls) {
-        console.log(`✅ 사파리 장소 일일 입장 보상 지급: 사파리볼 x${SAFARI_BALL_DAILY_REWARD_COUNT}`);
-      }
 
       // 포켓몬 미조우 시
       if (randomEncounter >= encounterRate) {
@@ -127,10 +117,7 @@ export const useRegionExplore = (
         ];
         applyLoot(loot, null);
         const itemText = itemList.length > 0 ? `\n🎁 ${itemList.join(', ')}` : '';
-        const safariText = canReceiveSafariBalls
-          ? `\n🎁 사파리볼 x${SAFARI_BALL_DAILY_REWARD_COUNT}을 받았습니다!`
-          : '';
-        alert(`🌿 ${encounterLocationName}을(를) 탐험했지만 포켓몬을 발견하지 못했습니다!${safariText}\n\n💰 ${loot.money}원을 획득했습니다!${itemText}`);
+        alert(`🌿 ${encounterLocationName}을(를) 탐험했지만 포켓몬을 발견하지 못했습니다!\n\n💰 ${loot.money}원을 획득했습니다!${itemText}`);
         return;
       }
 
@@ -203,6 +190,7 @@ export const useRegionExplore = (
       isSafari,
       minLevel,
       maxLevel,
+      pendingSafariBallReward: canReceiveSafariBalls ? SAFARI_BALL_DAILY_REWARD_COUNT : 0,
 		};
 
 		setEncounterPokemon(encounteredPokemon);
