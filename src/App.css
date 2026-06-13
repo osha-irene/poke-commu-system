@@ -1743,7 +1743,7 @@ img.emoji {
 }
 .home-issue-board {
   --home-issue-column-width: 128px;
-  --home-issue-column-gap: 58px;
+  --home-issue-column-gap: 56px;
   --home-issue-item-image-size: 50%;
   --home-issue-pokemon-image-size: 75%;
   --home-issue-image-row-height: 108px;
@@ -1751,7 +1751,7 @@ img.emoji {
   --home-issue-pokemon-icon-source-width: 128px;
   --home-issue-pokemon-icon-height: 64px;
   position: absolute;
-  inset: 95px 60px 18px 36px;
+  inset: 89px 58px 18px 36px;
   display: grid;
   grid-template-columns: repeat(2, var(--home-issue-column-width));
   justify-content: center;
