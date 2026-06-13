@@ -3,6 +3,23 @@ import { Heart, Egg } from 'lucide-react';
 import { getTypeColor, POKEBALL_LIST } from '../../../styles/theme';
 import { getPokemonLocalIconUrl } from '../../../utils/pokemonIconUtils';
 
+const PARTNER_WALK_STYLE = `
+@keyframes partnerWalk {
+  0%, 49%  { background-position: 0px center; }
+  50%, 100% { background-position: -32px center; }
+}
+@keyframes partnerWalkDesktop {
+  0%, 49%  { background-position: 0px center; }
+  50%, 100% { background-position: -32px center; }
+}
+.partner-walk-anim {
+  animation: partnerWalk 0.6s steps(1) infinite;
+}
+.partner-walk-anim-desktop {
+  animation: partnerWalkDesktop 0.6s steps(1) infinite;
+}
+`;
+
 const getLocalIconUrl = (pokemon, allPokemonMaster) => {
   let englishName = pokemon.nameEn;
   
@@ -151,7 +168,8 @@ export function PartnerSlot({
           cursor: 'pointer',
         }}
       >
-        <div style={{ width: 36, height: 36, flexShrink: 0 }}>
+        <style>{PARTNER_WALK_STYLE}</style>
+        <div style={{ width: 32, height: 32, flexShrink: 0 }}>
           <div style={{
             width: '100%', height: '100%',
             backgroundImage: `url(${ballImage})`,
@@ -159,12 +177,15 @@ export function PartnerSlot({
             borderRadius: '50%',
           }} />
         </div>
-        <div style={{
-          width: 48, height: 48, flexShrink: 0,
-          backgroundImage: `url(${imageUrl})`,
-          backgroundSize: '96px 48px', backgroundPosition: 'left center',
-          backgroundRepeat: 'no-repeat', imageRendering: 'pixelated',
-        }} />
+        <div
+          className="partner-walk-anim"
+          style={{
+            width: 32, height: 32, flexShrink: 0,
+            backgroundImage: `url(${imageUrl})`,
+            backgroundSize: '64px 32px',
+            backgroundRepeat: 'no-repeat', imageRendering: 'pixelated',
+          }}
+        />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
             <Heart size={12} style={{ color: 'rgba(240,130,150,0.85)', flexShrink: 0 }} />
@@ -189,6 +210,7 @@ export function PartnerSlot({
       onClick={onClick}
       className={`flex items-center gap-4 rounded-lg p-4 ${STYLES.partner} cursor-pointer hover:shadow-lg transition-all`}
     >
+      <style>{PARTNER_WALK_STYLE}</style>
 
       <div
         className="flex-shrink-0 w-10 h-10 rounded-full overflow-hidden flex items-center justify-center"
@@ -205,18 +227,14 @@ export function PartnerSlot({
         />
       </div>
 
-      <div
-        className="w-14 h-14 flex-shrink-0 flex items-center justify-center"
-        style={{ padding: '4px' }}
-      >
+      <div className="w-14 h-14 flex-shrink-0 flex items-center justify-center" style={{ padding: '4px' }}>
         <div
-          className="pokemon-bg-sprite"
+          className="partner-walk-anim-desktop"
           style={{
-            width: '40px',
-            height: '40px',
+            width: '32px',
+            height: '32px',
             backgroundImage: `url(${imageUrl})`,
-            backgroundSize: '80px 40px',
-            backgroundPosition: 'left center',
+            backgroundSize: '64px 32px',
             backgroundRepeat: 'no-repeat',
             imageRendering: 'pixelated'
           }}
