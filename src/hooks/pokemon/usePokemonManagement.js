@@ -1,4 +1,4 @@
-// src/hooks/pokemon/usePokemonManagement.js - 吏꾪솕 泥댄겕 ?듯빀
+// src/hooks/pokemon/usePokemonManagement.js - 포켓몬 관리 훅
 
 import { ref, get } from 'firebase/database';
 import { database } from '../../firebase';
@@ -122,28 +122,28 @@ const usePokemonManagement = (
     return occupiedSlots.slice(0, 6);
   };
 
-  // ?뷀듃由??대룞
+  // 파티로 이동
   const movePokemonToParty = (uniqueId) => {
-    console.log('?뵦 movePokemonToParty ?쒖옉:', uniqueId);
+    console.log('movePokemonToParty 호출:', uniqueId);
     
     if (!currentUser) {
-      console.error('??currentUser媛 ?놁뒿?덈떎!');
+      console.error('currentUser가 없습니다!');
       return;
     }
     
-    console.log('?벀 ?꾩옱 ?꾩껜 諛곗뿴:', currentUser.caughtPokemon.map((p, i) => `[${i}] ${p?.name || 'null'}`));
+    console.log('현재 잡은 포켓몬:', currentUser.caughtPokemon.map((p, i) => `[${i}] ${p?.name || 'null'}`));
     
     const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === uniqueId);
-    console.log('?뵇 ?ъ폆紐??몃뜳??', pokemonIndex);
+    console.log('pokemon index:', pokemonIndex);
     
     if (pokemonIndex === -1) { 
-      console.error('???ъ폆紐ъ쓣 李얠쓣 ???놁뒿?덈떎!');
-      alert('?ъ폆紐ъ쓣 李얠쓣 ???놁뒿?덈떎!'); 
+      console.error('포켓몬을 찾을 수 없습니다!');
+      alert('포켓몬을 찾을 수 없습니다!'); 
       return; 
     }
     
     if (pokemonIndex < 6) {
-      console.log('?좑툘 ?대? ?뷀듃由ъ뿉 ?덉뒿?덈떎');
+      console.log('이미 파티에 있습니다');
       return; 
     }
     
@@ -158,11 +158,11 @@ const usePokemonManagement = (
       }
     }
     
-    console.log('?렞 鍮??щ’ ?몃뜳??', emptySlotIndex);
+    console.log('empty slot index:', emptySlotIndex);
     
     if (emptySlotIndex === -1) {
-      console.error('???뷀듃由ш? 媛??李쇱뒿?덈떎!');
-      alert('?뷀듃由ш? 媛??李쇱뒿?덈떎!'); 
+      console.error('파티가 가득찼습니다!');
+      alert('파티가 가득찼습니다!'); 
       return; 
     }
     
@@ -176,13 +176,13 @@ const usePokemonManagement = (
     updateCurrentUser({ caughtPokemon: finalPokemon });
   };
 
-  // 諛뺤뒪 ?대룞
+  // 박스로 이동
   const movePokemonToBox = (uniqueId) => {
     if (!currentUser) return;
     
     const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === uniqueId);
     if (pokemonIndex === -1) { 
-      alert('?ъ폆紐ъ쓣 李얠쓣 ???놁뒿?덈떎!'); 
+      alert('포켓몬을 찾을 수 없습니다!'); 
       return; 
     }
     
@@ -193,7 +193,7 @@ const usePokemonManagement = (
     const pokemon = currentUser.caughtPokemon[pokemonIndex];
     
     if (pokemon.isPartner) {
-      alert('?뮇 ?뚰듃???ъ폆紐ъ? 諛뺤뒪濡??대룞?????놁뒿?덈떎!');
+      alert('파트너 포켓몬은 박스로 이동할 수 없습니다!');
       return;
     }
     
@@ -209,12 +209,12 @@ const usePokemonManagement = (
     updateCurrentUser({ caughtPokemon: finalPokemon });
   };
 
-  // 諛⑹깮
+  // 방생
   const releasePokemon = (uniqueId) => {
     if (!currentUser) return;
 
     if (currentUser.partnerPokemon && currentUser.partnerPokemon.uniqueId === uniqueId) {
-      alert('파트너 포켓몬은 방생할 수 없습니다!');
+      alert('íí¸ë í¬ì¼ëª¬ì ë°©ìí  ì ììµëë¤!');
       return;
     }
     
@@ -242,16 +242,16 @@ const usePokemonManagement = (
       updateCurrentUser({ caughtPokemon: newCaughtPokemon });
     }
     
-    alert((pokemon.nickname || pokemon.name) + '을(를) 방생했습니다.');
+    alert((pokemon.nickname || pokemon.name) + 'ì(ë¥¼) ë°©ìíìµëë¤.');
   };
 
-  // ?뚰듃???ㅼ젙
+  // 파트너 설정
   const setPartnerPokemon = (uniqueId) => {
     if (!currentUser) return;
     
     if (uniqueId === null) {
       if (!currentUser.partnerPokemon) {
-        alert('?ㅼ젙???뚰듃???ъ폆紐ъ씠 ?놁뒿?덈떎.');
+        alert('설정된 파트너 포켓몬이 없습니다.');
         return;
       }
       
@@ -280,13 +280,13 @@ const usePokemonManagement = (
         caughtPokemon: finalCaughtPokemon
       });
       
-      alert('?뚰듃???ㅼ젙???댁젣?섏뿀?듬땲??');
+      alert('파트너 설정이 해제되었습니다.');
       return;
     }
     
     const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
     if (!pokemon) {
-      alert('?ъ폆紐ъ쓣 李얠쓣 ???놁뒿?덈떎!');
+      alert('포켓몬을 찾을 수 없습니다!');
       return;
     }
     
@@ -321,10 +321,10 @@ const usePokemonManagement = (
       caughtPokemon: finalCaughtPokemon
     });
     
-    alert('?뮇 ?뚰듃???ъ폆紐ъ쑝濡??ㅼ젙?섏뿀?듬땲??');
+    alert('파트너 포켓몬으로 설정되었습니다.');
   };
 
-  // ?덈꺼??(?댁긽?쒖궗??+ 吏꾪솕 泥댄겕 ?듯빀)
+  // 이상한사탕 (레벨업 + 진화 체크 포함)
   const useRareCandy = async (uniqueId, onLevelUp, expAmount = 0) => {
     if (!currentUser) return false;
 
@@ -351,18 +351,18 @@ const usePokemonManagement = (
           maxAllowedLevel = Number(maxLevel) || Infinity;
 
           if ((Number(pokemon.level) || 1) >= maxAllowedLevel) {
-            alert(`레벨 제한으로 인해 더 이상 레벨업할 수 없습니다!\n현재 최대 레벨: ${maxLevel}`);
+            alert(`ë ë²¨ ì íì¼ë¡ ì¸í´ ë ì´ì ë ë²¨ìí  ì ììµëë¤!\níì¬ ìµë ë ë²¨: ${maxLevel}`);
             return false;
           }
         }
       }
     } catch (error) {
-      console.error('레벨 제한 확인 실패:', error);
+      console.error('ë ë²¨ ì í íì¸ ì¤í¨:', error);
     }
 
     const oldLevel = Number(pokemon.level) || 1;
 
-    // 기존 누적 exp + 이번에 배분할 exp 합산
+    // ê¸°ì¡´ ëì  exp + ì´ë²ì ë°°ë¶í  exp í©ì°
     let currentLevel = oldLevel;
     let accExp = (Number(pokemon.exp) || 0) + (Number(expAmount) || 0);
     const learnedLevels = [];
@@ -376,7 +376,7 @@ const usePokemonManagement = (
         learnedLevels.push(currentLevel);
       }
     } else {
-      // expAmount 없이 호출된 경우 (이상한사탕 단독) — 기존 +1 동작
+      // expAmount ìì´ í¸ì¶ë ê²½ì° (ì´ìíì¬í ë¨ë) â ê¸°ì¡´ +1 ëì
       currentLevel = Math.min(oldLevel + 1, maxAllowedLevel);
       learnedLevels.push(currentLevel);
       accExp = 0;
@@ -386,10 +386,10 @@ const usePokemonManagement = (
     if (newLevel === oldLevel && accExp === (Number(pokemon.exp) || 0)) return false;
 
     const isPartnerPokemon = currentUser.partnerPokemon?.uniqueId === uniqueId;
-    // 남은 exp를 pokemon에 저장
+    // ë¨ì expë¥¼ pokemonì ì ì¥
     const updatedPokemonPatch = { ...pokemon, level: newLevel, exp: accExp };
 
-    // trainerExp에서 배분한 만큼만 차감
+    // trainerExpìì ë°°ë¶í ë§í¼ë§ ì°¨ê°
     const newTrainerExp = Math.max(0, (Number(currentUser.trainerExp) || 0) - (Number(expAmount) || 0));
 
     if (isPartnerPokemon) {
@@ -405,7 +405,7 @@ const usePokemonManagement = (
       const levelMsg = newLevel > oldLevel + 1
         ? `Lv.${oldLevel} → Lv.${newLevel} (${newLevel - oldLevel}레벨 상승!)`
         : `Lv.${oldLevel} → Lv.${newLevel}`;
-      alert(`${pokemon.nickname || pokemon.name}의 레벨이 올랐다!\n${levelMsg}`);
+      alert(`${pokemon.nickname || pokemon.name}ì ë ë²¨ì´ ì¬ëë¤!\n${levelMsg}`);
     }
 
     setTimeout(async () => {
@@ -423,13 +423,13 @@ const usePokemonManagement = (
             const shouldShowEvolutionModal = checkEvolutionOnLevelUp(latestPokemon);
 
             if (shouldShowEvolutionModal) {
-              console.log('진화 모달 표시 중, 기술 배우기는 건너뜀');
+              console.log('ì§í ëª¨ë¬ íì ì¤, ê¸°ì  ë°°ì°ê¸°ë ê±´ëë');
               return;
             }
           }
         }
       } catch (error) {
-        console.error('Firebase 조회 실패:', error);
+        console.error('Firebase ì¡°í ì¤í¨:', error);
       }
 
       if (onLevelUp && pokemonLearnsets && allMoves) {
@@ -459,7 +459,7 @@ const usePokemonManagement = (
     ));
 
     if (!targetTemplate) {
-      alert('蹂寃쏀븷 ???곗씠?곕? 李얠쓣 ???놁뒿?덈떎.');
+      alert('변경할 폼 데이터를 찾을 수 없습니다.');
       return false;
     }
 
@@ -476,7 +476,7 @@ const usePokemonManagement = (
       : currentUser.partnerPokemon;
 
     if (!changed) {
-      alert('?ъ폆紐ъ쓣 李얠쓣 ???놁뒿?덈떎.');
+      alert('포켓몬을 찾을 수 없습니다.');
       return false;
     }
 
@@ -484,11 +484,11 @@ const usePokemonManagement = (
       caughtPokemon: newCaughtPokemon,
       partnerPokemon: newPartnerPokemon,
     });
-    alert(`${targetTemplate.name || targetTemplate.nameEn} ?쇱쑝濡?蹂寃쏀뻽?듬땲??`);
+    alert((targetTemplate.name || targetTemplate.nameEn) + '으로 변경되었습니다.');
     return true;
   };
 
-  // ?됰꽕??蹂寃?
+  // 닉네임 변경
   const updatePokemonNickname = (uniqueId, nickname) => {
     if (!currentUser) return;
     const newCaughtPokemon = currentUser.caughtPokemon.map(p => 
@@ -497,33 +497,33 @@ const usePokemonManagement = (
     updateCurrentUser({ caughtPokemon: newCaughtPokemon });
   };
 
-  // ?꾩씠??二쇨린
+  // 아이템 지급
   const giveItemToPokemon = (pokemonUniqueId, itemName, allItems) => {
     if (!currentUser || !currentUser.inventory || !currentUser.caughtPokemon) {
-      alert('?ㅻ쪟媛 諛쒖깮?덉뒿?덈떎. ?섏씠吏瑜??덈줈怨좎묠?댁＜?몄슂.');
+      alert('오류가 발생했습니다. 페이지를 새로고침해주세요.');
       return false;
     }
     
     const itemIndex = currentUser.inventory.findIndex(i => i.name === itemName);
     if (itemIndex === -1) { 
-      alert('?대떦 ?꾩씠?쒖씠 ?놁뒿?덈떎!'); 
+      alert('해당 아이템이 없습니다!'); 
       return false; 
     }
     
     const item = currentUser.inventory[itemIndex];
     if (item.count <= 0) { 
-      alert('?꾩씠?쒖씠 遺議깊빀?덈떎!'); 
+      alert('아이템이 소진되었습니다!'); 
       return false; 
     }
     
     const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === pokemonUniqueId);
     if (!pokemon) { 
-      alert('?ъ폆紐ъ쓣 李얠쓣 ???놁뒿?덈떎!'); 
+      alert('포켓몬을 찾을 수 없습니다!'); 
       return false; 
     }
     
     if (pokemon.heldItem) {
-      if (!window.confirm(`${pokemon.nickname || pokemon.name}??媛) ?대? ${pokemon.heldItem}??瑜? ?ㅺ퀬 ?덉뒿?덈떎. 援먯껜?섏떆寃좎뒿?덇퉴?`)) {
+      if (!window.confirm((pokemon.nickname || pokemon.name) + '이(가) 이미 ' + pokemon.heldItem + '을(를) 들고 있습니다. 교체하시겠습니까?')) {
         return false;
       }
       
@@ -546,14 +546,14 @@ const usePokemonManagement = (
     );
     
     updateCurrentUser({ inventory: newInventory, caughtPokemon: newCaughtPokemon });
-    alert(`${pokemon.nickname || pokemon.name}?먭쾶 ${itemName}??瑜? 二쇱뿀?듬땲??`);
+    alert((pokemon.nickname || pokemon.name) + '에게 ' + itemName + '을(를) 주었습니다.');
     return true;
   };
 
-  // ?꾩씠???뚯닔
+  // 아이템 뺏기
   const takeItemFromPokemon = (pokemonUniqueId, allItems) => {
     if (!currentUser || !currentUser.caughtPokemon || !currentUser.inventory) {
-      alert('?ㅻ쪟媛 諛쒖깮?덉뒿?덈떎. ?섏씠吏瑜??덈줈怨좎묠?댁＜?몄슂.');
+      alert('오류가 발생했습니다. 페이지를 새로고침해주세요.');
       return;
     }
     
@@ -561,7 +561,7 @@ const usePokemonManagement = (
     if (!pokemon) return;
     
     if (!pokemon.heldItem) { 
-      alert('???ъ폆紐ъ? ?꾩씠?쒖쓣 ?ㅺ퀬 ?덉? ?딆뒿?덈떎!'); 
+      alert('이 포켓몬은 아이템을 들고 있지 않습니다!'); 
       return; 
     }
     
@@ -582,10 +582,10 @@ const usePokemonManagement = (
     );
     
     updateCurrentUser({ inventory: newInventory, caughtPokemon: newCaughtPokemon });
-    alert(`${pokemon.nickname || pokemon.name}?먭쾶??${itemName}??瑜? ?뚯닔?덉뒿?덈떎!`);
+    alert((pokemon.nickname || pokemon.name) + '에게서 ' + itemName + '을(를) 뺐습니다!');
   };
 
-  // ?뷀듃由??쒖꽌 蹂寃?
+  // 파티 순서 변경
   const reorderPartyPokemon = (reorderedParty) => {
     if (!currentUser) return;
     
@@ -599,7 +599,7 @@ const usePokemonManagement = (
     updateCurrentUser({ caughtPokemon: finalPokemon });
   };
 
-  // ?몃젰移?利앷?
+  // 노력치 증가
   const increaseEffort = (uniqueId, stat, amount) => {
     if (!currentUser) return;
     
@@ -616,7 +616,7 @@ const usePokemonManagement = (
     const actualIncrease = Math.min(amount, remaining, maxForStat);
     
     if (actualIncrease <= 0) {
-      alert('???댁긽 ?몃젰移섎? ?щ┫ ???놁뒿?덈떎!');
+      alert('더 이상 노력치를 늘릴 수 없습니다!');
       return;
     }
     

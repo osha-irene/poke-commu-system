@@ -1467,15 +1467,22 @@ export default function App() {
     return <LoadingOverlay />;
   }
 
-  if (!currentUser || !currentUser.id) {
-    const handlePublicNavigation = (nextTab) => {
+      const handlePublicNavigation = (nextTab) => {
       if (!['home', 'notice', 'world', 'system'].includes(nextTab)) {
+        // 허용되지 않은 탭이면 모달 오픈
         setAccessModalImg(getRandomAccessModalImg());
         setShowAccessModal(true);
+      } else {
+        // 허용된 탭('home', 'notice', 'world', 'system')이면 실제로 탭 전환!
+        setCurrentTab(nextTab);
       }
     };
 
+if (!currentUser || !currentUser.id) {
+    // ✅ 1. 비로그인 유저의 탭 이동 제어 함수 (이동 로직 추가)
+
     const MaintenanceCountdownBanner = maintenanceCountdown > 0 ? (
+      // ... (기존 유지보수 배너 스타일 코드 그대로 유지) ...
       <div style={{
         position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
         zIndex: 9999, background: '#1e293b', color: '#fff',
@@ -1490,30 +1497,43 @@ export default function App() {
 
     if (isMobile) {
       return (
-        <>
-          <PlaylistWidget />
-          <MobilePublicHomeDashboard members={members} onLogin={handleLogin} />
-          <MobileScrollIndicator />
+        <div style={{
+          position: 'fixed', inset: 0,
+          background: 'rgba(10,20,10,0.94)',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          color: 'rgba(255,255,255,0.88)',
+          textAlign: 'center', padding: '32px',
+        }}>
+          <p style={{ fontSize: 18, lineHeight: 1.9, letterSpacing: '0.05em', margin: 0 }}>
+            PC 환경에서 이용해주세요.<br />
+            모바일은 지원하지 않습니다.
+          </p>
           {isLoadingOverlayVisible && <LoadingOverlay overlay fading={isLoadingOverlayFading} />}
-          {MaintenanceCountdownBanner}
-        </>
+        </div>
       );
     }
 
     return (
       <>
       <PlaylistWidget />
-      <div className="main-shell main-shell--home">
+      <div className={`main-shell ${currentTab === 'home' ? 'main-shell--home' : ''}`}>
         <SakuraEffect />
-        <Header currentTab="notice" setCurrentTab={handlePublicNavigation} />
-        <div className="main-layout main-layout--home">
+        {/* ✅ 3. 현재 탭 상태(currentTab)를 고정이 아닌 state 기반으로 매핑 */}
+        <Header currentTab={currentTab} setCurrentTab={handlePublicNavigation} />
+        <div className={`main-layout ${currentTab === 'home' ? 'main-layout--home' : ''} ${isTopMenuPage ? 'main-layout--world' : ''}`}>
           <Sidebar
-            currentTab="notice"
+            currentTab={currentTab}
             setCurrentTab={handlePublicNavigation}
             isAdmin={false}
           />
-          <main className="content-stage content-stage--home">
-            <HomeDashboard showLogin onLogin={handleLogin} members={members} />
+          {hasContentSurface && <span className="content-stage__surface" aria-hidden="true" />}
+          <main className={`content-stage ${currentTab === 'home' ? 'content-stage--home' : 'content-stage--view'} ${isFeaturePage ? 'content-stage--feature' : ''} ${isTopMenuPage ? 'content-stage--world' : ''}`}>
+            {/* ✅ 4. 비로그인 유저라도 허용된 탭에 따라 화면을 다르게 보여주도록 스위칭 처리 */}
+            {currentTab === 'home' && <HomeDashboard showLogin onLogin={handleLogin} members={members} />}
+            {currentTab === 'notice' && <CommunityPlaceholder type="notice" trainer={trainer} />}
+            {currentTab === 'world' && <CommunityPlaceholder type="world" trainer={trainer} />}
+            {currentTab === 'system' && <CommunityPlaceholder type="system" trainer={trainer} />}
           </main>
         </div>
       </div>
@@ -1540,16 +1560,49 @@ export default function App() {
     );
   }
 
+if (isMobile) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0,
+      background: 'rgba(10,20,10,0.94)',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      color: 'rgba(255,255,255,0.88)',
+      textAlign: 'center', padding: '32px',
+    }}>
+      <p style={{ fontSize: 18, lineHeight: 1.9, letterSpacing: '0.05em', margin: 0 }}>
+        PC 환경에서 이용해주세요.<br />
+        모바일은 지원하지 않습니다.
+      </p>
+      <button
+        onClick={handleLogout}
+        style={{
+          marginTop: 28,
+          background: 'rgba(255,255,255,0.12)',
+          border: '1px solid rgba(255,255,255,0.3)',
+          color: '#fff',
+          borderRadius: 8,
+          padding: '8px 24px',
+          fontSize: 13,
+          cursor: 'pointer',
+          letterSpacing: '0.05em',
+        }}
+      >
+        로그아웃
+      </button>
+    </div>
+  );
+}
+
 return (
   <>
   <PlaylistWidget />
-  {isMobile && <MobileScrollIndicator />}
   <GameProvider value={gameState}>
     <PokemonProvider value={pokemonValue}>
       {isMobile ? (
         <MobileLayout
           currentTab={currentTab}
-          setCurrentTab={setCurrentTab}
+          setCurrentTab={handlePublicNavigation}
           trainer={trainer}
           isAdmin={isAdmin}
           soundEnabled={soundEnabled}
@@ -1633,12 +1686,12 @@ return (
       ) : (
         <div className={`main-shell ${currentTab === 'home' ? 'main-shell--home' : ''}`}>
           <SakuraEffect />
-          <Header currentTab={currentTab} setCurrentTab={setCurrentTab} />
+          <Header currentTab={currentTab} setCurrentTab={handlePublicNavigation} />
 
           <div className={`main-layout ${currentTab === 'home' ? 'main-layout--home' : ''} ${isTopMenuPage ? 'main-layout--world' : ''}`}>
           <Sidebar 
             currentTab={currentTab}
-            setCurrentTab={setCurrentTab}
+            setCurrentTab={handlePublicNavigation}
             isAdmin={isAdmin}
             trainer={trainer}
             onLogout={handleLogout}
