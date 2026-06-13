@@ -660,16 +660,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = 
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <button
-            type="button"
-            onClick={clearPendingChoices}
-            disabled={!hasPendingChoice || battleState.phase === 'finished'}
-            className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-amber-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500"
-          >
-            <RotateCcw size={20} />
-            선택 롤백
-          </button>
-          <button
+<button
             type="button"
             onClick={resetBattle}
             className="inline-flex items-center gap-2 rounded-lg bg-gray-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-gray-700"

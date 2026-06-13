@@ -6,6 +6,7 @@ import './App.css';
 import SakuraEffect from './effects/sakura';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { ref, get, set } from 'firebase/database';
 import { database } from './firebase';
 import Sidebar from './components/layout/Sidebar';
@@ -46,9 +47,10 @@ const DAILY_ATTENDANCE_MONEY = 2000;
 function useTwemoji() {
   useEffect(() => {
     let isParsing = false;
-    let timer = null;
+    let rafId = null;
 
     const parse = () => {
+      rafId = null;
       if (typeof window.twemoji === 'undefined' || isParsing) return;
       isParsing = true;
       window.twemoji.parse(document.body, { folder: 'svg', ext: '.svg' });
@@ -56,8 +58,8 @@ function useTwemoji() {
     };
 
     const scheduleparse = () => {
-      clearTimeout(timer);
-      timer = setTimeout(parse, 100);
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(parse);
     };
 
     scheduleparse();
@@ -77,7 +79,7 @@ function useTwemoji() {
     observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
-      clearTimeout(timer);
+      if (rafId) cancelAnimationFrame(rafId);
       observer.disconnect();
     };
   }, []);
@@ -312,6 +314,147 @@ function getCalendarDays(year, month) {
   });
 }
 
+function toDateKey(y, m, d) {
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+
+function isColorLight(hex) {
+  const c = hex.replace('#', '');
+  const r = parseInt(c.slice(0, 2), 16);
+  const g = parseInt(c.slice(2, 4), 16);
+  const b = parseInt(c.slice(4, 6), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 128;
+}
+
+function darkenHex(hex, amount = 40) {
+  const c = hex.replace('#', '');
+  const clamp = (v) => Math.max(0, Math.min(255, v));
+  const r = clamp(parseInt(c.slice(0, 2), 16) - amount);
+  const g = clamp(parseInt(c.slice(2, 4), 16) - amount);
+  const b = clamp(parseInt(c.slice(4, 6), 16) - amount);
+  return `rgb(${r},${g},${b})`;
+}
+
+
+function HomeCalendar({ koreaToday, calendarDays, calendarLabel, weekDays, scheduleEvents, tooltip, tooltipPos, tooltipTimer, setTooltip, setTooltipPos }) {
+  const todayKey = toDateKey(koreaToday.year, koreaToday.month, koreaToday.day);
+  const todayEvents = scheduleEvents.filter((e) => e.start === todayKey);
+  const rows = [];
+  for (let i = 0; i < calendarDays.length; i += 7) rows.push(calendarDays.slice(i, i + 7));
+
+  const showTip = (e, evOrArr) => {
+    clearTimeout(tooltipTimer.current);
+    const rect = e.currentTarget.getBoundingClientRect();
+    setTooltipPos({ x: rect.left + rect.width / 2, y: rect.top });
+    setTooltip(Array.isArray(evOrArr) ? evOrArr : [evOrArr]);
+  };
+
+  const hideTip = () => {
+    tooltipTimer.current = setTimeout(() => setTooltip(null), 150);
+  };
+
+  return (
+    <div className="home-calendar" aria-label="Korea time calendar">
+      <div className="home-calendar__header">
+        <span>Calendar</span>
+        <strong>{calendarLabel}</strong>
+      </div>
+      <div className="home-calendar__weekdays">
+        {weekDays.map((day, di) => (
+          <span key={di} className={di === 0 ? 'is-sunday' : di === 6 ? 'is-saturday' : ''}>{day}</span>
+        ))}
+      </div>
+      <div className="home-calendar__weeks">
+        {rows.map((row, ri) => {
+          return (
+            <div key={ri} className="home-calendar__week">
+              <div className="home-calendar__grid">
+                {row.map((day, di) => {
+                  const isToday = day.day === koreaToday.day && !day.muted;
+                  const isPrevMonth = day.muted && ri === 0;
+                  const isNextMonth = day.muted && ri > 0;
+                  const dayMonth = isPrevMonth
+                    ? (koreaToday.month === 1 ? 12 : koreaToday.month - 1)
+                    : isNextMonth
+                    ? (koreaToday.month === 12 ? 1 : koreaToday.month + 1)
+                    : koreaToday.month;
+                  const dayYear = isPrevMonth
+                    ? (koreaToday.month === 1 ? koreaToday.year - 1 : koreaToday.year)
+                    : isNextMonth
+                    ? (koreaToday.month === 12 ? koreaToday.year + 1 : koreaToday.year)
+                    : koreaToday.year;
+                  const pts = scheduleEvents.filter((e) => e.start === toDateKey(dayYear, dayMonth, day.day));
+                  const importantEv = pts.find((e) => e.important);
+                  const dotPts = pts.filter((e) => !e.important);
+                  const allPts = pts.filter(Boolean);
+                  return (
+                    <span
+                      key={di}
+                      className={[isToday ? 'is-today' : '', di === 0 ? 'is-sunday' : di === 6 ? 'is-saturday' : '', day.muted ? 'is-muted' : '', importantEv ? 'has-important' : ''].filter(Boolean).join(' ')}
+                      style={{ ...(importantEv ? { '--important-color': importantEv.color } : {}), ...(day.muted && allPts.length > 0 ? { opacity: 0.45 } : {}) }}
+                      onMouseEnter={allPts.length > 0 ? (e) => showTip(e, allPts) : undefined}
+                      onMouseLeave={allPts.length > 0 ? hideTip : undefined}
+                    >
+                      {day.day}
+                      {dotPts.length > 0 && (
+                        <span className="home-cal-dots">
+                          {dotPts.slice(0, 3).map((ev) => (
+                            <span
+                              key={ev.id}
+                              className="home-cal-dot"
+                              style={{ background: ev.color }}
+                            />
+                          ))}
+                        </span>
+                      )}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="home-cal-today-events">
+        <img src="/img/ui/main_event.png" alt="오늘의 이벤트" className="home-cal-today-events__img" />
+        <div className="home-cal-today-events__list">
+          {todayEvents.length === 0 ? (
+            <span className="home-cal-today-events__empty">진행되는 이벤트가 없습니다.</span>
+          ) : (
+            todayEvents.map((ev) => (
+              <div key={ev.id} className="home-cal-today-events__item">
+                <span className="home-cal-today-events__title">{ev.title}</span>
+                {ev.desc && <span className="home-cal-today-events__desc">{ev.desc}</span>}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+      {tooltip && createPortal(
+        <div
+          className="home-cal-tooltip"
+          style={{
+            left: tooltipPos.x,
+            top: tooltipPos.y,
+            '--tip-bg': tooltip[0]?.color ? darkenHex(tooltip[0].color, 45) : 'rgba(15,18,15,0.96)',
+            '--tip-text': '#fff',
+          }}
+          onMouseEnter={() => clearTimeout(tooltipTimer.current)}
+          onMouseLeave={hideTip}
+        >
+          {tooltip.map((ev, i) => (
+            <div key={i} className="home-cal-tooltip__item">
+              <strong>{ev.title}</strong>
+              {ev.desc && <p>{ev.desc}</p>}
+            </div>
+          ))}
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+}
+
 const DEPLOYED_HOME_FEED_START_TIME = Date.parse('2026-07-04T00:00:00+09:00');
 
 function isLocalRuntime() {
@@ -408,12 +551,22 @@ function HomeDashboard({
   }).format(new Date(Date.UTC(koreaToday.year, koreaToday.month - 1, 1)));
   const weekDays = ['\uC77C', '\uC6D4', '\uD654', '\uC218', '\uBAA9', '\uAE08', '\uD1A0'];
 
+  const [scheduleEvents, setScheduleEvents] = useState([]);
+  const [calTooltip, setCalTooltip] = useState(null);
+  const [calTooltipPos, setCalTooltipPos] = useState({ x: 0, y: 0 });
+  const calTooltipTimer = useRef(null);
+
   useEffect(() => {
     const updateKoreaToday = () => setKoreaToday(getKoreaDateParts());
     updateKoreaToday();
-
     const timer = window.setInterval(updateKoreaToday, 60 * 1000);
     return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    get(ref(database, 'gameData/scheduleEvents')).then((snap) => {
+      if (snap.exists()) setScheduleEvents(Object.values(snap.val()));
+    });
   }, []);
 
   const { cookingFeed, evolutionFeed } = getHomeFeeds(members);
@@ -564,27 +717,18 @@ function HomeDashboard({
           )}
           {index === 2 && (
             <>
-              <div className="home-calendar" aria-label="Korea time calendar">
-                <div className="home-calendar__header">
-                  <span>Calendar</span>
-                  <strong>{calendarLabel}</strong>
-                </div>
-                <div className="home-calendar__weekdays">
-                  {weekDays.map((day, dayIndex) => (
-                    <span key={`${day}-${dayIndex}`} className={dayIndex === 0 ? 'is-sunday' : dayIndex === 6 ? 'is-saturday' : ''}>{day}</span>
-                  ))}
-                </div>
-                <div className="home-calendar__grid">
-                  {calendarDays.map((day, dayIndex) => (
-                    <span
-                      key={`${day.muted ? 'muted' : 'current'}-${day.day}-${dayIndex}`}
-                      className={[day.day === koreaToday.day && !day.muted ? 'is-today' : '', dayIndex % 7 === 0 ? 'is-sunday' : dayIndex % 7 === 6 ? 'is-saturday' : '', day.muted ? 'is-muted' : ''].filter(Boolean).join(' ')}
-                    >
-                      {day.day}
-                    </span>
-                  ))}
-                </div>
-              </div>
+              <HomeCalendar
+                koreaToday={koreaToday}
+                calendarDays={calendarDays}
+                calendarLabel={calendarLabel}
+                weekDays={weekDays}
+                scheduleEvents={scheduleEvents}
+                tooltip={calTooltip}
+                tooltipPos={calTooltipPos}
+                tooltipTimer={calTooltipTimer}
+                setTooltip={setCalTooltip}
+                setTooltipPos={setCalTooltipPos}
+              />
             </>
           )}
         </article>
@@ -905,7 +1049,7 @@ function ForcePasswordChangeModal({ onChangePassword }) {
 
 function CommunityPlaceholder({ type }) {
   if (type === 'world') {
-    return <WorldView />;
+    return <WorldView zoomableImages />;
   }
 
   const content = type === 'system' ? systemContent : noticeContent;

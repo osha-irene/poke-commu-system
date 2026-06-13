@@ -13,6 +13,7 @@ import RegionExplorePanel from './admin/RegionExplorePanel';
 import CookingAdminPanel from './admin/CookingAdminPanel';
 import LevelRestrictionPanel from './admin/LevelRestrictionPanel';
 import CampingAdminPanel from './admin/CampingAdminPanel';
+import ScheduleAdminPanel from './admin/ScheduleAdminPanel';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
@@ -328,27 +329,30 @@ export default function AdminView() {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* 서브메뉴 탭 */}
-      <Card className="p-2 flex gap-2 overflow-x-auto">
+      <Card className="p-2 flex gap-2 overflow-x-auto flex-nowrap admin-tab-bar">
         <TabButton active={adminTab === 'members'} onClick={() => setAdminTab('members')}>
-          👥 멤버 관리
+          👥 멤버
         </TabButton>
         <TabButton active={adminTab === 'regions'} onClick={() => setAdminTab('regions')}>
-          🗺️ 지역 설정
+          🗺️ 지역
         </TabButton>
         <TabButton active={adminTab === 'pokedex'} onClick={() => setAdminTab('pokedex')}>
-          📖 도감 관리
+          📖 도감
         </TabButton>
         <TabButton active={adminTab === 'shop'} onClick={() => setAdminTab('shop')}>
-          🏪 상점 관리
+          🏪 상점
         </TabButton>
         <TabButton active={adminTab === 'cooking'} onClick={() => setAdminTab('cooking')}>
-          🍳 요리 시스템
+          🍳 요리
         </TabButton>
 		<TabButton active={adminTab === 'camping'} onClick={() => setAdminTab('camping')}>
-		  ⛺ 캠핑 관리
+		  ⛺ 캠핑
 		</TabButton>
+        <TabButton active={adminTab === 'schedule'} onClick={() => setAdminTab('schedule')}>
+          📅 일정
+        </TabButton>
         <TabButton active={adminTab === 'settings'} onClick={() => setAdminTab('settings')}>
-          ⚙️ 시스템 설정
+          ⚙️ 시스템
         </TabButton>
         {trainer?.isSuperAdmin && (
           <TabButton
@@ -356,7 +360,7 @@ export default function AdminView() {
             onClick={() => setAdminTab('danger')}
             variant="danger"
           >
-            ⚠️ 위험 구역
+            ⚠️ 위험
           </TabButton>
         )}
       </Card>
@@ -719,6 +723,8 @@ export default function AdminView() {
 			onDeleteSession={camping.deleteSession}
 		  />
 		)}
+
+      {adminTab === 'schedule' && <ScheduleAdminPanel />}
 
       {/* 위험 구역 탭 */}
       {adminTab === 'danger' && trainer?.isSuperAdmin && (

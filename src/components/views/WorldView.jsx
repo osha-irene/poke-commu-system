@@ -1,4 +1,5 @@
-import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useRef, useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import boardContent from '../../data/worldContent';
 
 const createSectionId = (label, index) => {
@@ -363,14 +364,24 @@ const renderListItems = (items) => (
 export default function BoardView({
   content = boardContent,
   tocLabel = '게시판 섹션',
-  hiddenSectionTitles = ['영운설화']
+  hiddenSectionTitles = ['영운설화'],
+  zoomableImages = false,
 }) {
   const parsedBoard = useMemo(() => parseBoardContent(content), [content]);
   const [activeSectionId, setActiveSectionId] = useState(parsedBoard.tocItems[0]?.id || '');
   const [expandedSectionId, setExpandedSectionId] = useState(parsedBoard.sections[0]?.id || '');
   const [tocTop, setTocTop] = useState(null);
+  const [lightbox, setLightbox] = useState(null);
+  const tocRef = useRef(null);
   const clickScrollLockRef = useRef('');
   const clickScrollTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (!lightbox) return;
+    const onKey = (e) => { if (e.key === 'Escape') setLightbox(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [lightbox]);
 
   const sectionHeadingMap = useMemo(() => (
     parsedBoard.sections.reduce((acc, section) => {
@@ -470,9 +481,13 @@ export default function BoardView({
   return (
     <section className="board">
       {parsedBoard.tocItems.length > 0 && (
-        <nav
-          className="board__toc"
+        <div
+          className="board__toc-wrap"
           style={tocTop === null ? undefined : { top: `${tocTop}px` }}
+        >
+        <nav
+          ref={tocRef}
+          className="board__toc"
           aria-label={tocLabel}
         >
           <span className="board__toc-title">Sections</span>
@@ -517,6 +532,14 @@ export default function BoardView({
             })}
           </div>
         </nav>
+        <button
+          className="board__top-btn"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          aria-label="맨 위로"
+        >
+          <img src="/topbutton.png" alt="위로" draggable={false} />
+        </button>
+        </div>
       )}
 
       <div className="board__overlay">
@@ -592,8 +615,9 @@ export default function BoardView({
                           key={`${block.type}-${index}`}
                           src={block.src}
                           alt={block.alt}
-                          className="board__image"
+                          className={`board__image${zoomableImages ? ' board__image--zoomable' : ''}`}
                           style={Object.keys(imgStyle).length ? imgStyle : undefined}
+                          onClick={zoomableImages ? () => setLightbox({ src: block.src, alt: block.alt }) : undefined}
                         />
                       );
                     }
@@ -625,6 +649,18 @@ export default function BoardView({
           </div>
         ) : null;
       })()}
+      {lightbox && createPortal(
+        <div className="board-lightbox" onClick={() => setLightbox(null)}>
+          <button className="board-lightbox__close" onClick={() => setLightbox(null)} aria-label="닫기">✕</button>
+          <img
+            src={lightbox.src}
+            alt={lightbox.alt}
+            className="board-lightbox__img"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>,
+        document.body
+      )}
     </section>
   );
 }

@@ -3,13 +3,13 @@ export const noticeContent = String.raw`
 {br:70}
 게임프리크 社의 〈포켓몬스터〉 시리즈 기반
 {br}
-![notice](/notice1.png =800)
+![notice](/img/notice/notice1.png =800)
 {br}
 운영진은 공지사항 미숙지로 발생하는 모든 불이익을 책임지지 않습니다.
 본 문서를 비롯하여 총괄계로 업로드되는 모든 게시물은 공지에 해당하오니 정독해 주시기 바랍니다.
 {br}
-![manage](/notice_managetime.png =300)
-![story](/notice_storytime.png =300)
+![manage](/img/notice/notice_managetime.png =300)
+![story](/img/notice/notice_storytime.png =300)
  {br:20}
 & 질문 접수 [🔗](https://open.kakao.com/o/sQ89e1xi)
 
@@ -66,7 +66,7 @@ export const noticeContent = String.raw`
 & TRPG 용어, oO(생각 말풍선) / 사념대화
 & 전설/울트라비스트/패러독스 및 그에 준하는 포켓몬 및 원작 캐릭터의 직접적인 언급 
 & 작품 내 실제 나오는 용어가 아닌 비공식 용어
-& 배틀 오리진/비욘드 난이도 관련 비교 발언
+& ^^배틀 오리진/비욘드 난이도 관련 비교 발언^^
 
 ### 사용 가능 용어
 & 랭크
@@ -113,10 +113,10 @@ export const noticeContent = String.raw`
 ** 메가진화 조건에 따라 ==특정 주차까지 최종 진화를 이루지 못한 파트너 포켓몬은 스토리 진행 중 진화가 이루어질 수 있습니다.== 해당 내용은 사전에 공지를 통해 안내드릴 예정입니다.
 
 ### 파트너 포켓몬
-![partnerpkm](/partner.png =600)
+![partnerpkm](/img/notice/partner.png =600)
 {br}
 ### 합격 관련 요소
-![minorsector](/minor.png =600)
+![minorsector](/img/notice/minor.png =600)
 
 
 %% ⓒ2026 · 포켓몬스터 오리진 비욘드`;
@@ -183,9 +183,9 @@ export const systemContent = String.raw`
 ## 배틀
 & 배틀은 오픈 카카오톡에서 실시간으로 진행되며 담당 스텝이 수동으로 계산합니다. 또한 실전 배틀이 익숙하지 않은 러너분들을 위한 전용 룰이 존재합니다. 
 & 모든 포켓몬의 개체값은 6V로 고정됩니다.
-& 그외 모든 배틀 판정은 9세대 실전 배틀 기준으로 하고 있습니다.
+& 그외 모든 배틀 판정은 ==9세대 실전 배틀 기준==으로 하고 있습니다.
 
-![level](/level.png =700)
+![level](/img/notice/level.png =700)
 
 ## 체육관
 & 특정 주차를 제외하고 매주 금·토 저녁 / 일요일 오전까지 원하는 시간대에 체육관에 도전할 수 있습니다. 
