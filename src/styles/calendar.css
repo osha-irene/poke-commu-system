@@ -1,0 +1,166 @@
+/* ── Home Calendar Schedule ── */
+.home-calendar__grid > span.has-important::before {
+  content: '';
+  position: absolute;
+  width: calc(var(--calendar-day-size) + 6px);
+  height: calc(var(--calendar-day-size) + 6px);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -44%);
+  border-radius: 50%;
+  background: var(--important-color, #8ecf3a);
+  opacity: 0.85;
+  z-index: -1;
+}
+
+.home-calendar__grid > span.has-important {
+}
+
+.home-cal-dots {
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.home-cal-dot {
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  cursor: pointer;
+  pointer-events: auto;
+  flex-shrink: 0;
+}
+
+.home-cal-today-events {
+  margin-top: 20px;
+  margin-left: 30px;
+  position: relative;
+}
+
+.home-cal-today-events__img {
+  width: 100%;
+  display: block;
+}
+
+.home-cal-today-events__list {
+  position: absolute;
+  top: 50%;
+  left: 33%;
+  right: 8px;
+  transform: translateY(-50%);
+  padding: 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.home-cal-today-events__empty {
+  font-size: 11px;
+  color: rgba(60, 45, 20, 0.5);
+  font-family: Georgia, serif;
+}
+
+.home-cal-today-events__item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  line-height: 1.3;
+}
+
+.home-cal-today-events__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+  position: relative;
+  top: 0px;
+}
+
+.home-cal-today-events__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3a2a10;
+  font-family: Georgia, serif;
+}
+
+.home-cal-today-events__desc {
+  font-size: 10px;
+  color: rgba(60, 40, 10, 0.6);
+  font-family: Georgia, serif;
+}
+
+@keyframes tip-in {
+  from { opacity: 0; transform: translate(-50%, calc(-100% - 4px)); }
+  to   { opacity: 1; transform: translate(-50%, calc(-100% - 10px)); }
+}
+
+.home-cal-tooltip {
+  position: fixed;
+  transform: translate(-50%, calc(-100% - 10px));
+  background: var(--tip-bg, rgba(15,18,15,0.96));
+  color: var(--tip-text, #fff);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  z-index: 9999;
+  pointer-events: auto;
+  min-width: 80px;
+  max-width: 150px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: tip-in 0.15s ease forwards;
+}
+
+.home-cal-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px 6px 0;
+  border-style: solid;
+  border-color: var(--tip-bg, rgba(15,18,15,0.96)) transparent transparent;
+}
+
+.home-cal-tooltip__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.home-cal-tooltip__item strong {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.home-cal-tooltip__item p {
+  margin: 0;
+  font-size: 11px;
+  opacity: 0.75;
+  line-height: 1.4;
+  text-align: center;
+  white-space: pre-line;
+}
+
+.home-cal-tooltip p {
+  margin: 3px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-line;
+}

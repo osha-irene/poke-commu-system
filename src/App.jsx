@@ -38,6 +38,7 @@ import doctorWpenImage from './assets/npc/doctor_wpen.png';
 import pokemonIcon from './assets/pokemon-icon.svg';
 import logoText from './assets/logo_text.png';
 import logoCompass from './assets/logo_compass.png';
+import forestBg from './assets/forest-bg.png';
 import mainNpcPanel from './assets/main_npc.png';
 import { User, Lock, LogOut, Music, X, Play, Pause, SkipBack, SkipForward, Volume2, Package, Gift, ChefHat, Sparkles } from 'lucide-react';
 import { DAILY_ATTENDANCE_EXP, getKoreaDateKey } from './utils/experience';
@@ -1499,16 +1500,49 @@ if (!currentUser || !currentUser.id) {
       return (
         <div style={{
           position: 'fixed', inset: 0,
-          background: 'rgba(10,20,10,0.94)',
-          display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-          color: 'rgba(255,255,255,0.88)',
-          textAlign: 'center', padding: '32px',
+          backgroundImage: `url(${forestBg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
         }}>
-          <p style={{ fontSize: 18, lineHeight: 1.9, letterSpacing: '0.05em', margin: 0 }}>
-            PC 환경에서 이용해주세요.<br />
-            모바일은 지원하지 않습니다.
-          </p>
+          <div style={{
+            position: 'absolute', inset: 0,
+            backgroundColor: 'rgba(10,20,10,0.55)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+          }} />
+          <img src={logoCompass} alt="" style={{
+            position: 'absolute',
+            width: 320, height: 320,
+            top: 'calc(50% - 20px)', left: '50%',
+            transform: 'translate(-50%, -62%)',
+            mixBlendMode: 'overlay',
+            pointerEvents: 'none',
+          }} />
+          <img src={logoText} alt="" style={{
+            position: 'absolute',
+            width: 340,
+            top: 'calc(52.8% - 20px)', left: '49.4%',
+            transform: 'translate(-50%, -90%)',
+            objectFit: 'contain',
+            pointerEvents: 'none',
+          }} />
+          <div style={{
+            position: 'absolute',
+            top: '50%', left: '50%',
+            transform: 'translate(-50%, 110%)',
+            textAlign: 'center',
+          }}>
+            <p style={{
+              color: 'rgba(255,255,255,0.88)',
+              fontSize: 18,
+              lineHeight: 1.9,
+              letterSpacing: '0.05em',
+              margin: 0,
+            }}>
+              PC 환경에서 이용해주세요.<br />
+              모바일은 지원하지 않습니다.
+            </p>
+          </div>
           {isLoadingOverlayVisible && <LoadingOverlay overlay fading={isLoadingOverlayFading} />}
         </div>
       );
@@ -1560,36 +1594,68 @@ if (!currentUser || !currentUser.id) {
     );
   }
 
-if (isMobile) {
+if (isMobile && !trainer.isAdmin && !trainer.isSuperAdmin) {
   return (
     <div style={{
       position: 'fixed', inset: 0,
-      background: 'rgba(10,20,10,0.94)',
-      display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      color: 'rgba(255,255,255,0.88)',
-      textAlign: 'center', padding: '32px',
+      backgroundImage: `url(${forestBg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
     }}>
-      <p style={{ fontSize: 18, lineHeight: 1.9, letterSpacing: '0.05em', margin: 0 }}>
-        PC 환경에서 이용해주세요.<br />
-        모바일은 지원하지 않습니다.
-      </p>
-      <button
-        onClick={handleLogout}
-        style={{
-          marginTop: 28,
-          background: 'rgba(255,255,255,0.12)',
-          border: '1px solid rgba(255,255,255,0.3)',
-          color: '#fff',
-          borderRadius: 8,
-          padding: '8px 24px',
-          fontSize: 13,
-          cursor: 'pointer',
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundColor: 'rgba(10,20,10,0.55)',
+        backdropFilter: 'blur(6px)',
+        WebkitBackdropFilter: 'blur(6px)',
+      }} />
+      <img src={logoCompass} alt="" style={{
+        position: 'absolute',
+        width: 320, height: 320,
+        top: 'calc(50% - 20px)', left: '50%',
+        transform: 'translate(-50%, -62%)',
+        mixBlendMode: 'overlay',
+        pointerEvents: 'none',
+      }} />
+      <img src={logoText} alt="" style={{
+        position: 'absolute',
+        width: 340,
+        top: 'calc(52.8% - 20px)', left: '49.4%',
+        transform: 'translate(-50%, -90%)',
+        objectFit: 'contain',
+        pointerEvents: 'none',
+      }} />
+      <div style={{
+        position: 'absolute',
+        top: '50%', left: '50%',
+        transform: 'translate(-50%, 110%)',
+        textAlign: 'center',
+      }}>
+        <p style={{
+          color: 'rgba(255,255,255,0.88)',
+          fontSize: 18,
+          lineHeight: 1.9,
           letterSpacing: '0.05em',
-        }}
-      >
-        로그아웃
-      </button>
+          marginBottom: 28,
+        }}>
+          PC 환경에서 이용해주세요.<br />
+          모바일은 지원하지 않습니다.
+        </p>
+        <button
+          onClick={handleLogout}
+          style={{
+            background: 'rgba(255,255,255,0.12)',
+            border: '1px solid rgba(255,255,255,0.3)',
+            color: '#fff',
+            borderRadius: 8,
+            padding: '8px 24px',
+            fontSize: 13,
+            cursor: 'pointer',
+            letterSpacing: '0.05em',
+          }}
+        >
+          로그아웃
+        </button>
+      </div>
     </div>
   );
 }
@@ -1602,7 +1668,7 @@ return (
       {isMobile ? (
         <MobileLayout
           currentTab={currentTab}
-          setCurrentTab={handlePublicNavigation}
+          setCurrentTab={setCurrentTab}
           trainer={trainer}
           isAdmin={isAdmin}
           soundEnabled={soundEnabled}
@@ -1686,12 +1752,12 @@ return (
       ) : (
         <div className={`main-shell ${currentTab === 'home' ? 'main-shell--home' : ''}`}>
           <SakuraEffect />
-          <Header currentTab={currentTab} setCurrentTab={handlePublicNavigation} />
+          <Header currentTab={currentTab} setCurrentTab={setCurrentTab} />
 
           <div className={`main-layout ${currentTab === 'home' ? 'main-layout--home' : ''} ${isTopMenuPage ? 'main-layout--world' : ''}`}>
-          <Sidebar 
+          <Sidebar
             currentTab={currentTab}
-            setCurrentTab={handlePublicNavigation}
+            setCurrentTab={setCurrentTab}
             isAdmin={isAdmin}
             trainer={trainer}
             onLogout={handleLogout}

@@ -1,48 +1,49 @@
 // src/components/layout/MobileLayout.jsx
 import React, { useEffect, useRef, useState } from 'react';
-import { 
-  Menu, X, Map, Users, Bot, BookOpen, Smile, Package, 
-  ShoppingBag, ChefHat, User, MessageSquare, Settings, 
-  LogOut, Volume2, VolumeX, Footprints, Coins, Tent, ChevronDown, Home, Sword
+import {
+  Menu, X, Map, Users, Bot, BookOpen, Smile, Package,
+  ShoppingBag, ChefHat, User, MessageSquare, Settings,
+  LogOut, Volume2, VolumeX, Footprints, Coins, Tent, Home, Sword, ChevronRight
 } from 'lucide-react';
 
-export default function MobileLayout({ 
-  currentTab, 
-  setCurrentTab, 
-  trainer, 
+// ── 팔레트 ──────────────────────────────────────────────
+const P = {
+  bg:          'rgba(12,21,12,0.93)',      // 헤더·하단바 배경
+  bgDrawer:    'rgba(10,18,10,0.97)',      // 드로어 배경
+  border:      'rgba(105,148,52,0.2)',     // 공통 테두리
+  textPrimary: 'rgba(215,238,170,0.95)',   // 주요 텍스트
+  textMuted:   'rgba(150,185,110,0.6)',    // 흐린 텍스트
+  accent:      'rgba(175,225,85,0.95)',    // 활성 액센트 (아이콘·레이블)
+  accentBg:    'rgba(88,138,38,0.22)',     // 활성 배경
+  inactive:    'rgba(148,178,108,0.55)',   // 비활성 아이콘·레이블
+};
+
+export default function MobileLayout({
+  currentTab,
+  setCurrentTab,
+  trainer,
   isAdmin,
   soundEnabled,
   toggleSound,
   onLogout,
-  children 
+  children
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [trainerOpen, setTrainerOpen] = useState(true);
-  const [adventureOpen, setAdventureOpen] = useState(true);
   const [isBottomNavHidden, setIsBottomNavHidden] = useState(false);
   const lastScrollYRef = useRef(0);
 
   useEffect(() => {
     lastScrollYRef.current = window.scrollY;
-
     const handleScroll = () => {
-      const currentScrollY = Math.max(0, window.scrollY);
-      const delta = currentScrollY - lastScrollYRef.current;
-
-      if (currentScrollY < 24) {
-        setIsBottomNavHidden(false);
-      } else if (delta > 8) {
-        setIsBottomNavHidden(true);
-      } else if (delta < -8) {
-        setIsBottomNavHidden(false);
-      }
-
-      lastScrollYRef.current = currentScrollY;
+      const y = Math.max(0, window.scrollY);
+      const d = y - lastScrollYRef.current;
+      if (y < 24)       setIsBottomNavHidden(false);
+      else if (d > 8)   setIsBottomNavHidden(true);
+      else if (d < -8)  setIsBottomNavHidden(false);
+      lastScrollYRef.current = y;
     };
-
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleScroll);
-
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
@@ -55,346 +56,237 @@ export default function MobileLayout({
   }, [currentTab]);
 
   const titleMap = {
-    home: { label: '메인', icon: Home },
-    map: { label: '지도(포켓몬포획)', icon: Map },
-    members: { label: '멤버', icon: Users },
-    npcs: { label: 'NPC', icon: Bot },
-    pokedex: { label: '포켓몬 도감', icon: BookOpen },
-    pokemon: { label: '포켓몬', icon: Smile },
-    items: { label: '아이템', icon: Package },
-    shop: { label: '상점', icon: ShoppingBag },
-    camping: { label: '캠핑', icon: Tent },
-    cooking: { label: '요리', icon: ChefHat },
-    profile: { label: '프로필', icon: User },
-    qna: { label: 'Q&A', icon: MessageSquare },
-    admin: { label: '관리자', icon: Settings },
-    battle: { label: '배틀', icon: Sword }
+    home:    { label: '메인',     icon: Home },
+    map:     { label: '지도',     icon: Map },
+    members: { label: '멤버',     icon: Users },
+    npcs:    { label: 'NPC',      icon: Bot },
+    pokedex: { label: '도감',     icon: BookOpen },
+    pokemon: { label: '포켓몬',   icon: Smile },
+    items:   { label: '아이템',   icon: Package },
+    shop:    { label: '상점',     icon: ShoppingBag },
+    camping: { label: '캠핑',     icon: Tent },
+    cooking: { label: '요리',     icon: ChefHat },
+    profile: { label: '트레이너', icon: User },
+    qna:     { label: 'Q&A',      icon: MessageSquare },
+    admin:   { label: '관리자',   icon: Settings },
+    battle:  { label: '배틀',     icon: Sword },
   };
 
-  const CurrentTitleIcon = titleMap[currentTab]?.icon || Menu;
-
-  const adventureItems = [
-    { id: 'map', icon: Map, label: '지도(포켓몬포획)' },
-    { id: 'camping', icon: Tent, label: '캠핑' },
-    { id: 'cooking', icon: ChefHat, label: '요리' }
+  const bottomNavItems = [
+    { id: 'home',    icon: Home },
+    { id: 'map',     icon: Map },
+    { id: 'pokemon', icon: Smile },
+    { id: 'items',   icon: Package },
+    { id: 'shop',    icon: ShoppingBag },
   ];
 
-  const trainerItems = [
-    { id: 'items', icon: Package, label: '가방' },
-    { id: 'pokemon', icon: Smile, label: '엔트리(포켓몬)' }
+  const menuGroups = [
+    {
+      label: null,
+      items: [
+        { id: 'home',    icon: Home,          label: '메인' },
+        { id: 'members', icon: Users,         label: '멤버' },
+        { id: 'pokedex', icon: BookOpen,      label: '포켓몬 도감' },
+        { id: 'qna',     icon: MessageSquare, label: 'Q&A' },
+      ],
+    },
+    {
+      label: '트레이너',
+      items: [
+        { id: 'profile', icon: User,    label: '트레이너 카드' },
+        { id: 'pokemon', icon: Smile,   label: '포켓몬' },
+        { id: 'items',   icon: Package, label: '아이템' },
+      ],
+    },
+    {
+      label: '모험',
+      items: [
+        { id: 'map',     icon: Map,         label: '지도 (포획)' },
+        { id: 'camping', icon: Tent,        label: '캠핑' },
+        { id: 'cooking', icon: ChefHat,     label: '요리' },
+        { id: 'shop',    icon: ShoppingBag, label: '상점' },
+      ],
+    },
+    ...(isAdmin ? [{
+      label: '관리',
+      items: [
+        { id: 'admin',  icon: Settings, label: '관리자 패널' },
+        { id: 'battle', icon: Sword,    label: '배틀' },
+      ],
+    }] : []),
   ];
 
-  const menuItems = [];
-
-  const handleMenuClick = (tabId) => {
-    setCurrentTab(tabId);
-    setMenuOpen(false);
-  };
+  const handleMenuClick = (tabId) => { setCurrentTab(tabId); setMenuOpen(false); };
+  const CurrentIcon = titleMap[currentTab]?.icon || Home;
 
   return (
-    <div className="min-h-screen flex flex-col bg-transparent text-green-950 overflow-x-hidden">
-      {/* 상단 헤더 */}
-      <header className="bg-[#f7fbec]/95 border-b border-lime-300 px-4 py-3 flex items-center justify-between sticky top-0 z-40 backdrop-blur">
-        <button
-          onClick={() => setMenuOpen(true)}
-          className="p-2 hover:bg-lime-100 rounded-lg transition-colors"
-        >
-          <Menu size={24} className="text-green-900" />
+    <div style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column', background: 'transparent', color: P.textPrimary, overflowX: 'hidden' }}>
+
+      {/* ── 헤더 ── */}
+      <header style={{
+        position: 'sticky', top: 0, zIndex: 40,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 12px', height: 52,
+        background: P.bg,
+        backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+        borderBottom: `1px solid ${P.border}`,
+        boxShadow: '0 2px 12px rgba(0,0,0,0.45)',
+      }}>
+        <button onClick={() => setMenuOpen(true)}
+          style={{ padding: 8, borderRadius: 8, background: 'transparent', border: 'none', cursor: 'pointer', color: P.inactive, display: 'flex', alignItems: 'center' }}>
+          <Menu size={22} />
         </button>
-        
-        <h1 className="text-lg font-bold text-green-950 flex items-center gap-2">
-          <CurrentTitleIcon size={20} />
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 700, fontSize: 15, color: P.textPrimary, letterSpacing: '0.04em' }}>
+          <CurrentIcon size={17} style={{ color: P.accent, opacity: 0.85 }} />
           {titleMap[currentTab]?.label || '메뉴'}
-        </h1>
-        
-        <div className="bg-lime-100 px-3 py-1 rounded-lg border border-lime-300">
-          <span className="text-xs font-bold text-green-800 flex items-center gap-1">
-            <Footprints size={14} />
+        </div>
+
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 5,
+          background: P.accentBg, border: `1px solid ${P.border}`,
+          borderRadius: 20, padding: '4px 10px',
+        }}>
+          <Footprints size={13} style={{ color: P.accent }} />
+          <span style={{ fontSize: 12, fontWeight: 700, color: P.accent }}>
             {trainer.dailyWalks}/{trainer.maxDailyWalks}
           </span>
         </div>
       </header>
 
-      {/* 메인 컨텐츠 */}
-      <main className="flex-1 overflow-visible">
+      {/* ── 콘텐츠 ── */}
+      <main style={{ flex: 1 }}>
         {children}
       </main>
 
-      {/* 하단 네비게이션 바 */}
-      <nav className={`mobile-bottom-nav bg-[#f7fbec]/95 border-t border-lime-300 px-2 py-2 flex justify-around items-center bottom-0 z-40 backdrop-blur ${isBottomNavHidden ? 'is-hidden' : ''}`}>
-        {[
-          { id: 'home', icon: Home },
-          { id: 'map', icon: Map },
-          { id: 'pokemon', icon: Smile },
-          { id: 'items', icon: Package },
-          { id: 'shop', icon: ShoppingBag }
-        ].map(({ id, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => setCurrentTab(id)}
-            className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all min-w-[60px] ${
-              currentTab === id
-                ? 'text-green-950 bg-lime-200'
-                : 'text-green-700'
-            }`}
-          >
-            <Icon size={24} />
-            <span className="text-xs font-semibold mt-1">
-              {titleMap[id]?.label || id}
-            </span>
-          </button>
-        ))}
+      {/* ── 하단 네비 ── */}
+      <nav className={`mobile-bottom-nav ${isBottomNavHidden ? 'is-hidden' : ''}`} style={{
+        display: 'flex', justifyContent: 'space-around', alignItems: 'center',
+        padding: '6px 4px',
+        background: P.bg,
+        backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+        borderTop: `1px solid ${P.border}`,
+        boxShadow: '0 -2px 16px rgba(0,0,0,0.5)',
+        transition: 'transform 0.28s ease, opacity 0.28s ease',
+        zIndex: 40,
+      }}>
+        {bottomNavItems.map(({ id, icon: Icon }) => {
+          const active = currentTab === id;
+          return (
+            <button key={id} onClick={() => setCurrentTab(id)} style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 3, padding: '6px 10px', borderRadius: 10, border: 'none', cursor: 'pointer',
+              background: active ? P.accentBg : 'transparent',
+              color: active ? P.accent : P.inactive,
+              transition: 'all 0.18s ease',
+              minWidth: 52,
+            }}>
+              <Icon size={22} />
+              <span style={{ fontSize: 10, fontWeight: active ? 700 : 500, letterSpacing: '0.02em' }}>
+                {titleMap[id]?.label || id}
+              </span>
+            </button>
+          );
+        })}
       </nav>
 
-      {/* 햄버거 메뉴 */}
+      {/* ── 드로어 ── */}
       {menuOpen && (
         <>
-          {/* 오버레이 */}
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-[100000]"
-            onClick={() => setMenuOpen(false)}
-          />
-          
-          {/* 메뉴 패널 */}
-          <aside className="fixed top-0 left-0 h-full w-64 bg-[#f7fbec] shadow-2xl z-[100001] flex flex-col animate-slide-in">
-            {/* 메뉴 헤더 */}
-            <div className="border-b-2 border-lime-300 bg-white/95 text-green-950 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">메뉴</h2>
-                <button
-                  onClick={() => setMenuOpen(false)}
-                  className="p-1 hover:bg-lime-100/70 rounded-lg transition-colors"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-              
-              <div className="text-sm opacity-90">
-                <p className="font-semibold">{trainer.name}</p>
-                <p className="text-lime-700 flex items-center gap-1">
-                  <Coins size={14} />
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100000, backdropFilter: 'blur(2px)' }}
+            onClick={() => setMenuOpen(false)} />
+          <aside style={{
+            position: 'fixed', top: 0, left: 0, height: '100%', width: 272,
+            background: P.bgDrawer,
+            borderRight: `1px solid ${P.border}`,
+            boxShadow: '4px 0 32px rgba(0,0,0,0.7)',
+            zIndex: 100001, display: 'flex', flexDirection: 'column',
+            animation: 'mob-slide-in 0.24s ease-out',
+          }}>
+
+            {/* 드로어 헤더 */}
+            <div style={{ padding: '20px 20px 16px', borderBottom: `1px solid ${P.border}`, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+              <div>
+                <p style={{ margin: 0, fontWeight: 700, fontSize: 16, color: P.textPrimary, letterSpacing: '0.03em' }}>
+                  {trainer.name}
+                </p>
+                <p style={{ margin: '5px 0 0', fontSize: 13, color: P.textMuted, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <Coins size={13} />
                   {trainer.money?.toLocaleString()}원
                 </p>
               </div>
-            </div>
-
-            {/* 사운드 토글 */}
-            <div className="p-4 border-b border-gray-200">
-              <button
-                onClick={toggleSound}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-colors ${
-                  soundEnabled
-                    ? 'bg-lime-100 text-green-800 hover:bg-lime-200'
-                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                }`}
-              >
-                {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
-                <span>{soundEnabled ? '사운드 ON' : '사운드 OFF'}</span>
+              <button onClick={() => setMenuOpen(false)}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: P.inactive, padding: 4, marginTop: -2 }}>
+                <X size={22} />
               </button>
             </div>
 
-            {/* 네비게이션 메뉴 */}
-            <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-              <button
-                onClick={() => handleMenuClick('home')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all ${
-                  currentTab === 'home'
-                    ? 'bg-lime-100 text-lime-800'
-                    : 'text-gray-700 hover:bg-lime-50'
-                }`}
-              >
-                <Home size={20} />
-                <span>메인</span>
+            {/* 사운드 */}
+            <div style={{ padding: '10px 14px', borderBottom: `1px solid ${P.border}` }}>
+              <button onClick={toggleSound} style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                padding: '9px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                background: soundEnabled ? P.accentBg : 'rgba(50,50,50,0.2)',
+                color: soundEnabled ? P.accent : P.inactive,
+                fontSize: 13, fontWeight: 600, transition: 'all 0.18s',
+              }}>
+                {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                {soundEnabled ? '사운드 ON' : '사운드 OFF'}
               </button>
+            </div>
 
-              <div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCurrentTab('profile');
-                    setTrainerOpen((open) => !open);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all ${
-                    currentTab === 'profile' || trainerItems.some((item) => item.id === currentTab)
-                      ? 'bg-lime-100 text-lime-800'
-                      : 'text-gray-700 hover:bg-lime-50'
-                  }`}
-                >
-                  <User size={20} />
-                  <span className="flex-1 text-left">트레이너카드</span>
-                  <ChevronDown
-                    size={18}
-                    className={`transition-transform ${trainerOpen ? 'rotate-180' : ''}`}
-                  />
-                </button>
-
-                {trainerOpen && (
-                  <div className="mt-1 space-y-1 pl-5">
-                    {trainerItems.map(({ id, icon: Icon, label }) => (
-                      <button
-                        key={id}
-                        onClick={() => handleMenuClick(id)}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                          currentTab === id
-                            ? 'bg-lime-100 text-lime-800'
-                            : 'text-gray-600 hover:bg-lime-50'
-                        }`}
-                      >
-                        <Icon size={18} />
-                        <span>{label}</span>
+            {/* 메뉴 그룹 */}
+            <nav style={{ flex: 1, overflowY: 'auto', padding: '8px 12px' }}>
+              {menuGroups.map((group, gi) => (
+                <div key={gi} style={{ marginBottom: 4 }}>
+                  {group.label && (
+                    <p style={{ margin: '12px 8px 4px', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: P.textMuted, textTransform: 'uppercase' }}>
+                      {group.label}
+                    </p>
+                  )}
+                  {group.items.map(({ id, icon: Icon, label }) => {
+                    const active = currentTab === id;
+                    return (
+                      <button key={id} onClick={() => handleMenuClick(id)} style={{
+                        width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '10px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                        background: active ? P.accentBg : 'transparent',
+                        color: active ? P.accent : P.textMuted,
+                        fontSize: 13, fontWeight: active ? 700 : 500,
+                        textAlign: 'left', transition: 'all 0.15s',
+                        borderLeft: `2px solid ${active ? P.accent : 'transparent'}`,
+                      }}>
+                        <Icon size={17} style={{ flexShrink: 0 }} />
+                        <span style={{ flex: 1 }}>{label}</span>
+                        {active && <ChevronRight size={14} style={{ opacity: 0.5 }} />}
                       </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <button
-                onClick={() => handleMenuClick('pokedex')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all ${
-                  currentTab === 'pokedex'
-                    ? 'bg-lime-100 text-lime-800'
-                    : 'text-gray-700 hover:bg-lime-50'
-                }`}
-              >
-                <BookOpen size={20} />
-                <span>도감</span>
-              </button>
-
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setAdventureOpen((open) => !open)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all ${
-                    adventureItems.some((item) => item.id === currentTab)
-                      ? 'bg-lime-100 text-lime-800'
-                      : 'text-gray-700 hover:bg-lime-50'
-                  }`}
-                >
-                  <Map size={20} />
-                  <span className="flex-1 text-left">모험</span>
-                  <ChevronDown
-                    size={18}
-                    className={`transition-transform ${adventureOpen ? 'rotate-180' : ''}`}
-                  />
-                </button>
-
-                {adventureOpen && (
-                  <div className="mt-1 space-y-1 pl-5">
-                    {adventureItems.map(({ id, icon: Icon, label }) => (
-                      <button
-                        key={id}
-                        onClick={() => handleMenuClick(id)}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                      currentTab === id
-                        ? 'bg-lime-100 text-lime-800'
-                        : 'text-gray-600 hover:bg-lime-50'
-                        }`}
-                      >
-                        <Icon size={18} />
-                        <span>{label}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <button
-                onClick={() => handleMenuClick('shop')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all ${
-                  currentTab === 'shop'
-                    ? 'bg-lime-100 text-lime-800'
-                    : 'text-gray-700 hover:bg-lime-50'
-                }`}
-              >
-                <ShoppingBag size={20} />
-                <span>상점</span>
-              </button>
-
-              <button
-                onClick={() => handleMenuClick('qna')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all ${
-                  currentTab === 'qna'
-                    ? 'bg-lime-100 text-lime-800'
-                    : 'text-gray-700 hover:bg-lime-50'
-                }`}
-              >
-                <MessageSquare size={20} />
-                <span>Q&A</span>
-              </button>
-
-              {menuItems.filter(({ id }) => !['pokedex'].includes(id)).map(({ id, icon: Icon, label }) => (
-                <button
-                  key={id}
-                  onClick={() => handleMenuClick(id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all ${
-                    currentTab === id
-                      ? 'bg-lime-100 text-lime-800'
-                      : 'text-gray-700 hover:bg-lime-50'
-                  }`}
-                >
-                  <Icon size={20} />
-                  <span>{label}</span>
-                </button>
+                    );
+                  })}
+                </div>
               ))}
-
-              {isAdmin && (
-                <>
-                  <div className="border-t border-gray-300 my-4 pt-2"></div>
-                  <button
-                    onClick={() => handleMenuClick('admin')}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all ${
-                      currentTab === 'admin'
-                        ? 'bg-lime-100 text-lime-800'
-                        : 'text-gray-700 hover:bg-lime-50'
-                    }`}
-                  >
-                    <Settings size={20} />
-                    <span>관리자</span>
-                  </button>
-                  <button
-                    onClick={() => handleMenuClick('battle')}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all ${
-                      currentTab === 'battle'
-                        ? 'bg-lime-100 text-lime-800'
-                        : 'text-gray-700 hover:bg-lime-50'
-                    }`}
-                  >
-                    <Sword size={20} />
-                    <span>배틀</span>
-                  </button>
-                </>
-              )}
             </nav>
 
-            {/* 로그아웃 버튼 */}
-            <div className="p-4 border-t border-gray-200">
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  onLogout();
-                }}
-                className="w-full bg-gray-100 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-200 font-semibold transition-colors flex items-center justify-center gap-2"
-              >
-                <LogOut size={18} />
-                <span>로그아웃</span>
+            {/* 로그아웃 */}
+            <div style={{ padding: '12px 16px', borderTop: `1px solid ${P.border}` }}>
+              <button onClick={() => { setMenuOpen(false); onLogout(); }} style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                padding: '10px 14px', borderRadius: 8,
+                border: '1px solid rgba(180,60,60,0.25)',
+                background: 'rgba(120,30,30,0.15)', color: 'rgba(215,120,110,0.85)',
+                fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s',
+              }}>
+                <LogOut size={15} />
+                로그아웃
               </button>
             </div>
           </aside>
         </>
       )}
 
-      <style jsx>{`
-        @keyframes slide-in {
-          from {
-            transform: translateX(-100%);
-          }
-          to {
-            transform: translateX(0);
-          }
-        }
-        
-        .animate-slide-in {
-          animation: slide-in 0.3s ease-out;
+      <style>{`
+        @keyframes mob-slide-in {
+          from { transform: translateX(-100%); }
+          to   { transform: translateX(0); }
         }
       `}</style>
     </div>

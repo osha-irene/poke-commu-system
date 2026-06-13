@@ -214,7 +214,7 @@ const usePokemonManagement = (
     if (!currentUser) return;
 
     if (currentUser.partnerPokemon && currentUser.partnerPokemon.uniqueId === uniqueId) {
-      alert('íí¸ë í¬ì¼ëª¬ì ë°©ìí  ì ììµëë¤!');
+      alert('파트너 포켓몬은 방생할 수 없습니다!');
       return;
     }
     
@@ -242,7 +242,7 @@ const usePokemonManagement = (
       updateCurrentUser({ caughtPokemon: newCaughtPokemon });
     }
     
-    alert((pokemon.nickname || pokemon.name) + 'ì(ë¥¼) ë°©ìíìµëë¤.');
+    alert((pokemon.nickname || pokemon.name) + '을(를) 방생했습니다.');
   };
 
   // 파트너 설정
@@ -351,18 +351,18 @@ const usePokemonManagement = (
           maxAllowedLevel = Number(maxLevel) || Infinity;
 
           if ((Number(pokemon.level) || 1) >= maxAllowedLevel) {
-            alert(`ë ë²¨ ì íì¼ë¡ ì¸í´ ë ì´ì ë ë²¨ìí  ì ììµëë¤!\níì¬ ìµë ë ë²¨: ${maxLevel}`);
+            alert(`레벨 제한으로 인해 더 이상 레벨업할 수 없습니다!\n현재 최대 레벨: ${maxLevel}`);
             return false;
           }
         }
       }
     } catch (error) {
-      console.error('ë ë²¨ ì í íì¸ ì¤í¨:', error);
+      console.error('레벨 제한 확인 실패:', error);
     }
 
     const oldLevel = Number(pokemon.level) || 1;
 
-    // ê¸°ì¡´ ëì  exp + ì´ë²ì ë°°ë¶í  exp í©ì°
+    // 기존 누적 exp + 이번에 배분할 exp 합산
     let currentLevel = oldLevel;
     let accExp = (Number(pokemon.exp) || 0) + (Number(expAmount) || 0);
     const learnedLevels = [];
@@ -376,7 +376,7 @@ const usePokemonManagement = (
         learnedLevels.push(currentLevel);
       }
     } else {
-      // expAmount ìì´ í¸ì¶ë ê²½ì° (ì´ìíì¬í ë¨ë) â ê¸°ì¡´ +1 ëì
+      // expAmount 없이 호출된 경우 (이상한사탕 단독) — 기존 +1 동작
       currentLevel = Math.min(oldLevel + 1, maxAllowedLevel);
       learnedLevels.push(currentLevel);
       accExp = 0;
@@ -386,10 +386,10 @@ const usePokemonManagement = (
     if (newLevel === oldLevel && accExp === (Number(pokemon.exp) || 0)) return false;
 
     const isPartnerPokemon = currentUser.partnerPokemon?.uniqueId === uniqueId;
-    // ë¨ì expë¥¼ pokemonì ì ì¥
+    // 남은 exp를 pokemon에 저장
     const updatedPokemonPatch = { ...pokemon, level: newLevel, exp: accExp };
 
-    // trainerExpìì ë°°ë¶í ë§í¼ë§ ì°¨ê°
+    // trainerExp에서 배분한 만큼만 차감
     const newTrainerExp = Math.max(0, (Number(currentUser.trainerExp) || 0) - (Number(expAmount) || 0));
 
     if (isPartnerPokemon) {
@@ -405,7 +405,7 @@ const usePokemonManagement = (
       const levelMsg = newLevel > oldLevel + 1
         ? `Lv.${oldLevel} → Lv.${newLevel} (${newLevel - oldLevel}레벨 상승!)`
         : `Lv.${oldLevel} → Lv.${newLevel}`;
-      alert(`${pokemon.nickname || pokemon.name}ì ë ë²¨ì´ ì¬ëë¤!\n${levelMsg}`);
+      alert(`${pokemon.nickname || pokemon.name}의 레벨이 올랐다!\n${levelMsg}`);
     }
 
     setTimeout(async () => {
@@ -423,13 +423,13 @@ const usePokemonManagement = (
             const shouldShowEvolutionModal = checkEvolutionOnLevelUp(latestPokemon);
 
             if (shouldShowEvolutionModal) {
-              console.log('ì§í ëª¨ë¬ íì ì¤, ê¸°ì  ë°°ì°ê¸°ë ê±´ëë');
+              console.log('진화 모달 표시 중, 기술 배우기는 건너뜀');
               return;
             }
           }
         }
       } catch (error) {
-        console.error('Firebase ì¡°í ì¤í¨:', error);
+        console.error('Firebase 조회 실패:', error);
       }
 
       if (onLevelUp && pokemonLearnsets && allMoves) {

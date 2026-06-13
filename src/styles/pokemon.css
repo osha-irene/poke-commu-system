@@ -1,0 +1,436 @@
+/* Pixel-perfect item icons: preserve each layout size and only disable smoothing. */
+img[src*="/sprites/items/"],
+img[src*="raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/"],
+img[src*="/images/items/"],
+img[src*="items/"][src$=".png"] {
+  image-rendering: -moz-crisp-edges !important;
+  image-rendering: -webkit-crisp-edges !important;
+  image-rendering: pixelated !important;
+  image-rendering: crisp-edges !important;
+  -ms-interpolation-mode: nearest-neighbor !important;
+  object-fit: contain !important;
+}
+
+.item-sprite,
+.item-sprite::before,
+.item-sprite::after {
+  image-rendering: -moz-crisp-edges !important;
+  image-rendering: -webkit-crisp-edges !important;
+  image-rendering: pixelated !important;
+  image-rendering: crisp-edges !important;
+}
+
+
+
+.item-sprite-xl {
+  --item-sprite-size: 120px;
+}
+
+
+.item-sprite-2x {
+  --item-sprite-size: 60px;
+  width: 60px !important;
+  height: 60px !important;
+  min-width: 60px !important;
+  min-height: 60px !important;
+}
+
+.item-sprite-bag-mobile {
+  --item-sprite-size: 48px;
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+}
+
+
+/* Pixel-perfect Pokemon sprites: preserve each layout size and only disable smoothing. */
+img[src*="/sprites/pokemon/"],
+img[src*="raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/"],
+img[src*="/images/pokemon/"],
+img[src*="pokemon/"][src$=".png"],
+img[src*="/pokemon-icons/"],
+img[src*="pokemon-icons/"][src$=".png"] {
+  image-rendering: -moz-crisp-edges !important;
+  image-rendering: -webkit-crisp-edges !important;
+  image-rendering: pixelated !important;
+  image-rendering: crisp-edges !important;
+  -ms-interpolation-mode: nearest-neighbor !important;
+  object-fit: contain !important;
+}
+
+.pokemon-icon,
+.pokemon-sprite,
+.pokemon-bg-sprite,
+.pixelated-sprite,
+[style*="/sprites/pokemon/"],
+[style*="raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/"],
+[style*="/images/pokemon/"],
+[style*="pokemon-icons/"] {
+  image-rendering: -moz-crisp-edges !important;
+  image-rendering: -webkit-crisp-edges !important;
+  image-rendering: pixelated !important;
+  image-rendering: crisp-edges !important;
+  -ms-interpolation-mode: nearest-neighbor !important;
+}
+
+
+/* Member page Pokemon sprites need larger fixed pixel units to avoid tiny blurred thumbnails. */
+.member-pokemon-card-sprite {
+  width: 64px !important;
+  height: 64px !important;
+  min-width: 64px !important;
+  min-height: 64px !important;
+  image-rendering: -moz-crisp-edges !important;
+  image-rendering: -webkit-crisp-edges !important;
+  image-rendering: pixelated !important;
+  image-rendering: crisp-edges !important;
+  -ms-interpolation-mode: nearest-neighbor !important;
+}
+
+.member-pokemon-modal-sprite {
+  width: 96px !important;
+  height: 96px !important;
+  min-width: 96px !important;
+  min-height: 96px !important;
+  image-rendering: -moz-crisp-edges !important;
+  image-rendering: -webkit-crisp-edges !important;
+  image-rendering: pixelated !important;
+  image-rendering: crisp-edges !important;
+  -ms-interpolation-mode: nearest-neighbor !important;
+}
+
+/* Serebii item art has a larger source canvas than PokeAPI dots, so keep it in the same visual range. */
+img[src*="serebii.net"],
+img[src*="serebii.net/itemdex"],
+img[src*="serebii.net/pokemon"] {
+  width: var(--serebii-item-image-size, 48px) !important;
+  height: var(--serebii-item-image-size, 48px) !important;
+  max-width: 72% !important;
+  max-height: 72% !important;
+  object-fit: contain !important;
+  transform: none !important;
+  image-rendering: auto !important;
+  -ms-interpolation-mode: bicubic !important;
+}
+
+.item-sprite[style*="serebii.net"],
+[style*="serebii.net"][class*="item-sprite"] {
+  --item-sprite-size: 44px;
+  background-size: var(--serebii-item-bg-size, 44px) auto !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+}
+
+.item-sprite-2x img[src*="serebii.net"],
+.item-sprite-bag-mobile img[src*="serebii.net"] {
+  --serebii-item-image-size: 52px;
+}
+
+
+.item-sprite[style*="serebii.net"],
+[style*="serebii.net"][class*="item-sprite"] {
+  image-rendering: auto !important;
+  -ms-interpolation-mode: bicubic !important;
+}
+
+/* Restore semantic colors for labels, category tabs, probability bars, and status badges.
+   Page surfaces stay leaf-toned, but data colors must remain distinguishable. */
+.content-stage--feature .bg-blue-50, .content-stage--view .bg-blue-50 { background-color: #eff6ff !important; }
+.content-stage--feature .bg-indigo-50, .content-stage--view .bg-indigo-50 { background-color: #eef2ff !important; }
+.content-stage--feature .bg-purple-50, .content-stage--view .bg-purple-50 { background-color: #faf5ff !important; }
+.content-stage--feature .bg-pink-50, .content-stage--view .bg-pink-50 { background-color: #fdf2f8 !important; }
+.content-stage--feature .bg-orange-50, .content-stage--view .bg-orange-50 { background-color: #fff7ed !important; }
+.content-stage--feature .bg-red-50, .content-stage--view .bg-red-50 { background-color: #fef2f2 !important; }
+.content-stage--feature .bg-yellow-50, .content-stage--view .bg-yellow-50 { background-color: #fefce8 !important; }
+.content-stage--feature .bg-cyan-50, .content-stage--view .bg-cyan-50 { background-color: #ecfeff !important; }
+.content-stage--feature .bg-teal-50, .content-stage--view .bg-teal-50 { background-color: #f0fdfa !important; }
+.content-stage--feature .bg-emerald-50, .content-stage--view .bg-emerald-50 { background-color: #ecfdf5 !important; }
+.content-stage--feature .bg-green-50, .content-stage--view .bg-green-50 { background-color: #f0fdf4 !important; }
+
+.content-stage--feature .bg-blue-100, .content-stage--view .bg-blue-100 { background-color: #dbeafe !important; }
+.content-stage--feature .bg-indigo-100, .content-stage--view .bg-indigo-100 { background-color: #e0e7ff !important; }
+.content-stage--feature .bg-purple-100, .content-stage--view .bg-purple-100 { background-color: #f3e8ff !important; }
+.content-stage--feature .bg-pink-100, .content-stage--view .bg-pink-100 { background-color: #fce7f3 !important; }
+.content-stage--feature .bg-orange-100, .content-stage--view .bg-orange-100 { background-color: #ffedd5 !important; }
+.content-stage--feature .bg-red-100, .content-stage--view .bg-red-100 { background-color: #fee2e2 !important; }
+.content-stage--feature .bg-yellow-100, .content-stage--view .bg-yellow-100 { background-color: #fef9c3 !important; }
+.content-stage--feature .bg-cyan-100, .content-stage--view .bg-cyan-100 { background-color: #cffafe !important; }
+.content-stage--feature .bg-teal-100, .content-stage--view .bg-teal-100 { background-color: #ccfbf1 !important; }
+.content-stage--feature .bg-emerald-100, .content-stage--view .bg-emerald-100 { background-color: #d1fae5 !important; }
+.content-stage--feature .bg-green-100, .content-stage--view .bg-green-100 { background-color: #dcfce7 !important; }
+
+.content-stage--feature .bg-blue-500, .content-stage--view .bg-blue-500 { background-color: #3b82f6 !important; }
+.content-stage--feature .bg-blue-600, .content-stage--view .bg-blue-600 { background-color: #2563eb !important; }
+.content-stage--feature .bg-indigo-500, .content-stage--view .bg-indigo-500 { background-color: #6366f1 !important; }
+.content-stage--feature .bg-indigo-600, .content-stage--view .bg-indigo-600 { background-color: #4f46e5 !important; }
+.content-stage--feature .bg-purple-500, .content-stage--view .bg-purple-500 { background-color: #a855f7 !important; }
+.content-stage--feature .bg-purple-600, .content-stage--view .bg-purple-600 { background-color: #9333ea !important; }
+.content-stage--feature .bg-pink-500, .content-stage--view .bg-pink-500 { background-color: #ec4899 !important; }
+.content-stage--feature .bg-pink-600, .content-stage--view .bg-pink-600 { background-color: #db2777 !important; }
+.content-stage--feature .bg-orange-500, .content-stage--view .bg-orange-500 { background-color: #f97316 !important; }
+.content-stage--feature .bg-orange-600, .content-stage--view .bg-orange-600 { background-color: #ea580c !important; }
+.content-stage--feature .bg-red-500, .content-stage--view .bg-red-500 { background-color: #ef4444 !important; }
+.content-stage--feature .bg-red-600, .content-stage--view .bg-red-600 { background-color: #dc2626 !important; }
+.content-stage--feature .bg-yellow-400, .content-stage--view .bg-yellow-400 { background-color: #facc15 !important; color: #422006 !important; }
+.content-stage--feature .bg-yellow-500, .content-stage--view .bg-yellow-500 { background-color: #eab308 !important; color: #422006 !important; }
+.content-stage--feature .bg-cyan-300, .content-stage--view .bg-cyan-300 { background-color: #67e8f9 !important; color: #164e63 !important; }
+.content-stage--feature .bg-cyan-500, .content-stage--view .bg-cyan-500 { background-color: #06b6d4 !important; }
+.content-stage--feature .bg-teal-500, .content-stage--view .bg-teal-500 { background-color: #14b8a6 !important; }
+.content-stage--feature .bg-emerald-500, .content-stage--view .bg-emerald-500 { background-color: #10b981 !important; }
+.content-stage--feature .bg-green-500, .content-stage--view .bg-green-500 { background-color: #22c55e !important; }
+.content-stage--feature .bg-green-600, .content-stage--view .bg-green-600 { background-color: #16a34a !important; }
+
+.content-stage--feature .text-blue-500, .content-stage--view .text-blue-500 { color: #3b82f6 !important; }
+.content-stage--feature .text-blue-600, .content-stage--view .text-blue-600 { color: #2563eb !important; }
+.content-stage--feature .text-blue-700, .content-stage--view .text-blue-700 { color: #1d4ed8 !important; }
+.content-stage--feature .text-blue-800, .content-stage--view .text-blue-800 { color: #1e40af !important; }
+.content-stage--feature .text-indigo-500, .content-stage--view .text-indigo-500 { color: #6366f1 !important; }
+.content-stage--feature .text-indigo-600, .content-stage--view .text-indigo-600 { color: #4f46e5 !important; }
+.content-stage--feature .text-indigo-700, .content-stage--view .text-indigo-700 { color: #4338ca !important; }
+.content-stage--feature .text-purple-500, .content-stage--view .text-purple-500 { color: #a855f7 !important; }
+.content-stage--feature .text-purple-600, .content-stage--view .text-purple-600 { color: #9333ea !important; }
+.content-stage--feature .text-purple-700, .content-stage--view .text-purple-700 { color: #7e22ce !important; }
+.content-stage--feature .text-pink-500, .content-stage--view .text-pink-500 { color: #ec4899 !important; }
+.content-stage--feature .text-pink-600, .content-stage--view .text-pink-600 { color: #db2777 !important; }
+.content-stage--feature .text-orange-500, .content-stage--view .text-orange-500 { color: #f97316 !important; }
+.content-stage--feature .text-orange-600, .content-stage--view .text-orange-600 { color: #ea580c !important; }
+.content-stage--feature .text-orange-700, .content-stage--view .text-orange-700 { color: #c2410c !important; }
+.content-stage--feature .text-red-500, .content-stage--view .text-red-500 { color: #ef4444 !important; }
+.content-stage--feature .text-red-600, .content-stage--view .text-red-600 { color: #dc2626 !important; }
+.content-stage--feature .text-red-700, .content-stage--view .text-red-700 { color: #b91c1c !important; }
+.content-stage--feature .text-red-800, .content-stage--view .text-red-800 { color: #991b1b !important; }
+.content-stage--feature .text-yellow-500, .content-stage--view .text-yellow-500 { color: #eab308 !important; }
+.content-stage--feature .text-yellow-600, .content-stage--view .text-yellow-600 { color: #ca8a04 !important; }
+.content-stage--feature .text-yellow-700, .content-stage--view .text-yellow-700 { color: #a16207 !important; }
+.content-stage--feature .text-yellow-800, .content-stage--view .text-yellow-800 { color: #854d0e !important; }
+.content-stage--feature .text-green-500, .content-stage--view .text-green-500 { color: #22c55e !important; }
+.content-stage--feature .text-green-600, .content-stage--view .text-green-600 { color: #16a34a !important; }
+.content-stage--feature .text-green-700, .content-stage--view .text-green-700 { color: #15803d !important; }
+.content-stage--feature .text-green-800, .content-stage--view .text-green-800 { color: #166534 !important; }
+
+.content-stage--feature .border-blue-200, .content-stage--view .border-blue-200 { border-color: #bfdbfe !important; }
+.content-stage--feature .border-blue-300, .content-stage--view .border-blue-300 { border-color: #93c5fd !important; }
+.content-stage--feature .border-blue-400, .content-stage--view .border-blue-400 { border-color: #60a5fa !important; }
+.content-stage--feature .border-indigo-200, .content-stage--view .border-indigo-200 { border-color: #c7d2fe !important; }
+.content-stage--feature .border-indigo-300, .content-stage--view .border-indigo-300 { border-color: #a5b4fc !important; }
+.content-stage--feature .border-indigo-400, .content-stage--view .border-indigo-400 { border-color: #818cf8 !important; }
+.content-stage--feature .border-indigo-500, .content-stage--view .border-indigo-500 { border-color: #6366f1 !important; }
+.content-stage--feature .border-purple-200, .content-stage--view .border-purple-200 { border-color: #e9d5ff !important; }
+.content-stage--feature .border-purple-300, .content-stage--view .border-purple-300 { border-color: #d8b4fe !important; }
+.content-stage--feature .border-purple-500, .content-stage--view .border-purple-500 { border-color: #a855f7 !important; }
+.content-stage--feature .border-pink-200, .content-stage--view .border-pink-200 { border-color: #fbcfe8 !important; }
+.content-stage--feature .border-pink-300, .content-stage--view .border-pink-300 { border-color: #f9a8d4 !important; }
+.content-stage--feature .border-orange-200, .content-stage--view .border-orange-200 { border-color: #fed7aa !important; }
+.content-stage--feature .border-orange-300, .content-stage--view .border-orange-300 { border-color: #fdba74 !important; }
+.content-stage--feature .border-orange-500, .content-stage--view .border-orange-500 { border-color: #f97316 !important; }
+.content-stage--feature .border-red-200, .content-stage--view .border-red-200 { border-color: #fecaca !important; }
+.content-stage--feature .border-red-300, .content-stage--view .border-red-300 { border-color: #fca5a5 !important; }
+.content-stage--feature .border-red-400, .content-stage--view .border-red-400 { border-color: #f87171 !important; }
+.content-stage--feature .border-yellow-200, .content-stage--view .border-yellow-200 { border-color: #fef08a !important; }
+.content-stage--feature .border-yellow-300, .content-stage--view .border-yellow-300 { border-color: #fde047 !important; }
+.content-stage--feature .border-yellow-400, .content-stage--view .border-yellow-400 { border-color: #facc15 !important; }
+.content-stage--feature .border-cyan-300, .content-stage--view .border-cyan-300 { border-color: #67e8f9 !important; }
+.content-stage--feature .border-teal-300, .content-stage--view .border-teal-300 { border-color: #5eead4 !important; }
+.content-stage--feature .border-emerald-300, .content-stage--view .border-emerald-300 { border-color: #6ee7b7 !important; }
+
+.content-stage--feature .hover\:bg-blue-50:hover, .content-stage--view .hover\:bg-blue-50:hover { background-color: #eff6ff !important; }
+.content-stage--feature .hover\:bg-indigo-50:hover, .content-stage--view .hover\:bg-indigo-50:hover { background-color: #eef2ff !important; }
+.content-stage--feature .hover\:bg-purple-50:hover, .content-stage--view .hover\:bg-purple-50:hover { background-color: #faf5ff !important; }
+.content-stage--feature .hover\:bg-orange-50:hover, .content-stage--view .hover\:bg-orange-50:hover { background-color: #fff7ed !important; }
+.content-stage--feature .hover\:bg-red-50:hover, .content-stage--view .hover\:bg-red-50:hover { background-color: #fef2f2 !important; }
+.content-stage--feature .hover\:bg-yellow-50:hover, .content-stage--view .hover\:bg-yellow-50:hover { background-color: #fefce8 !important; }
+.content-stage--feature .hover\:bg-blue-700:hover, .content-stage--view .hover\:bg-blue-700:hover { background-color: #1d4ed8 !important; }
+.content-stage--feature .hover\:bg-indigo-700:hover, .content-stage--view .hover\:bg-indigo-700:hover { background-color: #4338ca !important; }
+.content-stage--feature .hover\:bg-purple-700:hover, .content-stage--view .hover\:bg-purple-700:hover { background-color: #7e22ce !important; }
+.content-stage--feature .hover\:bg-orange-600:hover, .content-stage--view .hover\:bg-orange-600:hover { background-color: #ea580c !important; }
+.content-stage--feature .hover\:bg-orange-700:hover, .content-stage--view .hover\:bg-orange-700:hover { background-color: #c2410c !important; }
+.content-stage--feature .hover\:bg-red-600:hover, .content-stage--view .hover\:bg-red-600:hover { background-color: #dc2626 !important; }
+.content-stage--feature .hover\:bg-red-700:hover, .content-stage--view .hover\:bg-red-700:hover { background-color: #b91c1c !important; }
+.content-stage--feature .hover\:bg-yellow-500:hover, .content-stage--view .hover\:bg-yellow-500:hover { background-color: #eab308 !important; color: #422006 !important; }
+.content-stage--feature .hover\:bg-yellow-600:hover, .content-stage--view .hover\:bg-yellow-600:hover { background-color: #ca8a04 !important; color: #422006 !important; }
+
+/* Keep gradient bars/indicators meaningful without bringing back gradient cards. */
+.content-stage--feature .bg-gradient-to-r.from-indigo-500.to-purple-500,
+.content-stage--view .bg-gradient-to-r.from-indigo-500.to-purple-500 {
+  background-image: linear-gradient(to right, #6366f1, #a855f7) !important;
+}
+
+.content-stage--feature .bg-gradient-to-r.from-pink-400.to-pink-600,
+.content-stage--view .bg-gradient-to-r.from-pink-400.to-pink-600 {
+  background-image: linear-gradient(to right, #f472b6, #db2777) !important;
+}
+
+.content-stage--feature .bg-gradient-to-r.from-yellow-400.to-amber-500,
+.content-stage--view .bg-gradient-to-r.from-yellow-400.to-amber-500 {
+  background-image: linear-gradient(to right, #facc15, #f59e0b) !important;
+}
+
+/* Members page needs stronger information hierarchy than generic leaf surfaces. */
+.content-stage--view .members-toolbar,
+.content-stage--feature .members-toolbar {
+  background-color: rgba(236, 253, 245, 0.88) !important;
+  border-color: #a7f3d0 !important;
+  box-shadow: 0 12px 30px rgba(6, 95, 70, 0.10) !important;
+}
+
+.content-stage--view .member-list-card,
+.content-stage--feature .member-list-card {
+  background: #ffffff !important;
+  border-color: #d1d5db !important;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08) !important;
+}
+
+.content-stage--view .member-list-card:hover,
+.content-stage--feature .member-list-card:hover {
+  border-color: #34d399 !important;
+  box-shadow: 0 16px 34px rgba(5, 150, 105, 0.16) !important;
+}
+
+.content-stage--view .member-partner-panel,
+.content-stage--feature .member-partner-panel {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+}
+
+.content-stage--view .member-list-card .bg-yellow-50,
+.content-stage--feature .member-list-card .bg-yellow-50 { background-color: #fefce8 !important; border-color: #fde047 !important; }
+.content-stage--view .member-list-card .bg-purple-50,
+.content-stage--feature .member-list-card .bg-purple-50 { background-color: #faf5ff !important; border-color: #d8b4fe !important; }
+.content-stage--view .member-list-card .bg-emerald-50,
+.content-stage--feature .member-list-card .bg-emerald-50 { background-color: #ecfdf5 !important; border-color: #6ee7b7 !important; }
+
+.home-session-panel button:disabled {
+  cursor: not-allowed;
+  border-color: rgba(95, 111, 79, 0.34);
+  background: rgba(94, 111, 82, 0.42);
+  color: rgba(255, 255, 247, 0.72);
+}
+
+.home-session-panel__attendance {
+  border-color: rgba(177, 143, 34, 0.48) !important;
+  background: rgba(112, 92, 35, 0.84) !important;
+}
+
+.home-session-panel__attendance:not(:disabled):hover {
+  background: rgba(134, 109, 38, 0.92) !important;
+}
+
+.pokedex-card-sprite,
+.pokedex-admin-sprite {
+  display: block !important;
+  width: 96px !important;
+  height: 96px !important;
+  min-width: 96px !important;
+  min-height: 96px !important;
+  max-width: 96px !important;
+  max-height: 96px !important;
+  object-fit: contain !important;
+  image-rendering: -moz-crisp-edges !important;
+  image-rendering: -webkit-crisp-edges !important;
+  image-rendering: pixelated !important;
+  image-rendering: crisp-edges !important;
+  -ms-interpolation-mode: nearest-neighbor !important;
+}
+
+.pokedex-modal-sprite {
+  display: block !important;
+  width: 192px !important;
+  height: 192px !important;
+  min-width: 192px !important;
+  min-height: 192px !important;
+  max-width: 192px !important;
+  max-height: 192px !important;
+  object-fit: contain !important;
+  image-rendering: -moz-crisp-edges !important;
+  image-rendering: -webkit-crisp-edges !important;
+  image-rendering: pixelated !important;
+  image-rendering: crisp-edges !important;
+  -ms-interpolation-mode: nearest-neighbor !important;
+}
+
+.trainer-nav__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  align-items: center;
+  width: 100%;
+}
+
+.trainer-nav__adventure-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.trainer-nav__submenu {
+  display: flex;
+  flex-direction: column;
+  bottom-gap: 2px;
+  padding: 0;
+  align-self: flex-end;
+  margin-right: 40px;
+}
+
+.trainer-nav__submenu-button {
+  width: clamp(113px, 7.6vw, 128px);
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 0;
+  line-height: 0;
+  cursor: pointer;
+  transition: filter 150ms ease;
+}
+
+.trainer-nav__submenu-button img {
+  display: block;
+  width: clamp(113px, 7.6vw, 128px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(3px 4px 1px rgba(0, 0, 0, 0.38));
+  pointer-events: none;
+}
+
+.trainer-nav__submenu-button:hover,
+.trainer-nav__submenu-button.is-active {
+  filter: brightness(1.06) drop-shadow(3px 4px 1px rgba(0, 0, 0, 0.38));
+}
+
+.trainer-nav__social {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  padding: 0;
+  margin-left:  45px;
+}
+
+.trainer-nav__social-button {
+  width: 85%;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px  1px 10px;
+  cursor: pointer;
+  transition: filter 150ms ease;
+
+}
+
+.trainer-nav__social-button img {
+  width: 80%;
+  height: clamp(43px, 3.5vw, 49px);
+  object-fit: contain;
+  filter: drop-shadow(3px 4px 1px rgba(0, 0, 0, 0.38));
+  pointer-events: none;
+}
+
+.trainer-nav__social-button:hover,
+.trainer-nav__social-button.is-active {
+  filter: brightness(1.06) drop-shadow(3px 4px 1px rgba(0, 0, 0, 0.38));
+}
