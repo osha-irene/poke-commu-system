@@ -5,6 +5,15 @@ const FORM_ICON_ALIASES = {
   'ROTOM-FROST': 'ROTOM-FROST',
   'ROTOM-FAN': 'ROTOM-FAN',
   'ROTOM-MOW': 'ROTOM-MOW',
+  'PORYGON-Z': 'PORYGONZ',
+  'NIDORAN-F': 'NIDORANfE',
+  'NIDORAN-M': 'NIDORANmA',
+  'JANGMO-O': 'JANGMOO',
+  'HAKAMO-O': 'HAKAMOO',
+  'KOMMO-O': 'KOMMOO',
+  'HO-OH': 'HOOH',
+  'MIME-JR': 'MIMEJR',
+  'TYPE-NULL': 'TYPENULL',
 };
 
 export function toPokemonIconFileName(pokemon = {}, options = {}) {

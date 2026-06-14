@@ -162,28 +162,22 @@ export const useGameData = (allPokemonData) => {
           console.log('🔧 초기 영운 도감 생성');
         }
 
-        // 5. 공유 도감 로드
+        // 5. 공유 도감 실시간 리스너 (다른 브라우저/기기에서 변경 즉시 반영)
         const sharedPokedexRef = ref(database, 'gameData/sharedPokedex');
-        const sharedSnapshot = await get(sharedPokedexRef);
-        if (sharedSnapshot.exists()) {
-          const sharedData = sharedSnapshot.val();
-          
-          // 데이터 검증
-          const validatedData = {};
-          Object.entries(sharedData).forEach(([key, value]) => {
-            if (!isNaN(key) && typeof value === 'object' && value !== null) {
-              validatedData[key] = value;
-            } else {
-              console.warn('⚠️ 잘못된 공유 도감 엔트리 발견:', key, value);
-            }
-          });
-          
-          setSharedPokedexData(validatedData);
-          console.log('🌐 공유 도감 로드 완료:', Object.keys(validatedData).length, '개 엔트리');
-        } else {
-          setSharedPokedexData({});
-          console.log('🔧 공유 도감 초기화');
-        }
+        onValue(sharedPokedexRef, (snapshot) => {
+          if (snapshot.exists()) {
+            const sharedData = snapshot.val();
+            const validatedData = {};
+            Object.entries(sharedData).forEach(([key, value]) => {
+              if (!isNaN(key) && typeof value === 'object' && value !== null) {
+                validatedData[key] = value;
+              }
+            });
+            setSharedPokedexData(validatedData);
+          } else {
+            setSharedPokedexData({});
+          }
+        });
 
         // 6. 점검 모드 로드 (onValue로 실시간 처리, 별도 useEffect에서 구독)
 
@@ -280,40 +274,7 @@ export const useGameData = (allPokemonData) => {
     saveGamePokedex();
   }, [gamePokedex, isLoading]);
 
-  // 🔥 공유 도감 변경 시 Firebase에 저장
-  useEffect(() => {
-    const saveSharedPokedex = async () => {
-      if (isLoading) return;
-      
-      try {
-        const validatedData = {};
-        let hasInvalidData = false;
-        
-        Object.entries(sharedPokedexData).forEach(([key, value]) => {
-          if (!isNaN(key) && typeof value === 'object' && value !== null) {
-            validatedData[key] = value;
-          } else {
-            console.error('❌ 잘못된 키 타입 발견:', key, typeof key, value);
-            hasInvalidData = true;
-          }
-        });
-        
-        if (hasInvalidData) {
-          console.error('❌ 공유 도감에 잘못된 데이터가 있습니다!');
-          console.error('원본 데이터:', sharedPokedexData);
-          return;
-        }
-        
-        const sharedPokedexRef = ref(database, 'gameData/sharedPokedex');
-        await set(sharedPokedexRef, validatedData);
-        console.log('💾 공유 도감 저장:', Object.keys(validatedData).length, '개 엔트리');
-      } catch (error) {
-        console.error('❌ 공유 도감 저장 실패:', error);
-        console.error('문제가 된 데이터:', sharedPokedexData);
-      }
-    };
-    saveSharedPokedex();
-  }, [sharedPokedexData, isLoading]);
+  // 공유 도감은 onValue 실시간 리스너로 관리 — 전체 덮어쓰기 불필요
 
   // 🔥 점검 모드 실시간 리스너
   useEffect(() => {

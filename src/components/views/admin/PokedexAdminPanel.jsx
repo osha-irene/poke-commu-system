@@ -145,15 +145,15 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
 
   const handleRemovePokemon = (pokemon) => {
     if (window.confirm(`${pokemon.name}을(를) 도감에서 제거하시겠습니까?`)) {
-      const numbersToRemove = new Set([pokemon.number]);
-      if (pokemon.originalNumber) numbersToRemove.add(pokemon.originalNumber);
-      
-      const updatedPokedex = gamePokedex.filter(p => 
-        !numbersToRemove.has(p.number) && 
-        !(p.originalNumber && numbersToRemove.has(p.originalNumber))
-      );
-      
-      const newNumbers = updatedPokedex.map(p => p.originalNumber || p.number);
+      const isRegionalForm = pokemon.originalNumber && pokemon.originalNumber !== pokemon.number;
+      const updatedPokedex = gamePokedex.filter(p => {
+        if (p.number === pokemon.number) return false;
+        // 원종 제거 시 해당 원종의 리전폼도 함께 제거
+        if (!isRegionalForm && p.originalNumber && p.originalNumber !== p.number && p.originalNumber === pokemon.number) return false;
+        return true;
+      });
+      // 항상 p.number 사용 — originalNumber를 쓰면 리전폼이 원종 번호로 대체됨
+      const newNumbers = updatedPokedex.map(p => p.number);
       updateGamePokedex(newNumbers.sort((a, b) => a - b));
     }
   };

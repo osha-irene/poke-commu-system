@@ -224,10 +224,6 @@ const usePokemonManagement = (
     const pokemon = currentUser.caughtPokemon[pokemonIndex];
     if (!pokemon) return;
     
-    if (!window.confirm('정말 ' + (pokemon.nickname || pokemon.name) + '을(를) 방생하시겠습니까?\n되돌릴 수 없습니다!')) {
-      return;
-    }
-  
     const newCaughtPokemon = [...currentUser.caughtPokemon];
     
     if (pokemonIndex < 6) {

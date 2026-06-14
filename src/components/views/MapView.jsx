@@ -168,11 +168,6 @@ export default function MapView({
                     <span className="font-semibold" style={{ color: currentTown.color }}>
                       {currentTown.groupName}
                     </span>
-                    {currentTown.isDefaultTown && (
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                        기본 마을
-                      </span>
-                    )}
                   </>
                 )}
                 {viewMode === 'all' && '모든 구역 표시 중'}
@@ -188,7 +183,7 @@ export default function MapView({
                 >
                   {towns.map(town => (
                     <option key={town.groupId} value={town.groupId}>
-                      {town.groupName} {town.isDefaultTown ? '(기본)' : ''}
+                      {town.groupName}
                     </option>
                   ))}
                 </select>

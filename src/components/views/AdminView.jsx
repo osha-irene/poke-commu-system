@@ -7,7 +7,7 @@ import { User, ChevronRight } from 'lucide-react';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import RegionEditModal from '../modals/RegionEditModal';
 import PokedexAdminPanel from './admin/PokedexAdminPanel';
-import ShopAdminPanel from '../admin/ShopAdminPanel';
+import ShopAdminPanel from './admin/ShopAdminPanel';
 import MemberDetailPanel from './admin/MemberDetailPanel';
 import CustomItemCreator from './admin/CustomItemCreator';
 import RegionExplorePanel from './admin/RegionExplorePanel';

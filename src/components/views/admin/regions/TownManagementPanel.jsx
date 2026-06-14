@@ -184,9 +184,6 @@ export default function TownManagementPanel({ towns, regions, onToggleVisibility
                 </div>
               </div>
 
-              <div className="mt-2 text-xs text-gray-500">
-                좌표: ({town.x}%, {town.y}%)
-              </div>
             </div>
           ))}
 
@@ -233,51 +230,6 @@ export default function TownManagementPanel({ towns, regions, onToggleVisibility
                   className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
                   placeholder="태초마을"
                 />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-2">지도 X좌표 (%)</label>
-                  <input
-                    type="number"
-                    value={townForm.x}
-                    onChange={(e) => setTownForm({...townForm, x: parseInt(e.target.value)})}
-                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
-                    min="0"
-                    max="100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-2">지도 Y좌표 (%)</label>
-                  <input
-                    type="number"
-                    value={townForm.y}
-                    onChange={(e) => setTownForm({...townForm, y: parseInt(e.target.value)})}
-                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
-                    min="0"
-                    max="100"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold mb-2">마을 색상</label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="color"
-                    value={townForm.color}
-                    onChange={(e) => setTownForm({...townForm, color: e.target.value})}
-                    className="w-16 h-10 rounded border-2 border-gray-300 cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    value={townForm.color}
-                    onChange={(e) => setTownForm({...townForm, color: e.target.value})}
-                    className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
-                    placeholder="#10b981"
-                  />
-                </div>
               </div>
 
               <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-3">

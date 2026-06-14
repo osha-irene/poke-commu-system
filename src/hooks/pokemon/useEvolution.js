@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import evolutionsData from '../../data/evolutions.json';
 import { getBaseStatPatch } from '../../utils/pokemonBaseStats';
+import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
+
+const getBaseName = (pokemon) => getPokemonDisplayParts(pokemon).name;
 
 export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) => {
   const [evolutionModal, setEvolutionModal] = useState(null);
@@ -254,7 +257,7 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
           number: evolvedTemplate.number,
           originalNumber: evolvedTemplate.originalNumber || evolvedTemplate.number,
           pokemonId: evolvedTemplate.number,
-          name: evolvedTemplate.name,
+          name: getBaseName(evolvedTemplate),
           nameEn: evolvedTemplate.nameEn,
           type: evolvedTemplate.type,
           type2: evolvedTemplate.type2 || null,
@@ -262,8 +265,8 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
           imageUrl: evolvedTemplate.imageUrl,
           iconUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${evolvedTemplate.number}.png`,
           spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${evolvedTemplate.number}.png`,
-          // 닉네임은 유지, 진화 취소 플래그는 제거
-          nickname: p.nickname || null,
+          // 닉네임이 종족명이면 제거, 커스텀 닉네임은 유지
+          nickname: (p.nickname && p.nickname !== getBaseName(p) && p.nickname !== p.name && p.nickname !== p.nameEn) ? p.nickname : null,
           evolutionCancelled: false
         };
       }
@@ -274,8 +277,8 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
     const evolutionHistoryEntry = {
       id: `evolution_${pokemon.uniqueId || evolvedAt}_${evolvedAt}`,
       pokemonId: pokemon.uniqueId || null,
-      fromName: pokemon.nickname || pokemon.name,
-      toName: evolvedTemplate.name,
+      fromName: pokemon.nickname || getBaseName(pokemon),
+      toName: getBaseName(evolvedTemplate),
       toNameEn: evolvedTemplate.nameEn,
       toNumber: evolvedTemplate.number,
       imageUrl: evolvedTemplate.imageUrl,

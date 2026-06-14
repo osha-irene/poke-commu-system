@@ -476,14 +476,27 @@ export const useAdminMembers = (
 
     // 알로 지급 — egg 필드에 별도 저장, 포켓몬 수 제한 무관
     if (options.asEgg && options.eggData) {
-      const eggData = {
-        ...options.eggData,
-        id: `egg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        givenAt: new Date().toISOString(),
-      };
-      const memberRef = ref(database, `members/${memberId}`);
-      await update(memberRef, { egg: eggData });
-      alert(`${member.name}님에게 ${pokemonTemplate?.name || '포켓몬'} 알을 지급했습니다!`);
+      try {
+        const rawEggData = {
+          ...options.eggData,
+          id: `egg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          givenAt: new Date().toISOString(),
+        };
+        // Firebase는 undefined 값을 거부하므로 제거
+        const eggData = Object.fromEntries(
+          Object.entries(rawEggData).filter(([, v]) => v !== undefined)
+        );
+        const memberRef = ref(database, `members/${memberId}`);
+        await update(memberRef, { egg: eggData });
+        setMembers(prev => ({
+          ...prev,
+          [memberId]: { ...prev[memberId], egg: eggData }
+        }));
+        alert(`${member.name}님에게 ${pokemonTemplate?.name || '포켓몬'} 알을 지급했습니다!`);
+      } catch (error) {
+        console.error('❌ 알 지급 실패:', error);
+        alert(`알 지급 실패: ${error.message}`);
+      }
       return;
     }
 

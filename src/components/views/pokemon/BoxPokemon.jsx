@@ -1,21 +1,30 @@
 import React from 'react';
 import { getTypeColor, COLORS } from '../../../styles/theme';
 import { getPokemonLocalIconUrl } from '../../../utils/pokemonIconUtils';
+import { getPokemonDisplayParts } from '../../../utils/pokemonDisplayName';
+
+const getBaseName = (pokemon) => getPokemonDisplayParts(pokemon).name;
 
 // 濡쒖뺄 ?대갚 URL
 const getLocalIconUrl = (pokemon, allPokemonMaster) => {
   let englishName = pokemon.nameEn;
-  
+
   if (!englishName && allPokemonMaster) {
-    const template = allPokemonMaster.find(p => 
+    const template = allPokemonMaster.find(p =>
       p.number === pokemon.number || p.id === pokemon.pokemonId
     );
     englishName = template?.nameEn;
   }
-  return getPokemonLocalIconUrl({
+
+  const localUrl = getPokemonLocalIconUrl({
     ...pokemon,
     nameEn: englishName || pokemon.nameEn || pokemon.name || 'UNKNOWN',
   });
+  if (localUrl) return localUrl;
+
+  if (pokemon.iconUrl) return pokemon.iconUrl;
+  if (pokemon.number) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemon.number}.png`;
+  return '';
 };
 
 export default function BoxPokemon({ 
@@ -84,7 +93,7 @@ export default function BoxPokemon({
           className="text-xs font-bold truncate"
           style={{ color: COLORS.ui.text.primary }}
         >
-          {pokemon.nickname || pokemon.name}
+          {pokemon.nickname || getBaseName(pokemon)}
         </div>
         <div className="flex gap-1 mt-1 justify-center flex-wrap">
           <span 

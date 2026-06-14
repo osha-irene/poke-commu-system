@@ -222,7 +222,7 @@ export default function PokedexView({
     });
 
     console.log('  ??理쒖쥌 異쒗쁽 吏??', foundRegions);
-    return foundRegions;
+    return [...new Set(foundRegions)];
   };
 
   const getEditableRegionOptions = () => (
@@ -454,59 +454,56 @@ export default function PokedexView({
           })}
         </div>
 
-        {/* 모바일 도감 팝업 모달 */}
+        {/* 모바일 도감 팝업 */}
         {selectedPokemon && selectedForm && (
           <div
             style={{
               position: 'fixed', inset: 0, zIndex: 9000,
-              background: 'rgba(0,0,0,0.7)',
-              display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-              paddingBottom: 64,
+              background: 'rgba(0,0,0,0.55)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '24px 20px',
               backdropFilter: 'blur(4px)',
             }}
             onClick={() => { setSelectedPokemon(null); setSelectedForm(null); }}
           >
             <div
-              className="pokedex-mobile-modal"
               style={{
-                width: '100%', maxHeight: '88vh', overflowY: 'auto',
-                scrollbarWidth: 'none', msOverflowStyle: 'none',
-                background: 'rgba(14,26,14,0.97)',
-                border: '1px solid rgba(130,185,65,0.3)',
-                borderTop: '1px solid rgba(130,185,65,0.4)',
+                width: '100%', maxWidth: 260, maxHeight: '80vh', overflowY: 'auto',
+                scrollbarWidth: 'none',
+                background: 'rgba(255,255,255,0.97)',
+                border: '1px solid rgba(160,210,80,0.3)',
                 borderRadius: 20,
-                padding: '20px 16px 28px',
-                color: 'rgba(225,248,185,0.95)',
+                padding: '20px 18px 20px',
+                position: 'relative',
+                color: '#1a2e10',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
               }}
               onClick={e => e.stopPropagation()}
             >
-              {/* 드래그 핸들 */}
-              <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(130,185,65,0.35)', margin: '0 auto 16px' }} />
+              {/* 우상단 X */}
+              <button onClick={() => { setSelectedPokemon(null); setSelectedForm(null); }} style={{
+                position: 'absolute', top: 12, right: 14,
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: '#bbb', fontSize: 18, lineHeight: 1, padding: 4,
+              }}>✕</button>
 
-              {/* 번호 */}
-              <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(170,210,125,0.7)', marginBottom: 4 }}>
-                No.{(selectedForm.originalNumber || selectedForm.number).toString().padStart(3, '0')}
+              {/* 번호 + 이름 */}
+              <div style={{ fontSize: 10, color: '#8aaa60', fontWeight: 700, marginBottom: 1 }}>
+                No.{(selectedForm.newNumber || selectedForm.originalNumber || selectedForm.number).toString().padStart(3, '0')}
               </div>
-
-              {/* 이름 */}
-              <div style={{ textAlign: 'center', fontSize: 20, fontWeight: 800, marginBottom: 12 }}>
+              <div style={{ fontSize: 19, fontWeight: 800, color: '#1a2e10', marginBottom: 12 }}>
                 {getPokemonDisplayParts(selectedForm).name}
               </div>
 
               {/* 스프라이트 */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-                <img
-                  src={getPokemonSpriteUrl(selectedForm)}
-                  alt={selectedForm.name}
-                  style={{ width: 96, height: 96, imageRendering: 'pixelated', objectFit: 'contain' }}
-                />
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
+                <img src={getPokemonSpriteUrl(selectedForm)} alt={selectedForm.name}
+                  style={{ width: 96, height: 96, imageRendering: 'pixelated', objectFit: 'contain' }} />
               </div>
 
               {/* 리전폼 탭 */}
               {(() => {
-                const originalForm = selectedPokemon.originalNumber
-                  ? getOriginalForm(selectedPokemon)
-                  : selectedPokemon;
+                const originalForm = selectedPokemon.originalNumber ? getOriginalForm(selectedPokemon) : selectedPokemon;
                 const regionalForms = allPokedex.filter(p =>
                   p.originalNumber === (originalForm?.number || selectedPokemon.number) &&
                   p.originalNumber !== p.number &&
@@ -516,21 +513,16 @@ export default function PokedexView({
                 const allForms = originalForm ? [originalForm, ...regionalForms] : regionalForms;
                 if (allForms.length <= 1) return null;
                 return (
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 14 }}>
+                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 12 }}>
                     {allForms.map(form => {
                       const isActive = selectedForm.number === form.number;
                       return (
-                        <button
-                          key={form.number}
-                          onClick={() => setSelectedForm(form)}
-                          style={{
-                            padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700,
-                            border: `1px solid ${isActive ? 'rgba(185,240,90,0.8)' : 'rgba(130,185,65,0.3)'}`,
-                            background: isActive ? 'rgba(100,160,42,0.4)' : 'transparent',
-                            color: isActive ? 'rgba(195,245,100,1)' : 'rgba(170,210,125,0.7)',
-                            cursor: 'pointer',
-                          }}
-                        >
+                        <button key={form.number} onClick={() => setSelectedForm(form)} style={{
+                          padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+                          border: `1.5px solid ${isActive ? '#5a9a20' : 'rgba(120,180,60,0.35)'}`,
+                          background: isActive ? '#5a9a20' : 'transparent',
+                          color: isActive ? '#fff' : '#5a7a40', cursor: 'pointer',
+                        }}>
                           {getPokemonDisplayParts(form).formLabel || '기본형'}
                         </button>
                       );
@@ -539,51 +531,58 @@ export default function PokedexView({
                 );
               })()}
 
+              <div style={{ height: 1, background: 'rgba(120,180,60,0.15)', marginBottom: 12 }} />
+
+              {/* 출현 장소 */}
+              {(() => {
+                const pokemonRegions = getPokemonRegions(selectedForm);
+                return (
+                  <div style={{ marginBottom: 10 }}>
+                    <div style={{ fontSize: 10, color: '#7a9a50', fontWeight: 700, marginBottom: 5 }}>📍 출현 장소</div>
+                    <div>
+                      {pokemonRegions.length > 0
+                        ? pokemonRegions.map((r, i) => (
+                            <span key={i} style={{
+                              display: 'inline-block',
+                              background: 'rgba(220,245,195,0.8)',
+                              border: '1px solid rgba(120,180,60,0.25)',
+                              borderRadius: 6, padding: '2px 8px',
+                              margin: '2px 3px 2px 0', fontSize: 11, color: '#2a3d1a',
+                            }}>{r}</span>
+                          ))
+                        : <span style={{ color: '#bbb', fontSize: 11 }}>정보 없음</span>
+                      }
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* 도감 정보 */}
               {(() => {
                 const { entry } = getPokedexEntryWithKey(selectedForm);
-                if (!entry) {
-                  return (
-                    <div style={{ textAlign: 'center', color: 'rgba(170,210,125,0.5)', fontSize: 13, padding: '12px 0' }}>
-                      아직 발견 기록이 없습니다.
-                    </div>
-                  );
-                }
+                if (!entry) return null;
                 return (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                     {entry.firstCatcher && (
-                      <div style={{ background: 'rgba(30,52,20,0.65)', border: '1px solid rgba(130,185,65,0.2)', borderRadius: 10, padding: '10px 14px' }}>
-                        <div style={{ fontSize: 11, color: 'rgba(170,210,125,0.65)', marginBottom: 3 }}>최초 포획</div>
-                        <div style={{ fontSize: 14, fontWeight: 700 }}>{entry.firstCatcher}</div>
+                      <div style={{ fontSize: 12, color: '#2a3d1a' }}>
+                        <span style={{ color: '#7a9a50', fontWeight: 700 }}>최초 포획 </span>
+                        <span style={{ fontWeight: 700 }}>{entry.firstCatcher}</span>
                       </div>
                     )}
                     {entry.firstEncounter && (
-                      <div style={{ background: 'rgba(30,52,20,0.65)', border: '1px solid rgba(130,185,65,0.2)', borderRadius: 10, padding: '10px 14px' }}>
-                        <div style={{ fontSize: 11, color: 'rgba(170,210,125,0.65)', marginBottom: 3 }}>최초 조우</div>
-                        <div style={{ fontSize: 13 }}>{entry.firstEncounter}</div>
+                      <div style={{ fontSize: 12, color: '#2a3d1a' }}>
+                        <span style={{ color: '#7a9a50', fontWeight: 700 }}>최초 조우 </span>
+                        {entry.firstEncounter}
                       </div>
                     )}
                     {entry.memo && (
-                      <div style={{ background: 'rgba(30,52,20,0.45)', border: '1px solid rgba(130,185,65,0.15)', borderRadius: 10, padding: '10px 14px', fontStyle: 'italic', fontSize: 13, color: 'rgba(200,235,155,0.8)' }}>
+                      <div style={{ fontSize: 11, color: '#4a6a30', fontStyle: 'italic', borderTop: '1px solid rgba(120,180,60,0.15)', paddingTop: 6, marginTop: 2 }}>
                         "{entry.memo}"
                       </div>
                     )}
                   </div>
                 );
               })()}
-
-              <button
-                onClick={() => { setSelectedPokemon(null); setSelectedForm(null); }}
-                style={{
-                  marginTop: 18, width: '100%', padding: '12px',
-                  borderRadius: 10, border: 'none',
-                  background: 'rgba(100,160,42,0.4)',
-                  color: 'rgba(195,245,100,1)',
-                  fontSize: 14, fontWeight: 700, cursor: 'pointer',
-                }}
-              >
-                닫기
-              </button>
             </div>
           </div>
         )}

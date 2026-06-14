@@ -346,20 +346,20 @@ function MemberPokemonTab({
       const p = giveData.selectedPokemon;
       const eggData = {
         species: p.name,
-        speciesEn: p.nameEn,
+        speciesEn: p.nameEn || null,
         speciesNumber: p.number,
         speciesOriginalNumber: p.originalNumber || p.number,
         regionalForm: p.regionalForm || null,
         formVariant: p.formVariant || null,
-        isShiny: giveData.isShiny,
-        gender: giveData.gender,
-        ivs: giveData.ivs,
-        caughtWithBall: giveData.caughtWithBall,
+        isShiny: giveData.isShiny || false,
+        gender: giveData.gender || null,
+        ivs: giveData.ivs || null,
+        caughtWithBall: giveData.caughtWithBall || '몬스터볼',
         ballImageUrl: null,
-        heldItem: giveData.heldItem,
-        friendship: giveData.friendship,
+        heldItem: giveData.heldItem || null,
+        friendship: giveData.friendship || 0,
         ability: giveData.ability || null,
-        moves: giveData.selectedMoves.map(m => ({ moveId: m.id, currentPp: m.pp, learnedAt: 1 })),
+        moves: (giveData.selectedMoves || []).map(m => ({ moveId: m.id, currentPp: m.pp, learnedAt: 1 })),
         givenAt: new Date().toISOString(),
       };
       onGivePokemon(member.id, giveData.selectedPokemon, { asEgg: true, eggData });

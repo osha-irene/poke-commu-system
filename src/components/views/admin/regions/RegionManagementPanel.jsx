@@ -1085,55 +1085,6 @@ export default function RegionManagementPanel({
               </div>
 
               {!editingTown && (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-2">지도 X좌표 (%)</label>
-                  <input
-                    type="number"
-                    value={townForm.x}
-                    onChange={(event) => setTownForm({ ...townForm, x: parseInt(event.target.value, 10) || 0 })}
-                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
-                    min="0"
-                    max="100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-2">지도 Y좌표 (%)</label>
-                  <input
-                    type="number"
-                    value={townForm.y}
-                    onChange={(event) => setTownForm({ ...townForm, y: parseInt(event.target.value, 10) || 0 })}
-                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
-                    min="0"
-                    max="100"
-                  />
-                </div>
-              </div>
-              )}
-
-              {!editingTown && (
-              <div>
-                <label className="block text-sm font-semibold mb-2">마을 색상</label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="color"
-                    value={townForm.color}
-                    onChange={(event) => setTownForm({ ...townForm, color: event.target.value })}
-                    className="w-16 h-10 rounded border-2 border-gray-300 cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    value={townForm.color}
-                    onChange={(event) => setTownForm({ ...townForm, color: event.target.value })}
-                    className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
-                    placeholder="#10b981"
-                  />
-                </div>
-              </div>
-              )}
-
-              {!editingTown && (
               <label className="flex items-center gap-2 rounded-lg border-2 border-blue-200 bg-blue-50 p-3 cursor-pointer">
                 <input
                   type="checkbox"

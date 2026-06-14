@@ -27,6 +27,9 @@ import LevelUpMoveModal from './LevelUpMoveModal';
 import FormIconSprite from './FormIconSprite';
 import { getRequiredExpForLevel } from '../../../utils/experience';
 import { getAbilityByName } from '../../../utils/abilityUtils';
+import { getPokemonDisplayParts } from '../../../utils/pokemonDisplayName';
+
+const getBaseName = (pokemon) => getPokemonDisplayParts(pokemon).name;
 
 const getPokemonSpriteUrl = (number) => 
   `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`;
@@ -95,7 +98,7 @@ export default function PokemonDetailPanel({
 }) {
   // State
   const [isEditingNickname, setIsEditingNickname] = useState(false);
-  const [nickname, setNickname] = useState(pokemon.nickname || pokemon.name);
+  const [nickname, setNickname] = useState(pokemon.nickname || getBaseName(pokemon));
   const [showMoveSelectModal, setShowMoveSelectModal] = useState(false);
   const [showLevelUpMoveModal, setShowLevelUpMoveModal] = useState(false); 
   const [levelUpData, setLevelUpData] = useState(null);
@@ -331,7 +334,7 @@ const ballImage = getBallImage();
 
   // Effects
   useEffect(() => {
-    setNickname(pokemon.nickname || pokemon.name);
+    setNickname(pokemon.nickname || getBaseName(pokemon));
     setIsEditingNickname(false);
     setExpInput('');
     setShowExpPanel(false);
@@ -347,7 +350,7 @@ const ballImage = getBallImage();
   };
 
   const handleCancelEdit = () => {
-    setNickname(pokemon.nickname || pokemon.name);
+    setNickname(pokemon.nickname || getBaseName(pokemon));
     setIsEditingNickname(false);
   };
 
@@ -471,7 +474,7 @@ const ballImage = getBallImage();
                     {pokemon.type2}
                   </span>
                 )}
-                <span className="text-xs text-gray-500">{pokemon.name}</span>
+                <span className="text-xs text-gray-500">{getBaseName(pokemon)}</span>
               </div>
 
               {/* 아이콘 버튼 그룹 */}
@@ -603,7 +606,7 @@ const ballImage = getBallImage();
                                     className="h-9 w-9"
                                   />
                                   <span className="min-w-0">
-                                    <span className="block truncate text-sm font-bold text-[#26351f]">{form.name}</span>
+                                    <span className="block truncate text-sm font-bold text-[#26351f]">{getBaseName(form)}</span>
                                     <span className="block truncate text-xs text-[#6f8150]">
                                       {form.type}{form.type2 ? ` / ${form.type2}` : ''}
                                     </span>
@@ -747,7 +750,7 @@ const ballImage = getBallImage();
                   <div>
                     <div className="text-sm font-bold text-yellow-800">진화 가능!</div>
                     <div className="text-xs text-yellow-700">
-                      {evolvedPokemon.name}(으)로 진화할 수 있습니다
+                      {getBaseName(evolvedPokemon)}(으)로 진화할 수 있습니다
                     </div>
                   </div>
                 </div>

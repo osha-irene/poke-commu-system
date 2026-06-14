@@ -2,6 +2,9 @@ import React from 'react';
 import { Heart, Egg } from 'lucide-react';
 import { getTypeColor, POKEBALL_LIST } from '../../../styles/theme';
 import { getPokemonLocalIconUrl } from '../../../utils/pokemonIconUtils';
+import { getPokemonDisplayParts } from '../../../utils/pokemonDisplayName';
+
+const getBaseName = (pokemon) => getPokemonDisplayParts(pokemon).name;
 
 const PARTNER_WALK_STYLE = `
 @keyframes partnerWalk {
@@ -22,18 +25,24 @@ const PARTNER_WALK_STYLE = `
 
 const getLocalIconUrl = (pokemon, allPokemonMaster) => {
   let englishName = pokemon.nameEn;
-  
+
   if (!englishName && allPokemonMaster) {
-    const template = allPokemonMaster.find(p => 
+    const template = allPokemonMaster.find(p =>
       p.number === pokemon.number || p.id === pokemon.pokemonId
     );
     englishName = template?.nameEn;
   }
-  
-  return getPokemonLocalIconUrl({
+
+  const localUrl = getPokemonLocalIconUrl({
     ...pokemon,
     nameEn: englishName || pokemon.nameEn || pokemon.name || 'UNKNOWN',
   });
+  if (localUrl) return localUrl;
+
+  // 로컬 아이콘 없으면 Firebase 저장 URL → number 기반 PokeAPI 순으로 fallback
+  if (pokemon.iconUrl) return pokemon.iconUrl;
+  if (pokemon.number) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemon.number}.png`;
+  return '';
 };
 
 // ⭐ 볼 이미지 가져오기 헬퍼 함수 (디버깅 추가)
@@ -193,7 +202,7 @@ export function PartnerSlot({
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 11, color: '#5a7a40', fontWeight: 600 }}>No.{displayNumber.toString().padStart(3, '0')}</span>
-            <span style={{ fontSize: 16, fontWeight: 800, color: '#1a2e10' }}>{pokemon.nickname || pokemon.name}</span>
+            <span style={{ fontSize: 16, fontWeight: 800, color: '#1a2e10' }}>{pokemon.nickname || getBaseName(pokemon)}</span>
             <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 6, backgroundColor: typeColors.bg, color: typeColors.text }}>{pokemon.type}</span>
             {pokemon.type2 && type2Colors && (
               <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 6, backgroundColor: type2Colors.bg, color: type2Colors.text }}>{pokemon.type2}</span>
@@ -248,7 +257,7 @@ export function PartnerSlot({
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500">No.{displayNumber.toString().padStart(3, '0')}</span>
-          <span className="font-bold text-lg">{pokemon.nickname || pokemon.name}</span>
+          <span className="font-bold text-lg">{pokemon.nickname || getBaseName(pokemon)}</span>
           <div className="flex gap-1">
             <span
               className="text-xs px-2 py-1 rounded font-bold shadow-sm"
@@ -407,7 +416,7 @@ export default function PartySlot({
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <span className="text-xs" style={{ color: '#5a7a40', fontWeight: 600 }}>No.{displayNumber.toString().padStart(3, '0')}</span>
-          <span className="font-bold text-lg" style={{ color: '#1a2e10' }}>{pokemon.nickname || pokemon.name}</span>
+          <span className="font-bold text-lg" style={{ color: '#1a2e10' }}>{pokemon.nickname || getBaseName(pokemon)}</span>
           <div className="flex gap-1">
             <span
               className="text-xs px-2 py-1 rounded font-bold shadow-sm"

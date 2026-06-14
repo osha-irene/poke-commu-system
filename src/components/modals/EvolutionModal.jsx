@@ -1,5 +1,8 @@
 import React from 'react';
 import { Sparkles, ArrowRight } from 'lucide-react';
+import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
+
+const getBaseName = (pokemon) => getPokemonDisplayParts(pokemon).name;
 
 export default function EvolutionModal({ 
   pokemon, 
@@ -25,7 +28,7 @@ export default function EvolutionModal({
             <Sparkles size={32} className="text-lime-700 animate-pulse" />
           </div>
           <p className="text-center text-green-800">
-            {pokemon.nickname || pokemon.name}이(가) 진화하려고 합니다!
+            {pokemon.nickname || getBaseName(pokemon)}이(가) 진화하려고 합니다!
           </p>
         </div>
 
@@ -46,7 +49,7 @@ export default function EvolutionModal({
                   }}
                 />
                 <h3 className="text-xl font-bold text-gray-800 mb-1">
-                  {pokemon.nickname || pokemon.name}
+                  {pokemon.nickname || getBaseName(pokemon)}
                 </h3>
                 <p className="text-sm text-gray-600">Lv. {pokemon.level}</p>
                 <div className="flex gap-2 justify-center mt-3">
@@ -82,7 +85,7 @@ export default function EvolutionModal({
                   }}
                 />
                 <h3 className="text-xl font-bold text-gray-800 mb-1 relative z-10">
-                  {evolvedPokemon.name}
+                  {getBaseName(evolvedPokemon)}
                 </h3>
                 <p className="text-sm text-gray-600 relative z-10">Lv. {pokemon.level}</p>
                 <div className="flex gap-2 justify-center mt-3 relative z-10">
