@@ -243,36 +243,36 @@ export default function CurrentShopTab({
                     {item.name}
                   </div>
 
-                  <div className="flex items-center justify-center gap-3">
-                    <div className="flex items-center gap-1">
+                  <div className="flex flex-col gap-1 w-full">
+                    <div className="flex items-center justify-between gap-1">
                       <span className="text-xs text-gray-600 whitespace-nowrap">가격</span>
                       <input
                         type="number"
                         value={shopItem.price}
                         onChange={(e) => handleUpdateItem(
-                          shopItem.itemId, 
-                          shopItem.type, 
-                          shopItem.day, 
-                          'price', 
+                          shopItem.itemId,
+                          shopItem.type,
+                          shopItem.day,
+                          'price',
                           e.target.value
                         )}
-                        className="w-14 border border-gray-300 rounded px-1 py-1 text-xs text-center focus:border-indigo-500 focus:outline-none bg-white"
+                        className="w-full border border-gray-300 rounded px-1 py-1 text-xs text-center focus:border-indigo-500 focus:outline-none bg-white"
                       />
                     </div>
                     {shopItem.type !== 'rare' && (
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center justify-between gap-1">
                         <span className="text-xs text-gray-600 whitespace-nowrap">재고</span>
                         <input
                           type="number"
                           value={shopItem.stock}
                           onChange={(e) => handleUpdateItem(
-                            shopItem.itemId, 
-                            shopItem.type, 
-                            shopItem.day, 
-                            'stock', 
+                            shopItem.itemId,
+                            shopItem.type,
+                            shopItem.day,
+                            'stock',
                             e.target.value
                           )}
-                          className="w-14 border border-gray-300 rounded px-1 py-1 text-xs text-center focus:border-indigo-500 focus:outline-none bg-white"
+                          className="w-full border border-gray-300 rounded px-1 py-1 text-xs text-center focus:border-indigo-500 focus:outline-none bg-white"
                         />
                       </div>
                     )}

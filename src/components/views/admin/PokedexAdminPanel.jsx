@@ -1,5 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import { Globe } from 'lucide-react';
+import { getPokemonDisplayParts } from '../../../utils/pokemonDisplayName';
+
+const REGIONAL_FORM_KO = {
+  alola: '알로라',
+  galar: '가라르',
+  hisui: '히스이',
+  paldea: '팔데아',
+};
+
+const getBaseName = (pokemon) => getPokemonDisplayParts(pokemon).name;
 
 export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updateGamePokedex }) {
   const [activeTab, setActiveTab] = useState('current');
@@ -392,7 +402,19 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
                     <div className="text-xs text-gray-500">
                       #{pokemon.newNumber || pokemon.number} (#{pokemon.originalNumber || pokemon.number})
                     </div>
-                    <div className="font-semibold text-xs truncate">{pokemon.name}</div>
+                    <div className="font-semibold text-xs truncate">
+                      {getBaseName(pokemon)}
+                      {pokemon.isRegionalForm && (
+                        <span className={`ml-1 px-1 py-0.5 text-[10px] rounded ${
+                          pokemon.regionalForm === 'alola' ? 'bg-yellow-200 text-yellow-800' :
+                          pokemon.regionalForm === 'galar' ? 'bg-blue-200 text-blue-800' :
+                          pokemon.regionalForm === 'hisui' ? 'bg-green-200 text-green-800' :
+                          'bg-purple-200 text-purple-800'
+                        }`}>
+                          {REGIONAL_FORM_KO[pokemon.regionalForm] || pokemon.regionalForm}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex gap-1 justify-center mt-1">
                       <span className={`text-white text-xs px-1.5 py-0.5 rounded ${typeColors[pokemon.type] || 'bg-gray-400'}`}>
                         {pokemon.type}
@@ -464,7 +486,7 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
                         )}
                       </div>
                       <div className="font-semibold text-xs truncate">
-                        {pokemon.name}
+                        {getBaseName(pokemon)}
                         {pokemon.isRegionalForm && (
                           <span className={`ml-1 px-1 py-0.5 text-[10px] rounded ${
                             pokemon.regionalForm === 'alola' ? 'bg-yellow-200 text-yellow-800' :
@@ -472,7 +494,7 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
                             pokemon.regionalForm === 'hisui' ? 'bg-green-200 text-green-800' :
                             'bg-purple-200 text-purple-800'
                           }`}>
-                            {pokemon.regionalForm?.toUpperCase()}
+                            {REGIONAL_FORM_KO[pokemon.regionalForm] || pokemon.regionalForm}
                           </span>
                         )}
                       </div>

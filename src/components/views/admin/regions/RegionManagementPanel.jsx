@@ -46,6 +46,8 @@ export default function RegionManagementPanel({
   const [selectedPlaceId, setSelectedPlaceId] = useState(null);
   const [detailSection, setDetailSection] = useState('region');
   const [draggingRegionId, setDraggingRegionId] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editRegionForm, setEditRegionForm] = useState({});
   const [townForm, setTownForm] = useState({
     groupId: '',
     groupName: '',
@@ -570,6 +572,30 @@ export default function RegionManagementPanel({
             aria-label="이 지역에 장소 추가"
           >
             <Plus size={14} />
+          </button>
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              setEditRegionForm({
+                name: region.name || '',
+                description: region.description || '',
+                encounterRate: region.encounterRate ?? 90,
+                minLevel: region.minLevel || 5,
+                maxLevel: region.maxLevel || 20,
+                color: region.color || '#87CEEB',
+                groupId: region.groupId || '',
+                x: region.x ?? 50,
+                y: region.y ?? 50,
+                _region: region,
+              });
+              setShowEditModal(true);
+            }}
+            className="rounded bg-indigo-600 p-1.5 text-white transition-colors hover:bg-indigo-700"
+            title="지역 수정"
+            aria-label="지역 수정"
+          >
+            <Edit2 size={14} />
           </button>
           <button
             type="button"
@@ -1191,26 +1217,6 @@ export default function RegionManagementPanel({
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold mb-2">장소 속성</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { key: 'isCave', label: '동굴' },
-                    { key: 'isWaterside', label: '물가' },
-                    { key: 'isSafari', label: '사파리' },
-                  ].map((flag) => (
-                    <label key={flag.key} className="flex items-center justify-center gap-2 rounded-lg border-2 border-gray-200 px-3 py-2 text-sm font-semibold">
-                      <input
-                        type="checkbox"
-                        checked={placeForm[flag.key]}
-                        onChange={(event) => setPlaceForm({ ...placeForm, [flag.key]: event.target.checked })}
-                        className="h-4 w-4 accent-lime-700"
-                      />
-                      {flag.label}
-                    </label>
-                  ))}
-                </div>
-              </div>
             </div>
 
             <div className="flex gap-3 mt-6">
@@ -1330,27 +1336,6 @@ export default function RegionManagementPanel({
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold mb-2">장소 속성</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { key: 'isCave', label: '동굴' },
-                    { key: 'isWaterside', label: '물가' },
-                    { key: 'isSafari', label: '사파리' },
-                  ].map((flag) => (
-                    <label key={flag.key} className="flex items-center justify-center gap-2 rounded-lg border-2 border-gray-200 px-3 py-2 text-sm font-semibold">
-                      <input
-                        type="checkbox"
-                        checked={newRegionForm[flag.key]}
-                        onChange={(event) => setNewRegionForm({ ...newRegionForm, [flag.key]: event.target.checked })}
-                        className="h-4 w-4 accent-indigo-600"
-                      />
-                      {flag.label}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold mb-2">지도 X좌표 (%)</label>
@@ -1390,6 +1375,138 @@ export default function RegionManagementPanel({
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
+                className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-400 transition-colors"
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-2xl font-bold mb-6">지역 수정</h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-2">지역 이름</label>
+                <input
+                  type="text"
+                  value={editRegionForm.name}
+                  onChange={(e) => setEditRegionForm({ ...editRegionForm, name: e.target.value })}
+                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">설명 (선택)</label>
+                <input
+                  type="text"
+                  value={editRegionForm.description}
+                  onChange={(e) => setEditRegionForm({ ...editRegionForm, description: e.target.value })}
+                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">마을 카테고리</label>
+                <select
+                  value={editRegionForm.groupId}
+                  onChange={(e) => setEditRegionForm({ ...editRegionForm, groupId: e.target.value })}
+                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
+                >
+                  <option value="">미분류</option>
+                  {towns.map((town) => (
+                    <option key={town.groupId} value={town.groupId}>{town.groupName}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2">조우율 (%)</label>
+                  <input
+                    type="number"
+                    value={editRegionForm.encounterRate}
+                    onChange={(e) => setEditRegionForm({ ...editRegionForm, encounterRate: parseInt(e.target.value, 10) || 0 })}
+                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
+                    min="0" max="100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2">색상</label>
+                  <input
+                    type="color"
+                    value={editRegionForm.color}
+                    onChange={(e) => setEditRegionForm({ ...editRegionForm, color: e.target.value })}
+                    className="w-full h-10 px-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2">최소 레벨</label>
+                  <input
+                    type="number"
+                    value={editRegionForm.minLevel}
+                    onChange={(e) => setEditRegionForm({ ...editRegionForm, minLevel: parseInt(e.target.value, 10) || 1 })}
+                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
+                    min="1" max="100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2">최대 레벨</label>
+                  <input
+                    type="number"
+                    value={editRegionForm.maxLevel}
+                    onChange={(e) => setEditRegionForm({ ...editRegionForm, maxLevel: parseInt(e.target.value, 10) || 1 })}
+                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
+                    min="1" max="100"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2">지도 X좌표 (%)</label>
+                  <input
+                    type="number"
+                    value={editRegionForm.x}
+                    onChange={(e) => setEditRegionForm({ ...editRegionForm, x: parseFloat(e.target.value) || 50 })}
+                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
+                    min="0" max="100" step="0.1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2">지도 Y좌표 (%)</label>
+                  <input
+                    type="number"
+                    value={editRegionForm.y}
+                    onChange={(e) => setEditRegionForm({ ...editRegionForm, y: parseFloat(e.target.value) || 50 })}
+                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
+                    min="0" max="100" step="0.1"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                type="button"
+                onClick={() => {
+                  const { _region, ...fields } = editRegionForm;
+                  onUpdateRegion?.(_region.id, { ..._region, ...fields });
+                  setShowEditModal(false);
+                }}
+                className="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 transition-colors"
+              >
+                수정
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowEditModal(false)}
                 className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-400 transition-colors"
               >
                 취소

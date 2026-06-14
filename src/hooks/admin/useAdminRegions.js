@@ -290,12 +290,20 @@ export const useAdminRegions = (
       })
       .filter(Boolean)
       .filter(p => !p.isTownMeta && !p.groupId && p.name && p.number)
-      .sort((a, b) => (a.originalNumber || a.number) - (b.originalNumber || b.number))
-      .map((p, index) => ({ 
-        ...p, 
-        originalNumber: p.originalNumber || p.number, 
-        newNumber: index + 1 
-      }));
+      .sort((a, b) => {
+        const aDn = a.displayNumber || a.number;
+        const bDn = b.displayNumber || b.number;
+        if (aDn !== bDn) return aDn - bDn;
+        return (a.isRegionalForm ? 1 : 0) - (b.isRegionalForm ? 1 : 0);
+      })
+      .reduce((acc, p, _i, arr) => {
+        const dn = p.displayNumber || p.number;
+        const prev = acc[acc.length - 1];
+        const prevDn = prev ? (prev.displayNumber || prev.number) : null;
+        const counter = prevDn === dn ? prev.newNumber : (prev ? prev.newNumber + 1 : 1);
+        acc.push({ ...p, originalNumber: p.originalNumber || p.number, newNumber: counter });
+        return acc;
+      }, []);
     
     console.log('  - 최종 영운 도감:', newPokedex.length, '종');
     console.log('  - 샘플:', newPokedex.slice(0, 5).map(p => ({ name: p.name, number: p.number, originalNumber: p.originalNumber })));
