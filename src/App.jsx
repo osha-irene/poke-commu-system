@@ -570,6 +570,7 @@ function getHomeFeeds(members = {}) {
   );
 
   const cookingFeed = Object.values(members || {})
+    .filter((member) => !member?.hidden)
     .flatMap((member) => {
       const trainerName = member?.name || member?.nickname || '누군가';
       const historyEntries = (member?.cookingHistory || []).filter(Boolean).map((entry, index) => ({
@@ -597,6 +598,7 @@ function getHomeFeeds(members = {}) {
     .slice(0, 1);
 
   const evolutionFeed = Object.values(members || {})
+    .filter((member) => !member?.hidden)
     .flatMap((member) => {
       const trainerName = member?.name || member?.nickname || '누군가';
       return (member?.evolutionHistory || []).filter(Boolean).map((entry, index) => ({
@@ -930,9 +932,9 @@ function MobileHomeDashboard({
             })}
           </div>
 
-          {calPopup && (
+          {calPopup && createPortal(
             <div
-              style={{ position: 'fixed', inset: 0, zIndex: 200 }}
+              style={{ position: 'fixed', inset: 0, zIndex: 9999 }}
               onClick={() => setCalPopup(null)}
             >
               <div
@@ -946,7 +948,7 @@ function MobileHomeDashboard({
                   borderRadius: 12,
                   boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
                   padding: '10px 14px',
-                  zIndex: 201,
+                  zIndex: 10000,
                   border: '1px solid #e5e7eb',
                 }}
                 onClick={e => e.stopPropagation()}
@@ -963,7 +965,8 @@ function MobileHomeDashboard({
                 ))}
                 <div style={{ position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderTop: '8px solid #fff', filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.08))' }} />
               </div>
-            </div>
+            </div>,
+            document.body
           )}
         </div>
       </section>

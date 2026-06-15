@@ -1,10 +1,10 @@
 // src/hooks/game/useLoot.js
 // 전리품 생성 및 적용 시스템
 
-import { ref, get, set } from 'firebase/database';
+import { ref, get, set, update } from 'firebase/database';
 import { database } from '../../firebase';
 
-export const useLoot = (currentUser, updateCurrentUser, setMembers, allItems) => {
+export const useLoot = (currentUser, updateCurrentUser, setMembers, allItems, members = {}) => {
   
   // 기본 전리품 설정
   const getDefaultLootConfig = () => ({
@@ -147,20 +147,15 @@ export const useLoot = (currentUser, updateCurrentUser, setMembers, allItems) =>
       };
     });
     
-    // Firebase 저장
+    // Firebase 저장 (update로 해당 필드만 갱신 — caughtPokemon 등 덮어쓰기 방지)
     const memberRef = ref(database, `members/${currentUser.id}`);
-    get(memberRef).then(snapshot => {
-      if (snapshot.exists()) {
-        const currentData = snapshot.val();
-        const latestUpdatedUser = buildLootUpdate(currentData);
-        set(memberRef, {
-          ...currentData,
-          money: latestUpdatedUser.money,
-          inventory: latestUpdatedUser.inventory
-        }).then(() => {
-          console.log('✅ applyLoot: Firebase 저장 완료');
-        });
-      }
+    const latestUser = members[currentUser.id] || currentUser;
+    const latestUpdatedUser = buildLootUpdate(latestUser);
+    update(memberRef, {
+      money: latestUpdatedUser.money,
+      inventory: JSON.parse(JSON.stringify(latestUpdatedUser.inventory, (k, v) => v === undefined ? null : v))
+    }).then(() => {
+      console.log('✅ applyLoot: Firebase 저장 완료');
     }).catch(error => {
       console.error('❌ applyLoot: Firebase 저장 실패:', error);
     });

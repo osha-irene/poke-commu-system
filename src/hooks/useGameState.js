@@ -172,7 +172,7 @@ export default function useGameState() {
   const individualValues = useIndividualValues();
 
   // 전리품
-  const lootHook = useLoot(currentUser, updateCurrentUser, setMembers, allItems);
+  const lootHook = useLoot(currentUser, updateCurrentUser, setMembers, allItems, members);
 
   // 도감
   const pokedexHook = usePokedex(sharedPokedexData, setSharedPokedexData, currentUser);
