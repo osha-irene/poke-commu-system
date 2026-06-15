@@ -68,6 +68,8 @@ export default function AdminView() {
     deleteRecipe,
     updateIngredientStats,
     updateGamePokedex,
+    resetPokedex,
+    toggleMemberHidden,
 	camping
   } = gameContext;
 
@@ -447,33 +449,40 @@ export default function AdminView() {
             </div>
 
             {Object.values(members).map((member) => (
-              <button
+              <div
                 key={member.id}
-                onClick={() => setSelectedMemberId(member.id)}
-                className="w-full flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200 hover:border-indigo-400 hover:bg-indigo-50 transition-all text-left"
+                className={`flex items-center justify-between p-4 rounded-lg border transition-all ${member.hidden ? 'bg-gray-100 border-gray-300 opacity-60' : 'bg-gray-50 border-gray-200'}`}
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                <button
+                  onClick={() => setSelectedMemberId(member.id)}
+                  className="flex items-center gap-4 flex-1 text-left hover:opacity-80"
+                >
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg ${member.hidden ? 'bg-gray-400' : 'bg-indigo-500'}`}>
                     {member.name?.charAt(0) || '?'}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-lg">{member.name}</span>
                       <span className="text-sm text-gray-500">({member.id})</span>
-                      {member.isSuperAdmin && (
-                        <Badge variant="danger">슈퍼관리자</Badge>
-                      )}
-                      {member.isAdmin && !member.isSuperAdmin && (
-                        <Badge variant="primary">관리자</Badge>
-                      )}
+                      {member.isSuperAdmin && <Badge variant="danger">슈퍼관리자</Badge>}
+                      {member.isAdmin && !member.isSuperAdmin && <Badge variant="primary">관리자</Badge>}
+                      {member.hidden && <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">숨김</span>}
                     </div>
                     <div className="text-sm text-gray-600 mt-1">
                       탐험: {member.dailyWalks}/{member.maxDailyWalks}회 | 포켓몬: {member.caughtPokemon?.filter(p => p !== null).length || 0}마리 | 소지금: {member.money?.toLocaleString() || 0}원
                     </div>
                   </div>
+                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => toggleMemberHidden?.(member.id)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${member.hidden ? 'border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-100'}`}
+                  >
+                    {member.hidden ? '표시' : '숨김'}
+                  </button>
+                  <ChevronRight className="text-gray-400" />
                 </div>
-                <ChevronRight className="text-gray-400" />
-              </button>
+              </div>
             ))}
           </div>
         </Card>
@@ -498,7 +507,19 @@ export default function AdminView() {
       {/* 도감 관리 탭 */}
       {adminTab === 'pokedex' && (
         <Card className="p-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">📖 영운 도감 포켓몬 설정</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold text-gray-800">📖 영운 도감 포켓몬 설정</h3>
+            <button
+              onClick={() => {
+                if (window.confirm('도감 기록을 전부 삭제하시겠습니까?\n(조우, 포획, 메모, 지역 정보가 모두 초기화됩니다)')) {
+                  resetPokedex?.();
+                }
+              }}
+              className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-100 transition-colors"
+            >
+              🗑️ 도감 기록 리셋
+            </button>
+          </div>
           <PokedexAdminPanel
             allPokemonMaster={allPokemonMaster}
             gamePokedex={gamePokedex}

@@ -1262,10 +1262,32 @@ export const useAdminMembers = (
     }
   };
 
+  // ========== 멤버 숨기기 토글 ==========
+  const toggleMemberHidden = async (memberId) => {
+    if (!currentUser?.isAdmin) return;
+
+    const member = members[memberId];
+    if (!member) return;
+
+    const updatedMember = { ...member, hidden: !member.hidden };
+
+    try {
+      const { id, ...dataToSave } = updatedMember;
+      const memberRef = ref(database, `members/${memberId}`);
+      await set(memberRef, dataToSave);
+
+      setMembers(prev => ({ ...prev, [memberId]: updatedMember }));
+      console.log('✅ 멤버 숨김 토글:', member.name, updatedMember.hidden);
+    } catch (error) {
+      console.error('❌ 멤버 숨김 처리 실패:', error);
+    }
+  };
+
   return {
     addMember,
     toggleAdminStatus,
     toggleItemManagement,
+    toggleMemberHidden,
     updateMaxDailyWalks,
     resetMemberWalkCount,
     resetAllWalkCounts,

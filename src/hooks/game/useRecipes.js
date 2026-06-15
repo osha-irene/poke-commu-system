@@ -2,7 +2,7 @@
 // 요리 시스템
 
 import { useState, useEffect } from 'react';
-import { ref, get, set } from 'firebase/database';
+import { ref, get, set, onValue } from 'firebase/database';
 import { database } from '../../firebase';
 import recipesData from '../../data/recipes.json';
 
@@ -12,48 +12,50 @@ export const useRecipes = (currentUser, updateCurrentUser) => {
 
   // Firebase에서 레시피 데이터 로드
   useEffect(() => {
-    const loadRecipes = async () => {
-      try {
-        const recipesRef = ref(database, 'gameData/recipes');
-        const snapshot = await get(recipesRef);
-        
-        if (snapshot.exists()) {
-          setRecipes(snapshot.val());
-        } else {
-          // 초기 데이터 설정
-          const allRecipes = [
-            ...(recipesData.recipes || []),
-            ...(recipesData.statBasedRecipes || [])
-          ];
-          await set(recipesRef, allRecipes);
-          setRecipes(allRecipes);
-        }
-      } catch (error) {
-        console.error('레시피 로드 실패:', error);
-        // 폴백: JSON 파일 사용
+    const recipesRef = ref(database, 'gameData/recipes');
+
+    const initAndListen = async () => {
+      const snapshot = await get(recipesRef);
+      if (!snapshot.exists()) {
+        const allRecipes = [
+          ...(recipesData.recipes || []),
+          ...(recipesData.statBasedRecipes || [])
+        ];
+        await set(recipesRef, allRecipes);
+      }
+    };
+
+    initAndListen().catch(err => console.error('레시피 초기화 실패:', err));
+
+    const unsubRecipes = onValue(recipesRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setRecipes(snapshot.val());
+      } else {
         const allRecipes = [
           ...(recipesData.recipes || []),
           ...(recipesData.statBasedRecipes || [])
         ];
         setRecipes(allRecipes);
       }
-    };
+    }, (error) => {
+      console.error('레시피 로드 실패:', error);
+      setRecipes([...(recipesData.recipes || []), ...(recipesData.statBasedRecipes || [])]);
+    });
 
-    const loadDiscoveredRecipes = async () => {
-      try {
-        const discoveredRef = ref(database, 'gameData/discoveredRecipes');
-        const snapshot = await get(discoveredRef);
-        
-        if (snapshot.exists()) {
-          setDiscoveredRecipes(snapshot.val());
-        }
-      } catch (error) {
-        console.error('발견된 레시피 로드 실패:', error);
+    // discoveredRecipes 실시간 리스너
+    const discoveredRef = ref(database, 'gameData/discoveredRecipes');
+    const unsubDiscovered = onValue(discoveredRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setDiscoveredRecipes(snapshot.val());
       }
-    };
+    }, (error) => {
+      console.error('발견된 레시피 로드 실패:', error);
+    });
 
-    loadRecipes();
-    loadDiscoveredRecipes();
+    return () => {
+      unsubRecipes();
+      unsubDiscovered();
+    };
   }, []);
 
   // 레시피 생성 (관리자)

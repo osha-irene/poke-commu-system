@@ -1,7 +1,7 @@
 // src/hooks/useMembers.js - UID 자동 생성 + Database 복구 기능
 
 import { useState, useEffect } from 'react';
-import { ref, get, set } from 'firebase/database';
+import { ref, get, set, onValue } from 'firebase/database';
 import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { database, auth } from '../../firebase';
 import itemsData from '../../data/items.json';
@@ -14,23 +14,25 @@ export const useMembers = (allPokemonData) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let unsubscribe = null;
+
     const loadMembers = async () => {
       try {
         const membersRef = ref(database, 'members');
         const snapshot = await get(membersRef);
-        
+
         if (snapshot.exists()) {
           const loadedMembers = snapshot.val();
-          
+
           const updated = {};
           Object.keys(loadedMembers).forEach(userId => {
             const member = loadedMembers[userId];
-            
+
             const updatedCaughtPokemon = member.caughtPokemon?.map(pokemon => {
               if (!pokemon) return pokemon;
-              
+
               const template = findPokemonTemplate(pokemon, allPokemonData);
-              
+
               if (template) {
                 return withNormalizedIVs(fillMissingBaseStats({
                   ...pokemon,
@@ -38,25 +40,25 @@ export const useMembers = (allPokemonData) => {
                   abilityEn: pokemon.abilityEn || getAbilityEnglishName(pokemon.ability) || template.abilitiesEn?.[0] || null
                 }, template), DEFAULT_IVS);
               }
-              
+
               return withNormalizedIVs(pokemon, DEFAULT_IVS);
             }) || member.caughtPokemon;
-            
-            updated[userId] = { 
-              ...member, 
+
+            updated[userId] = {
+              ...member,
               id: userId,
               caughtPokemon: updatedCaughtPokemon,
               partnerPokemon: withNormalizedIVs(member.partnerPokemon, DEFAULT_IVS)
             };
           });
-          
+
           setMembers(updated);
           console.log('✅ Firebase에서 회원 데이터 로드 완료:', Object.keys(updated).length, '명');
         } else {
           // 🔥 초기 회원 자동 생성 (Authentication 확인 포함)
           console.log('🔧 초기 회원 자동 생성 시작...');
           const createdMembers = await createInitialMembersWithAuth();
-          
+
           if (createdMembers && Object.keys(createdMembers).length > 0) {
             setMembers(createdMembers);
             console.log('✅ 초기 회원 생성 완료:', Object.keys(createdMembers).length, '명');
@@ -70,10 +72,25 @@ export const useMembers = (allPokemonData) => {
         setMembers({});
       } finally {
         setIsLoading(false);
+
+        // 실시간 리스너 등록
+        const membersRef = ref(database, 'members');
+        unsubscribe = onValue(membersRef, (snap) => {
+          if (!snap.exists()) return;
+          const data = snap.val();
+          setMembers(prev => {
+            const updated = {};
+            Object.keys(data).forEach(userId => {
+              updated[userId] = { ...data[userId], id: userId };
+            });
+            return JSON.stringify(prev) === JSON.stringify(updated) ? prev : updated;
+          });
+        });
       }
     };
 
     loadMembers();
+    return () => { if (unsubscribe) unsubscribe(); };
   }, [allPokemonData]);
 
   return {

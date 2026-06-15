@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ref, get, set, push, update } from 'firebase/database';
+import { ref, get, set, push, update, onValue } from 'firebase/database';
 import { database } from '../../firebase';
 import * as campingHelper from '../../utils/campingHelper';
 
@@ -8,53 +8,46 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
   const [userCampingData, setUserCampingData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // 사용자 캠핑 데이터 로드
+  // 사용자 캠핑 데이터 실시간 리스너
   useEffect(() => {
     if (!currentUser?.id) return;
 
-    const loadUserCampingData = async () => {
-      try {
-        const campingRef = ref(database, `members/${currentUser.id}/campingData`);
-        const snapshot = await get(campingRef);
-        
-        if (snapshot.exists()) {
-          setUserCampingData(snapshot.val());
-        } else {
-          const initialData = {
-            lastCampingDate: null,
-            totalCampings: 0,
-            bestStageReached: 0
-          };
-          setUserCampingData(initialData);
-        }
-      } catch (error) {
-        console.error('캠핑 데이터 로드 실패:', error);
+    const campingRef = ref(database, `members/${currentUser.id}/campingData`);
+    const unsub = onValue(campingRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setUserCampingData(snapshot.val());
+      } else {
+        setUserCampingData({
+          lastCampingDate: null,
+          totalCampings: 0,
+          bestStageReached: 0
+        });
       }
-    };
+    }, (error) => {
+      console.error('캠핑 데이터 로드 실패:', error);
+    });
 
-    loadUserCampingData();
+    return () => unsub();
   }, [currentUser?.id]);
 
-  // 모든 캠핑 세션 로드
+  // 모든 캠핑 세션 실시간 리스너
   useEffect(() => {
-    const loadCampingSessions = async () => {
-      try {
-        const sessionsRef = ref(database, 'gameData/campingSessions');
-        const snapshot = await get(sessionsRef);
-        
-        if (snapshot.exists()) {
-          const sessions = Object.entries(snapshot.val()).map(([key, value]) => ({
-            firebaseKey: key,
-            ...value
-          }));
-          setCampingSessions(sessions);
-        }
-      } catch (error) {
-        console.error('캠핑 세션 로드 실패:', error);
+    const sessionsRef = ref(database, 'gameData/campingSessions');
+    const unsub = onValue(sessionsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const sessions = Object.entries(snapshot.val()).map(([key, value]) => ({
+          firebaseKey: key,
+          ...value
+        }));
+        setCampingSessions(sessions);
+      } else {
+        setCampingSessions([]);
       }
-    };
+    }, (error) => {
+      console.error('캠핑 세션 로드 실패:', error);
+    });
 
-    loadCampingSessions();
+    return () => unsub();
   }, []);
 
   // 캠핑 시작

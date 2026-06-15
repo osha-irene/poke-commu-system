@@ -25,6 +25,7 @@ export default function PokedexView({
   currentUser = null,
   onUpdateMemo,
   onUpdatePokedexRegions,
+  onResetPokedex,
   isMobile = false,
 }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -41,10 +42,9 @@ export default function PokedexView({
       .map(toDexNumber)
       .filter(Boolean)
   );
-  const unlockedNumbers = new Set([
-    ...Object.keys(pokedexData).map(toDexNumber).filter(Boolean),
-    ...myCaughtNumbers
-  ]);
+  const unlockedNumbers = new Set(
+    Object.keys(pokedexData).map(toDexNumber).filter(Boolean)
+  );
   const gamePokedexNumbers = new Set(
     pokedex.map(pokemon => toDexNumber(pokemon.number)).filter(Boolean)
   );

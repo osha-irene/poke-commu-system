@@ -382,6 +382,7 @@ export default function useGameState() {
     updateRegionLootConfig: (regionId, lootConfig) => 
       lootHook.updateRegionLootConfig(regionId, lootConfig, regions, setRegions),
     updatePokedexRegions: pokedexHook.updatePokedexRegions,
+    resetPokedex: pokedexHook.resetPokedex,
     useItemOnPokemon: itemEffectsHook.useItemOnPokemon,
     evolutionModal: evolutionHook.evolutionModal,
     acceptEvolution: evolutionHook.acceptEvolution,

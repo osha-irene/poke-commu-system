@@ -244,6 +244,42 @@ export const useGameData = (allPokemonData) => {
     return () => unsubscribe();
   }, [isLoading]);
 
+  // 영운 도감 실시간 리스너
+  useEffect(() => {
+    if (isLoading) return undefined;
+
+    const pokedexRef = ref(database, 'gameData/gamePokedex');
+    const unsub = onValue(pokedexRef, (snapshot) => {
+      if (!snapshot.exists()) return;
+      const data = snapshot.val();
+      setGamePokedex(prev =>
+        JSON.stringify(prev) === JSON.stringify(data) ? prev : data
+      );
+    }, (error) => {
+      console.error('영운 도감 실시간 동기화 실패:', error);
+    });
+
+    return () => unsub();
+  }, [isLoading]);
+
+  // 시스템 설정 실시간 리스너
+  useEffect(() => {
+    if (isLoading) return undefined;
+
+    const systemSettingsRef = ref(database, 'gameData/systemSettings');
+    const unsub = onValue(systemSettingsRef, (snapshot) => {
+      if (!snapshot.exists()) return;
+      const data = snapshot.val();
+      setSystemSettings(prev =>
+        JSON.stringify(prev) === JSON.stringify(data) ? prev : data
+      );
+    }, (error) => {
+      console.error('시스템 설정 실시간 동기화 실패:', error);
+    });
+
+    return () => unsub();
+  }, [isLoading]);
+
   // 🔥 지역 데이터 변경 시 Firebase에 저장
   useEffect(() => {
     const saveRegions = async () => {

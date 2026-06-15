@@ -12,7 +12,7 @@ function getMemberList(members) {
       id,
       ...(member || {})
     }))
-    .filter((member) => member && member.name)
+    .filter((member) => member && member.name && !member.hidden)
     .sort((a, b) => {
       const aAdminRank = a.isSuperAdmin ? 2 : a.isAdmin ? 1 : 0;
       const bAdminRank = b.isSuperAdmin ? 2 : b.isAdmin ? 1 : 0;

@@ -1,7 +1,7 @@
 // src/hooks/game/usePokedex.js
 // 도감 관리 시스템
 
-import { ref, set } from 'firebase/database';
+import { ref, set, remove } from 'firebase/database';
 import { database } from '../../firebase';
 
 export const usePokedex = (sharedPokedexData, setSharedPokedexData, currentUser) => {
@@ -143,11 +143,27 @@ export const usePokedex = (sharedPokedexData, setSharedPokedexData, currentUser)
     }
   };
 
+  // 도감 전체 리셋 (관리자)
+  const resetPokedex = async () => {
+    if (!currentUser?.isAdmin) return;
+
+    setSharedPokedexData({});
+
+    try {
+      const pokedexRef = ref(database, 'gameData/sharedPokedex');
+      await remove(pokedexRef);
+      console.log('✅ 도감 리셋 완료');
+    } catch (error) {
+      console.error('❌ 도감 리셋 실패:', error);
+    }
+  };
+
   return {
     recordFirstEncounter,
     recordFirstCatch,
     savePokedexMemo,
-    updatePokedexRegions
+    updatePokedexRegions,
+    resetPokedex
   };
 };
 

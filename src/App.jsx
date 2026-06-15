@@ -5,9 +5,9 @@ import MobileLayout from './components/layout/MobileLayout';
 import './App.css';
 import SakuraEffect from './effects/sakura';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { ref, get, set } from 'firebase/database';
+import { ref, get, set, onValue } from 'firebase/database';
 import { database } from './firebase';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
@@ -299,6 +299,85 @@ function getKoreaDateParts(date = new Date()) {
   };
 }
 
+// 숨긴 멤버의 도감 기여를 제거하고 다음 가시적 멤버 데이터로 대체
+function computeEffectivePokedexData(pokedexData, members) {
+  const hiddenNames = new Set(
+    Object.values(members)
+      .filter(m => m?.hidden)
+      .map(m => m.name)
+      .filter(Boolean)
+  );
+
+  if (hiddenNames.size === 0) return pokedexData;
+
+  // 포켓몬 번호별 → 해당 포켓몬을 보유한 가시적 멤버 이름 목록
+  const visibleCatchers = {};
+  Object.values(members).forEach(member => {
+    if (!member || member.hidden) return;
+    (member.caughtPokemon || []).forEach(pokemon => {
+      if (!pokemon) return;
+      [pokemon.number, pokemon.originalNumber].filter(Boolean).forEach(num => {
+        const key = String(num);
+        if (!visibleCatchers[key]) visibleCatchers[key] = [];
+        if (!visibleCatchers[key].includes(member.name)) {
+          visibleCatchers[key].push(member.name);
+        }
+      });
+    });
+  });
+
+  const result = {};
+  for (const [key, entry] of Object.entries(pokedexData)) {
+    if (!entry) continue;
+
+    const catcherHidden = entry.firstCatcher && hiddenNames.has(entry.firstCatcher);
+    const encounterHidden = entry.firstEncounter && hiddenNames.has(entry.firstEncounter);
+
+    if (!catcherHidden && !encounterHidden) {
+      result[key] = entry;
+      continue;
+    }
+
+    const nextVisible = (visibleCatchers[key] || [])[0] || null;
+
+    if (catcherHidden) {
+      if (nextVisible) {
+        // 다음 가시적 포획자로 대체, 메모 초기화
+        result[key] = {
+          ...entry,
+          firstCatcher: nextVisible,
+          caughtBy: nextVisible,
+          caughtAt: null,
+          firstEncounter: encounterHidden ? nextVisible : entry.firstEncounter,
+          encounteredAt: encounterHidden ? null : entry.encounteredAt,
+          memo: null,
+        };
+      } else if (!encounterHidden) {
+        // 가시적 포획자 없지만 조우자는 가시적 → 포획 정보만 제거
+        result[key] = {
+          ...entry,
+          firstCatcher: null,
+          caughtBy: null,
+          caughtAt: null,
+          memo: null,
+        };
+      }
+      // 조우자도 숨겨지고 가시적 멤버 없으면 entry 제외 → 포켓몬 잠금 상태로
+    } else {
+      // firstEncounter만 숨겨진 경우
+      if (entry.firstCatcher) {
+        // firstCatcher는 가시적 → firstEncounter를 firstCatcher로 대체
+        result[key] = { ...entry, firstEncounter: entry.firstCatcher, encounteredAt: null };
+      } else if (nextVisible) {
+        result[key] = { ...entry, firstEncounter: nextVisible, encounteredAt: null };
+      }
+      // 가시적 멤버 없으면 entry 제외
+    }
+  }
+
+  return result;
+}
+
 function getCalendarDays(year, month) {
   const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
   const previousMonthDays = new Date(Date.UTC(year, month - 1, 0)).getUTCDate();
@@ -570,9 +649,11 @@ function HomeDashboard({
   }, []);
 
   useEffect(() => {
-    get(ref(database, 'gameData/scheduleEvents')).then((snap) => {
-      if (snap.exists()) setScheduleEvents(Object.values(snap.val()));
+    const eventsRef = ref(database, 'gameData/scheduleEvents');
+    const unsub = onValue(eventsRef, (snap) => {
+      setScheduleEvents(snap.exists() ? Object.values(snap.val()) : []);
     });
+    return () => unsub();
   }, []);
 
   const { cookingFeed, evolutionFeed } = getHomeFeeds(members);
@@ -754,6 +835,7 @@ function HomeDashboard({
 function MobileHomeDashboard({
   trainer,
   members = {},
+  scheduleEvents = [],
   onCookingClick,
   onPokemonClick
 }) {
@@ -799,18 +881,41 @@ function MobileHomeDashboard({
             ))}
           </div>
           <div className="home-calendar__grid">
-            {calendarDays.map((day, index) => (
-              <span
-                key={`${day.muted ? 'muted' : 'current'}-${day.day}-${index}`}
-                className={[
-                  day.day === koreaToday.day && !day.muted ? 'is-today' : '',
-                  index % 7 === 0 ? 'is-sunday' : index % 7 === 6 ? 'is-saturday' : '',
-                  day.muted ? 'is-muted' : ''
-                ].filter(Boolean).join(' ')}
-              >
-                {day.day}
-              </span>
-            ))}
+            {calendarDays.map((day, index) => {
+              const dayYear = day.muted
+                ? (index < 7 ? (koreaToday.month === 1 ? koreaToday.year - 1 : koreaToday.year) : (koreaToday.month === 12 ? koreaToday.year + 1 : koreaToday.year))
+                : koreaToday.year;
+              const dayMonth = day.muted
+                ? (index < 7 ? (koreaToday.month === 1 ? 12 : koreaToday.month - 1) : (koreaToday.month === 12 ? 1 : koreaToday.month + 1))
+                : koreaToday.month;
+              const dateKey = toDateKey(dayYear, dayMonth, day.day);
+              const dayEvents = scheduleEvents.filter(e => e.start === dateKey);
+              const importantEv = dayEvents.find(e => e.important);
+              const dotEvents = dayEvents.filter(e => !e.important);
+
+              return (
+                <span
+                  key={`${day.muted ? 'muted' : 'current'}-${day.day}-${index}`}
+                  className={[
+                    index % 7 === 0 ? 'is-sunday' : index % 7 === 6 ? 'is-saturday' : '',
+                    day.muted ? 'is-muted' : ''
+                  ].filter(Boolean).join(' ')}
+                  style={importantEv ? { position: 'relative', color: importantEv.color, fontWeight: 700 } : { position: 'relative' }}
+                >
+                  {day.day}
+                  {dotEvents.length > 0 && (
+                    <span style={{
+                      position: 'absolute', bottom: 1, left: '50%', transform: 'translateX(-50%)',
+                      display: 'flex', gap: 2,
+                    }}>
+                      {dotEvents.slice(0, 3).map((ev, i) => (
+                        <span key={i} style={{ width: 4, height: 4, borderRadius: '50%', background: ev.color, display: 'inline-block' }} />
+                      ))}
+                    </span>
+                  )}
+                </span>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -945,7 +1050,7 @@ function MobilePublicHomeDashboard({ members = {}, onLogin }) {
 
   return (
     <div className="mobile-public-home">
-      <MobileHomeDashboard members={members} />
+      <MobileHomeDashboard members={members} scheduleEvents={scheduleEvents} />
       <form className="mobile-home-login" onSubmit={handleSubmit}>
         <label>
           <User size={17} />
@@ -1185,6 +1290,7 @@ export default function App() {
     applyLoot,
     updateCurrentUser,
     updatePokedexRegions,
+    resetPokedex,
     useItemOnPokemon,
     evolutionModal,
     acceptEvolution,
@@ -1215,6 +1321,11 @@ export default function App() {
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [maintenanceScheduledAt, publicMaintenanceScheduledAt]);
+
+  const effectivePokedexData = useMemo(
+    () => computeEffectivePokedexData(sharedPokedexData, members),
+    [sharedPokedexData, members]
+  );
 
   const effectiveMaintenanceMode = maintenanceMode || publicMaintenanceMode;
   const effectiveScheduledAt = maintenanceScheduledAt || publicMaintenanceScheduledAt;
@@ -1684,6 +1795,7 @@ return (
             <MobileHomeDashboard
               trainer={trainer}
               members={members}
+              scheduleEvents={scheduleEvents}
               onCookingClick={() => setCurrentTab('cooking')}
               onPokemonClick={() => setCurrentTab('pokemon')}
             />
@@ -1695,7 +1807,7 @@ return (
               onRegionClick={handleRegionClick}
               gamePokedex={gamePokedex}
               allPokemonMaster={allPokemonMaster}
-              pokedexData={sharedPokedexData}
+              pokedexData={effectivePokedexData}
               caughtPokemon={caughtPokemon.filter(p => p !== null)}
             />
           )}
@@ -1705,11 +1817,12 @@ return (
               pokedex={gamePokedex}
               allPokedex={allPokemonMaster}
               caughtPokemon={caughtPokemon.filter(p => p !== null)}
-              pokedexData={sharedPokedexData}
+              pokedexData={effectivePokedexData}
               regions={regions}
               currentUser={currentUser}
               onUpdateMemo={updatePokedexMemo}
               onUpdatePokedexRegions={updatePokedexRegions}
+              onResetPokedex={resetPokedex}
               isMobile
             />
           )}
@@ -1808,7 +1921,7 @@ return (
 			  onRegionClick={handleRegionClick} 
 			  gamePokedex={gamePokedex}
 			  allPokemonMaster={allPokemonMaster}
-			  pokedexData={sharedPokedexData}
+			  pokedexData={effectivePokedexData}
 			  caughtPokemon={caughtPokemon.filter(p => p !== null)}
 			/>
 		  )}
@@ -1818,11 +1931,12 @@ return (
 			  pokedex={gamePokedex}
 			  allPokedex={allPokemonMaster} 
 			  caughtPokemon={caughtPokemon.filter(p => p !== null)}
-			  pokedexData={sharedPokedexData}
+			  pokedexData={effectivePokedexData}
 			  regions={regions}
 			  currentUser={currentUser}
 			  onUpdateMemo={updatePokedexMemo}
 			  onUpdatePokedexRegions={updatePokedexRegions}
+			  onResetPokedex={resetPokedex}
 			/>
 		  )}
 		  

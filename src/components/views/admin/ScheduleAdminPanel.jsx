@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Sketch from '@uiw/react-color-sketch';
-import { ref, get, set } from 'firebase/database';
+import { ref, get, set, onValue } from 'firebase/database';
 import { database } from '../../../firebase';
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
@@ -72,11 +72,11 @@ export default function ScheduleAdminPanel() {
   };
 
   useEffect(() => {
-    const load = async () => {
-      const snap = await get(ref(database, 'gameData/scheduleEvents'));
-      if (snap.exists()) setEvents(Object.values(snap.val()));
-    };
-    load();
+    const eventsRef = ref(database, 'gameData/scheduleEvents');
+    const unsub = onValue(eventsRef, (snap) => {
+      setEvents(snap.exists() ? Object.values(snap.val()) : []);
+    });
+    return () => unsub();
   }, []);
 
   const saveEvents = async (next) => {
