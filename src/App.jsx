@@ -1039,7 +1039,7 @@ function MobileScrollIndicator() {
   );
 }
 
-function MobilePublicHomeDashboard({ members = {}, onLogin }) {
+function MobilePublicHomeDashboard({ members = {}, scheduleEvents = [], onLogin }) {
   const [loginUserId, setLoginUserId] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
 
@@ -1051,6 +1051,7 @@ function MobilePublicHomeDashboard({ members = {}, onLogin }) {
   return (
     <div className="mobile-public-home">
       <MobileHomeDashboard members={members} scheduleEvents={scheduleEvents} />
+
       <form className="mobile-home-login" onSubmit={handleSubmit}>
         <label>
           <User size={17} />
@@ -1186,6 +1187,7 @@ function LoadingOverlay({ overlay = false, fading = false }) {
 export default function App() {
   const [qnaPosts, setQnaPosts] = useState([]);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [scheduleEvents, setScheduleEvents] = useState([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
   const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -1456,6 +1458,15 @@ export default function App() {
     };
 
     loadQnaPosts();
+  }, []);
+
+  // 일정 실시간 로드 (App 레벨 — 모바일 공개홈에서도 사용)
+  useEffect(() => {
+    const eventsRef = ref(database, 'gameData/scheduleEvents');
+    const unsub = onValue(eventsRef, (snap) => {
+      setScheduleEvents(snap.exists() ? Object.values(snap.val()) : []);
+    });
+    return () => unsub();
   }, []);
 
   // ?ъ슫??濡쒕뱶
