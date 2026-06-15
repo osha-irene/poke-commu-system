@@ -512,6 +512,8 @@ export const useAdminMembers = (
       member.caughtPokemon = [];
     }
 
+    const FLAVORS = ['매운맛', '신맛', '단맛', '쓴맛', '짠맛'];
+
     const {
       level = 5,
       friendship = 0,
@@ -532,6 +534,7 @@ export const useAdminMembers = (
       ivs = null,
       effort = null,
       condition = null,
+      favoriteFlavor = FLAVORS[Math.floor(Math.random() * FLAVORS.length)],
     } = options;
 
     // 파트너가 아닌 경우에만 포획 제한 체크
@@ -585,6 +588,8 @@ export const useAdminMembers = (
 
     const newPokemon = {
       uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      isAdminGiven: true,
+      favoriteFlavor,
       pokemonId: pokemonTemplate.id,
       name: pokemonTemplate.name,
       nameEn: pokemonTemplate.nameEn,

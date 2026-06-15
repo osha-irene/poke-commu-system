@@ -938,32 +938,21 @@ function MobileHomeDashboard({
               onClick={() => setCalPopup(null)}
             >
               <div
+                className="home-cal-tooltip"
                 style={{
-                  position: 'fixed',
-                  top: Math.max(8, calPopup.anchorTop - 8),
-                  left: Math.min(Math.max(8, calPopup.anchorLeft - 120), window.innerWidth - 248),
-                  transform: 'translateY(-100%)',
-                  width: 240,
-                  background: '#fff',
-                  borderRadius: 12,
-                  boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
-                  padding: '10px 14px',
-                  zIndex: 10000,
-                  border: '1px solid #e5e7eb',
+                  left: Math.min(Math.max(6, calPopup.anchorLeft), window.innerWidth - 6),
+                  top: calPopup.anchorTop + 10,
+                  '--tip-bg': calPopup.events[0]?.color ? darkenHex(calPopup.events[0].color, 45) : 'rgba(15,18,15,0.96)',
+                  '--tip-text': '#fff',
                 }}
                 onClick={e => e.stopPropagation()}
               >
-                <div style={{ marginBottom: 6, fontWeight: 700, fontSize: 13, color: '#374151' }}>{calPopup.dateLabel} 일정</div>
                 {calPopup.events.map((ev, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: ev.color || '#6366f1', flexShrink: 0, marginTop: 4 }} />
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: ev.important ? 700 : 500, color: ev.important ? (ev.color || '#ef4444') : '#111827' }}>{ev.title}</div>
-                      {ev.description && <div style={{ fontSize: 11, color: '#6b7280', marginTop: 1 }}>{ev.description}</div>}
-                    </div>
+                  <div key={i} className="home-cal-tooltip__item">
+                    <strong>{ev.title}</strong>
+                    {ev.desc && <p>{ev.desc}</p>}
                   </div>
                 ))}
-                <div style={{ position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderTop: '8px solid #fff', filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.08))' }} />
               </div>
             </div>,
             document.body
