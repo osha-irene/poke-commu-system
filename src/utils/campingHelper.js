@@ -6,8 +6,14 @@ import campingData from '../data/camping.json';
 export function checkEggGroupMatch(pokemon1, pokemon2, allPokemonMaster) {
   if (!pokemon1 || !pokemon2) return { match: false, groups: [] };
   
-  const p1Data = allPokemonMaster.find(p => p.number === pokemon1.number);
-  const p2Data = allPokemonMaster.find(p => p.number === pokemon2.number);
+  const findData = (pokemon) =>
+    allPokemonMaster.find(p =>
+      p.number === pokemon.number ||
+      p.number === pokemon.originalNumber ||
+      p.originalNumber === pokemon.number
+    );
+  const p1Data = findData(pokemon1);
+  const p2Data = findData(pokemon2);
   
   if (!p1Data || !p2Data) return { match: false, groups: [] };
   if (!p1Data.eggGroups || !p2Data.eggGroups) return { match: false, groups: [] };
@@ -36,40 +42,46 @@ export function canGetEgg(member1Pokemon, member2Pokemon, allPokemonMaster) {
     return { canGet: false, reason: '회원2의 포켓몬이 없습니다' };
   }
 
-  // 모든 엔트리 포켓몬 조합 확인
-  let bestMatch = null;
-  let highestChance = 0;
+  // 모든 엔트리 포켓몬 조합 수집
+  const validMatches = [];
 
   for (const p1 of member1Pokemon.filter(p => p)) {
     for (const p2 of member2Pokemon.filter(p => p)) {
       const matchResult = checkEggGroupMatch(p1, p2, allPokemonMaster);
-      
+
       if (matchResult.match) {
-        const hasHighFriendship = 
+        const p1Gender = String(p1.gender || '').toLowerCase();
+        const p2Gender = String(p2.gender || '').toLowerCase();
+
+        // 수컷+암컷 조합만 유효 (어미=암컷, 아비=수컷)
+        let mother = null, father = null;
+        if (p1Gender === 'female' && p2Gender === 'male') {
+          mother = p1; father = p2;
+        } else if (p1Gender === 'male' && p2Gender === 'female') {
+          mother = p2; father = p1;
+        } else {
+          continue; // 둘 다 암컷/수컷/무성별이면 스킵
+        }
+
+        const hasHighFriendship =
           (p1.friendship >= campingData.campingConfig.minFriendshipForBonus) ||
           (p2.friendship >= campingData.campingConfig.minFriendshipForBonus);
-        
-        const eggChance = hasHighFriendship 
-          ? campingData.campingConfig.eggChanceWithFriendship 
+
+        const eggChance = hasHighFriendship
+          ? campingData.campingConfig.eggChanceWithFriendship
           : campingData.campingConfig.eggChanceBase;
-        
-        if (eggChance > highestChance) {
-          highestChance = eggChance;
-          bestMatch = {
-            pokemon1: p1,
-            pokemon2: p2,
-            matchResult,
-            eggChance,
-            hasHighFriendship
-          };
-        }
+
+        validMatches.push({ pokemon1: mother, pokemon2: father, matchResult, eggChance, hasHighFriendship });
       }
     }
   }
 
-  if (!bestMatch) {
+  if (validMatches.length === 0) {
     return { canGet: false, reason: '알 그룹이 일치하는 포켓몬이 없습니다' };
   }
+
+  // 랜덤으로 하나 선택
+  const bestMatch = validMatches[Math.floor(Math.random() * validMatches.length)];
 
   const success = Math.random() < bestMatch.eggChance;
   
@@ -88,9 +100,9 @@ export function canGetEgg(member1Pokemon, member2Pokemon, allPokemonMaster) {
 /**
  * 알 생성
  */
-export function createEgg(parent1, parent2, allPokemonMaster) {
-  // 어미 포켓몬 (일반적으로 암컷이거나 첫 번째)
-  const mother = String(parent2?.gender || '').toLowerCase() === 'female' ? parent2 : parent1;
+export function createEgg(parent1, parent2, allPokemonMaster, trainer1Name, trainer2Name) {
+  // canGetEgg에서 parent1=어미, parent2=아비로 정리해서 전달
+  const mother = parent1;
   const motherData = allPokemonMaster.find(p => p.number === mother.number);
   
   if (!motherData) {
@@ -113,6 +125,8 @@ export function createEgg(parent1, parent2, allPokemonMaster) {
     motherFormVariant: motherData.formVariant || null,
     parent1Name: parent1.name || parent1.nickname,
     parent2Name: parent2.name || parent2.nickname,
+    parent1TrainerName: trainer1Name || null,
+    parent2TrainerName: trainer2Name || null,
     parent1Ball: {
       caughtWithBall: parent1.caughtWithBall || '몬스터볼',
       ballImageUrl: parent1.ballImageUrl || null
@@ -213,7 +227,10 @@ export function hatchEgg(egg, allPokemonMaster, allMoves, movesData) {
     gender: Math.random() < 0.5 ? 'male' : 'female',
     height: pokemonData.height || 10,
     weight: pokemonData.weight || 100,
-    sizeRank: 'M',
+    sizeRank: (() => {
+      const ranks = ['XXXS','XXS','XS','M','M','M','M','XL','XXL','XXXL'];
+      return ranks[Math.floor(Math.random() * ranks.length)];
+    })(),
     ability: pokemonData.abilities?.[0] || '없음',
     isHiddenAbility: false,
     condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
@@ -224,7 +241,9 @@ export function hatchEgg(egg, allPokemonMaster, allMoves, movesData) {
     isFromEgg: true,
     parents: {
       parent1: egg.parent1Name,
-      parent2: egg.parent2Name
+      parent2: egg.parent2Name,
+      trainer1: egg.parent1TrainerName || null,
+      trainer2: egg.parent2TrainerName || null,
     }
   };
 

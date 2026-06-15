@@ -213,10 +213,12 @@ export const useAdminMembers = (
       hatchedAt: new Date().toISOString(),
       parents: {
         parent1: egg.parent1Name || null,
-        parent2: egg.parent2Name || null
+        parent2: egg.parent2Name || null,
+        trainer1: egg.parent1TrainerName || null,
+        trainer2: egg.parent2TrainerName || null,
       },
       sizeRank: (() => {
-        const ranks = ['XXXS','XXS','XS','S','M','M','M','M','L','XL','XXL','XXXL'];
+        const ranks = ['XXXS','XXS','XS','M','M','M','M','XL','XXL','XXXL'];
         return ranks[Math.floor(Math.random() * ranks.length)];
       })(),
       favoriteFlavor: ['매운맛','신맛','단맛','쓴맛','짠맛'][Math.floor(Math.random() * 5)]
@@ -565,9 +567,9 @@ export const useAdminMembers = (
       (ballInfo ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${ballInfo.nameEn}.png` : 
       'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png');
       
-    const spriteUrl = isShiny && pokemonTemplate.shinySprite 
-      ? pokemonTemplate.shinySprite 
-      : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`;
+    const spriteUrl = isShiny && pokemonTemplate.shinySprite
+      ? pokemonTemplate.shinySprite
+      : pokemonTemplate.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`;
 
     const iconUrl = isShiny && pokemonTemplate.shinySprite
       ? pokemonTemplate.shinySprite
@@ -1026,6 +1028,7 @@ export const useAdminMembers = (
             : normalizeIVs(p.ivs, DEFAULT_IVS),
           
           spriteUrl: safeValue(updates.spriteUrl, p.spriteUrl || p.sprite),
+          spriteSize: safeValue(updates.spriteSize, p.spriteSize || null),
           iconUrl: safeValue(updates.iconUrl, p.iconUrl),
           isShiny: safeValue(updates.isShiny, p.isShiny || false),
           heldItem: safeValue(updates.heldItem, p.heldItem || null),

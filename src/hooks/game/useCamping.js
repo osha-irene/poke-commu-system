@@ -282,8 +282,8 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
         if (partnerSnapshot.exists()) {
           const partnerData = partnerSnapshot.val();
           
-          const member1Entry = updatedPokemon.slice(0, 6).filter(p => p);
-          const member2Entry = partnerData.caughtPokemon.slice(0, 6).filter(p => p);
+          const member1Entry = updatedPokemon.filter(p => p);
+          const member2Entry = (partnerData.caughtPokemon || []).filter(p => p);
           
           const eggResult = campingHelper.canGetEgg(member1Entry, member2Entry, allPokemonMaster);
           
@@ -291,7 +291,9 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
             eggObtained = campingHelper.createEgg(
               eggResult.parents.pokemon1,
               eggResult.parents.pokemon2,
-              allPokemonMaster
+              allPokemonMaster,
+              currentUser?.name,
+              partnerData?.name
             );
             
             console.log(`🥚 알 획득! ${eggObtained.species}`);
@@ -321,6 +323,13 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
       await update(sessionRef, { status: 'applied', eggObtained: !!eggObtained });
 
       setCampingSessions(prev => prev.map(s => s.firebaseKey === sessionKey ? { ...s, status: 'applied' } : s));
+
+      updateCurrentUser({
+        caughtPokemon: updatedPokemon,
+        characterExp: newExp,
+        inventory: updatedInventory,
+        ...(eggObtained ? { egg: eggObtained } : {}),
+      });
 
       alert(
         `✅ 결과 반영 완료!\n\n` +

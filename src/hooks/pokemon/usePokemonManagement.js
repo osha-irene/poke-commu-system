@@ -498,7 +498,11 @@ const usePokemonManagement = (
     const newCaughtPokemon = currentUser.caughtPokemon.map(p =>
       p && p.uniqueId === uniqueId ? { ...p, memo } : p
     );
-    updateCurrentUser({ caughtPokemon: newCaughtPokemon });
+    const updates = { caughtPokemon: newCaughtPokemon };
+    if (currentUser.partnerPokemon?.uniqueId === uniqueId) {
+      updates.partnerPokemon = { ...currentUser.partnerPokemon, memo };
+    }
+    updateCurrentUser(updates);
   };
 
   // 아이템 지급

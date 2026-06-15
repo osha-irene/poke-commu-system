@@ -90,6 +90,19 @@ export default function MemberPokemonEditMode({
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-semibold mb-1">이미지 크기 (%)</label>
+            <input
+              type="number"
+              value={editData.spriteSize ?? ''}
+              onChange={(e) => setEditData(prev => ({ ...prev, spriteSize: e.target.value ? Number(e.target.value) : null }))}
+              className="w-full px-3 py-2 border rounded"
+              placeholder="기본값 (75)"
+              min={10}
+              max={200}
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold mb-1">포획볼</label>

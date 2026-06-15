@@ -463,23 +463,32 @@ const eggGroupsMatch = (pokemon1, pokemon2) => {
   return groups.length ? { data1, data2, groups } : null;
 };
 
-const rollEgg = (memberPokemon, partnerPokemon, settings) => {
+const rollEgg = (memberPokemon, partnerPokemon, settings, trainer1Name, trainer2Name) => {
   if (!memberPokemon.length || !partnerPokemon.length) return null;
 
+  // 유효한 쌍 전체 수집 후 랜덤 선택
+  const validPairs = [];
   for (const pokemon1 of memberPokemon) {
     for (const pokemon2 of partnerPokemon) {
       const match = eggGroupsMatch(pokemon1, pokemon2);
       if (!match || !gendersAreCompatible(pokemon1, pokemon2)) continue;
-      if (Math.random() >= settings.eggChance) continue;
+      validPairs.push({ pokemon1, pokemon2, match });
+    }
+  }
 
-      const mother = String(pokemon2.gender).toLowerCase() === 'female' ? pokemon2 : pokemon1;
-      const motherData = getMasterPokemon(mother) || match.data1 || match.data2;
-      if (!motherData) return null;
+  if (!validPairs.length) return null;
+  if (Math.random() >= settings.eggChance) return null;
 
-      const eggGroup = (motherData.eggGroups || match.groups)[0] || 'field';
-      const hatchSteps = settings.eggHatchStepsByGroup[eggGroup] || 5000;
+  const { pokemon1, pokemon2, match } = validPairs[Math.floor(Math.random() * validPairs.length)];
 
-      return {
+  const mother = String(pokemon2.gender).toLowerCase() === 'female' ? pokemon2 : pokemon1;
+  const motherData = getMasterPokemon(mother) || match.data1 || match.data2;
+  if (!motherData) return null;
+
+  const eggGroup = (motherData.eggGroups || match.groups)[0] || 'field';
+  const hatchSteps = settings.eggHatchStepsByGroup[eggGroup] || 5000;
+
+  return {
         eggId: `egg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
         species: motherData.name,
         speciesNumber: motherData.number,
@@ -490,6 +499,8 @@ const rollEgg = (memberPokemon, partnerPokemon, settings) => {
         motherFormVariant: motherData.formVariant || null,
         parent1Name: pokemon1.nickname || pokemon1.name,
         parent2Name: pokemon2.nickname || pokemon2.name,
+        parent1TrainerName: trainer1Name || null,
+        parent2TrainerName: trainer2Name || null,
         parent1Ball: {
           caughtWithBall: pokemon1.caughtWithBall || '몬스터볼',
           ballImageUrl: pokemon1.ballImageUrl || null
@@ -515,10 +526,6 @@ const rollEgg = (memberPokemon, partnerPokemon, settings) => {
         receivedDate: new Date().toISOString(),
         imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/egg.png'
       };
-    }
-  }
-
-  return null;
 };
 
 const rollBonusItem = (settings, currentStage) => {
@@ -600,7 +607,9 @@ const applyRewardsToMember = async ({ sessionKey, session, settings, success }) 
       egg = rollEgg(
         getParticipantPokemon(memberData),
         getParticipantPokemon(partnerSnapshot.val()),
-        settings
+        settings,
+        memberData.name,
+        partnerSnapshot.val().name
       );
     }
   }

@@ -424,9 +424,9 @@ function DesktopPokemonView() {
         <div className={getCardClass('default') + ' p-6'}>
           <PartnerSlot
             pokemon={partnerPokemon}
+            isSelected={partnerPokemon && selectedPokemonId === partnerPokemon.uniqueId}
             onClick={() => {
               if (partnerPokemon) {
-                console.log('파트너 포켓몬 클릭:', partnerPokemon.nickname || partnerPokemon.name);
                 handlePokemonClick(partnerPokemon);
               }
             }}

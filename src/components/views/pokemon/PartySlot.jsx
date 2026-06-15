@@ -13,7 +13,7 @@ const PARTNER_WALK_STYLE = `
 }
 @keyframes partnerWalkDesktop {
   0%, 49%  { background-position: 0px center; }
-  50%, 100% { background-position: -32px center; }
+  50%, 100% { background-position: -34px center; }
 }
 .partner-walk-anim {
   animation: partnerWalk 0.6s steps(1) infinite;
@@ -47,56 +47,27 @@ const getLocalIconUrl = (pokemon, allPokemonMaster) => {
 
 // ⭐ 볼 이미지 가져오기 헬퍼 함수 (디버깅 추가)
 const getBallImageUrl = (pokemon, allItems = []) => {
-  console.log('🔍 [PartySlot] 볼 이미지 찾기:', {
-    ballImageUrl: pokemon.ballImageUrl,
-    caughtWithBall: pokemon.caughtWithBall,
-    allItemsCount: allItems.length
-  });
-
-  // ⭐ ballImageUrl을 신뢰하지 말고, 항상 caughtWithBall로 찾기
-  
-  // 1순위: allItems에서 찾기
   if (pokemon.caughtWithBall && typeof pokemon.caughtWithBall === 'string' && allItems.length > 0) {
     const pokeballData = allItems.find(item => {
       const itemName = item.name?.toLowerCase();
       const itemNameEn = item.nameEn?.toLowerCase();
       const ballName = pokemon.caughtWithBall.toLowerCase();
-      
-      return itemName === ballName || 
-             itemNameEn === ballName ||
-             itemName?.includes(ballName) ||
-             itemNameEn?.includes(ballName);
+      return itemName === ballName || itemNameEn === ballName ||
+             itemName?.includes(ballName) || itemNameEn?.includes(ballName);
     });
-    
-    if (pokeballData) {
-      const url = pokeballData.spriteUrl || pokeballData.imageUrl;
-      console.log('✅ [PartySlot] allItems에서 찾음:', url);
-      return url;
-    }
+    if (pokeballData) return pokeballData.spriteUrl || pokeballData.imageUrl;
   }
-  
-  // 2순위: POKEBALL_LIST
+
   if (pokemon.caughtWithBall) {
-    const ballInfo = POKEBALL_LIST.find(ball => 
-      ball.name === pokemon.caughtWithBall || 
+    const ballInfo = POKEBALL_LIST.find(ball =>
+      ball.name === pokemon.caughtWithBall ||
       ball.nameEn === pokemon.caughtWithBall.toLowerCase()
     );
-    
-    if (ballInfo) {
-      const url = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${ballInfo.nameEn}.png`;
-      console.log('✅ [PartySlot] POKEBALL_LIST에서 찾음:', url);
-      return url;
-    }
+    if (ballInfo) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${ballInfo.nameEn}.png`;
   }
-  
-  // 3순위: ballImageUrl (마지막 대안)
-  if (pokemon.ballImageUrl) {
-    console.log('⚠️ [PartySlot] ballImageUrl 사용 (대안):', pokemon.ballImageUrl);
-    return pokemon.ballImageUrl;
-  }
-  
-  // 기본값
-  console.log('ℹ️ [PartySlot] 기본 몬스터볼 사용');
+
+  if (pokemon.ballImageUrl) return pokemon.ballImageUrl;
+
   return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
 };
 
@@ -114,6 +85,7 @@ const STYLES = {
 // 파트너 포켓몬 슬롯
 export function PartnerSlot({
   pokemon,
+  isSelected = false,
   onClick,
   gamePokedex,
   allPokemonMaster,
@@ -187,11 +159,12 @@ export function PartnerSlot({
           }} />
         </div>
         <div
-          className="partner-walk-anim"
+          className={isSelected ? 'partner-walk-anim-desktop' : 'pokemon-bg-sprite'}
           style={{
-            width: 32, height: 32, flexShrink: 0,
+            width: 34, height: 34, flexShrink: 0,
             backgroundImage: `url(${imageUrl})`,
-            backgroundSize: '64px 32px',
+            backgroundSize: '68px 34px',
+            backgroundPosition: isSelected ? undefined : 'left center',
             backgroundRepeat: 'no-repeat', imageRendering: 'pixelated',
           }}
         />
@@ -203,10 +176,6 @@ export function PartnerSlot({
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 11, color: '#5a7a40', fontWeight: 600 }}>No.{displayNumber.toString().padStart(3, '0')}</span>
             <span style={{ fontSize: 16, fontWeight: 800, color: '#1a2e10' }}>{pokemon.nickname || getBaseName(pokemon)}</span>
-            <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 6, backgroundColor: typeColors.bg, color: typeColors.text }}>{pokemon.type}</span>
-            {pokemon.type2 && type2Colors && (
-              <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 6, backgroundColor: type2Colors.bg, color: type2Colors.text }}>{pokemon.type2}</span>
-            )}
           </div>
           <div style={{ fontSize: 12, color: '#5a7a40', fontWeight: 600, marginTop: 2 }}>Lv.{pokemon.level}</div>
         </div>
@@ -238,12 +207,13 @@ export function PartnerSlot({
 
       <div className="w-14 h-14 flex-shrink-0 flex items-center justify-center" style={{ padding: '4px' }}>
         <div
-          className="partner-walk-anim-desktop"
+          className={isSelected ? 'partner-walk-anim-desktop' : 'pokemon-bg-sprite'}
           style={{
-            width: '32px',
-            height: '32px',
+            width: '34px',
+            height: '34px',
             backgroundImage: `url(${imageUrl})`,
-            backgroundSize: '64px 32px',
+            backgroundSize: '68px 34px',
+            backgroundPosition: isSelected ? undefined : 'left center',
             backgroundRepeat: 'no-repeat',
             imageRendering: 'pixelated'
           }}
@@ -258,28 +228,6 @@ export function PartnerSlot({
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500">No.{displayNumber.toString().padStart(3, '0')}</span>
           <span className="font-bold text-lg">{pokemon.nickname || getBaseName(pokemon)}</span>
-          <div className="flex gap-1">
-            <span
-              className="text-xs px-2 py-1 rounded font-bold shadow-sm"
-              style={{
-                backgroundColor: typeColors.bg,
-                color: typeColors.text
-              }}
-            >
-              {pokemon.type}
-            </span>
-            {pokemon.type2 && type2Colors && (
-              <span
-                className="text-xs px-2 py-1 rounded font-bold shadow-sm"
-                style={{
-                  backgroundColor: type2Colors.bg,
-                  color: type2Colors.text
-                }}
-              >
-                {pokemon.type2}
-              </span>
-            )}
-          </div>
         </div>
         <div className="text-sm" style={{ color: '#5a7a40', fontWeight: 600 }}>Lv.{pokemon.level}</div>
       </div>
@@ -369,14 +317,14 @@ export default function PartySlot({
   const ballImage = getBallImageUrl(pokemon, allItems);  // ⭐ 함수 호출
 
   return (
-    <div 
+    <div
       draggable
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onClick={onClick}
       className={`${STYLES.filled} ${isSelected ? STYLES.selected : STYLES.unselected}`}
     >
-      {/* ... 기존 style 태그 그대로 ... */}
+      <style>{PARTNER_WALK_STYLE}</style>
 
       <div 
         className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden flex items-center justify-center"
@@ -392,18 +340,18 @@ export default function PartySlot({
           }}
         />
       </div>
-      <div 
-        className="w-12 h-12 flex-shrink-0 flex items-center justify-center"
-        style={{ padding: '4px' }}
+      <div
+        className="flex-shrink-0 flex items-center justify-center"
+        style={{ width: 40, height: 40 }}
       >
         <div
-          className="pokemon-bg-sprite"
+          className={isSelected ? 'partner-walk-anim-desktop' : 'pokemon-bg-sprite'}
           style={{
-            width: '32px',
-            height: '32px',
+            width: '34px',
+            height: '34px',
             backgroundImage: `url(${imageUrl})`,
-            backgroundSize: '64px 32px',
-            backgroundPosition: 'left center',
+            backgroundSize: '68px 34px',
+            backgroundPosition: isSelected ? undefined : 'left center',
             backgroundRepeat: 'no-repeat',
             imageRendering: 'pixelated',
             WebkitImageRendering: '-webkit-crisp-edges',
@@ -417,28 +365,6 @@ export default function PartySlot({
         <div className="flex items-center gap-2">
           <span className="text-xs" style={{ color: '#5a7a40', fontWeight: 600 }}>No.{displayNumber.toString().padStart(3, '0')}</span>
           <span className="font-bold text-lg" style={{ color: '#1a2e10' }}>{pokemon.nickname || getBaseName(pokemon)}</span>
-          <div className="flex gap-1">
-            <span
-              className="text-xs px-2 py-1 rounded font-bold shadow-sm"
-              style={{
-                backgroundColor: typeColors.bg,
-                color: typeColors.text
-              }}
-            >
-              {pokemon.type}
-            </span>
-            {pokemon.type2 && type2Colors && (
-              <span 
-                className="text-xs px-2 py-1 rounded font-bold shadow-sm"
-                style={{ 
-                  backgroundColor: type2Colors.bg,
-                  color: type2Colors.text
-                }}
-              >
-                {pokemon.type2}
-              </span>
-            )}
-          </div>
         </div>
         <div className="text-sm" style={{ color: '#5a7a40', fontWeight: 600 }}>Lv.{pokemon.level}</div>
       </div>

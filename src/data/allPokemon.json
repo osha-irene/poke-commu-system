@@ -9930,8 +9930,8 @@
     "baseDefense": 15,
     "baseSpeed": 60,
     "generation": 2,
-    "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/172.png",
-    "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/172.png",
+    "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/emerald/172.png",
+    "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/emerald/shiny/172",
     "isShiny": false,
     "genderRatio": {
       "male": 50,
@@ -9955,7 +9955,7 @@
     ],
     "hatchSteps": 2550,
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/172.png",
-    "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/172.png",
+    "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/emerald/172.png",
     "isRegionalForm": false,
     "regionalForm": null
   },
@@ -10423,8 +10423,8 @@
     "baseDefense": 50,
     "baseSpeed": 40,
     "generation": 2,
-    "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/183.png",
-    "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/183.png",
+    "imageUrl": "https://img.pokemondb.net/sprites/diamond-pearl/normal/marill.png",
+    "shinySprite": "https://img.pokemondb.net/sprites/diamond-pearl/shiny/marill.png",
     "isShiny": false,
     "genderRatio": {
       "male": 50,
@@ -10452,7 +10452,7 @@
     ],
     "hatchSteps": 2550,
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/183.png",
-    "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/183.png",
+    "spriteUrl": "https://img.pokemondb.net/sprites/diamond-pearl/normal/marill.png",
     "isRegionalForm": false,
     "regionalForm": null
   },

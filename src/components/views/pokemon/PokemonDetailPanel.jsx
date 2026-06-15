@@ -127,6 +127,7 @@ export default function PokemonDetailPanel({
   // 툴팁용 state 추가
   const [hoveredCondition, setHoveredCondition] = useState(null);
   const [hoveredEffort, setHoveredEffort] = useState(null);
+  const [masterSpriteSize, setMasterSpriteSize] = useState(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [tooltipType, setTooltipType] = useState('');
 
@@ -168,8 +169,8 @@ const isHoldingEverstone = pokemon.heldItem?.toLowerCase() === 'everstone' ||
   // 컨디션 및 노력치 데이터
   const conditionData = [
     { subject: '근사함', A: pokemon.condition?.elegance || 0, fullMark: 100 },
-    { subject: '아름다움', A: pokemon.condition?.beauty || 0, fullMark: 100 },
     { subject: '귀여움', A: pokemon.condition?.cuteness || 0, fullMark: 100 },
+    { subject: '아름다움', A: pokemon.condition?.beauty || 0, fullMark: 100 },
     { subject: '슬기로움', A: pokemon.condition?.intelligence || 0, fullMark: 100 },
     { subject: '강인함', A: pokemon.condition?.strength || 0, fullMark: 100 }
   ];
@@ -187,11 +188,17 @@ const isHoldingEverstone = pokemon.heldItem?.toLowerCase() === 'everstone' ||
   const renderConditionTick = (tickProps) => {
     const { x, y, payload, textAnchor } = tickProps;
     const item = conditionData.find(d => d.subject === payload.value);
-    
+
+    let ax = x, ay = y;
+    if (payload.value === '강인함')  { ax += 6; ay -= 4; }
+    if (payload.value === '귀여움')   { ax -= 6; ay -= 4; }
+    if (payload.value === '슬기로움') { ax += 7; ay += 12; }
+    if (payload.value === '아름다움') { ax -= 7; ay += 12; }
+
     return (
       <text
-        x={x}
-        y={y}
+        x={ax}
+        y={ay}
         textAnchor={textAnchor}
         fill="#ec4899"
         fontSize={11}
@@ -257,6 +264,7 @@ const isHoldingEverstone = pokemon.heldItem?.toLowerCase() === 'everstone' ||
   });
   const displayNumber = pokedexEntry?.newNumber || pokemon.number;
   const originalNumber = pokedexEntry?.originalNumber || pokemon.number;
+  const masterData = allPokemonMaster.find(p => p.number === pokemon.number || p.number === pokemon.originalNumber);
 
   // 아이템 데이터
   const heldItemData = pokemon.heldItem 
@@ -348,6 +356,20 @@ const ballImage = getBallImage();
     setShowExpPanel(false);
     setShowFormPanel(false);
   }, [pokemon.uniqueId, pokemon.nickname, pokemon.name]);
+
+  useEffect(() => {
+    const url = pokemon.spriteUrl || masterData?.spriteUrl;
+    if (!url || !masterData?.spriteUrl || masterData.spriteUrl === getPokemonSpriteUrl(originalNumber) || pokemon.spriteSize) {
+      setMasterSpriteSize(null);
+      return;
+    }
+    setMasterSpriteSize(null);
+    const img = new Image();
+    img.onload = () => {
+      setMasterSpriteSize({ w: Math.round(img.naturalWidth * 1.05), h: Math.round(img.naturalHeight * 1.05) });
+    };
+    img.src = url;
+  }, [pokemon.spriteUrl, masterData?.spriteUrl, pokemon.spriteSize]);
 
   // Handlers
   const handleSaveNickname = () => {
@@ -451,26 +473,44 @@ const ballImage = getBallImage();
           <div
             className="pokemon-detail-art pokemon-bg-sprite"
             style={{
-              backgroundImage: `url(${pokemon.spriteUrl || getPokemonSpriteUrl(originalNumber)})`,
-              backgroundSize: '75%',
+              backgroundImage: (masterData?.spriteUrl && masterData.spriteUrl !== getPokemonSpriteUrl(originalNumber) && !pokemon.spriteSize) ? 'none' : `url(${pokemon.spriteUrl || getPokemonSpriteUrl(originalNumber)})`,
+              backgroundSize: pokemon.spriteSize ? `${pokemon.spriteSize}%` : '80%',
               backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat'
+              backgroundRepeat: 'no-repeat',
+              position: 'relative',
             }}
-          />
-          {canEvolve && !isHoldingEverstone && evolvedPokemon && (
-            <div className="absolute top-2 left-2">
-              <span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow flex items-center gap-1">
-                <Sparkles size={12} className="text-white animate-pulse" />
-                진화 가능
-              </span>
-            </div>
-          )}
+          >
+            {(masterData?.spriteUrl && masterData.spriteUrl !== getPokemonSpriteUrl(originalNumber) && !pokemon.spriteSize && masterSpriteSize) && (
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img
+                  src={pokemon.spriteUrl || masterData.spriteUrl}
+                  alt=""
+                  style={{
+                    imageRendering: 'pixelated',
+                    display: 'block',
+                    maxWidth: 'none',
+                    maxHeight: 'none',
+                    width: masterSpriteSize.w,
+                    height: masterSpriteSize.h,
+                  }}
+                />
+              </div>
+            )}
+            {canEvolve && !isHoldingEverstone && evolvedPokemon && (
+              <div className="absolute top-2 left-2" style={{ zIndex: 10 }}>
+                <span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow flex items-center gap-1">
+                  <Sparkles size={12} className="text-white animate-pulse" />
+                  진화 가능
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 정보 영역 */}
         <div className="pokemon-detail-content">
           {/* 기본 정보 */}
-          <div>
+          <div style={pokemon.isPartner ? { paddingTop: 15 } : undefined}>
             <div className="flex items-center mb-2">
               <div className="flex items-center gap-2 flex-1">
                 <span className="text-xs bg-gray-200 px-2 py-1 rounded font-semibold">
@@ -502,15 +542,15 @@ const ballImage = getBallImage();
                         type="button"
                         onClick={() => setShowExpPanel((value) => !value)}
                         className="rounded-lg transition-colors hover:bg-yellow-50"
-                        style={{ width: 36, height: 36, padding: 0, overflow: 'hidden' }}
+                        style={{ width: 36, height: 36, padding: 0, overflow: 'hidden', '--serebii-item-image-size': '22px' }}
                         title={levelExpTitle}
                       >
                         <img
                           src="https://www.serebii.net/itemdex/sprites/sv/exp.candyxl.png"
                           alt="경험사탕 XL"
-                          width={29}
-                          height={29}
-                          style={{ width: 29, height: 29, margin: '5px 3px 1px 3px', imageRendering: 'pixelated', display: 'block' }}
+                          width={22}
+                          height={22}
+                          style={{ width: 22, height: 22, margin: '5px 3px 1px 3px', imageRendering: 'pixelated', display: 'block' }}
                         />
                       </button>
 
@@ -683,8 +723,8 @@ const ballImage = getBallImage();
                   <Sparkles className="text-yellow-500 animate-pulse" size={20} />
                 )}
                 {pokemon.isPartner && (
-                  <span className="bg-pink-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-                    💖 파트너
+                  <span className="bg-pink-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                    <Heart size={12} fill="currentColor" /> 파트너
                   </span>
                 )}
                 <button onClick={() => setIsEditingNickname(true)} className="text-gray-400 hover:text-gray-600">
@@ -852,7 +892,7 @@ const ballImage = getBallImage();
                         <PolarGrid stroke="#f472b6" strokeWidth={1.5} strokeOpacity={0.3} radialLines={false} />
                         <PolarAngleAxis dataKey="subject" tick={renderConditionTick} />
                         <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} />
-                        <Radar dataKey="A" stroke="#ec4899" strokeWidth={1} fill="#fbcfe8" fillOpacity={1} activeDot={false} dot={false} />
+                        <Radar dataKey="A" stroke="none" fill="#f472b6" fillOpacity={0.5} activeDot={false} dot={false} />
                       </RadarChart>
                     </ResponsiveContainer>
                     {hoveredCondition !== null && tooltipType === 'condition' && ReactDOM.createPortal(
@@ -871,7 +911,7 @@ const ballImage = getBallImage();
                         <PolarGrid stroke="#60a5fa" strokeWidth={1.5} strokeOpacity={0.3} radialLines={false} gridType="polygon" />
                         <PolarAngleAxis dataKey="subject" tick={renderEffortTick} />
                         <PolarRadiusAxis angle={90} domain={[0, 255]} tickCount={5} tick={false} />
-                        <Radar dataKey="A" stroke="#3b82f6" strokeWidth={1} fill="#bfdbfe" fillOpacity={1} activeDot={false} dot={false} />
+                        <Radar dataKey="A" stroke="none" fill="#60a5fa" fillOpacity={0.5} activeDot={false} dot={false} />
                       </RadarChart>
                     </ResponsiveContainer>
                     {hoveredEffort !== null && tooltipType === 'effort' && ReactDOM.createPortal(
@@ -892,15 +932,17 @@ const ballImage = getBallImage();
           {activeTab === 'memo' && (
             <div className="space-y-3 mt-3">
               <div className="rounded-lg bg-gray-50 border border-gray-200 py-3 px-4 relative">
-                <button
-                  onClick={() => { setMemoText(pokemon.memo || ''); setIsEditingMemo(true); }}
-                  className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
-                  title="메모 편집"
-                  type="button"
-                >
-                  <Edit2 size={14} />
-                </button>
-                {pokemon.sizeRank && (
+                {!isEditingMemo && (
+                  <button
+                    onClick={() => { setMemoText(pokemon.memo || ''); setIsEditingMemo(true); }}
+                    className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+                    title="메모 편집"
+                    type="button"
+                  >
+                    <Edit2 size={14} />
+                  </button>
+                )}
+                {!pokemon.isPartner && pokemon.sizeRank && (
                   <div className="text-base text-gray-500 leading-relaxed italic mb-2">
                     <div>
                       {pokemon.isFromEgg
@@ -912,7 +954,17 @@ const ballImage = getBallImage();
                           : `레벨 ${pokemon.level}에 ${pokemon.caughtLocation || pokemon.metLocation || '야생'}에서 만났다.`
                       }
                     </div>
-
+                    {pokemon.isFromEgg && (pokemon.parents?.parent1 || pokemon.parents?.parent2) && (
+                      <div>
+                        {(() => {
+                          const p = pokemon.parents;
+                          const p1 = p.trainer1 ? `${p.trainer1}의 ${p.parent1}` : p.parent1;
+                          const p2 = p.trainer2 ? `${p.trainer2}의 ${p.parent2}` : p.parent2;
+                          if (p1 && p2) return `${p1}와(과) ${p2}를 닮은 것 같다.`;
+                          return `${p1 || p2}를 닮은 것 같다.`;
+                        })()}
+                      </div>
+                    )}
                     <div>{getSizeDescription(pokemon.sizeRank)}{pokemon.favoriteFlavor ? ` ${pokemon.favoriteFlavor}을 좋아한다.` : ''}</div>
                   </div>
                 )}

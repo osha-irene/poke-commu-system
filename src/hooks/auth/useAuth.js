@@ -2,7 +2,7 @@
 // onValue 리스너를 제거하고 로그인 시에만 데이터 로드
 
 import { useState, useEffect } from 'react';
-import { ref, get, set } from 'firebase/database';
+import { ref, get, set, onValue } from 'firebase/database';
 import { 
   signInWithEmailAndPassword,
   signOut,
@@ -106,6 +106,21 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
       unsubscribe();
     };
   }, [allPokemonMaster, setMembers]);
+
+  // egg 필드 실시간 감지 (어드민이 캠핑 결과 반영 시 즉시 반영)
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    const eggRef = ref(database, `members/${currentUser.id}/egg`);
+    const unsub = onValue(eggRef, (snapshot) => {
+      const egg = snapshot.val() || null;
+      setCurrentUser(prev => {
+        if (!prev) return prev;
+        if (prev.egg === egg) return prev;
+        return { ...prev, egg };
+      });
+    });
+    return () => unsub();
+  }, [currentUser?.id]);
 
   const handleLogin = async (userId, password) => {
     try {
