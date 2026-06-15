@@ -1,16 +1,20 @@
 // src/components/views/pokemon/PokemonDetailPanel.jsx
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { 
-  ArrowUpCircle, 
-  ArrowDownCircle, 
-  Heart, 
+  ArrowUpCircle,
+  ArrowDownCircle,
+  Heart,
   Trees,
-  X, 
-  Edit2, 
+  X,
+  Edit2,
   Check,
   Sparkles,
   Zap,
-  RefreshCw
+  RefreshCw,
+  Sword,
+  Info,
+  FileText
 } from 'lucide-react';
 import { 
   RadarChart, 
@@ -67,6 +71,19 @@ const getSizeRarity = (rank) => {
   return '일반';
 };
 
+const getSizeDescription = (rank) => {
+  const desc = {
+    'XXXS': '믿기 어려울 만큼 작은 크기인 것 같다.',
+    'XXS': '매우 작은 크기인 것 같다.',
+    'XS': '조금 작은 크기인 것 같다.',
+    'M': '중간 정도의 크기인 것 같다.',
+    'XL': '조금 큰 크기인 것 같다.',
+    'XXL': '매우 큰 크기인 것 같다.',
+    'XXXL': '믿기 어려울 만큼 큰 크기인 것 같다.',
+  };
+  return desc[rank] || '알 수 없는 크기인 것 같다.';
+};
+
 
 export default function PokemonDetailPanel({ 
   pokemon, 
@@ -82,6 +99,7 @@ export default function PokemonDetailPanel({
   onMove,
   onRelease,
   onUpdateNickname,
+  onUpdateMemo,
   onGiveItem,
   onTakeItem,
   onForgetMove,
@@ -110,7 +128,11 @@ export default function PokemonDetailPanel({
   const [hoveredCondition, setHoveredCondition] = useState(null);
   const [hoveredEffort, setHoveredEffort] = useState(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [tooltipType, setTooltipType] = useState(''); 
+  const [tooltipType, setTooltipType] = useState('');
+
+  const [activeTab, setActiveTab] = useState('skills');
+  const [memoText, setMemoText] = useState(pokemon.memo || '');
+  const [isEditingMemo, setIsEditingMemo] = useState(false);
 
   const toPokemonNumber = (value) => {
     const number = Number(value);
@@ -171,26 +193,19 @@ const isHoldingEverstone = pokemon.heldItem?.toLowerCase() === 'everstone' ||
         x={x}
         y={y}
         textAnchor={textAnchor}
-        fill="#4f741f"
-        fontSize={9}
+        fill="#ec4899"
+        fontSize={11}
         fontWeight={600}
         style={{ cursor: 'pointer' }}
         onMouseEnter={(e) => {
-          if (e && e.target) {
-            const rect = e.target.getBoundingClientRect();
-            setHoveredEffort(null);
-            setHoveredCondition(item?.A || 0);
-            setTooltipType('condition');
-            setMousePos({ 
-              x: rect.left + rect.width / 2,
-              y: rect.top
-            });
-          }
+          setHoveredEffort(null);
+          setHoveredCondition(item?.A || 0);
+          setTooltipType('condition');
+          setMousePos({ x: e.clientX, y: e.clientY });
         }}
         onMouseLeave={() => {
           setHoveredCondition(null);
           setTooltipType('');
-          setMousePos({ x: 0, y: 0 });
         }}
       >
         {payload.value}
@@ -207,26 +222,19 @@ const isHoldingEverstone = pokemon.heldItem?.toLowerCase() === 'everstone' ||
         x={x}
         y={y}
         textAnchor={textAnchor}
-        fill="#4f741f"
-        fontSize={9}
+        fill="#3b82f6"
+        fontSize={11}
         fontWeight={600}
         style={{ cursor: 'pointer' }}
         onMouseEnter={(e) => {
-          if (e && e.target) {
-            const rect = e.target.getBoundingClientRect();
-            setHoveredCondition(null);
-            setHoveredEffort(item?.A || 0);
-            setTooltipType('effort');
-            setMousePos({ 
-              x: rect.left + rect.width / 2,
-              y: rect.top
-            });
-          }
+          setHoveredCondition(null);
+          setHoveredEffort(item?.A || 0);
+          setTooltipType('effort');
+          setMousePos({ x: e.clientX, y: e.clientY });
         }}
         onMouseLeave={() => {
           setHoveredEffort(null);
           setTooltipType('');
-          setMousePos({ x: 0, y: 0 });
         }}
       >
         {payload.value}
@@ -430,8 +438,8 @@ const ballImage = getBallImage();
   return (
     <div className="pokemon-detail-card w-full rounded-lg p-6">
       {/* 헤더 */}
-      <div className="flex justify-between items-start mb-4">
-        <h3 className="text-xl font-bold text-[#26351f]">포켓몬 정보</h3>
+      <div className="flex justify-between items-start mb-2">
+        <h3 className="text-xl font-bold text-[#26351f]" style={{ position: 'relative', top: 5 }}>포켓몬 정보</h3>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
           <X size={20} />
         </button>
@@ -439,35 +447,43 @@ const ballImage = getBallImage();
 
       <div className="pokemon-detail-layout">
         {/* 포켓몬 이미지 */}
-        <div className="pokemon-detail-art-wrap">
-          <div 
+        <div className="pokemon-detail-art-wrap relative">
+          <div
             className="pokemon-detail-art pokemon-bg-sprite"
             style={{
               backgroundImage: `url(${pokemon.spriteUrl || getPokemonSpriteUrl(originalNumber)})`,
               backgroundSize: '75%',
               backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat' 
+              backgroundRepeat: 'no-repeat'
             }}
           />
+          {canEvolve && !isHoldingEverstone && evolvedPokemon && (
+            <div className="absolute top-2 left-2">
+              <span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow flex items-center gap-1">
+                <Sparkles size={12} className="text-white animate-pulse" />
+                진화 가능
+              </span>
+            </div>
+          )}
         </div>
 
         {/* 정보 영역 */}
         <div className="pokemon-detail-content">
           {/* 기본 정보 */}
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center mb-2">
+              <div className="flex items-center gap-2 flex-1">
                 <span className="text-xs bg-gray-200 px-2 py-1 rounded font-semibold">
                   No.{displayNumber.toString().padStart(3, '0')}
                 </span>
-                <span 
+                <span
                   className="text-xs px-2 py-1 rounded font-bold shadow-sm"
                   style={{ backgroundColor: typeColors.bg, color: typeColors.text }}
                 >
                   {pokemon.type}
                 </span>
                 {pokemon.type2 && (
-                  <span 
+                  <span
                     className="text-xs px-2 py-1 rounded font-bold shadow-sm"
                     style={{ backgroundColor: type2Colors.bg, color: type2Colors.text }}
                   >
@@ -480,86 +496,79 @@ const ballImage = getBallImage();
               {/* 아이콘 버튼 그룹 */}
               <div className="flex items-center gap-2">
                 {!pokemon.isPartner && (
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setShowExpPanel((value) => !value)}
-                    className="p-2 text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors"
-                    title={levelExpTitle}
-                  >
-                    {rareCandyImage ? (
-                      <div
-                        className="w-6 h-6"
-                        style={{
-                          backgroundImage: `url(${rareCandyImage})`,
-                          backgroundSize: 'contain',
-                          backgroundRepeat: 'no-repeat',
-                          backgroundPosition: 'center',
-                          imageRendering: 'pixelated'
-                        }}
-                      />
-                    ) : (
-                      <span className="text-xl">🍬</span>
-                    )}
-                  </button>
-
-                  {showExpPanel && (
-                    <div className="pokemon-detail-exp-popover">
-                      <div className="flex items-center justify-between gap-3">
-                        <strong>경험치 배분</strong>
-                        <button
-                          type="button"
-                          onClick={() => setShowExpPanel(false)}
-                          className="text-[#789252] hover:text-[#2f4a24]"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                      <div className="mt-2 flex items-center gap-2">
-                        <input
-                          type="number"
-                          min="1"
-                          max={trainerExp}
-                          value={expInput}
-                          onChange={(event) => {
-                            const value = event.target.value;
-                            if (value === '') {
-                              setExpInput('');
-                              return;
-                            }
-                            setExpInput(String(Math.max(0, Math.floor(Number(value) || 0))));
-                          }}
-                          className="h-9 w-24 rounded-lg border border-[#a7c86f] bg-[#f8fbef] px-2 text-sm font-bold text-[#2f4a24] focus:border-[#7fa438] focus:outline-none"
-                          placeholder="EXP"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (!canAllocateExp) return;
-                            onUseCandy(pokemon.uniqueId, openLevelUpMoveQueue, selectedExpAmount);
-                            setExpInput('');
-                            setShowExpPanel(false);
-                          }}
-                          disabled={!canAllocateExp}
-                          className={`h-9 rounded-lg px-3 text-xs font-bold transition-colors ${
-                            canAllocateExp
-                              ? 'bg-[#6f8f25] text-white hover:bg-[#4f741f]'
-                              : 'bg-[#dbeabf] text-[#7f9360] cursor-not-allowed'
-                          }`}
-                        >
-                          배분
-                        </button>
-                      </div>
-                      <div className="mt-2 space-y-0.5 text-xs font-semibold text-[#9a6b00]">
-                        <div>나의 남은 경험치: {trainerExp - (selectedExpAmount || 0) < 0 ? 0 : trainerExp - (selectedExpAmount || 0)} <span className="text-[#b0b0b0] font-normal">(보유 {trainerExp})</span></div>
-                        <div>다음 레벨업까지 필요 경험치: {expToNextLevel ?? '-'}</div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                )}
-                {!pokemon.isPartner && (
                   <>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setShowExpPanel((value) => !value)}
+                        className="rounded-lg transition-colors hover:bg-yellow-50"
+                        style={{ width: 36, height: 36, padding: 0, overflow: 'hidden' }}
+                        title={levelExpTitle}
+                      >
+                        <img
+                          src="https://www.serebii.net/itemdex/sprites/sv/exp.candyxl.png"
+                          alt="경험사탕 XL"
+                          width={29}
+                          height={29}
+                          style={{ width: 29, height: 29, margin: '5px 3px 1px 3px', imageRendering: 'pixelated', display: 'block' }}
+                        />
+                      </button>
+
+                      {showExpPanel && (
+                        <div className="pokemon-detail-exp-popover">
+                          <div className="flex items-center justify-between gap-3">
+                            <strong>경험치 배분</strong>
+                            <button
+                              type="button"
+                              onClick={() => setShowExpPanel(false)}
+                              className="text-[#789252] hover:text-[#2f4a24]"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                          <div className="mt-2 flex items-center gap-2">
+                            <input
+                              type="number"
+                              min="1"
+                              max={trainerExp}
+                              value={expInput}
+                              onChange={(event) => {
+                                const value = event.target.value;
+                                if (value === '') {
+                                  setExpInput('');
+                                  return;
+                                }
+                                setExpInput(String(Math.max(0, Math.floor(Number(value) || 0))));
+                              }}
+                              className="h-9 w-24 rounded-lg border border-[#a7c86f] bg-[#f8fbef] px-2 text-sm font-bold text-[#2f4a24] focus:border-[#7fa438] focus:outline-none"
+                              placeholder="EXP"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!canAllocateExp) return;
+                                onUseCandy(pokemon.uniqueId, openLevelUpMoveQueue, selectedExpAmount);
+                                setExpInput('');
+                                setShowExpPanel(false);
+                              }}
+                              disabled={!canAllocateExp}
+                              className={`h-9 rounded-lg px-3 text-xs font-bold transition-colors ${
+                                canAllocateExp
+                                  ? 'bg-[#6f8f25] text-white hover:bg-[#4f741f]'
+                                  : 'bg-[#dbeabf] text-[#7f9360] cursor-not-allowed'
+                              }`}
+                            >
+                              배분
+                            </button>
+                          </div>
+                          <div className="mt-2 space-y-0.5 text-xs font-semibold text-[#9a6b00]">
+                            <div>나의 남은 경험치: {trainerExp - (selectedExpAmount || 0) < 0 ? 0 : trainerExp - (selectedExpAmount || 0)} <span className="text-[#b0b0b0] font-normal">(보유 {trainerExp})</span></div>
+                            <div>다음 레벨업까지 필요 경험치: {expToNextLevel ?? '-'}</div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
                     <button
                       onClick={onMove}
                       className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
@@ -651,9 +660,10 @@ const ballImage = getBallImage();
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2 mb-1">
+              <>
+              <div className="flex items-center gap-2 flex-wrap" style={{ marginTop: -4 }}>
                 {ballImage && (
-                    <div 
+                    <div
                       className="item-sprite"
                       style={{
                         width: '32px',
@@ -668,13 +678,6 @@ const ballImage = getBallImage();
                   <h2 className="flex min-w-0 items-baseline gap-1 text-2xl font-bold text-gray-800">
                     <span className="truncate">{nickname}</span>
                   </h2>
-
-                  {/* ⭐ 성별 아이콘 추가 */}
-                  {(pokemon.gender === 'male' || pokemon.gender === 'female') && (
-                    <span className={`text-2xl font-bold ${getGenderColor(pokemon.gender)}`}>
-                      {getGenderIcon(pokemon.gender)}
-                    </span>
-                  )}
                 {/* ✨ 반짝이 아이콘 */}
                 {pokemon.isShiny && (
                   <Sparkles className="text-yellow-500 animate-pulse" size={20} />
@@ -687,336 +690,260 @@ const ballImage = getBallImage();
                 <button onClick={() => setIsEditingNickname(true)} className="text-gray-400 hover:text-gray-600">
                   <Edit2 size={16} />
                 </button>
+                {/* 성별 아이콘 */}
+                {pokemon.gender === 'male' && (
+                  <svg className="ml-1" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="10" cy="14" r="5"/><line x1="19" y1="5" x2="14.14" y2="9.86"/><polyline points="15 5 19 5 19 9"/>
+                  </svg>
+                )}
+                {pokemon.gender === 'female' && (
+                  <svg className="ml-1" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ec4899" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="9" r="5"/><line x1="12" y1="14" x2="12" y2="21"/><line x1="9" y1="18" x2="15" y2="18"/>
+                  </svg>
+                )}
               </div>
+              {/* 레벨 */}
+              <div className="mt-3">
+                <div className="text-lg font-bold text-gray-600">Lv. {pokemon.level}</div>
+                <div className="text-xs font-semibold text-gray-500">
+                  {expToNextLevel !== null ? `다음 레벨까지 ${expToNextLevel} 경험치` : 'MAX'}
+                </div>
+              </div>
+              </>
             )}
-            
-            <div className="text-lg text-gray-600">Lv. {pokemon.level}</div>
-            <div className="text-xs font-semibold text-yellow-700">
-              {expToNextLevel !== null ? `다음 레벨업까지 필요 경험치 ${expToNextLevel}` : '레벨업 불가'}
-            </div>
-          </div>
-            {/* ⭐ 크기/특성 정보 추가 */}
-{(pokemon.sizeRank || pokemon.ability) && (
-  <div className="grid grid-cols-2 gap-3 mt-2">
-    {/* 크기 정보 */}
-    {pokemon.sizeRank && (
-      <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-        <div className="text-xs text-gray-500 mb-1">크기</div>
-        <div className="flex items-center justify-between mb-2">
-          <span className={`text-lg font-bold ${getSizeColor(pokemon.sizeRank)}`}>
-            {pokemon.sizeRank}
-          </span>
-          <span className="text-xs text-gray-500">
-            {getSizeRarity(pokemon.sizeRank)}
-          </span>
-        </div>
-      </div>
-    )}
 
-    {/* 특성 정보 */}
-    {pokemon.ability && (
-      <div className={`rounded-lg p-3 border-2 ${
-        pokemon.isHiddenAbility 
-          ? 'bg-yellow-50 border-yellow-400' 
-          : 'bg-indigo-50 border-indigo-200'
-      }`}>
-        <div className="text-xs text-gray-500 mb-1 flex items-center gap-1">
-          특성
-          {pokemon.isHiddenAbility && (
-            <span className="text-yellow-600 font-bold">⭐</span>
-          )}
-        </div>
-        <div className={`font-bold text-sm ${
-          pokemon.isHiddenAbility ? 'text-yellow-700' : 'text-indigo-700'
-        }`}>
-          {abilityData?.name || pokemon.ability}
-        </div>
-        {abilityDescription && (
-          <p className="mt-2 text-xs leading-relaxed text-gray-600">
-            {abilityDescription}
-          </p>
-        )}
-      </div>
-    )}
-  </div>
-)}
-
-          {/* 진화 알림 */}
-          {canEvolve && !isHoldingEverstone && evolvedPokemon && (
-            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-3 border-2 border-yellow-300">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Sparkles size={20} className="text-yellow-600 animate-pulse" />
-                  <div>
-                    <div className="text-sm font-bold text-yellow-800">진화 가능!</div>
-                    <div className="text-xs text-yellow-700">
-                      {getBaseName(evolvedPokemon)}(으)로 진화할 수 있습니다
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={handleEvolve}
-                  className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-lg hover:from-yellow-600 hover:to-orange-600 font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2"
-                >
-                  <Zap size={16} />
-                  진화하기
-                </button>
-              </div>
-            </div>
-          )}
-
-          {isHoldingEverstone && (
-            <div className="bg-gray-50 rounded-lg p-3 border-2 border-gray-300">
-              <div className="flex items-center gap-2">
-                <div className="text-lg">🪨</div>
-                <div>
-                  <div className="text-sm font-bold text-gray-700">변함없는돌 착용 중</div>
-                  <div className="text-xs text-gray-600">이 포켓몬은 진화하지 않습니다</div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 컨디션 & 노력치 그래프 */}
-          <div className="grid grid-cols-2 gap-3 focus:ring-transparent focus:ring-0">
-            <div className="bg-purple-50 rounded-lg p-3 border border-purple-200 focus:ring-transparent focus:ring-0"
-                 onMouseLeave={() => {
-                  setHoveredCondition(null);
-                  setTooltipType('');
-                }}>
-              <div className="w-full h-40 relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart data={conditionData} tabIndex={-1}>
-                    <PolarGrid 
-                      stroke="#7fa438"
-                      strokeWidth={1.5}
-                      strokeOpacity={0.3}
-                      radialLines={false}
-                    />
-                    <PolarAngleAxis 
-                      dataKey="subject" 
-                      tick={renderConditionTick}
-                    />
-                    <PolarRadiusAxis 
-                      angle={90}
-                      domain={[0, 100]}
-                      tick={false}
-                    />
-                    <Radar 
-                      dataKey="A" 
-                      stroke="#7fa438"
-                      strokeWidth={1} 
-                      fill="#c7e57d"
-                      fillOpacity={1}
-                      activeDot={false}
-                      dot={false}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
-                
-                {hoveredCondition !== null && tooltipType === 'condition' && (
-                  <div 
-                    className="fixed z-50 pointer-events-none"
-                    style={{ 
-                      left: mousePos.x,
-                      top: mousePos.y - 35,
-                      transform: 'translateX(-50%)',
-                      animation: 'none'
-                    }}
-                  >
-                    <div 
-                      className="px-2 py-1 rounded text-white text-xs font-semibold"
-                      style={{ backgroundColor: '#6f8f25' }}
-                    >
-                      {hoveredCondition}
-                    </div>
-                    <div 
-                      className="w-0 h-0 mx-auto"
-                      style={{
-                        borderLeft: '5px solid transparent',
-                        borderRight: '5px solid transparent',
-                        borderTop: '5px solid #6f8f25',
-                        marginTop: '-1px'
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-blue-50 rounded-lg p-3 border border-blue-200 focus:outline-none focus:ring-0"
-                 onMouseLeave={() => {
-                  setHoveredEffort(null);
-                  setTooltipType('');
-                }}>
-              <div className="w-full h-40 relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart data={effortData}>
-                    <PolarGrid 
-                      stroke="#7fa438"
-                      strokeWidth={1.5}
-                      strokeOpacity={0.3}
-                      radialLines={false}
-                      gridType="polygon"
-                    />
-                    <PolarAngleAxis 
-                      dataKey="subject" 
-                      tick={renderEffortTick}
-                    />
-                    <PolarRadiusAxis 
-                      angle={90}
-                      domain={[0, 255]}
-                      tickCount={5}
-                      tick={false}
-                    />
-                    <Radar 
-                      dataKey="A" 
-                      stroke="#4f741f"
-                      strokeWidth={1} 
-                      fill="#9fcf45"
-                      fillOpacity={1}
-                      activeDot={false}
-                      dot={false}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
-                
-                {hoveredEffort !== null && tooltipType === 'effort' && (
-                  <div 
-                    className="fixed z-50 pointer-events-none"
-                    style={{ 
-                      left: mousePos.x,
-                      top: mousePos.y - 35,
-                      transform: 'translateX(-50%)',
-                      animation: 'none'
-                    }}
-                  >
-                    <div 
-                      className="px-2 py-1 rounded text-white text-xs font-semibold"
-                      style={{ backgroundColor: '#4f741f' }}
-                    >
-                      {hoveredEffort}
-                    </div>
-                    <div 
-                      className="w-0 h-0 mx-auto"
-                      style={{
-                        borderLeft: '5px solid transparent',
-                        borderRight: '5px solid transparent',
-                        borderTop: '5px solid #4f741f',
-                        marginTop: '-1px'
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
 
-          {/* 기술 섹션 */}
-          <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-700">
-                ⚔️ 배운 기술 ({pokemon.moves?.length || 0}/4)
-              </h3>
-              {isAdmin && (!pokemon.moves || pokemon.moves.length < 4) && (
-                <button
-                  onClick={() => setShowMoveSelectModal(true)}
-                  className="text-xs bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 font-semibold transition-colors"
-                >
-                  + 기술 추가
-                </button>
+          {/* 탭 바 */}
+          <div className="flex justify-end border-b border-gray-200 mt-3">
+            {[
+              { key: 'skills', label: '기술', icon: <Sword size={14} /> },
+              { key: 'info', label: '정보', icon: <Info size={14} /> },
+              { key: 'memo', label: '메모', icon: <FileText size={14} /> },
+            ].map(({ key, label, icon }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setActiveTab(key)}
+                className={`px-4 py-2 text-base font-semibold transition-colors border-b-2 -mb-px ${
+                  activeTab === key
+                    ? 'border-gray-500 text-gray-700'
+                    : 'border-transparent text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                <span className="flex items-center gap-1">{icon} {label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* 기술 탭 */}
+          {activeTab === 'skills' && (
+            <div className="space-y-3 mt-3">
+              {/* 기술 */}
+              <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-gray-700">배운 기술 ({pokemon.moves?.length || 0}/4)</h3>
+                  {isAdmin && (!pokemon.moves || pokemon.moves.length < 4) && (
+                    <button onClick={() => setShowMoveSelectModal(true)} className="text-xs bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 font-semibold transition-colors">+ 기술 추가</button>
+                  )}
+                </div>
+                <MovesList moves={pokemon.moves || []} onForgetMove={onForgetMove ? (moveId) => onForgetMove(pokemon.uniqueId, moveId) : undefined} canEdit={!!onForgetMove} allMoves={allMoves} />
+              </div>
+            </div>
+          )}
+
+          {/* 정보 탭 */}
+          {activeTab === 'info' && (
+            <div className="space-y-3 mt-3">
+              {/* 친밀도 한 줄 */}
+              <div className="bg-pink-50 rounded-lg px-3 py-2 border border-pink-200 flex items-center gap-3">
+                <Heart size={12} className="text-pink-500 flex-shrink-0" />
+                <span className="text-sm font-semibold text-gray-700 flex-shrink-0">친밀도</span>
+                <div className="flex-1 bg-gray-200 rounded-full h-2">
+                  <div className="bg-pink-500 h-2 rounded-full transition-all" style={{ width: `${((pokemon.friendship || 0) / 255) * 100}%` }} />
+                </div>
+                <span className="text-sm text-gray-500 flex-shrink-0">{pokemon.friendship || 0}/255</span>
+              </div>
+
+              {/* 도구 + 특성 2열 */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-xs text-gray-600 font-semibold">지니고 있는 도구</div>
+                    {pokemon.heldItem && (
+                      <button onClick={() => onTakeItem(pokemon.uniqueId)} className="text-xs text-gray-500 hover:text-gray-700 font-semibold">회수</button>
+                    )}
+                  </div>
+                  {heldItemData ? (
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="item-sprite" style={{ width: '24px', height: '24px', backgroundImage: `url(${heldItemData.spriteUrl})`, backgroundSize: 'contain', backgroundPosition: 'center' }} />
+                        <div className="text-sm font-bold text-gray-700 truncate">{heldItemData.name}</div>
+                      </div>
+                      <div className="text-sm text-gray-600 leading-tight">{heldItemData.effect || '효과 정보 없음'}</div>
+                    </div>
+                  ) : pokemon.heldItem ? (
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="text-lg">🎒</div>
+                        <div className="text-sm font-bold text-gray-700 truncate">{pokemon.heldItem}</div>
+                      </div>
+                      <div className="text-xs text-gray-400 italic">정보 없음</div>
+                    </div>
+                  ) : (
+                    <select onChange={(e) => { if (e.target.value) { onGiveItem(pokemon.uniqueId, e.target.value); e.target.value = ''; } }} className="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:border-blue-500 focus:outline-none">
+                      <option value="">아이템 선택...</option>
+                      {items.map((item, idx) => <option key={idx} value={item.name}>{item.name} (×{item.count})</option>)}
+                    </select>
+                  )}
+                </div>
+                <div className={`rounded-lg border p-3 ${pokemon.isHiddenAbility ? 'bg-yellow-50 border-yellow-200' : 'bg-indigo-50 border-indigo-100'}`}>
+                  {pokemon.ability ? (
+                    <>
+                      <div className="flex items-center gap-1 mb-1">
+                        {pokemon.isHiddenAbility && <span className="text-yellow-500">⭐</span>}
+                        <span className={`text-base font-bold ${pokemon.isHiddenAbility ? 'text-yellow-700' : 'text-indigo-700'}`}>{abilityData?.name || pokemon.ability}</span>
+                      </div>
+                      {abilityDescription && <div className="text-sm text-gray-500 leading-relaxed">{abilityDescription}</div>}
+                    </>
+                  ) : (
+                    <div className="text-xs text-gray-400 italic">특성 없음</div>
+                  )}
+                </div>
+              </div>
+
+              {/* 진화 알림 */}
+              {canEvolve && !isHoldingEverstone && evolvedPokemon && (
+                <div className="bg-green-700 rounded-lg p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Sparkles size={20} className="text-white animate-pulse" />
+                      <div>
+                        <div className="text-sm font-bold text-white">진화 가능!</div>
+                        <div className="text-xs text-white/80">{getBaseName(evolvedPokemon)}(으)로 진화할 수 있습니다</div>
+                      </div>
+                    </div>
+                    <button onClick={handleEvolve} className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2">
+                      <Zap size={16} />진화하기
+                    </button>
+                  </div>
+                </div>
               )}
-            </div>
-            <MovesList
-              moves={pokemon.moves || []}
-              onForgetMove={onForgetMove ? (moveId) => onForgetMove(pokemon.uniqueId, moveId) : undefined}
-              canEdit={!!onForgetMove}
-              allMoves={allMoves} 
-            />
-          </div>
 
-          {/* 지니고 있는 도구 + 친밀도 */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-xs text-gray-600 font-semibold">지니고 있는 도구</div>
-                {pokemon.heldItem && (
-                  <button
-                    onClick={() => onTakeItem(pokemon.uniqueId)}
-                    className="text-xs text-blue-600 hover:text-blue-700 font-semibold"
-                  >
-                    회수
-                  </button>
+              {isHoldingEverstone && (
+                <div className="bg-gray-50 rounded-lg p-3 border-2 border-gray-300">
+                  <div className="flex items-center gap-2">
+                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/everstone.png" alt="변함없는돌" style={{ width: 36, height: 36, imageRendering: 'pixelated' }} />
+                    <div>
+                      <div className="text-sm font-bold text-gray-700">변함없는돌 착용 중</div>
+                      <div className="text-xs text-gray-600">이 포켓몬은 진화하지 않습니다</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+
+              {/* 컨디션 & 노력치 그래프 */}
+              <div className="grid grid-cols-2 gap-3 items-center">
+                <div className="bg-purple-50 rounded-lg p-3 pt-6 border border-purple-200 flex flex-col justify-center" onMouseLeave={() => { setHoveredCondition(null); setTooltipType(''); }}>
+                  <div className="w-full h-52 relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart data={conditionData} tabIndex={-1}>
+                        <PolarGrid stroke="#f472b6" strokeWidth={1.5} strokeOpacity={0.3} radialLines={false} />
+                        <PolarAngleAxis dataKey="subject" tick={renderConditionTick} />
+                        <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} />
+                        <Radar dataKey="A" stroke="#ec4899" strokeWidth={1} fill="#fbcfe8" fillOpacity={1} activeDot={false} dot={false} />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                    {hoveredCondition !== null && tooltipType === 'condition' && ReactDOM.createPortal(
+                      <div className="fixed z-[9999] pointer-events-none" style={{ left: mousePos.x, top: mousePos.y - 36, transform: 'translateX(-50%)', animation: 'none' }}>
+                        <div className="px-2 py-1 rounded text-white text-xs font-semibold" style={{ backgroundColor: '#ec4899' }}>{hoveredCondition}</div>
+                        <div className="w-0 h-0 mx-auto" style={{ borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '5px solid #ec4899', marginTop: '-1px' }} />
+                      </div>,
+                      document.body
+                    )}
+                  </div>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-3 pt-6 border border-blue-200 flex flex-col justify-center" onMouseLeave={() => { setHoveredEffort(null); setTooltipType(''); }}>
+                  <div className="w-full h-52 relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart data={effortData}>
+                        <PolarGrid stroke="#60a5fa" strokeWidth={1.5} strokeOpacity={0.3} radialLines={false} gridType="polygon" />
+                        <PolarAngleAxis dataKey="subject" tick={renderEffortTick} />
+                        <PolarRadiusAxis angle={90} domain={[0, 255]} tickCount={5} tick={false} />
+                        <Radar dataKey="A" stroke="#3b82f6" strokeWidth={1} fill="#bfdbfe" fillOpacity={1} activeDot={false} dot={false} />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                    {hoveredEffort !== null && tooltipType === 'effort' && ReactDOM.createPortal(
+                      <div className="fixed z-[9999] pointer-events-none" style={{ left: mousePos.x, top: mousePos.y - 36, transform: 'translateX(-50%)', animation: 'none' }}>
+                        <div className="px-2 py-1 rounded text-white text-xs font-semibold" style={{ backgroundColor: '#3b82f6' }}>{hoveredEffort}</div>
+                        <div className="w-0 h-0 mx-auto" style={{ borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '5px solid #3b82f6', marginTop: '-1px' }} />
+                      </div>,
+                      document.body
+                    )}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* 메모 탭 */}
+          {activeTab === 'memo' && (
+            <div className="space-y-3 mt-3">
+              <div className="rounded-lg bg-gray-50 border border-gray-200 py-3 px-4 relative">
+                <button
+                  onClick={() => { setMemoText(pokemon.memo || ''); setIsEditingMemo(true); }}
+                  className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+                  title="메모 편집"
+                  type="button"
+                >
+                  <Edit2 size={14} />
+                </button>
+                {pokemon.sizeRank && (
+                  <div className="text-base text-gray-500 leading-relaxed italic mb-2">
+                    <div>
+                      {pokemon.isFromEgg
+                        ? (pokemon.parents?.parent1 || pokemon.parents?.parent2)
+                          ? `캠핑에서 생긴 알이 레벨 ${pokemon.level}로 부화했다.`
+                          : `특별한 만남을 가지고 레벨 ${pokemon.level}로 알에서 부화했다.`
+                        : pokemon.isAdminGiven
+                          ? `레벨 ${pokemon.level}에 특별한 만남을 가졌다.`
+                          : `레벨 ${pokemon.level}에 ${pokemon.caughtLocation || pokemon.metLocation || '야생'}에서 만났다.`
+                      }
+                    </div>
+
+                    <div>{getSizeDescription(pokemon.sizeRank)}{pokemon.favoriteFlavor ? ` ${pokemon.favoriteFlavor}을 좋아한다.` : ''}</div>
+                  </div>
+                )}
+                {isEditingMemo ? (
+                  <div className="mt-1">
+                    <textarea
+                      value={memoText}
+                      onChange={(e) => setMemoText(e.target.value)}
+                      placeholder="메모를 입력하세요..."
+                      autoFocus
+                      className="w-full h-20 rounded border border-gray-200 bg-white p-2 text-sm text-gray-700 leading-relaxed resize-none focus:outline-none focus:border-gray-400"
+                    />
+                    <div className="flex gap-2 mt-1 justify-end">
+                      <button
+                        onClick={() => setIsEditingMemo(false)}
+                        className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1"
+                        type="button"
+                      >취소</button>
+                      <button
+                        onClick={() => { onUpdateMemo && onUpdateMemo(pokemon.uniqueId, memoText); setIsEditingMemo(false); }}
+                        className="text-xs bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700"
+                        type="button"
+                      >저장</button>
+                    </div>
+                  </div>
+                ) : (
+                  pokemon.memo && <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap mt-1">{pokemon.memo}</p>
                 )}
               </div>
-              
-              {heldItemData ? (
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div 
-                      className="item-sprite"
-                      style={{
-                        width: '24px',
-                        height: '24px',
-                        backgroundImage: `url(${heldItemData.spriteUrl})`,
-                        backgroundSize: 'contain',
-                        backgroundPosition: 'center'
-                      }}
-                    />
-                    <div className="text-sm font-bold text-blue-600 truncate">
-                      {heldItemData.name}
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-600 leading-tight">
-                    {heldItemData.effect || '효과 정보 없음'}
-                  </div>
-                </div>
-              ) : pokemon.heldItem ? (
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="text-lg">🎒</div>
-                    <div className="text-sm font-bold text-blue-600 truncate">
-                      {pokemon.heldItem}
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-400 italic">정보 없음</div>
-                </div>
-              ) : (
-                <select
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      onGiveItem(pokemon.uniqueId, e.target.value);
-                      e.target.value = '';
-                    }
-                  }}
-                  className="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:border-blue-500 focus:outline-none"
-                >
-                  <option value="">아이템 선택...</option>
-                  {items.map((item, idx) => (
-                    <option key={idx} value={item.name}>
-                      {item.name} (×{item.count})
-                    </option>
-                  ))}
-                </select>
-              )}
             </div>
-
-            <div className="bg-pink-50 rounded-lg p-3 border border-pink-200">
-              <div className="flex items-center gap-1 mb-2">
-                <Heart size={12} className="text-pink-500" />
-                <span className="text-xs font-semibold text-gray-700">친밀도</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
-                <div 
-                  className="bg-pink-500 h-2 rounded-full transition-all" 
-                  style={{ width: `${((pokemon.friendship || 0) / 255) * 100}%` }} 
-                />
-              </div>
-              <div className="text-xs text-gray-600 text-right">
-                {pokemon.friendship || 0}/255
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 

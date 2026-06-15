@@ -214,7 +214,12 @@ export const useAdminMembers = (
       parents: {
         parent1: egg.parent1Name || null,
         parent2: egg.parent2Name || null
-      }
+      },
+      sizeRank: (() => {
+        const ranks = ['XXXS','XXS','XS','S','M','M','M','M','L','XL','XXL','XXXL'];
+        return ranks[Math.floor(Math.random() * ranks.length)];
+      })(),
+      favoriteFlavor: ['매운맛','신맛','단맛','쓴맛','짠맛'][Math.floor(Math.random() * 5)]
     };
   };
 
@@ -492,6 +497,9 @@ export const useAdminMembers = (
           ...prev,
           [memberId]: { ...prev[memberId], egg: eggData }
         }));
+        if (memberId === currentUser?.id) {
+          updateCurrentUser({ egg: eggData });
+        }
         alert(`${member.name}님에게 ${pokemonTemplate?.name || '포켓몬'} 알을 지급했습니다!`);
       } catch (error) {
         console.error('❌ 알 지급 실패:', error);

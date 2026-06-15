@@ -370,9 +370,12 @@ function MemberPokemonTab({
 
     const moves = giveData.randomMoves ? getRandomMoves() : giveData.selectedMoves;
 
+    const FLAVORS = ['매운맛', '신맛', '단맛', '쓴맛', '짠맛'];
     const pokemonData = {
       level: giveData.level,
       nickname: giveData.nickname || giveData.selectedPokemon.name,
+      isAdminGiven: true,
+      favoriteFlavor: FLAVORS[Math.floor(Math.random() * FLAVORS.length)],
       caughtWithBall: giveData.caughtWithBall,
       customBallImage: giveData.customBallImage,
       isShiny: giveData.isShiny,

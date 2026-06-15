@@ -27,6 +27,7 @@ function DesktopPokemonView() {
     releasePokemon: onReleasePokemon,
     useRareCandy: onUseRareCandy,
     updatePokemonNickname: onUpdateNickname,
+    updatePokemonMemo: onUpdateMemo,
     getPokemonFormCandidates,
     changePokemonForm: onChangeForm,
     giveItemToPokemon: onGiveItem,
@@ -416,8 +417,9 @@ function DesktopPokemonView() {
   };
 
   return (
-    <div className="grid grid-cols-2 gap-6 h-full">
-      <div className="space-y-6 overflow-y-auto">
+    <div className="flex flex-col gap-6 h-full">
+      <div className="grid grid-cols-5 gap-6 flex-1 min-h-0 overflow-hidden">
+      <div className="col-span-2 space-y-6 overflow-y-auto">
         {/* 파트너 포켓몬 슬롯 */}
         <div className={getCardClass('default') + ' p-6'}>
           <PartnerSlot
@@ -579,70 +581,9 @@ function DesktopPokemonView() {
             onClick={() => currentEgg && console.log('알 클릭')}
           />
         </div>
-
-        <button
-          onClick={() => setShowBox(!showBox)}
-          className={getCardClass('interactive') + ' w-full p-4 flex items-center justify-between'}
-        >
-          <div className="flex items-center gap-3">
-            <Package size={24} className="text-gray-600" />
-            <span className="font-bold text-lg">보관함 ({box.length}마리)</span>
-          </div>
-          <span className="text-gray-500">{showBox ? '▲ 닫기' : '▼ 열기'}</span>
-        </button>
-
-        {showBox && (
-          <div className={getCardClass('default') + ' p-6'}>
-            <div 
-              className={`min-h-[200px] transition-all duration-200 rounded-lg ${
-                dropTarget === 'box' 
-                  ? 'bg-orange-50 border-2 border-dashed border-orange-400 p-4' 
-                  : ''
-              }`}
-              onDragOver={handleDragOver} 
-              onDrop={handleDropToBox}
-              onDragEnter={handleDragEnterBox}
-              onDragLeave={handleDragLeave}
-            >
-              {dropTarget === 'box' && draggedPokemon && draggedPokemon.isInParty && (
-                <div className="text-center py-4 mb-4">
-                  <ArrowDown className="inline-block text-orange-600 animate-bounce" size={32} />
-                  <div className="text-orange-600 font-bold mt-2">
-                    박스로 이동
-                  </div>
-                  <div className="text-sm text-orange-500 mt-1">
-                    {draggedPokemon.pokemon.nickname || draggedPokemon.pokemon.name}
-                  </div>
-                </div>
-              )}
-              
-              {box.length > 0 ? (
-                <div className="grid grid-cols-6 gap-3">
-                  {box.map(pokemon => (
-                    <BoxPokemon
-                      key={pokemon.uniqueId}
-                      pokemon={pokemon}
-                      isSelected={selectedPokemonId === pokemon.uniqueId}
-                      onDragStart={(e) => handleDragStart(e, pokemon, false)}
-                      onDragEnd={handleDragEnd}
-                      onClick={() => handlePokemonClick(pokemon)}
-                      gamePokedex={gamePokedex}
-                      allPokemonMaster={allPokemonMaster}
-                    />
-                  ))}
-                </div>
-              ) : dropTarget !== 'box' ? (
-                <div className="text-center py-8 text-gray-400">
-                  보관함이 비어있습니다
-                  <div className="text-xs mt-2">엔트리에서 포켓몬을 드래그하세요</div>
-                </div>
-              ) : null}
-            </div>
-          </div>
-        )}
       </div>
 
-      <div className="overflow-y-auto">
+      <div className="col-span-3 overflow-y-auto">
         {selectedPokemon ? (
           <PokemonDetailPanel
             pokemon={selectedPokemon}
@@ -662,6 +603,7 @@ function DesktopPokemonView() {
             getPokemonFormCandidates={getPokemonFormCandidates}
             onChangeForm={onChangeForm}
             onUpdateNickname={onUpdateNickname}
+            onUpdateMemo={onUpdateMemo}
             onGiveItem={onGiveItem}
             onTakeItem={onTakeItem}
             onSetPartner={onSetPartner}
@@ -677,6 +619,74 @@ function DesktopPokemonView() {
             <div className="text-center text-gray-400">
               <div className="text-6xl mb-4">👆</div>
               <p>포켓몬을 선택하세요</p>
+            </div>
+          </div>
+        )}
+      </div>
+      </div>
+
+      {/* 박스 - 하단 전체 */}
+      <div>
+        <button
+          onClick={() => setShowBox(!showBox)}
+          className={getCardClass('interactive') + ' w-full p-4 flex items-center justify-between'}
+        >
+          <div className="flex items-center gap-3">
+            <Package size={24} className="text-gray-600" />
+            <span className="font-bold text-lg">박스 ({box.length}마리)</span>
+          </div>
+          <span className="text-gray-500">{showBox ? '▲ 닫기' : '▼ 열기'}</span>
+        </button>
+
+        {showBox && (
+          <div className={getCardClass('default') + ' p-6 mt-2'}>
+            <div
+              className={`min-h-[200px] transition-all duration-200 rounded-lg ${
+                dropTarget === 'box'
+                  ? 'bg-orange-50 border-2 border-dashed border-orange-400 p-4'
+                  : ''
+              }`}
+              onDragOver={handleDragOver}
+              onDrop={handleDropToBox}
+              onDragEnter={handleDragEnterBox}
+              onDragLeave={handleDragLeave}
+            >
+              {dropTarget === 'box' && draggedPokemon && draggedPokemon.isInParty && (
+                <div className="text-center py-4 mb-4">
+                  <ArrowDown className="inline-block text-orange-600 animate-bounce" size={32} />
+                  <div className="text-orange-600 font-bold mt-2">박스로 이동</div>
+                  <div className="text-sm text-orange-500 mt-1">
+                    {draggedPokemon.pokemon.nickname || draggedPokemon.pokemon.name}
+                  </div>
+                </div>
+              )}
+
+              {box.length > 0 ? (
+                <div className="grid grid-cols-6 gap-3">
+                  {box.map(pokemon => (
+                    <BoxPokemon
+                      key={pokemon.uniqueId}
+                      pokemon={pokemon}
+                      isSelected={selectedPokemonId === pokemon.uniqueId}
+                      onDragStart={(e) => handleDragStart(e, pokemon, false)}
+                      onDragEnd={handleDragEnd}
+                      onClick={() => handlePokemonClick(pokemon)}
+                      gamePokedex={gamePokedex}
+                      allPokemonMaster={allPokemonMaster}
+                    />
+                  ))}
+                </div>
+              ) : dropTarget !== 'box' ? (
+                <div className="text-center py-10 text-gray-400">
+                  <img
+                    src="/pokeball.png"
+                    alt="pokeball"
+                    className="mx-auto w-16 h-16"
+                    style={{ opacity: 1, filter: 'sepia(1) hue-rotate(45deg) saturate(1.4) brightness(0.7)' }}
+                  />
+                  <div className="text-base font-semibold mt-5">박스가 비어있습니다</div>
+                </div>
+              ) : null}
             </div>
           </div>
         )}

@@ -411,6 +411,7 @@ export default function useGameState() {
     reorderPartyPokemon: restPokemonManagement.reorderPartyPokemon,
     useRareCandy: useRareCandy,
     updatePokemonNickname: restPokemonManagement.updatePokemonNickname,
+    updatePokemonMemo: restPokemonManagement.updatePokemonMemo,
     getPokemonFormCandidates: restPokemonManagement.getPokemonFormCandidates,
     changePokemonForm: restPokemonManagement.changePokemonForm,
     setPartnerPokemon: restPokemonManagement.setPartnerPokemon,

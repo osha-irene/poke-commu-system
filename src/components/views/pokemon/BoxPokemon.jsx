@@ -71,7 +71,7 @@ export default function BoxPokemon({
       
       {/* ?ъ폆紐??대?吏 - 濡쒖뺄 ?ㅽ봽?쇱씠?몄쓽 ?쇱そ 64x64留??쒖떆 */}
       <div className="aspect-square flex items-center justify-center p-2">
-        <div 
+        <div
           className="pokemon-bg-sprite"
           style={{
             width: '64px',
@@ -79,43 +79,37 @@ export default function BoxPokemon({
             backgroundImage: `url(${imageUrl})`,
             backgroundSize: '128px 64px',
             backgroundPosition: 'left center',
-            backgroundRepeat: 'no-repeat'
+            backgroundRepeat: 'no-repeat',
           }}
         />
       </div>
       
       {/* ?뺣낫 ?곸뿭 */}
       <div className="bg-gray-50 p-2 border-t border-gray-200">
-        <div className="text-xs text-gray-500 mb-1">
-          No.{displayNumber.toString().padStart(3, '0')}
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs text-gray-500">No.{displayNumber.toString().padStart(3, '0')}</span>
+          <div className="flex gap-0.5 flex-shrink-0">
+            <span
+              className="text-xs px-1 py-0.5 rounded font-bold"
+              style={{ backgroundColor: typeColors.bg, color: typeColors.text }}
+            >
+              {pokemon.type}
+            </span>
+            {pokemon.type2 && type2Colors && (
+              <span
+                className="text-xs px-1 py-0.5 rounded font-bold"
+                style={{ backgroundColor: type2Colors.bg, color: type2Colors.text }}
+              >
+                {pokemon.type2}
+              </span>
+            )}
+          </div>
         </div>
-        <div 
-          className="text-xs font-bold truncate"
+        <div
+          className="text-base font-bold truncate"
           style={{ color: COLORS.ui.text.primary }}
         >
           {pokemon.nickname || getBaseName(pokemon)}
-        </div>
-        <div className="flex gap-1 mt-1 justify-center flex-wrap">
-          <span 
-            className="text-xs px-1.5 py-0.5 rounded font-bold"
-            style={{ 
-              backgroundColor: typeColors.bg,
-              color: typeColors.text
-            }}
-          >
-            {pokemon.type}
-          </span>
-          {pokemon.type2 && type2Colors && (
-            <span 
-              className="text-xs px-1.5 py-0.5 rounded font-bold"
-              style={{ 
-                backgroundColor: type2Colors.bg,
-                color: type2Colors.text
-              }}
-            >
-              {pokemon.type2}
-            </span>
-          )}
         </div>
       </div>
       

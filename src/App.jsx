@@ -840,6 +840,7 @@ function MobileHomeDashboard({
   onPokemonClick
 }) {
   const [koreaToday, setKoreaToday] = useState(() => getKoreaDateParts());
+  const [calPopup, setCalPopup] = useState(null); // { events, dateLabel }
   const calendarDays = getCalendarDays(koreaToday.year, koreaToday.month);
   const { cookingFeed, evolutionFeed } = getHomeFeeds(members);
   const calendarLabel = `${koreaToday.year}.${String(koreaToday.month).padStart(2, '0')}`;
@@ -892,15 +893,26 @@ function MobileHomeDashboard({
               const dayEvents = scheduleEvents.filter(e => e.start === dateKey);
               const importantEv = dayEvents.find(e => e.important);
               const dotEvents = dayEvents.filter(e => !e.important);
+              const hasEvents = dayEvents.length > 0;
 
               return (
                 <span
                   key={`${day.muted ? 'muted' : 'current'}-${day.day}-${index}`}
                   className={[
                     index % 7 === 0 ? 'is-sunday' : index % 7 === 6 ? 'is-saturday' : '',
-                    day.muted ? 'is-muted' : ''
+                    day.muted ? 'is-muted' : '',
+                    importantEv ? 'has-important' : '',
                   ].filter(Boolean).join(' ')}
-                  style={importantEv ? { position: 'relative', color: importantEv.color, fontWeight: 700 } : { position: 'relative' }}
+                  style={{
+                    position: 'relative',
+                    cursor: hasEvents ? 'pointer' : undefined,
+                    ...(importantEv ? { '--important-color': importantEv.color } : {}),
+                  }}
+                  onClick={hasEvents ? (e) => {
+                    e.stopPropagation();
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setCalPopup({ events: dayEvents, dateLabel: `${dayMonth}/${day.day}`, anchorTop: rect.top, anchorLeft: rect.left + rect.width / 2 });
+                  } : undefined}
                 >
                   {day.day}
                   {dotEvents.length > 0 && (
@@ -917,6 +929,42 @@ function MobileHomeDashboard({
               );
             })}
           </div>
+
+          {calPopup && (
+            <div
+              style={{ position: 'fixed', inset: 0, zIndex: 200 }}
+              onClick={() => setCalPopup(null)}
+            >
+              <div
+                style={{
+                  position: 'fixed',
+                  top: Math.max(8, calPopup.anchorTop - 8),
+                  left: Math.min(Math.max(8, calPopup.anchorLeft - 120), window.innerWidth - 248),
+                  transform: 'translateY(-100%)',
+                  width: 240,
+                  background: '#fff',
+                  borderRadius: 12,
+                  boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
+                  padding: '10px 14px',
+                  zIndex: 201,
+                  border: '1px solid #e5e7eb',
+                }}
+                onClick={e => e.stopPropagation()}
+              >
+                <div style={{ marginBottom: 6, fontWeight: 700, fontSize: 13, color: '#374151' }}>{calPopup.dateLabel} 일정</div>
+                {calPopup.events.map((ev, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: ev.color || '#6366f1', flexShrink: 0, marginTop: 4 }} />
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: ev.important ? 700 : 500, color: ev.important ? (ev.color || '#ef4444') : '#111827' }}>{ev.title}</div>
+                      {ev.description && <div style={{ fontSize: 11, color: '#6b7280', marginTop: 1 }}>{ev.description}</div>}
+                    </div>
+                  </div>
+                ))}
+                <div style={{ position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderTop: '8px solid #fff', filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.08))' }} />
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -1273,6 +1321,7 @@ export default function App() {
     releasePokemon,
     useRareCandy,
     updatePokemonNickname,
+    updatePokemonMemo,
     updatePokedexMemo,
     giveItemToPokemon,
     takeItemFromPokemon,
@@ -1571,6 +1620,7 @@ export default function App() {
     caughtPokemon,
     releasePokemon,
     updatePokemonNickname,
+    updatePokemonMemo,
     giveItemToPokemon,
     takeItemFromPokemon,
     getPokemonFormCandidates,

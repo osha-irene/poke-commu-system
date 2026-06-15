@@ -493,6 +493,14 @@ const usePokemonManagement = (
     updateCurrentUser({ caughtPokemon: newCaughtPokemon });
   };
 
+  const updatePokemonMemo = (uniqueId, memo) => {
+    if (!currentUser) return;
+    const newCaughtPokemon = currentUser.caughtPokemon.map(p =>
+      p && p.uniqueId === uniqueId ? { ...p, memo } : p
+    );
+    updateCurrentUser({ caughtPokemon: newCaughtPokemon });
+  };
+
   // 아이템 지급
   const giveItemToPokemon = (pokemonUniqueId, itemName, allItems) => {
     if (!currentUser || !currentUser.inventory || !currentUser.caughtPokemon) {
@@ -635,6 +643,7 @@ const usePokemonManagement = (
     setPartnerPokemon,
     useRareCandy,
     updatePokemonNickname,
+    updatePokemonMemo,
     getPokemonFormCandidates,
     changePokemonForm,
     giveItemToPokemon,

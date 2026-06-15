@@ -70,8 +70,12 @@ export const usePokemonCatch = (
     const abilityEn = getAbilityEnglishName(ability) || pokemonTemplate.abilitiesEn?.[0] || null;
     const ivs = pokemon.ivs ? normalizeIVs(pokemon.ivs) : generateIVs();
     
+    const FLAVORS = ['매운맛', '신맛', '단맛', '쓴맛', '짠맛'];
+    const favoriteFlavor = FLAVORS[Math.floor(Math.random() * FLAVORS.length)];
+
     const newPokemon = {
       uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      favoriteFlavor,
       pokemonId: pokemonTemplate.id,
       name: pokemonTemplate.name,
       nameEn: pokemonTemplate.nameEn,
@@ -93,6 +97,7 @@ export const usePokemonCatch = (
       moves: getStartingMoves(pokemonTemplate, level, movesData),
       caughtWithBall: ballUsed.name,
       ballImageUrl: ballUsed.imageUrl || ballItem?.spriteUrl || ballItem?.imageUrl,
+      caughtLocation: regionName || null,
       isPartner: false,
       isShiny: pokemon.isShiny || false,
       

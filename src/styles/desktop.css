@@ -452,14 +452,15 @@
 
 .pokemon-detail-layout {
   display: grid;
-  grid-template-columns: 128px minmax(0, 1fr);
+  grid-template-columns: 142px minmax(0, 1fr);
   align-items: start;
-  gap: 16px 18px;
+  gap: 16px 0;
 }
 
 .pokemon-detail-art-wrap {
   grid-column: 1;
   grid-row: 1;
+  padding-top: 15px;
 }
 
 .pokemon-detail-art {

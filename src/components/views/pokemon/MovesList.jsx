@@ -72,7 +72,7 @@ export default function MovesList({
   }
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+    <div className="grid grid-cols-1 gap-3 w-full">
       {displayMoves.map((move, index) => {
         const typeColors = getTypeColor(move.type);
         
@@ -116,20 +116,20 @@ export default function MovesList({
               {move.power > 0 && (
                 <span className="flex items-center gap-1 text-xs">
                   <span className="text-gray-500">위력</span>
-                  <span className="text-orange-600 font-bold">{move.power}</span>
+                  <span className="text-gray-700 font-bold">{move.power}</span>
                 </span>
               )}
               <span className="flex items-center gap-1 text-xs">
                 <span className="text-gray-500">명중</span>
-                <span className="text-blue-600 font-bold">{move.accuracy}</span>
+                <span className="text-gray-700 font-bold">{move.accuracy}</span>
               </span>
               <span className="flex items-center gap-1 text-xs">
                 <span className="text-gray-500">PP</span>
-                <span className="text-green-600 font-bold">{move.pp || move.currentPp}</span>
+                <span className="text-gray-700 font-bold">{move.pp || move.currentPp}</span>
               </span>
             </div>
             {move.description && (
-              <div className="text-xs text-gray-600 w-full leading-relaxed">
+              <div className="text-sm text-gray-600 w-full leading-relaxed">
                 {move.description}
               </div>
             )}
