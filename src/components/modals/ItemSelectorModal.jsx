@@ -121,7 +121,7 @@ export default function ItemSelectorModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full h-[85vh] min-h-0 flex flex-col">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full h-[85vh] min-h-0 flex flex-col">
         {/* 헤더 */}
         <div className="flex shrink-0 items-center justify-between p-6 border-b border-gray-200">
           <h3 className="text-2xl font-bold text-gray-800">

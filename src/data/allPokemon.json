@@ -531,7 +531,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/12.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/12.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 13,
@@ -1222,7 +1223,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 26,
@@ -1271,7 +1273,8 @@
     "originalNumber": 26,
     "species": "raichu",
     "baseSpAttack": 90,
-    "baseSpDefense": 80
+    "baseSpDefense": 80,
+    "hasGenderDiff": true
   },
   {
     "id": 10100,
@@ -2316,7 +2319,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/41.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/41.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 42,
@@ -2359,7 +2363,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/42.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/42.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 43,
@@ -2445,7 +2450,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/44.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/44.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 45,
@@ -2488,7 +2494,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/45.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/45.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 46,
@@ -3791,7 +3798,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/64.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/64.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 65,
@@ -3836,7 +3844,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/65.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/65.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 66,
@@ -5195,7 +5204,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/84.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/84.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 85,
@@ -5240,7 +5250,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/85.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/85.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 86,
@@ -5890,7 +5901,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/97.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/97.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 98,
@@ -6796,7 +6808,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/111.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/111.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 112,
@@ -6843,7 +6856,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/112.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/112.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 113,
@@ -7117,7 +7131,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/118.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/118.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 119,
@@ -7162,7 +7177,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/119.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/119.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 120,
@@ -7398,7 +7414,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/123.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/123.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 124,
@@ -7824,7 +7841,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/129.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/129.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 130,
@@ -7869,7 +7887,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/130.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/130.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 131,
@@ -9103,7 +9122,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/154.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/154.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 155,
@@ -9646,7 +9666,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/165.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/165.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 166,
@@ -9691,7 +9712,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/166.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/166.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 167,
@@ -10229,7 +10251,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/178.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/178.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 179,
@@ -10546,7 +10569,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/185.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/185.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 186,
@@ -10591,7 +10615,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/186.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/186.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 187,
@@ -10777,7 +10802,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/190.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/190.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 191,
@@ -10963,7 +10989,8 @@
     "originalNumber": 194,
     "species": "wooper",
     "baseSpAttack": 25,
-    "baseSpDefense": 25
+    "baseSpDefense": 25,
+    "hasGenderDiff": true
   },
   {
     "id": 10253,
@@ -11064,7 +11091,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/195.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/195.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 196,
@@ -11195,7 +11223,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/198.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/198.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 199,
@@ -11429,7 +11458,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/202.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/202.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 203,
@@ -11474,7 +11504,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/203.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/203.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 204,
@@ -11650,7 +11681,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/207.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/207.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 208,
@@ -11695,7 +11727,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/208.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/208.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 209,
@@ -11935,7 +11968,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/212.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/212.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 213,
@@ -12025,7 +12059,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/214.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/214.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 215,
@@ -12074,7 +12109,8 @@
     "originalNumber": 215,
     "species": "sneasel",
     "baseSpAttack": 35,
-    "baseSpDefense": 75
+    "baseSpDefense": 75,
+    "hasGenderDiff": true
   },
   {
     "id": 10235,
@@ -12216,7 +12252,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/217.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/217.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 218,
@@ -12396,7 +12433,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/221.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/221.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 222,
@@ -12593,7 +12631,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/224.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/224.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 225,
@@ -12820,7 +12859,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/229.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/229.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 230,
@@ -12953,7 +12993,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/232.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/232.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 233,
@@ -13968,7 +14009,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/255.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/255.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 256,
@@ -14011,7 +14053,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/256.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/256.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 257,
@@ -14054,7 +14097,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/257.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/257.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 258,
@@ -14610,7 +14654,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/267.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/267.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 268,
@@ -14696,7 +14741,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/269.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/269.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 270,
@@ -14837,7 +14883,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/272.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/272.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 273,
@@ -14931,7 +14978,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/274.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/274.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 275,
@@ -14978,7 +15026,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/275.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/275.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 276,
@@ -16420,7 +16469,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/307.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/307.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 308,
@@ -16463,7 +16513,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/308.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/308.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 309,
@@ -16780,7 +16831,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/315.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/315.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 316,
@@ -17095,7 +17147,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/322.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/322.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 323,
@@ -17140,7 +17193,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/323.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/323.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 324,
@@ -17549,7 +17603,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/332.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/332.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 333,
@@ -18349,7 +18404,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/350.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/350.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 351,
@@ -19362,7 +19418,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/369.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/369.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 370,
@@ -20698,7 +20755,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/396.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/396.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 397,
@@ -20741,7 +20799,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/397.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/397.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 398,
@@ -20784,7 +20843,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/398.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/398.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 399,
@@ -20831,7 +20891,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/399.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/399.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 400,
@@ -20878,7 +20939,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/400.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/400.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 401,
@@ -20921,7 +20983,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/401.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/401.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 402,
@@ -20964,7 +21027,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/402.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/402.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 403,
@@ -21009,7 +21073,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/403.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/403.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 404,
@@ -21054,7 +21119,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/404.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/404.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 405,
@@ -21099,7 +21165,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/405.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/405.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 406,
@@ -21191,7 +21258,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/407.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/407.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 408,
@@ -21746,7 +21814,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/415.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/415.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 416,
@@ -21836,7 +21905,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/417.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/417.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 418,
@@ -21881,7 +21951,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/418.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/418.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 419,
@@ -21926,7 +21997,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/419.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/419.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 420,
@@ -23184,7 +23256,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/443.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/443.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 444,
@@ -23229,7 +23302,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/444.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/444.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 445,
@@ -23274,7 +23348,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/445.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/445.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 446,
@@ -23454,7 +23529,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/449.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/449.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 450,
@@ -23497,7 +23573,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/450.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/450.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 451,
@@ -23636,7 +23713,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/453.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/453.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 454,
@@ -23681,7 +23759,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/454.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/454.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 455,
@@ -23769,7 +23848,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/456.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/456.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 457,
@@ -23814,7 +23894,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/457.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/457.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 458,
@@ -23904,7 +23985,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/459.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/459.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 460,
@@ -23949,7 +24031,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/460.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/460.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 461,
@@ -23992,7 +24075,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/461.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/461.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 462,
@@ -24129,7 +24213,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/464.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/464.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 465,
@@ -24174,7 +24259,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/465.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/465.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 466,
@@ -24528,7 +24614,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/473.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/473.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 474,
@@ -28024,7 +28111,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/521.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/521.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 522,
@@ -32091,7 +32179,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/592.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/592.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 593,
@@ -32136,7 +32225,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/593.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/593.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 594,
@@ -36900,7 +36990,8 @@
     "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/668.png",
     "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/668.png",
     "isRegionalForm": false,
-    "regionalForm": null
+    "regionalForm": null,
+    "hasGenderDiff": true
   },
   {
     "id": 669,
@@ -38466,63 +38557,11 @@
     "regionalForm": null
   },
   {
-    "id": 10025,
-    "number": 10025,
-    "displayNumber": 678,
-    "name": "냐오닉스 (암컷의 모습)",
-    "nameEn": "meowstic-female",
-    "type": "에스퍼",
-    "type2": null,
-    "catchRate": "0.29",
-    "baseHp": 74,
-    "baseAttack": 48,
-    "baseDefense": 76,
-    "baseSpeed": 104,
-    "generation": 6,
-    "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10025.png",
-    "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10025.png",
-    "isShiny": false,
-    "genderRatio": {
-      "male": 50,
-      "female": 50
-    },
-    "height": 6,
-    "weight": 85,
-    "abilities": [
-      "날카로운눈",
-      "틈새포착"
-    ],
-    "abilitiesEn": [
-      "keen-eye",
-      "infiltrator"
-    ],
-    "hiddenAbility": "승기",
-    "hiddenAbilityEn": "competitive",
-    "eggGroups": [
-      "ground"
-    ],
-    "eggGroupsEn": [
-      "ground"
-    ],
-    "hatchSteps": 5100,
-    "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10025.png",
-    "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10025.png",
-    "isRegionalForm": false,
-    "regionalForm": null,
-    "originalNumber": 678,
-    "species": "meowstic-female",
-    "baseSpAttack": 83,
-    "baseSpDefense": 81,
-    "formVariant": "meowstic-female",
-    "baseSpecies": "냐오닉스",
-    "baseSpeciesEn": "meowstic"
-  },
-  {
     "id": 678,
     "number": 678,
     "displayNumber": 678,
-    "name": "냐오닉스 (수컷의 모습)",
-    "nameEn": "meowstic-male",
+    "name": "냐오닉스",
+    "nameEn": "meowstic",
     "type": "에스퍼",
     "type2": null,
     "catchRate": "0.29",
@@ -38567,7 +38606,10 @@
     "baseSpDefense": 81,
     "formVariant": "meowstic-male",
     "baseSpecies": "냐오닉스",
-    "baseSpeciesEn": "meowstic"
+    "baseSpeciesEn": "meowstic",
+    "hasGenderDiff": true,
+    "femaleSpriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10025.png",
+    "femaleShinyUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10025.png"
   },
   {
     "id": 10314,
@@ -50664,63 +50706,11 @@
     "baseSpDefense": 50
   },
   {
-    "id": 10186,
-    "number": 10186,
-    "displayNumber": 876,
-    "name": "에써르 (암컷의 모습)",
-    "nameEn": "indeedee-female",
-    "type": "에스퍼",
-    "type2": "노말",
-    "catchRate": "0.12",
-    "baseHp": 70,
-    "baseAttack": 55,
-    "baseDefense": 65,
-    "baseSpeed": 85,
-    "generation": 8,
-    "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10186.png",
-    "shinySprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10186.png",
-    "isShiny": false,
-    "genderRatio": {
-      "male": 50,
-      "female": 50
-    },
-    "height": 9,
-    "weight": 280,
-    "abilities": [
-      "마이페이스",
-      "싱크로"
-    ],
-    "abilitiesEn": [
-      "own-tempo",
-      "synchronize"
-    ],
-    "hiddenAbility": "사이코메이커",
-    "hiddenAbilityEn": "psychic-surge",
-    "eggGroups": [
-      "요정"
-    ],
-    "eggGroupsEn": [
-      "fairy"
-    ],
-    "hatchSteps": 10200,
-    "iconUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10186.png",
-    "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10186.png",
-    "isRegionalForm": false,
-    "regionalForm": null,
-    "originalNumber": 876,
-    "species": "indeedee-female",
-    "baseSpAttack": 95,
-    "baseSpDefense": 105,
-    "formVariant": "indeedee-female",
-    "baseSpecies": "에써르",
-    "baseSpeciesEn": "indeedee"
-  },
-  {
     "id": 876,
     "number": 876,
     "displayNumber": 876,
-    "name": "에써르 (수컷의 모습)",
-    "nameEn": "indeedee-male",
+    "name": "에써르",
+    "nameEn": "indeedee",
     "type": "에스퍼",
     "type2": "노말",
     "catchRate": "0.12",
@@ -50765,7 +50755,10 @@
     "baseSpDefense": 95,
     "formVariant": "indeedee-male",
     "baseSpecies": "에써르",
-    "baseSpeciesEn": "indeedee"
+    "baseSpeciesEn": "indeedee",
+    "hasGenderDiff": true,
+    "femaleSpriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10186.png",
+    "femaleShinyUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/10186.png"
   },
   {
     "id": 877,
@@ -56732,10 +56725,10 @@
     "height": 22,
     "weight": 3200,
     "abilities": [
-      "Protosynthesis"
+      "고대활성"
     ],
     "abilitiesEn": [
-      "protosynthesis"
+      "고대활성"
     ],
     "hiddenAbility": null,
     "hiddenAbilityEn": null,
@@ -56779,10 +56772,10 @@
     "height": 12,
     "weight": 80,
     "abilities": [
-      "Protosynthesis"
+      "고대활성"
     ],
     "abilitiesEn": [
-      "protosynthesis"
+      "고대활성"
     ],
     "hiddenAbility": null,
     "hiddenAbilityEn": null,
@@ -56826,10 +56819,10 @@
     "height": 12,
     "weight": 210,
     "abilities": [
-      "Protosynthesis"
+      "고대활성"
     ],
     "abilitiesEn": [
-      "protosynthesis"
+      "고대활성"
     ],
     "hiddenAbility": null,
     "hiddenAbilityEn": null,
@@ -56873,10 +56866,10 @@
     "height": 14,
     "weight": 40,
     "abilities": [
-      "Protosynthesis"
+      "고대활성"
     ],
     "abilitiesEn": [
-      "protosynthesis"
+      "고대활성"
     ],
     "hiddenAbility": null,
     "hiddenAbilityEn": null,
@@ -56920,10 +56913,10 @@
     "height": 32,
     "weight": 920,
     "abilities": [
-      "Protosynthesis"
+      "고대활성"
     ],
     "abilitiesEn": [
-      "protosynthesis"
+      "고대활성"
     ],
     "hiddenAbility": null,
     "hiddenAbilityEn": null,
@@ -56967,10 +56960,10 @@
     "height": 23,
     "weight": 600,
     "abilities": [
-      "Protosynthesis"
+      "고대활성"
     ],
     "abilitiesEn": [
-      "protosynthesis"
+      "고대활성"
     ],
     "hiddenAbility": null,
     "hiddenAbilityEn": null,
@@ -57759,10 +57752,10 @@
     "height": 20,
     "weight": 3800,
     "abilities": [
-      "Protosynthesis"
+      "고대활성"
     ],
     "abilitiesEn": [
-      "protosynthesis"
+      "고대활성"
     ],
     "hiddenAbility": null,
     "hiddenAbilityEn": null,
@@ -58347,10 +58340,10 @@
     "height": 35,
     "weight": 2800,
     "abilities": [
-      "Protosynthesis"
+      "고대활성"
     ],
     "abilitiesEn": [
-      "protosynthesis"
+      "고대활성"
     ],
     "hiddenAbility": null,
     "hiddenAbilityEn": null,
@@ -58998,10 +58991,10 @@
     "height": 35,
     "weight": 5900,
     "abilities": [
-      "Protosynthesis"
+      "고대활성"
     ],
     "abilitiesEn": [
-      "protosynthesis"
+      "고대활성"
     ],
     "hiddenAbility": null,
     "hiddenAbilityEn": null,
@@ -59045,10 +59038,10 @@
     "height": 52,
     "weight": 4800,
     "abilities": [
-      "Protosynthesis"
+      "고대활성"
     ],
     "abilitiesEn": [
-      "protosynthesis"
+      "고대활성"
     ],
     "hiddenAbility": null,
     "hiddenAbilityEn": null,

@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { ArrowRightLeft, Edit, Gift, Plus, RefreshCw, Sparkles, Trash2, X } from 'lucide-react';
 import FormIconSprite from '../../pokemon/FormIconSprite';
 import { getOwnedPokemonDisplayParts } from '../../../../utils/ownedPokemonDisplay';
+import { getGenderedSpriteUrl } from '../../../../utils/pokemonImageUtils';
 
 export default function MemberPokemonViewMode({
   member,
+  allPokemonMaster = [],
   getPokemonFormCandidates,
   onStartEdit,
   onChangeForm,
@@ -57,11 +59,13 @@ export default function MemberPokemonViewMode({
         <div className="grid grid-cols-2 gap-3">
           {memberPokemon.map((pokemon, index) => {
             const displayName = getOwnedPokemonDisplayParts(pokemon);
+            const masterData = allPokemonMaster.find(p => p.number === pokemon.number || p.number === pokemon.originalNumber);
+            const spriteUrl = getGenderedSpriteUrl(pokemon, masterData) || pokemon.spriteUrl || pokemon.sprite || '';
             return (
             <div key={pokemon.uniqueId || index} className="bg-white rounded-lg border p-3">
               <div className="flex items-start gap-3">
                 <img
-                  src={pokemon.spriteUrl || pokemon.sprite || ''}
+                  src={spriteUrl}
                   alt={pokemon.name || '포켓몬'}
                   className="w-20 h-20"
                   style={{ imageRendering: 'pixelated' }}
@@ -80,7 +84,7 @@ export default function MemberPokemonViewMode({
                     <p className="text-xs font-semibold text-gray-500 truncate">{displayName.species}</p>
                   )}
                   <p className="text-xs text-gray-600">Lv.{pokemon.level || 1}</p>
-                  <p className="text-xs text-gray-500">No.{pokemon.number || '???'}</p>
+                  <p className="text-xs text-gray-500">No.{pokemon.originalNumber || pokemon.number || '???'}</p>
                   {pokemon.heldItem && (
                     <div className="flex items-center gap-1 mt-1">
                       <Gift size={10} className="text-purple-500" />

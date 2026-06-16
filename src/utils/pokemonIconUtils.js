@@ -1,3 +1,6 @@
+// 암수 아이콘이 별도로 존재하는 포켓몬 (기본명 기준)
+const GENDER_ICON_SET = new Set(['MEOWSTIC', 'INDEEDEE', 'BASCULEGION']);
+
 const FORM_ICON_ALIASES = {
   'ROTOM': 'ROTOM',
   'ROTOM-HEAT': 'ROTOM-HEAT',
@@ -30,7 +33,16 @@ export function toPokemonIconFileName(pokemon = {}, options = {}) {
   const aliasName = FORM_ICON_ALIASES[canonicalName];
   if (options.aliasesOnly && !aliasName) return '';
 
-  return aliasName || canonicalName;
+  const baseName = aliasName || canonicalName;
+
+  // 암수 아이콘이 따로 있는 포켓몬은 성별 suffix 추가
+  if (GENDER_ICON_SET.has(baseName)) {
+    const gender = pokemon.gender;
+    if (gender === 'female') return `${baseName}-FEMALE`;
+    if (gender === 'male')   return `${baseName}-MALE`;
+  }
+
+  return baseName;
 }
 
 export function getPokemonLocalIconUrl(pokemon = {}, options = {}) {

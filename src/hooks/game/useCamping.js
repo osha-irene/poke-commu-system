@@ -221,27 +221,42 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
       const memberData = memberSnapshot.val();
       const stageData = session.cookingResult.stageData;
 
-      // 엔트리 포켓몬 친밀도 증가 (null 제외)
-      const updatedPokemon = memberData.caughtPokemon.map((pokemon, index) => {
-        if (index < 6 && pokemon) {
+      // 세션에 저장된 엔트리 포켓몬 ID 목록
+      const entryIds = new Set(
+        (session.entryPokemon || []).map(e => e.pokemonId).filter(Boolean)
+      );
+      const isEntryPokemon = (p) =>
+        p && (entryIds.has(p.uniqueId) || entryIds.has(p.id) || entryIds.has(p.pokemonId));
+
+      // 엔트리 포켓몬만 친밀도 증가
+      const updatedPokemon = memberData.caughtPokemon.map((pokemon) => {
+        if (isEntryPokemon(pokemon)) {
           const friendshipBonus = Math.max(0, Math.floor(stageData.friendshipBonus * (pokemon.friendshipGainMultiplier || 1)));
           const newFriendship = Math.min(255, (pokemon.friendship || 0) + friendshipBonus);
           console.log(`친밀도 업데이트: ${pokemon.name} ${pokemon.friendship || 0} → ${newFriendship}`);
-          return {
-            ...pokemon,
-            friendship: newFriendship
-          };
+          return { ...pokemon, friendship: newFriendship };
         }
         return pokemon;
       });
 
+      // 파트너 포켓몬은 항상 친밀도 증가
+      let updatedPartnerPokemon = memberData.partnerPokemon || null;
+      if (updatedPartnerPokemon) {
+        const friendshipBonus = Math.max(0, Math.floor(stageData.friendshipBonus * (updatedPartnerPokemon.friendshipGainMultiplier || 1)));
+        updatedPartnerPokemon = {
+          ...updatedPartnerPokemon,
+          friendship: Math.min(255, (updatedPartnerPokemon.friendship || 0) + friendshipBonus)
+        };
+      }
+
       // 캐릭터 경험치 증가
       const newExp = (memberData.characterExp || 0) + stageData.expBonus;
 
-      // 친밀도 160 이상 포켓몬이 있는지 확인
-      const hasHighFriendshipPokemon = updatedPokemon
-        .slice(0, 6)
-        .some(p => p && (p.friendship || 0) >= 160);
+      // 친밀도 160 이상 포켓몬이 있는지 확인 (엔트리 + 파트너 기준)
+      const hasHighFriendshipPokemon = [
+        ...updatedPokemon.filter(isEntryPokemon),
+        ...(updatedPartnerPokemon ? [updatedPartnerPokemon] : [])
+      ].some(p => (p.friendship || 0) >= 160);
 
       let bonusItem = null;
       let updatedInventory = memberData.inventory || [];
@@ -282,8 +297,14 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
         if (partnerSnapshot.exists()) {
           const partnerData = partnerSnapshot.val();
           
-          const member1Entry = updatedPokemon.filter(p => p);
-          const member2Entry = (partnerData.caughtPokemon || []).filter(p => p);
+          const member1Entry = [
+            ...updatedPokemon.filter(isEntryPokemon),
+            ...(updatedPartnerPokemon ? [updatedPartnerPokemon] : [])
+          ];
+          const member2Entry = [
+            ...(partnerData.caughtPokemon || []).filter((p, i) => i < 6 && p),
+            ...(partnerData.partnerPokemon ? [partnerData.partnerPokemon] : [])
+          ];
           
           const eggResult = campingHelper.canGetEgg(member1Entry, member2Entry, allPokemonMaster);
           
@@ -304,6 +325,7 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
       // Firebase 업데이트
       const updates = {
         caughtPokemon: updatedPokemon,
+        ...(updatedPartnerPokemon ? { partnerPokemon: updatedPartnerPokemon } : {}),
         characterExp: newExp,
         inventory: updatedInventory,
         'campingData/lastCampingDate': new Date().toISOString(),

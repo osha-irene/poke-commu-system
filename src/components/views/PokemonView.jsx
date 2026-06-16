@@ -617,7 +617,7 @@ function DesktopPokemonView() {
         ) : (
           <div className={getCardClass('default') + ' p-6 h-full flex items-center justify-center'}>
             <div className="text-center text-gray-400">
-              <div className="text-6xl mb-4">👆</div>
+              <img src="/pokeball.png" alt="pokeball" style={{ width: 64, height: 64, opacity: 0.3, margin: '0 auto 16px' }} />
               <p>포켓몬을 선택하세요</p>
             </div>
           </div>

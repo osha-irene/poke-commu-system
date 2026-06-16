@@ -199,12 +199,21 @@ export const getItemCategory = (item) => {
 };
 
 // 아이템 사용 가능 여부
+const FORM_CHANGE_ITEM_NAMES = new Set([
+  'rotom-catalog', 'gracidea',
+  'meteorite', 'meteorite--2', 'meteorite--3', 'meteorite--4',
+  'red-nectar', 'yellow-nectar', 'pink-nectar', 'purple-nectar',
+]);
+
 export const canUseItem = (item) => {
   if (!item) return false;
-  
+
+  const nameEn = item.nameEn || item.name || '';
+  if (FORM_CHANGE_ITEM_NAMES.has(nameEn)) return true;
+
   const pocket = getItemPocket(item);
   const category = getItemCategory(item);
-  
+
   return (
     pocket === ITEM_POCKETS.BERRIES ||
     pocket === ITEM_POCKETS.MEDICINE ||

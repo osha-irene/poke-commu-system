@@ -29,3 +29,33 @@ export const getPokemonSpriteUrl = (number) => {
 export const getPokemonArtworkUrl = (number) => {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${number}.png`;
 };
+
+const FEMALE_SPRITE_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female';
+const FEMALE_SHINY_SPRITE_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/female';
+
+/**
+ * 성별을 고려한 스프라이트 URL 반환
+ * hasGenderDiff: true인 포켓몬만 female URL 적용, 없으면 기본 spriteUrl로 fallback
+ * @param {Object} pokemon - 보유 포켓몬 객체 (gender, isShiny 포함)
+ * @param {Object} pokemonData - allPokemon.json 항목 (hasGenderDiff, spriteUrl, number 포함)
+ */
+export const getGenderedSpriteUrl = (pokemon, pokemonData) => {
+  if (!pokemonData) return null;
+
+  const isFemale = pokemon?.gender === 'female';
+  const hasGenderDiff = pokemonData.hasGenderDiff === true;
+  const number = pokemonData.number;
+
+  if (isFemale && hasGenderDiff) {
+    if (pokemon.isShiny && pokemonData.femaleShinyUrl) return pokemonData.femaleShinyUrl;
+    if (pokemonData.femaleSpriteUrl) return pokemonData.femaleSpriteUrl;
+    if (number) {
+      return pokemon.isShiny
+        ? `${FEMALE_SHINY_SPRITE_BASE}/${number}.png`
+        : `${FEMALE_SPRITE_BASE}/${number}.png`;
+    }
+  }
+
+  // female이 아니거나 gender diff 없으면 null 반환 → 호출부에서 fallback 처리
+  return null;
+};

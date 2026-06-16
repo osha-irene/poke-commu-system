@@ -541,6 +541,7 @@ function MemberPokemonTab({
       {mode === 'view' && (
         <MemberPokemonViewMode
           member={member}
+          allPokemonMaster={allPokemonMaster}
           getPokemonFormCandidates={getPokemonFormCandidates}
           onStartEdit={handleStartEdit}
           onChangeForm={handleChangePokemonForm}

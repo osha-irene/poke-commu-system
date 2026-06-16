@@ -1,34 +1,5 @@
 import campingData from '../data/camping.json';
-
-/**
- * 알 그룹 확인
- */
-export function checkEggGroupMatch(pokemon1, pokemon2, allPokemonMaster) {
-  if (!pokemon1 || !pokemon2) return { match: false, groups: [] };
-  
-  const findData = (pokemon) =>
-    allPokemonMaster.find(p =>
-      p.number === pokemon.number ||
-      p.number === pokemon.originalNumber ||
-      p.originalNumber === pokemon.number
-    );
-  const p1Data = findData(pokemon1);
-  const p2Data = findData(pokemon2);
-  
-  if (!p1Data || !p2Data) return { match: false, groups: [] };
-  if (!p1Data.eggGroups || !p2Data.eggGroups) return { match: false, groups: [] };
-  
-  const matchedGroups = p1Data.eggGroups.filter(group => 
-    p2Data.eggGroups.includes(group)
-  );
-  
-  return {
-    match: matchedGroups.length > 0,
-    groups: matchedGroups,
-    pokemon1: p1Data,
-    pokemon2: p2Data
-  };
-}
+import { DEFAULT_IVS } from './pokemonIndividualValues';
 
 /**
  * 알 획득 가능 여부 체크 (2인 캠핑 전용)
@@ -37,42 +8,49 @@ export function canGetEgg(member1Pokemon, member2Pokemon, allPokemonMaster) {
   if (!member1Pokemon || member1Pokemon.length === 0) {
     return { canGet: false, reason: '회원1의 포켓몬이 없습니다' };
   }
-  
   if (!member2Pokemon || member2Pokemon.length === 0) {
     return { canGet: false, reason: '회원2의 포켓몬이 없습니다' };
   }
 
-  // 모든 엔트리 포켓몬 조합 수집
+  const findData = (pokemon) =>
+    allPokemonMaster.find(p =>
+      p.number === pokemon.number ||
+      p.number === pokemon.originalNumber ||
+      p.originalNumber === pokemon.number
+    );
+
   const validMatches = [];
 
   for (const p1 of member1Pokemon.filter(p => p)) {
     for (const p2 of member2Pokemon.filter(p => p)) {
-      const matchResult = checkEggGroupMatch(p1, p2, allPokemonMaster);
+      const p1Data = findData(p1);
+      const p2Data = findData(p2);
+      if (!p1Data?.eggGroups || !p2Data?.eggGroups) continue;
 
-      if (matchResult.match) {
-        const p1Gender = String(p1.gender || '').toLowerCase();
-        const p2Gender = String(p2.gender || '').toLowerCase();
+      const matchedGroups = p1Data.eggGroups.filter(g => p2Data.eggGroups.includes(g));
+      if (!matchedGroups.length) continue;
 
-        // 수컷+암컷 조합만 유효 (어미=암컷, 아비=수컷)
-        let mother = null, father = null;
-        if (p1Gender === 'female' && p2Gender === 'male') {
-          mother = p1; father = p2;
-        } else if (p1Gender === 'male' && p2Gender === 'female') {
-          mother = p2; father = p1;
-        } else {
-          continue; // 둘 다 암컷/수컷/무성별이면 스킵
-        }
+      const p1Gender = String(p1.gender || '').toLowerCase();
+      const p2Gender = String(p2.gender || '').toLowerCase();
 
-        const hasHighFriendship =
-          (p1.friendship >= campingData.campingConfig.minFriendshipForBonus) ||
-          (p2.friendship >= campingData.campingConfig.minFriendshipForBonus);
-
-        const eggChance = hasHighFriendship
-          ? campingData.campingConfig.eggChanceWithFriendship
-          : campingData.campingConfig.eggChanceBase;
-
-        validMatches.push({ pokemon1: mother, pokemon2: father, matchResult, eggChance, hasHighFriendship });
+      let mother = null, father = null;
+      if (p1Gender === 'female' && p2Gender === 'male') {
+        mother = p1; father = p2;
+      } else if (p1Gender === 'male' && p2Gender === 'female') {
+        mother = p2; father = p1;
+      } else {
+        continue;
       }
+
+      const hasHighFriendship =
+        (p1.friendship >= campingData.campingConfig.minFriendshipForBonus) ||
+        (p2.friendship >= campingData.campingConfig.minFriendshipForBonus);
+
+      const eggChance = hasHighFriendship
+        ? campingData.campingConfig.eggChanceWithFriendship
+        : campingData.campingConfig.eggChanceBase;
+
+      validMatches.push({ pokemon1: mother, pokemon2: father, matchedGroups, eggChance });
     }
   }
 
@@ -80,19 +58,17 @@ export function canGetEgg(member1Pokemon, member2Pokemon, allPokemonMaster) {
     return { canGet: false, reason: '알 그룹이 일치하는 포켓몬이 없습니다' };
   }
 
-  // 랜덤으로 하나 선택
   const bestMatch = validMatches[Math.floor(Math.random() * validMatches.length)];
-
   const success = Math.random() < bestMatch.eggChance;
-  
-  return { 
-    canGet: success, 
+
+  return {
+    canGet: success,
     reason: success ? '알 획득 성공!' : '알을 얻지 못했습니다',
     chance: bestMatch.eggChance,
     parents: {
       pokemon1: bestMatch.pokemon1,
       pokemon2: bestMatch.pokemon2,
-      eggGroups: bestMatch.matchResult.groups
+      eggGroups: bestMatch.matchedGroups
     }
   };
 }
@@ -101,16 +77,14 @@ export function canGetEgg(member1Pokemon, member2Pokemon, allPokemonMaster) {
  * 알 생성
  */
 export function createEgg(parent1, parent2, allPokemonMaster, trainer1Name, trainer2Name) {
-  // canGetEgg에서 parent1=어미, parent2=아비로 정리해서 전달
   const mother = parent1;
   const motherData = allPokemonMaster.find(p => p.number === mother.number);
-  
+
   if (!motherData) {
     console.error('어미 포켓몬 데이터를 찾을 수 없습니다');
     return null;
   }
 
-  // 알 그룹에 따른 부화 걸음 수
   const eggGroup = motherData.eggGroups?.[0] || 'field';
   const hatchSteps = campingData.campingConfig.eggHatchStepsByGroup[eggGroup] || 5000;
 
@@ -136,36 +110,23 @@ export function createEgg(parent1, parent2, allPokemonMaster, trainer1Name, trai
       ballImageUrl: parent2.ballImageUrl || null
     },
     parentBalls: [
-      {
-        caughtWithBall: parent1.caughtWithBall || '몬스터볼',
-        ballImageUrl: parent1.ballImageUrl || null
-      },
-      {
-        caughtWithBall: parent2.caughtWithBall || '몬스터볼',
-        ballImageUrl: parent2.ballImageUrl || null
-      }
+      { caughtWithBall: parent1.caughtWithBall || '몬스터볼', ballImageUrl: parent1.ballImageUrl || null },
+      { caughtWithBall: parent2.caughtWithBall || '몬스터볼', ballImageUrl: parent2.ballImageUrl || null }
     ],
     eggGroups: motherData.eggGroups,
-    hatchSteps: hatchSteps,
+    hatchSteps,
     stepsRemaining: hatchSteps,
     hatchProgress: 0,
     receivedDate: new Date().toISOString(),
-    imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/egg.png'
-  };
-}
-
-/**
- * 알 부화 진행
- */
-export function updateEggProgress(egg, steps) {
-  const newStepsRemaining = Math.max(0, egg.stepsRemaining - steps);
-  const progress = Math.min(100, ((egg.hatchSteps - newStepsRemaining) / egg.hatchSteps) * 100);
-  
-  return {
-    ...egg,
-    stepsRemaining: newStepsRemaining,
-    hatchProgress: Math.round(progress),
-    isReadyToHatch: newStepsRemaining === 0
+    imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/egg.png',
+    parentMoves: [...(parent1.moves || []), ...(parent2.moves || [])].filter(Boolean),
+    parentHeldItems: [parent1.heldItem || null, parent2.heldItem || null],
+    parent1Number: parent1.number || null,
+    parent2Number: parent2.number || null,
+    parent1FavoriteFlavor: parent1.favoriteFlavor || null,
+    parent2FavoriteFlavor: parent2.favoriteFlavor || null,
+    parent1Nature: parent1.nature || null,
+    parent2Nature: parent2.nature || null,
   };
 }
 
@@ -174,38 +135,94 @@ export function updateEggProgress(egg, steps) {
  */
 export function hatchEgg(egg, allPokemonMaster, allMoves, movesData) {
   const pokemonData = allPokemonMaster.find(p => p.number === egg.speciesNumber);
-  
+
   if (!pokemonData) {
     console.error('포켓몬 데이터를 찾을 수 없습니다');
     return null;
   }
 
-  // 기본 기술 설정 (레벨 1 기준)
-  const getStartingMoves = (pokemonNumber, level, movesData) => {
+  const EVERSTONE = ['변함없는돌', 'everstone'];
+  const DESTINY_KNOT = ['빨간실', 'destiny-knot'];
+  const MIRROR_HERB = ['흉내허브', 'mirror-herb'];
+  const LIGHT_BALL = ['전기구슬', 'light-ball'];
+  const matchItem = (item, list) => item && list.some(id => String(item).toLowerCase() === id.toLowerCase());
+
+  const parentHeldItems = egg.parentHeldItems || [null, null];
+  const everstoneIndex = parentHeldItems.findIndex(i => matchItem(i, EVERSTONE));
+  const hasDestinyKnot = parentHeldItems.some(i => matchItem(i, DESTINY_KNOT));
+  const mirrorHerbHolder = parentHeldItems.findIndex(i => matchItem(i, MIRROR_HERB));
+
+  const inheritedFlavor = everstoneIndex >= 0
+    ? (everstoneIndex === 0 ? egg.parent1FavoriteFlavor : egg.parent2FavoriteFlavor) || null
+    : null;
+  const inheritedNature = everstoneIndex >= 0
+    ? (everstoneIndex === 0 ? egg.parent1Nature : egg.parent2Nature) || null
+    : null;
+
+  const startingFriendship = hasDestinyKnot ? 150 : 120;
+
+  const getExpandedParentMoves = (baseMoves) => {
+    if (mirrorHerbHolder === -1) return baseMoves;
+    const partnerNumber = mirrorHerbHolder === 0 ? egg.parent2Number : egg.parent1Number;
+    if (!partnerNumber) return baseMoves;
+    const partnerLearnset = movesData.pokemonLearnsets?.[partnerNumber] || {};
+    const partnerLevelIds = (partnerLearnset.levelUpMoves || []).map(e => e.moveId);
+    const partnerTmIds = partnerLearnset.tmMoves || [];
+    const existingIds = new Set(baseMoves.map(m => m.moveId));
+    const extra = [...partnerLevelIds, ...partnerTmIds]
+      .filter(moveId => !existingIds.has(moveId))
+      .map(moveId => {
+        const move = allMoves.find(m => m.id === moveId);
+        return move ? { moveId: move.id, currentPp: move.pp, learnedAt: 1 } : null;
+      })
+      .filter(Boolean);
+    return [...baseMoves, ...extra];
+  };
+
+  const getStartingMoves = (pokemonNumber) => {
     const learnset = movesData.pokemonLearnsets?.[pokemonNumber];
     if (!learnset) return [];
-
-    return learnset
-      .filter(entry => entry.level <= level)
-      .sort((a, b) => b.level - a.level)
+    const levelUpMoves = learnset.levelUpMoves || (Array.isArray(learnset) ? learnset : []);
+    return levelUpMoves
+      .filter(entry => Number(entry.level || 0) <= 1)
+      .sort((a, b) => Number(b.level || 0) - Number(a.level || 0))
       .slice(0, 4)
       .map(entry => {
         const moveData = allMoves.find(m => m.id === entry.moveId);
-        return moveData ? {
-          id: moveData.id,
-          name: moveData.name,
-          type: moveData.type,
-          category: moveData.category,
-          power: moveData.power,
-          accuracy: moveData.accuracy,
-          pp: moveData.pp,
-          maxPp: moveData.pp
-        } : null;
+        return moveData ? { moveId: moveData.id, currentPp: moveData.pp, learnedAt: 1 } : null;
       })
-      .filter(m => m !== null);
+      .filter(Boolean);
   };
 
-  const hatchedPokemon = {
+  const getInheritedEggMoves = (pokemonNumber, parentMoves) => {
+    const learnset = movesData.pokemonLearnsets?.[pokemonNumber];
+    if (!learnset) return [];
+    const babyEggMoveIds = new Set(learnset.eggMoves || []);
+    if (babyEggMoveIds.size === 0) return [];
+    const parentMoveIds = new Set((parentMoves || []).map(m => m.moveId).filter(Boolean));
+    return [...babyEggMoveIds]
+      .filter(moveId => parentMoveIds.has(moveId))
+      .map(moveId => {
+        const moveData = allMoves.find(m => m.id === moveId);
+        return moveData ? { moveId: moveData.id, currentPp: moveData.pp, learnedAt: 1 } : null;
+      })
+      .filter(Boolean);
+  };
+
+  const expandedParentMoves = getExpandedParentMoves(egg.parentMoves || []);
+  const inherited = getInheritedEggMoves(pokemonData.number, expandedParentMoves);
+  const starting = getStartingMoves(pokemonData.number);
+  const usedIds = new Set(inherited.map(m => m.moveId));
+  let moves = [...inherited, ...starting.filter(m => !usedIds.has(m.moveId))].slice(0, 4);
+
+  if (pokemonData.number === 172 && parentHeldItems.some(i => matchItem(i, LIGHT_BALL))) {
+    const voltTackle = allMoves.find(m => m.id === 'volt-tackle');
+    if (voltTackle && !moves.find(m => m.moveId === 'volt-tackle')) {
+      moves = [{ moveId: voltTackle.id, currentPp: voltTackle.pp, learnedAt: 1 }, ...moves].slice(0, 4);
+    }
+  }
+
+  return {
     uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     pokemonId: pokemonData.id,
     name: pokemonData.name,
@@ -217,9 +234,12 @@ export function hatchEgg(egg, allPokemonMaster, allMoves, movesData) {
     hp: pokemonData.baseHp,
     maxHp: pokemonData.baseHp,
     exp: 0,
-    friendship: 120,
+    friendship: startingFriendship,
+    ivs: { ...DEFAULT_IVS },
+    ...(inheritedNature ? { nature: inheritedNature } : {}),
+    ...(inheritedFlavor ? { favoriteFlavor: inheritedFlavor } : {}),
     heldItem: null,
-    moves: getStartingMoves(pokemonData.number, 1, movesData),
+    moves,
     caughtWithBall: '알',
     ballImageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/egg.png',
     isPartner: false,
@@ -228,7 +248,7 @@ export function hatchEgg(egg, allPokemonMaster, allMoves, movesData) {
     height: pokemonData.height || 10,
     weight: pokemonData.weight || 100,
     sizeRank: (() => {
-      const ranks = ['XXXS','XXS','XS','M','M','M','M','XL','XXL','XXXL'];
+      const ranks = ['XXXS', 'XXS', 'XS', 'M', 'M', 'M', 'M', 'XL', 'XXL', 'XXXL'];
       return ranks[Math.floor(Math.random() * ranks.length)];
     })(),
     ability: pokemonData.abilities?.[0] || '없음',
@@ -246,24 +266,6 @@ export function hatchEgg(egg, allPokemonMaster, allMoves, movesData) {
       trainer2: egg.parent2TrainerName || null,
     }
   };
-
-  return hatchedPokemon;
-}
-
-/**
- * 요리 성공률 계산
- */
-export function calculateCookingSuccess(stage, isDuo) {
-  const stageData = campingData.cookingStages[stage - 1];
-  if (!stageData) return 0;
-  
-  let successRate = stageData.successRate;
-  
-  if (isDuo) {
-    successRate += campingData.campingConfig.duoSuccessBonus;
-  }
-  
-  return Math.min(1.0, successRate);
 }
 
 /**
@@ -271,16 +273,10 @@ export function calculateCookingSuccess(stage, isDuo) {
  */
 export function generateCookingResult(stage, isDuo) {
   const stageData = campingData.cookingStages[stage - 1];
-  const successRate = calculateCookingSuccess(stage, isDuo);
+  if (!stageData) return null;
+  const successRate = Math.min(1.0, stageData.successRate + (isDuo ? campingData.campingConfig.duoSuccessBonus : 0));
   const success = Math.random() < successRate;
-  
-  return {
-    success,
-    stage,
-    stageData,
-    successRate: Math.round(successRate * 100),
-    isDuo
-  };
+  return { success, stage, stageData, successRate: Math.round(successRate * 100), isDuo };
 }
 
 /**
@@ -289,16 +285,13 @@ export function generateCookingResult(stage, isDuo) {
 export function rollBonusItem(allItems) {
   const totalWeight = campingData.bonusItems.reduce((sum, item) => sum + item.weight, 0);
   const roll = Math.random() * totalWeight;
-  
   let currentWeight = 0;
   for (const bonusItem of campingData.bonusItems) {
     currentWeight += bonusItem.weight;
     if (roll <= currentWeight) {
-      const item = allItems.find(i => i.id === bonusItem.itemId);
-      return item || null;
+      return allItems.find(i => i.id === bonusItem.itemId) || null;
     }
   }
-  
   return null;
 }
 
@@ -307,23 +300,15 @@ export function rollBonusItem(allItems) {
  */
 export function canCampToday(lastCampingDate) {
   if (!lastCampingDate) return true;
-  
-  const today = new Date();
-  const lastDate = new Date(lastCampingDate);
-  
-  const diffTime = today - lastDate;
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  
-  return diffDays >= 7;
+  const diffTime = new Date() - new Date(lastCampingDate);
+  return Math.floor(diffTime / (1000 * 60 * 60 * 24)) >= 7;
 }
 
 /**
  * 오늘이 캠핑 가능한 요일인지 확인
  */
 export function isCampingDay() {
-  const today = new Date();
-  const dayName = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'][today.getDay()];
-  
+  const dayName = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'][new Date().getDay()];
   return campingData.campingConfig.allowedDays.includes(dayName);
 }
 
@@ -331,38 +316,10 @@ export function isCampingDay() {
  * 다음 캠핑 가능 날짜 계산
  */
 export function getNextCampingDate(lastCampingDate) {
-  if (!lastCampingDate) {
-    return new Date();
-  }
-  
+  if (!lastCampingDate) return new Date();
   const nextDate = new Date(lastCampingDate);
   nextDate.setDate(nextDate.getDate() + 7);
-  
   return nextDate;
-}
-
-/**
- * 엔트리 포켓몬의 친밀도 상승
- */
-export function applyFriendshipBonus(entryPokemon, friendshipBonus) {
-  return entryPokemon.map(pokemon => {
-    if (!pokemon) return null;
-    
-    const adjustedBonus = Math.max(0, Math.floor(friendshipBonus * (pokemon.friendshipGainMultiplier || 1)));
-    const newFriendship = Math.min(255, (pokemon.friendship || 0) + adjustedBonus);
-    
-    return {
-      ...pokemon,
-      friendship: newFriendship
-    };
-  });
-}
-
-/**
- * 캐릭터 경험치 증가
- */
-export function applyCharacterExp(currentExp, expBonus) {
-  return (currentExp || 0) + expBonus;
 }
 
 /**

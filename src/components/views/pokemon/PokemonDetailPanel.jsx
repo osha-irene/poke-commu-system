@@ -32,10 +32,11 @@ import FormIconSprite from './FormIconSprite';
 import { getRequiredExpForLevel } from '../../../utils/experience';
 import { getAbilityByName } from '../../../utils/abilityUtils';
 import { getPokemonDisplayParts } from '../../../utils/pokemonDisplayName';
+import { getGenderedSpriteUrl } from '../../../utils/pokemonImageUtils';
 
 const getBaseName = (pokemon) => getPokemonDisplayParts(pokemon).name;
 
-const getPokemonSpriteUrl = (number) => 
+const getPokemonSpriteUrl = (number) =>
   `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`;
 
 // ⭐ 여기에 헬퍼 함수들 추가
@@ -262,9 +263,11 @@ const isHoldingEverstone = pokemon.heldItem?.toLowerCase() === 'everstone' ||
 
     return entryNumbers.some(number => pokemonNumbers.has(number));
   });
-  const displayNumber = pokedexEntry?.newNumber || pokemon.number;
+  const displayNumber = pokedexEntry?.newNumber || pokemon.originalNumber || pokemon.number;
   const originalNumber = pokedexEntry?.originalNumber || pokemon.number;
   const masterData = allPokemonMaster.find(p => p.number === pokemon.number || p.number === pokemon.originalNumber);
+  // 우선순위: 암컷 스프라이트 > 커스텀(폼체인지) > masterData 기본 > 생성 URL
+  const effectiveSpriteUrl = getGenderedSpriteUrl(pokemon, masterData) || pokemon.spriteUrl || masterData?.spriteUrl || getPokemonSpriteUrl(originalNumber);
 
   // 아이템 데이터
   const heldItemData = pokemon.heldItem 
@@ -358,7 +361,7 @@ const ballImage = getBallImage();
   }, [pokemon.uniqueId, pokemon.nickname, pokemon.name]);
 
   useEffect(() => {
-    const url = pokemon.spriteUrl || masterData?.spriteUrl;
+    const url = effectiveSpriteUrl;
     if (!url || !masterData?.spriteUrl || masterData.spriteUrl === getPokemonSpriteUrl(originalNumber) || pokemon.spriteSize) {
       setMasterSpriteSize(null);
       return;
@@ -369,7 +372,7 @@ const ballImage = getBallImage();
       setMasterSpriteSize({ w: Math.round(img.naturalWidth * 1.05), h: Math.round(img.naturalHeight * 1.05) });
     };
     img.src = url;
-  }, [pokemon.spriteUrl, masterData?.spriteUrl, pokemon.spriteSize]);
+  }, [effectiveSpriteUrl, masterData?.spriteUrl, pokemon.spriteSize]);
 
   // Handlers
   const handleSaveNickname = () => {
@@ -473,7 +476,7 @@ const ballImage = getBallImage();
           <div
             className="pokemon-detail-art pokemon-bg-sprite"
             style={{
-              backgroundImage: (masterData?.spriteUrl && masterData.spriteUrl !== getPokemonSpriteUrl(originalNumber) && !pokemon.spriteSize) ? 'none' : `url(${pokemon.spriteUrl || getPokemonSpriteUrl(originalNumber)})`,
+              backgroundImage: (masterData?.spriteUrl && masterData.spriteUrl !== getPokemonSpriteUrl(originalNumber) && !pokemon.spriteSize) ? 'none' : `url(${effectiveSpriteUrl})`,
               backgroundSize: pokemon.spriteSize ? `${pokemon.spriteSize}%` : '80%',
               backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat',
@@ -483,7 +486,7 @@ const ballImage = getBallImage();
             {(masterData?.spriteUrl && masterData.spriteUrl !== getPokemonSpriteUrl(originalNumber) && !pokemon.spriteSize && masterSpriteSize) && (
               <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <img
-                  src={pokemon.spriteUrl || masterData.spriteUrl}
+                  src={effectiveSpriteUrl}
                   alt=""
                   style={{
                     imageRendering: 'pixelated',
@@ -960,8 +963,8 @@ const ballImage = getBallImage();
                           const p = pokemon.parents;
                           const p1 = p.trainer1 ? `${p.trainer1}의 ${p.parent1}` : p.parent1;
                           const p2 = p.trainer2 ? `${p.trainer2}의 ${p.parent2}` : p.parent2;
-                          if (p1 && p2) return `${p1}와(과) ${p2}를 닮은 것 같다.`;
-                          return `${p1 || p2}를 닮은 것 같다.`;
+                          if (p1 && p2) return `${p1}와(과) ${p2}와(과) 성격이 닮은 것 같다.`;
+                          return `${p1 || p2}와 성격이 닮은 것 같다.`;
                         })()}
                       </div>
                     )}

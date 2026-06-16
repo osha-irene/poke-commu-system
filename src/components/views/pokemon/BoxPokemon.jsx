@@ -43,7 +43,7 @@ export default function BoxPokemon({
   const pokedexEntry = gamePokedex?.find(p => 
     p.number === pokemon.number || p.originalNumber === pokemon.number
   );
-  const displayNumber = pokedexEntry?.newNumber || pokemon.number;
+  const displayNumber = pokedexEntry?.newNumber || pokemon.originalNumber || pokemon.number;
 
   // ????됱긽 (theme.js ?ъ슜)
   const typeColors = getTypeColor(pokemon.type);

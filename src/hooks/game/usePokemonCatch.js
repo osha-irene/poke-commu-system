@@ -79,7 +79,7 @@ export const usePokemonCatch = (
       pokemonId: pokemonTemplate.id,
       name: pokemonTemplate.name,
       nameEn: pokemonTemplate.nameEn,
-      number: pokemonTemplate.number,
+      number: pokemonTemplate.originalNumber || pokemonTemplate.number,
       originalNumber: pokemonTemplate.originalNumber || pokemonTemplate.number,
       formVariant: pokemonTemplate.formVariant || null,
       type: pokemonTemplate.type,

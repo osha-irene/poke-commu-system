@@ -64,7 +64,7 @@ export default function InfoTab({
   const pokedexEntry = gamePokedex?.find(p => 
     p.number === pokemon.number || p.originalNumber === pokemon.number
   );
-  const displayNumber = pokedexEntry?.newNumber || pokemon.number;
+  const displayNumber = pokedexEntry?.newNumber || pokemon.originalNumber || pokemon.number;
   
   // 포켓볼 이미지
   const getBallImage = () => {

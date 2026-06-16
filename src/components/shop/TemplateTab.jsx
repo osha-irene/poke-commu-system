@@ -15,6 +15,7 @@ export default function TemplateTab({
   const [editMode, setEditMode] = useState(false);
   const [tempTemplate, setTempTemplate] = useState(null);
   const [itemSelectorDay, setItemSelectorDay] = useState(null);
+  const [nextWeekOnly, setNextWeekOnly] = useState(false);
 
   const startEdit = () => {
     setTempTemplate(JSON.parse(JSON.stringify(shopData.initialDailyItems || {})));
@@ -28,14 +29,30 @@ export default function TemplateTab({
 
   const saveTemplate = async () => {
     try {
-      const updatedShopData = {
-        ...shopData,
-        initialDailyItems: tempTemplate
-      };
+      const updatedShopData = { ...shopData, initialDailyItems: tempTemplate };
+
+      if (!nextWeekOnly) {
+        // 이번주에도 즉시 반영: dailyItems를 템플릿으로 덮어씀
+        const newDailyItems = {};
+        for (const [day, items] of Object.entries(tempTemplate)) {
+          newDailyItems[day] = items.map(i => ({ ...i }));
+        }
+        // 기존 요일 중 템플릿에 없는 요일은 빈 배열로
+        const allDays = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+        for (const day of allDays) {
+          if (!newDailyItems[day]) newDailyItems[day] = [];
+        }
+        updatedShopData.dailyItems = newDailyItems;
+      }
+
       await onUpdateShop(updatedShopData);
-      alert('요일별 아이템이 저장되었습니다!\n다음 주 월요일부터 이 재고로 리셋됩니다.');
+      alert(nextWeekOnly
+        ? '요일별 아이템이 저장되었습니다!\n다음 주 월요일부터 이 재고로 리셋됩니다.'
+        : '요일별 아이템이 저장되었습니다!\n이번 주 재고에도 즉시 반영되었습니다.'
+      );
       setEditMode(false);
       setTempTemplate(null);
+      setNextWeekOnly(false);
     } catch (error) {
       console.error('요일별 아이템 저장 실패:', error);
       alert('요일별 아이템 저장 중 오류가 발생했습니다.');
@@ -109,6 +126,15 @@ export default function TemplateTab({
               </button>
             ) : (
               <>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={nextWeekOnly}
+                    onChange={(e) => setNextWeekOnly(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="text-sm font-semibold text-gray-700">다음 주부터 적용</span>
+                </label>
                 <button
                   onClick={cancelEdit}
                   className="bg-gray-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-gray-600 transition-colors"
@@ -135,8 +161,8 @@ export default function TemplateTab({
             <div>
               <div className="font-bold text-gray-800 mb-1">편집 모드</div>
               <div className="text-sm text-gray-600">
-                여기서 수정한 내용은 다음 주 월요일부터 적용됩니다.<br/>
-                현재 진행 중인 이번 주 재고에는 영향을 주지 않습니다.
+                기본적으로 저장 시 이번 주 재고에도 즉시 반영됩니다.<br/>
+                "다음 주부터 적용"을 체크하면 이번 주는 유지하고 다음 주부터 변경됩니다.
               </div>
             </div>
           </div>

@@ -2,6 +2,15 @@ import evolutionsData from '../data/evolutions.json';
 import { getLearnsetTmMoves, getPokemonLearnset } from './pokemonLearnsets';
 import { getEVItemEffect, isEVItem } from './evItemUtils';
 
+export const FORM_CHANGE_ITEM_POKEMON = {
+  'rotom-catalog': [479],
+  'gracidea': [492],
+  'meteorite': [386], 'meteorite--2': [386], 'meteorite--3': [386], 'meteorite--4': [386],
+  'red-nectar': [741], 'yellow-nectar': [741], 'pink-nectar': [741], 'purple-nectar': [741],
+};
+
+const FORM_CHANGE_ITEM_NAMES = new Set(Object.keys(FORM_CHANGE_ITEM_POKEMON));
+
 export const normalizeItemNameForUse = (name) => (
   String(name || '')
     .toLowerCase()
@@ -151,6 +160,13 @@ export const canUseItemOnPokemonTarget = ({
   }
 
   const itemName = resolvedItemData?.nameEn || resolvedItemData?.name || item.nameEn || item.name;
+
+  if (FORM_CHANGE_ITEM_NAMES.has(itemName)) {
+    const eligibleNumbers = FORM_CHANGE_ITEM_POKEMON[itemName] || [];
+    const baseNum = Number(pokemon.originalNumber || pokemon.number);
+    return eligibleNumbers.includes(baseNum);
+  }
+
   if (isEVItem(itemName)) {
     return canUseEVItemOnPokemon(pokemon, itemName);
   }

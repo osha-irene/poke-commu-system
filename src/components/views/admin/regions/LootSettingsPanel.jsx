@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Gift, Package, Coins, Apple, TreePine, Search, TrendingUp, Save, Check } from 'lucide-react';
+import { Gift, Package, Coins, Apple, TreePine, Search, TrendingUp, Save, Check, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { getItemPocket, getItemIcon, CATEGORIES, filterItemsByPocket } from '../../../../utils/itemUtils';
 
 const createDefaultLootConfig = () => ({
@@ -85,6 +85,7 @@ export default function LootSettingsPanel({
   const [lootConfig, setLootConfig] = useState(normalizeConfig(region.lootConfig));
   const [itemSearch, setItemSearch] = useState('');
   const [itemCategory, setItemCategory] = useState('all');
+  const [showSelectedPool, setShowSelectedPool] = useState(false);
 
   useEffect(() => {
     setLootConfig(normalizeConfig(region.lootConfig));
@@ -295,6 +296,64 @@ export default function LootSettingsPanel({
           );
         })}
       </div>
+
+      {/* 선택된 아이템풀 확인 */}
+      {(poolCounts.normalItems + poolCounts.ingredients + poolCounts.berries) > 0 && (
+        <div className="border-2 border-indigo-200 rounded-lg bg-indigo-50 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setShowSelectedPool(v => !v)}
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-indigo-100 transition-colors"
+          >
+            <span className="font-bold text-indigo-800 text-sm flex items-center gap-2">
+              <Package size={16} />
+              선택된 아이템풀 확인
+              <span className="bg-indigo-600 text-white text-xs px-2 py-0.5 rounded-full">
+                {poolCounts.normalItems + poolCounts.ingredients + poolCounts.berries}개
+              </span>
+            </span>
+            {showSelectedPool ? <ChevronUp size={16} className="text-indigo-600" /> : <ChevronDown size={16} className="text-indigo-600" />}
+          </button>
+          {showSelectedPool && (
+            <div className="px-4 pb-4 space-y-3">
+              {[
+                { pool: 'itemPool', label: '일반 아이템', color: 'blue' },
+                { pool: 'ingredientPool', label: '식재료', color: 'red' },
+                { pool: 'berryPool', label: '나무열매', color: 'green' },
+              ].map(({ pool, label, color }) => {
+                const ids = lootConfig[pool] || [];
+                if (ids.length === 0) return null;
+                return (
+                  <div key={pool}>
+                    <div className={`text-xs font-bold text-${color}-700 mb-1`}>{label} ({ids.length})</div>
+                    <div className="flex flex-wrap gap-1">
+                      {ids.map(id => {
+                        const item = allItems.find(i => i.id === id);
+                        if (!item) return null;
+                        return (
+                          <div key={id} className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg px-2 py-1">
+                            {item.spriteUrl && (
+                              <img src={item.spriteUrl} alt={item.name} className="w-5 h-5 object-contain" style={{ imageRendering: 'pixelated' }} />
+                            )}
+                            <span className="text-xs text-gray-700">{item.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => toggleItem(id, item)}
+                              className="text-gray-400 hover:text-red-500 transition-colors"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="bg-gray-50 rounded-lg p-4 border-2 border-gray-200">
         <div className="flex items-center justify-between mb-3">

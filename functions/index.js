@@ -360,7 +360,7 @@ const isFromBotAccount = status => {
 };
 
 const getParticipantPokemon = member => {
-  const caught = Array.isArray(member?.caughtPokemon) ? member.caughtPokemon.filter(Boolean).slice(0, 6) : [];
+  const caught = Array.isArray(member?.caughtPokemon) ? member.caughtPokemon.slice(0, 6).filter(Boolean) : [];
   const partner = member?.partnerPokemon ? [member.partnerPokemon] : [];
   const byId = new Map();
 
@@ -524,7 +524,18 @@ const rollEgg = (memberPokemon, partnerPokemon, settings, trainer1Name, trainer2
         stepsRemaining: hatchSteps,
         hatchProgress: 0,
         receivedDate: new Date().toISOString(),
-        imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/egg.png'
+        imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/egg.png',
+        parentMoves: [
+          ...(pokemon1.moves || []),
+          ...(pokemon2.moves || [])
+        ].filter(Boolean),
+        parentHeldItems: [pokemon1.heldItem || null, pokemon2.heldItem || null],
+        parent1Number: pokemon1.number || null,
+        parent2Number: pokemon2.number || null,
+        parent1FavoriteFlavor: pokemon1.favoriteFlavor || null,
+        parent2FavoriteFlavor: pokemon2.favoriteFlavor || null,
+        parent1Nature: pokemon1.nature || null,
+        parent2Nature: pokemon2.nature || null
       };
 };
 
@@ -587,11 +598,20 @@ const applyRewardsToMember = async ({ sessionKey, session, settings, success }) 
   const friendshipBonus = stageSettings.friendshipBonus || 0;
   const expBonus = stageSettings.expBonus || 0;
   const friendshipResult = applyFriendship(memberData, participantKeys, friendshipBonus);
-  const highFriendship = getParticipantPokemon({
-    ...memberData,
-    caughtPokemon: friendshipResult.caughtPokemon,
-    partnerPokemon: friendshipResult.partnerPokemon
-  }).some(pokemon => Number(pokemon.friendship || 0) >= settings.minFriendshipForBonus);
+
+  // 세션에 기록된 엔트리 포켓몬만 대상 (파트너는 항상 포함)
+  const entryIdSet = new Set(
+    (session.entryPokemon || []).flatMap(e => [e.uniqueId, e.pokemonId]).filter(Boolean)
+  );
+  const isEntry = p => p && (entryIdSet.has(p.uniqueId) || entryIdSet.has(p.id) || entryIdSet.has(p.pokemonId));
+  const memberEntryPokemon = [
+    ...(friendshipResult.caughtPokemon || []).filter(isEntry),
+    ...(friendshipResult.partnerPokemon ? [friendshipResult.partnerPokemon] : [])
+  ];
+
+  const highFriendship = memberEntryPokemon.some(
+    pokemon => Number(pokemon.friendship || 0) >= settings.minFriendshipForBonus
+  );
 
   let inventory = memberData.inventory || [];
   let bonusItem = null;
@@ -601,15 +621,16 @@ const applyRewardsToMember = async ({ sessionKey, session, settings, success }) 
   }
 
   let egg = null;
-  if (success && session.isDuo && session.partnerId) {
+  if (success && session.isDuo && session.partnerId && !memberData.egg) {
     const partnerSnapshot = await db.ref(`members/${session.partnerId}`).once('value');
     if (partnerSnapshot.exists()) {
+      const partnerData = partnerSnapshot.val();
       egg = rollEgg(
         getParticipantPokemon(memberData),
-        getParticipantPokemon(partnerSnapshot.val()),
+        getParticipantPokemon(partnerData),
         settings,
         memberData.name,
-        partnerSnapshot.val().name
+        partnerData.name
       );
     }
   }

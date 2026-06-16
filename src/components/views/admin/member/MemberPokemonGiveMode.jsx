@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { POKEBALL_LIST } from '../../../../styles/theme';
 import { getPokemonGenderOptions } from '../../../../utils/pokemonGender';
+import { getGenderedSpriteUrl } from '../../../../utils/pokemonImageUtils';
 
 export default function MemberPokemonGiveMode({
   allPokemonMaster,
@@ -46,7 +47,11 @@ export default function MemberPokemonGiveMode({
         {giveData.selectedPokemon ? (
           <>
             <img
-              src={giveData.selectedPokemon.sprite || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${giveData.selectedPokemon.number}.png`}
+              src={
+                getGenderedSpriteUrl({ gender: giveData.gender }, giveData.selectedPokemon) ||
+                giveData.selectedPokemon.spriteUrl ||
+                `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${giveData.selectedPokemon.number}.png`
+              }
               alt={giveData.selectedPokemon.name}
               className="h-12 w-12"
               style={{ imageRendering: 'pixelated' }}

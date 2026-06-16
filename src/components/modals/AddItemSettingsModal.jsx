@@ -21,8 +21,7 @@ export default function AddItemSettingsModal({
   onClose, 
   onAdd
 }) {
-  const [itemType, setItemType] = useState('daily');
-  const [selectedDay, setSelectedDay] = useState('monday');
+  const [itemType] = useState('permanent');
   const [price, setPrice] = useState(0);
   const [stock, setStock] = useState(99);
 
@@ -40,8 +39,7 @@ export default function AddItemSettingsModal({
       price,
       stock,
       isPersistent: false,
-      itemType,
-      selectedDay
+      itemType: 'permanent',
     });
   };
 
@@ -76,51 +74,6 @@ export default function AddItemSettingsModal({
                 <p className="text-sm text-gray-600 mt-1">{selectedItem.effect || selectedItem.description}</p>
               </div>
             </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                아이템 타입
-              </label>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setItemType('daily')}
-                  className={`flex-1 py-2 rounded-lg font-semibold transition-colors ${
-                    itemType === 'daily' 
-                      ? 'bg-indigo-600 text-white' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  요일별
-                </button>
-                <button
-                  onClick={() => setItemType('permanent')}
-                  className={`flex-1 py-2 rounded-lg font-semibold transition-colors ${
-                    itemType === 'permanent' 
-                      ? 'bg-indigo-600 text-white' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  상시 판매
-                </button>
-              </div>
-            </div>
-
-            {itemType === 'daily' && (
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  요일 선택
-                </label>
-                <select 
-                  value={selectedDay} 
-                  onChange={(e) => setSelectedDay(e.target.value)} 
-                  className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                >
-                  {DAYS.map(day => (
-                    <option key={day.id} value={day.id}>{day.name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">

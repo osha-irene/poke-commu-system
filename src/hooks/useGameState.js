@@ -213,7 +213,9 @@ export default function useGameState() {
     pokemonLearnsets,
     movesHook,
     evolutionHook,
-    pokemonManagement.useRareCandy
+    pokemonManagement.useRareCandy,
+    pokemonManagement.getPokemonFormCandidates,
+    pokemonManagement.changePokemonForm
   );
 
   // 매일 자정 산책 횟수 리셋

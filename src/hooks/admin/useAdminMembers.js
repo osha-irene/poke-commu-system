@@ -10,6 +10,7 @@ import { getBaseStatPatch } from '../../utils/pokemonBaseStats';
 import { getAbilityEnglishName } from '../../utils/abilityUtils';
 import { normalizePokemonGender } from '../../utils/pokemonGender';
 import { DEFAULT_IVS, generateRandomIVs, normalizeIVs } from '../../utils/pokemonIndividualValues';
+import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
 import movesData from '../../data/moves.json';
 import evolutionsData from '../../data/evolutions.json';
 
@@ -161,29 +162,93 @@ export const useAdminMembers = (
     const inheritedBall = getRandomParentBall(egg);
     const learnset = movesData.pokemonLearnsets?.[pokemonTemplate.number] ||
       movesData.pokemonLearnsets?.[pokemonTemplate.originalNumber] ||
-      [];
-    const startingMoves = Array.isArray(learnset)
-      ? learnset
-          .filter(entry => Number(entry.level || 0) <= 1)
-          .sort((a, b) => Number(b.level || 0) - Number(a.level || 0))
-          .slice(0, 4)
-          .map(entry => {
-            const move = (movesData.moves || []).find(item => item.id === entry.moveId);
-            return move ? {
-              moveId: move.id,
-              currentPp: move.pp,
-              learnedAt: 1
-            } : null;
-          })
-          .filter(Boolean)
-      : [];
+      {};
+    const allMovesArr = movesData.moves || [];
+
+    // 아이템 판별
+    const EVERSTONE = ['변함없는돌', 'everstone'];
+    const DESTINY_KNOT = ['빨간실', 'destiny-knot'];
+    const MIRROR_HERB = ['흉내허브', 'mirror-herb'];
+    const LIGHT_BALL = ['전기구슬', 'light-ball'];
+    const matchItem = (item, list) => item && list.some(id => String(item).toLowerCase() === id.toLowerCase());
+
+    const parentHeldItems = egg.parentHeldItems || [null, null];
+    const everstoneIndex = parentHeldItems.findIndex(i => matchItem(i, EVERSTONE));
+    const hasDestinyKnot = parentHeldItems.some(i => matchItem(i, DESTINY_KNOT));
+    const mirrorHerbHolder = parentHeldItems.findIndex(i => matchItem(i, MIRROR_HERB));
+
+    // 변함없는돌: 좋아하는 맛 / 성격 유전
+    const inheritedFlavor = everstoneIndex >= 0
+      ? (everstoneIndex === 0 ? egg.parent1FavoriteFlavor : egg.parent2FavoriteFlavor) || null
+      : null;
+    const inheritedNature = everstoneIndex >= 0
+      ? (everstoneIndex === 0 ? egg.parent1Nature : egg.parent2Nature) || null
+      : null;
+
+    // 빨간실: 친밀도 보너스
+    const startingFriendship = hasDestinyKnot ? 150 : 120;
+
+    // 흉내허브: 상대 부모의 레벨업+TM 레퍼토리까지 유전기 후보 확장
+    const getExpandedParentMoves = (baseMoves) => {
+      if (mirrorHerbHolder === -1) return baseMoves;
+      const partnerNumber = mirrorHerbHolder === 0 ? egg.parent2Number : egg.parent1Number;
+      if (!partnerNumber) return baseMoves;
+      const partnerLearnset = movesData.pokemonLearnsets?.[partnerNumber] || {};
+      const partnerLevelIds = (partnerLearnset.levelUpMoves || []).map(e => e.moveId);
+      const partnerTmIds = partnerLearnset.tmMoves || [];
+      const existingIds = new Set(baseMoves.map(m => m.moveId));
+      const extra = [...partnerLevelIds, ...partnerTmIds]
+        .filter(moveId => !existingIds.has(moveId))
+        .map(moveId => {
+          const move = allMovesArr.find(m => m.id === moveId);
+          return move ? { moveId: move.id, currentPp: move.pp, learnedAt: 1 } : null;
+        })
+        .filter(Boolean);
+      return [...baseMoves, ...extra];
+    };
+
+    const levelUpMoves = learnset.levelUpMoves || (Array.isArray(learnset) ? learnset : []);
+    const startingMoves = levelUpMoves
+      .filter(entry => Number(entry.level || 0) <= 1)
+      .sort((a, b) => Number(b.level || 0) - Number(a.level || 0))
+      .slice(0, 4)
+      .map(entry => {
+        const move = allMovesArr.find(item => item.id === entry.moveId);
+        return move ? { moveId: move.id, currentPp: move.pp, learnedAt: 1 } : null;
+      })
+      .filter(Boolean);
+
+    const expandedParentMoves = getExpandedParentMoves(egg.parentMoves || []);
+    const babyEggMoveIds = new Set(learnset.eggMoves || []);
+    const parentMoveIds = new Set(expandedParentMoves.map(m => m.moveId).filter(Boolean));
+    const inheritedEggMoves = [...babyEggMoveIds]
+      .filter(moveId => parentMoveIds.has(moveId))
+      .map(moveId => {
+        const move = allMovesArr.find(item => item.id === moveId);
+        return move ? { moveId: move.id, currentPp: move.pp, learnedAt: 1 } : null;
+      })
+      .filter(Boolean);
+
+    const usedIds = new Set(inheritedEggMoves.map(m => m.moveId));
+    let finalMoves = [
+      ...inheritedEggMoves,
+      ...startingMoves.filter(m => !usedIds.has(m.moveId))
+    ].slice(0, 4);
+
+    // 전기구슬: 피츄(172) 부화 시 볼트태클 추가
+    if (pokemonTemplate.number === 172 && parentHeldItems.some(i => matchItem(i, LIGHT_BALL))) {
+      const voltTackle = allMovesArr.find(m => m.id === 'volt-tackle');
+      if (voltTackle && !finalMoves.find(m => m.moveId === 'volt-tackle')) {
+        finalMoves = [{ moveId: voltTackle.id, currentPp: voltTackle.pp, learnedAt: 1 }, ...finalMoves].slice(0, 4);
+      }
+    }
 
     return {
       uniqueId: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
       pokemonId: pokemonTemplate.id,
       name: pokemonTemplate.name,
       nameEn: pokemonTemplate.nameEn,
-      number: pokemonTemplate.number,
+      number: pokemonTemplate.originalNumber || pokemonTemplate.number,
       originalNumber: pokemonTemplate.originalNumber || pokemonTemplate.number,
       regionalForm: pokemonTemplate.regionalForm || null,
       formVariant: pokemonTemplate.formVariant || null,
@@ -194,16 +259,16 @@ export const useAdminMembers = (
       hp: pokemonTemplate.baseHp || pokemonTemplate.hp || 10,
       maxHp: pokemonTemplate.baseHp || pokemonTemplate.hp || 10,
       exp: 0,
-      friendship: 120,
+      friendship: startingFriendship,
       heldItem: null,
-      moves: startingMoves,
+      moves: (egg.moves && egg.moves.length > 0) ? egg.moves : finalMoves,
       caughtWithBall: inheritedBall.caughtWithBall,
       ballImageUrl: inheritedBall.ballImageUrl,
       isPartner: false,
       isShiny: Math.random() < 0.001,
       gender: Math.random() < 0.5 ? 'male' : 'female',
       ability: pokemonTemplate.abilities?.[0] || '없음',
-      ivs: generateRandomIVs(),
+      ivs: { ...DEFAULT_IVS },
       condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
       effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
       imageUrl: pokemonTemplate.imageUrl,
@@ -221,7 +286,8 @@ export const useAdminMembers = (
         const ranks = ['XXXS','XXS','XS','M','M','M','M','XL','XXL','XXXL'];
         return ranks[Math.floor(Math.random() * ranks.length)];
       })(),
-      favoriteFlavor: ['매운맛','신맛','단맛','쓴맛','짠맛'][Math.floor(Math.random() * 5)]
+      ...(inheritedNature ? { nature: inheritedNature } : {}),
+      favoriteFlavor: inheritedFlavor || ['매운맛','신맛','단맛','쓴맛','짠맛'][Math.floor(Math.random() * 5)]
     };
   };
 
@@ -593,10 +659,10 @@ export const useAdminMembers = (
       isAdminGiven: true,
       favoriteFlavor,
       pokemonId: pokemonTemplate.id,
-      name: pokemonTemplate.name,
+      name: getPokemonDisplayParts(pokemonTemplate).name || pokemonTemplate.name,
       nameEn: pokemonTemplate.nameEn,
       nickname,
-      number: pokemonTemplate.number,
+      number: pokemonTemplate.originalNumber || pokemonTemplate.number,
       originalNumber: pokemonTemplate.originalNumber || pokemonTemplate.number,
       formVariant: pokemonTemplate.formVariant || null,
       type: pokemonTemplate.type,

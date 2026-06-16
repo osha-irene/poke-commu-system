@@ -128,10 +128,10 @@ export function PartnerSlot({
     );
   }
 
-  const pokedexEntry = gamePokedex?.find(p => 
+  const pokedexEntry = gamePokedex?.find(p =>
     p.number === pokemon.number || p.originalNumber === pokemon.number
   );
-  const displayNumber = pokedexEntry?.newNumber || pokemon.number;
+  const displayNumber = pokedexEntry?.newNumber || pokemon.originalNumber || pokemon.number;
 
   const typeColors = getTypeColor(pokemon.type);
   const type2Colors = pokemon.type2 ? getTypeColor(pokemon.type2) : null;
@@ -304,12 +304,12 @@ export default function PartySlot({
     );
   }
 
-  const pokedexEntry = gamePokedex?.find(p => 
+  const pokedexEntry = gamePokedex?.find(p =>
     p.number === pokemon.number || p.originalNumber === pokemon.number
   );
-  const displayNumber = pokedexEntry?.newNumber || pokemon.number;
+  const displayNumber = pokedexEntry?.newNumber || pokemon.originalNumber || pokemon.number;
 
-  
+
   const typeColors = getTypeColor(pokemon.type);
   const type2Colors = pokemon.type2 ? getTypeColor(pokemon.type2) : null;
   

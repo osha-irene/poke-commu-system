@@ -4,6 +4,24 @@ import { isEVItem, applyEVItem } from '../../utils/evItemUtils';
 import { getLearnsetTmMoves, getPokemonLearnset } from '../../utils/pokemonLearnsets';
 import { isRareCandyItem, resolveItemData } from '../../utils/itemUsageRules';
 
+// 아이템 nameEn → 변경 가능한 포켓몬 originalNumber 목록
+const FORM_CHANGE_ITEMS = {
+  'rotom-catalog': [479],
+  'gracidea': [492],
+  'meteorite': [386],
+  'meteorite--2': [386],
+  'meteorite--3': [386],
+  'meteorite--4': [386],
+};
+
+// 꿀 아이템 → 오리코리오 특정 폼 nameEn 직접 매핑
+const NECTAR_FORM_MAP = {
+  'red-nectar': 'oricorio-baile',
+  'yellow-nectar': 'oricorio-pom-pom',
+  'pink-nectar': 'oricorio-pau',
+  'purple-nectar': 'oricorio-sensu',
+};
+
 export const useItemEffects = (
   currentUser,
   updateCurrentUser,
@@ -12,14 +30,16 @@ export const useItemEffects = (
   pokemonLearnsets,
   useMoves,
   useEvolution,
-  handleRareCandyWithEvolution
+  handleRareCandyWithEvolution,
+  getPokemonFormCandidates,
+  changePokemonForm
 ) => {
 
   const movesHook = useMoves;
   const evolutionHook = useEvolution;
   const itemUseLockRef = useRef(null);
 
-  const useItemOnPokemon = async (item, pokemon) => {
+  const useItemOnPokemon = async (item, pokemon, selectedFormNameEn = null) => {
     if (!currentUser || !pokemon) return;
 
     const itemKey = item?.itemId || item?.id || item?.name || 'unknown-item';
@@ -276,6 +296,51 @@ export const useItemEffects = (
       const success = await handleRareCandyWithEvolution(pokemon.uniqueId);
       if (success) {
         consumeItem(item);
+      }
+      return;
+    }
+
+    // 폼체인지 아이템 (꿀 포함)
+    const nectarFormNameEn = NECTAR_FORM_MAP[itemData?.nameEn];
+    const formChangeNumbers = FORM_CHANGE_ITEMS[itemData?.nameEn];
+    const isNectar = Boolean(nectarFormNameEn);
+    const isFormChangeItem = isNectar || Boolean(formChangeNumbers);
+
+    if (isFormChangeItem && typeof changePokemonForm === 'function') {
+      // UI에서 이미 폼이 선택된 경우 (selectedFormNameEn 전달됨)
+      const targetFormNameEn = selectedFormNameEn || nectarFormNameEn;
+      if (targetFormNameEn) {
+        const success = changePokemonForm(pokemon.uniqueId, targetFormNameEn);
+        if (success) {
+          if (isNectar) consumeItem(item);
+        }
+        return;
+      }
+      // fallback: 선택 UI 없이 호출된 경우 (기존 prompt 방식)
+      if (formChangeNumbers && typeof getPokemonFormCandidates === 'function') {
+        const baseNumber = Number(pokemon.originalNumber || pokemon.number);
+        if (!formChangeNumbers.includes(baseNumber)) {
+          alert('이 아이템은 이 포켓몬에게 사용할 수 없습니다!');
+          releaseItemUseLock();
+          return;
+        }
+        const forms = getPokemonFormCandidates(pokemon);
+        const otherForms = forms.filter(f => f.nameEn !== pokemon.nameEn);
+        if (otherForms.length === 0) {
+          alert('변경 가능한 폼이 없습니다.');
+          releaseItemUseLock();
+          return;
+        }
+        const formList = otherForms.map((f, i) => `${i + 1}. ${f.name || f.nameEn}`).join('\n');
+        const choice = window.prompt(`${pokemon.nickname || pokemon.name}의 폼을 선택하세요:\n\n${formList}\n\n번호를 입력하세요 (취소: 0)`);
+        if (!choice || choice === '0') { releaseItemUseLock(); return; }
+        const idx = parseInt(choice) - 1;
+        if (isNaN(idx) || idx < 0 || idx >= otherForms.length) {
+          alert('올바른 번호를 입력해주세요.');
+          releaseItemUseLock();
+          return;
+        }
+        changePokemonForm(pokemon.uniqueId, otherForms[idx].id || otherForms[idx].nameEn || otherForms[idx].name);
       }
       return;
     }

@@ -1,7 +1,7 @@
 import useMediaQuery from '../../hooks/useMediaQuery';
 import MobileItemsView from './_mobile/MobileItemsView';
 import { getItemPocket, canUseItem, CATEGORIES } from '../../utils/itemUtils';
-import { canUseItemOnPokemonTarget } from '../../utils/itemUsageRules';
+import { canUseItemOnPokemonTarget, FORM_CHANGE_ITEM_POKEMON } from '../../utils/itemUsageRules';
 import { Package, Circle, Heart, Dumbbell, Apple, Disc, Backpack, Sparkles, Sword, Key, Search, X,Trash2, ShoppingCart } from 'lucide-react'; 
 import React, { useState } from 'react';
 
@@ -18,11 +18,19 @@ function DesktopItemsView() {
     sellItem: onSellItem,
     useItemOnPokemon: onUseItem,
     currentUser: trainer,
+    getPokemonFormCandidates,
   } = useGame();
-  
+
   const isSuperAdmin = trainer?.isSuperAdmin || false;
   const onTrashItem = null;
-  
+
+  const NECTAR_FORM_MAP = {
+    'red-nectar': 'oricorio-baile',
+    'yellow-nectar': 'oricorio-pom-pom',
+    'pink-nectar': 'oricorio-pau',
+    'purple-nectar': 'oricorio-sensu',
+  };
+
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('category');
@@ -30,6 +38,7 @@ function DesktopItemsView() {
   const [actionMode, setActionMode] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedPokemon, setSelectedPokemon] = useState(null);
+  const [selectedForm, setSelectedForm] = useState(null);
 
   // items.json에서 상세 정보 가져오기 (완전 수정)
   const getItemDetails = (item) => {
@@ -199,15 +208,67 @@ const categories = CATEGORIES.map(cat => {
 
   const handleItemClick = (item) => {
     const details = getItemDetails(item);
-    
+
     if (!details.canUse) {
       alert('이 아이템은 사용할 수 없습니다.');
       return;
     }
-    
+
+    if (isFormChangeItem(item)) {
+      const itemNameEn = getItemNameEn(item);
+      const eligibleNumbers = FORM_CHANGE_ITEM_POKEMON[itemNameEn] || [];
+      const eligible = caughtPokemon.filter(p =>
+        p && p !== 'null' && p.uniqueId &&
+        eligibleNumbers.includes(Number(p.originalNumber || p.number))
+      );
+      if (eligible.length === 0) {
+        alert('이 아이템을 사용할 수 있는 포켓몬이 없습니다.');
+        return;
+      }
+      setSelectedItem(item);
+      setActionMode('use');
+      setSelectedForm(null);
+      // 대상 1마리면 바로 폼 선택 단계
+      if (eligible.length === 1) {
+        setSelectedPokemon(eligible[0]);
+      } else {
+        setSelectedPokemon(null);
+      }
+      return;
+    }
+
     setSelectedItem(item);
     setActionMode('use');
     setQuantity(1);
+  };
+
+  const closeModal = () => {
+    setSelectedItem(null);
+    setActionMode(null);
+    setQuantity(1);
+    setSelectedPokemon(null);
+    setSelectedForm(null);
+  };
+
+  const getItemNameEn = (item) => {
+    if (!item) return '';
+    const details = getItemDetails(item);
+    return details.itemData?.nameEn || item.nameEn || item.name || '';
+  };
+
+  const isFormChangeItem = (item) => Boolean(FORM_CHANGE_ITEM_POKEMON[getItemNameEn(item)]);
+
+  const getAvailableForms = (item, pokemon) => {
+    if (!getPokemonFormCandidates || !pokemon) return [];
+    const itemNameEn = getItemNameEn(item);
+    const nectarForm = NECTAR_FORM_MAP[itemNameEn];
+    if (nectarForm) {
+      // 꿀: 현재 폼 제외한 특정 폼만
+      const forms = getPokemonFormCandidates(pokemon);
+      return forms.filter(f => f.nameEn !== pokemon.nameEn);
+    }
+    const forms = getPokemonFormCandidates(pokemon);
+    return forms.filter(f => f.nameEn !== pokemon.nameEn);
   };
 
   const handleUse = () => {
@@ -215,8 +276,26 @@ const categories = CATEGORIES.map(cat => {
       alert('포켓몬을 선택해주세요!');
       return;
     }
-    
+
     const details = getItemDetails(selectedItem);
+    const itemNameEn = getItemNameEn(selectedItem);
+    const isFormItem = isFormChangeItem(selectedItem);
+
+    // 폼체인지 아이템: 폼 선택 단계 필요
+    if (isFormItem) {
+      if (!selectedForm) {
+        alert('폼을 선택해주세요!');
+        return;
+      }
+      const nectarForm = NECTAR_FORM_MAP[itemNameEn];
+      const targetFormNameEn = nectarForm || selectedForm.nameEn || selectedForm.id || selectedForm.name;
+      if (onUseItem) {
+        onUseItem(selectedItem, selectedPokemon, targetFormNameEn);
+        closeModal();
+      }
+      return;
+    }
+
     if (!canUseItemOnPokemonTarget({
       item: selectedItem,
       itemData: details.itemData,
@@ -229,10 +308,7 @@ const categories = CATEGORIES.map(cat => {
 
     if (onUseItem && selectedItem) {
       onUseItem(selectedItem, selectedPokemon);
-      setSelectedItem(null);
-      setActionMode(null);
-      setQuantity(1);
-      setSelectedPokemon(null);
+      closeModal();
     } else {
       alert('아이템 사용 기능이 연결되지 않았습니다.');
     }
@@ -482,13 +558,9 @@ const categories = CATEGORIES.map(cat => {
       </div>
 
       {selectedItem && actionMode && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-          onClick={() => {
-            setSelectedItem(null);
-            setActionMode(null);
-            setQuantity(1);
-          }}
+          onClick={closeModal}
         >
           <div 
             className="bg-white rounded-lg p-6 max-w-md w-full"
@@ -518,80 +590,248 @@ const categories = CATEGORIES.map(cat => {
 
                   {isUsing ? (
                     <>
-                      <p className="text-gray-700 mb-3">아이템을 사용할 포켓몬을 선택하세요</p>
-                      
-                      <div className="max-h-96 overflow-y-auto mb-4 border border-gray-200 rounded-lg p-3">
-                        {caughtPokemon.length === 0 ? (
-                          <div className="text-center py-8 text-gray-400">
-                            보유한 포켓몬이 없습니다
-                          </div>
-                        ) : (
-                          <div className="grid grid-cols-3 gap-2">
-                            {caughtPokemon.filter(p => p && p !== 'null' && p.uniqueId).map((pokemon) => {
-                              const canUseTarget = canUseItemOnPokemonTarget({
-                                item: selectedItem,
-                                itemData: details.itemData,
-                                pokemon,
-                                allMoves,
-                                pokemonLearnsets
-                              });
+                      {(() => {
+                        const itemNameEn = getItemNameEn(selectedItem);
+                        const isNectar = Boolean(NECTAR_FORM_MAP[itemNameEn]);
+                        const eligibleNumbers = FORM_CHANGE_ITEM_POKEMON[itemNameEn] || [];
+                        const eligible = caughtPokemon.filter(p =>
+                          p && p !== 'null' && p.uniqueId &&
+                          eligibleNumbers.includes(Number(p.originalNumber || p.number))
+                        );
 
-                              return (
-                              <button
-                                key={pokemon.uniqueId}
-                                onClick={() => {
-                                  if (canUseTarget) setSelectedPokemon(pokemon);
-                                }}
-                                disabled={!canUseTarget}
-                                className={`item-use-pokemon-card flex flex-col items-center p-3 rounded-lg transition-all ${
-                                  selectedPokemon?.uniqueId === pokemon.uniqueId
-                                    ? 'is-selected'
-                                    : ''
-                                } ${!canUseTarget ? 'is-disabled' : ''}`}
-                              >
+                        // 꿀: 포켓몬 선택됐으면 확인 UI
+                        if (isNectar && selectedPokemon) {
+                          const targetFormNameEn = NECTAR_FORM_MAP[itemNameEn];
+                          const allForms = getPokemonFormCandidates ? getPokemonFormCandidates(selectedPokemon) : [];
+                          const targetForm = allForms.find(f => f.nameEn === targetFormNameEn);
+                          const formLabel = targetForm?.name || targetFormNameEn;
+                          return (
+                            <>
+                              {eligible.length > 1 && (
+                                <button
+                                  onClick={() => setSelectedPokemon(null)}
+                                  className="text-sm text-gray-500 hover:text-gray-700 mb-3 flex items-center gap-1"
+                                >
+                                  ← 포켓몬 다시 선택
+                                </button>
+                              )}
+                              <div className="flex flex-col items-center gap-3 py-4">
                                 <img
-                                  src={pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`}
-                                  alt={pokemon.name}
-                                  className="w-16 h-16 mb-1"
+                                  src={selectedPokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${selectedPokemon.number}.png`}
+                                  alt={selectedPokemon.name}
+                                  className="w-20 h-20"
                                   style={{ imageRendering: 'pixelated' }}
                                 />
-                                <div className="text-xs font-bold text-gray-800 truncate w-full text-center">
-                                  {pokemon.nickname || pokemon.name}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  Lv.{pokemon.level}
-                                </div>
-                              </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
+                                <p className="text-gray-800 font-semibold text-center">
+                                  {selectedPokemon.nickname || selectedPokemon.name}을(를)<br />
+                                  <span className="text-teal-700">{formLabel}</span>으로 바꾸겠습니까?
+                                </p>
+                              </div>
+                              <div className="flex gap-2 mt-2">
+                                <button onClick={closeModal} className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+                                  취소
+                                </button>
+                                <button
+                                  onClick={handleUse}
+                                  className="flex-1 bg-teal-600 text-white py-3 rounded-lg font-semibold hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
+                                >
+                                  <Sparkles size={18} />
+                                  변경
+                                </button>
+                              </div>
+                            </>
+                          );
+                        }
 
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedItem(null);
-                            setActionMode(null);
-                            setSelectedPokemon(null);
-                          }}
-                          className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
-                        >
-                          취소
-                        </button>
-                        <button
-                          onClick={handleUse}
-                          disabled={!selectedPokemon}
-                          className={`flex-1 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 ${
-                            selectedPokemon
-                              ? 'bg-purple-600 text-white hover:bg-purple-700'
-                              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          }`}
-                        >
-                          <Sparkles size={18} />
-                          사용하기
-                        </button>
-                      </div>
+                        // 꿀: 춤추새 여러 마리면 선택
+                        if (isNectar && !selectedPokemon) {
+                          return (
+                            <>
+                              <p className="text-gray-700 mb-3">춤추새를 선택하세요</p>
+                              <div className="max-h-96 overflow-y-auto mb-4 border border-gray-200 rounded-lg p-3">
+                                <div className="grid grid-cols-3 gap-2">
+                                  {eligible.map((pokemon) => (
+                                    <button
+                                      key={pokemon.uniqueId}
+                                      onClick={() => setSelectedPokemon(pokemon)}
+                                      className="item-use-pokemon-card flex flex-col items-center p-3 rounded-lg transition-all"
+                                    >
+                                      <img
+                                        src={pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`}
+                                        alt={pokemon.name}
+                                        className="w-16 h-16 mb-1"
+                                        style={{ imageRendering: 'pixelated' }}
+                                      />
+                                      <div className="text-xs font-bold text-gray-800 truncate w-full text-center">
+                                        {pokemon.nickname || pokemon.name}
+                                      </div>
+                                      <div className="text-xs text-gray-500">Lv.{pokemon.level}</div>
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                              <button onClick={closeModal} className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+                                취소
+                              </button>
+                            </>
+                          );
+                        }
+
+                        // 일반 폼체인지 (로토무카탈로그 등): 포켓몬 선택 후 폼 그리드
+                        if (selectedPokemon && isFormChangeItem(selectedItem)) {
+                          const availableForms = getAvailableForms(selectedItem, selectedPokemon);
+                          return (
+                            <>
+                              {eligible.length > 1 && (
+                                <button
+                                  onClick={() => { setSelectedPokemon(null); setSelectedForm(null); }}
+                                  className="text-sm text-gray-500 hover:text-gray-700 mb-3 flex items-center gap-1"
+                                >
+                                  ← 포켓몬 다시 선택
+                                </button>
+                              )}
+                              <p className="text-gray-700 mb-2 font-semibold">
+                                {selectedPokemon.nickname || selectedPokemon.name}의 폼을 선택하세요
+                              </p>
+                              {availableForms.length === 0 ? (
+                                <div className="text-center py-6 text-gray-400 border border-gray-200 rounded-lg mb-4">
+                                  변경 가능한 폼이 없습니다
+                                </div>
+                              ) : (
+                                <div className="grid grid-cols-3 gap-2 mb-4 max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3">
+                                  {availableForms.map((form) => (
+                                    <button
+                                      key={form.id || form.nameEn}
+                                      onClick={() => setSelectedForm(form)}
+                                      className={`item-use-pokemon-card flex flex-col items-center p-3 rounded-lg transition-all ${
+                                        selectedForm?.nameEn === form.nameEn ? 'is-selected' : ''
+                                      }`}
+                                    >
+                                      <img
+                                        src={form.spriteUrl || form.imageUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${form.number}.png`}
+                                        alt={form.name}
+                                        className="w-14 h-14 mb-1"
+                                        style={{ imageRendering: 'pixelated' }}
+                                      />
+                                      <div className="text-xs font-bold text-gray-800 text-center leading-tight">{form.name || form.nameEn}</div>
+                                      <div className="text-xs text-gray-500 text-center">{form.type}{form.type2 ? `/${form.type2}` : ''}</div>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                              <div className="flex gap-2">
+                                <button onClick={closeModal} className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+                                  취소
+                                </button>
+                                <button
+                                  onClick={handleUse}
+                                  disabled={!selectedForm}
+                                  className={`flex-1 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 ${
+                                    selectedForm ? 'bg-teal-600 text-white hover:bg-teal-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                  }`}
+                                >
+                                  <Sparkles size={18} />
+                                  폼 변경
+                                </button>
+                              </div>
+                            </>
+                          );
+                        }
+
+                        // 일반 폼체인지: 포켓몬 여러 마리 선택
+                        if (isFormChangeItem(selectedItem)) {
+                          return (
+                            <>
+                              <p className="text-gray-700 mb-3">포켓몬을 선택하세요</p>
+                              <div className="max-h-96 overflow-y-auto mb-4 border border-gray-200 rounded-lg p-3">
+                                <div className="grid grid-cols-3 gap-2">
+                                  {eligible.map((pokemon) => (
+                                    <button
+                                      key={pokemon.uniqueId}
+                                      onClick={() => { setSelectedPokemon(pokemon); setSelectedForm(null); }}
+                                      className={`item-use-pokemon-card flex flex-col items-center p-3 rounded-lg transition-all ${
+                                        selectedPokemon?.uniqueId === pokemon.uniqueId ? 'is-selected' : ''
+                                      }`}
+                                    >
+                                      <img
+                                        src={pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`}
+                                        alt={pokemon.name}
+                                        className="w-16 h-16 mb-1"
+                                        style={{ imageRendering: 'pixelated' }}
+                                      />
+                                      <div className="text-xs font-bold text-gray-800 truncate w-full text-center">
+                                        {pokemon.nickname || pokemon.name}
+                                      </div>
+                                      <div className="text-xs text-gray-500">Lv.{pokemon.level}</div>
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                              <button onClick={closeModal} className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+                                취소
+                              </button>
+                            </>
+                          );
+                        }
+
+                        // 일반 아이템: 전체 포켓몬 선택
+                        return (
+                          <>
+                            <p className="text-gray-700 mb-3">아이템을 사용할 포켓몬을 선택하세요</p>
+                            <div className="max-h-96 overflow-y-auto mb-4 border border-gray-200 rounded-lg p-3">
+                              {caughtPokemon.length === 0 ? (
+                                <div className="text-center py-8 text-gray-400">보유한 포켓몬이 없습니다</div>
+                              ) : (
+                                <div className="grid grid-cols-3 gap-2">
+                                  {caughtPokemon.filter(p => p && p !== 'null' && p.uniqueId).map((pokemon) => {
+                                    const canUseTarget = canUseItemOnPokemonTarget({
+                                      item: selectedItem,
+                                      itemData: details.itemData,
+                                      pokemon,
+                                      allMoves,
+                                      pokemonLearnsets
+                                    });
+                                    return (
+                                      <button
+                                        key={pokemon.uniqueId}
+                                        onClick={() => { if (canUseTarget) setSelectedPokemon(pokemon); }}
+                                        disabled={!canUseTarget}
+                                        className={`item-use-pokemon-card flex flex-col items-center p-3 rounded-lg transition-all ${
+                                          selectedPokemon?.uniqueId === pokemon.uniqueId ? 'is-selected' : ''
+                                        } ${!canUseTarget ? 'is-disabled' : ''}`}
+                                      >
+                                        <img
+                                          src={pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`}
+                                          alt={pokemon.name}
+                                          className="w-16 h-16 mb-1"
+                                          style={{ imageRendering: 'pixelated' }}
+                                        />
+                                        <div className="text-xs font-bold text-gray-800 truncate w-full text-center">{pokemon.nickname || pokemon.name}</div>
+                                        <div className="text-xs text-gray-500">Lv.{pokemon.level}</div>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex gap-2">
+                              <button onClick={closeModal} className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+                                취소
+                              </button>
+                              <button
+                                onClick={handleUse}
+                                disabled={!selectedPokemon}
+                                className={`flex-1 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 ${
+                                  selectedPokemon ? 'bg-purple-600 text-white hover:bg-purple-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                }`}
+                              >
+                                <Sparkles size={18} />
+                                사용하기
+                              </button>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </>
                   ) : (
                     <>

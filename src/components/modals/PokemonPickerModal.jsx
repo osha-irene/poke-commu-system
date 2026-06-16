@@ -60,9 +60,10 @@ export default function PokemonPickerModal({ allPokemon = [], onSelect, onClose 
   const [showRegionalForms, setShowRegionalForms] = useState(true);
 
   const filtered = useMemo(() => {
+    const effectiveGenFilter = searchQuery ? 'all' : generationFilter;
     return allPokemon.filter(p => {
       if (!showRegionalForms && p.isRegionalForm) return false;
-      if (generationFilter !== 'all' && parseInt(p.generation) !== parseInt(generationFilter)) return false;
+      if (effectiveGenFilter !== 'all' && parseInt(p.generation) !== parseInt(effectiveGenFilter)) return false;
       if (typeFilter !== 'all' && p.type !== typeFilter && p.type2 !== typeFilter) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();

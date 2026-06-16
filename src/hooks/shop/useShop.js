@@ -516,7 +516,38 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
         ];
     
     const newMoney = currentUser.money - totalCost;
-    
+
+    // 몬스터볼 10개당 프리미어볼 1개 증정
+    const isPokeBall = itemData.nameEn === 'poke-ball' || itemData.name === '몬스터볼';
+    const premierBallCount = isPokeBall ? Math.floor(quantity / 10) : 0;
+    let inventoryWithPremier = newInventory;
+    if (premierBallCount > 0) {
+      const premierData = allItems.find(i => i.nameEn === 'premier-ball');
+      if (premierData) {
+        const existingPremier = inventoryWithPremier.find(i => i.itemId === premierData.id || i.nameEn === 'premier-ball');
+        inventoryWithPremier = existingPremier
+          ? inventoryWithPremier.map(i =>
+              (i.itemId === premierData.id || i.nameEn === 'premier-ball')
+                ? { ...i, count: i.count + premierBallCount }
+                : i
+            )
+          : [
+              ...inventoryWithPremier,
+              {
+                itemId: premierData.id,
+                name: premierData.name,
+                nameEn: premierData.nameEn,
+                count: premierBallCount,
+                imageUrl: premierData.spriteUrl || premierData.imageUrl,
+                cost: premierData.cost,
+                sellPrice: premierData.sellPrice,
+                category: premierData.category,
+                pocket: premierData.pocket,
+              }
+            ];
+      }
+    }
+
     // 상점 재고 감소 처리
     try {
       const today = new Date();
@@ -542,20 +573,20 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
         }
         
         updateCurrentUser({
-          inventory: newInventory,
+          inventory: inventoryWithPremier,
           money: newMoney,
           purchaseHistory: purchaseHistory
         });
-        
+
       } else if (itemType === 'daily') {
         const dailyItems = updatedShopData.dailyItems?.[todayName] || [];
-        updatedShopData.dailyItems[todayName] = dailyItems.map(i => 
+        updatedShopData.dailyItems[todayName] = dailyItems.map(i =>
           i.itemId === itemId && i.stock !== 99
             ? { ...i, stock: Math.max(0, i.stock - quantity) }
             : i
         );
         needShopUpdate = true;
-        
+
       } else if (itemType === 'permanent') {
         updatedShopData.permanentItems = (updatedShopData.permanentItems || []).map(i =>
           i.itemId === itemId && i.stock !== 99
@@ -564,19 +595,20 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
         );
         needShopUpdate = true;
       }
-      
+
       if (needShopUpdate) {
         await updateShopData(updatedShopData);
       }
-      
+
       if (itemType !== 'rare') {
         updateCurrentUser({
-          inventory: newInventory,
+          inventory: inventoryWithPremier,
           money: newMoney
         });
       }
-      
-      alert(`${itemData.name} ${quantity}개를 구매했습니다!`);
+
+      const premierMsg = premierBallCount > 0 ? `\n🎁 프레미어볼 ${premierBallCount}개 증정!` : '';
+      alert(`${itemData.name} ${quantity}개를 구매했습니다!${premierMsg}`);
       return true;
       
     } catch (error) {

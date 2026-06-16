@@ -75,8 +75,8 @@ export default function GachaBallPanel({
       return;
     }
     
-    if (updatedShopData.gachaBall.balls.length >= 2) {
-      alert('최대 2개까지만 선택할 수 있습니다!');
+    if (updatedShopData.gachaBall.balls.length >= 7) {
+      alert('최대 7개까지만 선택할 수 있습니다!');
       return;
     }
     
@@ -119,11 +119,11 @@ export default function GachaBallPanel({
             <CircleDot className="text-orange-600" size={24} />
             규토리볼 관리
           </h3>
-          <p className="text-sm text-gray-600 mt-1">상점에서 판매할 몬스터볼 2종을 선택합니다</p>
+          <p className="text-sm text-gray-600 mt-1">풀에 등록된 몬스터볼 중 매일 2종이 랜덤으로 선정됩니다 (최대 7개)</p>
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden p-6">
+      <div className="flex-1 min-h-0 p-6">
         <div className="grid grid-cols-2 gap-6 h-full">
           <div className="flex flex-col border-2 border-gray-200 rounded-xl overflow-hidden h-full">
             <div className="p-4 border-b border-gray-200 space-y-3 bg-gray-50 flex-shrink-0">
@@ -144,7 +144,7 @@ export default function GachaBallPanel({
               </div>
 
               <div className="text-sm text-gray-600">
-                {filteredGachaBalls.length}개의 몬스터볼 • 최대 2개 선택 가능
+                {filteredGachaBalls.length}개의 몬스터볼 • 최대 7개 풀 등록 가능
               </div>
             </div>
 
@@ -224,9 +224,8 @@ export default function GachaBallPanel({
               <div className="bg-orange-50 p-4 border-b-2 border-orange-200 flex-shrink-0">
                 <h4 className="font-bold text-lg text-gray-800 flex items-center gap-2">
                   <CircleDot size={20} />
-                  규토리볼 설정
+                  규토리볼 풀 ({(shopData.gachaBall?.balls || []).length}/7)
                 </h4>
-                <p className="text-xs text-gray-600 mt-1">선택한 볼 2종이 랜덤으로 나옵니다</p>
               </div>
 
               <div className="flex-1 overflow-y-auto p-4">
@@ -264,25 +263,25 @@ export default function GachaBallPanel({
                   {(shopData.gachaBall?.balls || []).length === 0 && (
                     <div className="text-center py-12 text-gray-400">
                       <CircleDot size={64} className="mx-auto mb-3 text-gray-300" />
-                      <p>선택된 볼이 없습니다</p>
+                      <p>등록된 볼이 없습니다</p>
                       <p className="text-sm mt-1">왼쪽에서 몬스터볼을 선택해주세요</p>
                     </div>
                   )}
-                  
+
                   {(shopData.gachaBall?.balls || []).length === 1 && (
                     <div className="text-center py-8 text-orange-600 bg-orange-50 rounded-lg border-2 border-dashed border-orange-300">
-                      <p className="font-semibold">1개 더 선택해주세요!</p>
-                      <p className="text-sm mt-1">총 2개의 볼이 필요합니다</p>
+                      <p className="font-semibold">최소 2개 이상 등록해주세요!</p>
+                      <p className="text-sm mt-1">매일 2종이 랜덤 선정됩니다</p>
                     </div>
                   )}
                 </div>
               </div>
 
-              {(shopData.gachaBall?.balls || []).length === 2 && (
+              {(shopData.gachaBall?.balls || []).length >= 2 && (
                 <div className="p-4 border-t-2 border-orange-200 bg-orange-50 flex-shrink-0">
                   <div className="bg-green-100 border-2 border-green-400 rounded-lg p-3 text-center">
-                    <p className="font-bold text-green-800">규토리볼 설정 완료!</p>
-                    <p className="text-sm text-green-700 mt-1">상점 노출 스위치를 켜면 판매가 시작됩니다</p>
+                    <p className="font-bold text-green-800">규토리볼 풀 설정 완료!</p>
+                    <p className="text-sm text-green-700 mt-1">매일 자정 2종이 랜덤 교체됩니다. 상점 노출 스위치를 켜주세요.</p>
                   </div>
                 </div>
               )}
