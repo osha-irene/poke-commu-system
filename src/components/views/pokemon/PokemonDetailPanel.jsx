@@ -113,7 +113,8 @@ export default function PokemonDetailPanel({
   manualEvolve,
   allPokemonMaster = [],
   getPokemonFormCandidates,
-  onChangeForm
+  onChangeForm,
+  systemSettings = {}
 }) {
   // State
   const [isEditingNickname, setIsEditingNickname] = useState(false);
@@ -169,11 +170,11 @@ const isHoldingEverstone = pokemon.heldItem?.toLowerCase() === 'everstone' ||
 
   // 컨디션 및 노력치 데이터
   const conditionData = [
-    { subject: '근사함', A: pokemon.condition?.elegance || 0, fullMark: 100 },
-    { subject: '귀여움', A: pokemon.condition?.cuteness || 0, fullMark: 100 },
-    { subject: '아름다움', A: pokemon.condition?.beauty || 0, fullMark: 100 },
-    { subject: '슬기로움', A: pokemon.condition?.intelligence || 0, fullMark: 100 },
-    { subject: '강인함', A: pokemon.condition?.strength || 0, fullMark: 100 }
+    { subject: '근사함', A: Math.min(pokemon.condition?.elegance || 0, systemSettings.conditionMax || 100), fullMark: systemSettings.conditionMax || 100 },
+    { subject: '귀여움', A: Math.min(pokemon.condition?.cuteness || 0, systemSettings.conditionMax || 100), fullMark: systemSettings.conditionMax || 100 },
+    { subject: '아름다움', A: Math.min(pokemon.condition?.beauty || 0, systemSettings.conditionMax || 100), fullMark: systemSettings.conditionMax || 100 },
+    { subject: '슬기로움', A: Math.min(pokemon.condition?.intelligence || 0, systemSettings.conditionMax || 100), fullMark: systemSettings.conditionMax || 100 },
+    { subject: '강인함', A: Math.min(pokemon.condition?.strength || 0, systemSettings.conditionMax || 100), fullMark: systemSettings.conditionMax || 100 }
   ];
 
   const effortData = [

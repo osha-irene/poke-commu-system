@@ -215,7 +215,8 @@ export default function useGameState() {
     evolutionHook,
     pokemonManagement.useRareCandy,
     pokemonManagement.getPokemonFormCandidates,
-    pokemonManagement.changePokemonForm
+    pokemonManagement.changePokemonForm,
+    systemSettings
   );
 
   // 매일 자정 산책 횟수 리셋
@@ -442,6 +443,11 @@ export default function useGameState() {
     
     // 관리자 기능 - 아이템 관리
     addItemToSelf: adminItems.addItemToSelf,
-    giveItemToMember: adminItems.giveItemToMember
+    giveItemToMember: adminItems.giveItemToMember,
+    deleteCustomItem: async (itemId) => {
+      const ok = await adminItems.deleteCustomItem(itemId);
+      if (ok) setAllItems(prev => prev.filter(i => i.id !== itemId));
+      return ok;
+    }
   };
 }

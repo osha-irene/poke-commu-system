@@ -56,6 +56,7 @@ export default function AdminView() {
     giveItemToMember,
     givePokemonToMember,
     createCustomItem,
+    deleteCustomItem,
     updateMemberMoney,
     editMemberPokemon,
     deleteMemberPokemon,
@@ -77,6 +78,7 @@ export default function AdminView() {
   const [adminTab, setAdminTab] = useState('members');
   const [maxWalks, setMaxWalks] = useState(trainer?.maxDailyWalks || 5);
   const [maxNonPartnerPokemon, setMaxNonPartnerPokemon] = useState(systemSettings.maxNonPartnerPokemon || 18);
+  const [conditionMax, setConditionMax] = useState(systemSettings.conditionMax || 100);
   const [editingRegion, setEditingRegion] = useState(null);
   const [selectedMemberId, setSelectedMemberId] = useState(null);
   const [newMemberId, setNewMemberId] = useState('');
@@ -167,6 +169,10 @@ export default function AdminView() {
   useEffect(() => {
     setMaxNonPartnerPokemon(systemSettings.maxNonPartnerPokemon || 18);
   }, [systemSettings.maxNonPartnerPokemon]);
+
+  useEffect(() => {
+    setConditionMax(systemSettings.conditionMax || 100);
+  }, [systemSettings.conditionMax]);
 
   useEffect(() => {
     setEscapeMode(systemSettings.escapeMode || 'none');
@@ -614,15 +620,53 @@ export default function AdminView() {
 
           {/* 커스텀 아이템 */}
           <Card className="p-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-xl font-bold text-gray-800">✨ 커스텀 아이템</h3>
                 <p className="text-sm text-gray-600 mt-1">나만의 특별한 아이템을 만들어보세요</p>
               </div>
               <CustomItemCreator
-                onCreateItem={createCustomItem}
+                onCreateItem={async (data) => {
+                  const ok = await createCustomItem(data);
+                  return ok;
+                }}
               />
             </div>
+            {/* 커스텀 아이템 목록 */}
+            {allItems.filter(i => i.isCustom).length > 0 && (
+              <div className="space-y-2 mt-2">
+                <p className="text-sm font-semibold text-gray-600">등록된 커스텀 아이템 ({allItems.filter(i => i.isCustom).length}개)</p>
+                {allItems.filter(i => i.isCustom).map(item => {
+                  const cb = item.conditionBoost || {};
+                  const cbStr = Object.entries(cb).filter(([,v]) => Number(v) > 0).map(([k,v]) => {
+                    const n = { elegance:'근사함', beauty:'아름다움', cuteness:'귀여움', intelligence:'슬기로움', strength:'강인함' };
+                    return `${n[k]||k}+${v}`;
+                  }).join(', ');
+                  return (
+                    <div key={item.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
+                      <div className="flex items-center gap-2">
+                        {item.spriteUrl && <img src={item.spriteUrl} alt="" className="w-6 h-6" style={{imageRendering:'pixelated'}} />}
+                        <span className="font-semibold text-sm text-gray-800">{item.name}</span>
+                        {item.friendshipBoost > 0 && <span className="text-xs text-pink-600 bg-pink-50 px-1 rounded">친밀도+{item.friendshipBoost}</span>}
+                        {cbStr && <span className="text-xs text-green-700 bg-green-50 px-1 rounded">컨디션: {cbStr}</span>}
+                        {item.ivBoost && Object.values(item.ivBoost).some(v=>v>0) && <span className="text-xs text-blue-600 bg-blue-50 px-1 rounded">개체값</span>}
+                        {item.evBoost && Object.values(item.evBoost).some(v=>v>0) && <span className="text-xs text-purple-600 bg-purple-50 px-1 rounded">노력치</span>}
+                      </div>
+                      <button
+                        onClick={async () => {
+                          if (!window.confirm(`"${item.name}" 커스텀 아이템을 삭제하시겠습니까?\n(회원 인벤토리의 아이템은 유지됩니다)`)) return;
+                          const ok = await deleteCustomItem(item.id);
+                          if (ok) alert(`"${item.name}" 삭제 완료.`);
+                        }}
+                        className="text-red-500 hover:text-red-700 text-xs px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </Card>
 
           <Card className="p-6 space-y-6">
@@ -686,6 +730,38 @@ export default function AdminView() {
             </div>
             <div className="mt-3 text-sm text-gray-600">
               현재 설정: 파트너 제외 최대 <strong>{systemSettings.maxNonPartnerPokemon || 18}마리</strong>
+            </div>
+            </section>
+
+            <section className="rounded-lg border border-lime-200 bg-white/40 p-5">
+            <h4 className="text-lg font-bold text-gray-800 mb-4">컨디션 최고 수치</h4>
+            <div className="bg-lime-50 border-2 border-lime-200 rounded-lg p-4 mb-4">
+              <p className="text-sm text-lime-900">
+                포켓몬 컨디션(귀여움, 아름다움 등) 각 항목의 최대치를 설정합니다.
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <input
+                type="number"
+                value={conditionMax}
+                onChange={(e) => setConditionMax(parseInt(e.target.value, 10) || 0)}
+                min="1"
+                max="999"
+                className="border-2 border-gray-300 rounded-lg px-4 py-3 w-32 text-lg font-semibold focus:border-indigo-500 focus:outline-none"
+              />
+              <Button
+                variant="primary"
+                onClick={async () => {
+                  const val = Math.max(1, Math.floor(conditionMax));
+                  await updateSystemSettings?.({ ...systemSettings, conditionMax: val });
+                  alert(`컨디션 최고 수치가 ${val}로 저장되었습니다.`);
+                }}
+              >
+                저장
+              </Button>
+            </div>
+            <div className="mt-3 text-sm text-gray-600">
+              현재 설정: 최대 <strong>{systemSettings.conditionMax || 100}</strong>
             </div>
             </section>
 

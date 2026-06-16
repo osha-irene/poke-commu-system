@@ -224,24 +224,7 @@ urshifu-rapid-strike | urshifu | URSHIFU-RAPID-STRIKE.png
 urshifu-rapid-strike-gmax | urshifu | URSHIFU-RAPID-STRIKE-GMAX.png
 urshifu-single-strike | urshifu | URSHIFU-SINGLE-STRIKE.png
 urshifu-single-strike-gmax | urshifu | URSHIFU-SINGLE-STRIKE-GMAX.png
-vivillon-continental | vivillon | VIVILLON-CONTINENTAL.png
-vivillon-elegant | vivillon | VIVILLON-ELEGANT.png
-vivillon-fancy | vivillon | VIVILLON-FANCY.png
-vivillon-garden | vivillon | VIVILLON-GARDEN.png
-vivillon-high-plains | vivillon | VIVILLON-HIGH-PLAINS.png
-vivillon-icy-snow | vivillon | VIVILLON-ICY-SNOW.png
-vivillon-jungle | vivillon | VIVILLON-JUNGLE.png
-vivillon-marine | vivillon | VIVILLON-MARINE.png
-vivillon-modern | vivillon | VIVILLON-MODERN.png
-vivillon-monsoon | vivillon | VIVILLON-MONSOON.png
-vivillon-ocean | vivillon | VIVILLON-OCEAN.png
-vivillon-poke-ball | vivillon | VIVILLON-POKE-BALL.png
-vivillon-polar | vivillon | VIVILLON-POLAR.png
-vivillon-river | vivillon | VIVILLON-RIVER.png
-vivillon-sandstorm | vivillon | VIVILLON-SANDSTORM.png
-vivillon-savanna | vivillon | VIVILLON-SAVANNA.png
-vivillon-sun | vivillon | VIVILLON-SUN.png
-vivillon-tundra | vivillon | VIVILLON-TUNDRA.png
+
 voltorb-hisui | voltorb | VOLTORB-HISUI.png
 vulpix-alola | vulpix | VULPIX-ALOLA.png
 walking-wake | - | WALKING-WAKE.png

@@ -39,10 +39,22 @@ const handleSubmit = async () => {  // ⭐ async 추가
     return;
   }
   
+  const cleanConditionBoost = Object.fromEntries(
+    Object.entries(itemData.conditionBoost).filter(([, v]) => Number(v) > 0)
+  );
+  const cleanIvBoost = Object.fromEntries(
+    Object.entries(itemData.ivBoost).filter(([, v]) => Number(v) > 0)
+  );
+  const cleanEvBoost = Object.fromEntries(
+    Object.entries(itemData.evBoost).filter(([, v]) => Number(v) > 0)
+  );
   const itemToCreate = {
     ...itemData,
     pocket: itemData.pocket || itemData.category,
-    sellPrice: itemData.sellPrice || Math.floor(itemData.cost * 0.5)
+    sellPrice: itemData.sellPrice || Math.floor(itemData.cost * 0.5),
+    conditionBoost: cleanConditionBoost,
+    ivBoost: cleanIvBoost,
+    evBoost: cleanEvBoost,
   };
   
   console.log('🎨 생성할 아이템 데이터:', itemToCreate);

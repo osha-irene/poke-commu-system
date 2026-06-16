@@ -98,28 +98,33 @@ const canUseEVItemOnPokemon = (pokemon, itemName) => {
   return totalEVs <= 510;
 };
 
-const canUseBoostItemOnPokemon = (pokemon, item, itemData) => {
-  const friendshipBoost = item.friendshipBoost || itemData?.friendshipBoost;
-  if (friendshipBoost && Number(pokemon.friendship || 0) >= 255) return false;
+const hasBoost = (boost) => boost && Object.values(boost).some(v => Number(v) > 0);
 
-  const ivBoost = item.ivBoost || itemData?.ivBoost;
-  if (ivBoost) {
-    return Object.keys(ivBoost).some(stat => Number(pokemon.ivs?.[stat] || 0) < 31);
+const canUseBoostItemOnPokemon = (pokemon, item, itemData, systemSettings = {}) => {
+  const src = itemData || item;
+
+  const friendshipBoost = src.friendshipBoost;
+  if (Number(friendshipBoost) > 0 && Number(pokemon.friendship || 0) >= 255) return false;
+
+  const ivBoost = src.ivBoost;
+  if (hasBoost(ivBoost)) {
+    return Object.keys(ivBoost).some(stat => Number(ivBoost[stat]) > 0 && Number(pokemon.ivs?.[stat] || 0) < 31);
   }
 
-  const evBoost = item.evBoost || itemData?.evBoost;
-  if (evBoost) {
+  const evBoost = src.evBoost;
+  if (hasBoost(evBoost)) {
     const effort = pokemon.effortValues || pokemon.effort || {};
     const total = Object.values(effort).reduce((sum, value) => sum + Number(value || 0), 0);
     return Object.keys(evBoost).some(stat => (
-      total < 510 && Number(effort[stat] || 0) < 252
+      Number(evBoost[stat]) > 0 && total < 510 && Number(effort[stat] || 0) < 252
     ));
   }
 
-  const conditionBoost = item.conditionBoost || itemData?.conditionBoost;
-  if (conditionBoost) {
+  const conditionBoost = src.conditionBoost;
+  if (hasBoost(conditionBoost)) {
     const condition = pokemon.condition || {};
-    return Object.keys(conditionBoost).some(stat => Number(condition[stat] || 0) < 255);
+    const condMax = systemSettings?.conditionMax || 100;
+    return Object.keys(conditionBoost).some(stat => Number(conditionBoost[stat]) > 0 && Number(condition[stat] || 0) < condMax);
   }
 
   return true;
@@ -130,7 +135,8 @@ export const canUseItemOnPokemonTarget = ({
   itemData,
   pokemon,
   allMoves = [],
-  pokemonLearnsets = {}
+  pokemonLearnsets = {},
+  systemSettings = {}
 }) => {
   if (!item || !pokemon) return false;
 
@@ -171,5 +177,5 @@ export const canUseItemOnPokemonTarget = ({
     return canUseEVItemOnPokemon(pokemon, itemName);
   }
 
-  return canUseBoostItemOnPokemon(pokemon, item, itemData);
+  return canUseBoostItemOnPokemon(pokemon, item, itemData, systemSettings);
 };

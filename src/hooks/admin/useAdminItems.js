@@ -158,9 +158,25 @@ export const useAdminItems = (
     }
   };
 
+  const deleteCustomItem = async (itemId) => {
+    if (!currentUser?.isAdmin) return false;
+    try {
+      const customItemsRef = ref(database, 'gameData/customItems');
+      const snapshot = await get(customItemsRef);
+      const customItems = snapshot.exists() ? snapshot.val() : [];
+      const filtered = (Array.isArray(customItems) ? customItems : []).filter(i => i.id !== itemId);
+      await set(customItemsRef, filtered);
+      return true;
+    } catch (error) {
+      console.error('커스텀 아이템 삭제 실패:', error);
+      return false;
+    }
+  };
+
   return {
     addItemToSelf,
     giveItemToMember,
-    createCustomItem
+    createCustomItem,
+    deleteCustomItem,
   };
 };

@@ -42,6 +42,7 @@ export default function MobilePokemonView() {
     currentUser,
     allMoves = [],
     pokemonLearnsets = {},
+    systemSettings = {},
   } = useGame();
 
   const isAdmin = currentUser?.isAdmin || false;
@@ -246,6 +247,7 @@ export default function MobilePokemonView() {
               onLearnMove={learnMove}
               allMoves={allMoves}
               pokemonLearnsets={pokemonLearnsets}
+              systemSettings={systemSettings}
             />
           </div>
         </div>

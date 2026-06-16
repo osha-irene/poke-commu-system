@@ -19,6 +19,7 @@ function DesktopItemsView() {
     useItemOnPokemon: onUseItem,
     currentUser: trainer,
     getPokemonFormCandidates,
+    systemSettings = {},
   } = useGame();
 
   const isSuperAdmin = trainer?.isSuperAdmin || false;
@@ -301,7 +302,8 @@ const categories = CATEGORIES.map(cat => {
       itemData: details.itemData,
       pokemon: selectedPokemon,
       allMoves,
-      pokemonLearnsets
+      pokemonLearnsets,
+      systemSettings
     })) {
       return;
     }
@@ -789,7 +791,8 @@ const categories = CATEGORIES.map(cat => {
                                       itemData: details.itemData,
                                       pokemon,
                                       allMoves,
-                                      pokemonLearnsets
+                                      pokemonLearnsets,
+                                      systemSettings
                                     });
                                     return (
                                       <button

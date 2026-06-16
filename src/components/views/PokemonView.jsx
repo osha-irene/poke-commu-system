@@ -39,7 +39,8 @@ function DesktopPokemonView() {
     currentUser,
     allMoves = [],
     pokemonLearnsets = {},    checkEvolution,
-    manualEvolve
+    manualEvolve,
+    systemSettings = {}
   } = useGame();
 
   const isAdmin = currentUser?.isAdmin || false;
@@ -613,6 +614,7 @@ function DesktopPokemonView() {
             allMoves={allMoves} 
             pokemonLearnsets={pokemonLearnsets}
             currentUser={currentUser}
+            systemSettings={systemSettings}
           />
         ) : (
           <div className={getCardClass('default') + ' p-6 h-full flex items-center justify-center'}>
