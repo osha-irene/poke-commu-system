@@ -158,6 +158,23 @@ export const useAdminItems = (
     }
   };
 
+  const updateCustomItem = async (itemId, updatedFields) => {
+    if (!currentUser?.isAdmin) return false;
+    try {
+      const customItemsRef = ref(database, 'gameData/customItems');
+      const snapshot = await get(customItemsRef);
+      const customItems = snapshot.exists() ? snapshot.val() : [];
+      const updated = (Array.isArray(customItems) ? customItems : []).map(i =>
+        i.id === itemId ? { ...i, ...updatedFields } : i
+      );
+      await set(customItemsRef, updated);
+      return true;
+    } catch (error) {
+      console.error('커스텀 아이템 수정 실패:', error);
+      return false;
+    }
+  };
+
   const deleteCustomItem = async (itemId) => {
     if (!currentUser?.isAdmin) return false;
     try {
@@ -177,6 +194,7 @@ export const useAdminItems = (
     addItemToSelf,
     giveItemToMember,
     createCustomItem,
+    updateCustomItem,
     deleteCustomItem,
   };
 };

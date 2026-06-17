@@ -169,13 +169,16 @@ const isHoldingEverstone = pokemon.heldItem?.toLowerCase() === 'everstone' ||
                             pokemon.heldItem?.toLowerCase() === '변함없는돌';
 
   // 컨디션 및 노력치 데이터
+  const condLimit = Number(systemSettings?.conditionMax) || 100;
+  const cond = pokemon.condition || {};
   const conditionData = [
-    { subject: '근사함', A: Math.min(pokemon.condition?.elegance || 0, systemSettings.conditionMax || 100), fullMark: systemSettings.conditionMax || 100 },
-    { subject: '귀여움', A: Math.min(pokemon.condition?.cuteness || 0, systemSettings.conditionMax || 100), fullMark: systemSettings.conditionMax || 100 },
-    { subject: '아름다움', A: Math.min(pokemon.condition?.beauty || 0, systemSettings.conditionMax || 100), fullMark: systemSettings.conditionMax || 100 },
-    { subject: '슬기로움', A: Math.min(pokemon.condition?.intelligence || 0, systemSettings.conditionMax || 100), fullMark: systemSettings.conditionMax || 100 },
-    { subject: '강인함', A: Math.min(pokemon.condition?.strength || 0, systemSettings.conditionMax || 100), fullMark: systemSettings.conditionMax || 100 }
+    { subject: '근사함',  A: Math.min(Number(cond.elegance    || 0), condLimit), fullMark: 100 },
+    { subject: '귀여움',  A: Math.min(Number(cond.cuteness    || 0), condLimit), fullMark: 100 },
+    { subject: '아름다움', A: Math.min(Number(cond.beauty      || 0), condLimit), fullMark: 100 },
+    { subject: '슬기로움', A: Math.min(Number(cond.intelligence|| 0), condLimit), fullMark: 100 },
+    { subject: '강인함',  A: Math.min(Number(cond.strength    || 0), condLimit), fullMark: 100 },
   ];
+  const hasAnyCondition = conditionData.some(d => d.A > 0);
 
   const effortData = [
     { subject: 'HP', A: pokemon.effort?.hp || 0, fullMark: 255 },
@@ -892,11 +895,11 @@ const ballImage = getBallImage();
                 <div className="bg-purple-50 rounded-lg p-3 pt-6 border border-purple-200 flex flex-col justify-center" onMouseLeave={() => { setHoveredCondition(null); setTooltipType(''); }}>
                   <div className="w-full h-52 relative">
                     <ResponsiveContainer width="100%" height="100%">
-                      <RadarChart data={conditionData} tabIndex={-1}>
+                      <RadarChart data={hasAnyCondition ? conditionData : conditionData.map(d => ({ ...d, A: 0.01 }))} tabIndex={-1}>
                         <PolarGrid stroke="#f472b6" strokeWidth={1.5} strokeOpacity={0.3} radialLines={false} />
                         <PolarAngleAxis dataKey="subject" tick={renderConditionTick} />
                         <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} />
-                        <Radar dataKey="A" stroke="none" fill="#f472b6" fillOpacity={0.5} activeDot={false} dot={false} />
+                        <Radar dataKey="A" stroke="#f472b6" strokeWidth={1} fill="#f472b6" fillOpacity={hasAnyCondition ? 0.5 : 0} activeDot={false} dot={false} isAnimationActive={false} />
                       </RadarChart>
                     </ResponsiveContainer>
                     {hoveredCondition !== null && tooltipType === 'condition' && ReactDOM.createPortal(
@@ -915,7 +918,7 @@ const ballImage = getBallImage();
                         <PolarGrid stroke="#60a5fa" strokeWidth={1.5} strokeOpacity={0.3} radialLines={false} gridType="polygon" />
                         <PolarAngleAxis dataKey="subject" tick={renderEffortTick} />
                         <PolarRadiusAxis angle={90} domain={[0, 255]} tickCount={5} tick={false} />
-                        <Radar dataKey="A" stroke="none" fill="#60a5fa" fillOpacity={0.5} activeDot={false} dot={false} />
+                        <Radar dataKey="A" stroke="#60a5fa" strokeWidth={1} fill="#60a5fa" fillOpacity={0.5} activeDot={false} dot={false} isAnimationActive={false} />
                       </RadarChart>
                     </ResponsiveContainer>
                     {hoveredEffort !== null && tooltipType === 'effort' && ReactDOM.createPortal(

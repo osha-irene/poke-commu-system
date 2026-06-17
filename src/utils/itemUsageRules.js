@@ -22,12 +22,12 @@ export const normalizeItemNameForUse = (name) => (
 export const resolveItemData = (allItems = [], item = {}) => {
   const items = Array.isArray(allItems) ? allItems : (allItems.items || []);
   return items.find(candidate => (
-    candidate.id === item.itemId ||
-    candidate.id === item.id ||
-    candidate.name === item.name ||
-    candidate.nameEn === item.nameEn ||
-    candidate.nameEn === item.name ||
-    candidate.id === item.name
+    (item.itemId != null && candidate.id === item.itemId) ||
+    (item.id != null && candidate.id === item.id) ||
+    (item.name  != null && candidate.name === item.name) ||
+    (item.nameEn != null && candidate.nameEn === item.nameEn) ||
+    (item.name  != null && candidate.nameEn === item.name) ||
+    (item.name  != null && candidate.id === item.name)
   ));
 };
 

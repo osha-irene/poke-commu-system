@@ -266,18 +266,18 @@ export const useItemEffects = (
 
     if (src.conditionBoost) {
       const boost = src.conditionBoost;
-      const condMax = Number(systemSettingsRef.current.conditionMax) || 100;
+      const condMax = Number(systemSettingsRef.current?.conditionMax) > 0
+        ? Number(systemSettingsRef.current.conditionMax)
+        : 100;
       Object.keys(boost).forEach(condKey => {
-        if (updatedPokemon.condition && updatedPokemon.condition[condKey] !== undefined) {
-          const current = updatedPokemon.condition[condKey] || 0;
-          if (current >= condMax) { itemUsed = true; return; }
-          const newValue = Math.min(condMax, current + boost[condKey]);
-          if (newValue > current) {
-            updatedPokemon.condition[condKey] = newValue;
-            effectMessages.push((statNameKo[condKey] || condKey) + '이(가) ' + newValue + '으로 올랐습니다!');
-          }
-          itemUsed = true;
+        const current = Number(updatedPokemon.condition?.[condKey] || 0);
+        if (current >= condMax) { itemUsed = true; return; }
+        const newValue = Math.min(condMax, current + boost[condKey]);
+        if (newValue > current) {
+          updatedPokemon.condition[condKey] = newValue;
+          effectMessages.push((statNameKo[condKey] || condKey) + '이(가) ' + newValue + '으로 올랐습니다!');
         }
+        itemUsed = true;
       });
     }
 

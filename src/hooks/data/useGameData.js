@@ -58,7 +58,8 @@ export const useGameData = (allPokemonData) => {
   const [maintenanceScheduledAt, setMaintenanceScheduledAt] = useState(null);
   const [systemSettings, setSystemSettings] = useState({
     maxNonPartnerPokemon: 18,
-    escapeMode: 'none'
+    escapeMode: 'none',
+    conditionMax: 100,
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -191,7 +192,8 @@ export const useGameData = (allPokemonData) => {
         const normalizedSystemSettings = {
           maxNonPartnerPokemon: Number(savedSystemSettings.maxNonPartnerPokemon) || 18,
           escapeMode: savedEscapeMode,
-          campingSettings: savedSystemSettings.campingSettings || {}
+          campingSettings: savedSystemSettings.campingSettings || {},
+          ...(savedSystemSettings.conditionMax != null && { conditionMax: Number(savedSystemSettings.conditionMax) }),
         };
         await set(systemSettingsRef, normalizedSystemSettings);
         setSystemSettings(normalizedSystemSettings);

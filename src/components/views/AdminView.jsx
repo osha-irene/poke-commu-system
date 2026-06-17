@@ -9,7 +9,7 @@ import RegionEditModal from '../modals/RegionEditModal';
 import PokedexAdminPanel from './admin/PokedexAdminPanel';
 import ShopAdminPanel from './admin/ShopAdminPanel';
 import MemberDetailPanel from './admin/MemberDetailPanel';
-import CustomItemCreator from './admin/CustomItemCreator';
+import CustomItemCreator, { CustomItemModal } from './admin/CustomItemCreator';
 import RegionExplorePanel from './admin/RegionExplorePanel';
 import CookingAdminPanel from './admin/CookingAdminPanel';
 import LevelRestrictionPanel from './admin/LevelRestrictionPanel';
@@ -18,6 +18,64 @@ import ScheduleAdminPanel from './admin/ScheduleAdminPanel';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
+
+const CONDITION_LABELS = { elegance:'근사함', beauty:'아름다움', cuteness:'귀여움', intelligence:'슬기로움', strength:'강인함' };
+
+function CustomItemList({ items, onUpdate, onDelete }) {
+  const [editingItem, setEditingItem] = useState(null);
+
+  if (items.length === 0) return null;
+
+  return (
+    <div className="space-y-2 mt-2">
+      <p className="text-sm font-semibold text-gray-600">등록된 커스텀 아이템 ({items.length}개)</p>
+      {items.map(item => {
+        const cb = item.conditionBoost || {};
+        const cbStr = Object.entries(cb).filter(([,v]) => Number(v) > 0)
+          .map(([k,v]) => `${CONDITION_LABELS[k]||k}+${v}`).join(', ');
+        return (
+          <div key={item.id} className="bg-gray-50 rounded-lg border border-gray-200 px-3 py-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 flex-wrap">
+                {item.spriteUrl && <img src={item.spriteUrl} alt="" className="w-6 h-6" style={{imageRendering:'pixelated'}} />}
+                <span className="font-semibold text-sm text-gray-800">{item.name}</span>
+                {item.nameEn && <span className="text-xs text-gray-400 font-mono">{item.nameEn}</span>}
+                {item.friendshipBoost > 0 && <span className="text-xs text-pink-600 bg-pink-50 px-1 rounded">친밀도+{item.friendshipBoost}</span>}
+                {cbStr && <span className="text-xs text-green-700 bg-green-50 px-1 rounded">컨디션: {cbStr}</span>}
+                {item.ivBoost && Object.values(item.ivBoost).some(v=>v>0) && <span className="text-xs text-blue-600 bg-blue-50 px-1 rounded">개체값</span>}
+                {item.evBoost && Object.values(item.evBoost).some(v=>v>0) && <span className="text-xs text-purple-600 bg-purple-50 px-1 rounded">노력치</span>}
+              </div>
+              <div className="flex gap-1 ml-2 shrink-0">
+                <button onClick={() => setEditingItem(item)} className="text-blue-500 hover:text-blue-700 text-xs px-2 py-1 rounded hover:bg-blue-50 transition-colors">수정</button>
+                <button
+                  onClick={async () => {
+                    if (!window.confirm(`"${item.name}" 커스텀 아이템을 삭제하시겠습니까?\n(회원 인벤토리의 아이템은 유지됩니다)`)) return;
+                    const ok = await onDelete(item.id);
+                    if (ok) alert(`"${item.name}" 삭제 완료.`);
+                  }}
+                  className="text-red-500 hover:text-red-700 text-xs px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                >삭제</button>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      {editingItem && (
+        <CustomItemModal
+          editItem={editingItem}
+          onSubmit={async (payload) => {
+            const { id, isCustom, createdBy, createdAt, ...fields } = payload;
+            const ok = await onUpdate(editingItem.id, fields);
+            if (ok) alert(`"${fields.name}" 수정 완료.`);
+            return ok;
+          }}
+          onClose={() => setEditingItem(null)}
+        />
+      )}
+    </div>
+  );
+}
 
 export default function AdminView() {
   const gameContext = useGame();
@@ -56,6 +114,7 @@ export default function AdminView() {
     giveItemToMember,
     givePokemonToMember,
     createCustomItem,
+    updateCustomItem,
     deleteCustomItem,
     updateMemberMoney,
     editMemberPokemon,
@@ -633,40 +692,11 @@ export default function AdminView() {
               />
             </div>
             {/* 커스텀 아이템 목록 */}
-            {allItems.filter(i => i.isCustom).length > 0 && (
-              <div className="space-y-2 mt-2">
-                <p className="text-sm font-semibold text-gray-600">등록된 커스텀 아이템 ({allItems.filter(i => i.isCustom).length}개)</p>
-                {allItems.filter(i => i.isCustom).map(item => {
-                  const cb = item.conditionBoost || {};
-                  const cbStr = Object.entries(cb).filter(([,v]) => Number(v) > 0).map(([k,v]) => {
-                    const n = { elegance:'근사함', beauty:'아름다움', cuteness:'귀여움', intelligence:'슬기로움', strength:'강인함' };
-                    return `${n[k]||k}+${v}`;
-                  }).join(', ');
-                  return (
-                    <div key={item.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
-                      <div className="flex items-center gap-2">
-                        {item.spriteUrl && <img src={item.spriteUrl} alt="" className="w-6 h-6" style={{imageRendering:'pixelated'}} />}
-                        <span className="font-semibold text-sm text-gray-800">{item.name}</span>
-                        {item.friendshipBoost > 0 && <span className="text-xs text-pink-600 bg-pink-50 px-1 rounded">친밀도+{item.friendshipBoost}</span>}
-                        {cbStr && <span className="text-xs text-green-700 bg-green-50 px-1 rounded">컨디션: {cbStr}</span>}
-                        {item.ivBoost && Object.values(item.ivBoost).some(v=>v>0) && <span className="text-xs text-blue-600 bg-blue-50 px-1 rounded">개체값</span>}
-                        {item.evBoost && Object.values(item.evBoost).some(v=>v>0) && <span className="text-xs text-purple-600 bg-purple-50 px-1 rounded">노력치</span>}
-                      </div>
-                      <button
-                        onClick={async () => {
-                          if (!window.confirm(`"${item.name}" 커스텀 아이템을 삭제하시겠습니까?\n(회원 인벤토리의 아이템은 유지됩니다)`)) return;
-                          const ok = await deleteCustomItem(item.id);
-                          if (ok) alert(`"${item.name}" 삭제 완료.`);
-                        }}
-                        className="text-red-500 hover:text-red-700 text-xs px-2 py-1 rounded hover:bg-red-50 transition-colors"
-                      >
-                        삭제
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            <CustomItemList
+              items={allItems.filter(i => i.isCustom)}
+              onUpdate={updateCustomItem}
+              onDelete={deleteCustomItem}
+            />
           </Card>
 
           <Card className="p-6 space-y-6">
@@ -734,10 +764,10 @@ export default function AdminView() {
             </section>
 
             <section className="rounded-lg border border-lime-200 bg-white/40 p-5">
-            <h4 className="text-lg font-bold text-gray-800 mb-4">컨디션 최고 수치</h4>
+            <h4 className="text-lg font-bold text-gray-800 mb-4">컨디션 제한치</h4>
             <div className="bg-lime-50 border-2 border-lime-200 rounded-lg p-4 mb-4">
               <p className="text-sm text-lime-900">
-                포켓몬 컨디션(귀여움, 아름다움 등) 각 항목의 최대치를 설정합니다.
+                아이템으로 올릴 수 있는 컨디션 항목별 상한선입니다. 절대 최대치는 100입니다.
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -746,22 +776,49 @@ export default function AdminView() {
                 value={conditionMax}
                 onChange={(e) => setConditionMax(parseInt(e.target.value, 10) || 0)}
                 min="1"
-                max="999"
+                max="100"
                 className="border-2 border-gray-300 rounded-lg px-4 py-3 w-32 text-lg font-semibold focus:border-indigo-500 focus:outline-none"
               />
+              <span className="text-gray-500 font-semibold">/ 100</span>
               <Button
                 variant="primary"
                 onClick={async () => {
-                  const val = Math.max(1, Math.floor(conditionMax));
+                  const val = Math.min(100, Math.max(1, Math.floor(conditionMax)));
                   await updateSystemSettings?.({ ...systemSettings, conditionMax: val });
-                  alert(`컨디션 최고 수치가 ${val}로 저장되었습니다.`);
+
+                  // 모든 멤버 포켓몬 컨디션 clamp
+                  const COND_KEYS = ['elegance', 'beauty', 'cuteness', 'intelligence', 'strength'];
+                  const memberEntries = Object.entries(members);
+                  let clampedCount = 0;
+                  await Promise.all(memberEntries.map(async ([memberId, member]) => {
+                    const pokemon = member.caughtPokemon;
+                    if (!Array.isArray(pokemon)) return;
+                    let changed = false;
+                    const updated = pokemon.map(p => {
+                      if (!p?.condition) return p;
+                      const newCond = { ...p.condition };
+                      COND_KEYS.forEach(k => {
+                        if (Number(newCond[k] || 0) > val) {
+                          newCond[k] = val;
+                          changed = true;
+                        }
+                      });
+                      return changed ? { ...p, condition: newCond } : p;
+                    });
+                    if (changed) {
+                      clampedCount++;
+                      await set(dbRef(database, `members/${memberId}/caughtPokemon`), updated);
+                    }
+                  }));
+
+                  alert(`컨디션 제한치가 ${val}로 저장됐습니다.${clampedCount > 0 ? `\n초과 데이터 ${clampedCount}명 포켓몬 정리 완료.` : ''}`);
                 }}
               >
                 저장
               </Button>
             </div>
             <div className="mt-3 text-sm text-gray-600">
-              현재 설정: 최대 <strong>{systemSettings.conditionMax || 100}</strong>
+              현재 제한치: <strong>{systemSettings.conditionMax || 100}</strong> / 100
             </div>
             </section>
 
