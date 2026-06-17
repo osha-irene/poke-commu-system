@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.1989d8f5.css",
-    "main.js": "/static/js/main.9686625d.js",
+    "main.js": "/static/js/main.597a3002.js",
     "static/js/623.69c45dc4.chunk.js": "/static/js/623.69c45dc4.chunk.js",
     "static/media/forest-bg.png": "/static/media/forest-bg.ed51a4032d3a6a7016d2.png",
     "static/media/forest-bg (2).png": "/static/media/forest-bg (2).023aaebd6df83a1d1128.png",
@@ -31,11 +31,11 @@
     "index.html": "/index.html",
     "static/media/pokemon-icon.svg": "/static/media/pokemon-icon.d36b6f0655c180980d5acb3287a88011.svg",
     "main.1989d8f5.css.map": "/static/css/main.1989d8f5.css.map",
-    "main.9686625d.js.map": "/static/js/main.9686625d.js.map",
+    "main.597a3002.js.map": "/static/js/main.597a3002.js.map",
     "623.69c45dc4.chunk.js.map": "/static/js/623.69c45dc4.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.1989d8f5.css",
-    "static/js/main.9686625d.js"
+    "static/js/main.597a3002.js"
   ]
 }
