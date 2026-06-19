@@ -124,9 +124,13 @@ export const usePokemonCatch = (
         speed: 0 
       },
       imageUrl: pokemonTemplate.imageUrl,
-      iconUrl: pokemon.isShiny 
-        ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/shiny/${pokemonTemplate.number}.png`
-        : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`,
+      iconUrl: (() => {
+        const orig = pokemonTemplate.originalNumber;
+        const iconNum = (orig === 710 || orig === 711) ? orig : pokemonTemplate.number;
+        return pokemon.isShiny
+          ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/shiny/${iconNum}.png`
+          : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${iconNum}.png`;
+      })(),
       spriteUrl: pokemon.isShiny
         ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${pokemonTemplate.number}.png`
         : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`

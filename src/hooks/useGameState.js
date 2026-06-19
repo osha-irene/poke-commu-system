@@ -59,6 +59,7 @@ export default function useGameState() {
   }, []);
   const [encounterPokemon, setEncounterPokemon] = useState(null);
   const [firstCatchPokemon, setFirstCatchPokemon] = useState(null);
+  const [statSelectPending, setStatSelectPending] = useState(null); // { item, pokemon, type, amount }
   
   const allPokemonDataParsed = Array.isArray(allPokemonDataRaw) 
     ? allPokemonDataRaw 
@@ -216,8 +217,19 @@ export default function useGameState() {
     pokemonManagement.useRareCandy,
     pokemonManagement.getPokemonFormCandidates,
     pokemonManagement.changePokemonForm,
-    systemSettings
+    systemSettings,
+    (item, pokemon, type, amount) => setStatSelectPending({ item, pokemon, type, amount })
   );
+
+  const handleStatSelectComplete = (statKey) => {
+    if (!statSelectPending) return;
+    const { item, pokemon, type, amount } = statSelectPending;
+    setStatSelectPending(null);
+    const boostedItem = type === 'conditionSelect'
+      ? { ...item, specialEffect: null, conditionBoost: { [statKey]: amount } }
+      : { ...item, specialEffect: null, evBoost: { [statKey]: amount } };
+    itemEffectsHook.useItemOnPokemon(boostedItem, pokemon);
+  };
 
   // 매일 자정 산책 횟수 리셋
   useEffect(() => {
@@ -294,8 +306,10 @@ export default function useGameState() {
     }
 
     if (result && result.isFirstCatch) {
+      const tpl = result.pokemonTemplate;
       setFirstCatchPokemon({
-        ...result.pokemonTemplate,
+        ...tpl,
+        name: (tpl.name || '').replace(/\s*\([^)]+\)\s*$/, '').trim() || tpl.name,
         memoPokemonNumber: result.pokemonNumber
       });
     }
@@ -350,6 +364,8 @@ export default function useGameState() {
     items: currentUser?.inventory || [],
     encounterPokemon,
     firstCatchPokemon,
+    statSelectPending,
+    handleStatSelectComplete,
     regions,
     setRegions,
     allPokemon,

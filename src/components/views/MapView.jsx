@@ -56,7 +56,7 @@ export default function MapView({
   const towns = (() => {
     const townMap = new Map();
     regions.forEach(region => {
-      if (region.groupId && region.groupName && !region.isTownMeta) {
+      if (region.groupId && region.groupName && !region.isTownMeta && region.groupVisible !== false) {
         if (!townMap.has(region.groupId)) {
           townMap.set(region.groupId, {
             groupId: region.groupId,

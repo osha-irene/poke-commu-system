@@ -16,7 +16,7 @@ const P = {
   accentBg:  'rgba(74,154,8,0.15)',
   price:     '#a05000',
   daily:     '#1050b8',
-  dailyBg:   'rgba(16,80,184,0.12)',
+  dailyBg:   'rgba(255,255,255,0.90)',
   rare:      '#7010b0',
   rareBg:    'rgba(112,16,176,0.10)',
 };

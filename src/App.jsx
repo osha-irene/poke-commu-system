@@ -20,6 +20,7 @@ import ProfileView from './components/views/ProfileView';
 import AdminView from './components/views/AdminView';
 import EncounterModal from './components/modals/EncounterModal';
 import FirstCatchMemoModal from './components/modals/FirstCatchMemoModal';
+import StatSelectModal from './components/modals/StatSelectModal';
 import EvolutionModal from './components/modals/EvolutionModal';
 import useGameState from './hooks/useGameState';
 import ShopView from './components/views/ShopView';
@@ -1295,6 +1296,8 @@ export default function App() {
     items,
     encounterPokemon,
     firstCatchPokemon,
+    statSelectPending,
+    handleStatSelectComplete,
     regions,
     allPokemonMaster,
     members,
@@ -2063,6 +2066,16 @@ return (
           pokemon={firstCatchPokemon}
           onSave={saveFirstCatchMemo}
           onSkip={skipFirstCatchMemo}
+        />
+      )}
+
+      {statSelectPending && (
+        <StatSelectModal
+          type={statSelectPending.type}
+          amount={statSelectPending.amount}
+          pokemonName={statSelectPending.pokemon?.nickname || statSelectPending.pokemon?.name}
+          onSelect={handleStatSelectComplete}
+          onClose={() => handleStatSelectComplete(null)}
         />
       )}
 

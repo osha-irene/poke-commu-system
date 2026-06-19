@@ -104,16 +104,10 @@ export function CustomItemModal({ editItem = null, onSubmit, onClose }) {
     let finalEvBoost = cleanEvBoost;
     let finalSpecialEffect = itemData.specialEffect;
 
-    if (itemData.specialEffect === 'conditionSelect') {
-      if (!itemData.conditionTarget) { alert('컨디션 항목을 선택해주세요!'); return; }
+    if (itemData.specialEffect === 'conditionSelect' || itemData.specialEffect === 'evSelect') {
       if (!itemData.boostAmount || itemData.boostAmount <= 0) { alert('상승량을 입력해주세요!'); return; }
-      finalConditionBoost = { [itemData.conditionTarget]: Number(itemData.boostAmount) };
-      finalEvBoost = {};
-    } else if (itemData.specialEffect === 'evSelect') {
-      if (!itemData.evTarget) { alert('노력치 항목을 선택해주세요!'); return; }
-      if (!itemData.boostAmount || itemData.boostAmount <= 0) { alert('상승량을 입력해주세요!'); return; }
-      finalEvBoost = { [itemData.evTarget]: Number(itemData.boostAmount) };
       finalConditionBoost = {};
+      finalEvBoost = {};
     }
 
     const payload = {
@@ -318,76 +312,46 @@ export function CustomItemModal({ editItem = null, onSubmit, onClose }) {
             </div>
           )}
 
-          {/* 컨디션 선택 */}
+          {/* 컨디션 선택 (항목은 사용자가 선택) */}
           {itemData.specialEffect === 'conditionSelect' && (
             <div className="bg-white/40 rounded-lg p-4 border-2 border-lime-200">
               <h4 className="font-bold text-green-900 mb-3">✨ 컨디션 항목 선택 상승</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">컨디션 항목</label>
-                  <select
-                    value={itemData.conditionTarget}
-                    onChange={e => set({ conditionTarget: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  >
-                    <option value="">선택하세요</option>
-                    {Object.entries(CONDITION_LABELS).map(([key, label]) => (
-                      <option key={key} value={key}>{label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">상승량 (N)</label>
-                  <input
-                    type="number" min="1" max="100"
-                    value={itemData.boostAmount}
-                    onChange={e => set({ boostAmount: Math.min(100, Math.max(1, parseInt(e.target.value) || 0)) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                    placeholder="예: 10"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">상승량 (N)</label>
+                <input
+                  type="number" min="1" max="100"
+                  value={itemData.boostAmount}
+                  onChange={e => set({ boostAmount: Math.min(100, Math.max(1, parseInt(e.target.value) || 0)) })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  placeholder="예: 10"
+                />
               </div>
-              {itemData.conditionTarget && itemData.boostAmount > 0 && (
+              {itemData.boostAmount > 0 && (
                 <p className="text-xs text-lime-700 mt-2 font-semibold">
-                  → 사용 시 {CONDITION_LABELS[itemData.conditionTarget]} +{itemData.boostAmount} 상승
+                  → 사용 시 유저가 컨디션 항목을 선택 후 +{itemData.boostAmount} 상승
                 </p>
               )}
               <p className="text-xs text-purple-600 mt-1">💡 현재 컨디션에 추가됩니다 (최대 100)</p>
             </div>
           )}
 
-          {/* 노력치 선택 */}
+          {/* 노력치 선택 (항목은 사용자가 선택) */}
           {itemData.specialEffect === 'evSelect' && (
             <div className="bg-purple-50 rounded-lg p-4 border-2 border-purple-200">
               <h4 className="font-bold text-purple-800 mb-3">⚡ 노력치 항목 선택 상승</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">노력치 항목</label>
-                  <select
-                    value={itemData.evTarget}
-                    onChange={e => set({ evTarget: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  >
-                    <option value="">선택하세요</option>
-                    {Object.entries(STAT_LABELS).map(([key, label]) => (
-                      <option key={key} value={key}>{label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">상승량 (N)</label>
-                  <input
-                    type="number" min="1" max="252"
-                    value={itemData.boostAmount}
-                    onChange={e => set({ boostAmount: Math.min(252, Math.max(1, parseInt(e.target.value) || 0)) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                    placeholder="예: 10"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">상승량 (N)</label>
+                <input
+                  type="number" min="1" max="252"
+                  value={itemData.boostAmount}
+                  onChange={e => set({ boostAmount: Math.min(252, Math.max(1, parseInt(e.target.value) || 0)) })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  placeholder="예: 10"
+                />
               </div>
-              {itemData.evTarget && itemData.boostAmount > 0 && (
+              {itemData.boostAmount > 0 && (
                 <p className="text-xs text-purple-700 mt-2 font-semibold">
-                  → 사용 시 {STAT_LABELS[itemData.evTarget]} 노력치 +{itemData.boostAmount} 상승
+                  → 사용 시 유저가 노력치 항목을 선택 후 +{itemData.boostAmount} 상승
                 </p>
               )}
               <p className="text-xs text-purple-600 mt-1">💡 현재 노력치에 추가됩니다 (최대 252, 총합 510)</p>

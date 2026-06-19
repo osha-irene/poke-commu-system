@@ -272,7 +272,7 @@ export const useAdminMembers = (
       condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
       effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
       imageUrl: pokemonTemplate.imageUrl,
-      iconUrl: pokemonTemplate.iconUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`,
+      iconUrl: (() => { const orig = pokemonTemplate.originalNumber; const n = (orig === 710 || orig === 711) ? orig : pokemonTemplate.number; return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${n}.png`; })(),
       spriteUrl: pokemonTemplate.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`,
       isFromEgg: true,
       hatchedAt: new Date().toISOString(),
@@ -639,7 +639,7 @@ export const useAdminMembers = (
 
     const iconUrl = isShiny && pokemonTemplate.shinySprite
       ? pokemonTemplate.shinySprite
-      : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonTemplate.number}.png`;
+      : (() => { const orig = pokemonTemplate.originalNumber; const n = (orig === 710 || orig === 711) ? orig : pokemonTemplate.number; return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${n}.png`; })();
 
     // 기본값 설정
     const finalGender = normalizePokemonGender(gender, pokemonTemplate);

@@ -33,7 +33,8 @@ export const useItemEffects = (
   handleRareCandyWithEvolution,
   getPokemonFormCandidates,
   changePokemonForm,
-  systemSettings = {}
+  systemSettings = {},
+  onRequestStatSelection = null
 ) => {
 
   const movesHook = useMoves;
@@ -216,7 +217,12 @@ export const useItemEffects = (
     };
 
     // itemData(마스터)가 있으면 마스터 데이터만, 없을 때만 item 데이터 사용
-    const src = itemData || item;
+    // itemData(allItems 원본)에 호출자가 넘긴 item의 override(conditionBoost/evBoost/specialEffect 등)를 병합
+    const src = itemData ? { ...itemData, ...Object.fromEntries(
+      ['conditionBoost', 'evBoost', 'ivBoost', 'specialEffect', 'boostAmount', 'friendshipBoost']
+        .filter(k => item[k] !== undefined)
+        .map(k => [k, item[k]])
+    ) } : item;
 
     if (src.friendshipBoost) {
       const baseBoost = src.friendshipBoost;
@@ -242,6 +248,15 @@ export const useItemEffects = (
           itemUsed = true;
         }
       });
+    }
+
+    // 사용자가 항목을 선택하는 conditionSelect / evSelect
+    if (src.specialEffect === 'conditionSelect' || src.specialEffect === 'evSelect') {
+      if (onRequestStatSelection) {
+        releaseItemUseLock();
+        onRequestStatSelection(item, pokemon, src.specialEffect, Number(src.boostAmount) || 1);
+        return;
+      }
     }
 
     if (src.evBoost) {

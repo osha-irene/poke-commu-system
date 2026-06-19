@@ -40,6 +40,10 @@ const getLocalIconUrl = (pokemon, allPokemonMaster) => {
   if (localUrl) return localUrl;
 
   // 로컬 아이콘 없으면 Firebase 저장 URL → number 기반 PokeAPI 순으로 fallback
+  const orig = pokemon.originalNumber;
+  if (orig === 710 || orig === 711) {
+    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${orig}.png`;
+  }
   if (pokemon.iconUrl) return pokemon.iconUrl;
   if (pokemon.number) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemon.number}.png`;
   return '';

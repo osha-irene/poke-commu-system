@@ -263,7 +263,7 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
           type2: evolvedTemplate.type2 || null,
           ...getBaseStatPatch(evolvedTemplate),
           imageUrl: evolvedTemplate.imageUrl,
-          iconUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${evolvedTemplate.number}.png`,
+          iconUrl: (() => { const orig = evolvedTemplate.originalNumber; const n = (orig === 710 || orig === 711) ? orig : evolvedTemplate.number; return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${n}.png`; })(),
           spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${evolvedTemplate.number}.png`,
           // 닉네임이 종족명이면 제거, 커스텀 닉네임은 유지
           nickname: (p.nickname && p.nickname !== getBaseName(p) && p.nickname !== p.name && p.nickname !== p.nameEn) ? p.nickname : null,

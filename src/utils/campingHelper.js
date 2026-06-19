@@ -257,7 +257,7 @@ export function hatchEgg(egg, allPokemonMaster, allMoves, movesData) {
     condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
     effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
     imageUrl: pokemonData.imageUrl,
-    iconUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemonData.number}.png`,
+    iconUrl: (() => { const orig = pokemonData.originalNumber; const n = (orig === 710 || orig === 711) ? orig : pokemonData.number; return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${n}.png`; })(),
     spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonData.number}.png`,
     isFromEgg: true,
     parents: {

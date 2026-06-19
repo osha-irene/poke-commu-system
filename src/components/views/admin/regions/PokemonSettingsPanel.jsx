@@ -260,18 +260,17 @@ export default function PokemonSettingsPanel({
 
   // ─── 지역 모드 핸들러 ───────────────────────────────────────────────────
   const toggleRegionPokemon = (pokemon) => {
-    const id = pokemon.number;
-    setSelectedPokemon(prev => {
-      if (prev.includes(id)) {
-        setPokemonFormSelections(ps => { const n = { ...ps }; delete n[id]; return n; });
-        return prev.filter(x => x !== id);
-      }
-      // 기본 폼 초기화
+    const id = Number(pokemon.number) || pokemon.number;
+    const isSelected = selectedPokemon.some(x => Number(x) === id || x === id);
+    if (isSelected) {
+      setSelectedPokemon(prev => prev.filter(x => Number(x) !== id && x !== id));
+      setPokemonFormSelections(ps => { const n = { ...ps }; delete n[id]; return n; });
+    } else {
       const forms = getFormsForPokemon(id);
       const defaultForm = forms.length > 0 ? [forms[0].number] : [id];
+      setSelectedPokemon(prev => [...prev, id]);
       setPokemonFormSelections(ps => ({ ...ps, [id]: defaultForm }));
-      return [...prev, id];
-    });
+    }
   };
 
   const toggleFormInRegion = (baseId, formNum) => {
@@ -636,7 +635,7 @@ export default function PokemonSettingsPanel({
                 <p>선택된 포켓몬이 없습니다.</p>
               </div>
             ) : (
-              <>
+              <div className="max-h-80 overflow-y-auto pr-1">
                 {[
                   { title: '영운 도감', ids: selectedPokemon.filter(isInGamePokedex) },
                   { title: '전국 도감', ids: selectedPokemon.filter(id => !isInGamePokedex(id)) },
@@ -648,7 +647,7 @@ export default function PokemonSettingsPanel({
                     </div>
                   </div>
                 ))}
-              </>
+              </div>
             )}
           </div>
 
@@ -734,8 +733,10 @@ export default function PokemonSettingsPanel({
                 <Package size={20} />
                 포켓몬 / 폼 선택 ({selectedFormIds.length}개 선택됨)
               </h5>
-              <div className="grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(120px,1fr))]">
-                {placeFormPool.map(f => renderPlaceFormCard(f))}
+              <div className="max-h-80 overflow-y-auto pr-1">
+                <div className="grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(120px,1fr))]">
+                  {placeFormPool.map(f => renderPlaceFormCard(f))}
+                </div>
               </div>
             </div>
           )}

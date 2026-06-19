@@ -72,8 +72,8 @@ const getSizeRarity = (rank) => {
   return '일반';
 };
 
-const getSizeDescription = (rank) => {
-  const desc = {
+const getSizeDescription = (rank, formVariant) => {
+  const sizeDesc = {
     'XXXS': '믿기 어려울 만큼 작은 크기인 것 같다.',
     'XXS': '매우 작은 크기인 것 같다.',
     'XS': '조금 작은 크기인 것 같다.',
@@ -82,7 +82,22 @@ const getSizeDescription = (rank) => {
     'XXL': '매우 큰 크기인 것 같다.',
     'XXXL': '믿기 어려울 만큼 큰 크기인 것 같다.',
   };
-  return desc[rank] || '알 수 없는 크기인 것 같다.';
+  const breedPrefix = {
+    'pumpkaboo-super': '제일 큰 품종',
+    'pumpkaboo-large': '큰 품종',
+    'pumpkaboo-average': '평범한 품종',
+    'pumpkaboo-small': '작은 품종',
+    'gourgeist-super': '제일 큰 품종',
+    'gourgeist-large': '큰 품종',
+    'gourgeist-average': '평범한 품종',
+    'gourgeist-small': '작은 품종',
+  };
+  if (formVariant && breedPrefix[formVariant]) {
+    const rankDesc = sizeDesc[rank];
+    if (rankDesc) return `${breedPrefix[formVariant]} 중에서도 ${rankDesc}`;
+    return `${breedPrefix[formVariant]}인 것 같다.`;
+  }
+  return sizeDesc[rank] || '알 수 없는 크기인 것 같다.';
 };
 
 
@@ -972,7 +987,7 @@ const ballImage = getBallImage();
                         })()}
                       </div>
                     )}
-                    <div>{getSizeDescription(pokemon.sizeRank)}{pokemon.favoriteFlavor ? ` ${pokemon.favoriteFlavor}을 좋아한다.` : ''}</div>
+                    <div>{getSizeDescription(pokemon.sizeRank, pokemon.formVariant)}{pokemon.favoriteFlavor ? ` ${pokemon.favoriteFlavor}을 좋아한다.` : ''}</div>
                   </div>
                 )}
                 {isEditingMemo ? (
