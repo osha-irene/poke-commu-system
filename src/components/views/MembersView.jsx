@@ -1,303 +1,252 @@
-import React, { useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { Search, Shield, X, Users } from 'lucide-react';
+import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
+import { Search, ArrowLeft, Shield, Star, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const POKEMON_PLACEHOLDER = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
 
 function getMemberList(members) {
   if (!members) return [];
-
   return Object.entries(members)
-    .map(([id, member]) => ({
-      id,
-      ...(member || {})
-    }))
-    .filter((member) => member && member.name && !member.hidden)
+    .map(([id, m]) => ({ id, ...(m || {}) }))
+    .filter(m => m && m.name && !m.hidden)
     .sort((a, b) => {
-      const aAdminRank = a.isSuperAdmin ? 2 : a.isAdmin ? 1 : 0;
-      const bAdminRank = b.isSuperAdmin ? 2 : b.isAdmin ? 1 : 0;
-
-      if (aAdminRank !== bAdminRank) return bAdminRank - aAdminRank;
+      const ar = a.isSuperAdmin ? 2 : a.isAdmin ? 1 : 0;
+      const br = b.isSuperAdmin ? 2 : b.isAdmin ? 1 : 0;
+      if (ar !== br) return br - ar;
       return (a.name || '').localeCompare(b.name || '', 'ko');
     });
 }
 
-function getPokemonName(pokemon) {
-  return pokemon?.nickname || pokemon?.name || pokemon?.nameKo || pokemon?.nameEn || '포켓몬';
+function getPokemonName(p) {
+  return p?.nickname || p?.name || p?.nameKo || p?.nameEn || '포켓몬';
+}
+function getPokemonImage(p) {
+  return p?.sprite || p?.spriteUrl || p?.imageUrl || p?.iconUrl || p?.frontSprite || POKEMON_PLACEHOLDER;
+}
+function getMemberImage(m) {
+  return m?.profileImage || m?.profileImageUrl || m?.avatarUrl || m?.imageUrl || '';
+}
+function getPartyPokemon(m) {
+  return (m?.caughtPokemon || []).filter(Boolean).slice(0, 6);
+}
+function getPartnerPokemon(m) {
+  if (m?.partnerPokemon) return m.partnerPokemon;
+  const party = getPartyPokemon(m);
+  return party.find(p => p.isPartner) || party[0] || null;
+}
+function getVisibleInventory(m) {
+  return (m?.inventory || []).filter(i => i && (i.count ?? 1) > 0).slice(0, 12);
 }
 
-function getPokemonImage(pokemon) {
-  return (
-    pokemon?.sprite ||
-    pokemon?.spriteUrl ||
-    pokemon?.imageUrl ||
-    pokemon?.iconUrl ||
-    pokemon?.frontSprite ||
-    POKEMON_PLACEHOLDER
-  );
+function RoleBadge({ member }) {
+  if (member.isSuperAdmin) return <span className="mbr-badge mbr-badge--super">슈퍼관리자</span>;
+  if (member.isAdmin) return <span className="mbr-badge mbr-badge--admin">관리자</span>;
+  return <span className="mbr-badge mbr-badge--member">회원</span>;
 }
 
-function getMemberImage(member) {
-  return member.profileImage || member.profileImageUrl || member.avatarUrl || member.imageUrl || '';
-}
-
-function getVisibleInventory(member) {
-  return (member.inventory || [])
-    .filter((item) => item && (item.count ?? 1) > 0)
-    .slice(0, 12);
-}
-
-function getPartyPokemon(member) {
-  return (member.caughtPokemon || []).slice(0, 6).filter(Boolean);
-}
-
-function getPartnerPokemon(member) {
-  if (member?.partnerPokemon) return member.partnerPokemon;
+function MemberDetail({ member, onBack }) {
   const party = getPartyPokemon(member);
-  return party.find((pokemon) => pokemon.isPartner) || party[0] || null;
-}
-
-function MemberAvatar({ member, className = '' }) {
+  const partner = getPartnerPokemon(member);
+  const inventory = getVisibleInventory(member);
   const imageUrl = getMemberImage(member);
-  const initial = member.name?.trim()?.charAt(0) || '?';
-
-  if (imageUrl) {
-    return (
-      <img
-        src={imageUrl}
-        alt={member.name}
-        className={`bg-indigo-100 object-cover ${className}`}
-      />
-    );
-  }
 
   return (
-    <div className={`border-2 border-lime-300 bg-white/55 text-green-950 flex items-center justify-center font-bold ${className}`}>
-      {initial}
+    <div className="mbr-detail">
+      <div className="mbr-visual">
+        <button className="mbr-detail-back" onClick={onBack} aria-label="목록으로">
+          <ChevronLeft size={14} strokeWidth={2.5} />
+        </button>
+        {imageUrl
+          ? <img src={imageUrl} alt={member.name} className="mbr-visual-img" />
+          : <div className="mbr-visual-placeholder">{member.name?.charAt(0) || '?'}</div>
+        }
+        <div className="mbr-visual-shade" />
+        <div className="mbr-visual-footer">
+          <span className="mbr-visual-name">{member.name}</span>
+          <RoleBadge member={member} />
+        </div>
+      </div>
+
+      <div className="mbr-body">
+        <div className="mbr-body-inner">
+          {(member.email || member.mastodonAccount) && (
+            <p className="mbr-body-sub">{member.email || member.mastodonAccount}</p>
+          )}
+
+          <div className="mbr-stats-grid">
+            <div className="mbr-stat"><span>소지금</span><strong>{(member.money || 0).toLocaleString()}원</strong></div>
+            <div className="mbr-stat"><span>탐험</span><strong>{member.dailyWalks ?? 0}/{member.maxDailyWalks ?? 0}회</strong></div>
+            <div className="mbr-stat"><span>포켓몬</span><strong>{(member.caughtPokemon || []).filter(Boolean).length}마리</strong></div>
+            <div className="mbr-stat"><span>아이템</span><strong>{(member.inventory || []).filter(Boolean).length}종</strong></div>
+          </div>
+
+          {partner && (
+            <section className="mbr-section">
+              <h3 className="mbr-section-h"><Star size={12} />파트너</h3>
+              <div className="mbr-partner-row">
+                <div className="mbr-partner-img-box">
+                  <img src={getPokemonImage(partner)} alt={getPokemonName(partner)} style={{ imageRendering: 'pixelated', width: 48, height: 48, objectFit: 'contain' }} />
+                </div>
+                <div>
+                  <div className="mbr-partner-name">{getPokemonName(partner)}</div>
+                  <div className="mbr-partner-lv">Lv.{partner.level || 1}</div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {party.length > 0 && (
+            <section className="mbr-section">
+              <h3 className="mbr-section-h">엔트리</h3>
+              <div className="mbr-party-grid">
+                {party.map((p, i) => (
+                  <div key={p.uniqueId || i} className="mbr-party-slot">
+                    <img src={getPokemonImage(p)} alt={getPokemonName(p)} style={{ imageRendering: 'pixelated', width: 44, height: 44, objectFit: 'contain' }} />
+                    <div className="mbr-party-name">{getPokemonName(p)}</div>
+                    <div className="mbr-party-lv">Lv.{p.level || 1}</div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {inventory.length > 0 && (
+            <section className="mbr-section">
+              <h3 className="mbr-section-h">보유 아이템</h3>
+              <div className="mbr-item-grid">
+                {inventory.map((item, i) => (
+                  <div key={item.itemId || i} className="mbr-item-slot">
+                    <img src={item.imageUrl || item.spriteUrl || POKEMON_PLACEHOLDER} alt={item.name || '아이템'} style={{ imageRendering: 'pixelated', width: 32, height: 32, objectFit: 'contain' }} />
+                    <div className="mbr-item-name">{item.name || '아이템'}</div>
+                    <div className="mbr-item-cnt">×{item.count ?? 1}</div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
-function RoleBadge({ member }) {
-  if (member.isSuperAdmin) {
-    return <span className="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full font-semibold">슈퍼관리자</span>;
-  }
-
-  if (member.isAdmin) {
-    return <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-semibold">관리자</span>;
-  }
-
-  return <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full font-semibold">회원</span>;
-}
-
 export default function MembersView({ members = {}, isLoading = false }) {
-  const [selectedMemberId, setSelectedMemberId] = useState(null);
+  const [activeId, setActiveId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const listRef = useRef(null);
+  const [navState, setNavState] = useState({ prev: false, next: false });
 
   const memberList = useMemo(() => getMemberList(members), [members]);
-  const filteredMembers = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return memberList;
-
-    return memberList.filter((member) => {
-      const searchable = [
-        member.name,
-        member.nickname,
-        member.email,
-        member.mastodonAccount
-      ].filter(Boolean).join(' ').toLowerCase();
-
-      return searchable.includes(query);
-    });
+  const filtered = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return memberList;
+    return memberList.filter(m =>
+      [m.name, m.nickname, m.email, m.mastodonAccount].filter(Boolean).join(' ').toLowerCase().includes(q)
+    );
   }, [memberList, searchQuery]);
 
-  const selectedMember = selectedMemberId
-    ? memberList.find((member) => member.id === selectedMemberId) || null
-    : null;
-  const selectedParty = selectedMember ? getPartyPokemon(selectedMember) : [];
-  const selectedPartner = selectedMember ? getPartnerPokemon(selectedMember) : null;
-  const selectedInventory = selectedMember ? getVisibleInventory(selectedMember) : [];
+  const activeMember = activeId ? memberList.find(m => m.id === activeId) : null;
+  const hasActive = !!activeMember;
+
+  const updateNav = useCallback(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const max = Math.max(0, el.scrollWidth - el.clientWidth);
+    setNavState({ prev: el.scrollLeft > 2, next: el.scrollLeft < max - 2 });
+  }, []);
+
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', updateNav, { passive: true });
+    updateNav();
+    return () => el.removeEventListener('scroll', updateNav);
+  }, [updateNav, filtered]);
+
+  useEffect(() => {
+    window.setTimeout(updateNav, 400);
+  }, [hasActive, updateNav]);
+
+  const scrollList = (dir) => {
+    const el = listRef.current;
+    if (!el) return;
+    const amt = Math.max(220, Math.round(el.clientWidth * 0.58));
+    el.scrollTo({ left: Math.max(0, el.scrollLeft + amt * dir), behavior: 'smooth' });
+    window.setTimeout(updateNav, 360);
+  };
+
+  const openMember = (id) => {
+    setActiveId(id);
+  };
+
+  const closeMember = () => {
+    setActiveId(null);
+  };
 
   return (
-    <div className="max-w-7xl mx-auto p-4 space-y-4">
-      <div className="members-toolbar rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 shadow-sm">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h2 className="flex items-center gap-2 text-xl font-bold text-gray-800">
-            <Users size={22} className="text-emerald-700" />
-            멤버
-          </h2>
-          <p className="text-sm text-gray-500">
-            {isLoading ? '회원 데이터를 불러오는 중입니다.' : `총 ${memberList.length}명`}
-          </p>
+    <div className={`mbr-page${hasActive ? ' has-active' : ''}`}>
+      {/* 좌측: 멤버 목록 */}
+      <div className="mbr-roster">
+        {/* 검색 — hover시 표시, 우상단 */}
+        <div className="mbr-search-zone">
+          <div className="mbr-search-inner">
+            <input
+              type="text"
+              placeholder="이름·계정 검색"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="mbr-search-input"
+            />
+            <Search size={13} className="mbr-search-icon" aria-hidden="true" />
+          </div>
         </div>
 
-        <label className="relative w-full md:w-80">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden="true" />
-          <input
-            type="text"
-            placeholder="이름, 이메일, 계정 검색"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none"
-          />
-        </label>
-        </div>
-      </div>
-
-      {isLoading && (
-        <div className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
-          회원 목록을 불러오고 있습니다.
-        </div>
-      )}
-
-      {!isLoading && filteredMembers.length === 0 && (
-        <div className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
-          표시할 회원이 없습니다.
-        </div>
-      )}
-
-      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
-        {filteredMembers.map((member) => (
+        {/* 카드 가로 스크롤 */}
+        <div className="mbr-list-stage">
           <button
-            type="button"
-            key={member.id}
-            onClick={() => setSelectedMemberId(member.id)}
-            className="member-image-tile group relative aspect-square overflow-hidden rounded-xl border border-gray-200 bg-slate-100 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
-            title={member.name}
-          >
-            <MemberAvatar member={member} className="h-full w-full text-5xl" />
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-full bg-slate-950/78 px-2.5 py-2 text-left transition-transform duration-200 group-hover:translate-y-0 group-focus:translate-y-0">
-              <div className="truncate text-sm font-bold text-white">{member.name}</div>
-              <div className="mt-1">
-                <RoleBadge member={member} />
-              </div>
-            </div>
-          </button>
-        ))}
+            className="mbr-list-nav mbr-list-nav-prev"
+            hidden={!navState.prev}
+            onClick={() => scrollList(-1)}
+            aria-label="이전"
+          >&#8249;</button>
+
+          <div className="mbr-list" ref={listRef}>
+            {isLoading ? null : filtered.map(m => {
+              const img = getMemberImage(m);
+              return (
+                <button
+                  key={m.id}
+                  className={`mbr-card${activeId === m.id ? ' active' : ''}`}
+                  onClick={() => openMember(m.id)}
+                  title={m.name}
+                >
+                  <span className="mbr-card-thumb">
+                    {img
+                      ? <img src={img} alt={m.name} />
+                      : <span className="mbr-card-initial">{m.name?.charAt(0) || '?'}</span>
+                    }
+                  </span>
+                  <span className="mbr-card-main">
+                    <em>{m.mastodonAccount || m.email || ''}</em>
+                    <strong>{m.name}</strong>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            className="mbr-list-nav mbr-list-nav-next"
+            hidden={!navState.next}
+            onClick={() => scrollList(1)}
+            aria-label="다음"
+          >&#8250;</button>
+        </div>
       </div>
 
-      {selectedMember && createPortal((
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setSelectedMemberId(null)}>
-          <section className="flex max-h-[86vh] w-full max-w-5xl overflow-hidden rounded-lg bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
-            <aside className="flex w-80 flex-shrink-0 flex-col border-r-2 border-lime-200 bg-white/55">
-              <div className="relative flex-1 p-4">
-                <button
-                  type="button"
-                  onClick={() => setSelectedMemberId(null)}
-                  className="absolute left-3 top-3 z-10 rounded-full bg-white/90 p-1.5 text-gray-700 shadow hover:bg-white"
-                  aria-label="닫기"
-                >
-                  <X size={20} aria-hidden="true" />
-                </button>
-                <MemberAvatar member={selectedMember} className="h-full min-h-80 w-full rounded-lg text-8xl" />
-              </div>
-
-              <div className="border-t bg-white p-4">
-                <div className="mb-2 flex items-center gap-2">
-                  <h2 className="min-w-0 flex-1 truncate text-lg font-bold text-gray-900">{selectedMember.name}</h2>
-                  <RoleBadge member={selectedMember} />
-                </div>
-                <p className="truncate text-xs text-gray-500">{selectedMember.email || selectedMember.mastodonAccount || selectedMember.id}</p>
-              </div>
-            </aside>
-
-            <div className="flex-1 space-y-3 overflow-y-auto bg-gray-50 p-4">
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                <div className="rounded-lg border border-gray-200 bg-white p-3">
-                  <div className="text-xs text-gray-500">소지금</div>
-                  <div className="text-lg font-bold text-yellow-600">{(selectedMember.money || 0).toLocaleString()}원</div>
-                </div>
-                <div className="rounded-lg border border-gray-200 bg-white p-3">
-                  <div className="text-xs text-gray-500">탐험</div>
-                  <div className="text-lg font-bold text-purple-600">{selectedMember.dailyWalks ?? 0}/{selectedMember.maxDailyWalks ?? 0}회</div>
-                </div>
-                <div className="rounded-lg border border-gray-200 bg-white p-3">
-                  <div className="text-xs text-gray-500">포켓몬</div>
-                  <div className="text-lg font-bold text-blue-600">{(selectedMember.caughtPokemon || []).filter(Boolean).length}마리</div>
-                </div>
-                <div className="rounded-lg border border-gray-200 bg-white p-3">
-                  <div className="text-xs text-gray-500">아이템</div>
-                  <div className="text-lg font-bold text-emerald-600">{(selectedMember.inventory || []).filter(Boolean).length}개</div>
-                </div>
-              </div>
-
-              <section className="rounded-lg border border-blue-200 bg-white p-3">
-                <h3 className="mb-2 flex items-center gap-2 text-sm font-bold text-gray-800">
-                  <Shield size={16} aria-hidden="true" />
-                  파트너
-                </h3>
-                {selectedPartner ? (
-                  <div className="flex items-center gap-3 rounded-lg bg-blue-50 p-3">
-                    <div className="flex h-28 w-28 flex-shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-white p-2">
-                      <img
-                        src={getPokemonImage(selectedPartner)}
-                        alt={getPokemonName(selectedPartner)}
-                        className="member-pokemon-modal-sprite object-contain pokemon-sprite"
-                        style={{ imageRendering: 'pixelated' }}
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <h4 className="truncate text-base font-bold text-gray-800">{getPokemonName(selectedPartner)}</h4>
-                      <p className="text-sm text-gray-600">Lv.{selectedPartner.level || 1}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">파트너 포켓몬이 없습니다.</p>
-                )}
-              </section>
-
-              <section className="rounded-lg border border-gray-200 bg-white p-3">
-                <h3 className="mb-2 text-sm font-bold text-gray-800">엔트리</h3>
-                {selectedParty.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {selectedParty.map((pokemon, index) => (
-                      <div key={pokemon.uniqueId || pokemon.id || index} className="rounded-lg border border-gray-200 bg-gray-50 p-2">
-                        <div className="mb-1 flex h-28 items-center justify-center rounded bg-white">
-                          <img
-                            src={getPokemonImage(pokemon)}
-                            alt={getPokemonName(pokemon)}
-                            className="member-pokemon-modal-sprite object-contain pokemon-sprite"
-                            style={{ imageRendering: 'pixelated' }}
-                          />
-                        </div>
-                        <div className="truncate text-center text-xs font-semibold text-gray-800">{getPokemonName(pokemon)}</div>
-                        <div className="text-center text-xs text-gray-500">Lv.{pokemon.level || 1}</div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">등록된 포켓몬이 없습니다.</p>
-                )}
-              </section>
-
-              <section className="rounded-lg border border-gray-200 bg-white p-3">
-                <h3 className="mb-2 text-sm font-bold text-gray-800">보유 아이템</h3>
-                {selectedInventory.length > 0 ? (
-                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                    {selectedInventory.map((item, index) => (
-                      <div key={item.itemId || item.id || index} className="rounded-lg border border-yellow-200 bg-yellow-50 p-2 text-center">
-                        <div className="mx-auto mb-1 h-10 w-10">
-                          <img
-                            src={item.imageUrl || item.spriteUrl || POKEMON_PLACEHOLDER}
-                            alt={item.name || '아이템'}
-                            className="h-full w-full object-contain"
-                            style={{ imageRendering: 'pixelated' }}
-                          />
-                        </div>
-                        <div className="truncate text-xs font-semibold text-gray-700">{item.name || '아이템'}</div>
-                        <div className="text-xs text-gray-500">x{item.count ?? 1}</div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">보유 아이템이 없습니다.</p>
-                )}
-              </section>
-            </div>
-          </section>
-        </div>
-      ), document.body)}
+      {/* 우측: 디테일 */}
+      <div className={`mbr-detail-wrap${hasActive ? '' : ' is-empty'}`}>
+        {activeMember && <MemberDetail member={activeMember} onBack={closeMember} />}
+      </div>
     </div>
   );
 }

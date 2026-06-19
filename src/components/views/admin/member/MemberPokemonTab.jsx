@@ -9,6 +9,7 @@ import MemberPokemonTransferMode from './MemberPokemonTransferMode';
 import { getLearnsetTmMoves, getPokemonLearnset } from '../../../../utils/pokemonLearnsets';
 import { DEFAULT_IVS, generateRandomIVs, normalizeIVs } from '../../../../utils/pokemonIndividualValues';
 import { getPokemonGenderOptions } from '../../../../utils/pokemonGender';
+import { getPokemonDisplayParts } from '../../../../utils/pokemonDisplayName';
 
 const emptyEffort = { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 };
 const emptyCondition = { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 };
@@ -526,7 +527,7 @@ function MemberPokemonTab({
             setGiveData(prev => ({
               ...prev,
               selectedPokemon: pokemon,
-              nickname: pokemon.name,
+              nickname: getPokemonDisplayParts(pokemon).name || pokemon.name,
               selectedMoves: [],
               gender: nextGenderOptions.length === 1 && nextGenderOptions[0] === 'none' ? 'none' : 'random',
             }));

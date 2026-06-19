@@ -4,7 +4,8 @@
 import { initializeApp, deleteApp } from 'firebase/app';
 import { createUserWithEmailAndPassword, getAuth, signOut } from 'firebase/auth';
 import { ref, set, update } from 'firebase/database';
-import { auth, database } from '../../firebase';
+import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { auth, database, storage } from '../../firebase';
 import { POKEBALL_LIST } from '../../styles/theme';
 import { getBaseStatPatch } from '../../utils/pokemonBaseStats';
 import { getAbilityEnglishName } from '../../utils/abilityUtils';
@@ -1381,6 +1382,52 @@ export const useAdminMembers = (
     addPokemonToSelf,
     updateMemberMoney,
     deleteMember,
-    resetGameData
+    resetGameData,
+    uploadMemberImage,
+    deleteMemberImage,
   };
+
+  async function uploadMemberImage(memberId, file, type) {
+    // type: 'face' | 'body'
+    if (!memberId || !file) return null;
+    const ext = file.name.split('.').pop() || 'jpg';
+    const path = `members/${memberId}/${type}.${ext}`;
+    const sRef = storageRef(storage, path);
+    try {
+      await uploadBytes(sRef, file, { contentType: file.type });
+      const url = await getDownloadURL(sRef);
+      const field = type === 'face' ? 'profileImage' : 'profileImageFull';
+      const memberRef = ref(database, `members/${memberId}`);
+      await update(memberRef, { [field]: url });
+      setMembers(prev => ({
+        ...prev,
+        [memberId]: { ...prev[memberId], [field]: url }
+      }));
+      return url;
+    } catch (error) {
+      console.error('❌ 이미지 업로드 실패:', error);
+      alert('이미지 업로드에 실패했습니다: ' + error.message);
+      return null;
+    }
+  }
+
+  async function deleteMemberImage(memberId, type) {
+    if (!memberId) return;
+    const field = type === 'face' ? 'profileImage' : 'profileImageFull';
+    const member = members[memberId];
+    const url = member?.[field];
+    if (url) {
+      try {
+        // storage 파일 삭제 시도 (실패해도 DB는 지움)
+        const sRef = storageRef(storage, `members/${memberId}/${type}`);
+        await deleteObject(sRef).catch(() => {});
+      } catch {}
+    }
+    const memberRef = ref(database, `members/${memberId}`);
+    await update(memberRef, { [field]: null });
+    setMembers(prev => ({
+      ...prev,
+      [memberId]: { ...prev[memberId], [field]: null }
+    }));
+  }
 };
