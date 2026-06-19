@@ -27,6 +27,8 @@ function MemberDetailPanel({ member, onClose }) {
     resetMemberWalkCount,
     toggleAdminStatus,
     updateMemberMoney,
+    uploadMemberImage,
+    deleteMemberImage,
   } = useGame();
 
   const [selectedTab, setSelectedTab] = useState('info');
@@ -138,6 +140,8 @@ function MemberDetailPanel({ member, onClose }) {
               onUpdateWalkCount={handleUpdateWalkCount}
               onUpdateMaxWalkCount={handleUpdateMaxWalkCount}
               onDeleteMember={handleDeleteMember}
+              onUploadImage={uploadMemberImage}
+              onDeleteImage={deleteMemberImage}
             />
           )}
 

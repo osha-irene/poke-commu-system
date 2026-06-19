@@ -1418,8 +1418,7 @@ export const useAdminMembers = (
     const url = member?.[field];
     if (url) {
       try {
-        // storage 파일 삭제 시도 (실패해도 DB는 지움)
-        const sRef = storageRef(storage, `members/${memberId}/${type}`);
+        const sRef = storageRef(storage, url);
         await deleteObject(sRef).catch(() => {});
       } catch {}
     }

@@ -1,5 +1,83 @@
 // src/components/views/admin/member/MemberInfoTab.jsx
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { Upload, Trash2, User, PersonStanding } from 'lucide-react';
+
+function ImageUploadSlot({ label, description, currentUrl, onUpload, onDelete, uploading }) {
+  const inputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('이미지 파일만 업로드할 수 있습니다.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('파일 크기는 5MB 이하여야 합니다.');
+      return;
+    }
+    onUpload(file);
+    e.target.value = '';
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="text-xs font-bold text-gray-600 uppercase tracking-wide">{label}</div>
+      <div className="text-xs text-gray-400">{description}</div>
+
+      {/* 미리보기 */}
+      <div
+        className="relative overflow-hidden rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition-colors group"
+        style={{ aspectRatio: label === '두상' ? '1/1' : '2/3', minHeight: label === '두상' ? 120 : 180 }}
+        onClick={() => !uploading && inputRef.current?.click()}
+      >
+        {currentUrl ? (
+          <>
+            <img
+              src={currentUrl}
+              alt={label}
+              className="w-full h-full object-cover object-top"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+              <span className="text-white text-xs font-bold">클릭하여 교체</span>
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col items-center gap-2 text-gray-300 p-4">
+            {uploading ? (
+              <div className="text-xs text-indigo-500 font-semibold">업로드 중...</div>
+            ) : (
+              <>
+                <Upload size={22} />
+                <span className="text-xs font-medium">클릭하여 업로드</span>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileChange}
+        disabled={uploading}
+      />
+
+      {currentUrl && (
+        <button
+          onClick={onDelete}
+          disabled={uploading}
+          className="flex items-center justify-center gap-1.5 text-xs text-red-500 hover:text-red-700 py-1 border border-red-200 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
+        >
+          <Trash2 size={12} />
+          이미지 삭제
+        </button>
+      )}
+    </div>
+  );
+}
 
 function MemberInfoTab({
   member,
@@ -9,16 +87,58 @@ function MemberInfoTab({
   onUpdateMoney,
   onUpdateWalkCount,
   onUpdateMaxWalkCount,
-  onDeleteMember
+  onDeleteMember,
+  onUploadImage,
+  onDeleteImage,
 }) {
   const [moneyInput, setMoneyInput] = useState(member.money || 0);
   const [editWalkCount, setEditWalkCount] = useState(member.dailyWalks);
   const [editMaxWalkCount, setEditMaxWalkCount] = useState(member.maxDailyWalks);
+  const [uploading, setUploading] = useState({ face: false, body: false });
+
+  const handleUpload = async (file, type) => {
+    if (!onUploadImage) return;
+    setUploading(prev => ({ ...prev, [type]: true }));
+    try {
+      await onUploadImage(member.id, file, type);
+    } finally {
+      setUploading(prev => ({ ...prev, [type]: false }));
+    }
+  };
+
+  const handleDelete = async (type) => {
+    if (!onDeleteImage) return;
+    if (!window.confirm(`${type === 'face' ? '두상' : '전신'} 이미지를 삭제할까요?`)) return;
+    await onDeleteImage(member.id, type);
+  };
 
   return (
     <div className="grid grid-cols-2 gap-5">
-      {/* 왼쪽: 기본 정보 + 탐험 횟수 */}
+      {/* 왼쪽 */}
       <div className="space-y-4">
+        {/* 프로필 이미지 */}
+        <div className="bg-gray-50 rounded-lg p-4">
+          <h3 className="font-bold text-base mb-3">🖼️ 프로필 이미지</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <ImageUploadSlot
+              label="두상"
+              description="증명사진 (정방형)"
+              currentUrl={member.profileImage}
+              onUpload={(file) => handleUpload(file, 'face')}
+              onDelete={() => handleDelete('face')}
+              uploading={uploading.face}
+            />
+            <ImageUploadSlot
+              label="전신"
+              description="전신샷 (세로형)"
+              currentUrl={member.profileImageFull}
+              onUpload={(file) => handleUpload(file, 'body')}
+              onDelete={() => handleDelete('body')}
+              uploading={uploading.body}
+            />
+          </div>
+        </div>
+
         <div className="bg-gray-50 rounded-lg p-4">
           <h3 className="font-bold text-base mb-3">📋 기본 정보</h3>
           <div className="space-y-2 text-sm">
@@ -92,7 +212,7 @@ function MemberInfoTab({
         </div>
       </div>
 
-      {/* 오른쪽: 소지금액 + 관리 기능 */}
+      {/* 오른쪽 */}
       <div className="space-y-4">
         <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
           <h3 className="font-bold text-base mb-3">💰 소지금액 관리</h3>
@@ -122,24 +242,9 @@ function MemberInfoTab({
               </div>
             </div>
             <div className="flex gap-2">
-              <button
-                onClick={() => setMoneyInput(moneyInput + 1000)}
-                className="flex-1 bg-gray-100 text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-200 transition-colors text-sm"
-              >
-                +1,000
-              </button>
-              <button
-                onClick={() => setMoneyInput(moneyInput + 10000)}
-                className="flex-1 bg-gray-100 text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-200 transition-colors text-sm"
-              >
-                +10,000
-              </button>
-              <button
-                onClick={() => setMoneyInput(moneyInput + 100000)}
-                className="flex-1 bg-gray-100 text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-200 transition-colors text-sm"
-              >
-                +100,000
-              </button>
+              <button onClick={() => setMoneyInput(moneyInput + 1000)} className="flex-1 bg-gray-100 text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-200 transition-colors text-sm">+1,000</button>
+              <button onClick={() => setMoneyInput(moneyInput + 10000)} className="flex-1 bg-gray-100 text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-200 transition-colors text-sm">+10,000</button>
+              <button onClick={() => setMoneyInput(moneyInput + 100000)} className="flex-1 bg-gray-100 text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-200 transition-colors text-sm">+100,000</button>
             </div>
           </div>
         </div>
