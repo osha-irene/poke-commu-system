@@ -7,7 +7,8 @@ on:
   workflow_dispatch: # 수동 실행 허용
 
 permissions:
-  contents: write # gh-pages 브랜치에 푸시할 쓰기 권한 부여
+  contents: write
+  id-token: write
 
 jobs:
   build_and_deploy:
@@ -42,7 +43,23 @@ jobs:
           REACT_APP_FIREBASE_DATABASE_URL: ${{ secrets.REACT_APP_FIREBASE_DATABASE_URL }}
         run: npm run build
         
-      # 4. GitHub Pages 배포
+      # 4. Firebase Storage CORS 설정
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set Firebase Storage CORS
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Apply CORS to Firebase Storage
+        run: |
+          cat > /tmp/cors.json << 'EOF'
+          [{"origin":["https://osha-irene.github.io"],"method":["GET","POST","PUT","DELETE","HEAD","OPTIONS"],"maxAgeSeconds":3600,"responseHeader":["Content-Type","Authorization","Content-Length","x-goog-resumable"]}]
+          EOF
+          gsutil cors set /tmp/cors.json gs://${{ secrets.REACT_APP_FIREBASE_STORAGE_BUCKET }}
+
+      # 5. GitHub Pages 배포
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:

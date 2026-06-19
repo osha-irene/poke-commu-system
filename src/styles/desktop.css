@@ -147,6 +147,11 @@
     grid-column: auto;
     order: 2;
     transform: none;
+    transition: transform 0.45s cubic-bezier(0.4,0,0.2,1);
+  }
+  body.mbr-overlay-open .trainer-rail {
+    transform: translateX(-120%);
+    pointer-events: none;
   }
 
   .content-stage {

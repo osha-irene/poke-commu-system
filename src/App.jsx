@@ -1883,7 +1883,7 @@ return (
             />
           )}
 
-          {currentTab === 'members' && <MembersView members={members} isLoading={isMembersLoading} />}
+          {currentTab === 'members' && <MembersView members={members} isLoading={isMembersLoading} isAdmin={isAdmin} />}
           {currentTab === 'npcs' && <NPCsView />}
           {currentTab === 'pokemon' && <PokemonView />}
           {currentTab === 'items' && <ItemsView />}
@@ -1996,7 +1996,7 @@ return (
 			/>
 		  )}
 		  
-		  {currentTab === 'members' && <MembersView members={members} isLoading={isMembersLoading} />}
+		  {currentTab === 'members' && <MembersView members={members} isLoading={isMembersLoading} isAdmin={isAdmin} />}
 		  {currentTab === 'npcs' && <NPCsView />}
 		  {currentTab === 'pokemon' && <PokemonView />}
 		  {currentTab === 'items' && <ItemsView />}

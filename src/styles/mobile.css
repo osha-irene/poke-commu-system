@@ -1271,6 +1271,11 @@ button:active {
     width: var(--side-column) !important;
     transform: none !important;
     z-index: 45 !important;
+    transition: transform 0.45s cubic-bezier(0.4,0,0.2,1) !important;
+  }
+  body.mbr-overlay-open .trainer-rail {
+    transform: translateX(-300%) !important;
+    pointer-events: none !important;
   }
 
   .main-shell--home .trainer-rail {
