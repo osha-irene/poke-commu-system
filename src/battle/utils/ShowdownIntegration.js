@@ -302,7 +302,7 @@ class ShowdownIntegration {
         level: pokemon.level || 50,
         ability: pokemon.ability || 'Adaptability',
         item: pokemon.item || '',
-        nature: pokemon.nature || 'Hardy',
+        nature: 'Hardy',
         ivs: pokemon.ivs || {
           hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31
         },

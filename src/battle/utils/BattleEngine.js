@@ -559,16 +559,8 @@ class BattleEngine {
       const level = pokemon.level || 50;
       
       // 실수치 = (종족값 * 2 + 개체값 + 노력치/4) * 레벨/100 + 5
-      let stat = Math.floor((baseSpeed * 2 + iv + Math.floor(ev / 4)) * level / 100 + 5);
-      
-      // 성격 보정
-      const nature = pokemon.nature || 'Hardy';
-      if (['Timid', 'Hasty', 'Jolly', 'Naive'].includes(nature)) {
-        stat = Math.floor(stat * 1.1);
-      } else if (['Brave', 'Relaxed', 'Quiet', 'Sassy'].includes(nature)) {
-        stat = Math.floor(stat * 0.9);
-      }
-      
+      const stat = Math.floor((baseSpeed * 2 + iv + Math.floor(ev / 4)) * level / 100 + 5);
+
       return stat;
     }
   }

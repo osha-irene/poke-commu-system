@@ -14,8 +14,8 @@ export function calculateHP(base, iv, ev, level) {
 /**
  * 기타 스탯 계산 (공격, 방어, 특공, 특방, 스피드)
  */
-export function calculateStat(base, iv, ev, level, nature = 1.0) {
-  return Math.floor((Math.floor(((2 * base + iv + Math.floor(ev / 4)) * level) / 100) + 5) * nature);
+export function calculateStat(base, iv, ev, level) {
+  return Math.floor(((2 * base + iv + Math.floor(ev / 4)) * level) / 100) + 5;
 }
 
 /**
@@ -59,13 +59,11 @@ export const NATURE_MODIFIERS = {
  * 전체 스탯 계산
  */
 export function calculateAllStats(pokemon) {
-  const { baseStats, ivs = {}, evs = {}, level = 50, nature = 'serious' } = pokemon;
-  
+  const { baseStats, ivs = {}, evs = {}, level = 50 } = pokemon;
+
   const defaultIV = 31;
   const defaultEV = 0;
-  
-  const natureModifiers = NATURE_MODIFIERS[nature] || [1.0, 1.0, 1.0, 1.0, 1.0];
-  
+
   return {
     hp: calculateHP(
       baseStats.hp,
@@ -77,36 +75,31 @@ export function calculateAllStats(pokemon) {
       baseStats.attack,
       ivs.attack ?? defaultIV,
       evs.attack ?? defaultEV,
-      level,
-      natureModifiers[0]
+      level
     ),
     defense: calculateStat(
       baseStats.defense,
       ivs.defense ?? defaultIV,
       evs.defense ?? defaultEV,
-      level,
-      natureModifiers[1]
+      level
     ),
     spAttack: calculateStat(
       baseStats.spAttack,
       ivs.spAttack ?? defaultIV,
       evs.spAttack ?? defaultEV,
-      level,
-      natureModifiers[2]
+      level
     ),
     spDefense: calculateStat(
       baseStats.spDefense,
       ivs.spDefense ?? defaultIV,
       evs.spDefense ?? defaultEV,
-      level,
-      natureModifiers[3]
+      level
     ),
     speed: calculateStat(
       baseStats.speed,
       ivs.speed ?? defaultIV,
       evs.speed ?? defaultEV,
-      level,
-      natureModifiers[4]
+      level
     )
   };
 }

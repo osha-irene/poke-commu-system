@@ -7,6 +7,7 @@ import {
 import { POKEBALL_LIST } from '../../../../styles/theme';
 import { getPokemonGenderOptions } from '../../../../utils/pokemonGender';
 import { getGenderedSpriteUrl } from '../../../../utils/pokemonImageUtils';
+import { getPokemonDisplayParts } from '../../../../utils/pokemonDisplayName';
 
 export default function MemberPokemonGiveMode({
   allPokemonMaster,
@@ -27,7 +28,7 @@ export default function MemberPokemonGiveMode({
     setGiveData(prev => ({
       ...prev,
       selectedPokemon: pokemon,
-      nickname: pokemon.name,
+      nickname: getPokemonDisplayParts(pokemon).name || pokemon.name,
       selectedMoves: [],
       gender: nextGenderOptions.length === 1 && nextGenderOptions[0] === 'none' ? 'none' : 'random',
     }));

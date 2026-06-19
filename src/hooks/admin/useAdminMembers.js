@@ -246,7 +246,7 @@ export const useAdminMembers = (
     return {
       uniqueId: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
       pokemonId: pokemonTemplate.id,
-      name: pokemonTemplate.name,
+      name: getPokemonDisplayParts(pokemonTemplate).name || pokemonTemplate.name,
       nameEn: pokemonTemplate.nameEn,
       number: pokemonTemplate.originalNumber || pokemonTemplate.number,
       originalNumber: pokemonTemplate.originalNumber || pokemonTemplate.number,

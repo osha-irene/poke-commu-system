@@ -4,6 +4,7 @@
 import { getBaseStatPatch } from '../../utils/pokemonBaseStats';
 import { getAbilityEnglishName } from '../../utils/abilityUtils';
 import { normalizeIVs } from '../../utils/pokemonIndividualValues';
+import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
 
 export const usePokemonCatch = (
   currentUser,
@@ -77,7 +78,7 @@ export const usePokemonCatch = (
       uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       favoriteFlavor,
       pokemonId: pokemonTemplate.id,
-      name: pokemonTemplate.name,
+      name: getPokemonDisplayParts(pokemonTemplate).name || pokemonTemplate.name,
       nameEn: pokemonTemplate.nameEn,
       number: pokemonTemplate.originalNumber || pokemonTemplate.number,
       originalNumber: pokemonTemplate.originalNumber || pokemonTemplate.number,

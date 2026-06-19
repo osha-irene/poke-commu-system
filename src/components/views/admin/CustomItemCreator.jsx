@@ -17,6 +17,9 @@ const EMPTY_ITEM = {
   evBoost: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
   friendshipBoost: 0,
   conditionBoost: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
+  conditionTarget: '',
+  evTarget: '',
+  boostAmount: 0,
 };
 
 const CATEGORIES = [
@@ -42,6 +45,21 @@ const CONDITION_LABELS = {
 
 // 기존 아이템 데이터를 편집 폼 형태로 정규화
 function normalizeForEdit(item) {
+  const specialEffect = item.specialEffect ||
+    (item.ivBoost && Object.values(item.ivBoost).some(v => Number(v) > 0) ? 'iv' :
+     item.evBoost && Object.values(item.evBoost).some(v => Number(v) > 0) ? 'ev' :
+     item.friendshipBoost > 0 ? 'friendship' :
+     item.conditionBoost && Object.values(item.conditionBoost).some(v => Number(v) > 0) ? 'condition' :
+     null);
+
+  const conditionTarget = item.conditionTarget ||
+    (specialEffect === 'conditionSelect' && item.conditionBoost ? Object.keys(item.conditionBoost)[0] : '');
+  const evTarget = item.evTarget ||
+    (specialEffect === 'evSelect' && item.evBoost ? Object.keys(item.evBoost)[0] : '');
+  const boostAmount = item.boostAmount ||
+    (specialEffect === 'conditionSelect' && item.conditionBoost ? Object.values(item.conditionBoost)[0] :
+     specialEffect === 'evSelect' && item.evBoost ? Object.values(item.evBoost)[0] : 0);
+
   return {
     ...EMPTY_ITEM,
     ...item,
@@ -49,12 +67,10 @@ function normalizeForEdit(item) {
     evBoost: { ...EMPTY_ITEM.evBoost, ...(item.evBoost || {}) },
     conditionBoost: { ...EMPTY_ITEM.conditionBoost, ...(item.conditionBoost || {}) },
     friendshipBoost: item.friendshipBoost || 0,
-    specialEffect: item.specialEffect ||
-      (item.ivBoost && Object.values(item.ivBoost).some(v => Number(v) > 0) ? 'iv' :
-       item.evBoost && Object.values(item.evBoost).some(v => Number(v) > 0) ? 'ev' :
-       item.friendshipBoost > 0 ? 'friendship' :
-       item.conditionBoost && Object.values(item.conditionBoost).some(v => Number(v) > 0) ? 'condition' :
-       null),
+    specialEffect,
+    conditionTarget,
+    evTarget,
+    boostAmount,
   };
 }
 
@@ -84,13 +100,30 @@ export function CustomItemModal({ editItem = null, onSubmit, onClose }) {
       Object.entries(itemData.evBoost).filter(([, v]) => Number(v) > 0)
     );
 
+    let finalConditionBoost = cleanConditionBoost;
+    let finalEvBoost = cleanEvBoost;
+    let finalSpecialEffect = itemData.specialEffect;
+
+    if (itemData.specialEffect === 'conditionSelect') {
+      if (!itemData.conditionTarget) { alert('컨디션 항목을 선택해주세요!'); return; }
+      if (!itemData.boostAmount || itemData.boostAmount <= 0) { alert('상승량을 입력해주세요!'); return; }
+      finalConditionBoost = { [itemData.conditionTarget]: Number(itemData.boostAmount) };
+      finalEvBoost = {};
+    } else if (itemData.specialEffect === 'evSelect') {
+      if (!itemData.evTarget) { alert('노력치 항목을 선택해주세요!'); return; }
+      if (!itemData.boostAmount || itemData.boostAmount <= 0) { alert('상승량을 입력해주세요!'); return; }
+      finalEvBoost = { [itemData.evTarget]: Number(itemData.boostAmount) };
+      finalConditionBoost = {};
+    }
+
     const payload = {
       ...itemData,
       pocket: itemData.pocket || itemData.category,
       sellPrice: itemData.sellPrice || Math.floor(itemData.cost * 0.5),
-      conditionBoost: cleanConditionBoost,
+      conditionBoost: finalConditionBoost,
       ivBoost: cleanIvBoost,
-      evBoost: cleanEvBoost,
+      evBoost: finalEvBoost,
+      specialEffect: finalSpecialEffect,
     };
 
     const success = await onSubmit(payload);
@@ -215,9 +248,11 @@ export function CustomItemModal({ editItem = null, onSubmit, onClose }) {
             >
               <option value="">없음</option>
               <option value="iv">기초 포인트(개체값) 상승</option>
-              <option value="ev">노력치 상승</option>
+              <option value="ev">노력치 상승 (전체 입력)</option>
+              <option value="evSelect">노력치 상승 (항목 선택)</option>
               <option value="friendship">친밀도 상승</option>
-              <option value="condition">컨디션 상승</option>
+              <option value="condition">컨디션 상승 (전체 입력)</option>
+              <option value="conditionSelect">컨디션 상승 (항목 선택)</option>
             </select>
           </div>
 
@@ -280,6 +315,82 @@ export function CustomItemModal({ editItem = null, onSubmit, onClose }) {
                 <div className="h-full bg-pink-500 transition-all" style={{ width: `${(itemData.friendshipBoost / 255) * 100}%` }} />
               </div>
               <p className="text-xs text-pink-600 mt-2">💡 현재 친밀도에 추가됩니다 (최대 255)</p>
+            </div>
+          )}
+
+          {/* 컨디션 선택 */}
+          {itemData.specialEffect === 'conditionSelect' && (
+            <div className="bg-white/40 rounded-lg p-4 border-2 border-lime-200">
+              <h4 className="font-bold text-green-900 mb-3">✨ 컨디션 항목 선택 상승</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">컨디션 항목</label>
+                  <select
+                    value={itemData.conditionTarget}
+                    onChange={e => set({ conditionTarget: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  >
+                    <option value="">선택하세요</option>
+                    {Object.entries(CONDITION_LABELS).map(([key, label]) => (
+                      <option key={key} value={key}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">상승량 (N)</label>
+                  <input
+                    type="number" min="1" max="100"
+                    value={itemData.boostAmount}
+                    onChange={e => set({ boostAmount: Math.min(100, Math.max(1, parseInt(e.target.value) || 0)) })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    placeholder="예: 10"
+                  />
+                </div>
+              </div>
+              {itemData.conditionTarget && itemData.boostAmount > 0 && (
+                <p className="text-xs text-lime-700 mt-2 font-semibold">
+                  → 사용 시 {CONDITION_LABELS[itemData.conditionTarget]} +{itemData.boostAmount} 상승
+                </p>
+              )}
+              <p className="text-xs text-purple-600 mt-1">💡 현재 컨디션에 추가됩니다 (최대 100)</p>
+            </div>
+          )}
+
+          {/* 노력치 선택 */}
+          {itemData.specialEffect === 'evSelect' && (
+            <div className="bg-purple-50 rounded-lg p-4 border-2 border-purple-200">
+              <h4 className="font-bold text-purple-800 mb-3">⚡ 노력치 항목 선택 상승</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">노력치 항목</label>
+                  <select
+                    value={itemData.evTarget}
+                    onChange={e => set({ evTarget: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  >
+                    <option value="">선택하세요</option>
+                    {Object.entries(STAT_LABELS).map(([key, label]) => (
+                      <option key={key} value={key}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">상승량 (N)</label>
+                  <input
+                    type="number" min="1" max="252"
+                    value={itemData.boostAmount}
+                    onChange={e => set({ boostAmount: Math.min(252, Math.max(1, parseInt(e.target.value) || 0)) })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    placeholder="예: 10"
+                  />
+                </div>
+              </div>
+              {itemData.evTarget && itemData.boostAmount > 0 && (
+                <p className="text-xs text-purple-700 mt-2 font-semibold">
+                  → 사용 시 {STAT_LABELS[itemData.evTarget]} 노력치 +{itemData.boostAmount} 상승
+                </p>
+              )}
+              <p className="text-xs text-purple-600 mt-1">💡 현재 노력치에 추가됩니다 (최대 252, 총합 510)</p>
             </div>
           )}
 

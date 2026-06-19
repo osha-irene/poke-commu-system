@@ -103,7 +103,8 @@ export const useAdminRegions = (
       isCave: normalizedData.isCave === true,
       isWaterside: normalizedData.isWaterside === true,
       isSafari: normalizedData.isSafari === true,
-      places: Array.isArray(normalizedData.places) ? normalizedData.places : []
+      places: Array.isArray(normalizedData.places) ? normalizedData.places : [],
+      pokemonFormConfig: normalizedData.pokemonFormConfig !== undefined ? normalizedData.pokemonFormConfig : {}
     };
     
     const updatedRegions = (Array.isArray(regions) ? regions : []).map(region => 

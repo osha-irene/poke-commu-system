@@ -1,5 +1,6 @@
 import campingData from '../data/camping.json';
 import { DEFAULT_IVS } from './pokemonIndividualValues';
+import { getPokemonDisplayParts } from './pokemonDisplayName';
 
 /**
  * 알 획득 가능 여부 체크 (2인 캠핑 전용)
@@ -225,7 +226,7 @@ export function hatchEgg(egg, allPokemonMaster, allMoves, movesData) {
   return {
     uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     pokemonId: pokemonData.id,
-    name: pokemonData.name,
+    name: getPokemonDisplayParts(pokemonData).name || pokemonData.name,
     nameEn: pokemonData.nameEn,
     number: pokemonData.number,
     type: pokemonData.type,

@@ -187,7 +187,7 @@ export function convertToBattleFormat(pokemon) {
   };
   
   // 실제 스탯 계산
-  const stats = calculateStats(baseStats, ivs, evs, level, nature);
+  const stats = calculateStats(baseStats, ivs, evs, level);
   
   const result = {
     // 표시용 정보
@@ -262,53 +262,15 @@ function translateGender(gender) {
 /**
  * 스탯 계산
  */
-function calculateStats(base, ivs, evs, level, natureName) {
-  const natureModifiers = getNatureModifiers(natureName);
-  
+function calculateStats(base, ivs, evs, level) {
   return {
     hp: Math.floor(((2 * base.hp + ivs.hp + Math.floor(evs.hp / 4)) * level) / 100) + level + 10,
-    atk: Math.floor((Math.floor(((2 * base.atk + ivs.atk + Math.floor(evs.atk / 4)) * level) / 100) + 5) * natureModifiers.atk),
-    def: Math.floor((Math.floor(((2 * base.def + ivs.def + Math.floor(evs.def / 4)) * level) / 100) + 5) * natureModifiers.def),
-    spa: Math.floor((Math.floor(((2 * base.spa + ivs.spa + Math.floor(evs.spa / 4)) * level) / 100) + 5) * natureModifiers.spa),
-    spd: Math.floor((Math.floor(((2 * base.spd + ivs.spd + Math.floor(evs.spd / 4)) * level) / 100) + 5) * natureModifiers.spd),
-    spe: Math.floor((Math.floor(((2 * base.spe + ivs.spe + Math.floor(evs.spe / 4)) * level) / 100) + 5) * natureModifiers.spe)
+    atk: Math.floor(((2 * base.atk + ivs.atk + Math.floor(evs.atk / 4)) * level) / 100) + 5,
+    def: Math.floor(((2 * base.def + ivs.def + Math.floor(evs.def / 4)) * level) / 100) + 5,
+    spa: Math.floor(((2 * base.spa + ivs.spa + Math.floor(evs.spa / 4)) * level) / 100) + 5,
+    spd: Math.floor(((2 * base.spd + ivs.spd + Math.floor(evs.spd / 4)) * level) / 100) + 5,
+    spe: Math.floor(((2 * base.spe + ivs.spe + Math.floor(evs.spe / 4)) * level) / 100) + 5
   };
-}
-
-/**
- * 성격에 따른 스탯 보정값
- */
-function getNatureModifiers(natureName) {
-  const modifiers = {
-    'Adamant': { atk: 1.1, def: 1.0, spa: 0.9, spd: 1.0, spe: 1.0 },
-    'Brave': { atk: 1.1, def: 1.0, spa: 1.0, spd: 1.0, spe: 0.9 },
-    'Lonely': { atk: 1.1, def: 0.9, spa: 1.0, spd: 1.0, spe: 1.0 },
-    'Naughty': { atk: 1.1, def: 1.0, spa: 1.0, spd: 0.9, spe: 1.0 },
-    'Bold': { atk: 0.9, def: 1.1, spa: 1.0, spd: 1.0, spe: 1.0 },
-    'Impish': { atk: 1.0, def: 1.1, spa: 0.9, spd: 1.0, spe: 1.0 },
-    'Lax': { atk: 1.0, def: 1.1, spa: 1.0, spd: 0.9, spe: 1.0 },
-    'Relaxed': { atk: 1.0, def: 1.1, spa: 1.0, spd: 1.0, spe: 0.9 },
-    'Modest': { atk: 0.9, def: 1.0, spa: 1.1, spd: 1.0, spe: 1.0 },
-    'Mild': { atk: 1.0, def: 0.9, spa: 1.1, spd: 1.0, spe: 1.0 },
-    'Rash': { atk: 1.0, def: 1.0, spa: 1.1, spd: 0.9, spe: 1.0 },
-    'Quiet': { atk: 1.0, def: 1.0, spa: 1.1, spd: 1.0, spe: 0.9 },
-    'Calm': { atk: 0.9, def: 1.0, spa: 1.0, spd: 1.1, spe: 1.0 },
-    'Gentle': { atk: 1.0, def: 0.9, spa: 1.0, spd: 1.1, spe: 1.0 },
-    'Careful': { atk: 1.0, def: 1.0, spa: 0.9, spd: 1.1, spe: 1.0 },
-    'Sassy': { atk: 1.0, def: 1.0, spa: 1.0, spd: 1.1, spe: 0.9 },
-    'Timid': { atk: 0.9, def: 1.0, spa: 1.0, spd: 1.0, spe: 1.1 },
-    'Hasty': { atk: 1.0, def: 0.9, spa: 1.0, spd: 1.0, spe: 1.1 },
-    'Jolly': { atk: 1.0, def: 1.0, spa: 0.9, spd: 1.0, spe: 1.1 },
-    'Naive': { atk: 1.0, def: 1.0, spa: 1.0, spd: 0.9, spe: 1.1 },
-    // 무보정 성격
-    'Hardy': { atk: 1.0, def: 1.0, spa: 1.0, spd: 1.0, spe: 1.0 },
-    'Docile': { atk: 1.0, def: 1.0, spa: 1.0, spd: 1.0, spe: 1.0 },
-    'Serious': { atk: 1.0, def: 1.0, spa: 1.0, spd: 1.0, spe: 1.0 },
-    'Bashful': { atk: 1.0, def: 1.0, spa: 1.0, spd: 1.0, spe: 1.0 },
-    'Quirky': { atk: 1.0, def: 1.0, spa: 1.0, spd: 1.0, spe: 1.0 }
-  };
-  
-  return modifiers[natureName] || modifiers['Hardy'];
 }
 
 /**

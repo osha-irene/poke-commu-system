@@ -172,8 +172,7 @@
 미라이돈 | miraidon-glide-mode | miraidon | MIRAIDON-GLIDE-MODE.png
 미라이돈 | miraidon-low-power-mode | miraidon | MIRAIDON-LOW-POWER-MODE.png
 파이어 (가라르의 모습) | moltres-galar | moltres | MOLTRES-GALAR.png
-모르페코 (배부른 모양) | morpeko-full-belly | morpeko | MORPEKO-FULL-BELLY.png
-모르페코 (배고픈 모양) | morpeko-hangry | morpeko | MORPEKO-HANGRY.png
+
 마임맨 | mr-mime | - | MR-MIME.png
 마임맨 (가라르의 모습) | mr-mime-galar | mr-mime | MR-MIME-GALAR.png
 마임꽁꽁 | mr-rime | - | MR-RIME.png
