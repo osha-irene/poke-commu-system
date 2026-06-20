@@ -17,6 +17,37 @@ import {
 import useAdvancedBattle from '../hooks/useAdvancedBattle';
 import { getOwnedPokemonDisplayParts } from '../../utils/ownedPokemonDisplay';
 
+const TYPE_BADGE_COLORS = {
+  '노말':    'bg-gray-400 text-white',
+  '불꽃':    'bg-red-500 text-white',
+  '물':      'bg-blue-500 text-white',
+  '전기':    'bg-yellow-400 text-gray-900',
+  '풀':      'bg-green-500 text-white',
+  '얼음':    'bg-cyan-400 text-gray-900',
+  '격투':    'bg-orange-600 text-white',
+  '독':      'bg-purple-500 text-white',
+  '땅':      'bg-yellow-600 text-white',
+  '비행':    'bg-indigo-400 text-white',
+  '에스퍼':  'bg-pink-500 text-white',
+  '벌레':    'bg-lime-500 text-gray-900',
+  '바위':    'bg-stone-500 text-white',
+  '고스트':  'bg-violet-700 text-white',
+  '드래곤':  'bg-violet-600 text-white',
+  '악':      'bg-neutral-700 text-white',
+  '강철':    'bg-slate-400 text-white',
+  '페어리':  'bg-pink-400 text-white',
+};
+
+const TypeBadge = ({ type, baseType, typeChanged, className = '' }) => (
+  <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-bold ${TYPE_BADGE_COLORS[type] || 'bg-gray-300 text-gray-800'} ${className}`}>
+    {typeChanged && (
+      <span className="opacity-70 line-through text-[10px]">{baseType}</span>
+    )}
+    {type}
+    {typeChanged && <span className="text-[10px]">★</span>}
+  </span>
+);
+
 const BOOST_LABELS = {
   atk: '공격',
   def: '방어',
@@ -166,6 +197,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = 
     selectMove,
     selectSwitch,
     clearPendingChoices,
+    confirmAndSubmit,
     resetBattle,
     previewDamage,
   } = useAdvancedBattle({
@@ -258,6 +290,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = 
   ]);
 
   const hasPendingChoice = Boolean(battleState.pendingChoices?.player1 || battleState.pendingChoices?.player2);
+  const bothPlayersChosen = Boolean(battleState.pendingChoices?.player1 && battleState.pendingChoices?.player2);
 
   if (battleState.phase === 'team_selection') {
     if (autoStart) {
@@ -510,9 +543,20 @@ export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = 
               >
                 <div className="flex items-center justify-between gap-3">
                   <span>{move.name || move.id}</span>
-                  <span className="text-xs opacity-80">
-                    {isSelected ? '선택됨' : move.disabled ? `사용 불가${move.disabledSource ? ` (${move.disabledSource})` : ''}` : `${move.type} | ${move.category}`}
-                  </span>
+                  {isSelected ? (
+                    <span className="text-xs opacity-80">선택됨</span>
+                  ) : move.disabled ? (
+                    <span className="text-xs opacity-80">사용 불가{move.disabledSource ? ` (${move.disabledSource})` : ''}</span>
+                  ) : (
+                    <span className="flex items-center gap-1">
+                      <TypeBadge
+                        type={move.type}
+                        baseType={move.baseType}
+                        typeChanged={move.typeChanged}
+                      />
+                      <span className="text-xs opacity-80">| {move.category}</span>
+                    </span>
+                  )}
                 </div>
               </button>
             );
@@ -612,6 +656,32 @@ export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = 
           {renderPokemonPanel('player1', p1Active, p2Active, 'blue')}
           {renderPokemonPanel('player2', p2Active, p1Active, 'red')}
         </div>
+
+        {bothPlayersChosen && battleState.phase === 'battle' && (
+          <div className="mb-6 rounded-lg border-2 border-green-400 bg-green-50 p-4 shadow-sm">
+            <p className="mb-3 text-center font-semibold text-green-800">
+              양쪽 선택 완료! 다음 턴으로 진행하시겠습니까?
+            </p>
+            <div className="flex justify-center gap-3">
+              <button
+                type="button"
+                onClick={confirmAndSubmit}
+                className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-8 py-3 font-bold text-white hover:bg-green-700"
+              >
+                <Zap size={20} />
+                확인 (턴 진행)
+              </button>
+              <button
+                type="button"
+                onClick={clearPendingChoices}
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 hover:bg-gray-100"
+              >
+                <RotateCcw size={18} />
+                취소 (다시 선택)
+              </button>
+            </div>
+          </div>
+        )}
 
         {showDamagePreview && !showDamagePreview.preview?.error && (
           <div className="mb-6 rounded-lg border-2 border-yellow-400 bg-white p-4 shadow-lg">

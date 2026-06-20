@@ -201,18 +201,58 @@ const applyDisplayNamesToLine = (line, displayNames) => {
   return nextLine;
 };
 
-const initialDisplayNames = (battle) => {
+const buildNickMap = (battle) => {
+  const map = new Map();
+  for (const side of [battle.p1, battle.p2]) {
+    for (const poke of side.pokemon) {
+      if (!poke) continue;
+      const speciesName = poke.species?.name || '';
+      const speciesLabel = /-Mega(?:-[XY])?$/i.test(speciesName)
+        ? formatMegaSpeciesName(speciesName)
+        : formatBattleSpeciesName(speciesName);
+      const displayName = poke.name || speciesLabel;
+      const enriched = (displayName && displayName !== speciesLabel)
+        ? `${displayName}(${speciesLabel})`
+        : speciesLabel;
+      if (displayName) map.set(displayName, enriched);
+    }
+  }
+  return map;
+};
+
+const initialDisplayNames = (battle, nickMap) => {
   const displayNames = new Map();
   [
     ['p1a', battle.p1.active[0]],
     ['p2a', battle.p2.active[0]],
   ].forEach(([slot, pokemon]) => {
+    if (!pokemon) return;
     const speciesName = pokemon?.species?.name || '';
     if (/-Mega(?:-[XY])?$/i.test(speciesName)) {
       displayNames.set(slot, formatMegaSpeciesName(speciesName));
+    } else {
+      const enriched = nickMap.get(pokemon.name) || formatBattleSpeciesName(speciesName);
+      displayNames.set(slot, enriched);
     }
   });
   return displayNames;
+};
+
+// 끝 글자가 받침 없음/ㄹ받침이면 '로', 그 외 '으로'
+const roSuffix = (str) => {
+  if (!str) return '로';
+  const code = str[str.length - 1].charCodeAt(0);
+  if (code < 0xAC00 || code > 0xD7A3) return '로';
+  const jongseong = (code - 0xAC00) % 28;
+  return (jongseong === 0 || jongseong === 8) ? '로' : '으로';
+};
+
+// 끝 글자에 받침 있으면 '이', 없으면 '가'
+const iSuffix = (str) => {
+  if (!str) return '이';
+  const code = str[str.length - 1].charCodeAt(0);
+  if (code < 0xAC00 || code > 0xD7A3) return '이';
+  return (code - 0xAC00) % 28 === 0 ? '가' : '이';
 };
 
 const protocolToLog = (line) => {
@@ -227,9 +267,26 @@ const protocolToLog = (line) => {
       const changedTo = formatSpeciesDetails(parts[3]);
       if (/-Mega(?:-[XY])?$/i.test(changedTo)) {
         const megaName = formatMegaSpeciesName(parts[3]);
-        return { message: `${extractName(parts[2])}\uc740(\ub294) ${megaName}\ub85c \uba54\uac00\uc9c4\ud654\ud588\ub2e4!`, type: 'mega' };
+        return { message: `${extractName(parts[2])}\uc740(\ub294) ${megaName}${roSuffix(megaName)} \uba54\uac00\uc9c4\ud654\ud588\ub2e4!`, type: 'mega' };
       }
-      return { message: `${extractName(parts[2])}\uc740(\ub294) ${translateBattlePokemonName(changedTo)}\ub85c \ubaa8\uc2b5\uc744 \ubc14\uafc4\ub2e4!`, type: 'switch' };
+      const formeName = formatBattleSpeciesName(changedTo);
+      return { message: `${extractName(parts[2])}\uc740(\ub294) ${formeName}${roSuffix(formeName)} \ubaa8\uc2b5\uc744 \ubc14\uafe8\ub2e4!`, type: 'switch' };
+    }
+    case 'cant': {
+      const cantMsgs = {
+        flinch: '\ud480\uc774 \uc8fd\uc5b4 \uc6c0\uc9c1\uc774\uc9c0 \ubabb\ud588\ub2e4!',
+        par: '\ubab8\uc774 \uad73\uc5b4 \uc6c0\uc9c1\uc774\uc9c0 \ubabb\ud588\ub2e4!',
+        slp: '\uc7a0\ub4e4\uc5b4 \uc788\ub2e4!',
+        frz: '\uaf41\uaf41 \uc5bc\uc5b4 \uc788\ub2e4!',
+        recharge: '\ud53c\ub85c\ud574\uc11c \uc26c\uc5c8\ub2e4!',
+        disable: '\uae30\uc220\uc774 \ubd09\uc778\ub418\uc5b4 \uc0ac\uc6a9\ud560 \uc218 \uc5c6\ub2e4!',
+        taunt: '\ub3c4\ubc1c \uc0c1\ud0dc\ub77c \ubcc0\ud654\uae30\uc220\uc744 \uc4f8 \uc218 \uc5c6\ub2e4!',
+        encore: '\uc575\ucf5c \uc0c1\ud0dc\uc5d0\uc11c \ub2e4\ub978 \uae30\uc220\uc744 \uc4f8 \uc218 \uc5c6\ub2e4!',
+        torment: '\ud2b8\uc9d1\uc744 \uc7a1\ud600 \uac19\uc740 \uae30\uc220\uc744 \ub2e4\uc2dc \uc4f8 \uc218 \uc5c6\ub2e4!',
+        imprison: '\ubc29\ud638\ub97c \ubc1b\uc544 \uae30\uc220\uc744 \uc4f8 \uc218 \uc5c6\ub2e4!',
+      };
+      const reason = cantMsgs[(parts[3] || '').toLowerCase()] || '\uc6c0\uc9c1\uc774\uc9c0 \ubabb\ud588\ub2e4!';
+      return { message: `${extractName(parts[2])}\uc740(\ub294) ${reason}`, type: 'status' };
     }
     case 'move':
       return { message: `${extractName(parts[2])}\uc758 ${translateMoveName(parts[3])}!`, type: 'move' };
@@ -289,25 +346,68 @@ const protocolToLog = (line) => {
 };
 const collectLogs = (battle, fromIndex = 0) => {
   const seenInBatch = new Set();
-  const displayNames = initialDisplayNames(battle);
+  const nickMap = buildNickMap(battle);
+  const displayNames = initialDisplayNames(battle, nickMap);
 
   return battle.log
     .slice(fromIndex)
     .map((line) => {
-      const message = protocolToLog(applyDisplayNamesToLine(line, displayNames));
+      const rawParts = line?.split('|') || [];
+      const slot = battleSlotKey(rawParts[2] || '');
 
-      if (line?.startsWith('|detailschange|') || line?.startsWith('|-formechange|')) {
-        const parts = line.split('|');
-        const slot = battleSlotKey(parts[2]);
-        const nextName = formatBattleSpeciesName(parts[3]);
-        if (slot && nextName) displayNames.set(slot, nextName);
+      // 교체 시 displayNames 갱신 (처리 전에 먼저 갱신)
+      if (line?.startsWith('|switch|') || line?.startsWith('|drag|') || line?.startsWith('|replace|')) {
+        const nameInProtocol = extractName(rawParts[2] || '');
+        const enriched = nickMap.get(nameInProtocol) || nameInProtocol;
+        if (slot) displayNames.set(slot, enriched);
       }
 
-      return message;
+      let message;
+
+      if (line?.startsWith('|-formechange|')) {
+        // displayNames 치환 전 원본 이름으로 처리해야 올바른 포켓몬명 사용 가능
+        const pokeName = nickMap.get(extractName(rawParts[2] || '')) || extractName(rawParts[2] || '');
+        const targetSpecies = formatSpeciesDetails(rawParts[3]);
+
+        if (/^Mimikyu-Busted/i.test(targetSpecies)) {
+          // 따라큐 껍데기 특성 해제
+          message = { message: `${pokeName}의 정체가 드러났다!`, type: 'ability' };
+        } else {
+          const targetLabel = customSpeciesLabels[normalizeBattleKey(targetSpecies)];
+          if (targetLabel) {
+            // 배틀폼으로 변신
+            message = { message: `${pokeName}은(는) ${targetLabel}${roSuffix(targetLabel)} 모습을 바꿨다!`, type: 'switch' };
+          } else {
+            // 원래 폼으로 복귀 — 이전 폼 이름 사용
+            const prevFormeName = displayNames.get(slot) || '';
+            message = prevFormeName
+              ? { message: `${pokeName}의 ${prevFormeName}${iSuffix(prevFormeName)} 풀렸다!`, type: 'switch' }
+              : null;
+          }
+        }
+
+        // displayNames 갱신: 배틀폼이면 폼 레이블, 복귀면 포켓몬 원본 이름으로
+        if (slot) {
+          const targetLabel = customSpeciesLabels[normalizeBattleKey(targetSpecies)];
+          displayNames.set(slot, targetLabel || nickMap.get(extractName(rawParts[2] || '')) || extractName(rawParts[2] || ''));
+        }
+      } else {
+        message = protocolToLog(applyDisplayNamesToLine(line, displayNames));
+
+        // detailschange 후 슬롯 이름 갱신
+        if (line?.startsWith('|detailschange|')) {
+          const newSpecies = formatBattleSpeciesName(rawParts[3]);
+          if (slot && newSpecies) displayNames.set(slot, newSpecies);
+        }
+      }
+
+      if (!message) return null;
+      return { ...message, _slot: slot };
     })
     .filter(Boolean)
     .filter((entry) => {
-      const key = `${entry.type}:${entry.message}`;
+      // 슬롯을 포함한 키로 중복 판별 — 다른 포켓몬이 같은 기술을 써도 슬롯이 다르면 표시됨
+      const key = `${entry.type}:${entry._slot}:${entry.message}`;
       if (seenInBatch.has(key)) return false;
       seenInBatch.add(key);
       return true;
@@ -359,17 +459,37 @@ const samePendingChoice = (choiceA, choiceB) => (
   && choiceA.type === choiceB.type
 );
 
-const getMoveData = (battle, moveSlot, requestMove = null) => {
+// 노말 타입을 다른 타입으로 변환하는 특성 (데미지 보정 포함)
+const TYPE_OVERRIDE_ABILITIES = {
+  pixilate: 'Fairy',       // 페어리스킨
+  galvanize: 'Electric',   // 일렉트릭스킨
+  aerilate: 'Flying',      // 에어로스킨
+  refrigerate: 'Ice',      // 프리즈스킨
+};
+
+const getEffectiveMoveType = (baseType, abilityName) => {
+  if (baseType !== 'Normal' || !abilityName) return baseType;
+  const key = abilityName.toLowerCase().replace(/[^a-z]/g, '');
+  return TYPE_OVERRIDE_ABILITIES[key] || baseType;
+};
+
+const getMoveData = (battle, moveSlot, requestMove = null, abilityName = '') => {
   const id = requestMove?.id || moveSlot?.id || moveSlot?.move || requestMove?.move;
   const moveData = battle.dex.moves.get(id);
   const disabledSource = requestMove?.disabledSource || moveSlot?.disabledSource || '';
+  const baseType = moveData?.type || 'Normal';
+  const effectiveType = getEffectiveMoveType(baseType, abilityName);
+  const typeChanged = effectiveType !== baseType;
 
   return {
     name: translateMoveName(id || requestMove?.move),
     nameEn: moveData?.name || moveSlot?.move || requestMove?.move,
     id,
-    type: translateTypeName(moveData?.type || 'Normal'),
-    typeEn: moveData?.type || 'Normal',
+    type: translateTypeName(effectiveType),
+    typeEn: effectiveType,
+    baseType: translateTypeName(baseType),
+    baseTypeEn: baseType,
+    typeChanged,
     category: translateCategoryName(moveData?.category || 'Status'),
     categoryEn: moveData?.category || 'Status',
     basePower: moveData?.basePower || 0,
@@ -382,14 +502,15 @@ const getMoveData = (battle, moveSlot, requestMove = null) => {
 };
 
 const convertMoves = (battle, pokemon, activeRequest = null) => {
+  const abilityName = pokemon.ability || pokemon.baseAbility || '';
   const moveSlots = pokemon.moveSlots || [];
   if (!activeRequest?.moves) {
-    return moveSlots.map(moveSlot => getMoveData(battle, moveSlot));
+    return moveSlots.map(moveSlot => getMoveData(battle, moveSlot, null, abilityName));
   }
 
   return activeRequest.moves.map((requestMove) => {
     const moveSlot = moveSlots.find(slot => slot.id === requestMove.id || slot.move === requestMove.move);
-    return getMoveData(battle, moveSlot, requestMove);
+    return getMoveData(battle, moveSlot, requestMove, abilityName);
   });
 };
 
@@ -621,10 +742,12 @@ export function useAdvancedBattle(initialOptions = {}) {
 
   const battleRef = useRef(null);
   const pendingChoicesRef = useRef(emptyPendingChoices());
+  const logFromRef = useRef(0);
   const [battleState, setBattleState] = useState(() => emptyBattleState(player1Team, player2Team));
 
   useEffect(() => {
     pendingChoicesRef.current = emptyPendingChoices();
+    logFromRef.current = 0;
     setBattleState(emptyBattleState(player1Team, player2Team));
     battleRef.current = null;
   }, [player1Team, player2Team]);
@@ -635,6 +758,36 @@ export function useAdvancedBattle(initialOptions = {}) {
       ...prev,
       pendingChoices: nextPending,
     }));
+  }, []);
+
+  const submitChoices = useCallback((pending, logFrom) => {
+    const battle = battleRef.current;
+    if (!battle || battle.ended) return;
+
+    const requiredPlayers = getRequiredChoicePlayers(battle);
+    try {
+      requiredPlayers.forEach((player) => {
+        const p = pending[player];
+        if (p) battle.choose(playerToSideId(player), p.choice);
+      });
+    } catch (error) {
+      console.error('배틀 선택 제출 실패:', error);
+      const clearedPending = emptyPendingChoices();
+      pendingChoicesRef.current = clearedPending;
+      logFromRef.current = 0;
+      setBattleState(prev => ({
+        ...prev,
+        pendingChoices: clearedPending,
+        log: [...prev.log, { message: '선택 처리 중 오류가 발생했습니다.', type: 'fail' }],
+      }));
+      return;
+    }
+
+    const clearedPending = emptyPendingChoices();
+    pendingChoicesRef.current = clearedPending;
+    logFromRef.current = 0;
+    const autoLogs = applyAutomaticChoices(battle);
+    setBattleState(prev => stateFromBattle(battle, { ...prev, pendingChoices: clearedPending }, logFrom, autoLogs));
   }, []);
 
   const commitPendingChoicesIfReady = useCallback((nextPending, logFrom) => {
@@ -653,38 +806,27 @@ export function useAdvancedBattle(initialOptions = {}) {
       return;
     }
 
-    try {
-      requiredPlayers.forEach((player) => {
-        const pending = nextPending[player];
-        if (pending) battle.choose(playerToSideId(player), pending.choice);
-      });
-    } catch (error) {
-      console.error('배틀 선택 제출 실패:', error);
-      const clearedPending = emptyPendingChoices();
-      pendingChoicesRef.current = clearedPending;
-      setBattleState(prev => ({
-        ...prev,
-        pendingChoices: clearedPending,
-        log: [
-          ...prev.log,
-          {
-            message: '선택 처리 중 오류가 발생했습니다.',
-            type: 'fail',
-          },
-        ],
-      }));
+    // 양쪽 모두 선택 필요한 턴이면 확인 대기, 한쪽만 선택하면 즉시 진행
+    if (requiredPlayers.length >= 2) {
+      logFromRef.current = logFrom;
+      setPendingChoices(nextPending);
       return;
     }
 
-    const clearedPending = emptyPendingChoices();
-    pendingChoicesRef.current = clearedPending;
-    const autoLogs = applyAutomaticChoices(battle);
+    submitChoices(nextPending, logFrom);
+  }, [setPendingChoices, submitChoices]);
 
-    setBattleState(prev => stateFromBattle(battle, {
-      ...prev,
-      pendingChoices: clearedPending,
-    }, logFrom, autoLogs));
-  }, [setPendingChoices]);
+  const confirmAndSubmit = useCallback(() => {
+    const pending = pendingChoicesRef.current;
+    const logFrom = logFromRef.current;
+    const battle = battleRef.current;
+    if (!battle || battle.ended) return;
+
+    const requiredPlayers = getRequiredChoicePlayers(battle);
+    if (!requiredPlayers.every(player => pending[player])) return;
+
+    submitChoices(pending, logFrom);
+  }, [submitChoices]);
 
   const startBattle = useCallback((p1ActiveIndices, p2ActiveIndices) => {
     const battle = new Battle({ formatid: FORMAT_ID });
@@ -753,11 +895,14 @@ export function useAdvancedBattle(initialOptions = {}) {
   }, [commitPendingChoicesIfReady]);
 
   const clearPendingChoices = useCallback(() => {
+    logFromRef.current = 0;
     setPendingChoices(emptyPendingChoices());
   }, [setPendingChoices]);
+
   const resetBattle = useCallback(() => {
     battleRef.current = null;
     pendingChoicesRef.current = emptyPendingChoices();
+    logFromRef.current = 0;
     setBattleState(emptyBattleState(player1Team, player2Team));
   }, [player1Team, player2Team]);
 
@@ -775,6 +920,7 @@ export function useAdvancedBattle(initialOptions = {}) {
     selectMove,
     selectSwitch,
     clearPendingChoices,
+    confirmAndSubmit,
     resetBattle,
     previewDamage,
     compareMoveDamage,

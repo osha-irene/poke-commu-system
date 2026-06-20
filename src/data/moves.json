@@ -13914,7 +13914,7 @@
     },
     {
       "id": "dire-claw",
-      "name": "dire-claw",
+      "name": "페이탈클로",
       "nameEn": "dire-claw",
       "type": "poison",
       "category": "physical",
@@ -13931,7 +13931,7 @@
     },
     {
       "id": "psyshield-bash",
-      "name": "psyshield-bash",
+      "name": "배리어러시",
       "nameEn": "psyshield-bash",
       "type": "psychic",
       "category": "physical",
@@ -13948,7 +13948,7 @@
     },
     {
       "id": "power-shift",
-      "name": "power-shift",
+      "name": "파워시프트",
       "nameEn": "power-shift",
       "type": "normal",
       "category": "status",
@@ -13965,7 +13965,7 @@
     },
     {
       "id": "stone-axe",
-      "name": "stone-axe",
+      "name": "암석액스",
       "nameEn": "stone-axe",
       "type": "rock",
       "category": "physical",
@@ -13982,7 +13982,7 @@
     },
     {
       "id": "springtide-storm",
-      "name": "springtide-storm",
+      "name": "봄의폭풍",
       "nameEn": "springtide-storm",
       "type": "fairy",
       "category": "special",
@@ -13999,7 +13999,7 @@
     },
     {
       "id": "mystical-power",
-      "name": "mystical-power",
+      "name": "신비의힘",
       "nameEn": "mystical-power",
       "type": "psychic",
       "category": "special",
@@ -14016,7 +14016,7 @@
     },
     {
       "id": "raging-fury",
-      "name": "raging-fury",
+      "name": "대격분",
       "nameEn": "raging-fury",
       "type": "fire",
       "category": "physical",
@@ -14033,7 +14033,7 @@
     },
     {
       "id": "wave-crash",
-      "name": "wave-crash",
+      "name": "웨이브태클",
       "nameEn": "wave-crash",
       "type": "water",
       "category": "physical",
@@ -14050,7 +14050,7 @@
     },
     {
       "id": "chloroblast",
-      "name": "chloroblast",
+      "name": "클로로블라스트",
       "nameEn": "chloroblast",
       "type": "grass",
       "category": "special",
@@ -14067,7 +14067,7 @@
     },
     {
       "id": "mountain-gale",
-      "name": "mountain-gale",
+      "name": "빙산바람",
       "nameEn": "mountain-gale",
       "type": "ice",
       "category": "physical",
@@ -14084,7 +14084,7 @@
     },
     {
       "id": "victory-dance",
-      "name": "victory-dance",
+      "name": "승리의춤",
       "nameEn": "victory-dance",
       "type": "fighting",
       "category": "status",
@@ -14101,7 +14101,7 @@
     },
     {
       "id": "headlong-rush",
-      "name": "headlong-rush",
+      "name": "들이받기",
       "nameEn": "headlong-rush",
       "type": "ground",
       "category": "physical",
@@ -14118,7 +14118,7 @@
     },
     {
       "id": "barb-barrage",
-      "name": "barb-barrage",
+      "name": "독침천발",
       "nameEn": "barb-barrage",
       "type": "poison",
       "category": "physical",
@@ -14135,7 +14135,7 @@
     },
     {
       "id": "esper-wing",
-      "name": "esper-wing",
+      "name": "오라윙",
       "nameEn": "esper-wing",
       "type": "psychic",
       "category": "special",
@@ -14152,7 +14152,7 @@
     },
     {
       "id": "bitter-malice",
-      "name": "bitter-malice",
+      "name": "천추지한",
       "nameEn": "bitter-malice",
       "type": "ghost",
       "category": "special",
@@ -14169,7 +14169,7 @@
     },
     {
       "id": "shelter",
-      "name": "shelter",
+      "name": "농성",
       "nameEn": "shelter",
       "type": "steel",
       "category": "status",
@@ -14186,7 +14186,7 @@
     },
     {
       "id": "triple-arrows",
-      "name": "triple-arrows",
+      "name": "3연화살",
       "nameEn": "triple-arrows",
       "type": "fighting",
       "category": "physical",
@@ -14203,7 +14203,7 @@
     },
     {
       "id": "infernal-parade",
-      "name": "infernal-parade",
+      "name": "백귀야행",
       "nameEn": "infernal-parade",
       "type": "ghost",
       "category": "special",
@@ -14220,7 +14220,7 @@
     },
     {
       "id": "ceaseless-edge",
-      "name": "ceaseless-edge",
+      "name": "비검천중파",
       "nameEn": "ceaseless-edge",
       "type": "dark",
       "category": "physical",
@@ -14237,7 +14237,7 @@
     },
     {
       "id": "bleakwind-storm",
-      "name": "bleakwind-storm",
+      "name": "찬바람폭풍",
       "nameEn": "bleakwind-storm",
       "type": "flying",
       "category": "special",
@@ -14254,7 +14254,7 @@
     },
     {
       "id": "wildbolt-storm",
-      "name": "wildbolt-storm",
+      "name": "번개폭풍",
       "nameEn": "wildbolt-storm",
       "type": "electric",
       "category": "special",
@@ -14271,7 +14271,7 @@
     },
     {
       "id": "sandsear-storm",
-      "name": "sandsear-storm",
+      "name": "열사의폭풍",
       "nameEn": "sandsear-storm",
       "type": "ground",
       "category": "special",
@@ -14288,7 +14288,7 @@
     },
     {
       "id": "lunar-blessing",
-      "name": "lunar-blessing",
+      "name": "초승달의기도",
       "nameEn": "lunar-blessing",
       "type": "psychic",
       "category": "status",
@@ -14305,7 +14305,7 @@
     },
     {
       "id": "take-heart",
-      "name": "take-heart",
+      "name": "브레이브차지",
       "nameEn": "take-heart",
       "type": "psychic",
       "category": "status",
@@ -14322,7 +14322,7 @@
     },
     {
       "id": "tera-blast",
-      "name": "tera-blast",
+      "name": "테라버스트",
       "nameEn": "tera-blast",
       "type": "normal",
       "category": "special",
@@ -14339,7 +14339,7 @@
     },
     {
       "id": "silk-trap",
-      "name": "silk-trap",
+      "name": "스레드트랩",
       "nameEn": "silk-trap",
       "type": "bug",
       "category": "status",
@@ -14356,7 +14356,7 @@
     },
     {
       "id": "axe-kick",
-      "name": "axe-kick",
+      "name": "발꿈치찍기",
       "nameEn": "axe-kick",
       "type": "fighting",
       "category": "physical",
@@ -14373,7 +14373,7 @@
     },
     {
       "id": "last-respects",
-      "name": "last-respects",
+      "name": "성묘",
       "nameEn": "last-respects",
       "type": "ghost",
       "category": "physical",
@@ -14390,7 +14390,7 @@
     },
     {
       "id": "lumina-crash",
-      "name": "lumina-crash",
+      "name": "루미나콜리전",
       "nameEn": "lumina-crash",
       "type": "psychic",
       "category": "special",
@@ -14407,7 +14407,7 @@
     },
     {
       "id": "order-up",
-      "name": "order-up",
+      "name": "한판내기",
       "nameEn": "order-up",
       "type": "dragon",
       "category": "physical",
@@ -14424,8 +14424,8 @@
     },
     {
       "id": "jet-punch",
-      "name": "jet-punch",
-      "nameEn": "jet-punch",
+      "name": "제트펀치",
+      "nameEn": "Jet Punch",
       "type": "water",
       "category": "physical",
       "power": 60,
@@ -14441,7 +14441,7 @@
     },
     {
       "id": "spicy-extract",
-      "name": "spicy-extract",
+      "name": "하바네로엑기스",
       "nameEn": "spicy-extract",
       "type": "grass",
       "category": "status",
@@ -14458,7 +14458,7 @@
     },
     {
       "id": "spin-out",
-      "name": "spin-out",
+      "name": "휠스핀",
       "nameEn": "spin-out",
       "type": "steel",
       "category": "physical",
@@ -14475,7 +14475,7 @@
     },
     {
       "id": "population-bomb",
-      "name": "population-bomb",
+      "name": "찍찍베기",
       "nameEn": "population-bomb",
       "type": "normal",
       "category": "physical",
@@ -14492,7 +14492,7 @@
     },
     {
       "id": "ice-spinner",
-      "name": "ice-spinner",
+      "name": "아이스스피너",
       "nameEn": "ice-spinner",
       "type": "ice",
       "category": "physical",
@@ -14509,7 +14509,7 @@
     },
     {
       "id": "glaive-rush",
-      "name": "glaive-rush",
+      "name": "대검돌격",
       "nameEn": "glaive-rush",
       "type": "dragon",
       "category": "physical",
@@ -14526,7 +14526,7 @@
     },
     {
       "id": "revival-blessing",
-      "name": "revival-blessing",
+      "name": "회생의기도",
       "nameEn": "revival-blessing",
       "type": "normal",
       "category": "status",
@@ -14543,7 +14543,7 @@
     },
     {
       "id": "salt-cure",
-      "name": "salt-cure",
+      "name": "소금절이",
       "nameEn": "salt-cure",
       "type": "rock",
       "category": "physical",
@@ -14560,7 +14560,7 @@
     },
     {
       "id": "triple-dive",
-      "name": "triple-dive",
+      "name": "트리플다이브",
       "nameEn": "triple-dive",
       "type": "water",
       "category": "physical",
@@ -14577,7 +14577,7 @@
     },
     {
       "id": "mortal-spin",
-      "name": "mortal-spin",
+      "name": "킬러스핀",
       "nameEn": "mortal-spin",
       "type": "poison",
       "category": "physical",
@@ -14594,7 +14594,7 @@
     },
     {
       "id": "doodle",
-      "name": "doodle",
+      "name": "배껴그리기",
       "nameEn": "doodle",
       "type": "normal",
       "category": "status",
@@ -14611,7 +14611,7 @@
     },
     {
       "id": "fillet-away",
-      "name": "fillet-away",
+      "name": "제살깎기",
       "nameEn": "fillet-away",
       "type": "normal",
       "category": "status",
@@ -14628,7 +14628,7 @@
     },
     {
       "id": "kowtow-cleave",
-      "name": "kowtow-cleave",
+      "name": "도각참",
       "nameEn": "kowtow-cleave",
       "type": "dark",
       "category": "physical",
@@ -14645,7 +14645,7 @@
     },
     {
       "id": "flower-trick",
-      "name": "flower-trick",
+      "name": "트릭플라워",
       "nameEn": "flower-trick",
       "type": "grass",
       "category": "physical",
@@ -14662,7 +14662,7 @@
     },
     {
       "id": "torch-song",
-      "name": "torch-song",
+      "name": "플레어송",
       "nameEn": "torch-song",
       "type": "fire",
       "category": "special",
@@ -14679,7 +14679,7 @@
     },
     {
       "id": "aqua-step",
-      "name": "aqua-step",
+      "name": "아쿠아스텝",
       "nameEn": "aqua-step",
       "type": "water",
       "category": "physical",
@@ -14696,7 +14696,7 @@
     },
     {
       "id": "raging-bull",
-      "name": "raging-bull",
+      "name": "레이징불",
       "nameEn": "raging-bull",
       "type": "normal",
       "category": "physical",
@@ -14713,7 +14713,7 @@
     },
     {
       "id": "make-it-rain",
-      "name": "make-it-rain",
+      "name": "골드러시",
       "nameEn": "make-it-rain",
       "type": "steel",
       "category": "special",
@@ -14764,7 +14764,7 @@
     },
     {
       "id": "ruination",
-      "name": "ruination",
+      "name": "카타스트로피",
       "nameEn": "ruination",
       "type": "dark",
       "category": "special",
@@ -14781,7 +14781,7 @@
     },
     {
       "id": "collision-course",
-      "name": "collision-course",
+      "name": "액셀브레이크",
       "nameEn": "collision-course",
       "type": "fighting",
       "category": "physical",
@@ -14798,7 +14798,7 @@
     },
     {
       "id": "electro-drift",
-      "name": "electro-drift",
+      "name": "라이트닝드라이브",
       "nameEn": "electro-drift",
       "type": "electric",
       "category": "special",
@@ -14815,7 +14815,7 @@
     },
     {
       "id": "shed-tail",
-      "name": "shed-tail",
+      "name": "꼬리자르기",
       "nameEn": "shed-tail",
       "type": "normal",
       "category": "status",
@@ -14832,7 +14832,7 @@
     },
     {
       "id": "chilly-reception",
-      "name": "chilly-reception",
+      "name": "썰렁개그",
       "nameEn": "chilly-reception",
       "type": "ice",
       "category": "status",
@@ -14849,7 +14849,7 @@
     },
     {
       "id": "tidy-up",
-      "name": "tidy-up",
+      "name": "정리정돈",
       "nameEn": "tidy-up",
       "type": "normal",
       "category": "status",
@@ -14884,7 +14884,7 @@
     },
     {
       "id": "pounce",
-      "name": "pounce",
+      "name": "달려들기",
       "nameEn": "pounce",
       "type": "bug",
       "category": "physical",
@@ -14901,7 +14901,7 @@
     },
     {
       "id": "trailblaze",
-      "name": "trailblaze",
+      "name": "개척하기",
       "nameEn": "trailblaze",
       "type": "grass",
       "category": "physical",
@@ -14918,7 +14918,7 @@
     },
     {
       "id": "chilling-water",
-      "name": "chilling-water",
+      "name": "찬물끼얹기",
       "nameEn": "chilling-water",
       "type": "water",
       "category": "special",
@@ -14935,7 +14935,7 @@
     },
     {
       "id": "hyper-drill",
-      "name": "hyper-drill",
+      "name": "하이퍼드릴",
       "nameEn": "hyper-drill",
       "type": "normal",
       "category": "physical",
@@ -14952,7 +14952,7 @@
     },
     {
       "id": "twin-beam",
-      "name": "twin-beam",
+      "name": "트윈빔",
       "nameEn": "twin-beam",
       "type": "psychic",
       "category": "special",
@@ -14969,7 +14969,7 @@
     },
     {
       "id": "rage-fist",
-      "name": "rage-fist",
+      "name": "분노의주먹",
       "nameEn": "rage-fist",
       "type": "ghost",
       "category": "physical",
@@ -14986,7 +14986,7 @@
     },
     {
       "id": "armor-cannon",
-      "name": "armor-cannon",
+      "name": "아머캐논",
       "nameEn": "armor-cannon",
       "type": "fire",
       "category": "special",
@@ -15003,7 +15003,7 @@
     },
     {
       "id": "bitter-blade",
-      "name": "bitter-blade",
+      "name": "원념의칼",
       "nameEn": "bitter-blade",
       "type": "fire",
       "category": "physical",
@@ -15020,7 +15020,7 @@
     },
     {
       "id": "double-shock",
-      "name": "double-shock",
+      "name": "전광쌍격",
       "nameEn": "double-shock",
       "type": "electric",
       "category": "physical",
@@ -15037,7 +15037,7 @@
     },
     {
       "id": "gigaton-hammer",
-      "name": "gigaton-hammer",
+      "name": "거대해머",
       "nameEn": "gigaton-hammer",
       "type": "steel",
       "category": "physical",
@@ -15054,7 +15054,7 @@
     },
     {
       "id": "comeuppance",
-      "name": "comeuppance",
+      "name": "앙갚음",
       "nameEn": "comeuppance",
       "type": "dark",
       "category": "physical",
@@ -15071,7 +15071,7 @@
     },
     {
       "id": "aqua-cutter",
-      "name": "aqua-cutter",
+      "name": "아쿠아커터",
       "nameEn": "aqua-cutter",
       "type": "water",
       "category": "physical",
@@ -15088,7 +15088,7 @@
     },
     {
       "id": "blazing-torque",
-      "name": "blazing-torque",
+      "name": "번액셀",
       "nameEn": "blazing-torque",
       "type": "fire",
       "category": "physical",
@@ -15105,7 +15105,7 @@
     },
     {
       "id": "wicked-torque",
-      "name": "wicked-torque",
+      "name": "다크액셀",
       "nameEn": "wicked-torque",
       "type": "dark",
       "category": "physical",
@@ -15122,7 +15122,7 @@
     },
     {
       "id": "noxious-torque",
-      "name": "noxious-torque",
+      "name": "포이즌액셀",
       "nameEn": "noxious-torque",
       "type": "poison",
       "category": "physical",
@@ -15139,7 +15139,7 @@
     },
     {
       "id": "combat-torque",
-      "name": "combat-torque",
+      "name": "파이트액셀",
       "nameEn": "combat-torque",
       "type": "fighting",
       "category": "physical",
@@ -15156,7 +15156,7 @@
     },
     {
       "id": "magical-torque",
-      "name": "magical-torque",
+      "name": "매지컬액셀",
       "nameEn": "magical-torque",
       "type": "fairy",
       "category": "physical",
@@ -15173,7 +15173,7 @@
     },
     {
       "id": "blood-moon",
-      "name": "blood-moon",
+      "name": "블러드문",
       "nameEn": "blood-moon",
       "type": "normal",
       "category": "special",
@@ -15190,7 +15190,7 @@
     },
     {
       "id": "matcha-gotcha",
-      "name": "matcha-gotcha",
+      "name": "휘적휘적포",
       "nameEn": "matcha-gotcha",
       "type": "grass",
       "category": "special",
@@ -15207,7 +15207,7 @@
     },
     {
       "id": "syrup-bomb",
-      "name": "syrup-bomb",
+      "name": "시럽봄",
       "nameEn": "syrup-bomb",
       "type": "grass",
       "category": "special",
@@ -15224,7 +15224,7 @@
     },
     {
       "id": "ivy-cudgel",
-      "name": "ivy-cudgel",
+      "name": "덩굴방망이",
       "nameEn": "ivy-cudgel",
       "type": "grass",
       "category": "physical",

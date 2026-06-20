@@ -53,7 +53,33 @@
     },
     "speciesLabels": {
       "Milotic-Mega": "메가밀로틱",
-      "메가밀로틱": "메가밀로틱"
+      "메가밀로틱": "메가밀로틱",
+      "Castform-Sunny": "태양의 모습",
+      "Castform-Rainy": "빗방울의 모",
+      "Castform-Snowy": "설운의 모습",
+      "Cherrim-Sunshine": "포지폼",
+      "Darmanitan-Zen": "달마모드",
+      "Darmanitan-Galar-Zen": "달마모드",
+      "Meloetta-Pirouette": "스텝폼",
+      "Aegislash-Blade": "블레이드폼",
+      "Zygarde-Complete": "지가르데(퍼펙트폼)",
+      "Wishiwashi-School": "군집의 모습",
+      "Minior-Meteor": "유성의 모습",
+      "Mimikyu-Busted": "들킨 모습",
+      "Necrozma-Ultra": "울트라네크로즈마",
+      "Cramorant-Gulping": "그대로 삼킨 모습",
+      "Cramorant-Gorging": "통째로 삼킨 모습",
+      "Eiscue-Noice": "나이스페이스",
+      "Morpeko-Hangry": "배고픈 모양",
+      "Zacian-Crowned": "검왕",
+      "Zamazenta-Crowned": "방패왕",
+      "Palafin-Hero": "마이티폼",
+      "Ogerpon-Teal-Tera": "오거폰(청록가면 테라)",
+      "Ogerpon-Wellspring-Tera": "오거폰(우물가면 테라)",
+      "Ogerpon-Hearthflame-Tera": "오거폰(화로가면 테라)",
+      "Ogerpon-Cornerstone-Tera": "오거폰(주춧돌가면 테라)",
+      "Terapagos-Terastal": "테라파고스(테라스탈폼)",
+      "Terapagos-Stellar": "테라파고스(항성폼)"
     }
   }
 }
