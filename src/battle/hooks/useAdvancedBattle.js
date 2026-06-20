@@ -5,6 +5,7 @@ import fieldEffectsManager from '../utils/FieldEffectsManager';
 import statusManager from '../utils/StatusManager';
 import customBattleData from '../../data/customBattleData.json';
 import { toCalcAbilityName } from '../../utils/abilityUtils';
+import { getOwnedPokemonDisplayParts } from '../../utils/ownedPokemonDisplay';
 import {
   normalizeBattleKey,
   translateAbilityName,
@@ -201,20 +202,41 @@ const applyDisplayNamesToLine = (line, displayNames) => {
   return nextLine;
 };
 
-const buildNickMap = (battle) => {
+const buildNickMap = (battle, teams = []) => {
+  // teamLookup 키: toPackedSet.name 과 동일한 우선순위 (nickname || nameKo || name || species)
+  const teamLookup = new Map();
+  for (const team of teams) {
+    if (!Array.isArray(team)) continue;
+    for (const p of team) {
+      if (!p) continue;
+      const psName = p.nickname || p.nameKo || p.name || p.species || '';
+      if (psName) teamLookup.set(psName, p);
+    }
+  }
+
   const map = new Map();
   for (const side of [battle.p1, battle.p2]) {
     for (const poke of side.pokemon) {
       if (!poke) continue;
-      const speciesName = poke.species?.name || '';
-      const speciesLabel = /-Mega(?:-[XY])?$/i.test(speciesName)
-        ? formatMegaSpeciesName(speciesName)
-        : formatBattleSpeciesName(speciesName);
-      const displayName = poke.name || speciesLabel;
-      const enriched = (displayName && displayName !== speciesLabel)
-        ? `${displayName}(${speciesLabel})`
-        : speciesLabel;
-      if (displayName) map.set(displayName, enriched);
+      const psName = poke.name || '';
+      const teamPoke = teamLookup.get(psName);
+
+      let enriched;
+      if (teamPoke) {
+        // getOwnedPokemonDisplayParts 로 닉네임 여부 정확히 판별
+        const parts = getOwnedPokemonDisplayParts(teamPoke);
+        enriched = parts.hasNickname
+          ? `${parts.primary}(${parts.species})`
+          : parts.primary;
+      } else {
+        // 팀 데이터 없으면 종족명 번역 fallback
+        const speciesName = poke.species?.name || '';
+        enriched = /-Mega(?:-[XY])?$/i.test(speciesName)
+          ? formatMegaSpeciesName(speciesName)
+          : formatBattleSpeciesName(speciesName);
+      }
+
+      if (psName) map.set(psName, enriched);
     }
   }
   return map;
@@ -334,8 +356,10 @@ const protocolToLog = (line) => {
       return { message: `${extractName(parts[2])}\uc758 ${translateItemName(parts[3])}\uc744(\ub97c) \uc0ac\uc6a9\ud588\ub2e4.`, type: 'item' };
     case 'switch':
       return { message: `${extractName(parts[2])} \ub4f1\uc7a5!`, type: 'switch' };
-    case 'faint':
-      return { message: `${extractName(parts[2])}\uc740(\ub294) \uc4f0\ub7ec\uc84c\ub2e4!`, type: 'faint' };
+    case 'faint': {
+      const faintName = extractName(parts[2]);
+      return { message: `${faintName}${iSuffix(faintName)} \uc4f0\ub7ec\uc84c\ub2e4!`, type: 'faint' };
+    }
     case 'turn':
       return { message: `\u2014 ${parts[2]}\ud134 \u2014`, type: 'turn' };
     case 'win':
@@ -344,14 +368,17 @@ const protocolToLog = (line) => {
       return null;
   }
 };
-const collectLogs = (battle, fromIndex = 0) => {
+const collectLogs = (battle, fromIndex = 0, teams = []) => {
   const seenInBatch = new Set();
-  const nickMap = buildNickMap(battle);
+  const nickMap = buildNickMap(battle, teams);
   const displayNames = initialDisplayNames(battle, nickMap);
+  // 교체 투입 시 "모습을 바꿨다!" 를 추가로 출력해야 하는 포켓몬 추적
+  // key: normalizedSpecies (e.g. 'palafinHero'), value: { pokeName, formeLabel }
+  const pendingFormeOnSwitch = new Map();
 
   return battle.log
     .slice(fromIndex)
-    .map((line) => {
+    .flatMap((line) => {
       const rawParts = line?.split('|') || [];
       const slot = battleSlotKey(rawParts[2] || '');
 
@@ -368,10 +395,26 @@ const collectLogs = (battle, fromIndex = 0) => {
         // displayNames 치환 전 원본 이름으로 처리해야 올바른 포켓몬명 사용 가능
         const pokeName = nickMap.get(extractName(rawParts[2] || '')) || extractName(rawParts[2] || '');
         const targetSpecies = formatSpeciesDetails(rawParts[3]);
+        // rawParts[5] 등에 [from] ability: Zero to Hero 형태로 들어옴
+        const fromAbility = rawParts.slice(4).join('|');
+        const isZeroToHero = /zero.?to.?hero/i.test(fromAbility);
+
+        // 매 턴 자동으로 폼이 바뀌는 종류: 로그는 표시하되 displayNames는 기본 이름 유지
+        // (HP 로그가 "배고픈 모양 HP 117/133" 처럼 표시되지 않게)
+        const AUTO_CYCLE_FORMES = new Set(['morpeko', 'morpekohangry']);
+        const isAutoCycleForme = AUTO_CYCLE_FORMES.has(normalizeBattleKey(targetSpecies));
+        const basePokeName = nickMap.get(extractName(rawParts[2] || '')) || extractName(rawParts[2] || '');
 
         if (/^Mimikyu-Busted/i.test(targetSpecies)) {
           // 따라큐 껍데기 특성 해제
           message = { message: `${pokeName}의 정체가 드러났다!`, type: 'ability' };
+        } else if (isZeroToHero) {
+          // Zero to Hero: 특성 발동 메시지만 표시, "모습을 바꿨다!"는 교체 투입 시로 이연
+          message = { message: `${pokeName}의 마이티체인지 발동!`, type: 'ability' };
+          const targetLabel = customSpeciesLabels[normalizeBattleKey(targetSpecies)];
+          if (targetLabel) {
+            pendingFormeOnSwitch.set(normalizeBattleKey(targetSpecies), { formeLabel: targetLabel });
+          }
         } else {
           const targetLabel = customSpeciesLabels[normalizeBattleKey(targetSpecies)];
           if (targetLabel) {
@@ -386,12 +429,33 @@ const collectLogs = (battle, fromIndex = 0) => {
           }
         }
 
-        // displayNames 갱신: 배틀폼이면 폼 레이블, 복귀면 포켓몬 원본 이름으로
+        // displayNames 갱신
+        // 매 턴 자동 폼체인지는 기본 이름 유지, 그 외엔 폼 레이블로 변경
         if (slot) {
-          const targetLabel = customSpeciesLabels[normalizeBattleKey(targetSpecies)];
-          displayNames.set(slot, targetLabel || nickMap.get(extractName(rawParts[2] || '')) || extractName(rawParts[2] || ''));
+          if (isAutoCycleForme) {
+            displayNames.set(slot, basePokeName);
+          } else {
+            const targetLabel = customSpeciesLabels[normalizeBattleKey(targetSpecies)];
+            displayNames.set(slot, targetLabel || basePokeName);
+          }
         }
       } else {
+        // 교체 투입 시 pendingFormeOnSwitch 처리
+        if (line?.startsWith('|switch|') || line?.startsWith('|drag|')) {
+          const incomingSpecies = formatSpeciesDetails(rawParts[3] || '');
+          const pendingKey = normalizeBattleKey(incomingSpecies);
+          if (pendingFormeOnSwitch.has(pendingKey)) {
+            const { formeLabel } = pendingFormeOnSwitch.get(pendingKey);
+            pendingFormeOnSwitch.delete(pendingKey);
+            // 교체 등장 메시지 + "마이티폼으로 모습을 바꿨다!" 두 개 출력
+            // 이름은 switch 라인에서 추출 (TOP 블록이 이미 displayNames 갱신 완료)
+            const switchPokeName = displayNames.get(slot) || extractName(rawParts[2] || '');
+            const switchMsg = protocolToLog(applyDisplayNamesToLine(line, displayNames));
+            const formeMsg = { message: `${switchPokeName}은(는) ${formeLabel}${roSuffix(formeLabel)} 모습을 바꿨다!`, type: 'switch' };
+            return [switchMsg, formeMsg].filter(Boolean).map(m => ({ ...m, _slot: slot }));
+          }
+        }
+
         message = protocolToLog(applyDisplayNamesToLine(line, displayNames));
 
         // detailschange 후 슬롯 이름 갱신
@@ -401,8 +465,8 @@ const collectLogs = (battle, fromIndex = 0) => {
         }
       }
 
-      if (!message) return null;
-      return { ...message, _slot: slot };
+      if (!message) return [];
+      return [{ ...message, _slot: slot }];
     })
     .filter(Boolean)
     .filter((entry) => {
@@ -467,18 +531,34 @@ const TYPE_OVERRIDE_ABILITIES = {
   refrigerate: 'Ice',      // 프리즈스킨
 };
 
-const getEffectiveMoveType = (baseType, abilityName) => {
+// 폼에 따라 기술 타입이 달라지는 경우 (moveId → { normalizedSpecies → type })
+const FORME_MOVE_TYPE_OVERRIDES = {
+  'aurawheel': {
+    'morpekohangry': 'Dark',    // 배고픈 모양 → 악
+    'morpeko': 'Electric',      // 배부른 모양 → 전기 (기본값이지만 명시)
+  },
+};
+
+const getEffectiveMoveType = (baseType, abilityName, moveId = '', speciesName = '') => {
+  // 폼 기반 타입 우선 처리
+  const moveKey = moveId.toLowerCase().replace(/[^a-z]/g, '');
+  const speciesKey = speciesName.toLowerCase().replace(/[^a-z]/g, '');
+  const formeOverride = FORME_MOVE_TYPE_OVERRIDES[moveKey];
+  if (formeOverride) {
+    const overrideType = formeOverride[speciesKey];
+    if (overrideType) return overrideType;
+  }
   if (baseType !== 'Normal' || !abilityName) return baseType;
   const key = abilityName.toLowerCase().replace(/[^a-z]/g, '');
   return TYPE_OVERRIDE_ABILITIES[key] || baseType;
 };
 
-const getMoveData = (battle, moveSlot, requestMove = null, abilityName = '') => {
+const getMoveData = (battle, moveSlot, requestMove = null, abilityName = '', speciesName = '') => {
   const id = requestMove?.id || moveSlot?.id || moveSlot?.move || requestMove?.move;
   const moveData = battle.dex.moves.get(id);
   const disabledSource = requestMove?.disabledSource || moveSlot?.disabledSource || '';
   const baseType = moveData?.type || 'Normal';
-  const effectiveType = getEffectiveMoveType(baseType, abilityName);
+  const effectiveType = getEffectiveMoveType(baseType, abilityName, id || '', speciesName);
   const typeChanged = effectiveType !== baseType;
 
   return {
@@ -503,14 +583,15 @@ const getMoveData = (battle, moveSlot, requestMove = null, abilityName = '') => 
 
 const convertMoves = (battle, pokemon, activeRequest = null) => {
   const abilityName = pokemon.ability || pokemon.baseAbility || '';
+  const speciesName = pokemon.species?.name || '';
   const moveSlots = pokemon.moveSlots || [];
   if (!activeRequest?.moves) {
-    return moveSlots.map(moveSlot => getMoveData(battle, moveSlot, null, abilityName));
+    return moveSlots.map(moveSlot => getMoveData(battle, moveSlot, null, abilityName, speciesName));
   }
 
   return activeRequest.moves.map((requestMove) => {
     const moveSlot = moveSlots.find(slot => slot.id === requestMove.id || slot.move === requestMove.move);
-    return getMoveData(battle, moveSlot, requestMove, abilityName);
+    return getMoveData(battle, moveSlot, requestMove, abilityName, speciesName);
   });
 };
 
@@ -703,13 +784,13 @@ const applyAutomaticChoices = (battle) => {
   return messages;
 };
 
-const stateFromBattle = (battle, baseState, logFrom = 0, extraLogs = []) => {
+const stateFromBattle = (battle, baseState, logFrom = 0, extraLogs = [], teams = []) => {
   const p1Request = getSideRequest(battle, battle.p1);
   const p2Request = getSideRequest(battle, battle.p2);
   const player1 = convertSide(battle, battle.p1, p1Request);
   const player2 = convertSide(battle, battle.p2, p2Request);
   let _logSeq = Date.now();
-  const newLogs = [...extraLogs, ...collectLogs(battle, logFrom)].map(e => ({ ...e, _uid: _logSeq++ }));
+  const newLogs = [...extraLogs, ...collectLogs(battle, logFrom, teams)].map(e => ({ ...e, _uid: _logSeq++ }));
 
   return {
     ...baseState,
@@ -743,6 +824,8 @@ export function useAdvancedBattle(initialOptions = {}) {
   const battleRef = useRef(null);
   const pendingChoicesRef = useRef(emptyPendingChoices());
   const logFromRef = useRef(0);
+  const teamsRef = useRef([player1Team, player2Team]);
+  teamsRef.current = [player1Team, player2Team];
   const [battleState, setBattleState] = useState(() => emptyBattleState(player1Team, player2Team));
 
   useEffect(() => {
@@ -787,7 +870,7 @@ export function useAdvancedBattle(initialOptions = {}) {
     pendingChoicesRef.current = clearedPending;
     logFromRef.current = 0;
     const autoLogs = applyAutomaticChoices(battle);
-    setBattleState(prev => stateFromBattle(battle, { ...prev, pendingChoices: clearedPending }, logFrom, autoLogs));
+    setBattleState(prev => stateFromBattle(battle, { ...prev, pendingChoices: clearedPending }, logFrom, autoLogs, teamsRef.current));
   }, []);
 
   const commitPendingChoicesIfReady = useCallback((nextPending, logFrom) => {
@@ -848,7 +931,7 @@ export function useAdvancedBattle(initialOptions = {}) {
     };
 
     const autoLogs = applyAutomaticChoices(battle);
-    setBattleState(stateFromBattle(battle, initialState, 0, autoLogs));
+    setBattleState(stateFromBattle(battle, initialState, 0, autoLogs, teamsRef.current));
   }, [player1Team, player2Team]);
 
   const selectMove = useCallback((player, activeIndex, moveIndex, options = {}) => {
