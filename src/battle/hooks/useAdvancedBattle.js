@@ -372,9 +372,6 @@ const collectLogs = (battle, fromIndex = 0, teams = []) => {
   const seenInBatch = new Set();
   const nickMap = buildNickMap(battle, teams);
   const displayNames = initialDisplayNames(battle, nickMap);
-  // 교체 투입 시 "모습을 바꿨다!" 를 추가로 출력해야 하는 포켓몬 추적
-  // key: normalizedSpecies (e.g. 'palafinHero'), value: { pokeName, formeLabel }
-  const pendingFormeOnSwitch = new Map();
 
   return battle.log
     .slice(fromIndex)
@@ -409,12 +406,15 @@ const collectLogs = (battle, fromIndex = 0, teams = []) => {
           // 따라큐 껍데기 특성 해제
           message = { message: `${pokeName}의 정체가 드러났다!`, type: 'ability' };
         } else if (isZeroToHero) {
-          // Zero to Hero: 특성 발동 메시지만 표시, "모습을 바꿨다!"는 교체 투입 시로 이연
-          message = { message: `${pokeName}의 마이티체인지 발동!`, type: 'ability' };
+          // Zero to Hero: 발동 시점에 바로 두 줄 출력
           const targetLabel = customSpeciesLabels[normalizeBattleKey(targetSpecies)];
-          if (targetLabel) {
-            pendingFormeOnSwitch.set(normalizeBattleKey(targetSpecies), { formeLabel: targetLabel });
-          }
+          const abilityMsg = { message: `${pokeName}의 마이티체인지 발동!`, type: 'ability' };
+          const formeMsg = targetLabel
+            ? { message: `${pokeName}은(는) ${targetLabel}${roSuffix(targetLabel)} 모습을 바꿨다!`, type: 'switch' }
+            : null;
+          // displayNames 갱신 후 바로 return
+          if (slot) displayNames.set(slot, targetLabel || basePokeName);
+          return [abilityMsg, formeMsg].filter(Boolean).map(m => ({ ...m, _slot: slot }));
         } else {
           const targetLabel = customSpeciesLabels[normalizeBattleKey(targetSpecies)];
           if (targetLabel) {
@@ -440,22 +440,6 @@ const collectLogs = (battle, fromIndex = 0, teams = []) => {
           }
         }
       } else {
-        // 교체 투입 시 pendingFormeOnSwitch 처리
-        if (line?.startsWith('|switch|') || line?.startsWith('|drag|')) {
-          const incomingSpecies = formatSpeciesDetails(rawParts[3] || '');
-          const pendingKey = normalizeBattleKey(incomingSpecies);
-          if (pendingFormeOnSwitch.has(pendingKey)) {
-            const { formeLabel } = pendingFormeOnSwitch.get(pendingKey);
-            pendingFormeOnSwitch.delete(pendingKey);
-            // 교체 등장 메시지 + "마이티폼으로 모습을 바꿨다!" 두 개 출력
-            // 이름은 switch 라인에서 추출 (TOP 블록이 이미 displayNames 갱신 완료)
-            const switchPokeName = displayNames.get(slot) || extractName(rawParts[2] || '');
-            const switchMsg = protocolToLog(applyDisplayNamesToLine(line, displayNames));
-            const formeMsg = { message: `${switchPokeName}은(는) ${formeLabel}${roSuffix(formeLabel)} 모습을 바꿨다!`, type: 'switch' };
-            return [switchMsg, formeMsg].filter(Boolean).map(m => ({ ...m, _slot: slot }));
-          }
-        }
-
         message = protocolToLog(applyDisplayNamesToLine(line, displayNames));
 
         // detailschange 후 슬롯 이름 갱신
