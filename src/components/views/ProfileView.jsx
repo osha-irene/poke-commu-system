@@ -92,8 +92,8 @@ export default function ProfileView({ trainer, caughtPokemon, items, titles = []
 
   return (
     <div className="flex items-start justify-center w-full">
-      <div className="rounded-xl shadow-lg overflow-hidden" style={{ maxWidth: '50rem', width: '100%' }}>
-        <div className="flex gap-0">
+      <div className="rounded-xl  shadow-xl border-4 border-lime-600 ring-2 ring-white overflow-hidden" style={{ maxWidth: '50rem', width: '100%' }}>
+        <div className="flex gap-0 ">
 
           {/* 좌측: 이미지 */}
           <div className="flex-shrink-0 w-80 relative self-stretch overflow-hidden" style={{ background: 'rgba(20,20,30,0.35)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
