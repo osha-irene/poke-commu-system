@@ -1,6 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, Pencil, Check, X, User, Text, Swords } from 'lucide-react';
-import { getDatabase, ref, update } from 'firebase/database';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { ChevronLeft, User, Text, Swords } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 
 /* ── 유틸 ── */
@@ -28,145 +27,65 @@ const getOfficialArtwork = p => {
   if (id) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
   return getPokemonImg(p);
 };
+const getPokemonDbSprite = p => {
+  const name = p?.nameEn || p?.name;
+  if (name) return `https://img.pokemondb.net/sprites/scarlet-violet/normal/${name.toLowerCase().replace(/\s+/g, '-')}.png`;
+  return getOfficialArtwork(p);
+};
 const getPokemonName = p => p?.nickname || p?.nameKo || p?.name || '포켓몬';
 
 /* ── 편집 가능 텍스트 필드 ── */
-function EditableField({ value, placeholder, onSave, multiline = false, className = '' }) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(value || '');
+function CatchphraseDisplay({ value, color }) {
+  const spanRef = useRef(null);
+  const [fontSize, setFontSize] = useState(96);
 
-  const save = async () => {
-    await onSave(draft.trim());
-    setEditing(false);
-  };
-  const cancel = () => { setDraft(value || ''); setEditing(false); };
+  useLayoutEffect(() => {
+    const el = spanRef.current;
+    if (!el || !value) return;
 
-  if (editing) {
-    return (
-      <div className="flex items-start gap-1.5 w-full">
-        {multiline ? (
-          <textarea
-            autoFocus rows={3}
-            value={draft}
-            onChange={e => setDraft(e.target.value)}
-            className="flex-1 text-sm border border-indigo-300 rounded px-2 py-1 resize-none focus:outline-none focus:ring-1 focus:ring-indigo-400"
-          />
-        ) : (
-          <input
-            autoFocus type="text"
-            value={draft}
-            onChange={e => setDraft(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') cancel(); }}
-            className="flex-1 text-sm border border-indigo-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-          />
-        )}
-        <button onClick={save} className="p-1 bg-indigo-500 hover:bg-indigo-600 text-white rounded mt-0.5"><Check className="w-3.5 h-3.5" /></button>
-        <button onClick={cancel} className="p-1 bg-gray-200 hover:bg-gray-300 rounded mt-0.5"><X className="w-3.5 h-3.5" /></button>
-      </div>
-    );
-  }
-  return (
-    <div className={`group flex items-start gap-1.5 cursor-pointer ${className}`} onClick={() => { setDraft(value || ''); setEditing(true); }}>
-      <span className={value ? '' : 'text-gray-300 italic'}>{value || placeholder}</span>
-      <Pencil className="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5 flex-shrink-0" />
-    </div>
-  );
-}
+    // 단일 라인 높이 측정
+    const prevWS = el.style.whiteSpace;
+    el.style.whiteSpace = 'nowrap';
+    el.style.fontSize = '96px';
+    void el.offsetHeight;
+    const oneLineH = el.scrollHeight;
+    el.style.whiteSpace = prevWS;
 
-function CatchphraseField({ value, color, canEdit, onSave }) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(value || '');
+    const maxH = oneLineH * 2;
 
-  useEffect(() => {
-    if (!editing) setDraft(value || '');
-  }, [editing, value]);
-
-  const save = async () => {
-    await onSave(draft.trim());
-    setEditing(false);
-  };
-  const cancel = () => {
-    setDraft(value || '');
-    setEditing(false);
-  };
-
-  if (editing) {
-    return (
-      <div style={{ width: '100%', pointerEvents: 'auto' }}>
-        <textarea
-          autoFocus
-          rows={2}
-          value={draft}
-          onChange={e => setDraft(e.target.value)}
-          onKeyDown={e => {
-            if (e.key === 'Escape') cancel();
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') save();
-          }}
-          style={{
-            width: '100%',
-            resize: 'none',
-            border: `1.5px solid rgba(${color},0.35)`,
-            borderRadius: 10,
-            background: 'rgba(255,255,255,0.72)',
-            color: `rgb(${color})`,
-            padding: '10px 12px',
-            fontSize: 'clamp(2rem, 4vw, 3.8rem)',
-            fontWeight: 800,
-            fontStretch: '90%',
-            textAlign: 'right',
-            lineHeight: 1.18,
-            outline: 'none',
-            boxShadow: `0 10px 26px rgba(${color},0.10)`,
-          }}
-        />
-        <div className="flex gap-1.5 mt-2">
-          <button onClick={save} className="p-1.5 text-white rounded" style={{ background: `rgb(${color})` }}><Check className="w-4 h-4" /></button>
-          <button onClick={cancel} className="p-1.5 bg-white/80 text-gray-500 rounded"><X className="w-4 h-4" /></button>
-        </div>
-      </div>
-    );
-  }
+    let lo = 16, hi = 96;
+    while (lo < hi) {
+      const mid = Math.ceil((lo + hi) / 2);
+      el.style.fontSize = mid + 'px';
+      void el.offsetHeight;
+      // 단일라인 높이 비례로 2줄 기준 계산
+      const twoLineH = (oneLineH / 96) * mid * 2;
+      if (el.scrollHeight <= twoLineH + 4) lo = mid;
+      else hi = mid - 1;
+    }
+    setFontSize(lo);
+  }, [value]);
 
   return (
-    <button
-      type="button"
-      onClick={() => canEdit && setEditing(true)}
-      disabled={!canEdit}
-      className="group"
-      style={{
-        pointerEvents: canEdit ? 'auto' : 'none',
-        cursor: canEdit ? 'text' : 'default',
-        border: 'none',
-        background: 'transparent',
-        padding: 0,
-        margin: 0,
+    <div style={{ width: '100%', textAlign: 'right', opacity: '10%', pointerEvents: 'none' }}>
+      <span ref={spanRef} style={{
+        display: 'block',
+        fontFamily: "'SUITE', sans-serif",
+        fontSize,
+        fontWeight: 500,
+        transform: 'scale(1.2)',
+        transformOrigin: 'center',
+        filter: 'blur(1px)',
         width: '100%',
-        textAlign: 'right',
-        opacity: '10%',
-      }}
-    >
-      <span
-        style={{
-          display: 'block',
-          fontFamily: "'SUITE', sans-serif",
-          fontSize: 'clamp(4rem, 5.35vw, 6rem)',
-          fontWeight: 500,
-          transform: 'scale(1.2)',
-          transformOrigin: 'center',
-          filter: 'blur(1px)',
-          width: '100%',
-          color: value ? `rgba(${color},0.90)` : `rgba(${color},0.38)`,
-          letterSpacing: '0',
-          lineHeight: 1,
-          whiteSpace: 'pre-wrap',
-          textShadow: '0 1px 0 rgba(255,255,255,0.65)',
-         
-        }}
-      >
-        {value || '한마디를 입력하세요'}
-        {canEdit && <Pencil className="inline-block w-4 h-4 ml-2 opacity-0 group-hover:opacity-70 transition-opacity align-middle" />}
+        color: value ? `rgba(${color},0.90)` : `rgba(${color},0.38)`,
+        letterSpacing: '0',
+        lineHeight: 1,
+        whiteSpace: 'pre-wrap',
+        textShadow: '0 1px 0 rgba(255,255,255,0.65)',
+      }}>
+        {value || ''}
       </span>
-    </button>
+    </div>
   );
 }
 
@@ -183,8 +102,16 @@ function PartySlot({ pokemon, large }) {
     <div className={`rounded-xl bg-white border-2 border-gray-100 shadow-sm flex flex-col items-center justify-center gap-1 p-1 ${large ? 'w-20 h-20' : 'w-14 h-14'}`}
       title={getPokemonName(pokemon)}>
       {icon ? (
-        <img src={icon} alt={getPokemonName(pokemon)}
-          style={{ imageRendering: 'pixelated', width: large ? 48 : 36, height: large ? 48 : 36, objectFit: 'contain' }} />
+        <div style={{
+          width: (large ? 48 : 36) / 2,
+          height: large ? 48 : 36,
+          backgroundImage: `url(${icon})`,
+          backgroundRepeat: 'no-repeat',
+          backgroundSize: `auto ${large ? 48 : 36}px`,
+          backgroundPosition: 'left center',
+          imageRendering: 'pixelated',
+          flexShrink: 0,
+        }} />
       ) : (
         <div className="w-8 h-8 rounded-full bg-gray-200" />
       )}
@@ -202,13 +129,23 @@ function MemberCard({ member, titles, onClick }) {
     ? titles.find(t => t.id === member.title)?.label || ''
     : '';
 
+  const preloadFullImg = () => {
+    const full = getFullImg(member);
+    if (full && full !== faceImg) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = full;
+    }
+  };
+
   return (
     <div
       className="rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden hover:-translate-y-1 group aspect-square bg-gray-100"
       onClick={onClick}
+      onMouseEnter={preloadFullImg}
     >
       {faceImg ? (
-        <img src={faceImg} alt={member.name}
+        <img src={faceImg} alt={member.name} loading="lazy"
           className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
       ) : (
         <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-indigo-50 to-purple-50">
@@ -312,18 +249,63 @@ function getQuoteAccentColor(color) {
   return hslToRgb(h, clamp(s + 0.06, 0.62, 0.92), clamp(l - 0.26, 0.14, 0.26));
 }
 
-function MemberDetail({ member, currentUserId, canEditAll, titles, onBack }) {
-  const isOwn = member.id === currentUserId;
-  const canEditMember = isOwn || canEditAll;
+const imgCache = {}; // url → accent color (모듈 레벨 캐시)
+
+function MemberDetail({ member, titles, onBack }) {
   const fullImg = getFullImg(member);
   const imgRef = useRef(null);
-  const [imgLoaded, setImgLoaded] = useState(false);
+  const prevMemberIdRef = useRef(null);
+  const noteRef = useRef(null);
+  const [imgLoaded, setImgLoaded] = useState(() => !!imgCache[fullImg]);
   const [tab, setTab] = useState('main');
   const [hoveredTab, setHoveredTab] = useState(null);
-  const [accent, setAccent] = useState(null); // [r, g, b]
+  const [accent, setAccent] = useState(() => imgCache[fullImg] ?? null);
+  const [note, setNote] = useState(member.note || '');
+  const [noteEditing, setNoteEditing] = useState(false);
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [keywordTexts, setKeywordTexts] = useState(() => member.keywordTexts || ['', '', '']);
+  const [kwEditing, setKwEditing] = useState(null);
+  const [kwSaving, setKwSaving] = useState(false);
+  const [etcText, setEtcText] = useState(() => member.etcText || '');
+  const [etcEditing, setEtcEditing] = useState(false);
+  const [etcSaving, setEtcSaving] = useState(false);
+
+  const saveEtcText = async () => {
+    setEtcSaving(true);
+    try {
+      const { getDatabase, ref, update } = await import('firebase/database');
+      await update(ref(getDatabase(), `members/${member.id}`), { etcText });
+    } finally {
+      setEtcSaving(false);
+      setEtcEditing(false);
+    }
+  };
+
+  const saveKeywordText = async (i) => {
+    setKwSaving(true);
+    try {
+      const { getDatabase, ref, update } = await import('firebase/database');
+      const next = [...keywordTexts];
+      await update(ref(getDatabase(), `members/${member.id}`), { keywordTexts: next });
+    } finally {
+      setKwSaving(false);
+      setKwEditing(null);
+    }
+  };
+
+  const saveNote = async () => {
+    setNoteSaving(true);
+    try {
+      const { getDatabase, ref, update } = await import('firebase/database');
+      await update(ref(getDatabase(), `members/${member.id}`), { note: note.trim() });
+    } finally {
+      setNoteSaving(false);
+      setNoteEditing(false);
+    }
+  };
 
   const party = getParty(member);
-  const partner = getPartner(member);
+  const partner = party.find(p => p?.isPartner) || member.partnerPokemon || null;
   const entry = party.filter(p => p !== partner);
 
   const accentRgb = accent ? `${accent[0]},${accent[1]},${accent[2]}` : '80,120,200';
@@ -332,54 +314,47 @@ function MemberDetail({ member, currentUserId, canEditAll, titles, onBack }) {
   const quoteAccent = getQuoteAccentColor(accent);
   const quoteAccentRgb = `${quoteAccent[0]},${quoteAccent[1]},${quoteAccent[2]}`;
 
-  const saveField = async (field, value) => {
-    const db = getDatabase();
-    await update(ref(db, `members/${member.id}`), { [field]: value });
-  };
-
   const handleImgLoad = () => {
     setImgLoaded(true);
     if (imgRef.current) {
       const color = extractDominantColor(imgRef.current);
-      if (color) setAccent(color);
+      if (color) {
+        imgCache[fullImg] = color;
+        setAccent(color);
+      }
     }
   };
 
   useEffect(() => {
-    setAccent(null);
-    setImgLoaded(false);
+    const memberChanged = prevMemberIdRef.current !== member.id;
+    prevMemberIdRef.current = member.id;
+    if (imgCache[fullImg]) {
+      setImgLoaded(true);
+      setAccent(imgCache[fullImg]);
+    } else if (memberChanged) {
+      setAccent(null);
+      setImgLoaded(false);
+    }
   }, [fullImg, member.id]);
 
-  // 이미 캐시된 이미지는 onLoad가 안 불릴 수 있음
+
   useEffect(() => {
-    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
-      handleImgLoad();
-    }
-  });
+    const el = noteRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  }, [note, noteEditing]);
 
   return (
-    <div className="relative flex" style={{ minHeight: '100vh' }}>
+    <div className="relative flex" style={{ height: '100vh' }}>
 
-      {/* 한마디 텍스트*/}
-      <div style={{
-        position: 'absolute',
-        top: 28, left: '28%', right: '28%',
-        height: 100,
-        display: 'flex',
-        alignItems: 'center',
-        paddingLeft: '4%',
-        zIndex: 3,
-        pointerEvents: 'none',
-      }}>
-        <span style={{ color: 'white', fontSize: '0.875rem', fontWeight: 500 }}>
-          {member.bio || ''}
-        </span>
-      </div>
+
 
       {/* 좌측: 캐치프레이즈(뒤) + 캐릭터 이미지 */}
       <div className="relative" style={{ width: 'calc(100% - 240px)', flexShrink: 0 }}>
         {tab === 'main' && (
           <div
+            className="rmv-catchphrase-fade"
             style={{
               position: 'fixed',
               top: '0.15rem',
@@ -389,11 +364,9 @@ function MemberDetail({ member, currentUserId, canEditAll, titles, onBack }) {
               pointerEvents: 'none',
             }}
           >
-            <CatchphraseField
+            <CatchphraseDisplay
               value={member.catchphrase || ''}
               color={quoteAccentRgb}
-              canEdit={canEditMember}
-              onSave={v => saveField('catchphrase', v)}
             />
           </div>
         )}
@@ -402,25 +375,26 @@ function MemberDetail({ member, currentUserId, canEditAll, titles, onBack }) {
             ref={imgRef}
             src={fullImg}
             alt={member.name}
+            crossOrigin="anonymous"
             onLoad={handleImgLoad}
             onError={() => setImgLoaded(true)}
+            className={`rmv-char-base${tab === 'text' ? ' rmv-char-pushed' : ''}`}
             style={{
               position: 'fixed',
               top: 0,
               left: '9vw',
-              transform: 'translateX(-50%)',
               height: 'auto',
               width: '70vh',
               maxWidth: 'none',
               objectFit: 'contain',
               objectPosition: 'top center',
               zIndex: 2,
-              maskImage: 'linear-gradient(to bottom, black 90%, rgba(0,0,0,0.3) 98%, transparent 100%)',
-              WebkitMaskImage: 'linear-gradient(to bottom, black 80%, rgba(0,0,0,0.3) 90%, transparent 100%)',
+             /*  maskImage: 'linear-gradient(to bottom, black 90%, rgba(0,0,0,0.3) 98%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 80%, rgba(0,0,0,0.3) 90%, transparent 100%)', */
               filter: 'url(#paper-cut-outline) drop-shadow(0px 4px 3px rgba(20, 34, 3, 0.3))',
               pointerEvents: 'none',
               opacity: imgLoaded ? 1 : 0,
-              transition: 'opacity 0.5s ease',
+              transition: 'transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease',
             }}
           />
         ) : (
@@ -432,9 +406,9 @@ function MemberDetail({ member, currentUserId, canEditAll, titles, onBack }) {
         )}
       </div>
 
-      {/* 하단 액센트 그라데이션 */}
+     {/* 하단 액센트 그라데이션 */}
       <div style={{
-        position: 'fixed', bottom: -1, left: 0, right: 0, height: 220,
+        position: 'fixed', bottom: -1, left: 0, right: 0, height: 400,
         background: `linear-gradient(to top, rgba(${accentRgb},0.10) 0%, rgba(${accentRgb},0.06) 42%, rgba(${accentRgb},0) 100%)`,
         pointerEvents: 'none', zIndex: 1,
       }} />
@@ -475,52 +449,182 @@ function MemberDetail({ member, currentUserId, canEditAll, titles, onBack }) {
         ))}
       </div>
 
+
+
       {/* 우측 콘텐츠 패널 */}
+      {tab === 'text' && (
+        <div style={{ position: 'fixed', top: 0, bottom: 0, left: '30%', right: '0%', overflow: 'hidden', zIndex: 10, background: 'linear-gradient(to right, transparent 0%, rgba(255,255,255,0.95) 5%, rgba(255,255,255,0.95) 100%)', pointerEvents: 'none' }} />
+      )}
       <div
-        className="z-10 flex flex-col justify-start gap-3"
-        style={{ position: 'absolute', top: tab === 'main' ? '17rem' : '3.5rem', left: '60%', width: 240 }}
+        key={tab}
+        className={`flex flex-col justify-start gap-3 ${tab === 'text' ? 'rmv-text-tab-in' : 'rmv-tab-content'}`}
+        style={tab === 'text'
+          ? { position: 'fixed', top: 0, bottom: 0, left: '30%', right: '0%', overflowY: 'auto', paddingTop: 24, paddingBottom: 24, paddingLeft: 24, paddingRight: 20, boxSizing: 'border-box', zIndex: 11 }
+          : { position: 'absolute', top: tab === 'main' ? '17rem' : '3.5rem', left: '57%', width: 280, maxHeight: 'calc(100vh - 2rem)', overflowY: 'visible', paddingBottom: 24, boxSizing: 'border-box' }}
       >
-        <h2 style={{ fontFamily: "'SBAggroB', sans-serif", fontWeight: 700, fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#1a1a1a', lineHeight: 1.1 }}>{member.name}</h2>
+        {tab !== 'text' && (() => {
+          const titleLabel = member.title && member.title !== 'none'
+            ? titles.find(t => t.id === member.title)?.label
+            : null;
+          return titleLabel ? (
+            <span style={{ fontSize: 14, fontWeight: 600, color: `rgb(${accentRgb})`, letterSpacing: '0.05em', lineHeight: 1 }}>
+              {titleLabel}
+            </span>
+          ) : null;
+        })()}
+        {tab !== 'text' && <h2 style={{ fontFamily: "'SBAggroB', sans-serif", fontWeight: 700, fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#1a1a1a', lineHeight: 1.1, marginTop: -4 }}>{member.name}</h2>}
 
         {/* 메인 탭 */}
         {tab === 'main' && <>
+          {/* 파트너 — 여백 유지 + 이미지 절대 위치 */}
           {partner && (
-            <div className="flex items-center gap-3 rounded-2xl"
-              style={{ background: 'rgba(255,255,255,0.7)', padding: '8px 12px', backdropFilter: 'blur(6px)' }}>
-              <img src={getOfficialArtwork(partner)} alt={getPokemonName(partner)}
-                style={{ width: 56, height: 56, objectFit: 'cover' }} />
-              <div className="flex flex-col">
-                <span className="text-2xl font-bold text-gray-800">{getPokemonName(partner)}</span>
-              </div>
+            <div style={{ position: 'relative', height: 65, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end', paddingRight: 110 }}>
+              <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.25)', fontWeight: 500, letterSpacing: '0.05em' }}>파트너</span>
+              <span style={{ fontSize: 22, fontWeight: 700, color: '#1a1a1a' }}>{getPokemonName(partner)}</span>
+              <img src={getPokemonDbSprite(partner)} alt={getPokemonName(partner)}
+                style={{ position: 'absolute', bottom: '0', right: '-2rem', width: 160, height: 160, objectFit: 'contain', zIndex: 5, pointerEvents: 'none' }} />
             </div>
           )}
-          <div className="grid grid-cols-2 gap-1.5">
-            {Array.from({ length: 6 }).map((_, i) => {
-              const p = entry[i];
-              return (
-                <div key={i} className="flex items-center justify-center rounded-xl"
-                  style={{ background: 'rgba(255,255,255,0.6)', height: 40, backdropFilter: 'blur(4px)' }}>
-                  {p
-                    ? <img src={getPokemonLocalIconUrl(p)} alt={getPokemonName(p)}
-                        style={{ width: 32, height: 32, imageRendering: 'pixelated', objectFit: 'contain' }} />
-                    : <span style={{ color: 'rgba(0,0,0,0.15)', fontSize: 18 }}>—</span>}
-                </div>
-              );
-            })}
+
+          {/* 여백 노트란 */}
+          {noteEditing ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <textarea
+                autoFocus
+                ref={el => { noteRef.current = el; if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } }}
+                value={note}
+                onChange={e => { setNote(e.target.value); if (noteRef.current) { noteRef.current.style.height = 'auto'; noteRef.current.style.height = noteRef.current.scrollHeight + 'px'; } }}
+                style={{
+                  width: '100%', resize: 'none', border: 'none', outline: 'none',
+                  background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(6px)',
+                  borderRadius: 10, padding: '10px 12px',
+                  fontSize: 15, color: '#333', lineHeight: 1.6, fontFamily: 'inherit',
+                  zIndex: 5, overflow: 'hidden', minHeight: 48, display: 'block',
+                }}
+              />
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={saveNote} disabled={noteSaving}
+                  style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: `rgb(${accentRgb})`, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                  {noteSaving ? '저장 중...' : '저장'}
+                </button>
+                <button onClick={() => { setNote(member.note || ''); setNoteEditing(false); }}
+                  style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: 'rgba(0,0,0,0.08)', color: '#555', fontSize: 13, cursor: 'pointer' }}>
+                  취소
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div onClick={() => setNoteEditing(true)}
+              style={{ minHeight: 48, fontSize: 15, color: note ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.6, cursor: 'text', padding: '4px 2px', position: 'relative', zIndex: 1 }}>
+              {note
+                ? note.split('\n').map((line, i) => <p key={i} style={{ margin: 0, marginBottom: '0.4em', textIndent: '0.5em' }}>{line || ' '}</p>)
+                : '클릭해서 메모 추가...'}
+            </div>
+          )}
+
+          {/* 엔트리 */}
+          <div style={{ marginTop: 24 }}>
+            <div className="grid grid-cols-2 gap-1.5">
+              {Array.from({ length: 6 }).map((_, i) => {
+                const p = entry[i];
+                return (
+                  <div key={i} className="flex items-center justify-center rounded-xl"
+                    style={{ background: 'rgba(255,255,255,0.6)', height: 40, backdropFilter: 'blur(4px)' }}>
+                    {p
+                      ? <img src={getPokemonLocalIconUrl(p)} alt={getPokemonName(p)}
+                          style={{ width: 32, height: 32, imageRendering: 'pixelated', objectFit: 'contain' }} />
+                      : <span style={{ color: 'rgba(0,0,0,0.15)', fontSize: 18 }}>—</span>}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </>}
 
         {/* 설정 탭 */}
-        {tab === 'settings' && (
-          <div className="flex flex-col gap-3 text-sm text-gray-600">
-            {canEditMember ? (
-              <EditableField value={member.bio} placeholder="한마디를 입력해보세요"
-                onSave={v => saveField('bio', v)} multiline className="text-sm text-gray-600" />
-            ) : (
-              <span>{member.bio || '한마디가 없어요'}</span>
-            )}
-          </div>
-        )}
+        {tab === 'text' && (() => {
+          const [ar, ag, ab] = selectedAccent;
+          const lum = 0.299 * ar + 0.587 * ag + 0.114 * ab;
+          const kwTextColor = lum > 160 ? '#111' : '#fff';
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {(member.keywords || []).slice(0, 3).map((kw, i) => {
+                if (!kw) return null;
+                const isEditing = kwEditing === i;
+                return (
+                  <div key={i} style={{ paddingTop: 28 }}>
+                    <div style={{ display: 'block', background: `rgb(${selectedAccentRgb})`, borderRadius: 0, padding: '2px 10px', marginBottom: 20, width: 'calc(100% + 2rem)', WebkitMaskImage: 'linear-gradient(to right, black 55%, transparent 88%)', maskImage: 'linear-gradient(to right, black 55%, transparent 88%)' }}>
+                      <span style={{ fontSize: 16, fontWeight: 700, color: kwTextColor, letterSpacing: '0.04em' }}>#{kw}</span>
+                    </div>
+                    {isEditing ? (
+                      <>
+                        <textarea
+                          autoFocus
+                          value={keywordTexts[i]}
+                          ref={el => { if (el) { el.style.height = 'auto'; requestAnimationFrame(() => { el.style.height = el.scrollHeight + 'px'; }); } }}
+                          onChange={e => { setKeywordTexts(prev => { const n = [...prev]; n[i] = e.target.value; return n; }); const el = e.target; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }}
+                          style={{ display: 'block', width: '100%', resize: 'none', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.6)', borderRadius: 8, padding: '8px 10px', fontSize: 14, color: '#333', lineHeight: 1.6, fontFamily: 'inherit', overflow: 'hidden', minHeight: 40 }}
+                        />
+                        <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                          <button onClick={() => saveKeywordText(i)} disabled={kwSaving}
+                            style={{ flex: 1, padding: '5px 0', borderRadius: 7, border: 'none', background: `rgb(${selectedAccentRgb})`, color: kwTextColor, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                            {kwSaving ? '저장 중...' : '저장'}
+                          </button>
+                          <button onClick={() => setKwEditing(null)}
+                            style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: 'rgba(0,0,0,0.08)', color: '#555', fontSize: 12, cursor: 'pointer' }}>
+                            취소
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <div onClick={() => setKwEditing(i)}
+                        style={{ fontSize: 14, color: keywordTexts[i] ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.6, cursor: 'text', minHeight: 32, paddingLeft: 16 }}>
+                        {keywordTexts[i]
+                          ? keywordTexts[i].split('\n').map((line, j) => <p key={j} style={{ margin: 0, marginBottom: '0.4em', textIndent: '0.5em' }}>{line || ' '}</p>)
+                          : '클릭해서 내용 추가...'}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* 기타 섹션 */}
+              <div style={{ paddingTop: 28 }}>
+                <div style={{ display: 'block', background: `rgb(${selectedAccentRgb})`, borderRadius: 0, padding: '2px 10px', marginBottom: 20, width: 'calc(100% + 2rem)', WebkitMaskImage: 'linear-gradient(to right, black 55%, transparent 88%)', maskImage: 'linear-gradient(to right, black 55%, transparent 88%)' }}>
+                  <span style={{ fontSize: 16, fontWeight: 700, color: kwTextColor, letterSpacing: '0.04em' }}>기타</span>
+                </div>
+                {etcEditing ? (
+                  <>
+                    <textarea
+                      autoFocus
+                      value={etcText}
+                      ref={el => { if (el) { el.style.height = 'auto'; requestAnimationFrame(() => { el.style.height = el.scrollHeight + 'px'; }); } }}
+                      onChange={e => { setEtcText(e.target.value); const el = e.target; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }}
+                      style={{ display: 'block', width: '100%', resize: 'none', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.6)', borderRadius: 8, padding: '8px 10px', fontSize: 14, color: '#333', lineHeight: 1.6, fontFamily: 'inherit', overflow: 'hidden', minHeight: 40 }}
+                    />
+                    <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                      <button onClick={saveEtcText} disabled={etcSaving}
+                        style={{ flex: 1, padding: '5px 0', borderRadius: 7, border: 'none', background: `rgb(${selectedAccentRgb})`, color: kwTextColor, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                        {etcSaving ? '저장 중...' : '저장'}
+                      </button>
+                      <button onClick={() => setEtcEditing(false)}
+                        style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: 'rgba(0,0,0,0.08)', color: '#555', fontSize: 12, cursor: 'pointer' }}>
+                        취소
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div onClick={() => setEtcEditing(true)}
+                    style={{ fontSize: 14, color: etcText ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.6, cursor: 'text', minHeight: 32, paddingLeft: 16 }}>
+                    {etcText
+                      ? etcText.split('\n').map((line, j) => <p key={j} style={{ margin: 0, marginBottom: '0.4em', textIndent: '0.5em' }}>{line || ' '}</p>)
+                      : '클릭해서 내용 추가...'}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* 엔트리 탭 */}
         {tab === 'entry' && (
@@ -543,6 +647,51 @@ function MemberDetail({ member, currentUserId, canEditAll, titles, onBack }) {
           </div>
         )}
       </div>
+
+      {/* 말풍선 — 메인 탭에서만 표시 */}
+      {tab === 'main' && member.bio && (
+        <div className="rmv-bio-slide" style={{ position: 'absolute', top: '6rem', right: 'calc(43% - 290px)', width: 'calc(43vw * 1/2)', zIndex: 1 }}>
+          <span style={{
+            position: 'absolute',
+            top: 30, left: 10,
+            fontSize: 80, fontWeight: 700, lineHeight: 1,
+            fontFamily: 'Georgia, serif',
+            color: `rgb(${accentRgb})`,
+            transform: 'translateY(-70%)',
+            zIndex: 3,
+            WebkitTextStroke: '7px white',
+            paintOrder: 'stroke fill',
+          }}>{'“'}</span>
+          <div style={{ filter: `drop-shadow(-9px 12px 0px rgba(${accentRgb},0.7))` }}>
+            <div style={{
+              position: 'relative',
+              background: 'white',
+              borderRadius: 5,
+              padding: '24px 28px',
+              opacity: 0.95,
+            }}>
+              <svg
+                width={22} height={28}
+                viewBox={'0 0 28 28'}
+                style={{ position: 'absolute', top: 6, left: -21 }}
+              >
+                <path d={'M0,0 L28,0 L28,28 Z'} fill={'white'} />
+              </svg>
+              <span style={{
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                fontSize: 30, color: '#333', fontWeight: 400, lineHeight: 1.2,
+                wordBreak: 'keep-all',
+                fontFamily: ['Aggravo', 'Georgia', 'serif'].join(', '),
+              }}>
+                {member.bio}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
@@ -570,6 +719,8 @@ export default function MembersView({ members = {}, isLoading, currentUserId, ti
   }, [showDetail]);
 
   const openMember = (member) => {
+    const full = getFullImg(member);
+    if (full) { const img = new Image(); img.crossOrigin = 'anonymous'; img.src = full; }
     setIsClosing(false);
     setSelected(member);
     setTransitioning(true);
@@ -637,7 +788,7 @@ export default function MembersView({ members = {}, isLoading, currentUserId, ti
             top: 0, bottom: 0, left: '30%', right: '30%',
             zIndex: 50,
             overflow: 'visible',
-            background: 'rgba(255, 255, 255, 0.87)',
+            background: 'rgba(255, 255, 255,0.89)',
             boxShadow: '0 0 80px rgba(0,0,0,0.18), 0 0 200px rgba(0,0,0,0.08)',
             transition: 'transform 0.45s cubic-bezier(0.22,1,0.36,1), opacity 0.4s',
             transform: showDetail ? 'translateX(0)' : isClosing ? 'translateX(-60px)' : 'translateX(60px)',
@@ -648,7 +799,6 @@ export default function MembersView({ members = {}, isLoading, currentUserId, ti
         >
           <MemberDetail
             member={members[selected.id] || selected}
-            currentUserId={currentUserId}
             titles={titles}
             onBack={closeMember}
           />

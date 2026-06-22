@@ -13,6 +13,8 @@ import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import MapView from './components/views/MapView';
 import MobileMapView from './components/views/_mobile/MobileMapView';
+import MobileMembersView from './components/views/_mobile/MobileMembersView';
+import MobileTrainerCard from './components/views/_mobile/MobileTrainerCard';
 import PokedexView from './components/views/PokedexView';
 import PokemonView from './components/views/PokemonView';
 import ItemsView from './components/views/ItemsView';
@@ -1955,7 +1957,7 @@ return (
             />
           )}
 
-          {currentTab === 'members' && <MembersView members={members} isLoading={isMembersLoading} currentUserId={currentUser?.id} titles={titles} />}
+          {currentTab === 'members' && <MobileMembersView members={members} titles={titles} />}
           {currentTab === 'npcs' && <NpcView members={members} isLoading={isMembersLoading} isAdmin={isAdmin} npcOnly />}
           {currentTab === 'pokemon' && <PokemonView />}
           {currentTab === 'items' && <ItemsView />}
@@ -1975,12 +1977,9 @@ return (
 			)}
 					  
           {currentTab === 'profile' && (
-            <ProfileView
-              trainer={trainer}
-              caughtPokemon={caughtPokemon}
-              items={items}
-              titles={titles || []}
-            />
+            <div style={{ padding: '16px 16px 80px' }}>
+              <MobileTrainerCard trainer={trainer} titles={titles || []} />
+            </div>
           )}
           
           {currentTab === 'qna' && (
