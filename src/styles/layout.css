@@ -1706,8 +1706,8 @@ img.emoji {
 
 .home-login-panel {
   position: absolute;
-  top: var(--login-top);
-  right: var(--panel-form-right);
+  top: var(--login-form-top);
+  right: var(--login-form-right);
   z-index: 6;
   width: 226px;
   margin: 0;
@@ -1778,8 +1778,8 @@ img.emoji {
 }
 .home-session-panel {
   position: fixed;
-  top: var(--login-top);
-  right: var(--panel-form-right);
+  top: var(--session-panel-top);
+  right: var(--session-panel-right);
   z-index: 6;
   width: 240px;
   display: flex;

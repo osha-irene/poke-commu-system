@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { get, ref, set, query, orderByChild, limitToLast } from 'firebase/database';
+import { get, ref, set, update, query, orderByChild, limitToLast } from 'firebase/database';
 import { getAuth } from 'firebase/auth';
 import { database } from '../../firebase';
+import { useGame } from '../../contexts/GameContext';
 import AdvancedBattleSimulator from '../../battle/components/AdvancedBattleSimulator';
 import { toCalcAbilityName } from '../../utils/abilityUtils';
 import { getOwnedPokemonDisplayParts } from '../../utils/ownedPokemonDisplay';
@@ -585,20 +586,23 @@ const BattleLogArchiveModal = ({ logs, onClose, onDelete, loading }) => {
 };
 
 export function BattleView() {
+  const { systemSettings } = useGame();
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [loadingPokemon, setLoadingPokemon] = useState({ player1: false, player2: false });
   const [members, setMembers] = useState([]);
   const [battleSize, setBattleSize] = useState(3);
   const [selectedUser1, setSelectedUser1] = useState('');
   const [selectedUser2, setSelectedUser2] = useState('');
-  const [player1Data, setPlayer1Data] = useState({ entryPokemon: [], partnerPokemon: null });
-  const [player2Data, setPlayer2Data] = useState({ entryPokemon: [], partnerPokemon: null });
+  const [player1Data, setPlayer1Data] = useState({ entryPokemon: [], partnerPokemon: null, inventory: [] });
+  const [player2Data, setPlayer2Data] = useState({ entryPokemon: [], partnerPokemon: null, inventory: [] });
   const [selectedP1Ids, setSelectedP1Ids] = useState([]);
   const [selectedP2Ids, setSelectedP2Ids] = useState([]);
   const [battleStarted, setBattleStarted] = useState(false);
   const [battleLogArchive, setBattleLogArchive] = useState(() => readBattleLogArchive());
   const [showBattleLogArchive, setShowBattleLogArchive] = useState(false);
   const [logsLoading, setLogsLoading] = useState(false);
+  // 배틀 중 소모된 아이템 추적 (uid → { itemId → count })
+  const [consumedItems, setConsumedItems] = useState({});
 
   useEffect(() => {
     const loadMembers = async () => {
@@ -662,6 +666,7 @@ export function BattleView() {
       setData({
         entryPokemon,
         partnerPokemon: memberData.partnerPokemon || null,
+        inventory: Array.isArray(memberData.inventory) ? memberData.inventory : [],
       });
     } catch (error) {
       console.error('포켓몬 로드 실패:', error);
@@ -727,6 +732,40 @@ export function BattleView() {
     }
   };
 
+  // 배틀 중 아이템 소모 처리 (로컬 인벤토리 차감 + Firebase 저장)
+  const handleConsumeItem = async (player, item) => {
+    const userId = player === 'player1' ? selectedUser1 : selectedUser2;
+    const setData = player === 'player1' ? setPlayer1Data : setPlayer2Data;
+
+    // 로컬 인벤토리에서 수량 차감
+    setData(prev => {
+      const newInventory = prev.inventory.map(i => {
+        if ((i.id || i.name) === (item.id || item.name)) {
+          return { ...i, quantity: (i.quantity ?? 1) - 1 };
+        }
+        return i;
+      }).filter(i => (i.quantity ?? 1) > 0);
+      return { ...prev, inventory: newInventory };
+    });
+
+    // Firebase 저장
+    if (!userId) return;
+    try {
+      const snapshot = await get(ref(database, `members/${userId}/inventory`));
+      if (!snapshot.exists()) return;
+      const inv = Array.isArray(snapshot.val()) ? snapshot.val() : [];
+      const updated = inv.map(i => {
+        if ((i.id || i.name) === (item.id || item.name)) {
+          return { ...i, quantity: (i.quantity ?? 1) - 1 };
+        }
+        return i;
+      }).filter(i => (i.quantity ?? 1) > 0);
+      await set(ref(database, `members/${userId}/inventory`), updated);
+    } catch (e) {
+      console.warn('아이템 소모 저장 실패:', e);
+    }
+  };
+
   const handleDeleteBattleLog = (id) => {
     setBattleLogArchive((prev) => {
       const next = prev.filter(log => log.id !== id);
@@ -785,6 +824,10 @@ export function BattleView() {
           autoStart
           onBattleFinished={handleBattleFinished}
           onExit={() => setBattleStarted(false)}
+          battleItemsEnabled={!!systemSettings?.battleItemsEnabled}
+          player1Inventory={player1Data.inventory}
+          player2Inventory={player2Data.inventory}
+          onConsumeItem={handleConsumeItem}
         />
         {showBattleLogArchive && (
           <BattleLogArchiveModal logs={battleLogArchive} onClose={() => setShowBattleLogArchive(false)} onDelete={handleDeleteBattleLog} loading={logsLoading} />

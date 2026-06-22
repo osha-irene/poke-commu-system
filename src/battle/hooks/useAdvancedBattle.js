@@ -981,11 +981,66 @@ export function useAdvancedBattle(initialOptions = {}) {
     showdownIntegration.compareMoveDamage(attacker, defender, moveNames, battleState.field)
   ), [battleState.field]);
 
+  // ── 배틀 중 아이템 사용 ──
+  const applyBattleItem = useCallback((player, item, effect) => {
+    const battle = battleRef.current;
+    if (!battle || battle.ended) return false;
+
+    const side = player === 'player1' ? battle.p1 : battle.p2;
+    const pokemon = side.active?.[0];
+    if (!pokemon || pokemon.fainted) return false;
+
+    const playerLabel = player === 'player1' ? 'Player 1' : 'Player 2';
+    const itemName = item.name || item.nameEn || '아이템';
+    let effectMsg = '';
+
+    if (effect.type === 'heal') {
+      const amount = effect.amount == null ? (pokemon.maxhp - pokemon.hp) : effect.amount;
+      const actual = Math.min(amount, pokemon.maxhp - pokemon.hp);
+      if (actual <= 0) return false;
+      pokemon.hp = pokemon.hp + actual;
+      effectMsg = `HP ${actual} 회복 (${pokemon.hp}/${pokemon.maxhp})`;
+    } else if (effect.type === 'healpercent') {
+      const amount = Math.floor(pokemon.maxhp * effect.percent);
+      const actual = Math.min(amount, pokemon.maxhp - pokemon.hp);
+      if (actual <= 0) return false;
+      pokemon.hp = pokemon.hp + actual;
+      effectMsg = `HP ${actual} 회복 (${pokemon.hp}/${pokemon.maxhp})`;
+    } else if (effect.type === 'fullheal') {
+      pokemon.hp = pokemon.maxhp;
+      pokemon.status = '';
+      effectMsg = 'HP 완전 회복 & 상태이상 치료';
+    } else if (effect.type === 'curestatus') {
+      if (!pokemon.status) return false;
+      pokemon.status = '';
+      effectMsg = '상태이상 치료';
+    } else if (effect.type === 'boost') {
+      const cur = pokemon.boosts[effect.stat] || 0;
+      if (cur >= 6) return false;
+      pokemon.boosts[effect.stat] = Math.min(6, cur + effect.stages);
+      const statLabels = { atk: '공격', def: '방어', spa: '특수공격', spd: '특수방어', spe: '스피드', accuracy: '명중률' };
+      effectMsg = `${statLabels[effect.stat] || effect.stat} 상승`;
+    } else {
+      return false;
+    }
+
+    const itemLog = {
+      message: `${playerLabel}이(가) ${itemName}을(를) 사용했다! (${effectMsg})`,
+      type: 'item',
+    };
+
+    setBattleState(prev =>
+      stateFromBattle(battle, prev, battle.log.length, [itemLog], teamsRef.current)
+    );
+    return true;
+  }, []);
+
   return {
     battleState,
     startBattle,
     selectMove,
     selectSwitch,
+    applyBattleItem,
     clearPendingChoices,
     confirmAndSubmit,
     resetBattle,

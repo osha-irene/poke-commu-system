@@ -784,11 +784,13 @@ function HomeDashboard({
                             <div onClick={() => { onUpdateTitle?.('none'); setTitleOpen(false); }}>
                               칭호 없음
                             </div>
-                            {titles.map(t => (
-                              <div key={t.id} onClick={() => { onUpdateTitle?.(t.id); setTitleOpen(false); }}>
-                                {t.label}
-                              </div>
-                            ))}
+                            {titles
+                              .filter(t => (trainer.assignedTitles || []).includes(t.id))
+                              .map(t => (
+                                <div key={t.id} onClick={() => { onUpdateTitle?.(t.id); setTitleOpen(false); }}>
+                                  {t.label}
+                                </div>
+                              ))}
                           </div>
                         )}
                       </div>

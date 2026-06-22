@@ -13,9 +13,11 @@ import {
   Wind,
   X,
   Zap,
+  Backpack,
 } from 'lucide-react';
 import useAdvancedBattle from '../hooks/useAdvancedBattle';
 import { getOwnedPokemonDisplayParts } from '../../utils/ownedPokemonDisplay';
+import { filterBattleItems } from '../../data/battleItemEffects';
 
 const TYPE_BADGE_COLORS = {
   '노말':    'bg-gray-400 text-white',
@@ -190,12 +192,23 @@ const BattleInfoPanel = ({ battleState, onClose }) => {
   );
 };
 
-export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = false, onBattleFinished, onExit }) {
+export function AdvancedBattleSimulator({
+  player1Team,
+  player2Team,
+  autoStart = false,
+  onBattleFinished,
+  onExit,
+  battleItemsEnabled = false,
+  player1Inventory = [],
+  player2Inventory = [],
+  onConsumeItem,
+}) {
   const {
     battleState,
     startBattle,
     selectMove,
     selectSwitch,
+    applyBattleItem,
     clearPendingChoices,
     confirmAndSubmit,
     resetBattle,
@@ -212,6 +225,7 @@ export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = 
   const [showDamagePreview, setShowDamagePreview] = useState(null);
   const [megaIntent, setMegaIntent] = useState({ player1: false, player2: false });
   const megaIntentRef = useRef({ player1: false, player2: false });
+  const [itemPanelOpen, setItemPanelOpen] = useState({ player1: false, player2: false });
   const [showBattleInfo, setShowBattleInfo] = useState(false);
   const autoStartedRef = useRef(false);
   const finishedNotifiedRef = useRef(false);
@@ -440,6 +454,20 @@ export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = 
       selectMove(player, 0, moveIndex, { mega: megaIntentRef.current[player] && active.canMegaEvolve });
     };
 
+    const inventory = player === 'player1' ? player1Inventory : player2Inventory;
+    const battleItems = battleItemsEnabled ? filterBattleItems(inventory) : [];
+    const showItemPanel = itemPanelOpen[player];
+
+    const handleUseItem = (item) => {
+      const ok = applyBattleItem(player, item, item.battleEffect);
+      if (ok) {
+        onConsumeItem?.(player, item);
+        setItemPanelOpen(prev => ({ ...prev, [player]: false }));
+      } else {
+        alert('이 아이템을 사용할 수 없습니다. (HP 가득 찼거나 조건 불충족)');
+      }
+    };
+
     return (
       <div className={`${borderClass} rounded-lg border p-6 shadow-sm`}>
         <div className="mb-4 text-center">
@@ -494,7 +522,67 @@ export function AdvancedBattleSimulator({ player1Team, player2Team, autoStart = 
           )}
         </div>
 
-        <div className="space-y-2">
+        {/* 탭: 기술 / 아이템 */}
+        {battleItemsEnabled && (
+          <div className="flex gap-2 mb-3">
+            <button
+              type="button"
+              onClick={() => setItemPanelOpen(prev => ({ ...prev, [player]: false }))}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-bold transition-colors ${
+                !showItemPanel
+                  ? (color === 'blue' ? 'bg-blue-600 text-white' : 'bg-red-600 text-white')
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <Swords size={14} strokeWidth={2.5} /> 기술
+            </button>
+            <button
+              type="button"
+              onClick={() => setItemPanelOpen(prev => ({ ...prev, [player]: true }))}
+              disabled={!canChooseMove}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-bold transition-colors ${
+                showItemPanel
+                  ? (color === 'blue' ? 'bg-blue-600 text-white' : 'bg-red-600 text-white')
+                  : canChooseMove
+                    ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-gray-50 text-gray-300 cursor-not-allowed'
+              }`}
+            >
+              <Backpack size={14} strokeWidth={2.5} /> 아이템 {battleItems.length > 0 ? `(${battleItems.length})` : ''}
+            </button>
+          </div>
+        )}
+
+        {/* 아이템 패널 */}
+        {battleItemsEnabled && showItemPanel && (
+          <div className="space-y-2 mb-3">
+            {battleItems.length === 0 ? (
+              <div className="text-sm text-gray-400 text-center py-4">사용 가능한 배틀 아이템이 없습니다.</div>
+            ) : (
+              battleItems.map((item, idx) => (
+                <button
+                  key={`${item.id || item.name}-${idx}`}
+                  type="button"
+                  onClick={() => handleUseItem(item)}
+                  className={`w-full rounded-lg px-4 py-3 font-semibold text-left transition-all ${buttonClass} text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span>{item.name || item.nameEn}</span>
+                    <span className="text-xs opacity-80">
+                      {item.battleEffect?.category === 'heal' && '회복'}
+                      {item.battleEffect?.category === 'berry' && '나무열매'}
+                      {item.battleEffect?.category === 'battle' && '배틀'}
+                      {' '}× {item.quantity ?? 1}
+                    </span>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* 기술 패널 */}
+        <div className={`space-y-2 ${battleItemsEnabled && showItemPanel ? 'hidden' : ''}`}>
           <h3 className={`mb-3 flex items-center gap-2 font-bold ${titleClass}`}>
             <Swords size={20} />
             기술 선택

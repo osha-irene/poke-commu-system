@@ -28,6 +28,8 @@ function MemberDetailPanel({ member, onClose }) {
     toggleAdminStatus,
     updateMemberMoney,
     updateMemberTitle,
+    grantMemberTitle,
+    revokeMemberTitle,
     uploadMemberImage,
     deleteMemberImage,
     titles = [],
@@ -139,7 +141,8 @@ function MemberDetailPanel({ member, onClose }) {
               onResetWalk={handleResetWalk}
               onToggleAdmin={handleToggleAdmin}
               onUpdateMoney={updateMemberMoney}
-              onUpdateTitle={updateMemberTitle}
+              onGrantTitle={grantMemberTitle}
+              onRevokeTitle={revokeMemberTitle}
               onUpdateWalkCount={handleUpdateWalkCount}
               onUpdateMaxWalkCount={handleUpdateMaxWalkCount}
               onDeleteMember={handleDeleteMember}

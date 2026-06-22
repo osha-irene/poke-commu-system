@@ -1305,6 +1305,46 @@ export const useAdminMembers = (
     }
   };
 
+  // ========== 칭호 부여 ==========
+  const grantMemberTitle = async (memberId, titleId) => {
+    if (!currentUser?.isAdmin) return;
+    const member = members[memberId];
+    if (!member) return;
+
+    const assigned = Array.isArray(member.assignedTitles) ? member.assignedTitles : [];
+    if (assigned.includes(titleId)) return;
+
+    const newAssigned = [...assigned, titleId];
+    try {
+      await update(ref(database, `members/${memberId}`), { assignedTitles: newAssigned });
+      setMembers(prev => ({ ...prev, [memberId]: { ...prev[memberId], assignedTitles: newAssigned } }));
+      if (memberId === currentUser?.id) updateCurrentUser({ assignedTitles: newAssigned });
+    } catch (error) {
+      console.error('❌ 칭호 부여 실패:', error);
+      alert('칭호 부여 중 오류가 발생했습니다: ' + error.message);
+    }
+  };
+
+  // ========== 칭호 회수 ==========
+  const revokeMemberTitle = async (memberId, titleId) => {
+    if (!currentUser?.isAdmin) return;
+    const member = members[memberId];
+    if (!member) return;
+
+    const assigned = Array.isArray(member.assignedTitles) ? member.assignedTitles : [];
+    const newAssigned = assigned.filter(id => id !== titleId);
+    const newTitle = member.title === titleId ? null : (member.title ?? null);
+
+    try {
+      await update(ref(database, `members/${memberId}`), { assignedTitles: newAssigned, title: newTitle });
+      setMembers(prev => ({ ...prev, [memberId]: { ...prev[memberId], assignedTitles: newAssigned, title: newTitle } }));
+      if (memberId === currentUser?.id) updateCurrentUser({ assignedTitles: newAssigned, title: newTitle });
+    } catch (error) {
+      console.error('❌ 칭호 회수 실패:', error);
+      alert('칭호 회수 중 오류가 발생했습니다: ' + error.message);
+    }
+  };
+
   // ========== 회원 삭제 ==========
   const deleteMember = async (memberId) => {
     if (!currentUser?.isSuperAdmin) return false;
@@ -1407,6 +1447,8 @@ export const useAdminMembers = (
     addPokemonToSelf,
     updateMemberMoney,
     updateMemberTitle,
+    grantMemberTitle,
+    revokeMemberTitle,
     deleteMember,
     resetGameData,
     uploadMemberImage,

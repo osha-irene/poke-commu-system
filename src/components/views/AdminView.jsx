@@ -1,9 +1,10 @@
 // src/components/views/AdminView.jsx - 완전 수정 버전
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useGame } from '../../contexts/GameContext';
 import { ref as dbRef, get, set } from 'firebase/database';
 import { database } from '../../firebase';
-import { User, ChevronRight, Pencil, Image, X } from 'lucide-react';
+import { User, ChevronRight, Pencil, Image, X, Users, Map, BookOpen, ShoppingBag, UtensilsCrossed, Tent, Calendar, Settings, AlertTriangle, Medal, Wrench, CheckCircle, Info, Trash2, Zap, Wind, Ban, AlertCircle, Swords } from 'lucide-react';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import RegionEditModal from '../modals/RegionEditModal';
 import PokedexAdminPanel from './admin/PokedexAdminPanel';
@@ -103,24 +104,29 @@ function TitleManagerPanel({ titles = [], onAdd, onDelete, onRename, onUploadIco
   };
 
   return (
-    <div className="relative" style={{ minWidth: 0 }}>
+    <div style={{ minWidth: 0 }}>
       <button
         type="button"
-        onClick={() => setOpen(v => !v)}
+        onClick={() => setOpen(true)}
         className="text-sm font-semibold px-3 py-1.5 rounded-lg border border-indigo-300 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors"
       >
-        🏅 칭호 관리 {open ? '▲' : '▼'}
+        <span className="flex items-center gap-1.5"><Medal size={14} strokeWidth={2.5} /> 칭호 관리</span>
       </button>
-      {open && (
-        <div className="absolute right-0 top-10 bg-white border border-gray-200 rounded-xl shadow-xl z-20 p-4" style={{ width: 288 }}>
-          <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">칭호 목록</p>
-          <div className="space-y-1.5 max-h-48 overflow-y-auto mb-3">
-            {titles.length === 0 && (
-              <p className="text-xs text-gray-400">등록된 칭호가 없습니다.</p>
-            )}
-            {titles.map(t => (
-              <div key={t.id} className="bg-gray-50 rounded-lg px-2 py-1.5 space-y-1">
-                <div className="flex items-center gap-2">
+      {open && createPortal(
+        <div className="fixed inset-0 z-[200] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 flex flex-col" style={{ maxHeight: '80vh' }}>
+            <div className="mb-4">
+              <h2 className="text-base font-bold flex items-center gap-1.5"><Medal size={16} strokeWidth={2.5} /> 칭호 관리</h2>
+            </div>
+
+            {/* 칭호 목록 */}
+            <div className="flex-1 overflow-y-auto mb-4 min-h-0 divide-y divide-gray-100">
+              {titles.length === 0 && (
+                <p className="text-xs text-gray-400 py-2">등록된 칭호가 없습니다.</p>
+              )}
+              {titles.map(t => (
+                <div key={t.id} className="flex items-center gap-2 py-2">
                   {t.iconUrl && <img src={t.iconUrl} alt="" className="w-5 h-5 object-contain flex-shrink-0" />}
                   {editingId === t.id ? (
                     <input
@@ -140,14 +146,14 @@ function TitleManagerPanel({ titles = [], onAdd, onDelete, onRename, onUploadIco
                   {editingId === t.id ? (
                     <>
                       <button type="button" onClick={() => { onRename?.(t.id, editingLabel); setEditingId(null); }}
-                        className="text-xs text-green-600 hover:text-green-800 px-1.5 py-0.5 border border-green-300 rounded hover:bg-green-50 transition-colors">저장</button>
+                        className="text-xs text-indigo-600 hover:text-indigo-800 px-1.5 py-0.5 border border-indigo-300 rounded hover:bg-indigo-50 transition-colors">저장</button>
                       <button type="button" onClick={() => setEditingId(null)}
-                        className="text-xs text-gray-500 hover:text-gray-700 px-1.5 py-0.5 border border-gray-300 rounded hover:bg-gray-100 transition-colors">취소</button>
+                        className="text-xs text-indigo-400 hover:text-indigo-600 px-1.5 py-0.5 border border-indigo-200 rounded hover:bg-indigo-50 transition-colors">취소</button>
                     </>
                   ) : (
                     <>
                       <button type="button" title="수정" onClick={() => { setEditingId(t.id); setEditingLabel(t.label); }}
-                        className="text-indigo-500 hover:text-indigo-700 p-0.5 transition-colors"><Pencil size={14} /></button>
+                        className="text-indigo-400 hover:text-indigo-600 p-0.5 transition-colors"><Pencil size={13} strokeWidth={2} /></button>
                       <label className="cursor-pointer">
                         <input
                           ref={el => fileInputRefs.current[t.id] = el}
@@ -160,48 +166,51 @@ function TitleManagerPanel({ titles = [], onAdd, onDelete, onRename, onUploadIco
                             e.target.value = '';
                           }}
                         />
-                        <span title="아이콘" className="inline-flex items-center text-blue-500 hover:text-blue-700 p-0.5 transition-colors cursor-pointer">
-                          {uploading[t.id] ? <span className="text-xs">...</span> : <Image size={14} />}
+                        <span title="아이콘" className="inline-flex items-center text-indigo-400 hover:text-indigo-600 p-0.5 transition-colors cursor-pointer">
+                          {uploading[t.id] ? <span className="text-xs text-indigo-300">...</span> : <Image size={13} strokeWidth={2} />}
                         </span>
                       </label>
                       {confirmDeleteId === t.id ? (
                         <>
                           <button type="button"
                             onClick={() => { onDelete?.(t.id); setConfirmDeleteId(null); }}
-                            className="text-xs text-white bg-red-500 hover:bg-red-600 px-1.5 py-0.5 rounded transition-colors">확인</button>
+                            className="text-xs text-white bg-indigo-500 hover:bg-indigo-600 px-1.5 py-0.5 rounded transition-colors">확인</button>
                           <button type="button"
                             onClick={() => setConfirmDeleteId(null)}
-                            className="text-xs text-gray-500 hover:text-gray-700 px-1.5 py-0.5 border border-gray-300 rounded hover:bg-gray-100 transition-colors">취소</button>
+                            className="text-xs text-indigo-400 hover:text-indigo-600 px-1.5 py-0.5 border border-indigo-200 rounded hover:bg-indigo-50 transition-colors">취소</button>
                         </>
                       ) : (
                         <button type="button" title="삭제"
                           onClick={() => setConfirmDeleteId(t.id)}
-                          className="text-sm text-red-500 hover:text-red-700 px-1.5 py-0.5 border border-red-200 rounded hover:bg-red-50 transition-colors">✕</button>
+                          className="text-indigo-300 hover:text-indigo-500 p-0.5 transition-colors"><X size={13} strokeWidth={2} /></button>
                       )}
                     </>
                   )}
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+
+            {/* 새 칭호 추가 */}
+            <div className="flex gap-2 pt-3 border-t border-gray-100">
+              <input
+                type="text"
+                placeholder="새 칭호 이름"
+                value={newLabel}
+                onChange={e => setNewLabel(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleAdd()}
+                className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleAdd}
+                className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors"
+              >
+                추가
+              </button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="새 칭호 이름"
-              value={newLabel}
-              onChange={e => setNewLabel(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleAdd()}
-              className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
-            />
-            <button
-              type="button"
-              onClick={handleAdd}
-              className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors"
-            >
-              추가
-            </button>
-          </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -485,7 +494,7 @@ export default function AdminView() {
     } else if (maintenanceScheduledAt) {
       cancelScheduledMaintenance?.();
     } else {
-      if (window.confirm('⚠️ 5분 후 점검 모드를 시작하시겠습니까?\n\n모든 유저에게 카운트다운이 표시됩니다.')) {
+      if (window.confirm('5분 후 점검 모드를 시작하시겠습니까?\n\n모든 유저에게 카운트다운이 표시됩니다.')) {
         scheduleMaintenanceMode?.();
       }
     }
@@ -534,15 +543,15 @@ export default function AdminView() {
   }
 
   const ADMIN_TABS = [
-    { id: 'members',  label: '👥 멤버' },
-    { id: 'regions',  label: '🗺️ 지역' },
-    { id: 'pokedex',  label: '📖 도감' },
-    { id: 'shop',     label: '🏪 상점' },
-    { id: 'cooking',  label: '🍳 요리' },
-    { id: 'camping',  label: '⛺ 캠핑' },
-    { id: 'schedule', label: '📅 일정' },
-    { id: 'settings', label: '⚙️ 시스템' },
-    ...(trainer?.isSuperAdmin ? [{ id: 'danger', label: '⚠️ 위험', variant: 'danger' }] : []),
+    { id: 'members',  label: '멤버',  icon: Users },
+    { id: 'regions',  label: '지역',  icon: Map },
+    { id: 'pokedex',  label: '도감',  icon: BookOpen },
+    { id: 'shop',     label: '상점',  icon: ShoppingBag },
+    { id: 'cooking',  label: '요리',  icon: UtensilsCrossed },
+    { id: 'camping',  label: '캠핑',  icon: Tent },
+    { id: 'schedule', label: '일정',  icon: Calendar },
+    { id: 'settings', label: '시스템', icon: Settings },
+    ...(trainer?.isSuperAdmin ? [{ id: 'danger', label: '위험', icon: AlertTriangle, variant: 'danger' }] : []),
   ];
 
   return (
@@ -576,7 +585,10 @@ export default function AdminView() {
                 backdropFilter: 'blur(8px)',
               }}
             >
-              {tab.label}
+              <span className="flex items-center gap-1">
+                {tab.icon && <tab.icon size={13} strokeWidth={2.5} />}
+                {tab.label}
+              </span>
             </button>
           ))}
         </div>
@@ -589,7 +601,10 @@ export default function AdminView() {
               onClick={() => setAdminTab(tab.id)}
               variant={tab.variant}
             >
-              {tab.label}
+              <span className="flex items-center gap-1.5">
+                {tab.icon && <tab.icon size={14} strokeWidth={2.5} />}
+                {tab.label}
+              </span>
             </TabButton>
           ))}
         </Card>
@@ -718,7 +733,7 @@ export default function AdminView() {
       {adminTab === 'pokedex' && (
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold text-gray-800">📖 영운 도감 포켓몬 설정</h3>
+            <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2"><BookOpen size={20} strokeWidth={2.5} /> 영운 도감 포켓몬 설정</h3>
             <button
               onClick={() => {
                 if (window.confirm('도감 기록을 전부 삭제하시겠습니까?\n(조우, 포획, 메모, 지역 정보가 모두 초기화됩니다)')) {
@@ -727,7 +742,7 @@ export default function AdminView() {
               }}
               className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-100 transition-colors"
             >
-              🗑️ 도감 기록 리셋
+              <span className="flex items-center gap-1.5"><Trash2 size={14} strokeWidth={2.5} /> 도감 기록 리셋</span>
             </button>
           </div>
           <PokedexAdminPanel
@@ -769,15 +784,15 @@ export default function AdminView() {
           <Card className="p-6">
             <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg border-2 border-yellow-200">
               <div className="flex items-center gap-3">
-                <span className="text-2xl">🔧</span>
+                <Wrench size={24} strokeWidth={2} className="text-yellow-600 flex-shrink-0" />
                 <div>
                   <div className="font-bold text-gray-800">시스템 점검 모드</div>
                   <div className="text-sm text-gray-600">
                     {maintenanceMode
-                      ? '⚠️ 점검 중 - 일반 유저 접근 차단됨'
+                      ? '점검 중 - 일반 유저 접근 차단됨'
                       : maintenanceScheduledAt
-                      ? `⏳ 점검 예약됨 - ${Math.max(0, Math.ceil((maintenanceScheduledAt - Date.now()) / 60000))}분 후 시작`
-                      : '✅ 정상 운영 중'}
+                      ? `점검 예약됨 - ${Math.max(0, Math.ceil((maintenanceScheduledAt - Date.now()) / 60000))}분 후 시작`
+                      : '정상 운영 중'}
                   </div>
                 </div>
               </div>
@@ -851,10 +866,10 @@ export default function AdminView() {
             </div>
 
             <section className="rounded-lg border border-lime-200 bg-white/40 p-5">
-            <h4 className="text-lg font-bold text-gray-800 mb-4">⚙️ 전체 멤버 탐험 횟수 일괄 설정</h4>
+            <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><Settings size={18} strokeWidth={2.5} /> 전체 멤버 탐험 횟수 일괄 설정</h4>
             <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-4">
-              <p className="text-sm text-blue-800">
-                💡 모든 회원의 최대 탐험 횟수를 동일하게 설정합니다. 개별 회원은 "멤버 관리"에서 수정할 수 있습니다.
+              <p className="text-sm text-blue-800 flex items-center gap-1.5">
+                <Info size={14} strokeWidth={2.5} className="flex-shrink-0" /> 모든 회원의 최대 탐험 횟수를 동일하게 설정합니다. 개별 회원은 "멤버 관리"에서 수정할 수 있습니다.
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -877,6 +892,26 @@ export default function AdminView() {
             <div className="mt-3 text-sm text-gray-600">
               현재 설정: 모든 회원 최대 <strong>{Object.values(members)[0]?.maxDailyWalks || 5}회</strong>
             </div>
+            </section>
+
+            <section className="rounded-lg border border-lime-200 bg-white/40 p-5">
+            <h4 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+              <Swords size={18} strokeWidth={2.5} /> 배틀 아이템 사용
+            </h4>
+            <p className="text-sm text-gray-600 mb-3">
+              배틀 중 회복 아이템, 나무열매, 배틀 아이템을 사용할 수 있게 합니다. 아이템은 턴을 소모하지 않습니다.
+            </p>
+            <button
+              type="button"
+              onClick={() => updateSystemSettings?.({ ...systemSettings, battleItemsEnabled: !systemSettings?.battleItemsEnabled })}
+              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
+                systemSettings?.battleItemsEnabled
+                  ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              {systemSettings?.battleItemsEnabled ? '활성화됨 (클릭하여 끄기)' : '비활성화됨 (클릭하여 켜기)'}
+            </button>
             </section>
 
             <section className="rounded-lg border border-lime-200 bg-white/40 p-5">
@@ -971,7 +1006,7 @@ export default function AdminView() {
 
           {/* 도망 시스템 설정 */}
             <section className="rounded-lg border border-lime-200 bg-white/40 p-5">
-            <h4 className="text-lg font-bold text-gray-800 mb-4">🏃 포켓몬 도망 시스템</h4>
+            <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><Wind size={18} strokeWidth={2.5} /> 포켓몬 도망 시스템</h4>
 
             <div className="rounded-lg p-5 border border-lime-200 bg-white/40">
               <div className="flex items-start justify-between gap-6">
@@ -980,19 +1015,19 @@ export default function AdminView() {
                   <div className="text-sm text-gray-600 leading-relaxed">
                     {escapeMode === 'none' && (
                       <>
-                        <p className="font-semibold text-gray-700 mb-1">❌ 도망 안함 모드 (기본)</p>
+                        <p className="font-semibold text-gray-700 mb-1 flex items-center gap-1"><Ban size={14} strokeWidth={2.5} /> 도망 안함 모드 (기본)</p>
                         <p>포획에 실패해도 포켓몬이 계속 남아있어 무한으로 시도할 수 있습니다.</p>
                       </>
                     )}
                     {escapeMode === 'instant' && (
                       <>
-                        <p className="font-semibold text-gray-700 mb-1">⚡ 즉시 도망 모드</p>
+                        <p className="font-semibold text-gray-700 mb-1 flex items-center gap-1"><Zap size={14} strokeWidth={2.5} /> 즉시 도망 모드</p>
                         <p>포획에 실패하면 포켓몬이 즉시 도망갑니다.</p>
                       </>
                     )}
                     {escapeMode === 'speed' && (
                       <>
-                        <p className="font-semibold text-gray-700 mb-1">💨 스피드 기반 모드</p>
+                        <p className="font-semibold text-gray-700 mb-1 flex items-center gap-1"><Wind size={14} strokeWidth={2.5} /> 스피드 기반 모드</p>
                         <p>파트너 포켓몬의 스피드와 야생 포켓몬의 스피드를 비교하여 확률적으로 도망갑니다.</p>
                       </>
                     )}
@@ -1016,7 +1051,7 @@ export default function AdminView() {
                       className={`relative z-10 flex-1 py-1.5 rounded-full font-semibold transition-colors text-center ${escapeMode === 'none' ? 'text-white' : 'text-gray-600 hover:text-gray-800'
                         }`}
                     >
-                      <div className="text-base leading-none">❌</div>
+                      <div className="flex justify-center"><Ban size={15} strokeWidth={2.5} /></div>
                     </button>
 
                     <button
@@ -1024,7 +1059,7 @@ export default function AdminView() {
                       className={`relative z-10 flex-1 py-1.5 rounded-full font-semibold transition-colors text-center ${escapeMode === 'instant' ? 'text-white' : 'text-gray-600 hover:text-gray-800'
                         }`}
                     >
-                      <div className="text-base leading-none">⚡</div>
+                      <div className="flex justify-center"><Zap size={15} strokeWidth={2.5} /></div>
                     </button>
 
                     <button
@@ -1032,7 +1067,7 @@ export default function AdminView() {
                       className={`relative z-10 flex-1 py-1.5 rounded-full font-semibold transition-colors text-center ${escapeMode === 'speed' ? 'text-white' : 'text-gray-600 hover:text-gray-800'
                         }`}
                     >
-                      <div className="text-base leading-none">💨</div>
+                      <div className="flex justify-center"><Wind size={15} strokeWidth={2.5} /></div>
                     </button>
                   </div>
                 </div>
@@ -1061,7 +1096,7 @@ export default function AdminView() {
       {/* 위험 구역 탭 */}
       {adminTab === 'danger' && trainer?.isSuperAdmin && (
         <Card className="p-6 bg-red-50 border-red-200">
-          <h3 className="text-xl font-bold text-red-800 mb-4">⚠️ 위험 구역</h3>
+          <h3 className="text-xl font-bold text-red-800 mb-4 flex items-center gap-2"><AlertTriangle size={20} strokeWidth={2.5} /> 위험 구역</h3>
           <p className="text-red-600 mb-4">
             모든 게임 데이터를 초기화합니다. 이 작업은 되돌릴 수 없습니다!
           </p>
@@ -1069,8 +1104,8 @@ export default function AdminView() {
             variant="danger"
             size="lg"
             onClick={() => {
-              if (window.confirm('⚠️ 정말로 모든 데이터를 초기화하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다!')) {
-                if (window.confirm('⚠️⚠️ 마지막 확인입니다. 정말 초기화하시겠습니까?')) {
+              if (window.confirm('정말로 모든 데이터를 초기화하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다!')) {
+                if (window.confirm('마지막 확인입니다. 정말 초기화하시겠습니까?')) {
                   resetGameData?.();
                 }
               }

@@ -53,6 +53,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Apply CORS to Firebase Storage
+        continue-on-error: true
         run: |
           cat > /tmp/cors.json << 'EOF'
           [{"origin":["https://osha-irene.github.io"],"method":["GET","POST","PUT","DELETE","HEAD","OPTIONS"],"maxAgeSeconds":3600,"responseHeader":["Content-Type","Authorization","Content-Length","x-goog-resumable"]}]

@@ -268,8 +268,10 @@ html {
   --deco-paper-width: 570px;
   --news-button-width: 178px;
   --news-button-right: -90px;
-  --login-top:96px;
-  --panel-form-right: 109px;
+  --login-form-top: 78px;
+  --login-form-right: 144px;
+  --session-panel-top: 96px;
+  --session-panel-right: 109px;
   --calendar-offset-x: 76px;
   --calendar-offset-y: 28px;
   --nav-lift: -32px;
