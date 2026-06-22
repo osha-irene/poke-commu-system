@@ -350,6 +350,13 @@ function MemberDetail({ member, currentUserId, canEditAll, titles, onBack }) {
     setImgLoaded(false);
   }, [fullImg, member.id]);
 
+  // 이미 캐시된 이미지는 onLoad가 안 불릴 수 있음
+  useEffect(() => {
+    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
+      handleImgLoad();
+    }
+  });
+
   return (
     <div className="relative flex" style={{ minHeight: '100vh' }}>
 
@@ -396,6 +403,7 @@ function MemberDetail({ member, currentUserId, canEditAll, titles, onBack }) {
             src={fullImg}
             alt={member.name}
             onLoad={handleImgLoad}
+            onError={() => setImgLoaded(true)}
             style={{
               position: 'fixed',
               top: 0,
