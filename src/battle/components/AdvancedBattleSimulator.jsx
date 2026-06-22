@@ -69,7 +69,7 @@ const PokemonNameText = ({ pokemon, className = '', speciesClassName = '' }) => 
   return (
     <span className={className}>
       <span>{displayName.primary}</span>
-      {displayName.hasNickname && (
+      {displayName.hasNickname && displayName.species?.includes('-') && (
         <span className={`ml-1 text-xs font-semibold opacity-70 ${speciesClassName}`}>
           {displayName.species}
         </span>
@@ -875,20 +875,31 @@ export function AdvancedBattleSimulator({
               >
                 <div className="flex items-center justify-between gap-3">
                   <span>{move.name || move.id}</span>
-                  {isSelected ? (
-                    <span className="text-xs opacity-80">선택됨</span>
-                  ) : move.disabled ? (
-                    <span className="text-xs opacity-80">사용 불가{move.disabledSource ? ` (${move.disabledSource})` : ''}</span>
-                  ) : (
-                    <span className="flex items-center gap-1">
-                      <TypeBadge
-                        type={move.type}
-                        baseType={move.baseType}
-                        typeChanged={move.typeChanged}
-                      />
-                      <span className="text-xs opacity-80">| {move.category}</span>
-                    </span>
-                  )}
+                  <span className="flex items-center gap-1.5">
+                    {isSelected ? (
+                      <span className="text-xs opacity-80">선택됨</span>
+                    ) : move.disabled ? (
+                      <span className="text-xs opacity-80">사용 불가{move.disabledSource ? ` (${move.disabledSource})` : ''}</span>
+                    ) : (
+                      <>
+                        <TypeBadge
+                          type={move.type}
+                          baseType={move.baseType}
+                          typeChanged={move.typeChanged}
+                        />
+                        <span className="text-xs opacity-80">| {move.category}</span>
+                      </>
+                    )}
+                    {move.currentPP != null && move.pp != null && (
+                      <span className={`text-sm font-mono ml-1 font-bold ${
+                        move.currentPP === 0 ? 'text-red-300' :
+                        move.currentPP <= move.pp / 4 ? 'text-orange-300' :
+                        'text-white'
+                      }`}>
+                        {move.currentPP}/{move.pp}
+                      </span>
+                    )}
+                  </span>
                 </div>
               </button>
             );

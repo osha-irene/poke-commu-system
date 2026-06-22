@@ -223,6 +223,7 @@ body.mbr-overlay-open .site-logo-compass-layer {
 .site-header {
   zoom: var(--site-scale);
   position: relative;
+  z-index: 60;
   top: auto;
   z-index: 30;
   flex: 0 0 var(--header-block);
@@ -571,6 +572,50 @@ body.mbr-overlay-open .main-shell {
 }
 body.mbr-overlay-open .admin-corner-nav {
   transform: translateX(-200%);
+  pointer-events: none;
+}
+
+.rmv-overlay::-webkit-scrollbar {
+  display: none;
+}
+
+html.rmv-detail-open {
+  overflow: hidden;
+}
+
+body.rmv-detail-open *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+body.rmv-detail-open * {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+body.rmv-detail-open .main-shell {
+  overflow: hidden;
+  height: 100vh;
+}
+
+body.rmv-detail-open .main-layout {
+  z-index: auto;
+}
+
+body.rmv-detail-open .trainer-rail {
+  z-index: 55;
+  pointer-events: auto;
+}
+
+body.rmv-detail-open .site-logo-compass-layer {
+  opacity: 0;
+  pointer-events: none;
+}
+
+body.rmv-detail-open .site-header {
+  transform: translateY(-120%);
+  opacity: 0;
   pointer-events: none;
 }
 

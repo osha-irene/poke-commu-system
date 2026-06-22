@@ -25,7 +25,7 @@ import EvolutionModal from './components/modals/EvolutionModal';
 import useGameState from './hooks/useGameState';
 import ShopView from './components/views/ShopView';
 import MembersView from './components/views/MembersView';
-import NPCsView from './components/views/NPCsView';
+import RealMembersView from './components/views/RealMembersView';
 import CampingView from './components/views/CampingView';
 import QnABoard from './components/views/QnABoard';
 import CookingView from './components/views/CookingView';
@@ -1971,8 +1971,8 @@ return (
             />
           )}
 
-          {currentTab === 'members' && <MembersView members={members} isLoading={isMembersLoading} isAdmin={isAdmin} />}
-          {currentTab === 'npcs' && <NPCsView />}
+          {currentTab === 'members' && <RealMembersView members={members} isLoading={isMembersLoading} currentUserId={currentUser?.id} titles={titles} />}
+          {currentTab === 'npcs' && <MembersView members={members} isLoading={isMembersLoading} isAdmin={isAdmin} npcOnly />}
           {currentTab === 'pokemon' && <PokemonView />}
           {currentTab === 'items' && <ItemsView />}
           {currentTab === 'shop' && <ShopView />}
@@ -2087,8 +2087,8 @@ return (
 			/>
 		  )}
 		  
-		  {currentTab === 'members' && <MembersView members={members} isLoading={isMembersLoading} isAdmin={isAdmin} />}
-		  {currentTab === 'npcs' && <NPCsView />}
+		  {currentTab === 'members' && <RealMembersView members={members} isLoading={isMembersLoading} currentUserId={currentUser?.id} titles={titles} />}
+		  {currentTab === 'npcs' && <MembersView members={members} isLoading={isMembersLoading} isAdmin={isAdmin} npcOnly />}
 		  {currentTab === 'pokemon' && <PokemonView />}
 		  {currentTab === 'items' && <ItemsView />}
 		  {currentTab === 'shop' && <ShopView />}

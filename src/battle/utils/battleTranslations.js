@@ -141,5 +141,10 @@ export const translateEffectName = (effect) => {
   if (text.startsWith('move:')) {
     return translateMoveName(text.replace('move:', '').trim());
   }
+  const effectMap = {
+    choicelock: '기술 변경 불가',
+    typechange: '타입 변화',
+  };
+  if (effectMap[text.toLowerCase()]) return effectMap[text.toLowerCase()];
   return translateMoveName(text);
 };

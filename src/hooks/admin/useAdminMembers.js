@@ -343,8 +343,8 @@ export const useAdminMembers = (
 
       const pokeBall = findItem(['poke ball', 'pokeball', '몬스터볼']);
       const potion = findItem(['potion', '상처약', '상처 약']);
-      const greatBall = findItem(['great ball', 'super ball', '슈퍼볼', '수퍼볼']);
-      const ultraBall = findItem(['ultra ball', 'hyper ball', '하이퍼볼']);
+    //  const greatBall = findItem(['great ball', 'super ball', '슈퍼볼', '수퍼볼']);
+     // const ultraBall = findItem(['ultra ball', 'hyper ball', '하이퍼볼']);
       // const rareCandy = findItem(['rare candy', '이상한사탕']);
 
       return [
@@ -367,7 +367,7 @@ export const useAdminMembers = (
       canManageItems: false,
       dailyWalks: 10,
       maxDailyWalks: 10,
-      money: 10000,
+      money: 2000,
       trainerExp: 0,
       lastAttendanceDate: null,
       caughtPokemon: [],
@@ -1438,6 +1438,22 @@ export const useAdminMembers = (
     }
   };
 
+  // ========== NPC 토글 ==========
+  const toggleMemberNPC = async (memberId) => {
+    if (!currentUser?.isAdmin) return;
+    const member = members[memberId];
+    if (!member) return;
+    const updatedMember = { ...member, isNPC: !member.isNPC };
+    try {
+      const { id, ...dataToSave } = updatedMember;
+      const memberRef = ref(database, `members/${memberId}`);
+      await set(memberRef, dataToSave);
+      setMembers(prev => ({ ...prev, [memberId]: updatedMember }));
+    } catch (error) {
+      console.error('❌ NPC 토글 실패:', error);
+    }
+  };
+
   // ========== 멤버 숨기기 토글 ==========
   const toggleMemberHidden = async (memberId) => {
     if (!currentUser?.isAdmin) return;
@@ -1464,6 +1480,7 @@ export const useAdminMembers = (
     toggleAdminStatus,
     toggleItemManagement,
     toggleMemberHidden,
+    toggleMemberNPC,
     updateMaxDailyWalks,
     resetMemberWalkCount,
     resetAllWalkCounts,

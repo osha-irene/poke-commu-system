@@ -7,11 +7,11 @@ import { useProfileTemplate, useMemberProfile } from '../../hooks/data/useProfil
 const PLACEHOLDER = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
 
 /* ── 유틸 ── */
-function getMemberList(members) {
+function getMemberList(members, npcOnly = false) {
   if (!members) return [];
   return Object.entries(members)
     .map(([id, m]) => ({ id, ...(m || {}) }))
-    .filter(m => m && m.name && !m.hidden)
+    .filter(m => m && m.name && !m.hidden && (npcOnly ? !!m.isNPC : !m.isNPC))
     .sort((a, b) => {
       const ar = a.isSuperAdmin ? 2 : a.isAdmin ? 1 : 0;
       const br = b.isSuperAdmin ? 2 : b.isAdmin ? 1 : 0;
@@ -254,14 +254,14 @@ function MemberOverlay({ member, onClose, isAdmin, closing }) {
 }
 
 /* ── 목록 뷰 ── */
-export default function MembersView({ members = {}, isLoading = false, isAdmin = false }) {
+export default function MembersView({ members = {}, isLoading = false, isAdmin = false, npcOnly = false }) {
   const [activeId, setActiveId]       = useState(null);
   const [closing, setClosing]         = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const listRef = useRef(null);
   const [navState, setNavState] = useState({ prev: false, next: false });
 
-  const memberList = useMemo(() => getMemberList(members), [members]);
+  const memberList = useMemo(() => getMemberList(members, npcOnly), [members, npcOnly]);
   const filtered   = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return memberList;

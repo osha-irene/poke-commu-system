@@ -26,6 +26,7 @@ function MemberDetailPanel({ member, onClose }) {
     deleteMember,
     resetMemberWalkCount,
     toggleAdminStatus,
+    toggleMemberNPC,
     updateMemberMoney,
     updateMemberTrainerExp,
     updateMemberTitle,
@@ -141,6 +142,7 @@ function MemberDetailPanel({ member, onClose }) {
               trainer={trainer}
               onResetWalk={handleResetWalk}
               onToggleAdmin={handleToggleAdmin}
+              onToggleNPC={toggleMemberNPC}
               onUpdateMoney={updateMemberMoney}
               onUpdateTrainerExp={updateMemberTrainerExp}
               onGrantTitle={grantMemberTitle}

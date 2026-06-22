@@ -151,6 +151,7 @@ function MemberInfoTab({
   trainer,
   onResetWalk,
   onToggleAdmin,
+  onToggleNPC,
   onUpdateMoney,
   onUpdateTrainerExp,
   onGrantTitle,
@@ -200,7 +201,7 @@ function MemberInfoTab({
       )}
 
       <div className="grid grid-cols-2 gap-5">
-        {/* 왼쪽: 기본 정보 + 프로필 이미지 */}
+        {/* 왼쪽: 기본 정보 + 칭호 + NPC + 프로필 이미지 */}
         <div className="space-y-3">
           {/* 기본 정보 */}
           <div className="bg-gray-50 rounded-lg p-4">
@@ -209,35 +210,22 @@ function MemberInfoTab({
               <div><span className="text-gray-500">회원 ID:</span><span className="ml-2 font-medium">{member.id}</span></div>
               <div><span className="text-gray-500">이름:</span><span className="ml-2 font-medium">{member.name}</span></div>
               <div><span className="text-gray-500">포켓몬 수:</span><span className="ml-2 font-medium">{(member.caughtPokemon || []).filter(p => p !== null && p !== undefined).length}마리</span></div>
+              {trainer.isAdmin && (
+                <div className="pt-1">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={!!member.isNPC}
+                      onChange={() => onToggleNPC?.(member.id)}
+                      className="w-4 h-4 rounded accent-indigo-600"
+                    />
+                    <span className="text-gray-700 font-medium">NPC 캐릭터</span>
+                  </label>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* 프로필 이미지 */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="font-bold text-base mb-3">🖼️ 프로필 이미지</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <ImageUploadSlot
-                label="두상"
-                description="증명사진 (정방형)"
-                currentUrl={member.profileImage}
-                onUpload={(file) => handleUpload(file, 'face')}
-                onDelete={() => handleDelete('face')}
-                uploading={uploading.face}
-              />
-              <ImageUploadSlot
-                label="전신"
-                description="전신샷 (세로형)"
-                currentUrl={member.profileImageFull}
-                onUpload={(file) => handleUpload(file, 'body')}
-                onDelete={() => handleDelete('body')}
-                uploading={uploading.body}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* 오른쪽: 칭호 버튼 + 탐험 횟수 + 소지금 + 관리 */}
-        <div className="space-y-3">
           {/* 칭호 */}
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="flex items-center justify-between mb-1">
@@ -267,6 +255,32 @@ function MemberInfoTab({
             )}
           </div>
 
+          {/* 프로필 이미지 */}
+          <div className="bg-gray-50 rounded-lg p-4">
+            <h3 className="font-bold text-base mb-3">🖼️ 프로필 이미지</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <ImageUploadSlot
+                label="두상"
+                description="증명사진 (정방형)"
+                currentUrl={member.profileImage}
+                onUpload={(file) => handleUpload(file, 'face')}
+                onDelete={() => handleDelete('face')}
+                uploading={uploading.face}
+              />
+              <ImageUploadSlot
+                label="전신"
+                description="전신샷 (세로형)"
+                currentUrl={member.profileImageFull}
+                onUpload={(file) => handleUpload(file, 'body')}
+                onDelete={() => handleDelete('body')}
+                uploading={uploading.body}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* 오른쪽: 탐험 횟수 + 소지금 + 관리 */}
+        <div className="space-y-3">
           {/* 탐험 횟수 */}
           <div className="bg-gray-50 rounded-lg p-4 space-y-2.5">
             <h3 className="font-bold text-base">🚶 탐험 횟수</h3>
@@ -335,6 +349,7 @@ function MemberInfoTab({
           {/* 관리 기능 */}
           <div className="space-y-2">
             <h3 className="font-bold text-base">관리 기능</h3>
+
             <button onClick={() => onResetWalk(member.id, member.name)}
               className="w-full bg-green-100 text-green-700 py-2.5 rounded-lg hover:bg-green-200 font-semibold text-sm">탐험 횟수 리셋</button>
             {trainer.isSuperAdmin && member.id !== 'admin' && (

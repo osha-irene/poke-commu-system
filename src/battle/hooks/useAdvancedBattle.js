@@ -330,8 +330,13 @@ const protocolToLog = (line) => {
       return { message: `${translateTerrainName(parts[2])} \ud6a8\uacfc\uac00 \uc0ac\ub77c\uc84c\ub2e4.`, type: 'field' };
     case '-status':
       return { message: `${extractName(parts[2])}\uc740(\ub294) ${translateStatusName(parts[3])} \uc0c1\ud0dc\uac00 \ub418\uc5c8\ub2e4!`, type: 'status' };
-    case '-start':
+    case '-start': {
+      if (parts[3] === 'typechange') {
+        const newType = translateTypeName(parts[4]) || parts[4] || '???';
+        return { message: `${extractName(parts[2])}\uac00 ${newType}\ud0c0\uc785\uc73c\ub85c \ubcc0\ud588\ub2e4!`, type: 'ability' };
+      }
       return { message: `${extractName(parts[2])}\uc5d0\uac8c ${translateEffectName(parts[3])} \ud6a8\uacfc\uac00 \ub098\ud0c0\ub0ac\ub2e4!`, type: 'status' };
+    }
     case '-end':
       return { message: `${extractName(parts[2])}\uc758 ${translateEffectName(parts[3])} \ud6a8\uacfc\uac00 \uc0ac\ub77c\uc84c\ub2e4.`, type: 'status' };
     case '-miss':
@@ -558,8 +563,10 @@ const getMoveData = (battle, moveSlot, requestMove = null, abilityName = '', spe
     categoryEn: moveData?.category || 'Status',
     basePower: moveData?.basePower || 0,
     accuracy: moveData?.accuracy === true ? 100 : (moveData?.accuracy ?? true),
-    pp: moveSlot?.maxpp ?? null,
-    currentPP: moveSlot?.pp ?? null,
+    pp: moveData?.pp ?? null,
+    currentPP: (moveSlot?.pp != null && moveSlot?.maxpp && moveData?.pp)
+      ? Math.round(moveSlot.pp * (moveData.pp / moveSlot.maxpp))
+      : (moveSlot?.pp ?? null),
     disabled: Boolean(requestMove?.disabled ?? moveSlot?.disabled),
     disabledSource: disabledSource ? translateEffectName(disabledSource) : '',
   };

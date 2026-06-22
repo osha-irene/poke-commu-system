@@ -198,7 +198,7 @@ export default function ProfileView({ trainer, caughtPokemon, items, titles = []
             </div>
 
             {/* 우측 스트립: 파트너 아이콘 + 바코드 */}
-            <div className="flex flex-col items-center gap-3 py-5 pr-5 pl-2">
+            <div className="flex flex-col items-center gap-3 py-5 pl-2">
 
               {/* 파트너 포켓몬 */}
               {partnerIcon ? (
