@@ -16,8 +16,8 @@ const getMemberList = (members) =>
 
 const getParty = m => (m?.caughtPokemon || []).filter(Boolean).slice(0, 6);
 const getPartner = m => { const p = getParty(m); return p.find(x => x.isPartner) || p[0] || null; };
-const getFaceImg = m => m?.profileImage || m?.profileImageFull || '';
-const getFullImg = m => m?.profileImageFull || m?.profileImage || '';
+const getFaceImg = m => m?.profileImage || m?.profileImageFull || m?.profileImageUrl || '';
+const getFullImg     = m => m?.profileImageFull || m?.profileImage || m?.profileImageUrl || '';
 const getPokemonImg = p => p?.sprite || p?.spriteUrl || p?.imageUrl || p?.iconUrl || '';
 const getOfficialArtwork = p => {
   if (p?.sprite) {
