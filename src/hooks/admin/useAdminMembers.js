@@ -1280,6 +1280,31 @@ export const useAdminMembers = (
     }
   };
 
+  // ========== 칭호 업데이트 ==========
+  const updateMemberTitle = async (memberId, titleId) => {
+    if (!currentUser?.isAdmin) return;
+
+    const member = members[memberId];
+    if (!member) return;
+
+    const updatedMember = { ...member, title: titleId === 'none' ? null : titleId };
+
+    try {
+      const { id, ...dataToSave } = updatedMember;
+      const memberRef = ref(database, `members/${memberId}`);
+      await update(memberRef, { title: updatedMember.title ?? null });
+
+      setMembers(prev => ({ ...prev, [memberId]: updatedMember }));
+
+      if (memberId === currentUser?.id) {
+        updateCurrentUser({ title: updatedMember.title ?? null });
+      }
+    } catch (error) {
+      console.error('❌ 칭호 업데이트 실패:', error);
+      alert('칭호 업데이트 중 오류가 발생했습니다: ' + error.message);
+    }
+  };
+
   // ========== 회원 삭제 ==========
   const deleteMember = async (memberId) => {
     if (!currentUser?.isSuperAdmin) return false;
@@ -1381,6 +1406,7 @@ export const useAdminMembers = (
     editMemberPokemon,
     addPokemonToSelf,
     updateMemberMoney,
+    updateMemberTitle,
     deleteMember,
     resetGameData,
     uploadMemberImage,

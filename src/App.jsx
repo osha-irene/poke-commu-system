@@ -42,10 +42,22 @@ import logoText from './assets/logo_text.png';
 import logoCompass from './assets/logo_compass.png';
 import forestBg from './assets/forest-bg.png';
 import mainNpcPanel from './assets/main_npc.png';
+import loginMemberImg from './assets/login/member-img.png';
+import loginTitle from './assets/login/title.png';
+import loginBag from './assets/login/bag.png';
+import loginEntry from './assets/login/entry.png';
+import loginReport from './assets/login/report.png';
+import loginLogout from './assets/login/logout.png';
+import { getTitleById } from './data/titles';
+import loginIcon1 from './assets/login/icons/icon1.png';
+import loginIcon2 from './assets/login/icons/icon2.png';
+import loginIcon3 from './assets/login/icons/icon3.png';
+import loginIcon4 from './assets/login/icons/icon4.png';
 import { User, Lock, LogOut, Music, X, Play, Pause, SkipBack, SkipForward, Volume2, Package, Gift, ChefHat, Sparkles } from 'lucide-react';
 import { DAILY_ATTENDANCE_EXP, getKoreaDateKey } from './utils/experience';
 import { getPokemonLocalIconUrl } from './utils/pokemonIconUtils';
 
+const STATIC_TITLE_ICONS = { icon1: loginIcon1, icon2: loginIcon2, icon3: loginIcon3, icon4: loginIcon4 };
 const DAILY_ATTENDANCE_MONEY = 2000;
 
 function useTwemoji() {
@@ -627,10 +639,13 @@ function HomeDashboard({
   onClaimAttendance,
   attendanceClaimed = false,
   isClaimingAttendance = false,
-  members = {}
+  members = {},
+  titles = [],
+  onUpdateTitle,
 }) {
   const [loginUserId, setLoginUserId] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [titleOpen, setTitleOpen] = useState(false);
   const [koreaToday, setKoreaToday] = useState(() => getKoreaDateParts());
   const calendarDays = getCalendarDays(koreaToday.year, koreaToday.month);
   const calendarLabel = new Intl.DateTimeFormat('en-US', {
@@ -715,34 +730,102 @@ function HomeDashboard({
           )}
           {index === 1 && !showLogin && onLogout && (
             <div className="home-session-panel">
-              <span>{trainer?.name || 'Trainer'}</span>
-              <div className="home-session-panel__quick-actions" aria-label="temporary shortcuts">
-                <button type="button" onClick={onPokemonClick}>
-                  <img className="home-session-panel__pokemon-icon" src={pokemonIcon} alt="" aria-hidden="true" />
-                  {'\uD3EC\uCF13\uBAAC'}
-                </button>
-                <button type="button" onClick={onItemsClick}>
-                  <Package aria-hidden="true" />
-                  {'\uAC00\uBC29'}
-                </button>
+              <div className="home-session-panel__top">
+                <div className="home-session-panel__member-img">
+                  <div className="home-session-panel__member-clip">
+                    {trainer?.profileImage && (
+                      <img
+                        className="home-session-panel__member-face"
+                        src={trainer.profileImage}
+                        alt={trainer.name || ''}
+                      />
+                    )}
+                  </div>
+                  <img className="home-session-panel__member-frame" src={loginMemberImg} alt="" aria-hidden="true" />
+                  {(() => {
+                    if (!trainer?.title || trainer.title === 'none') return null;
+                    const found = titles.find(t => t.id === trainer.title);
+                    const iconUrl = found?.iconUrl
+                      || (found?.icon ? STATIC_TITLE_ICONS[found.icon] : null)
+                      || (() => { const s = getTitleById(trainer.title); return s?.icon ? STATIC_TITLE_ICONS[s.icon] : null; })();
+                    if (!iconUrl) return null;
+                    return (
+                      <img
+                        className="home-session-panel__title-icon"
+                        src={iconUrl}
+                        alt=""
+                        aria-hidden="true"
+                      />
+                    );
+                  })()}
+                </div>
+                <div className="home-session-panel__info">
+                  {(() => {
+                    const currentTitleLabel = (() => {
+                      if (!trainer?.title || trainer.title === 'none') return null;
+                      const found = titles.find(t => t.id === trainer.title);
+                      if (found) return found.label;
+                      // fallback to static data
+                      const staticData = getTitleById(trainer.title);
+                      return staticData && staticData.id !== 'none' ? staticData.label : null;
+                    })();
+                    return (
+                      <div className="home-session-panel__title-wrap" style={{ position: 'relative' }}>
+                        <img className="home-session-panel__title" src={loginTitle} alt="" aria-hidden="true" />
+                        <button
+                          className="home-session-panel__title-overlay"
+                          onClick={() => setTitleOpen(v => !v)}
+                          aria-label="칭호 선택"
+                        >
+                          {currentTitleLabel || ''}
+                        </button>
+                        {titleOpen && (
+                          <div className="home-session-panel__title-dropdown">
+                            <div onClick={() => { onUpdateTitle?.('none'); setTitleOpen(false); }}>
+                              칭호 없음
+                            </div>
+                            {titles.map(t => (
+                              <div key={t.id} onClick={() => { onUpdateTitle?.(t.id); setTitleOpen(false); }}>
+                                {t.label}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                  <span className="home-session-panel__name">{trainer?.name || 'Trainer'}</span>
+                  <div className="home-session-panel__quick-actions" aria-label="\uBC14\uB85C\uAC00\uAE30">
+                    <button type="button" onClick={onItemsClick} aria-label="\uAC00\uBC29">
+                      <img src={loginBag} alt="\uAC00\uBC29" />
+                    </button>
+                    <button type="button" onClick={onPokemonClick} aria-label="\uC5D4\uD2B8\uB9AC">
+                      <img src={loginEntry} alt="\uC5D4\uD2B8\uB9AC" />
+                    </button>
+                  </div>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={onClaimAttendance}
-                disabled={attendanceClaimed || isClaimingAttendance}
-                className="home-session-panel__attendance"
-              >
-                <Gift aria-hidden="true" />
-                {attendanceClaimed
-                  ? '\uCD9C\uC11D \uC644\uB8CC'
-                  : isClaimingAttendance
-                    ? '\uCC98\uB9AC \uC911...'
-                    : '\uCD9C\uC11D \uBCF4\uC0C1'}
-              </button>
-              <button type="button" onClick={onLogout}>
-                <LogOut aria-hidden="true" />
-                {'\uB85C\uADF8\uC544\uC6C3'}
-              </button>
+              <div className="home-session-panel__bottom">
+                <div
+                  role="button"
+                  tabIndex={attendanceClaimed || isClaimingAttendance ? -1 : 0}
+                  onClick={!attendanceClaimed && !isClaimingAttendance ? onClaimAttendance : undefined}
+                  className={`home-session-panel__report${attendanceClaimed || isClaimingAttendance ? ' is-disabled' : ''}`}
+                  aria-label="\uB808\uD3EC\uD2B8 \uC791\uC131"
+                  aria-disabled={attendanceClaimed || isClaimingAttendance}
+                >
+                  <img src={loginReport} alt="\uB808\uD3EC\uD2B8 \uC791\uC131" />
+                </div>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={onLogout}
+                  className="home-session-panel__logout"
+                  aria-label="\uB85C\uADF8\uC544\uC6C3"
+                >
+                  <img src={loginLogout} alt="\uB85C\uADF8\uC544\uC6C3" />
+                </div>
+              </div>
             </div>
           )}
           {index === 3 && (
@@ -1343,6 +1426,9 @@ export default function App() {
     cancelEvolution,
     increaseEffort,
 	camping,
+    titles,
+    updateMemberTitle,
+    updateSelfTitle,
   } = gameState;
   const isFeaturePage = currentTab !== 'home';
   const isMembersPage = currentTab === 'members';
@@ -1953,6 +2039,8 @@ return (
           attendanceClaimed={attendanceClaimed}
           isClaimingAttendance={isClaimingAttendance}
           members={members}
+          titles={titles || []}
+          onUpdateTitle={updateSelfTitle}
         />
       )}
       {currentTab === 'notice' && (

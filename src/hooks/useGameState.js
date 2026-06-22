@@ -37,6 +37,7 @@ import { useCamping } from './game/useCamping';
 import { useAdminMembers } from './admin/useAdminMembers';
 import { useAdminRegions } from './admin/useAdminRegions';
 import { useAdminItems } from './admin/useAdminItems';
+import { useAdminTitles } from './admin/useAdminTitles';
 
 export default function useGameState() {
   const [currentTab, setCurrentTab] = useState(() => {
@@ -168,6 +169,8 @@ export default function useGameState() {
     updateCurrentUser,
     allItems
   );
+
+  const adminTitles = useAdminTitles();
 
   // 개체값
   const individualValues = useIndividualValues();
@@ -354,6 +357,17 @@ export default function useGameState() {
 
   const { useRareCandy, ...restPokemonManagement } = pokemonManagement;
 
+  const updateSelfTitle = async (titleId) => {
+    if (!currentUser?.id) return;
+    const titleValue = titleId === 'none' ? null : titleId;
+    try {
+      await update(ref(database, `members/${currentUser.id}`), { title: titleValue });
+      updateCurrentUser({ title: titleValue });
+    } catch (e) {
+      console.error('칭호 변경 실패:', e);
+    }
+  };
+
   return {
     currentTab,
     setCurrentTab: navigateTab,
@@ -457,6 +471,15 @@ export default function useGameState() {
     // 관리자 기능 - 지역 관리
     ...adminRegions,
     
+    updateSelfTitle,
+
+    // 관리자 기능 - 칭호 관리
+    titles: adminTitles.titles,
+    addTitle: adminTitles.addTitle,
+    deleteTitle: adminTitles.deleteTitle,
+    renameTitle: adminTitles.renameTitle,
+    uploadTitleIcon: adminTitles.uploadTitleIcon,
+
     // 관리자 기능 - 아이템 관리
     addItemToSelf: adminItems.addItemToSelf,
     giveItemToMember: adminItems.giveItemToMember,

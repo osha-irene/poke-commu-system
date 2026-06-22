@@ -85,16 +85,19 @@ function MemberInfoTab({
   onResetWalk,
   onToggleAdmin,
   onUpdateMoney,
+  onUpdateTitle,
   onUpdateWalkCount,
   onUpdateMaxWalkCount,
   onDeleteMember,
   onUploadImage,
   onDeleteImage,
+  titles = [],
 }) {
   const [moneyInput, setMoneyInput] = useState(member.money || 0);
   const [editWalkCount, setEditWalkCount] = useState(member.dailyWalks);
   const [editMaxWalkCount, setEditMaxWalkCount] = useState(member.maxDailyWalks);
   const [uploading, setUploading] = useState({ face: false, body: false });
+  const [selectedTitle, setSelectedTitle] = useState(member.title || 'none');
 
   const handleUpload = async (file, type) => {
     if (!onUploadImage) return;
@@ -148,6 +151,30 @@ function MemberInfoTab({
             <div><span className="text-gray-500">회원 ID:</span><span className="ml-2 font-medium">{member.id}</span></div>
             <div><span className="text-gray-500">이름:</span><span className="ml-2 font-medium">{member.name}</span></div>
             <div><span className="text-gray-500">포켓몬 수:</span><span className="ml-2 font-medium">{(member.caughtPokemon || []).filter(p => p !== null && p !== undefined).length}마리</span></div>
+          </div>
+        </div>
+
+        {/* 칭호 */}
+        <div className="bg-gray-50 rounded-lg p-4">
+          <h3 className="font-bold text-base mb-2">🏅 칭호</h3>
+          <div className="flex gap-2">
+            <select
+              value={selectedTitle}
+              onChange={e => setSelectedTitle(e.target.value)}
+              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+            >
+              <option value="none">칭호 없음</option>
+              {titles.map(t => (
+                <option key={t.id} value={t.id}>{t.label}</option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => { onUpdateTitle?.(member.id, selectedTitle); alert('칭호가 변경되었습니다!'); }}
+              className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm font-semibold transition-colors"
+            >
+              적용
+            </button>
           </div>
         </div>
 

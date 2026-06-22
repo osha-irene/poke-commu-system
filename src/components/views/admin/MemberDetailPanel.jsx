@@ -27,8 +27,10 @@ function MemberDetailPanel({ member, onClose }) {
     resetMemberWalkCount,
     toggleAdminStatus,
     updateMemberMoney,
+    updateMemberTitle,
     uploadMemberImage,
     deleteMemberImage,
+    titles = [],
   } = useGame();
 
   const [selectedTab, setSelectedTab] = useState('info');
@@ -137,11 +139,13 @@ function MemberDetailPanel({ member, onClose }) {
               onResetWalk={handleResetWalk}
               onToggleAdmin={handleToggleAdmin}
               onUpdateMoney={updateMemberMoney}
+              onUpdateTitle={updateMemberTitle}
               onUpdateWalkCount={handleUpdateWalkCount}
               onUpdateMaxWalkCount={handleUpdateMaxWalkCount}
               onDeleteMember={handleDeleteMember}
               onUploadImage={uploadMemberImage}
               onDeleteImage={deleteMemberImage}
+              titles={titles}
             />
           )}
 

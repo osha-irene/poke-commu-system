@@ -1,9 +1,9 @@
 // src/components/views/AdminView.jsx - 완전 수정 버전
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useGame } from '../../contexts/GameContext';
 import { ref as dbRef, get, set } from 'firebase/database';
 import { database } from '../../firebase';
-import { User, ChevronRight } from 'lucide-react';
+import { User, ChevronRight, Pencil, Image, X } from 'lucide-react';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import RegionEditModal from '../modals/RegionEditModal';
 import PokedexAdminPanel from './admin/PokedexAdminPanel';
@@ -77,6 +77,136 @@ function CustomItemList({ items, onUpdate, onDelete }) {
   );
 }
 
+function TitleManagerPanel({ titles = [], onAdd, onDelete, onRename, onUploadIcon }) {
+  const [open, setOpen] = useState(false);
+  const [newLabel, setNewLabel] = useState('');
+  const [uploading, setUploading] = useState({});
+  const [editingId, setEditingId] = useState(null);
+  const [editingLabel, setEditingLabel] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const fileInputRefs = useRef({});
+
+  const handleAdd = async () => {
+    const trimmed = newLabel.trim();
+    if (!trimmed) return;
+    await onAdd?.(trimmed);
+    setNewLabel('');
+  };
+
+  const handleUpload = async (id, file) => {
+    setUploading(prev => ({ ...prev, [id]: true }));
+    try {
+      await onUploadIcon?.(id, file);
+    } finally {
+      setUploading(prev => ({ ...prev, [id]: false }));
+    }
+  };
+
+  return (
+    <div className="relative" style={{ minWidth: 0 }}>
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="text-sm font-semibold px-3 py-1.5 rounded-lg border border-indigo-300 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors"
+      >
+        🏅 칭호 관리 {open ? '▲' : '▼'}
+      </button>
+      {open && (
+        <div className="absolute right-0 top-10 bg-white border border-gray-200 rounded-xl shadow-xl z-20 p-4" style={{ width: 288 }}>
+          <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">칭호 목록</p>
+          <div className="space-y-1.5 max-h-48 overflow-y-auto mb-3">
+            {titles.length === 0 && (
+              <p className="text-xs text-gray-400">등록된 칭호가 없습니다.</p>
+            )}
+            {titles.map(t => (
+              <div key={t.id} className="bg-gray-50 rounded-lg px-2 py-1.5 space-y-1">
+                <div className="flex items-center gap-2">
+                  {t.iconUrl && <img src={t.iconUrl} alt="" className="w-5 h-5 object-contain flex-shrink-0" />}
+                  {editingId === t.id ? (
+                    <input
+                      autoFocus
+                      type="text"
+                      value={editingLabel}
+                      onChange={e => setEditingLabel(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') { onRename?.(t.id, editingLabel); setEditingId(null); }
+                        if (e.key === 'Escape') setEditingId(null);
+                      }}
+                      className="flex-1 border border-indigo-400 rounded px-1.5 py-0.5 text-sm focus:outline-none"
+                    />
+                  ) : (
+                    <span className="flex-1 text-sm font-medium text-gray-800">{t.label}</span>
+                  )}
+                  {editingId === t.id ? (
+                    <>
+                      <button type="button" onClick={() => { onRename?.(t.id, editingLabel); setEditingId(null); }}
+                        className="text-xs text-green-600 hover:text-green-800 px-1.5 py-0.5 border border-green-300 rounded hover:bg-green-50 transition-colors">저장</button>
+                      <button type="button" onClick={() => setEditingId(null)}
+                        className="text-xs text-gray-500 hover:text-gray-700 px-1.5 py-0.5 border border-gray-300 rounded hover:bg-gray-100 transition-colors">취소</button>
+                    </>
+                  ) : (
+                    <>
+                      <button type="button" title="수정" onClick={() => { setEditingId(t.id); setEditingLabel(t.label); }}
+                        className="text-indigo-500 hover:text-indigo-700 p-0.5 transition-colors"><Pencil size={14} /></button>
+                      <label className="cursor-pointer">
+                        <input
+                          ref={el => fileInputRefs.current[t.id] = el}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={e => {
+                            const file = e.target.files?.[0];
+                            if (file) handleUpload(t.id, file);
+                            e.target.value = '';
+                          }}
+                        />
+                        <span title="아이콘" className="inline-flex items-center text-blue-500 hover:text-blue-700 p-0.5 transition-colors cursor-pointer">
+                          {uploading[t.id] ? <span className="text-xs">...</span> : <Image size={14} />}
+                        </span>
+                      </label>
+                      {confirmDeleteId === t.id ? (
+                        <>
+                          <button type="button"
+                            onClick={() => { onDelete?.(t.id); setConfirmDeleteId(null); }}
+                            className="text-xs text-white bg-red-500 hover:bg-red-600 px-1.5 py-0.5 rounded transition-colors">확인</button>
+                          <button type="button"
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="text-xs text-gray-500 hover:text-gray-700 px-1.5 py-0.5 border border-gray-300 rounded hover:bg-gray-100 transition-colors">취소</button>
+                        </>
+                      ) : (
+                        <button type="button" title="삭제"
+                          onClick={() => setConfirmDeleteId(t.id)}
+                          className="text-sm text-red-500 hover:text-red-700 px-1.5 py-0.5 border border-red-200 rounded hover:bg-red-50 transition-colors">✕</button>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="새 칭호 이름"
+              value={newLabel}
+              onChange={e => setNewLabel(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleAdd()}
+              className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={handleAdd}
+              className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors"
+            >
+              추가
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminView() {
   const gameContext = useGame();
 
@@ -130,7 +260,12 @@ export default function AdminView() {
     updateGamePokedex,
     resetPokedex,
     toggleMemberHidden,
-	camping
+	camping,
+    titles = [],
+    addTitle,
+    deleteTitle,
+    renameTitle,
+    uploadTitleIcon,
   } = gameContext;
 
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -463,9 +598,19 @@ export default function AdminView() {
       {/* 멤버 관리 탭 */}
       {adminTab === 'members' && (
         <Card className="p-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <User size={24} /> 멤버 관리
-          </h3>
+          <div className="flex items-start justify-between mb-4">
+            <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+              <User size={24} /> 멤버 관리
+            </h3>
+            {/* 칭호 관리 패널 - 우상단 */}
+            <TitleManagerPanel
+              titles={titles}
+              onAdd={addTitle}
+              onDelete={deleteTitle}
+              onRename={renameTitle}
+              onUploadIcon={uploadTitleIcon}
+            />
+          </div>
 
           {/* 새 멤버 추가 */}
           <div className="bg-gray-50 rounded-lg p-4 mb-4">
