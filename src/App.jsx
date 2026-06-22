@@ -24,8 +24,8 @@ import StatSelectModal from './components/modals/StatSelectModal';
 import EvolutionModal from './components/modals/EvolutionModal';
 import useGameState from './hooks/useGameState';
 import ShopView from './components/views/ShopView';
+import NpcView from './components/views/NpcView';
 import MembersView from './components/views/MembersView';
-import RealMembersView from './components/views/RealMembersView';
 import CampingView from './components/views/CampingView';
 import QnABoard from './components/views/QnABoard';
 import CookingView from './components/views/CookingView';
@@ -35,24 +35,8 @@ import { PokemonProvider } from './contexts/PokemonContext';
 import { GameProvider } from './contexts/GameContext';
 import BattleView from './components/views/BattleView';
 import MaintenanceScreen from './components/layout/MaintenanceScreen';
-import mainNewsButton from './assets/main_news.png';
-import doctorWpenImage from './assets/npc/doctor_wpen.png';
-import pokemonIcon from './assets/pokemon-icon.svg';
-import logoText from './assets/logo_text.png';
-import logoCompass from './assets/logo_compass.png';
-import forestBg from './assets/forest-bg.png';
-import mainNpcPanel from './assets/main_npc.png';
-import loginMemberImg from './assets/login/member-img.png';
-import loginTitle from './assets/login/title.png';
-import loginBag from './assets/login/bag.png';
-import loginEntry from './assets/login/entry.png';
-import loginReport from './assets/login/report.png';
-import loginLogout from './assets/login/logout.png';
+import { mainNewsButton, doctorWpenImage, pokemonIcon, logoText, logoCompass, forestBg, mainNpcPanel, loginMemberImg, loginTitle, loginBag, loginEntry, loginReport, loginLogout, loginIcon1, loginIcon2, loginIcon3, loginIcon4 } from './assets/images';
 import { getTitleById } from './data/titles';
-import loginIcon1 from './assets/login/icons/icon1.png';
-import loginIcon2 from './assets/login/icons/icon2.png';
-import loginIcon3 from './assets/login/icons/icon3.png';
-import loginIcon4 from './assets/login/icons/icon4.png';
 import { User, Lock, LogOut, Music, X, Play, Pause, SkipBack, SkipForward, Volume2, Package, Gift, ChefHat, Sparkles } from 'lucide-react';
 import { DAILY_ATTENDANCE_EXP, getKoreaDateKey } from './utils/experience';
 import { getPokemonLocalIconUrl } from './utils/pokemonIconUtils';
@@ -1971,8 +1955,8 @@ return (
             />
           )}
 
-          {currentTab === 'members' && <RealMembersView members={members} isLoading={isMembersLoading} currentUserId={currentUser?.id} titles={titles} />}
-          {currentTab === 'npcs' && <MembersView members={members} isLoading={isMembersLoading} isAdmin={isAdmin} npcOnly />}
+          {currentTab === 'members' && <MembersView members={members} isLoading={isMembersLoading} currentUserId={currentUser?.id} titles={titles} />}
+          {currentTab === 'npcs' && <NpcView members={members} isLoading={isMembersLoading} isAdmin={isAdmin} npcOnly />}
           {currentTab === 'pokemon' && <PokemonView />}
           {currentTab === 'items' && <ItemsView />}
           {currentTab === 'shop' && <ShopView />}
@@ -2087,8 +2071,8 @@ return (
 			/>
 		  )}
 		  
-		  {currentTab === 'members' && <RealMembersView members={members} isLoading={isMembersLoading} currentUserId={currentUser?.id} titles={titles} />}
-		  {currentTab === 'npcs' && <MembersView members={members} isLoading={isMembersLoading} isAdmin={isAdmin} npcOnly />}
+		  {currentTab === 'members' && <MembersView members={members} isLoading={isMembersLoading} currentUserId={currentUser?.id} titles={titles} />}
+		  {currentTab === 'npcs' && <NpcView members={members} isLoading={isMembersLoading} isAdmin={isAdmin} npcOnly />}
 		  {currentTab === 'pokemon' && <PokemonView />}
 		  {currentTab === 'items' && <ItemsView />}
 		  {currentTab === 'shop' && <ShopView />}

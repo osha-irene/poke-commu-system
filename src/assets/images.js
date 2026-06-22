@@ -1,0 +1,17 @@
+export { default as mainNewsButton } from './main_news.png';
+export { default as doctorWpenImage } from './npc/doctor_wpen.png';
+export { default as pokemonIcon } from './pokemon-icon.svg';
+export { default as logoText } from './logo_text.png';
+export { default as logoCompass } from './logo_compass.png';
+export { default as forestBg } from './forest-bg.png';
+export { default as mainNpcPanel } from './main_npc.png';
+export { default as loginMemberImg } from './login/member-img.png';
+export { default as loginTitle } from './login/title.png';
+export { default as loginBag } from './login/bag.png';
+export { default as loginEntry } from './login/entry.png';
+export { default as loginReport } from './login/report.png';
+export { default as loginLogout } from './login/logout.png';
+export { default as loginIcon1 } from './login/icons/icon1.png';
+export { default as loginIcon2 } from './login/icons/icon2.png';
+export { default as loginIcon3 } from './login/icons/icon3.png';
+export { default as loginIcon4 } from './login/icons/icon4.png';
