@@ -1808,9 +1808,10 @@ img.emoji {
   width: 97%;
   height: 91%;
   background: #fff;
-  border-radius: 12% 0 18% 0;
+  border-radius: 18% 0 18% 0;
   overflow: hidden;
   z-index: 0;
+  will-change: transform;
 }
 
 .home-session-panel__member-face {
@@ -1820,9 +1821,14 @@ img.emoji {
   object-position: top center;
   display: block;
   image-rendering: auto;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
+  -ms-interpolation-mode: bicubic;
   transform: translateZ(0);
+  will-change: transform;
+}
+
+.home-session-panel img {
+  image-rendering: auto;
+  -ms-interpolation-mode: bicubic;
 }
 
 .home-session-panel__member-frame {

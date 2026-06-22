@@ -587,6 +587,7 @@ const BattleLogArchiveModal = ({ logs, onClose, onDelete, loading }) => {
 
 export function BattleView() {
   const { systemSettings } = useGame();
+  const [battleItemsEnabled, setBattleItemsEnabled] = useState(false);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [loadingPokemon, setLoadingPokemon] = useState({ player1: false, player2: false });
   const [members, setMembers] = useState([]);
@@ -737,14 +738,21 @@ export function BattleView() {
     const userId = player === 'player1' ? selectedUser1 : selectedUser2;
     const setData = player === 'player1' ? setPlayer1Data : setPlayer2Data;
 
+    const matchItem = (i) =>
+      (item.itemId != null && i.itemId === item.itemId) ||
+      (item.nameEn && i.nameEn === item.nameEn) ||
+      (item.name && i.name === item.name);
+
+    const decrementItem = (i) => {
+      const cur = i.count ?? i.quantity ?? 1;
+      return { ...i, count: cur - 1, quantity: cur - 1 };
+    };
+
     // 로컬 인벤토리에서 수량 차감
     setData(prev => {
-      const newInventory = prev.inventory.map(i => {
-        if ((i.id || i.name) === (item.id || item.name)) {
-          return { ...i, quantity: (i.quantity ?? 1) - 1 };
-        }
-        return i;
-      }).filter(i => (i.quantity ?? 1) > 0);
+      const newInventory = prev.inventory
+        .map(i => matchItem(i) ? decrementItem(i) : i)
+        .filter(i => (i.count ?? i.quantity ?? 1) > 0);
       return { ...prev, inventory: newInventory };
     });
 
@@ -754,15 +762,53 @@ export function BattleView() {
       const snapshot = await get(ref(database, `members/${userId}/inventory`));
       if (!snapshot.exists()) return;
       const inv = Array.isArray(snapshot.val()) ? snapshot.val() : [];
-      const updated = inv.map(i => {
-        if ((i.id || i.name) === (item.id || item.name)) {
-          return { ...i, quantity: (i.quantity ?? 1) - 1 };
-        }
-        return i;
-      }).filter(i => (i.quantity ?? 1) > 0);
+      const updated = inv
+        .map(i => matchItem(i) ? decrementItem(i) : i)
+        .filter(i => (i.count ?? i.quantity ?? 1) > 0);
       await set(ref(database, `members/${userId}/inventory`), updated);
     } catch (e) {
       console.warn('아이템 소모 저장 실패:', e);
+    }
+  };
+
+  const handleReturnItem = async (player, item) => {
+    const userId = player === 'player1' ? selectedUser1 : selectedUser2;
+    const setData = player === 'player1' ? setPlayer1Data : setPlayer2Data;
+
+    const matchItem = (i) =>
+      (item.itemId != null && i.itemId === item.itemId) ||
+      (item.nameEn && i.nameEn === item.nameEn) ||
+      (item.name && i.name === item.name);
+
+    // 로컬 인벤토리에 수량 복원
+    setData(prev => {
+      const exists = prev.inventory.some(matchItem);
+      const newInventory = exists
+        ? prev.inventory.map(i => {
+            if (!matchItem(i)) return i;
+            const cur = i.count ?? i.quantity ?? 0;
+            return { ...i, count: cur + 1, quantity: cur + 1 };
+          })
+        : [...prev.inventory, { ...item, count: 1, quantity: 1 }];
+      return { ...prev, inventory: newInventory };
+    });
+
+    // Firebase 저장
+    if (!userId) return;
+    try {
+      const snap = await get(ref(database, `members/${userId}/inventory`));
+      const inv = snap.exists() && Array.isArray(snap.val()) ? snap.val() : [];
+      const exists = inv.some(matchItem);
+      const updated = exists
+        ? inv.map(i => {
+            if (!matchItem(i)) return i;
+            const cur = i.count ?? i.quantity ?? 0;
+            return { ...i, count: cur + 1, quantity: cur + 1 };
+          })
+        : [...inv, { ...item, count: 1, quantity: 1 }];
+      await set(ref(database, `members/${userId}/inventory`), updated);
+    } catch (e) {
+      console.warn('아이템 반환 저장 실패:', e);
     }
   };
 
@@ -824,10 +870,11 @@ export function BattleView() {
           autoStart
           onBattleFinished={handleBattleFinished}
           onExit={() => setBattleStarted(false)}
-          battleItemsEnabled={!!systemSettings?.battleItemsEnabled}
+          battleItemsEnabled={battleItemsEnabled}
           player1Inventory={player1Data.inventory}
           player2Inventory={player2Data.inventory}
           onConsumeItem={handleConsumeItem}
+          onReturnItem={handleReturnItem}
         />
         {showBattleLogArchive && (
           <BattleLogArchiveModal logs={battleLogArchive} onClose={() => setShowBattleLogArchive(false)} onDelete={handleDeleteBattleLog} loading={logsLoading} />
@@ -845,6 +892,18 @@ export function BattleView() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {renderBattleLogArchiveButton()}
+          {/* 배틀 아이템 토글 */}
+          <button
+            type="button"
+            onClick={() => setBattleItemsEnabled(prev => !prev)}
+            className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
+              battleItemsEnabled
+                ? 'border-indigo-400 bg-indigo-600 text-white hover:bg-indigo-700'
+                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            🎒 아이템 사용 {battleItemsEnabled ? 'ON' : 'OFF'}
+          </button>
           <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1">
             {[3, 6].map(size => (
               <button

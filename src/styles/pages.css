@@ -414,7 +414,7 @@
 .mbr-card:hover { flex-basis: 360px; z-index: 2; filter: brightness(1.05); }
 .mbr-card-thumb { position: absolute; inset: 0; }
 .mbr-card-thumb img {
-  width: 100%; height: 100%; object-fit: cover; object-position: top center;
+  width: 100%; height: 100%; object-fit: cover; object-position: center 8%;
   display: block; filter: grayscale(1) saturate(0.7) brightness(0.88); transition: filter 0.58s;
 }
 .mbr-card:hover .mbr-card-thumb img { filter: none; }

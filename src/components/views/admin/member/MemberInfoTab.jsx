@@ -152,6 +152,7 @@ function MemberInfoTab({
   onResetWalk,
   onToggleAdmin,
   onUpdateMoney,
+  onUpdateTrainerExp,
   onGrantTitle,
   onRevokeTitle,
   onUpdateWalkCount,
@@ -162,6 +163,7 @@ function MemberInfoTab({
   titles = [],
 }) {
   const [moneyInput, setMoneyInput] = useState(member.money || 0);
+  const [expInput, setExpInput] = useState(member.trainerExp || 0);
   const [editWalkCount, setEditWalkCount] = useState(member.dailyWalks);
   const [editMaxWalkCount, setEditMaxWalkCount] = useState(member.maxDailyWalks);
   const [uploading, setUploading] = useState({ face: false, body: false });
@@ -308,6 +310,25 @@ function MemberInfoTab({
               <button onClick={() => setMoneyInput(moneyInput + 1000)} className="flex-1 bg-gray-100 text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-200 transition-colors text-xs">+1,000</button>
               <button onClick={() => setMoneyInput(moneyInput + 10000)} className="flex-1 bg-gray-100 text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-200 transition-colors text-xs">+10,000</button>
               <button onClick={() => setMoneyInput(moneyInput + 100000)} className="flex-1 bg-gray-100 text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-200 transition-colors text-xs">+100,000</button>
+            </div>
+          </div>
+
+          {/* 트레이너 경험치 */}
+          <div className="bg-indigo-50 border-2 border-indigo-200 rounded-xl p-4">
+            <h3 className="font-bold text-base mb-2">⭐ 트레이너 경험치 관리</h3>
+            <label className="block text-sm text-gray-700 mb-1.5">
+              현재 경험치: <span className="text-indigo-600 font-bold">{(member.trainerExp || 0).toLocaleString()}</span>
+            </label>
+            <div className="flex gap-2 mb-2">
+              <input type="number" value={expInput} onChange={(e) => setExpInput(parseInt(e.target.value) || 0)}
+                className="flex-1 px-3 py-1.5 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none text-sm" placeholder="경험치 입력" min="0" />
+              <button onClick={() => { onUpdateTrainerExp(member.id, expInput); alert(`${member.name}님의 경험치가 ${expInput.toLocaleString()}으로 변경되었습니다!`); }}
+                className="bg-indigo-600 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors font-medium text-sm">변경</button>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setExpInput(expInput + 100)} className="flex-1 bg-gray-100 text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-200 transition-colors text-xs">+100</button>
+              <button onClick={() => setExpInput(expInput + 500)} className="flex-1 bg-gray-100 text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-200 transition-colors text-xs">+500</button>
+              <button onClick={() => setExpInput(expInput + 1000)} className="flex-1 bg-gray-100 text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-200 transition-colors text-xs">+1,000</button>
             </div>
           </div>
 

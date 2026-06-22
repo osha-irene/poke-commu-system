@@ -660,6 +660,7 @@ const convertPokemon = (battle, pokemon, activeRequest = null, forceSwitch = fal
     canMegaEvolve: Boolean(builtInMegaSpecies || customMega),
     megaSpecies: builtInMegaSpecies || customMega?.displayName || customMega?.name || null,
     status: pokemon.status ? translateStatusName(pokemon.status) : null,
+    statusEn: pokemon.status || null,
     volatileStatus: Object.keys(pokemon.volatiles || {}).map(translateVolatileName),
     boosts: { ...pokemon.boosts },
     currentHP: pokemon.hp,
@@ -835,7 +836,20 @@ export function useAdvancedBattle(initialOptions = {}) {
     try {
       requiredPlayers.forEach((player) => {
         const p = pending[player];
-        if (p) battle.choose(playerToSideId(player), p.choice);
+        if (!p) return;
+        if (p.type === 'item-pass') {
+          // 아이템 턴 소모: commanding volatile 임시 주입으로 pass 허용
+          const side = player === 'player1' ? battle.p1 : battle.p2;
+          const pokemon = side.active?.[0];
+          if (pokemon && !pokemon.fainted) {
+            const had = 'commanding' in pokemon.volatiles;
+            pokemon.volatiles['commanding'] = {};
+            battle.choose(playerToSideId(player), 'pass');
+            if (!had) delete pokemon.volatiles['commanding'];
+          }
+        } else {
+          battle.choose(playerToSideId(player), p.choice);
+        }
       });
     } catch (error) {
       console.error('배틀 선택 제출 실패:', error);
@@ -961,6 +975,18 @@ export function useAdvancedBattle(initialOptions = {}) {
     commitPendingChoicesIfReady(nextPending, logFrom);
   }, [commitPendingChoicesIfReady]);
 
+  // 아이템 사용 시 턴 소모 — 포켓몬이 아무 행동도 하지 않고 턴을 넘깁니다.
+  // submitChoices에서 commanding volatile 해킹으로 pkmn/sim의 pass 허용.
+  const selectPass = useCallback((player) => {
+    const battle = battleRef.current;
+    if (!battle || battle.ended) return;
+    const choice = { type: 'item-pass', choice: 'pass' };
+    const currentPending = pendingChoicesRef.current;
+    const nextPending = { ...currentPending, [player]: choice };
+    const logFrom = battle.log.length;
+    commitPendingChoicesIfReady(nextPending, logFrom);
+  }, [commitPendingChoicesIfReady]);
+
   const clearPendingChoices = useCallback(() => {
     logFromRef.current = 0;
     setPendingChoices(emptyPendingChoices());
@@ -982,28 +1008,57 @@ export function useAdvancedBattle(initialOptions = {}) {
   ), [battleState.field]);
 
   // ── 배틀 중 아이템 사용 ──
-  const applyBattleItem = useCallback((player, item, effect) => {
+  // 성공 시 롤백용 스냅샷 반환, 실패 시 null 반환
+  const applyBattleItem = useCallback((player, item, effect, targetSlot = null) => {
     const battle = battleRef.current;
-    if (!battle || battle.ended) return false;
+    if (!battle || battle.ended) return null;
 
     const side = player === 'player1' ? battle.p1 : battle.p2;
-    const pokemon = side.active?.[0];
-    if (!pokemon || pokemon.fainted) return false;
+
+    let pokemon;
+    if (effect.type === 'revive') {
+      if (targetSlot === null) return null;
+      pokemon = side.pokemon.find(p => p.position === targetSlot);
+      if (!pokemon || !pokemon.fainted) return null;
+    } else {
+      if (targetSlot !== null) {
+        pokemon = side.pokemon.find(p => p.position === targetSlot);
+      } else {
+        pokemon = side.active?.[0];
+      }
+      if (!pokemon || pokemon.fainted) return null;
+    }
+
+    // 롤백용 스냅샷 저장
+    const snapshot = {
+      player,
+      targetSlot: pokemon.position,
+      prevHP: pokemon.hp,
+      prevStatus: pokemon.status,
+      prevBoosts: { ...pokemon.boosts },
+      prevFainted: pokemon.fainted,
+    };
 
     const playerLabel = player === 'player1' ? 'Player 1' : 'Player 2';
     const itemName = item.name || item.nameEn || '아이템';
     let effectMsg = '';
 
-    if (effect.type === 'heal') {
+    if (effect.type === 'revive') {
+      const hp = effect.fullHP ? pokemon.maxhp : Math.floor(pokemon.maxhp / 2);
+      pokemon.hp = hp;
+      pokemon.fainted = false;
+      const speciesName = pokemon.species?.name || pokemon.name || '포켓몬';
+      effectMsg = `${speciesName} 부활 (HP ${hp}/${pokemon.maxhp})`;
+    } else if (effect.type === 'heal') {
       const amount = effect.amount == null ? (pokemon.maxhp - pokemon.hp) : effect.amount;
       const actual = Math.min(amount, pokemon.maxhp - pokemon.hp);
-      if (actual <= 0) return false;
+      if (actual <= 0) return null;
       pokemon.hp = pokemon.hp + actual;
       effectMsg = `HP ${actual} 회복 (${pokemon.hp}/${pokemon.maxhp})`;
     } else if (effect.type === 'healpercent') {
       const amount = Math.floor(pokemon.maxhp * effect.percent);
       const actual = Math.min(amount, pokemon.maxhp - pokemon.hp);
-      if (actual <= 0) return false;
+      if (actual <= 0) return null;
       pokemon.hp = pokemon.hp + actual;
       effectMsg = `HP ${actual} 회복 (${pokemon.hp}/${pokemon.maxhp})`;
     } else if (effect.type === 'fullheal') {
@@ -1011,17 +1066,18 @@ export function useAdvancedBattle(initialOptions = {}) {
       pokemon.status = '';
       effectMsg = 'HP 완전 회복 & 상태이상 치료';
     } else if (effect.type === 'curestatus') {
-      if (!pokemon.status) return false;
+      if (!pokemon.status) return null;
+      if (effect.status && pokemon.status !== effect.status) return null;
       pokemon.status = '';
       effectMsg = '상태이상 치료';
     } else if (effect.type === 'boost') {
       const cur = pokemon.boosts[effect.stat] || 0;
-      if (cur >= 6) return false;
+      if (cur >= 6) return null;
       pokemon.boosts[effect.stat] = Math.min(6, cur + effect.stages);
       const statLabels = { atk: '공격', def: '방어', spa: '특수공격', spd: '특수방어', spe: '스피드', accuracy: '명중률' };
       effectMsg = `${statLabels[effect.stat] || effect.stat} 상승`;
     } else {
-      return false;
+      return null;
     }
 
     const itemLog = {
@@ -1032,7 +1088,31 @@ export function useAdvancedBattle(initialOptions = {}) {
     setBattleState(prev =>
       stateFromBattle(battle, prev, battle.log.length, [itemLog], teamsRef.current)
     );
-    return true;
+    return snapshot;
+  }, []);
+
+  // ── 아이템 사용 롤백 ──
+  const rollbackBattleItem = useCallback((snapshot) => {
+    const battle = battleRef.current;
+    if (!battle || !snapshot) return;
+    const { player, targetSlot, prevHP, prevStatus, prevBoosts, prevFainted } = snapshot;
+    const side = player === 'player1' ? battle.p1 : battle.p2;
+    const pokemon = side.pokemon.find(p => p.position === targetSlot);
+    if (!pokemon) return;
+
+    pokemon.hp = prevHP;
+    pokemon.status = prevStatus;
+    pokemon.boosts = { ...prevBoosts };
+    pokemon.fainted = prevFainted;
+
+    // 해당 플레이어의 pending choice 제거
+    setBattleState(prev => {
+      const pending = { ...prev.pendingChoices };
+      delete pending[player];
+      return stateFromBattle(battle, { ...prev, pendingChoices: pending }, battle.log.length, [], teamsRef.current);
+    });
+    pendingChoicesRef.current = { ...pendingChoicesRef.current };
+    delete pendingChoicesRef.current[player];
   }, []);
 
   return {
@@ -1041,6 +1121,8 @@ export function useAdvancedBattle(initialOptions = {}) {
     selectMove,
     selectSwitch,
     applyBattleItem,
+    rollbackBattleItem,
+    selectPass,
     clearPendingChoices,
     confirmAndSubmit,
     resetBattle,

@@ -202,6 +202,7 @@ export function AdvancedBattleSimulator({
   player1Inventory = [],
   player2Inventory = [],
   onConsumeItem,
+  onReturnItem,
 }) {
   const {
     battleState,
@@ -209,6 +210,8 @@ export function AdvancedBattleSimulator({
     selectMove,
     selectSwitch,
     applyBattleItem,
+    rollbackBattleItem,
+    selectPass,
     clearPendingChoices,
     confirmAndSubmit,
     resetBattle,
@@ -226,6 +229,10 @@ export function AdvancedBattleSimulator({
   const [megaIntent, setMegaIntent] = useState({ player1: false, player2: false });
   const megaIntentRef = useRef({ player1: false, player2: false });
   const [itemPanelOpen, setItemPanelOpen] = useState({ player1: false, player2: false });
+  const [revivePending, setRevivePending] = useState({ player1: null, player2: null });
+  const [targetPending, setTargetPending] = useState({ player1: null, player2: null });
+  // 아이템 사용 후 롤백용: { player: snapshot, item }
+  const [itemSnapshots, setItemSnapshots] = useState({ player1: null, player2: null });
   const [showBattleInfo, setShowBattleInfo] = useState(false);
   const autoStartedRef = useRef(false);
   const finishedNotifiedRef = useRef(false);
@@ -280,6 +287,20 @@ export function AdvancedBattleSimulator({
       player2Team.map((_, index) => index)
     );
   }, [autoStart, battleState.phase, player1Team, player2Team, startBattle]);
+
+  // 턴이 제출되면 (pendingChoices에서 player choice 소멸) 해당 스냅샷 제거 → 취소 불가
+  useEffect(() => {
+    const pending = battleState.pendingChoices || {};
+    setItemSnapshots(prev => {
+      const p1Gone = prev.player1 && !pending.player1;
+      const p2Gone = prev.player2 && !pending.player2;
+      if (!p1Gone && !p2Gone) return prev;
+      return {
+        player1: p1Gone ? null : prev.player1,
+        player2: p2Gone ? null : prev.player2,
+      };
+    });
+  }, [battleState.pendingChoices]);
 
   useEffect(() => {
     if (battleState.phase !== 'finished') return;
@@ -442,8 +463,9 @@ export function AdvancedBattleSimulator({
     const buttonClass = color === 'blue' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700';
     const megaSelected = Boolean(megaIntent[player]);
     const pendingChoice = battleState.pendingChoices?.[player];
-    const canChooseMove = waiting && side.requestType === 'move';
-    const canSwitch = waiting && side.canSwitch && side.bench.length > 0;
+    const hasItemPass = pendingChoice?.type === 'item-pass';
+    const canChooseMove = waiting && side.requestType === 'move' && !pendingChoice;
+    const canSwitch = waiting && side.canSwitch && side.bench.length > 0 && !pendingChoice;
     const switchBlockedReason = active.request?.trapped
       ? '교체할 수 없는 상태입니다.'
       : active.request?.maybeTrapped
@@ -458,14 +480,114 @@ export function AdvancedBattleSimulator({
     const battleItems = battleItemsEnabled ? filterBattleItems(inventory) : [];
     const showItemPanel = itemPanelOpen[player];
 
-    const handleUseItem = (item) => {
-      const ok = applyBattleItem(player, item, item.battleEffect);
-      if (ok) {
-        onConsumeItem?.(player, item);
-        setItemPanelOpen(prev => ({ ...prev, [player]: false }));
-      } else {
-        alert('이 아이템을 사용할 수 없습니다. (HP 가득 찼거나 조건 불충족)');
+    const faintedPokemon = side.fainted || [];
+
+    // 엔트리 전체 (현재 출전 + 벤치), slot 순서로 정렬
+    const allEntryPokemon = [
+      ...(side.active || []).map(p => ({ ...p, isActive: true })),
+      ...(side.bench || []).map(p => ({ ...p, isActive: false })),
+    ].sort((a, b) => a.slot - b.slot);
+
+    // 아이템이 특정 포켓몬에게 사용 가능한지 체크
+    const isItemUsableOnPoke = (eff, poke) => {
+      if (!eff) return false;
+      if (eff.type === 'revive') return poke.fainted;
+      if (poke.fainted) return false;
+      const curHP = poke.currentHP;
+      const maxHP = poke.maxHP;
+      const statusEn = poke.statusEn || '';
+      if (eff.type === 'heal' || eff.type === 'healpercent') return curHP < maxHP;
+      if (eff.type === 'fullheal') return true;
+      if (eff.type === 'curestatus') {
+        if (!statusEn) return false;
+        if (eff.status && statusEn !== eff.status) return false;
+        return true;
       }
+      if (eff.type === 'boost') return (poke.boosts?.[eff.stat] ?? 0) < 6;
+      return true;
+    };
+
+    const getPokeUnusableReason = (eff, poke) => {
+      if (!eff) return '';
+      if (poke.fainted) return '쓰러진 상태';
+      const curHP = poke.currentHP;
+      const maxHP = poke.maxHP;
+      const statusEn = poke.statusEn || '';
+      if ((eff.type === 'heal' || eff.type === 'healpercent') && curHP >= maxHP) return 'HP 가득 참';
+      if (eff.type === 'curestatus') {
+        if (!statusEn) return '상태이상 없음';
+        const statusNames = { par: '마비', psn: '독', brn: '화상', slp: '잠듦', frz: '얼음' };
+        if (eff.status && statusEn !== eff.status) return `${statusNames[eff.status] || eff.status} 아님`;
+      }
+      if (eff.type === 'boost' && (poke.boosts?.[eff.stat] ?? 0) >= 6) return '스탯 최대';
+      return '';
+    };
+
+    // 아이템 목록에서 버튼 활성화 여부 (엔트리 중 하나라도 쓸 수 있으면 true)
+    const isItemUsable = (item) => {
+      const eff = item.battleEffect;
+      if (!eff) return false;
+      if (eff.type === 'revive') return faintedPokemon.length > 0;
+      return allEntryPokemon.some(poke => isItemUsableOnPoke(eff, poke));
+    };
+
+    const getItemUnusableReason = (item) => {
+      const eff = item.battleEffect;
+      if (!eff) return '';
+      if (eff.type === 'revive') return '쓰러진 포켓몬이 없습니다';
+      if (eff.type === 'heal' || eff.type === 'healpercent') return '모든 포켓몬 HP 가득 참';
+      if (eff.type === 'curestatus') {
+        const statusNames = { par: '마비', psn: '독', brn: '화상', slp: '잠듦', frz: '얼음' };
+        if (eff.status) return `${statusNames[eff.status] || eff.status} 상태이상인 포켓몬 없음`;
+        return '상태이상인 포켓몬 없음';
+      }
+      if (eff.type === 'boost') return '능력치가 이미 최대입니다';
+      return '';
+    };
+
+    const handleUseItem = (item) => {
+      if (!isItemUsable(item)) return;
+      if (item.battleEffect?.type === 'revive') {
+        setRevivePending(prev => ({ ...prev, [player]: item }));
+        return;
+      }
+      // 대상 선택 패널로 진입
+      setTargetPending(prev => ({ ...prev, [player]: item }));
+    };
+
+    const handleReviveTarget = (faintedPoke) => {
+      const item = revivePending[player];
+      if (!item) return;
+      const snapshot = applyBattleItem(player, item, item.battleEffect, faintedPoke.slot - 1);
+      if (snapshot) {
+        onConsumeItem?.(player, item);
+        setItemSnapshots(prev => ({ ...prev, [player]: { snapshot, item } }));
+        setRevivePending(prev => ({ ...prev, [player]: null }));
+        setItemPanelOpen(prev => ({ ...prev, [player]: false }));
+        selectPass(player);
+      }
+    };
+
+    const handleItemTarget = (targetPoke) => {
+      const item = targetPending[player];
+      if (!item) return;
+      const slot = targetPoke.slot - 1;
+      const snapshot = applyBattleItem(player, item, item.battleEffect, slot);
+      if (snapshot) {
+        onConsumeItem?.(player, item);
+        setItemSnapshots(prev => ({ ...prev, [player]: { snapshot, item } }));
+        setTargetPending(prev => ({ ...prev, [player]: null }));
+        setItemPanelOpen(prev => ({ ...prev, [player]: false }));
+        selectPass(player);
+      }
+    };
+
+    const handleCancelItem = () => {
+      const entry = itemSnapshots[player];
+      if (!entry) return;
+      rollbackBattleItem(entry.snapshot);
+      onReturnItem?.(player, entry.item);
+      setItemSnapshots(prev => ({ ...prev, [player]: null }));
     };
 
     return (
@@ -522,8 +644,29 @@ export function AdvancedBattleSimulator({
           )}
         </div>
 
+        {/* 아이템 사용 완료 배너 */}
+        {hasItemPass && (
+          <div className={`mb-3 flex items-center justify-between gap-2 rounded-lg px-4 py-3 text-sm font-bold ${
+            color === 'blue' ? 'bg-blue-50 text-blue-800 border border-blue-200' : 'bg-red-50 text-red-800 border border-red-200'
+          }`}>
+            <div className="flex items-center gap-2">
+              <Backpack size={14} strokeWidth={2.5} />
+              아이템 사용 완료 — 상대방 행동 대기 중
+            </div>
+            {itemSnapshots[player] && (
+              <button
+                type="button"
+                onClick={handleCancelItem}
+                className="rounded px-2 py-1 text-xs font-semibold bg-white border border-current opacity-70 hover:opacity-100 transition-opacity"
+              >
+                취소
+              </button>
+            )}
+          </div>
+        )}
+
         {/* 탭: 기술 / 아이템 */}
-        {battleItemsEnabled && (
+        {battleItemsEnabled && !hasItemPass && (
           <div className="flex gap-2 mb-3">
             <button
               type="button"
@@ -539,11 +682,11 @@ export function AdvancedBattleSimulator({
             <button
               type="button"
               onClick={() => setItemPanelOpen(prev => ({ ...prev, [player]: true }))}
-              disabled={!canChooseMove}
+              disabled={!waiting || !!pendingChoice}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-bold transition-colors ${
                 showItemPanel
                   ? (color === 'blue' ? 'bg-blue-600 text-white' : 'bg-red-600 text-white')
-                  : canChooseMove
+                  : (waiting && !pendingChoice)
                     ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     : 'bg-gray-50 text-gray-300 cursor-not-allowed'
               }`}
@@ -553,30 +696,131 @@ export function AdvancedBattleSimulator({
           </div>
         )}
 
+        {/* 일반 아이템 대상 선택 패널 */}
+        {battleItemsEnabled && showItemPanel && targetPending[player] && (
+          <div className="mb-3">
+            <div className={`mb-2 flex items-center justify-between rounded-lg px-3 py-2 text-sm font-bold ${
+              color === 'blue' ? 'bg-blue-50 text-blue-800 border border-blue-200' : 'bg-red-50 text-red-800 border border-red-200'
+            }`}>
+              <span>{targetPending[player].name} — 사용할 포켓몬 선택</span>
+              <button
+                type="button"
+                onClick={() => setTargetPending(prev => ({ ...prev, [player]: null }))}
+                className="text-gray-400 hover:text-gray-600 text-lg leading-none"
+              >×</button>
+            </div>
+            <div className="space-y-2">
+              {allEntryPokemon.map((poke) => {
+                const eff = targetPending[player].battleEffect;
+                const usable = isItemUsableOnPoke(eff, poke);
+                const reason = usable ? '' : getPokeUnusableReason(eff, poke);
+                return (
+                  <button
+                    key={poke.slot}
+                    type="button"
+                    onClick={() => usable && handleItemTarget(poke)}
+                    disabled={!usable}
+                    className={`w-full rounded-lg px-4 py-3 font-semibold text-left transition-all ${
+                      usable
+                        ? `${buttonClass} text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg`
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        {poke.isActive && (
+                          <span className={`text-xs px-1.5 py-0.5 rounded font-bold ${
+                            color === 'blue' ? 'bg-blue-200 text-blue-900' : 'bg-red-200 text-red-900'
+                          }`}>출전</span>
+                        )}
+                        <span>{poke.name}</span>
+                        {poke.status && (
+                          <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">{poke.status}</span>
+                        )}
+                      </div>
+                      <span className="text-xs opacity-70 shrink-0">
+                        {usable ? `HP ${poke.currentHP}/${poke.maxHP}` : reason}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* 부활 대상 선택 패널 */}
+        {battleItemsEnabled && showItemPanel && revivePending[player] && (
+          <div className="mb-3">
+            <div className={`mb-2 flex items-center justify-between rounded-lg px-3 py-2 text-sm font-bold ${
+              color === 'blue' ? 'bg-blue-50 text-blue-800 border border-blue-200' : 'bg-red-50 text-red-800 border border-red-200'
+            }`}>
+              <span>{revivePending[player].name} — 부활시킬 포켓몬 선택</span>
+              <button
+                type="button"
+                onClick={() => setRevivePending(prev => ({ ...prev, [player]: null }))}
+                className="text-gray-400 hover:text-gray-600 text-lg leading-none"
+              >×</button>
+            </div>
+            <div className="space-y-2">
+              {faintedPokemon.map((poke) => (
+                <button
+                  key={poke.slot}
+                  type="button"
+                  onClick={() => handleReviveTarget(poke)}
+                  className={`w-full rounded-lg px-4 py-3 font-semibold text-left text-white shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg ${buttonClass}`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span>{poke.name}</span>
+                    <span className="text-xs opacity-80">
+                      {revivePending[player].battleEffect?.fullHP
+                        ? `→ HP ${poke.maxHP}/${poke.maxHP}`
+                        : `→ HP ${Math.floor(poke.maxHP / 2)}/${poke.maxHP}`}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* 아이템 패널 */}
-        {battleItemsEnabled && showItemPanel && (
+        {battleItemsEnabled && showItemPanel && !revivePending[player] && !targetPending[player] && (
           <div className="space-y-2 mb-3">
             {battleItems.length === 0 ? (
               <div className="text-sm text-gray-400 text-center py-4">사용 가능한 배틀 아이템이 없습니다.</div>
             ) : (
-              battleItems.map((item, idx) => (
-                <button
-                  key={`${item.id || item.name}-${idx}`}
-                  type="button"
-                  onClick={() => handleUseItem(item)}
-                  className={`w-full rounded-lg px-4 py-3 font-semibold text-left transition-all ${buttonClass} text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg`}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span>{item.name || item.nameEn}</span>
-                    <span className="text-xs opacity-80">
-                      {item.battleEffect?.category === 'heal' && '회복'}
-                      {item.battleEffect?.category === 'berry' && '나무열매'}
-                      {item.battleEffect?.category === 'battle' && '배틀'}
-                      {' '}× {item.quantity ?? 1}
-                    </span>
-                  </div>
-                </button>
-              ))
+              battleItems.map((item, idx) => {
+                const usable = isItemUsable(item);
+                const reason = usable ? '' : getItemUnusableReason(item);
+                return (
+                  <button
+                    key={`${item.id || item.name}-${idx}`}
+                    type="button"
+                    onClick={() => handleUseItem(item)}
+                    disabled={!usable}
+                    title={reason || undefined}
+                    className={`w-full rounded-lg px-4 py-3 font-semibold text-left transition-all ${
+                      usable
+                        ? `${buttonClass} text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg`
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        {item.imageUrl && <img src={item.imageUrl} alt="" className="w-6 h-6 object-contain" style={usable ? {} : { opacity: 0.4 }} />}
+                        <div className="flex flex-col">
+                          <span>{item.name || item.nameEn}</span>
+                          {!usable && reason && (
+                            <span className="text-xs text-gray-400 font-normal">{reason}</span>
+                          )}
+                        </div>
+                      </div>
+                      <span className="text-xs opacity-80">× {item._qty ?? 1}</span>
+                    </div>
+                  </button>
+                );
+              })
             )}
           </div>
         )}
@@ -761,7 +1005,18 @@ export function AdvancedBattleSimulator({
               </button>
               <button
                 type="button"
-                onClick={clearPendingChoices}
+                onClick={() => {
+                  // 아이템 사용 롤백 후 선택 초기화
+                  ['player1', 'player2'].forEach(p => {
+                    const entry = itemSnapshots[p];
+                    if (entry) {
+                      rollbackBattleItem(entry.snapshot);
+                      onReturnItem?.(p, entry.item);
+                    }
+                  });
+                  setItemSnapshots({ player1: null, player2: null });
+                  clearPendingChoices();
+                }}
                 className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 hover:bg-gray-100"
               >
                 <RotateCcw size={18} />

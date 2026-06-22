@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { useGame } from '../../contexts/GameContext';
 import { ref as dbRef, get, set } from 'firebase/database';
 import { database } from '../../firebase';
-import { User, ChevronRight, Pencil, Image, X, Users, Map, BookOpen, ShoppingBag, UtensilsCrossed, Tent, Calendar, Settings, AlertTriangle, Medal, Wrench, CheckCircle, Info, Trash2, Zap, Wind, Ban, AlertCircle, Swords } from 'lucide-react';
+import { User, ChevronRight, Pencil, Image, X, Users, Map, BookOpen, ShoppingBag, UtensilsCrossed, Tent, Calendar, Settings, AlertTriangle, Medal, Wrench, CheckCircle, Info, Trash2, Zap, Wind, Ban, AlertCircle } from 'lucide-react';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import RegionEditModal from '../modals/RegionEditModal';
 import PokedexAdminPanel from './admin/PokedexAdminPanel';
@@ -892,26 +892,6 @@ export default function AdminView() {
             <div className="mt-3 text-sm text-gray-600">
               현재 설정: 모든 회원 최대 <strong>{Object.values(members)[0]?.maxDailyWalks || 5}회</strong>
             </div>
-            </section>
-
-            <section className="rounded-lg border border-lime-200 bg-white/40 p-5">
-            <h4 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-              <Swords size={18} strokeWidth={2.5} /> 배틀 아이템 사용
-            </h4>
-            <p className="text-sm text-gray-600 mb-3">
-              배틀 중 회복 아이템, 나무열매, 배틀 아이템을 사용할 수 있게 합니다. 아이템은 턴을 소모하지 않습니다.
-            </p>
-            <button
-              type="button"
-              onClick={() => updateSystemSettings?.({ ...systemSettings, battleItemsEnabled: !systemSettings?.battleItemsEnabled })}
-              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
-                systemSettings?.battleItemsEnabled
-                  ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              {systemSettings?.battleItemsEnabled ? '활성화됨 (클릭하여 끄기)' : '비활성화됨 (클릭하여 켜기)'}
-            </button>
             </section>
 
             <section className="rounded-lg border border-lime-200 bg-white/40 p-5">

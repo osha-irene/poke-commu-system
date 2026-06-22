@@ -304,7 +304,7 @@ export default function MembersView({ members = {}, isLoading = false, isAdmin =
             <button className="mbr-list-nav mbr-list-nav-prev" hidden={!navState.prev} onClick={() => scrollList(-1)}>&#8249;</button>
             <div className="mbr-list" ref={listRef}>
               {!isLoading && filtered.map(m => {
-                const img = getListImg(m);
+                const img = getFullImg(m);
                 const party = getParty(m).slice(0, 6);
                 return (
                   <button key={m.id} className="mbr-card" onClick={() => setActiveId(m.id)}>

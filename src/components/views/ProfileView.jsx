@@ -1,135 +1,244 @@
-// src/components/views/ProfileView.jsx - 탭 추가 버전
+import React, { useState, useEffect } from 'react';
+import { Link, Pencil, Check } from 'lucide-react';
+import { getDatabase, ref, get, set } from 'firebase/database';
+import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
+import titleBg from '../../assets/login/title.png';
 
-import React, { useState } from 'react';
-import { User, Settings } from 'lucide-react';
-import ProfileSettings from '../settings/ProfileSettings';
+function VerticalBarcode({ text, width = 32, height = 180 }) {
+  const bits = [1, 0, 1];
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    for (let b = 7; b >= 0; b--) bits.push((c >> b) & 1);
+    bits.push(0);
+  }
+  bits.push(1, 0, 1, 1);
 
-export default function ProfileView({ trainer, caughtPokemon, items }) {
-  // 탭 상태 관리
-  const [activeTab, setActiveTab] = useState('info');
+  const runs = [];
+  let cur = bits[0], cnt = 1;
+  for (let i = 1; i < bits.length; i++) {
+    if (bits[i] === cur) cnt++;
+    else { runs.push([cur === 1, cnt]); cur = bits[i]; cnt = 1; }
+  }
+  runs.push([cur === 1, cnt]);
 
-  // 포켓몬 카운트
-  const caughtCount = caughtPokemon?.filter(p => p !== null && p !== undefined).length || 0;
-  const completion = Math.round((caughtCount / 151) * 100);
-  
-  // 총 탐험 횟수 계산
-  const todayWalksUsed = trainer.maxDailyWalks - trainer.dailyWalks;
-  
+  const total = runs.reduce((s, [, c]) => s + c, 0);
+  const unitH = height / total;
+
+  let y = 0;
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* 탭 메뉴 */}
-      <div className="bg-white rounded-lg shadow-lg mb-6 overflow-hidden">
-        <div className="flex border-b">
-          <button
-            onClick={() => setActiveTab('info')}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 font-semibold transition-colors ${
-              activeTab === 'info'
-                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <User className="w-5 h-5" />
-            프로필 정보
-          </button>
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 font-semibold transition-colors ${
-              activeTab === 'settings'
-                ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <Settings className="w-5 h-5" />
-            설정
-          </button>
-        </div>
-      </div>
+    <svg width={width} height={height} style={{ display: 'block' }}>
+      {runs.map(([black, cnt], i) => {
+        const h = Math.max(cnt * unitH, 0.5);
+        const el = black ? <rect key={i} x={0} y={y} width={width} height={h} fill="#1a1a2e" /> : null;
+        y += cnt * unitH;
+        return el;
+      })}
+    </svg>
+  );
+}
 
-      {/* 프로필 정보 탭 */}
-      {activeTab === 'info' && (
-        <div className="bg-white rounded-lg border border-gray-200 p-8">
-          <div className="flex gap-8 mb-8">
-            <div 
-              className="w-48 h-48 bg-indigo-500 rounded-lg flex items-center justify-center text-8xl"
-              style={{
-                backgroundSize: 'cover',
-                backgroundPosition: 'center'
-              }}
-            >
-              {trainer.name?.charAt(0) || '👦'}
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-3xl font-bold">{trainer.name}</h3>
-                {trainer.isSuperAdmin && (
-                  <span className="bg-red-100 text-red-700 text-sm px-3 py-1 rounded-full font-semibold">
-                    슈퍼관리자
-                  </span>
-                )}
-                {trainer.isAdmin && !trainer.isSuperAdmin && (
-                  <span className="bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded-full font-semibold">
-                    관리자
-                  </span>
-                )}
-              </div>
-              <p className="text-gray-600 text-lg mb-2">포켓몬 트레이너</p>
-              
-              <div className="bg-gray-50 rounded-lg p-4 inline-block">
-                <div className="text-sm text-gray-600">일일 탐험 설정</div>
-                <div className="text-2xl font-bold text-indigo-600">
-                  {trainer.maxDailyWalks}회/일
+export default function ProfileView({ trainer, caughtPokemon, items, titles = [] }) {
+  const [mastodonAccount, setMastodonAccount] = useState('');
+  const [mastodonLoading, setMastodonLoading] = useState(false);
+  const [mastodonSaved, setMastodonSaved] = useState(false);
+  const [isEditingMastodon, setIsEditingMastodon] = useState(false);
+  const [mastodonInput, setMastodonInput] = useState('');
+
+  const todayWalksUsed = trainer.maxDailyWalks - trainer.dailyWalks;
+  const trainerId = trainer.id
+    ? String(trainer.id.split('').reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) & 0xFFFFFF, 0)).padStart(6, '0').slice(-6)
+    : '000000';
+  const partnerPokemon = trainer.partnerPokemon || null;
+  const partnerIcon = partnerPokemon ? getPokemonLocalIconUrl(partnerPokemon) : null;
+  const currentTitle = trainer.title && trainer.title !== 'none'
+    ? titles.find(t => t.id === trainer.title)?.label || ''
+    : '';
+
+  useEffect(() => {
+    if (!trainer?.id) return;
+    const db = getDatabase();
+    get(ref(db, `members/${trainer.id}/mastodonAccount`)).then(snapshot => {
+      if (snapshot.exists()) {
+        const val = snapshot.val();
+        const match = val.match(/@?([\w]+)@/);
+        const username = match ? match[1] : val;
+        setMastodonAccount(username);
+        setMastodonInput(username);
+      }
+    }).catch(() => {});
+  }, [trainer]);
+
+  const saveMastodon = async () => {
+    const username = mastodonInput.trim().replace(/^@/, '');
+    if (!username) return;
+    setMastodonLoading(true);
+    try {
+      const db = getDatabase();
+      await set(ref(db, `members/${trainer.id}/mastodonAccount`), `@${username}@poketodon.monster`);
+      setMastodonAccount(username);
+      setMastodonSaved(true);
+      setIsEditingMastodon(false);
+      setTimeout(() => setMastodonSaved(false), 2000);
+    } catch {
+    } finally {
+      setMastodonLoading(false);
+    }
+  };
+
+  const handleMastodonKeyDown = (e) => {
+    if (e.key === 'Enter') saveMastodon();
+    if (e.key === 'Escape') { setIsEditingMastodon(false); setMastodonInput(mastodonAccount); }
+  };
+
+  return (
+    <div className="flex items-start justify-center w-full">
+      <div className="rounded-xl shadow-lg overflow-hidden" style={{ maxWidth: '50rem', width: '100%' }}>
+        <div className="flex gap-0">
+
+          {/* 좌측: 이미지 */}
+          <div className="flex-shrink-0 w-80 relative self-stretch overflow-hidden" style={{ background: 'rgba(20,20,30,0.35)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+            {trainer.profileImage ? (
+              <img
+                src={trainer.profileImage}
+                alt={trainer.name}
+                className="absolute inset-0 w-full h-full object-cover object-top scale-[1] origin-top"
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-28 h-28 rounded-full bg-white/20 border-4 border-white/40 flex items-center justify-center text-6xl shadow-inner">
+                  {trainer.name?.charAt(0) || '👦'}
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
-              <div className="text-sm text-gray-600 mb-1">포획한 포켓몬</div>
-              <div className="text-4xl font-bold text-blue-600">{caughtCount}마리</div>
-            </div>
-            <div className="bg-green-50 rounded-lg p-6 border border-green-200">
-              <div className="text-sm text-gray-600 mb-1">도감 완성도</div>
-              <div className="text-4xl font-bold text-green-600">{completion}%</div>
-            </div>
-            <div className="bg-purple-50 rounded-lg p-6 border border-purple-200">
-              <div className="text-sm text-gray-600 mb-1">오늘 탐험</div>
-              <div className="text-4xl font-bold text-purple-600">{todayWalksUsed}회</div>
-            </div>
-            <div className="bg-yellow-50 rounded-lg p-6 border border-yellow-200">
-              <div className="text-sm text-gray-600 mb-1">보유 경험치</div>
-              <div className="text-4xl font-bold text-yellow-700">{(trainer.trainerExp || 0).toLocaleString()}</div>
-            </div>
-          </div>
+          {/* 우측: 정보 */}
+          <div className="flex-1 flex bg-white" style={{ minHeight: '400px' }}>
 
-          {/* 추가 정보 */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">남은 탐험 횟수</span>
-                <span className="font-semibold">{trainer.dailyWalks}회</span>
+            {/* 콘텐츠 */}
+            <div className="flex-1 px-6 flex flex-col gap-4" style={{ paddingTop: '35px', paddingBottom: '36px' }}>
+
+              {/* ID */}
+              <div className="text-gray-400 tracking-wider" style={{ paddingTop: '0px',paddingBottom: '8px', fontFamily: "'Aggravo', Georgia, serif", fontSize: '1rem' }}>
+                ID. {trainerId}
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">보유 금액</span>
-                <span className="font-semibold">{trainer.money?.toLocaleString() || 0}원</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">보유 아이템</span>
-                <span className="font-semibold">{items?.length || 0}개</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">이메일</span>
-                <span className="font-semibold">{trainer.email || '-'}</span>
+
+                 {/* 칭호 + 이름 + 파트너 아이콘 */}
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex flex-col gap-1">
+                <span className="text-sl text-gray-400 font-medium tracking-wide h-6">
+                  {currentTitle}
+                </span>
+                  <div className="flex items-center gap-2 flex-wrap">  
+                   <h3 className="text-3xl font-bold">{trainer.name}</h3>
+                   {/*  {trainer.isSuperAdmin && (
+                    <span className="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full font-semibold">슈퍼관리자</span>
+                  )}
+                  {trainer.isAdmin && !trainer.isSuperAdmin && (
+                    <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-semibold">관리자</span>
+                  )}*/}
+                </div>
+                  {/*  <span className="text-gray-400 text-sm">포켓몬 트레이너</span>*/}
               </div>
             </div>
+
+              {/* 스탯 */}
+              <div className="flex flex-col gap-1.5 text-m text-gray-600">
+                 {partnerPokemon && (
+                  <div>파트너 <strong className="text-pink-400">{partnerPokemon.nickname || partnerPokemon.name}</strong></div>
+                )}
+                <div>출신 지역 <strong className="text-gray-700">음현시티</strong></div>
+                <div>여행을 시작한 날 <strong className="text-gray-700">7월 5일</strong></div>
+                <br></br>
+                <div>탐험 횟수 <strong className="text-gray-700">{todayWalksUsed}/{trainer.maxDailyWalks}회</strong></div>
+                <div>경험치 <strong className="text-gray-700">{(trainer.trainerExp || 0).toLocaleString()}</strong></div>
+                <div>보유 금액 <strong className="text-gray-700">{trainer.money?.toLocaleString() || 0}원</strong></div>
+
+              </div>
+
+              {/* 마스토돈 — 하단 */}
+              <div className="mt-auto">
+                {isEditingMastodon ? (
+                  <div className="flex items-center gap-1.5">
+                    <Link className="w-3 h-3 text-purple-400 flex-shrink-0" />
+                    <input
+                      autoFocus
+                      type="text"
+                      placeholder="username"
+                      value={mastodonInput}
+                      onChange={e => setMastodonInput(e.target.value)}
+                      onKeyDown={handleMastodonKeyDown}
+                      className="w-28 px-2 py-0.5 text-xs border border-purple-300 rounded focus:outline-none focus:ring-1 focus:ring-purple-400 text-right"
+                    />
+                    <button
+                      onClick={saveMastodon}
+                      disabled={mastodonLoading}
+                      className="p-1 bg-purple-500 hover:bg-purple-600 text-white rounded transition disabled:opacity-50"
+                    >
+                      <Check className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    className="group flex items-center gap-1.5 cursor-pointer"
+                    onClick={() => { setMastodonInput(mastodonAccount); setIsEditingMastodon(true); }}
+                  >
+                    <Link className="w-3 h-3 text-purple-300 flex-shrink-0" />
+                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      {mastodonAccount
+                        ? `@${mastodonAccount}@POKETODON.MONSTER`
+                        : <span className="text-gray-300 font-normal">마스토돈 미연결</span>}
+                    </span>
+                    <Pencil className="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    {mastodonSaved && <Check className="w-3 h-3 text-green-500" />}
+                  </div>
+                )}
+              </div>
+
+            </div>
+
+            {/* 우측 스트립: 파트너 아이콘 + 바코드 */}
+            <div className="flex flex-col items-center gap-3 py-5 pr-5 pl-2">
+
+              {/* 파트너 포켓몬 */}
+              {partnerIcon ? (
+                <div
+                  className="flex-shrink-0 rounded-full bg-gray-50 border-2 border-gray-100 shadow-sm"
+                  title={partnerPokemon?.nickname || partnerPokemon?.name || ''}
+                  style={{
+                    width: 64, height: 64,
+                    backgroundImage: `url(${partnerIcon})`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'left center',
+                    backgroundSize: 'auto 100%',
+                    imageRendering: 'pixelated',
+                  }}
+                />
+              ) : (
+                <div className="flex-shrink-0 rounded-full bg-gray-100 border-2 border-gray-200" style={{ width: 64, height: 64 }} />
+              )}
+
+              {/* 바코드 */}
+              {mastodonAccount && (
+                <a
+                  href={`https://originbeyond.homes/`} /*`https://poketodon.monster/@${mastodonAccount}`}*/
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 flex items-center opacity-100 hover:opacity-100 transition-opacity"
+                >
+                  <VerticalBarcode
+                    text={`https://originbeyond.homes/`} /*`https://poketodon.monster/@${mastodonAccount}`}*/
+                    width={60}
+                    height={200}
+                  />
+                </a>
+              )}
+
+            </div>
+
           </div>
         </div>
-      )}
-
-      {/* 설정 탭 */}
-      {activeTab === 'settings' && (
-        <ProfileSettings trainer={trainer} />
-      )}
+      </div>
     </div>
   );
 }

@@ -733,10 +733,10 @@ function HomeDashboard({
               <div className="home-session-panel__top">
                 <div className="home-session-panel__member-img">
                   <div className="home-session-panel__member-clip">
-                    {trainer?.profileImage && (
+                    {(trainer?.profileImageThumb || trainer?.profileImage) && (
                       <img
                         className="home-session-panel__member-face"
-                        src={trainer.profileImage}
+                        src={trainer.profileImageThumb || trainer.profileImage}
                         alt={trainer.name || ''}
                       />
                     )}
@@ -1435,7 +1435,7 @@ export default function App() {
   const isFeaturePage = currentTab !== 'home';
   const isMembersPage = currentTab === 'members';
   const isTopMenuPage = ['notice', 'world', 'system'].includes(currentTab);
-  const hasContentSurface = isFeaturePage && !isMembersPage;
+  const hasContentSurface = isFeaturePage && !isMembersPage && currentTab !== 'profile';
   const isCoreLoading = isAuthLoading || isMembersLoading;
   const [isInitialPageReady, setIsInitialPageReady] = useState(false);
 
@@ -1991,10 +1991,11 @@ return (
 			)}
 					  
           {currentTab === 'profile' && (
-            <ProfileView 
+            <ProfileView
               trainer={trainer}
               caughtPokemon={caughtPokemon}
               items={items}
+              titles={titles || []}
             />
           )}
           
@@ -2108,10 +2109,11 @@ return (
 		  )}
 		  
 		  {currentTab === 'profile' && (
-			<ProfileView 
+			<ProfileView
 			  trainer={trainer}
 			  caughtPokemon={caughtPokemon}
 			  items={items}
+			  titles={titles || []}
 			/>
 		  )}
 		  

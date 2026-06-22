@@ -342,15 +342,17 @@ export const useAdminMembers = (
       };
 
       const pokeBall = findItem(['poke ball', 'pokeball', '몬스터볼']);
+      const potion = findItem(['potion', '상처약', '상처 약']);
       const greatBall = findItem(['great ball', 'super ball', '슈퍼볼', '수퍼볼']);
       const ultraBall = findItem(['ultra ball', 'hyper ball', '하이퍼볼']);
-      const rareCandy = findItem(['rare candy', '이상한사탕']);
+      // const rareCandy = findItem(['rare candy', '이상한사탕']);
 
       return [
-        { itemId: pokeBall?.id || 4, name: '몬스터볼', count: 15, imageUrl: pokeBall?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png' },
-        { itemId: greatBall?.id || 3, name: '슈퍼볼', count: 5, imageUrl: greatBall?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png' },
-        { itemId: ultraBall?.id || 2, name: '하이퍼볼', count: 2, imageUrl: ultraBall?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png' },
-        { itemId: rareCandy?.id || 50, name: '이상한사탕', count: 3, imageUrl: rareCandy?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/rare-candy.png' }
+        { itemId: pokeBall?.id || 4, name: '몬스터볼', count: 10, imageUrl: pokeBall?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png' },
+        { itemId: potion?.id || 17, name: '상처약', count: 2, imageUrl: potion?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/potion.png' }
+       // { itemId: greatBall?.id || 3, name: '슈퍼볼', count: 5, imageUrl: greatBall?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png' },
+       // { itemId: ultraBall?.id || 2, name: '하이퍼볼', count: 2, imageUrl: ultraBall?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png' },
+      //  { itemId: rareCandy?.id || 50, name: '이상한사탕', count: 3, imageUrl: rareCandy?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/rare-candy.png' }
       ];
     };
 
@@ -1254,6 +1256,32 @@ export const useAdminMembers = (
     });
   };
 
+  // ========== 회원 경험치 업데이트 ==========
+  const updateMemberTrainerExp = async (memberId, amount) => {
+    if (!currentUser?.isAdmin) return;
+
+    const member = members[memberId];
+    if (!member) return;
+
+    const updatedMember = {
+      ...member,
+      trainerExp: Math.max(0, amount)
+    };
+
+    try {
+      const { id, ...dataToSave } = updatedMember;
+      const memberRef = ref(database, `members/${memberId}`);
+      await set(memberRef, dataToSave);
+
+      setMembers(prev => ({
+        ...prev,
+        [memberId]: updatedMember
+      }));
+    } catch (error) {
+      console.error('❌ 경험치 업데이트 실패:', error);
+    }
+  };
+
   // ========== 회원 금액 업데이트 ==========
   const updateMemberMoney = async (memberId, amount) => {
     if (!currentUser?.isAdmin) return;
@@ -1446,6 +1474,7 @@ export const useAdminMembers = (
     editMemberPokemon,
     addPokemonToSelf,
     updateMemberMoney,
+    updateMemberTrainerExp,
     updateMemberTitle,
     grantMemberTitle,
     revokeMemberTitle,
@@ -1465,18 +1494,66 @@ export const useAdminMembers = (
       await uploadBytes(sRef, file, { contentType: file.type });
       const url = await getDownloadURL(sRef);
       const field = type === 'face' ? 'profileImage' : 'profileImageFull';
+      const updates = { [field]: url };
+
+      // 두상 업로드 시 썸네일(300×300) 추가 저장
+      if (type === 'face') {
+        try {
+          const isPng = file.type === 'image/png';
+          const thumbMime = isPng ? 'image/png' : 'image/jpeg';
+          const thumbExt = isPng ? 'png' : 'jpg';
+          const thumbBlob = await resizeImage(file, 200, null, thumbMime);
+          const thumbPath = `members/${memberId}/face_thumb.${thumbExt}`;
+          const thumbRef = storageRef(storage, thumbPath);
+          await uploadBytes(thumbRef, thumbBlob, { contentType: thumbMime });
+          updates.profileImageThumb = await getDownloadURL(thumbRef);
+        } catch (thumbErr) {
+          console.warn('썸네일 생성 실패(무시):', thumbErr);
+        }
+      }
+
       const memberRef = ref(database, `members/${memberId}`);
-      await update(memberRef, { [field]: url });
+      await update(memberRef, updates);
       setMembers(prev => ({
         ...prev,
-        [memberId]: { ...prev[memberId], [field]: url }
+        [memberId]: { ...prev[memberId], ...updates }
       }));
+      if (memberId === currentUser?.id) {
+        updateCurrentUser(updates);
+      }
       return url;
     } catch (error) {
       console.error('❌ 이미지 업로드 실패:', error);
       alert('이미지 업로드에 실패했습니다: ' + error.message);
       return null;
     }
+  }
+
+  function resizeImage(file, maxW, maxH, mime = 'image/jpeg') {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        const scale = maxH == null
+          ? Math.min(maxW / img.width, 1)
+          : Math.min(maxW / img.width, maxH / img.height, 1);
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (mime !== 'image/png') {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, w, h);
+        }
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('toBlob 실패')), mime, 0.9);
+      };
+      img.onerror = reject;
+      img.src = objectUrl;
+    });
   }
 
   async function deleteMemberImage(memberId, type) {
@@ -1490,11 +1567,21 @@ export const useAdminMembers = (
         await deleteObject(sRef).catch(() => {});
       } catch {}
     }
+    const updates = { [field]: null };
+    if (type === 'face') {
+      const thumbUrl = member?.profileImageThumb;
+      if (thumbUrl) {
+        try {
+          await deleteObject(storageRef(storage, thumbUrl)).catch(() => {});
+        } catch {}
+      }
+      updates.profileImageThumb = null;
+    }
     const memberRef = ref(database, `members/${memberId}`);
-    await update(memberRef, { [field]: null });
+    await update(memberRef, updates);
     setMembers(prev => ({
       ...prev,
-      [memberId]: { ...prev[memberId], [field]: null }
+      [memberId]: { ...prev[memberId], ...updates }
     }));
   }
 };
