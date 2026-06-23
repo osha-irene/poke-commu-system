@@ -59,3 +59,29 @@ export const getGenderedSpriteUrl = (pokemon, pokemonData) => {
   // female이 아니거나 gender diff 없으면 null 반환 → 호출부에서 fallback 처리
   return null;
 };
+
+export const getOwnedPokemonSpriteUrl = (pokemon, pokemonData = pokemon) => {
+  if (!pokemon) return '';
+
+  const genderedSprite = getGenderedSpriteUrl(pokemon, pokemonData);
+  if (genderedSprite) return genderedSprite;
+
+  if (pokemon.isShiny) {
+    if (pokemon.shinySprite) return pokemon.shinySprite;
+    if (pokemon.shinySpriteUrl) return pokemon.shinySpriteUrl;
+
+    const shinyNumber = pokemon.number || pokemon.originalNumber || pokemon.dexId || pokemon.pokemonId;
+    if (shinyNumber) {
+      return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${shinyNumber}.png`;
+    }
+  }
+
+  if (pokemon.spriteUrl) return pokemon.spriteUrl;
+  if (pokemon.sprite) return pokemon.sprite;
+  if (pokemon.imageUrl) return pokemon.imageUrl;
+
+  const number = pokemon.number || pokemon.originalNumber || pokemon.dexId || pokemon.pokemonId || pokemon.id;
+  return number
+    ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`
+    : '';
+};

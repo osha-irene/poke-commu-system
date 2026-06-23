@@ -1,5 +1,6 @@
 import React from 'react';
 import { getPokemonLocalIconUrl } from '../../../utils/pokemonIconUtils';
+import CachedImage from '../../common/CachedImage';
 
 function VerticalBarcode({ text, width = 20, height = 100 }) {
   const bits = [1, 0, 1];
@@ -65,7 +66,7 @@ export default function MobileTrainerCard({ trainer, titles = [] }) {
         overflow: 'hidden',
       }}>
         {trainer?.profileImage ? (
-          <img
+          <CachedImage
             src={trainer.profileImage}
             alt={trainer?.name}
             style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}

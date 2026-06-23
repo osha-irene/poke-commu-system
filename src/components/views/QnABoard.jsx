@@ -1,78 +1,34 @@
 import React, { useState } from 'react';
-import { MessageSquare, Lock, Eye, Send, Trash2, X } from 'lucide-react';
+import { Lock, MessageSquare, Plus, Send, Trash2, X } from 'lucide-react';
 
-export default function QnABoard({ currentUser, posts = [], onCreatePost, onDeletePost, onCreateComment, onDeleteComment }) {
+const inputClass =
+  'w-full rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none transition focus:border-gray-400 focus:ring-2 focus:ring-gray-100';
+
+export default function QnABoard({
+  currentUser,
+  posts = [],
+  onCreatePost,
+  onDeletePost,
+  onCreateComment,
+  onDeleteComment,
+}) {
   const [showWriteModal, setShowWriteModal] = useState(false);
-  const [selectedPost, setSelectedPost] = useState(null);
-  const [newPost, setNewPost] = useState({
-    title: '',
-    content: '',
-    isPrivate: false
-  });
+  const [selectedPostId, setSelectedPostId] = useState(null);
+  const [newPost, setNewPost] = useState({ title: '', content: '', isPrivate: false });
   const [commentText, setCommentText] = useState('');
 
   const isAdmin = currentUser?.isAdmin || currentUser?.isSuperAdmin;
 
-  // 게시글 작성
-  const handleCreatePost = () => {
-    if (!newPost.title.trim()) {
-      alert('제목을 입력해주세요!');
-      return;
-    }
-    if (!newPost.content.trim()) {
-      alert('내용을 입력해주세요!');
-      return;
-    }
+  const canViewPost = (post) => (
+    !post.isPrivate || isAdmin || post.authorId === currentUser?.id
+  );
 
-    onCreatePost({
-      id: Date.now(),
-      authorId: currentUser.id,
-      authorName: currentUser.name,
-      title: newPost.title,
-      content: newPost.content,
-      isPrivate: newPost.isPrivate,
-      createdAt: new Date().toISOString(),
-      comments: []
-    });
+  const visiblePosts = posts.filter(canViewPost);
+  const selectedPost = posts.find(post => post.id === selectedPostId) || null;
 
-    setNewPost({ title: '', content: '', isPrivate: false });
-    setShowWriteModal(false);
-  };
-
-  // 댓글 작성
-  const handleCreateComment = () => {
-    if (!commentText.trim()) {
-      alert('댓글 내용을 입력해주세요!');
-      return;
-    }
-
-    onCreateComment(selectedPost.id, {
-      id: Date.now(),
-      authorId: currentUser.id,
-      authorName: currentUser.name,
-      content: commentText,
-      createdAt: new Date().toISOString()
-    });
-
-    setCommentText('');
-  };
-
-  // 게시글 볼 수 있는지 확인
-  const canViewPost = (post) => {
-    if (!post.isPrivate) return true;
-    if (isAdmin) return true;
-    if (post.authorId === currentUser.id) return true;
-    return false;
-  };
-
-  // 표시할 게시글 필터링
-  const visiblePosts = posts.filter(post => canViewPost(post));
-
-  // 날짜 포맷
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    const now = new Date();
-    const diff = now - date;
+    const diff = Date.now() - date.getTime();
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
@@ -84,274 +40,286 @@ export default function QnABoard({ currentUser, posts = [], onCreatePost, onDele
     return date.toLocaleDateString('ko-KR');
   };
 
-  return (
-    <div className="max-w-6xl mx-auto">
-      {/* 헤더 */}
-      <div className="rounded-lg border-2 border-lime-300 bg-white/55 p-6 shadow-sm mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2 flex items-center gap-3 text-green-950">
-              <MessageSquare size={32} className="text-lime-700" />
-              Q&A 게시판
-            </h1>
-            <p className="text-green-800">총괄에게 궁금한 점을 물어보세요!</p>
-          </div>
-          <button
-            onClick={() => setShowWriteModal(true)}
-            className="bg-white text-indigo-600 px-6 py-3 rounded-lg hover:bg-indigo-50 font-semibold transition-colors shadow-lg"
-          >
-            글쓰기
-          </button>
-        </div>
-      </div>
+  const handleCreatePost = () => {
+    if (!newPost.title.trim()) {
+      alert('제목을 입력해주세요.');
+      return;
+    }
+    if (!newPost.content.trim()) {
+      alert('내용을 입력해주세요.');
+      return;
+    }
 
-      {/* 게시글 목록 */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-md">
+    onCreatePost({
+      id: Date.now(),
+      authorId: currentUser.id,
+      authorName: currentUser.name,
+      title: newPost.title.trim(),
+      content: newPost.content.trim(),
+      isPrivate: newPost.isPrivate,
+      createdAt: new Date().toISOString(),
+      comments: [],
+    });
+    setNewPost({ title: '', content: '', isPrivate: false });
+    setShowWriteModal(false);
+  };
+
+  const handleCreateComment = () => {
+    if (!selectedPost || !commentText.trim()) return;
+
+    onCreateComment(selectedPost.id, {
+      id: Date.now(),
+      authorId: currentUser.id,
+      authorName: currentUser.name,
+      content: commentText.trim(),
+      createdAt: new Date().toISOString(),
+    });
+    setCommentText('');
+  };
+
+  return (
+    <div className="mx-auto w-full max-w-5xl">
+      <header className="mb-5 flex items-end justify-between border-b border-gray-200 pb-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Q&A</h1>
+          <p className="mt-1 text-sm text-gray-500">궁금한 내용을 남겨주세요.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowWriteModal(true)}
+          className="inline-flex h-10 items-center gap-2 rounded-md bg-gray-900 px-4 text-sm font-semibold text-white transition hover:bg-gray-700"
+        >
+          <Plus size={17} />
+          질문 작성
+        </button>
+      </header>
+
+      <section className="overflow-hidden rounded-md border border-gray-200 bg-white">
         {visiblePosts.length === 0 ? (
-          <div className="text-center py-20 text-gray-400">
-            <MessageSquare size={64} className="mx-auto mb-4 opacity-30" />
-            <p className="text-lg">아직 작성된 글이 없습니다</p>
-            <p className="text-sm mt-2">첫 번째 질문을 남겨보세요!</p>
+          <div className="flex min-h-64 flex-col items-center justify-center px-6 text-center">
+            <MessageSquare size={30} className="mb-3 text-gray-300" />
+            <p className="text-sm font-semibold text-gray-600">등록된 질문이 없습니다.</p>
+            <p className="mt-1 text-xs text-gray-400">첫 번째 질문을 작성해보세요.</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
-            {visiblePosts.map(post => (
-              <div
-                key={post.id}
-                onClick={() => setSelectedPost(post)}
-                className="p-5 hover:bg-gray-50 cursor-pointer transition-colors"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      {post.isPrivate && (
-                        <Lock size={16} className="text-gray-400" />
-                      )}
-                      <h3 className="text-lg font-bold text-gray-800 hover:text-indigo-600">
-                        {post.title}
-                      </h3>
-                      {post.comments?.length > 0 && (
-                        <span className="text-sm text-indigo-600 font-semibold">
-                          [{post.comments.length}]
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 text-sm text-gray-500">
-                      <span className="font-semibold">{post.authorName}</span>
-                      <span>•</span>
-                      <span>{formatDate(post.createdAt)}</span>
-                      {post.isPrivate && (
-                        <>
-                          <span>•</span>
-                          <span className="text-gray-400 flex items-center gap-1">
-                            <Lock size={12} />
-                            비공개
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-400">
-                    <Eye size={18} />
-                    <MessageSquare size={18} />
-                  </div>
+          visiblePosts.map((post, index) => (
+            <button
+              type="button"
+              key={post.id}
+              onClick={() => setSelectedPostId(post.id)}
+              className={`flex w-full items-center gap-4 px-5 py-4 text-left transition hover:bg-gray-50 ${
+                index > 0 ? 'border-t border-gray-100' : ''
+              }`}
+            >
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  {post.isPrivate && <Lock size={14} className="shrink-0 text-gray-400" />}
+                  <h2 className="truncate text-sm font-semibold text-gray-900">{post.title}</h2>
+                  {!!post.comments?.length && (
+                    <span className="shrink-0 text-xs font-semibold text-green-700">
+                      {post.comments.length}
+                    </span>
+                  )}
+                </div>
+                <div className="mt-1.5 flex items-center gap-2 text-xs text-gray-400">
+                  <span className="font-medium text-gray-500">{post.authorName}</span>
+                  <span aria-hidden="true">·</span>
+                  <time>{formatDate(post.createdAt)}</time>
+                  {post.isPrivate && <span>비공개</span>}
                 </div>
               </div>
-            ))}
-          </div>
+              <MessageSquare size={17} className="shrink-0 text-gray-300" />
+            </button>
+          ))
         )}
-      </div>
+      </section>
 
-      {/* 글쓰기 모달 */}
       {showWriteModal && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4"
           onClick={() => setShowWriteModal(false)}
         >
           <div
-            className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-xl overflow-hidden rounded-md bg-white shadow-2xl"
+            onClick={event => event.stopPropagation()}
           >
-            <div className="border-b-2 border-lime-300 bg-white/95 p-6">
-              <h2 className="text-2xl font-bold text-green-950">새 글쓰기</h2>
+            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+              <h2 className="text-lg font-bold text-gray-900">질문 작성</h2>
+              <button
+                type="button"
+                onClick={() => setShowWriteModal(false)}
+                className="p-1 text-gray-400 transition hover:text-gray-700"
+                title="닫기"
+              >
+                <X size={20} />
+              </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="space-y-4 p-5">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  제목
-                </label>
+                <label className="mb-1.5 block text-xs font-semibold text-gray-600">제목</label>
                 <input
                   type="text"
                   value={newPost.title}
-                  onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-                  placeholder="제목을 입력하세요"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-indigo-500 focus:outline-none"
+                  onChange={event => setNewPost({ ...newPost, title: event.target.value })}
+                  placeholder="질문 제목"
+                  className={inputClass}
                 />
               </div>
-
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  내용
-                </label>
+                <label className="mb-1.5 block text-xs font-semibold text-gray-600">내용</label>
                 <textarea
                   value={newPost.content}
-                  onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
-                  placeholder="내용을 입력하세요"
-                  rows="10"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-indigo-500 focus:outline-none resize-none"
+                  onChange={event => setNewPost({ ...newPost, content: event.target.value })}
+                  placeholder="궁금한 내용을 입력하세요."
+                  rows={9}
+                  className={`${inputClass} resize-none`}
                 />
               </div>
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-600">
+                <input
+                  type="checkbox"
+                  checked={newPost.isPrivate}
+                  onChange={event => setNewPost({ ...newPost, isPrivate: event.target.checked })}
+                  className="h-4 w-4 accent-gray-800"
+                />
+                <Lock size={14} />
+                관리자에게만 공개
+              </label>
+            </div>
 
-              <div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={newPost.isPrivate}
-                    onChange={(e) => setNewPost({ ...newPost, isPrivate: e.target.checked })}
-                    className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
-                  />
-                  <Lock size={16} className="text-gray-600" />
-                  <span className="text-sm font-semibold text-gray-700">
-                    비공개 (나와 총괄만 볼 수 있습니다)
-                  </span>
-                </label>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  onClick={() => setShowWriteModal(false)}
-                  className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 font-semibold transition-colors"
-                >
-                  취소
-                </button>
-                <button
-                  onClick={handleCreatePost}
-                  className="flex-1 bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-semibold transition-colors"
-                >
-                  작성하기
-                </button>
-              </div>
+            <div className="flex justify-end gap-2 border-t border-gray-100 px-5 py-4">
+              <button
+                type="button"
+                onClick={() => setShowWriteModal(false)}
+                className="rounded-md px-4 py-2 text-sm font-semibold text-gray-500 transition hover:bg-gray-100"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={handleCreatePost}
+                className="rounded-md bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700"
+              >
+                등록
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 게시글 상세 모달 */}
       {selectedPost && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-          onClick={() => setSelectedPost(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4"
+          onClick={() => setSelectedPostId(null)}
         >
-          <div
-            className="bg-white rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
+          <article
+            className="max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-md bg-white shadow-2xl"
+            onClick={event => event.stopPropagation()}
           >
-            {/* 헤더 */}
-            <div className="border-b border-gray-200 p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    {selectedPost.isPrivate && (
-                      <Lock size={20} className="text-gray-400" />
-                    )}
-                    <h2 className="text-2xl font-bold text-gray-800">
-                      {selectedPost.title}
-                    </h2>
+            <header className="border-b border-gray-100 px-6 py-5">
+              <div className="flex items-start justify-between gap-5">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    {selectedPost.isPrivate && <Lock size={16} className="text-gray-400" />}
+                    <h2 className="text-xl font-bold text-gray-900">{selectedPost.title}</h2>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-500">
-                    <span className="font-semibold">{selectedPost.authorName}</span>
-                    <span>•</span>
-                    <span>{formatDate(selectedPost.createdAt)}</span>
+                  <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
+                    <span className="font-semibold text-gray-600">{selectedPost.authorName}</span>
+                    <span aria-hidden="true">·</span>
+                    <time>{formatDate(selectedPost.createdAt)}</time>
                   </div>
                 </div>
                 <button
-                  onClick={() => setSelectedPost(null)}
-                  className="text-gray-400 hover:text-gray-600 p-2"
+                  type="button"
+                  onClick={() => setSelectedPostId(null)}
+                  className="shrink-0 p-1 text-gray-400 transition hover:text-gray-700"
+                  title="닫기"
                 >
-                  <X size={24} />
+                  <X size={20} />
                 </button>
               </div>
 
-              {/* 내용 */}
-              <div className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+              <p className="mt-6 whitespace-pre-wrap text-sm leading-7 text-gray-700">
                 {selectedPost.content}
+              </p>
+
+              {(selectedPost.authorId === currentUser.id || isAdmin) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm('질문을 삭제할까요?')) {
+                      onDeletePost(selectedPost.id);
+                      setSelectedPostId(null);
+                    }
+                  }}
+                  className="mt-5 inline-flex items-center gap-1.5 text-xs font-semibold text-red-500 transition hover:text-red-700"
+                >
+                  <Trash2 size={14} />
+                  삭제
+                </button>
+              )}
+            </header>
+
+            <section className="px-6 py-5">
+              <div className="mb-4 flex items-center gap-2">
+                <MessageSquare size={17} className="text-gray-400" />
+                <h3 className="text-sm font-bold text-gray-800">
+                  답변 {selectedPost.comments?.length || 0}
+                </h3>
               </div>
 
-              {/* 작성자 또는 관리자만 삭제 가능 */}
-              {(selectedPost.authorId === currentUser.id || isAdmin) && (
-                <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
-                  <button
-                    onClick={() => {
-                      if (window.confirm('정말 삭제하시겠습니까?')) {
-                        onDeletePost(selectedPost.id);
-                        setSelectedPost(null);
-                      }
-                    }}
-                    className="text-red-600 hover:text-red-700 text-sm font-semibold flex items-center gap-1"
-                  >
-                    <Trash2 size={16} />
-                    삭제
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* 댓글 섹션 */}
-            <div className="p-6">
-              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                <MessageSquare size={20} />
-                댓글 {selectedPost.comments?.length || 0}
-              </h3>
-
-              {/* 댓글 목록 */}
-              <div className="space-y-3 mb-4">
+              <div className="space-y-3">
                 {selectedPost.comments?.map(comment => (
-                  <div key={comment.id} className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-gray-800">{comment.authorName}</span>
-                        <span className="text-sm text-gray-500">{formatDate(comment.createdAt)}</span>
+                  <div key={comment.id} className="rounded-md bg-gray-50 px-4 py-3">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="font-semibold text-gray-700">{comment.authorName}</span>
+                        <time className="text-gray-400">{formatDate(comment.createdAt)}</time>
                       </div>
                       {(comment.authorId === currentUser.id || isAdmin) && (
                         <button
+                          type="button"
                           onClick={() => {
-                            if (window.confirm('댓글을 삭제하시겠습니까?')) {
+                            if (window.confirm('답변을 삭제할까요?')) {
                               onDeleteComment(selectedPost.id, comment.id);
                             }
                           }}
-                          className="text-gray-400 hover:text-red-600"
+                          className="text-gray-300 transition hover:text-red-500"
+                          title="답변 삭제"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={14} />
                         </button>
                       )}
                     </div>
-                    <p className="text-gray-700 whitespace-pre-wrap">{comment.content}</p>
+                    <p className="whitespace-pre-wrap text-sm leading-6 text-gray-700">
+                      {comment.content}
+                    </p>
                   </div>
                 ))}
               </div>
 
-              {/* 댓글 작성 */}
-              <div className="border-t border-gray-200 pt-4">
+              <div className="mt-5 border-t border-gray-100 pt-5">
                 <textarea
                   value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  placeholder="댓글을 입력하세요..."
-                  rows="3"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-indigo-500 focus:outline-none resize-none mb-3"
+                  onChange={event => setCommentText(event.target.value)}
+                  placeholder="답변을 입력하세요."
+                  rows={3}
+                  className={`${inputClass} resize-none`}
                 />
-                <div className="flex justify-end">
+                <div className="mt-3 flex justify-end">
                   <button
+                    type="button"
                     onClick={handleCreateComment}
-                    className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 font-semibold transition-colors flex items-center gap-2"
+                    className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700"
                   >
-                    <Send size={18} />
-                    댓글 작성
+                    <Send size={15} />
+                    답변 등록
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
+            </section>
+          </article>
         </div>
       )}
     </div>

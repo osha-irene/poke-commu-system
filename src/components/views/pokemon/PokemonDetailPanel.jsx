@@ -394,10 +394,10 @@ const ballImage = getBallImage();
   }, [effectiveSpriteUrl, masterData?.spriteUrl, pokemon.spriteSize]);
 
   // Handlers
-  const handleSaveNickname = () => {
+  const handleSaveNickname = async () => {
     if (nickname.trim()) {
-      onUpdateNickname(pokemon.uniqueId, nickname.trim());
-      setIsEditingNickname(false);
+      const saved = await onUpdateNickname(pokemon.uniqueId, nickname.trim());
+      if (saved !== false) setIsEditingNickname(false);
     }
   };
 

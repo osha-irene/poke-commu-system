@@ -22,10 +22,10 @@ export default function PokemonDetailPanel({
   const hpPercent = Math.max(0, (pokemon.hp / pokemon.maxHp) * 100);
   const hpColor = hpPercent > 50 ? 'bg-green-500' : hpPercent > 20 ? 'bg-yellow-500' : 'bg-red-500';
 
-  const handleSaveNickname = () => {
+  const handleSaveNickname = async () => {
     if (nickname.trim()) {
-      onUpdateNickname(pokemon.uniqueId, nickname.trim());
-      setIsEditingNickname(false);
+      const saved = await onUpdateNickname(pokemon.uniqueId, nickname.trim());
+      if (saved !== false) setIsEditingNickname(false);
     }
   };
 

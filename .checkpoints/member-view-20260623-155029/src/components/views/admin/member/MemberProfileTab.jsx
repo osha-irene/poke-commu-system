@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Upload, Trash2, X } from 'lucide-react';
 import { getDatabase, ref, update } from 'firebase/database';
-import CachedImage from '../../../common/CachedImage';
 
 function ImageUploadSlot({ label, description, currentUrl, onUpload, onDelete, uploading }) {
   const inputRef = useRef(null);
@@ -27,7 +26,7 @@ function ImageUploadSlot({ label, description, currentUrl, onUpload, onDelete, u
       >
         {currentUrl ? (
           <>
-            <CachedImage src={currentUrl} alt={label} className="w-full h-full object-cover object-top" />
+            <img src={currentUrl} alt={label} className="w-full h-full object-cover object-top" />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
               <span className="text-white text-xs font-bold">클릭하여 교체</span>
             </div>

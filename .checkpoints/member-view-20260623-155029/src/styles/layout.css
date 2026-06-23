@@ -728,17 +728,6 @@ body.rmv-detail-open .site-header {
 .rmv-char-scroll-from-text {
   animation: rmv-char-scroll-from-text 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
-@keyframes rmv-partner-text-in {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.rmv-partner-text-in {
-  animation: rmv-partner-text-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-.rmv-partner-text-input::placeholder {
-  color: currentColor;
-  opacity: 0.58;
-}
 
 .admin-corner-nav .trainer-nav__group {
   flex-direction: column-reverse;

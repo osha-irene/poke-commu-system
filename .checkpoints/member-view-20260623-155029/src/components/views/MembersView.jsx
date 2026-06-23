@@ -1,12 +1,9 @@
 ﻿import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { ChevronLeft, User, Text } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
-import { getOwnedPokemonSpriteUrl } from '../../utils/pokemonImageUtils';
 import { TYPE_COLORS } from '../../constants/pokemon';
 import { translateMoveName } from '../../battle/utils/move-translations';
 import movesData from '../../data/moves.json';
-import CachedImage from '../common/CachedImage';
-import { preloadDecodedImage } from '../../utils/imageCache';
 
 const GenderMale = () => (
   <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
@@ -39,6 +36,33 @@ const getParty = m => (m?.caughtPokemon || []).filter(Boolean).slice(0, 6);
 const getPartner = m => { const p = getParty(m); return p.find(x => x.isPartner) || p[0] || null; };
 const getFaceImg = m => m?.profileImage || m?.profileImageFull || m?.profileImageUrl || '';
 const getFullImg     = m => m?.profileImageFull || m?.profileImage || m?.profileImageUrl || '';
+const memberImagePreloadCache = new Map();
+
+const preloadMemberImage = (url) => {
+  if (!url) return Promise.resolve();
+  if (memberImagePreloadCache.has(url)) return memberImagePreloadCache.get(url);
+
+  const promise = new Promise(resolve => {
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = async () => {
+      try {
+        await image.decode?.();
+      } catch {
+        // The loaded image is still usable when decode() is unavailable or rejects.
+      }
+      resolve(image);
+    };
+    image.onerror = () => {
+      memberImagePreloadCache.delete(url);
+      resolve(null);
+    };
+    image.src = url;
+  });
+
+  memberImagePreloadCache.set(url, promise);
+  return promise;
+};
 
 const getPokemonImg = p => p?.sprite || p?.spriteUrl || p?.imageUrl || p?.iconUrl || '';
 const getOfficialArtwork = p => {
@@ -59,13 +83,12 @@ const getPokemonName = p => p?.nickname || p?.nameKo || p?.name || '포켓몬';
 const getPokeApiSprite = p => {
   if (p?.sprite) {
     const m = p.sprite.match(/\/pokemon\/(\d+)\.png/);
-    if (m) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-ix/scarlet-violet/${m[1]}.png`;
+    if (m) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${m[1]}.png`;
   }
   const id = p?.dexId || p?.nationalDex || p?.pokemonId || p?.id;
-  if (id) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-ix/scarlet-violet/${id}.png`;
-  return null;
+  if (id) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+  return getPokemonLocalIconUrl(p);
 };
-const getEntryPokemonSprite = p => getOwnedPokemonSpriteUrl(p) || getPokemonLocalIconUrl(p);
 
 const MOVE_TYPE_COLORS = {
   normal: { bg: '#A8A878', text: '#fff' },
@@ -212,7 +235,7 @@ function MemberCard({ member, titles, onClick }) {
 
   const preloadFullImg = () => {
     const full = getFullImg(member);
-    if (full && full !== faceImg) preloadDecodedImage(full);
+    if (full && full !== faceImg) preloadMemberImage(full);
   };
 
   return (
@@ -222,7 +245,7 @@ function MemberCard({ member, titles, onClick }) {
       onMouseEnter={preloadFullImg}
     >
       {faceImg ? (
-        <CachedImage src={faceImg} alt={member.name} loading="eager" decoding="async" fetchPriority="high"
+        <img src={faceImg} alt={member.name} loading="eager" decoding="async" fetchPriority="high"
           className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
       ) : (
         <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-indigo-50 to-purple-50">
@@ -404,14 +427,6 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
   const [etcText, setEtcText] = useState(() => member.etcText || '');
   const [etcEditing, setEtcEditing] = useState(false);
   const [etcSaving, setEtcSaving] = useState(false);
-  const [partnerTextOpen, setPartnerTextOpen] = useState(false);
-  const [partnerEditing, setPartnerEditing] = useState(false);
-  const [partnerHovered, setPartnerHovered] = useState(false);
-  const [partnerTopOffset, setPartnerTopOffset] = useState(0.0);
-  const [partnerImgHeight, setPartnerImgHeight] = useState(128);
-  const [partnerText, setPartnerText] = useState(() => member.partnerText || '');
-  const [savedPartnerText, setSavedPartnerText] = useState(() => member.partnerText || '');
-  const [partnerTextSaving, setPartnerTextSaving] = useState(false);
 
   const saveEtcText = async () => {
     setEtcSaving(true);
@@ -447,27 +462,8 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
     }
   };
 
-  const savePartnerText = async () => {
-    const nextText = partnerText.trim();
-    if (nextText === savedPartnerText) return true;
-    setPartnerTextSaving(true);
-    try {
-      const { getDatabase, ref, update } = await import('firebase/database');
-      await update(ref(getDatabase(), `members/${member.id}`), { partnerText: nextText });
-      setPartnerText(nextText);
-      setSavedPartnerText(nextText);
-      return true;
-    } catch (error) {
-      console.error('파트너 설명 저장 실패:', error);
-      alert('파트너 설명을 저장하지 못했습니다.');
-      return false;
-    } finally {
-      setPartnerTextSaving(false);
-    }
-  };
-
   const party = getParty(member);
-  const partner = party.find(p => p?.isPartner) || member.partnerPokemon || party[0] || null;
+  const partner = party.find(p => p?.isPartner) || member.partnerPokemon || null;
   const entry = party.filter(p => p !== partner);
 
   const accentRgb = accent ? `${accent[0]},${accent[1]},${accent[2]}` : '80,120,200';
@@ -475,11 +471,6 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
   const selectedAccentRgb = `${selectedAccent[0]},${selectedAccent[1]},${selectedAccent[2]}`;
   const quoteAccent = getQuoteAccentColor(accent);
   const quoteAccentRgb = `${quoteAccent[0]},${quoteAccent[1]},${quoteAccent[2]}`;
-  const partnerTextColor = (
-    0.299 * selectedAccent[0] +
-    0.587 * selectedAccent[1] +
-    0.114 * selectedAccent[2]
-  ) > 165 ? '#151515' : '#fff';
 
   const handleImgLoad = () => {
     setImgLoaded(true);
@@ -492,36 +483,6 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
       }
     }
   };
-
-  useEffect(() => {
-    if (!partner) return;
-    const url = getPokeApiSprite(partner);
-    if (!url) return;
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-        let topRow = img.naturalHeight;
-        outer: for (let y = 0; y < img.naturalHeight; y++) {
-          for (let x = 0; x < img.naturalWidth; x++) {
-            if (data[(y * img.naturalWidth + x) * 4 + 3] > 10) { topRow = y; break outer; }
-          }
-        }
-        const scale = Math.min(160 / img.naturalWidth, 160 / img.naturalHeight, 1);
-        const renderedHeight = img.naturalHeight * scale;
-        setPartnerTopOffset(topRow / img.naturalHeight);
-        setPartnerImgHeight(renderedHeight);
-      } catch { setPartnerTopOffset(0); }
-    };
-    img.onerror = () => setPartnerTopOffset(0);
-    img.src = url;
-  }, [partner?.sprite, partner?.dexId, partner?.nationalDex, partner?.id]);
 
   useEffect(() => {
     const memberChanged = prevMemberIdRef.current !== member.id;
@@ -547,13 +508,6 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
     setCharImageOffset(0);
   }, [member.id, tab]);
 
-  useEffect(() => {
-    const nextText = member.partnerText || '';
-    setPartnerText(nextText);
-    setSavedPartnerText(nextText);
-    setPartnerTextOpen(false);
-  }, [member.id]);
-
   useEffect(() => () => {
     if (charTransitionTimerRef.current) clearTimeout(charTransitionTimerRef.current);
     if (charReturnTimerRef.current) clearTimeout(charReturnTimerRef.current);
@@ -572,7 +526,7 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
   };
 
   return (
-    <div className="relative flex" style={{ height: '100vh' }} onWheel={member.charImageScrollEnabled && tab === 'main' ? moveScrollableCharacter : undefined}>
+    <div className="relative flex" style={{ height: '100vh' }}>
 
 
 
@@ -600,6 +554,7 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
           member.charImageScrollEnabled && tab === 'main' ? (
             <div
               className={`rmv-char-scroll${charTabTransition === 'rmv-char-from-text' ? ' rmv-char-scroll-from-text' : ''}`}
+              onWheel={moveScrollableCharacter}
               style={{
                 position: 'fixed',
                 top: 0,
@@ -608,11 +563,10 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
                 width: '100vw',
                 overflow: 'hidden',
                 boxSizing: 'border-box',
-                zIndex: 15,
-                pointerEvents: 'none',
+                zIndex: 2,
               }}
             >
-              <CachedImage
+              <img
                 ref={imgRef}
                 src={fullImg}
                 alt={member.name}
@@ -640,7 +594,7 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
               />
             </div>
           ) : (
-            <CachedImage
+            <img
               ref={imgRef}
               src={fullImg}
               alt={member.name}
@@ -657,7 +611,7 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
                 maxWidth: 'none',
                 objectFit: 'contain',
                 objectPosition: 'top center',
-                zIndex: 15,
+                zIndex: 2,
                 filter: 'url(#paper-cut-outline) drop-shadow(0px 4px 3px rgba(20, 34, 3, 0.3))',
                 pointerEvents: 'none',
                 opacity: imgLoaded ? 1 : 0,
@@ -847,7 +801,7 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
         <div
           key="main"
           className="rmv-tab-content flex flex-col justify-start gap-3"
-          style={{ position: 'absolute', top: '16.5rem', left: '57%', width: 280, maxHeight: 'calc(100vh - 2rem)', overflowY: 'visible', paddingBottom: 24, boxSizing: 'border-box', zIndex: 10 }}
+          style={{ position: 'absolute', top: '16.5rem', left: '57%', width: 280, maxHeight: 'calc(100vh - 2rem)', overflowY: 'visible', paddingBottom: 24, boxSizing: 'border-box' }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 28 }}>
             {(() => {
@@ -866,126 +820,9 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
             {partner && (
               <div style={{ position: 'relative', height: 65, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end', paddingRight: 110 }}>
                 <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.25)', fontWeight: 500, letterSpacing: '0.05em' }}>파트너</span>
-                <button
-                  type="button"
-                  onClick={() => { setPartnerTextOpen(open => !open); setPartnerEditing(false); }}
-                  style={{ border: 0, padding: 0, background: 'transparent', fontSize: 22, fontWeight: 700, color: '#1a1a1a', cursor: 'pointer' }}
-                >
-                  {getPokemonName(partner)}
-                </button>
-                <img
-                  src={getPokeApiSprite(partner) || getPokemonDbSprite(partner)}
-                  alt={getPokemonName(partner)}
-                  onClick={() => { setPartnerTextOpen(open => !open); setPartnerEditing(false); }}
-                  onMouseEnter={() => setPartnerHovered(true)}
-                  onMouseLeave={() => setPartnerHovered(false)}
-                  style={{ position: 'absolute', bottom: '0', right: '-2rem', width: 'auto', height: 'auto', maxHeight: 160, maxWidth: 160, zIndex: 5, cursor: 'pointer' }}
-                />
-                {partnerHovered && (() => {
-                  const imgH = partnerImgHeight;
-                  const topPx = partnerTopOffset * imgH;
-                  const bottomFromContainerBottom = imgH - topPx + 7;
-                  return (
-                    <div style={{ position: 'absolute', bottom: bottomFromContainerBottom, right: 18, zIndex: 10, pointerEvents: 'none' }}>
-                      <div style={{ background: `rgb(${selectedAccentRgb})`, color: partnerTextColor, padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', whiteSpace: 'nowrap', boxShadow: '3px 3px 6px rgba(0,0,0,0.18)' }}>
-                        CLICK!
-                      </div>
-                      <div style={{ width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: `7px solid rgb(${selectedAccentRgb})`, margin: '0 auto' }} />
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
-            {partner && (
-              <div
-                style={{ display: 'grid', gridTemplateRows: partnerTextOpen ? '1fr' : '0fr', transition: 'grid-template-rows 0.38s cubic-bezier(0.16,1,0.3,1)' }}
-              >
-              <div style={{ overflow: 'hidden' }}>
-              <div
-                className={partnerTextOpen ? 'rmv-partner-text-in' : ''}
-                onClick={() => { if (!partnerEditing) setPartnerEditing(true); }}
-                style={{
-                  position: 'relative',
-                  zIndex: 6,
-                  background: `rgba(${selectedAccentRgb}, ${savedPartnerText ? 1 : 0.45})`,
-                  borderRadius: 8,
-                  padding: '10px 12px',
-                  marginTop: 2,
-                  minHeight: 36,
-                  cursor: partnerEditing ? 'text' : 'pointer',
-                  transition: 'background 0.3s',
-                }}
-              >
-                {partnerEditing ? (
-                  <textarea
-                    className="rmv-partner-text-input"
-                    value={partnerText}
-                    onChange={event => {
-                      setPartnerText(event.target.value);
-                      event.currentTarget.style.height = 'auto';
-                      event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
-                    }}
-                    onBlur={async () => {
-                      const saved = await savePartnerText();
-                      if (saved) setPartnerEditing(false);
-                    }}
-                    onKeyDown={async event => {
-                      if (event.key === 'Enter' && !event.shiftKey) {
-                        event.preventDefault();
-                        const saved = await savePartnerText();
-                        if (saved) setPartnerEditing(false);
-                      }
-                      if (event.key === 'Escape') {
-                        setPartnerText(savedPartnerText);
-                        setPartnerEditing(false);
-                      }
-                    }}
-                    ref={element => {
-                      if (!element) return;
-                      element.style.height = 'auto';
-                      element.style.height = `${element.scrollHeight}px`;
-                      element.focus({ preventScroll: true });
-                    }}
-                    rows={4}
-                    maxLength={1000}
-                    placeholder="파트너에 대한 설명을 입력하세요."
-                    disabled={partnerTextSaving}
-                    style={{
-                      width: '100%',
-                      border: 0,
-                      outline: 0,
-                      padding: 0,
-                      resize: 'none',
-                      overflow: 'hidden',
-                      background: 'transparent',
-                      color: partnerTextColor,
-                      caretColor: partnerTextColor,
-                      fontSize: 14,
-                      fontWeight: 500,
-                      lineHeight: 1.65,
-                      fontFamily: 'inherit',
-                    }}
-                  />
-                ) : savedPartnerText ? (
-                  <div
-                    style={{
-                      color: partnerTextColor,
-                      fontSize: 14,
-                      fontWeight: 500,
-                      lineHeight: 1.65,
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'keep-all',
-                    }}
-                  >
-                    {savedPartnerText}
-                  </div>
-                ) : (
-                  <div style={{ color: `rgba(255,255,255,0.5)`, fontSize: 13, fontWeight: 500 }}>
-                    클릭해서 설명 추가...
-                  </div>
-                )}
-              </div>
-              </div>
+                <span style={{ fontSize: 22, fontWeight: 700, color: '#1a1a1a' }}>{getPokemonName(partner)}</span>
+                <img src={getPokemonDbSprite(partner)} alt={getPokemonName(partner)}
+                  style={{ position: 'absolute', bottom: '0', right: '-2rem', width: 160, height: 160, objectFit: 'contain', zIndex: 5, pointerEvents: 'none' }} />
               </div>
             )}
             {(() => {
@@ -1073,25 +910,16 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
               const baseName = p.nameKo || p.name || '';
               const nickname = p.nickname && p.nickname !== baseName ? p.nickname : null;
               return (
-                <div key={i} style={{ background: `rgba(${accentRgb}, 0.10)`, backdropFilter: 'blur(8px)', borderRadius: 14, padding: '10px 16px 10px 12px', display: 'flex', gap: 10, alignItems: 'center' }}>
+                <div key={i} style={{ background: `rgba(${accentRgb}, 0.10)`, border: `1px solid rgba(${accentRgb}, 0.18)`, backdropFilter: 'blur(8px)', borderRadius: 14, padding: '10px 16px 10px 12px', display: 'flex', gap: 10, alignItems: 'center' }}>
                   <img
-                    src={getEntryPokemonSprite(p)}
+                    src={getPokeApiSprite(p)}
                     alt={getPokemonName(p)}
-                    style={{ width: 96, height: 96, objectFit: 'contain', flexShrink: 0, imageRendering: 'auto' }}
+                    style={{ width: 96, height: 96, objectFit: 'contain', flexShrink: 0, imageRendering: 'pixelated' }}
                     onError={e => { e.target.src = getPokemonLocalIconUrl(p); }}
                   />
                   <div style={{ flex: 1, minWidth: 0, alignSelf: 'stretch', paddingTop: 3 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>{nickname || baseName}</span>
-                      {p.isShiny && (
-                        <span
-                          aria-label="이로치"
-                          title="이로치"
-                          style={{ color: '#dc2626', fontSize: 11, lineHeight: 1, fontWeight: 900 }}
-                        >
-                          ★
-                        </span>
-                      )}
                       {nickname && <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.38)' }}>{baseName}</span>}
                       {p.gender === 'male' && <GenderMale />}
                       {p.gender === 'female' && <GenderFemale />}
@@ -1208,8 +1036,8 @@ export default function MembersView({ members = {}, isLoading, currentUserId, ti
 
   useEffect(() => {
     memberList.forEach(member => {
-      preloadDecodedImage(getFaceImg(member));
-      preloadDecodedImage(getFullImg(member));
+      preloadMemberImage(getFaceImg(member));
+      preloadMemberImage(getFullImg(member));
     });
   }, [members]);
 
@@ -1226,7 +1054,7 @@ export default function MembersView({ members = {}, isLoading, currentUserId, ti
 
   const openMember = (member) => {
     const full = getFullImg(member);
-    if (full) preloadDecodedImage(full);
+    if (full) preloadMemberImage(full);
     setIsClosing(false);
     setSelected(member);
     setTransitioning(true);

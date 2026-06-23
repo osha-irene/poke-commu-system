@@ -75,6 +75,13 @@ img[src*="pokemon-icons/"][src$=".png"] {
 }
 
 
+/* Generation IX SV sprites are high-res — override pixelated above (2 attrs to beat specificity) */
+img[src*="generation-ix/"][src*="scarlet-violet/"] {
+  image-rendering: auto !important;
+  -ms-interpolation-mode: bicubic !important;
+  object-fit: contain !important;
+}
+
 /* Member page Pokemon sprites need larger fixed pixel units to avoid tiny blurred thumbnails. */
 .member-pokemon-card-sprite {
   width: 64px !important;

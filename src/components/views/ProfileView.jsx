@@ -3,6 +3,7 @@ import { Link, Pencil, Check } from 'lucide-react';
 import { getDatabase, ref, get, set } from 'firebase/database';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import titleBg from '../../assets/login/title.png';
+import CachedImage from '../common/CachedImage';
 
 function VerticalBarcode({ text, width = 32, height = 180 }) {
   const bits = [1, 0, 1];
@@ -98,7 +99,7 @@ export default function ProfileView({ trainer, caughtPokemon, items, titles = []
           {/* 좌측: 이미지 */}
           <div className="flex-shrink-0 w-80 relative self-stretch overflow-hidden" style={{ background: 'rgba(20,20,30,0.35)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
             {trainer.profileImage ? (
-              <img
+              <CachedImage
                 src={trainer.profileImage}
                 alt={trainer.name}
                 className="absolute inset-0 w-full h-full object-cover object-top scale-[1] origin-top"

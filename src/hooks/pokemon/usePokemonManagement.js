@@ -1,6 +1,6 @@
 // src/hooks/pokemon/usePokemonManagement.js - 포켓몬 관리 훅
 
-import { ref, get } from 'firebase/database';
+import { ref, get, update } from 'firebase/database';
 import { database } from '../../firebase';
 import { getPokemonLearnset } from '../../utils/pokemonLearnsets';
 import { getRequiredExpForLevel } from '../../utils/experience';
@@ -485,12 +485,45 @@ const usePokemonManagement = (
   };
 
   // 닉네임 변경
-  const updatePokemonNickname = (uniqueId, nickname) => {
-    if (!currentUser) return;
-    const newCaughtPokemon = currentUser.caughtPokemon.map(p => 
-      p && p.uniqueId === uniqueId ? { ...p, nickname } : p
+  const updatePokemonNickname = async (uniqueId, nickname) => {
+    if (!currentUser?.id || !Array.isArray(currentUser.caughtPokemon)) return false;
+
+    const pokemonIndex = currentUser.caughtPokemon.findIndex(
+      pokemon => pokemon && String(pokemon.uniqueId) === String(uniqueId)
     );
-    updateCurrentUser({ caughtPokemon: newCaughtPokemon });
+    if (pokemonIndex < 0) {
+      alert('닉네임을 변경할 포켓몬을 찾을 수 없습니다.');
+      return false;
+    }
+
+    const normalizedNickname = String(nickname || '').trim();
+    const newCaughtPokemon = currentUser.caughtPokemon.map((pokemon, index) =>
+      index === pokemonIndex ? { ...pokemon, nickname: normalizedNickname } : pokemon
+    );
+    const isPartner = String(currentUser.partnerPokemon?.uniqueId) === String(uniqueId);
+    const updatedPartnerPokemon = isPartner
+      ? { ...currentUser.partnerPokemon, nickname: normalizedNickname }
+      : currentUser.partnerPokemon;
+
+    try {
+      await updateCurrentUser({
+        caughtPokemon: newCaughtPokemon,
+        ...(isPartner ? { partnerPokemon: updatedPartnerPokemon } : {}),
+      });
+
+      const firebaseUpdates = {
+        [`members/${currentUser.id}/caughtPokemon/${pokemonIndex}/nickname`]: normalizedNickname,
+      };
+      if (isPartner) {
+        firebaseUpdates[`members/${currentUser.id}/partnerPokemon/nickname`] = normalizedNickname;
+      }
+      await update(ref(database), firebaseUpdates);
+      return true;
+    } catch (error) {
+      console.error('포켓몬 닉네임 저장 실패:', error);
+      alert('닉네임을 저장하지 못했습니다. 잠시 후 다시 시도해주세요.');
+      return false;
+    }
   };
 
   const updatePokemonMemo = (uniqueId, memo) => {

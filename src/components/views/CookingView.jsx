@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChefHat, Book, Plus, Minus, Sparkles, X, ClipboardList, Dice5, Utensils, Package, Soup, BookOpen, HelpCircle } from 'lucide-react';
+import { ChefHat, Book, Plus, Minus, Sparkles, X, Utensils, Package, Soup, BookOpen, HelpCircle } from 'lucide-react';
 import recipesData from '../../data/recipes.json';
 
 import { useGame } from '../../contexts/GameContext';
@@ -80,14 +80,15 @@ export default function CookingView() {
   const { allItems = [] } = useGame();
   const [selectedIngredients, setSelectedIngredients] = useState([]);
   const [showRecipeBook, setShowRecipeBook] = useState(false);
-  const [cookingMode, setCookingMode] = useState('fixed');
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   const fixedRecipes = recipes.filter(r => recipeSupports(r, 'fixed'));
-  const statRecipes = [
-    ...recipes.filter(r => recipeSupports(r, 'stat')),
-    ...(recipesData.statBasedRecipes || []),
-  ];
+  const statRecipes = Array.from(new Map(
+    [
+      ...recipes.filter(r => recipeSupports(r, 'stat')),
+      ...(recipesData.statBasedRecipes || []),
+    ].map(recipe => [recipe.id, recipe])
+  ).values());
   const ingredientStats = recipesData.ingredientStats || [];
   const availableIngredients = userItems.filter(isCookingIngredient);
 
@@ -167,22 +168,12 @@ export default function CookingView() {
           <span style={{ fontSize: 18, fontWeight: 800, color: '#1a2e10' }}>요리하기</span>
         </div>
 
-        {/* 모드 선택 */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-          {[
-            { id: 'fixed', label: '정해진 레시피', icon: <ClipboardList size={16} />, color: '#ea580c', activeBg: '#ea580c' },
-            { id: 'stat', label: '자유 실험', icon: <Dice5 size={16} />, color: '#9333ea', activeBg: '#9333ea' },
-          ].map(m => (
-            <button key={m.id} onClick={() => setCookingMode(m.id)} style={{
-              flex: 1, padding: '10px 8px', borderRadius: 12, border: `2px solid ${cookingMode === m.id ? m.color : 'rgba(0,0,0,0.12)'}`,
-               background: cookingMode === m.id ? m.activeBg : 'rgba(255,255,255,0.75)',
-              color: cookingMode === m.id ? '#fff' : '#555',
-              fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-            }}>
-              {m.icon}{m.label}
-            </button>
-          ))}
+        <div style={{
+          marginBottom: 16, padding: '10px 12px', borderRadius: 10,
+          background: 'rgba(255,255,255,0.65)', color: '#647054',
+          fontSize: 12, lineHeight: 1.5, border: '1px solid rgba(132,204,22,0.2)',
+        }}>
+          재료 조합에 맞는 레시피를 먼저 찾고, 없으면 재료 스탯으로 자동 판정합니다.
         </div>
 
         {/* 요리 냄비 (선택된 재료) */}
@@ -319,34 +310,8 @@ export default function CookingView() {
         </div>
       </div>
 
-      {/* 요리 모드 선택 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <div className="flex gap-4">
-          <button
-            onClick={() => setCookingMode('fixed')}
-            className={`flex-1 py-3 px-4 rounded-lg border-2 font-semibold transition-all ${
-              cookingMode === 'fixed'
-                ? 'border-orange-500 bg-orange-50 text-orange-700'
-                : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400'
-            }`}
-          >
-            <ClipboardList size={28} className="mx-auto mb-1" />
-            <div>정해진 레시피로 요리</div>
-            <div className="text-xs text-gray-500 mt-1">정확한 재료 조합 필요</div>
-          </button>
-          <button
-            onClick={() => setCookingMode('stat')}
-            className={`flex-1 py-3 px-4 rounded-lg border-2 font-semibold transition-all ${
-              cookingMode === 'stat'
-                ? 'border-purple-500 bg-purple-50 text-purple-700'
-                : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400'
-            }`}
-          >
-            <Dice5 size={28} className="mx-auto mb-1" />
-            <div>자유롭게 실험하기</div>
-            <div className="text-xs text-gray-500 mt-1">스탯 합산으로 결과 결정</div>
-          </button>
-        </div>
+      <div className="rounded-md border border-lime-200/70 bg-white/55 px-4 py-3 text-sm text-green-900/70">
+        재료 조합에 맞는 레시피를 먼저 찾고, 없으면 재료 스탯으로 자동 판정합니다.
       </div>
 
       <div className="grid grid-cols-2 gap-6">

@@ -42,6 +42,7 @@ import { getTitleById } from './data/titles';
 import { User, Lock, LogOut, Music, X, Play, Pause, SkipBack, SkipForward, Volume2, Package, Gift, ChefHat, Sparkles } from 'lucide-react';
 import { DAILY_ATTENDANCE_EXP, getKoreaDateKey } from './utils/experience';
 import { getPokemonLocalIconUrl } from './utils/pokemonIconUtils';
+import CachedImage from './components/common/CachedImage';
 
 const STATIC_TITLE_ICONS = { icon1: loginIcon1, icon2: loginIcon2, icon3: loginIcon3, icon4: loginIcon4 };
 const DAILY_ATTENDANCE_MONEY = 2000;
@@ -720,7 +721,7 @@ function HomeDashboard({
                 <div className="home-session-panel__member-img">
                   <div className="home-session-panel__member-clip">
                     {(trainer?.profileImageThumb || trainer?.profileImage) && (
-                      <img
+                      <CachedImage
                         className="home-session-panel__member-face"
                         src={trainer.profileImageThumb || trainer.profileImage}
                         alt={trainer.name || ''}

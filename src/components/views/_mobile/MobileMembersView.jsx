@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../../utils/pokemonIconUtils';
+import CachedImage from '../../common/CachedImage';
 
 const getMemberList = (members) =>
   Object.entries(members || {})
@@ -64,7 +65,7 @@ function MemberCard({ member, titles, onClick }) {
     >
       <div style={{ width: 48, height: 48, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: '#e8f0e0' }}>
         {faceImg
-          ? <img src={faceImg} alt={member.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
+          ? <CachedImage src={faceImg} alt={member.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
           : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: '#7a9a60' }}>{member.name?.charAt(0)}</div>
         }
       </div>
@@ -96,7 +97,7 @@ function MemberDetail({ member, titles, onBack }) {
       {/* 헤더 이미지 */}
       <div style={{ position: 'relative', width: '100%', height: 200, background: '#d8e8c8', overflow: 'hidden', flexShrink: 0 }}>
         {faceImg
-          ? <img src={faceImg} alt={member.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
+          ? <CachedImage src={faceImg} alt={member.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
           : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 56 }}>{member.name?.charAt(0)}</div>
         }
 

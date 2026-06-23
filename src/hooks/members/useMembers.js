@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { ref, get, set, onValue } from 'firebase/database';
 import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { database, auth } from '../../firebase';
+import { preloadDecodedImage } from '../../utils/imageCache';
 import itemsData from '../../data/items.json';
 import { fillMissingBaseStats, findPokemonTemplate } from '../../utils/pokemonBaseStats';
 import { getAbilityEnglishName } from '../../utils/abilityUtils';
@@ -52,6 +53,12 @@ export const useMembers = (allPokemonData) => {
             };
           });
 
+          Object.values(updated).forEach(member => {
+            preloadDecodedImage(member?.profileImageThumb);
+            preloadDecodedImage(member?.profileImage);
+            preloadDecodedImage(member?.profileImageFull);
+            preloadDecodedImage(member?.profileImageUrl);
+          });
           setMembers(updated);
           console.log('✅ Firebase에서 회원 데이터 로드 완료:', Object.keys(updated).length, '명');
         } else {
