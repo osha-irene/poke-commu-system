@@ -252,7 +252,7 @@ export default function MobileMapView({
   /* ── 마을/구역 목록 ── */
   return (
     <div style={{ paddingBottom: 88 }}>
-    <div style={{ padding: '14px 52px 0' }}>
+    <div style={{ padding: '14px 14px 0' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: 'calc(100vh - 120px)', justifyContent: 'center' }}>
         {towns.map(town => {
           const isOpen      = expandedTown === town.groupId;

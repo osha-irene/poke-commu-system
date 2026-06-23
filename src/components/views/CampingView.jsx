@@ -49,24 +49,15 @@ export default function CampingView({ trainer, campingSessions = [] }) {
   }, {});
 
   return (
-    <div style={{ maxWidth: 680, margin: '0 auto', padding: isMobile ? '72px 14px 24px' : '36px 20px' }}>
-      {/* 헤더 */}
-      <div style={{
-        display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 28,
-        background: 'rgba(255,255,255,0.82)',
-        backdropFilter: 'blur(6px)',
-        borderRadius: 24, padding: '7px 16px 7px 12px',
-        boxShadow: '0 1px 8px rgba(0,0,0,0.10)',
-      }}>
-        <Tent size={20} style={{ color: '#4a9a08' }} />
-        <span style={{ fontSize: 18, fontWeight: 800, color: '#1a2e10' }}>캠핑 기록</span>
+    <div style={{ maxWidth: 680, margin: '0 auto', padding: isMobile ? '14px 14px 24px' : '36px 20px' }}>
+      {/* 캠핑 횟수 pill — 우상단 */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
         <span style={{
           fontSize: 12, fontWeight: 700,
-          color: '#4a9a08',
-          background: 'rgba(74,154,8,0.12)',
-          border: '1px solid rgba(74,154,8,0.25)',
-          borderRadius: 20, padding: '2px 10px', marginLeft: 2,
-        }}>{mine.length}회</span>
+          color: '#fff',
+          background: '#4a9a08',
+          borderRadius: 20, padding: '4px 12px',
+        }}>총 캠핑 횟수 {mine.length}회</span>
       </div>
 
       {Object.keys(groups).length === 0 ? (

@@ -148,7 +148,7 @@ export default function ProfileView({ trainer, caughtPokemon, items, titles = []
                  {partnerPokemon && (
                   <div>파트너 <strong className="text-pink-400">{partnerPokemon.nickname || partnerPokemon.name}</strong></div>
                 )}
-                <div>출신 지역 <strong className="text-gray-700">음현시티</strong></div>
+                {trainer.hometown && <div>출신 지역 <strong className="text-gray-700">{trainer.hometown}</strong></div>}
                 <div>여행을 시작한 날 <strong className="text-gray-700">7월 5일</strong></div>
                 <br></br>
                 <div>탐험 횟수 <strong className="text-gray-700">{todayWalksUsed}/{trainer.maxDailyWalks}회</strong></div>
@@ -199,7 +199,7 @@ export default function ProfileView({ trainer, caughtPokemon, items, titles = []
             </div>
 
             {/* 우측 스트립: 파트너 아이콘 + 바코드 */}
-            <div className="flex flex-col items-center gap-3 py-5 pl-2">
+            <div className="flex flex-col items-center gap-3 py-5 px-4">
 
               {/* 파트너 포켓몬 */}
               {partnerIcon ? (

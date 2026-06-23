@@ -1,7 +1,7 @@
 // src/components/layout/MobileLayout.jsx
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Menu, X, Map, Users, Bot, BookOpen, Smile, Package,
+  X, Map, Users, Bot, BookOpen, Smile, Package,
   ShoppingBag, ChefHat, User, MessageSquare, Settings,
   LogOut, Footprints, Coins, Tent, Home, Sword, ChevronRight
 } from 'lucide-react';
@@ -130,7 +130,7 @@ export default function MobileLayout({
     if (touchStartX.current === null) return;
     const dx = e.changedTouches[0].clientX - touchStartX.current;
     const dy = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
-    if (dx > 60 && dy < 60 && touchStartX.current < 40) setMenuOpen(true);
+    if (dx > 60 && dy < 60) setMenuOpen(true);
     if (dx < -60 && dy < 60 && menuOpen) setMenuOpen(false);
     touchStartX.current = null;
   };
@@ -142,22 +142,20 @@ export default function MobileLayout({
       onTouchEnd={handleTouchEnd}
     >
 
-      {/* ── 플로팅 메뉴 버튼 ── */}
-      <button
+      {/* ── 슬라이드 힌트 탭 ── */}
+      <div
         onClick={() => setMenuOpen(true)}
         style={{
-          position: 'fixed', top: 14, left: 14, zIndex: 38,
-          width: 40, height: 40, borderRadius: 10,
-          background: P.bg,
-          border: `1px solid ${P.border}`,
-          boxShadow: '0 2px 10px rgba(0,0,0,0.12)',
-          backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
-          cursor: 'pointer', color: P.inactive,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          position: 'fixed', top: '50%', left: 0,
+          transform: 'translateY(-50%)',
+          zIndex: 38,
+          width: 5, height: 52,
+          background: 'rgba(140,210,80,0.75)',
+          borderRadius: '0 6px 6px 0',
+          cursor: 'pointer',
+          boxShadow: '2px 0 6px rgba(0,0,0,0.12)',
         }}
-      >
-        <Menu size={20} />
-      </button>
+      />
 
       {/* ── 콘텐츠 ── */}
       <main style={{ flex: 1 }}>

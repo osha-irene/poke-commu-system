@@ -120,7 +120,7 @@ export default function MobilePokemonView() {
   };
 
   return (
-    <div style={{ paddingTop: 60, paddingBottom: 88, minHeight: '100%' }}>
+    <div style={{ paddingTop: 14, paddingBottom: 88, minHeight: '100%' }}>
 
       {/* 파트너 */}
       <div style={S.section}>

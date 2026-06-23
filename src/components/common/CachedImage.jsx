@@ -1,22 +1,35 @@
 import React, { forwardRef, useEffect, useState } from 'react';
-import { isImageDecoded, preloadDecodedImage } from '../../utils/imageCache';
+import { getCachedSrc, isImageCached, preloadImage } from '../../utils/imageCache';
 
 const CachedImage = forwardRef(function CachedImage(
-  { src, style, className = '', onLoad, onError, ...props },
+  { src: originalSrc, style, className = '', onLoad, onError, ...props },
   ref
 ) {
-  const [ready, setReady] = useState(() => isImageDecoded(src));
+  const [src, setSrc] = useState(() => getCachedSrc(originalSrc));
+  const [ready, setReady] = useState(() => isImageCached(originalSrc));
 
   useEffect(() => {
+    if (!originalSrc) return;
     let active = true;
-    setReady(isImageDecoded(src));
-    preloadDecodedImage(src).then(image => {
-      if (active && image) setReady(true);
+
+    const cached = getCachedSrc(originalSrc);
+    if (cached !== originalSrc) {
+      setSrc(cached);
+      setReady(true);
+      return;
+    }
+
+    setSrc(originalSrc);
+    setReady(false);
+
+    preloadImage(originalSrc).then(resolvedSrc => {
+      if (!active) return;
+      setSrc(resolvedSrc);
+      setReady(true);
     });
-    return () => {
-      active = false;
-    };
-  }, [src]);
+
+    return () => { active = false; };
+  }, [originalSrc]);
 
   return (
     <img

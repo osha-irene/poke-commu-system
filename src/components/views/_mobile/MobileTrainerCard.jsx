@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'lucide-react';
+import { getDatabase, ref, get } from 'firebase/database';
 import { getPokemonLocalIconUrl } from '../../../utils/pokemonIconUtils';
 import CachedImage from '../../common/CachedImage';
 
@@ -45,6 +47,18 @@ export default function MobileTrainerCard({ trainer, titles = [] }) {
     : '';
   const todayWalksUsed = (trainer?.maxDailyWalks || 0) - (trainer?.dailyWalks || 0);
 
+  const [mastodonAccount, setMastodonAccount] = useState('');
+  useEffect(() => {
+    if (!trainer?.id) return;
+    get(ref(getDatabase(), `members/${trainer.id}/mastodonAccount`)).then(snap => {
+      if (snap.exists()) {
+        const val = snap.val();
+        const match = val.match(/@?([\w]+)@/);
+        setMastodonAccount(match ? match[1] : val);
+      }
+    }).catch(() => {});
+  }, [trainer?.id]);
+
   return (
     <div style={{
       width: '100%',
@@ -61,7 +75,7 @@ export default function MobileTrainerCard({ trainer, titles = [] }) {
       <div style={{
         position: 'relative',
         width: '100%',
-        aspectRatio: '3/2',
+        aspectRatio: '3/4',
         background: 'rgba(20,20,30,0.3)',
         overflow: 'hidden',
       }}>
@@ -111,7 +125,7 @@ export default function MobileTrainerCard({ trainer, titles = [] }) {
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6 }}>
             {partnerIcon && (
               <div style={{
-                width: 22, height: 44, flexShrink: 0,
+                width: 48, height: 44, flexShrink: 0,
                 backgroundImage: `url(${partnerIcon})`,
                 backgroundRepeat: 'no-repeat',
                 backgroundSize: `auto 44px`,
@@ -126,23 +140,31 @@ export default function MobileTrainerCard({ trainer, titles = [] }) {
         {/* 구분선 */}
         <div style={{ height: 1, background: 'rgba(90,150,30,0.15)', margin: '0 -2px' }} />
 
-        {/* 스탯 그리드 */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 12px', fontSize: 12 }}>
-          {partner && (
-            <div style={{ gridColumn: '1 / -1', color: '#888' }}>
-              파트너 <strong style={{ color: '#e06080' }}>{partner.nickname || partner.name}</strong>
-            </div>
-          )}
-          <div style={{ color: '#888' }}>
-            탐험 <strong style={{ color: '#333' }}>{todayWalksUsed}/{trainer?.maxDailyWalks || 0}회</strong>
+        {/* 스탯 — 2열 */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 8px', fontSize: 12, color: '#888', alignItems: 'start' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {partner && (
+              <div>파트너 <strong style={{ color: '#e06080' }}>{partner.nickname || partner.name}</strong></div>
+            )}
+            {trainer?.hometown && <div>출신 지역 <strong style={{ color: '#333' }}>{trainer.hometown}</strong></div>}
+            <div>여행 시작 <strong style={{ color: '#333' }}>7월 5일</strong></div>
           </div>
-          <div style={{ color: '#888' }}>
-            경험치 <strong style={{ color: '#333' }}>{(trainer?.trainerExp || 0).toLocaleString()}</strong>
-          </div>
-          <div style={{ color: '#888' }}>
-            소지금 <strong style={{ color: '#b07030' }}>{(trainer?.money || 0).toLocaleString()}원</strong>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div>탐험 <strong style={{ color: '#333' }}>{todayWalksUsed}/{trainer?.maxDailyWalks || 0}회</strong></div>
+            <div>경험치 <strong style={{ color: '#333' }}>{(trainer?.trainerExp || 0).toLocaleString()}</strong></div>
+            <div>소지금 <strong style={{ color: '#b07030' }}>{(trainer?.money || 0).toLocaleString()}원</strong></div>
           </div>
         </div>
+
+        {/* 마스토돈 */}
+        {mastodonAccount && (
+          <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
+            <Link size={11} style={{ color: '#a78bfa', flexShrink: 0 }} />
+            <span style={{ fontSize: 11, color: '#888', letterSpacing: '0.04em' }}>
+              @{mastodonAccount}@POKETODON.MONSTER
+            </span>
+          </div>
+        )}
 
       </div>
     </div>

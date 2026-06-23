@@ -248,7 +248,7 @@ function MemberProfileTab({ member, titles = [], onGrantTitle, onRevokeTitle, on
                   { label: '나이', value: age, set: setAge, placeholder: '예: 22살' },
                   { label: '키', value: height, set: setHeight, placeholder: '예: 175cm' },
                   { label: '몸무게', value: weight, set: setWeight, placeholder: '예: 65kg' },
-                  { label: '출신지역', value: hometown, set: setHometown, placeholder: '예: 태초마을' },
+                  { label: '출신지역', value: hometown, set: setHometown, placeholder: '예: 음현시티' },
                 ].map(({ label, value, set, placeholder }) => (
                   <div key={label}>
                     <label className="text-xs text-gray-500 block mb-1">{label}</label>

@@ -491,16 +491,19 @@ const usePokemonManagement = (
     const pokemonIndex = currentUser.caughtPokemon.findIndex(
       pokemon => pokemon && String(pokemon.uniqueId) === String(uniqueId)
     );
-    if (pokemonIndex < 0) {
+    const isPartner = String(currentUser.partnerPokemon?.uniqueId) === String(uniqueId);
+
+    if (pokemonIndex < 0 && !isPartner) {
       alert('닉네임을 변경할 포켓몬을 찾을 수 없습니다.');
       return false;
     }
 
     const normalizedNickname = String(nickname || '').trim();
-    const newCaughtPokemon = currentUser.caughtPokemon.map((pokemon, index) =>
-      index === pokemonIndex ? { ...pokemon, nickname: normalizedNickname } : pokemon
-    );
-    const isPartner = String(currentUser.partnerPokemon?.uniqueId) === String(uniqueId);
+    const newCaughtPokemon = pokemonIndex >= 0
+      ? currentUser.caughtPokemon.map((pokemon, index) =>
+          index === pokemonIndex ? { ...pokemon, nickname: normalizedNickname } : pokemon
+        )
+      : currentUser.caughtPokemon;
     const updatedPartnerPokemon = isPartner
       ? { ...currentUser.partnerPokemon, nickname: normalizedNickname }
       : currentUser.partnerPokemon;
@@ -511,9 +514,10 @@ const usePokemonManagement = (
         ...(isPartner ? { partnerPokemon: updatedPartnerPokemon } : {}),
       });
 
-      const firebaseUpdates = {
-        [`members/${currentUser.id}/caughtPokemon/${pokemonIndex}/nickname`]: normalizedNickname,
-      };
+      const firebaseUpdates = {};
+      if (pokemonIndex >= 0) {
+        firebaseUpdates[`members/${currentUser.id}/caughtPokemon/${pokemonIndex}/nickname`] = normalizedNickname;
+      }
       if (isPartner) {
         firebaseUpdates[`members/${currentUser.id}/partnerPokemon/nickname`] = normalizedNickname;
       }

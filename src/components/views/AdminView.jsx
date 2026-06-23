@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { useGame } from '../../contexts/GameContext';
 import { ref as dbRef, get, set } from 'firebase/database';
 import { database } from '../../firebase';
-import { User, ChevronRight, Pencil, Image, X, Users, Map, BookOpen, ShoppingBag, UtensilsCrossed, Tent, Calendar, Settings, AlertTriangle, Medal, Wrench, CheckCircle, Info, Trash2, Zap, Wind, Ban, AlertCircle } from 'lucide-react';
+import { User, ChevronRight, Pencil, Image, X, Users, Map, BookOpen, ShoppingBag, UtensilsCrossed, Tent, Calendar, Settings, AlertTriangle, Medal, Wrench, CheckCircle, Info, Trash2, Zap, Wind, Ban, AlertCircle, Bot } from 'lucide-react';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import RegionEditModal from '../modals/RegionEditModal';
 import PokedexAdminPanel from './admin/PokedexAdminPanel';
@@ -544,6 +544,7 @@ export default function AdminView() {
 
   const ADMIN_TABS = [
     { id: 'members',  label: '멤버',  icon: Users },
+    { id: 'npc',      label: 'NPC',   icon: Bot },
     { id: 'regions',  label: '지역',  icon: Map },
     { id: 'pokedex',  label: '도감',  icon: BookOpen },
     { id: 'shop',     label: '상점',  icon: ShoppingBag },
@@ -662,7 +663,7 @@ export default function AdminView() {
           <div className="space-y-2">
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-semibold text-gray-700">
-                멤버 목록 ({Object.keys(members).length}명)
+                멤버 목록 ({Object.values(members).filter(m => !m.isNPC).length}명)
               </h4>
               <Button
                 variant="warning"
@@ -673,7 +674,7 @@ export default function AdminView() {
               </Button>
             </div>
 
-            {Object.values(members).map((member) => (
+            {Object.values(members).filter(m => !m.isNPC).map((member) => (
               <div
                 key={member.id}
                 className={`flex items-center justify-between p-4 rounded-lg border transition-all ${member.hidden ? 'bg-gray-100 border-gray-300 opacity-60' : 'bg-gray-50 border-gray-200'}`}
@@ -682,9 +683,17 @@ export default function AdminView() {
                   onClick={() => setSelectedMemberId(member.id)}
                   className="flex items-center gap-4 flex-1 text-left hover:opacity-80"
                 >
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg ${member.hidden ? 'bg-gray-400' : 'bg-indigo-500'}`}>
-                    {member.name?.charAt(0) || '?'}
-                  </div>
+                  {member.profileImageThumb || member.profileImage ? (
+                    <img
+                      src={member.profileImageThumb || member.profileImage}
+                      alt={member.name}
+                      className="w-12 h-12 rounded-full object-cover object-top flex-shrink-0"
+                    />
+                  ) : (
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0 ${member.hidden ? 'bg-gray-400' : 'bg-indigo-500'}`}>
+                      {member.name?.charAt(0) || '?'}
+                    </div>
+                  )}
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-lg">{member.name}</span>
@@ -709,6 +718,69 @@ export default function AdminView() {
                 </div>
               </div>
             ))}
+          </div>
+        </Card>
+      )}
+
+      {/* NPC 탭 */}
+      {adminTab === 'npc' && (
+        <Card className="p-6">
+          <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2 mb-4">
+            <Bot size={24} /> NPC 관리
+          </h3>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="font-semibold text-gray-700">
+                NPC 목록 ({Object.values(members).filter(m => m.isNPC).length}명)
+              </h4>
+            </div>
+            {Object.values(members).filter(m => m.isNPC).length === 0 ? (
+              <p className="text-gray-400 text-sm py-4 text-center">NPC로 설정된 멤버가 없습니다.</p>
+            ) : (
+              Object.values(members).filter(m => m.isNPC).map((member) => (
+                <div
+                  key={member.id}
+                  className={`flex items-center justify-between p-4 rounded-lg border transition-all ${member.hidden ? 'bg-gray-100 border-gray-300 opacity-60' : 'bg-purple-50 border-purple-200'}`}
+                >
+                  <button
+                    onClick={() => setSelectedMemberId(member.id)}
+                    className="flex items-center gap-4 flex-1 text-left hover:opacity-80"
+                  >
+                    {member.profileImageThumb || member.profileImage ? (
+                      <img
+                        src={member.profileImageThumb || member.profileImage}
+                        alt={member.name}
+                        className="w-12 h-12 rounded-full object-cover object-top flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0 bg-purple-500">
+                        {member.name?.charAt(0) || '?'}
+                      </div>
+                    )}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-lg">{member.name}</span>
+                        <span className="text-sm text-gray-500">({member.id})</span>
+                        <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-semibold">NPC</span>
+                        {member.hidden && <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">숨김</span>}
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">
+                        포켓몬: {member.caughtPokemon?.filter(p => p !== null).length || 0}마리 | 소지금: {member.money?.toLocaleString() || 0}원
+                      </div>
+                    </div>
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => toggleMemberHidden?.(member.id)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${member.hidden ? 'border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-100'}`}
+                    >
+                      {member.hidden ? '표시' : '숨김'}
+                    </button>
+                    <ChevronRight className="text-gray-400" />
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </Card>
       )}

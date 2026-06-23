@@ -31,11 +31,6 @@ const getPartner     = m => {
 };
 const getBadges = m => (m?.gymBadges || m?.badges || []).filter(Boolean);
 
-function RoleBadge({ member }) {
-  if (member.isSuperAdmin) return <span className="mbr-badge mbr-badge--super">슈퍼관리자</span>;
-  if (member.isAdmin)      return <span className="mbr-badge mbr-badge--admin">관리자</span>;
-  return                          <span className="mbr-badge mbr-badge--member">회원</span>;
-}
 
 /* 스크롤 감지 등장 */
 function Reveal({ children, delay = 0 }) {

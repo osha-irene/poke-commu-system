@@ -156,18 +156,7 @@ export default function CookingView() {
 
   if (isMobile) {
     return (
-      <div style={{ padding: '72px 14px 100px', minHeight: '100%' }}>
-        {/* 헤더 */}
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 16,
-          background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(6px)',
-          borderRadius: 24, padding: '7px 16px 7px 12px',
-          boxShadow: '0 1px 8px rgba(0,0,0,0.10)',
-        }}>
-          <ChefHat size={20} style={{ color: '#4a7a08' }} />
-          <span style={{ fontSize: 18, fontWeight: 800, color: '#1a2e10' }}>요리하기</span>
-        </div>
-
+      <div style={{ padding: '14px 14px 100px', minHeight: '100%' }}>
         <div style={{
           marginBottom: 16, padding: '10px 12px', borderRadius: 10,
           background: 'rgba(255,255,255,0.65)', color: '#647054',

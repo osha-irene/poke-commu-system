@@ -1,6 +1,6 @@
 // src/components/views/_mobile/MobileItemsView.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Sparkles, ShoppingCart, Trash2, Search } from 'lucide-react';
+import { X, Sparkles, ShoppingCart, Trash2, Search, Package } from 'lucide-react';
 import { useGame } from '../../../contexts/GameContext';
 import { getItemPocket, canUseItem, CATEGORIES, getItemIcon, POCKET_LABELS } from '../../../utils/itemUtils';
 
@@ -120,7 +120,7 @@ export default function MobileItemsView() {
   const selectedDetails = selectedItem ? getItemDetails(selectedItem) : null;
 
   return (
-    <div style={{ paddingTop: 60, paddingBottom: 88, minHeight: '100%' }}>
+    <div style={{ paddingTop: 14, paddingBottom: 88, minHeight: '100%' }}>
       <style>{`
         @keyframes sheet-up { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes search-expand { from { width: 34px; opacity: 0.4; } to { width: 130px; opacity: 1; } }

@@ -3,24 +3,22 @@ import { ChevronLeft, User, Text } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import { getOwnedPokemonSpriteUrl } from '../../utils/pokemonImageUtils';
 import { TYPE_COLORS } from '../../constants/pokemon';
+import { POKEBALL_LIST } from '../../styles/theme';
 import { translateMoveName } from '../../battle/utils/move-translations';
 import movesData from '../../data/moves.json';
+import abilitiesData from '../../data/abilities.json';
 import CachedImage from '../common/CachedImage';
 import { preloadDecodedImage } from '../../utils/imageCache';
+import { useGame } from '../../contexts/GameContext';
 
 const GenderMale = () => (
-  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-    <circle cx="5" cy="8" r="4" stroke="#5b8fe8" strokeWidth="1.8"/>
-    <line x1="8.5" y1="4.5" x2="12" y2="1" stroke="#5b8fe8" strokeWidth="1.8" strokeLinecap="round"/>
-    <line x1="9.5" y1="1" x2="12" y2="1" stroke="#5b8fe8" strokeWidth="1.8" strokeLinecap="round"/>
-    <line x1="12" y1="1" x2="12" y2="3.5" stroke="#5b8fe8" strokeWidth="1.8" strokeLinecap="round"/>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="10" cy="14" r="5"/><line x1="19" y1="5" x2="14.14" y2="9.86"/><polyline points="15 5 19 5 19 9"/>
   </svg>
 );
 const GenderFemale = () => (
-  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-    <circle cx="6.5" cy="5.5" r="4" stroke="#e85b9a" strokeWidth="1.8"/>
-    <line x1="6.5" y1="9.5" x2="6.5" y2="12.5" stroke="#e85b9a" strokeWidth="1.8" strokeLinecap="round"/>
-    <line x1="4.5" y1="11" x2="8.5" y2="11" stroke="#e85b9a" strokeWidth="1.8" strokeLinecap="round"/>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ec4899" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="9" r="5"/><line x1="12" y1="14" x2="12" y2="21"/><line x1="9" y1="18" x2="15" y2="18"/>
   </svg>
 );
 
@@ -30,8 +28,6 @@ const getMemberList = (members) =>
     .map(([id, m]) => ({ id, ...(m || {}) }))
     .filter(m => m?.name && !m.hidden && !m.isNPC)
     .sort((a, b) => {
-      const rank = m => m.isSuperAdmin ? 2 : m.isAdmin ? 1 : 0;
-      if (rank(a) !== rank(b)) return rank(b) - rank(a);
       return (a.name || '').localeCompare(b.name || '', 'ko');
     });
 
@@ -41,6 +37,29 @@ const getFaceImg = m => m?.profileImage || m?.profileImageFull || m?.profileImag
 const getFullImg     = m => m?.profileImageFull || m?.profileImage || m?.profileImageUrl || '';
 
 const getPokemonImg = p => p?.sprite || p?.spriteUrl || p?.imageUrl || p?.iconUrl || '';
+const getBallImageUrl = (p, allItems) => {
+  if (p?.caughtWithBall && allItems?.length > 0) {
+    const ballName = p.caughtWithBall.toLowerCase();
+    const item = allItems.find(it => {
+      const n = it.name?.toLowerCase();
+      const en = it.nameEn?.toLowerCase();
+      return n === ballName || en === ballName || n?.includes(ballName) || en?.includes(ballName);
+    });
+    if (item) return item.spriteUrl || item.imageUrl;
+  }
+  if (p?.ballImageUrl) return p.ballImageUrl;
+  if (p?.caughtWithBall) {
+    const search = p.caughtWithBall;
+    const searchLower = search.toLowerCase();
+    const ballInfo = POKEBALL_LIST.find(b =>
+      b.name === search ||
+      b.nameEn === searchLower.replace(/\s/g, '-') ||
+      b.name.toLowerCase() === searchLower
+    );
+    if (ballInfo) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${ballInfo.nameEn}.png`;
+  }
+  return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
+};
 const getOfficialArtwork = p => {
   if (p?.sprite) {
     const m = p.sprite.match(/\/pokemon\/(\d+)\.png/);
@@ -86,6 +105,16 @@ const MOVE_TYPE_COLORS = {
   dark: { bg: '#705848', text: '#fff' },
   steel: { bg: '#B8B8D0', text: '#303048' },
   fairy: { bg: '#EE99AC', text: '#fff' },
+};
+
+const abilityList = Array.isArray(abilitiesData) ? abilitiesData : (abilitiesData.abilities || []);
+const getAbilityDesc = (abilityName) => {
+  if (!abilityName) return null;
+  const n = abilityName.trim().toLowerCase();
+  const found = abilityList.find(a =>
+    a.name?.toLowerCase() === n || a.nameEn?.toLowerCase() === n
+  );
+  return found?.flavorTextKo || found?.shortEffectKo || found?.effectKo || null;
 };
 
 const moveList = Array.isArray(movesData) ? movesData : (movesData.moves || []);
@@ -357,6 +386,7 @@ function getQuoteAccentColor(color) {
 const imgCache = {}; // url → accent color (모듈 레벨 캐시)
 
 function MemberDetail({ member, titles, onBack, onTabChange }) {
+  const { allItems = [] } = useGame();
   const fullImg = getFullImg(member);
   const imgRef = useRef(null);
   const opaqueBottomRatioRef = useRef(1);
@@ -407,6 +437,8 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
   const [partnerTextOpen, setPartnerTextOpen] = useState(false);
   const [partnerEditing, setPartnerEditing] = useState(false);
   const [partnerHovered, setPartnerHovered] = useState(false);
+  const [hoveredEntryIndex, setHoveredEntryIndex] = useState(null);
+  const [flippedEntryIndex, setFlippedEntryIndex] = useState(null);
   const [partnerTopOffset, setPartnerTopOffset] = useState(0.0);
   const [partnerImgHeight, setPartnerImgHeight] = useState(128);
   const [partnerText, setPartnerText] = useState(() => member.partnerText || '');
@@ -759,10 +791,10 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
         };
         return (
           <>
-            <div className="rmv-text-bg-reveal" style={{ position: 'fixed', top: 0, bottom: 0, left: '22%', right: 0, overflow: 'hidden', zIndex: 10, background: 'linear-gradient(to right, transparent 0%, rgba(255,255,255,0.85) 12%, rgba(255,255,255,0.97) 28%, rgba(255,255,255,0.97) 100%)', pointerEvents: 'none' }} />
+            <div className="rmv-text-bg-reveal" style={{ position: 'fixed', top: 0, bottom: 0, left: '22%', right: 0, overflow: 'hidden', zIndex: 16, background: 'linear-gradient(to right, transparent 0%, rgba(255,255,255,0.85) 12%, rgba(255,255,255,0.97) 28%, rgba(255,255,255,0.97) 100%)', pointerEvents: 'none' }} />
             <div
               className="rmv-text-scroll"
-              style={{ position: 'absolute', top: 0, left: '30%', right: 0, bottom: 0, overflowY: 'auto', overflowX: 'hidden', zIndex: 11, '--rmv-accent-base': selectedAccentRgb }}
+              style={{ position: 'absolute', top: 0, left: '30%', right: 0, bottom: 0, overflowY: 'auto', overflowX: 'hidden', zIndex: 17, '--rmv-accent-base': selectedAccentRgb }}
             >
               <div className="rmv-text-tab-in flex flex-col justify-start gap-3"
                 style={{ paddingTop: 42, paddingBottom: 40, paddingLeft: 32, paddingRight: 60, boxSizing: 'border-box', minWidth: 'calc((100vw - 53vw) * 0.65)' }}>
@@ -864,7 +896,7 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: -12 }}>
             {partner && (
-              <div style={{ position: 'relative', height: 65, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end', paddingRight: 110 }}>
+              <div style={{ position: 'relative', height: 65, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end', paddingRight: 110, transform: 'translateY(16px)' }}>
                 <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.25)', fontWeight: 500, letterSpacing: '0.05em' }}>파트너</span>
                 <button
                   type="button"
@@ -1019,7 +1051,7 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
               <div onClick={() => setNoteEditing(true)}
                 style={{ minHeight: 48, fontSize: 15, color: note ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.6, cursor: 'text', padding: '4px 2px', position: 'relative', zIndex: 1 }}>
                 {note
-                  ? note.split('\n').map((line, i) => <p key={i} style={{ margin: 0, marginBottom: '0.4em', textIndent: '0.5em' }}>{line || ' '}</p>)
+                  ? note.split('\n').map((line, i) => <p key={i} style={{ margin: 0, marginBottom: '1.4em', textIndent: '0.5em' }}>{line || ' '}</p>)
                   : '클릭해서 메모 추가...'}
               </div>
             )}
@@ -1034,7 +1066,7 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
           className="rmv-entry-title"
           style={{
             position: 'absolute',
-            top: '2.6rem',
+            top: '2rem',
             left: '37%',
             right: 0,
             zIndex: 0,
@@ -1063,8 +1095,12 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
         <div
           key="entry"
           className="rmv-tab-content flex flex-col justify-start gap-3"
-          style={{ position: 'absolute', top: '15rem', left: '60%', width: 286, overflow: 'visible', paddingBottom: 24, paddingRight: 6, boxSizing: 'border-box', zIndex: 1 }}
+          onAnimationEnd={e => { e.currentTarget.style.animation = 'none'; }}
+          style={{ position: 'absolute', top: '13rem', left: '55%', width: 320, overflow: 'visible', paddingBottom: 24, paddingRight: 6, boxSizing: 'border-box' }}
         >
+          <style>{`
+            @keyframes rmv-card-flip-in { from { transform: rotateY(-90deg) scaleX(0.8); opacity: 0; } to { transform: rotateY(0deg) scaleX(1); opacity: 1; } }
+          `}</style>
           {party.length === 0
             ? <span style={{ fontSize: 14, color: 'rgba(0,0,0,0.3)' }}>엔트리가 비어있어요</span>
             : party.map((p, i) => {
@@ -1072,71 +1108,99 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
               const moves = (p.moves || []).slice(0, 4);
               const baseName = p.nameKo || p.name || '';
               const nickname = p.nickname && p.nickname !== baseName ? p.nickname : null;
+              const isFlipped = flippedEntryIndex === i;
+              const abilityDesc = getAbilityDesc(p.ability);
+              const cardBg = hoveredEntryIndex === i && !isFlipped
+                ? `rgb(${Math.round(255*0.9+(accent?.[0]??80)*0.1)},${Math.round(255*0.9+(accent?.[1]??120)*0.1)},${Math.round(255*0.9+(accent?.[2]??200)*0.1)})`
+                : `rgba(${accentRgb}, 0.10)`;
               return (
-                <div key={i} style={{ background: `rgba(${accentRgb}, 0.10)`, backdropFilter: 'blur(8px)', borderRadius: 14, padding: '10px 16px 10px 12px', display: 'flex', gap: 10, alignItems: 'center' }}>
-                  <img
-                    src={getEntryPokemonSprite(p)}
-                    alt={getPokemonName(p)}
-                    style={{ width: 96, height: 96, objectFit: 'contain', flexShrink: 0, imageRendering: 'auto' }}
-                    onError={e => { e.target.src = getPokemonLocalIconUrl(p); }}
-                  />
-                  <div style={{ flex: 1, minWidth: 0, alignSelf: 'stretch', paddingTop: 3 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>{nickname || baseName}</span>
-                      {p.isShiny && (
-                        <span
-                          aria-label="이로치"
-                          title="이로치"
-                          style={{ color: '#dc2626', fontSize: 11, lineHeight: 1, fontWeight: 900 }}
-                        >
-                          ★
-                        </span>
-                      )}
-                      {nickname && <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.38)' }}>{baseName}</span>}
-                      {p.gender === 'male' && <GenderMale />}
-                      {p.gender === 'female' && <GenderFemale />}
-                      {types.map((t, ti) => {
-                        const tc = TYPE_COLORS[t] || { bg: '#888', text: '#fff' };
-                        return (
-                          <span key={ti} style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 99, background: tc.bg, color: tc.text }}>
-                            {t}
-                          </span>
-                        );
-                      })}
-                      {p.ability && (
-                        <span style={{ fontSize: 11, color: '#555', marginLeft: 'auto', whiteSpace: 'nowrap' }}>
-                          <span style={{ color: `rgba(${accentRgb}, 0.55)`, fontWeight: 600, marginRight: 3 }}></span>{p.ability}
-                        </span>
-                      )}
-                      {p.isPartner && <span style={{ fontSize: 11, fontWeight: 600, color: '#d97706' }}>파트너</span>}
-                    </div>
-                    {moves.length > 0 && (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 4, marginTop: 8 }}>
-                        {moves.map((mv, mi) => {
-                          const mc = getMoveTypeColor(mv);
-                          return (
-                            <span
-                              key={`${getMoveKey(mv)}-${mi}`}
-                              style={{
-                                fontSize: 10,
-                                fontWeight: 700,
-                                lineHeight: 1.2,
-                                color: mc.text,
-                                background: mc.bg,
-                                borderRadius: 999,
-                                padding: '3px 7px',
-                                textAlign: 'center',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                              }}
-                            >
-                              {getMoveLabel(mv)}
-                            </span>
-                          );
-                        })}
+                <div
+                  key={i}
+                  onMouseEnter={() => setHoveredEntryIndex(i)}
+                  onMouseLeave={() => setHoveredEntryIndex(null)}
+                  onClick={() => setFlippedEntryIndex(isFlipped ? null : i)}
+                  style={{ position: 'relative', zIndex: hoveredEntryIndex === i ? 20 : 1, cursor: 'pointer', borderRadius: 14, display: 'grid' }}
+                >
+                  {/* 앞면 */}
+                  <div style={{
+                    gridArea: '1/1',
+                    borderRadius: 14,
+                    background: cardBg,
+                    backdropFilter: 'blur(8px)',
+                    boxShadow: hoveredEntryIndex === i && !isFlipped ? '0 4px 20px rgba(0,0,0,0.10)' : 'none',
+                    padding: '10px 16px 10px 12px',
+                    display: 'flex', flexDirection: 'column', gap: 8,
+                    transition: 'opacity 0.18s ease, transform 0.22s ease, background 0.18s ease',
+                    opacity: isFlipped ? 0 : 1,
+                    transform: isFlipped ? 'rotateY(90deg)' : (hoveredEntryIndex === i ? 'rotateY(-12deg)' : 'rotateY(0deg)'),
+                    pointerEvents: isFlipped ? 'none' : 'auto',
+                  }}>
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                      <img src={getBallImageUrl(p, allItems)} alt="" style={{ position: 'absolute', top: 6, left: 6, width: 32, height: 32, objectFit: 'contain', imageRendering: 'pixelated', opacity: 0.75, pointerEvents: 'none' }} />
+                      <img src={getEntryPokemonSprite(p)} alt={getPokemonName(p)} style={{ width: 96, height: 96, objectFit: 'contain', flexShrink: 0, imageRendering: 'auto' }} onError={e => { e.target.src = getPokemonLocalIconUrl(p); }} />
+                      <div style={{ flex: 1, minWidth: 0, alignSelf: 'stretch', paddingTop: 3 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>{nickname || baseName}</span>
+                          {p.isShiny && <span aria-label="이로치" title="이로치" style={{ color: '#dc2626', fontSize: 11, lineHeight: 1, fontWeight: 900 }}>★</span>}
+                          {nickname && <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.38)' }}>{baseName}</span>}
+                          {p.gender === 'male' && <GenderMale />}
+                          {p.gender === 'female' && <GenderFemale />}
+                          {types.map((t, ti) => {
+                            const tc = TYPE_COLORS[t] || { bg: '#888', text: '#fff' };
+                            return <span key={ti} style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: tc.bg, color: tc.text }}>{t}</span>;
+                          })}
+                          {p.ability && <span style={{ fontSize: 11, color: '#555', marginLeft: 'auto', whiteSpace: 'nowrap' }}>{p.ability}</span>}
+                          {p.isPartner && <span style={{ fontSize: 11, fontWeight: 600, color: '#d97706' }}>파트너</span>}
+                        </div>
+                        {moves.length > 0 && (
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 6, marginTop: 8 }}>
+                            {moves.map((mv, mi) => {
+                              const mc = getMoveTypeColor(mv);
+                              return <span key={`${getMoveKey(mv)}-${mi}`} style={{ fontSize: 10, fontWeight: 700, lineHeight: 1.2, color: mc.text, background: mc.bg, borderRadius: 999, padding: '3px 7px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{getMoveLabel(mv)}</span>;
+                            })}
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
+                    {(() => {
+                      const e = p.effort || p.evs || {};
+                      const evs = [
+                        { label: 'H', val: e.hp ?? 0 },
+                        { label: 'A', val: e.attack ?? e.atk ?? 0 },
+                        { label: 'B', val: e.defense ?? e.def ?? 0 },
+                        { label: 'C', val: e.specialAttack ?? e.spa ?? 0 },
+                        { label: 'D', val: e.specialDefense ?? e.spd ?? 0 },
+                        { label: 'S', val: e.speed ?? e.spe ?? 0 },
+                      ];
+                      return (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4, marginTop: -10, marginBottom: -4 }}>
+                          {evs.map(({ label, val }) => (
+                            <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, background: '#fff', borderRadius: 999, padding: '0 4px', height: 14 }}>
+                              <span style={{ fontSize: 6, fontWeight: 800, color: '#111', lineHeight: 1 }}>{label}</span>
+                              <span style={{ fontSize: 7, fontWeight: 300, color: val > 0 ? '#111' : '#bbb', lineHeight: 1 }}>{val}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                  {/* 뒷면 — 특성 설명 */}
+                  <div style={{
+                    gridArea: '1/1',
+                    borderRadius: 14,
+                    background: `rgba(${accentRgb}, 0.92)`,
+                    backdropFilter: 'blur(8px)',
+                    padding: '14px 16px',
+                    display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6,
+                    transition: 'opacity 0.18s ease, transform 0.18s ease',
+                    opacity: isFlipped ? 1 : 0,
+                    transform: isFlipped ? 'rotateY(0deg)' : 'rotateY(-90deg)',
+                    pointerEvents: isFlipped ? 'auto' : 'none',
+                  }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', letterSpacing: '0.04em' }}>{p.ability || '특성 없음'}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.88)', lineHeight: 1.6 }}>
+                      {abilityDesc || '특성 설명이 없습니다.'}
+                    </div>
                   </div>
                 </div>
               );

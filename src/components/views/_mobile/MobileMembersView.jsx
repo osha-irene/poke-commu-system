@@ -1,187 +1,523 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../../utils/pokemonIconUtils';
+import { getOwnedPokemonSpriteUrl } from '../../../utils/pokemonImageUtils';
+import { TYPE_COLORS, POKEBALL_LIST } from '../../../constants/pokemon';
+import { translateMoveName } from '../../../battle/utils/move-translations';
+import movesData from '../../../data/moves.json';
 import CachedImage from '../../common/CachedImage';
+import { useGame } from '../../../contexts/GameContext';
 
+const GenderMale = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="10" cy="14" r="5"/><line x1="19" y1="5" x2="14.14" y2="9.86"/><polyline points="15 5 19 5 19 9"/>
+  </svg>
+);
+const GenderFemale = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ec4899" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="9" r="5"/><line x1="12" y1="14" x2="12" y2="21"/><line x1="9" y1="18" x2="15" y2="18"/>
+  </svg>
+);
+
+const MOVE_TYPE_COLORS = {
+  normal:{bg:'#A8A878',text:'#fff'},fire:{bg:'#F08030',text:'#fff'},water:{bg:'#6890F0',text:'#fff'},
+  electric:{bg:'#F8D030',text:'#3b2f00'},grass:{bg:'#78C850',text:'#fff'},ice:{bg:'#98D8D8',text:'#1e4f5f'},
+  fighting:{bg:'#C03028',text:'#fff'},poison:{bg:'#A040A0',text:'#fff'},ground:{bg:'#E0C068',text:'#4b3510'},
+  flying:{bg:'#A890F0',text:'#fff'},psychic:{bg:'#F85888',text:'#fff'},bug:{bg:'#A8B820',text:'#fff'},
+  rock:{bg:'#B8A038',text:'#fff'},ghost:{bg:'#705898',text:'#fff'},dragon:{bg:'#7038F8',text:'#fff'},
+  dark:{bg:'#705848',text:'#fff'},steel:{bg:'#B8B8D0',text:'#303048'},fairy:{bg:'#EE99AC',text:'#fff'},
+};
+const _moveList = Array.isArray(movesData) ? movesData : (movesData.moves || []);
+const _moveTypeByKey = new Map(_moveList.flatMap(m => [m.id, m.nameEn, m.name].filter(Boolean).map(k => [String(k).toLowerCase(), m.type])));
+const getMoveKey = m => typeof m === 'string' ? m : m?.moveId || m?.id || m?.nameEn || m?.name || '';
+const getMoveLabel = m => { const k = getMoveKey(m); return translateMoveName(k) || m?.nameKo || m?.name || k || '—'; };
+const getMoveTypeColor = m => {
+  const rawType = typeof m === 'string' ? null : (m?.type || m?.typeEn || m?.moveType);
+  const type = String(rawType || _moveTypeByKey.get(String(getMoveKey(m)).toLowerCase()) || 'normal').toLowerCase();
+  return MOVE_TYPE_COLORS[type] || { bg: '#777', text: '#fff' };
+};
+
+/* ── 유틸 ── */
 const getMemberList = (members) =>
   Object.entries(members || {})
     .map(([id, m]) => ({ id, ...(m || {}) }))
     .filter(m => m?.name && !m.hidden && !m.isNPC)
     .sort((a, b) => {
-      const rank = m => m.isSuperAdmin ? 2 : m.isAdmin ? 1 : 0;
-      if (rank(a) !== rank(b)) return rank(b) - rank(a);
       return (a.name || '').localeCompare(b.name || '', 'ko');
     });
 
-const getFaceImg = m => m?.profileImage || m?.profileImageFull || m?.profileImageUrl || '';
-const getPartner = m => {
-  const party = (m?.caughtPokemon || []).filter(Boolean).slice(0, 6);
-  return party.find(p => p?.isPartner) || m?.partnerPokemon || null;
-};
+const getFaceImg = m => m?.profileImageThumb || m?.profileImage || m?.profileImageFull || m?.profileImageUrl || '';
 const getPokemonName = p => p?.nickname || p?.nameKo || p?.name || '포켓몬';
+
 const getPokemonDbSprite = p => {
   const name = p?.nameEn || p?.name;
   if (name) return `https://img.pokemondb.net/sprites/scarlet-violet/normal/${name.toLowerCase().replace(/\s+/g, '-')}.png`;
   return null;
 };
 
-/* 포켓몬 아이콘 — 왼쪽 절반만 */
-function PokemonHalfIcon({ pokemon, size = 36 }) {
-  const icon = getPokemonLocalIconUrl(pokemon);
-  if (!icon) return <div style={{ width: size / 2, height: size, background: '#e0e0e0', borderRadius: 4 }} />;
+const getBallUrl = (p, allItems = []) => {
+  if (p?.caughtWithBall && allItems.length > 0) {
+    const ballName = p.caughtWithBall.toLowerCase();
+    const item = allItems.find(it => {
+      const n = it.name?.toLowerCase();
+      const en = it.nameEn?.toLowerCase();
+      return n === ballName || en === ballName || n?.includes(ballName) || en?.includes(ballName);
+    });
+    if (item?.spriteUrl || item?.imageUrl) return item.spriteUrl || item.imageUrl;
+  }
+  if (p?.ballImageUrl) return p.ballImageUrl;
+  if (p?.caughtWithBall) {
+    const s = p.caughtWithBall.toLowerCase();
+    const info = POKEBALL_LIST.find(b =>
+      b.name === p.caughtWithBall || b.name.toLowerCase() === s || b.nameEn === s.replace(/\s/g, '-')
+    );
+    if (info) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${info.nameEn}.png`;
+  }
+  return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
+};
+
+const getParty = m => {
+  const partner = m?.partnerPokemon;
+  const caught = (m?.caughtPokemon || []).filter(Boolean);
+  const rest = caught.filter(p => !p?.isPartner);
+  return partner
+    ? [{ ...partner, _isPartner: true }, ...rest].slice(0, 6)
+    : rest.slice(0, 6);
+};
+
+const getPartner = m =>
+  m?.partnerPokemon || (m?.caughtPokemon || []).filter(Boolean).find(p => p?.isPartner) || null;
+
+/* ── 텍스트 파서 ── */
+const ACCENT = '#5a9a30';
+
+const renderInline = (text) => {
+  const parts = text.split(/(\|[^|]+\|)/g);
+  if (parts.length === 1) return text || null;
+  return parts.map((part, k) =>
+    /^\|[^|]+\|$/.test(part)
+      ? <mark key={k} style={{ background: 'rgba(90,154,48,0.18)', color: 'inherit', borderRadius: 3, padding: '1px 4px', fontWeight: 600 }}>{part.slice(1, -1)}</mark>
+      : part
+  );
+};
+
+const renderTextLine = (line, j) => {
+  if (line.startsWith('*')) return (
+    <div key={j} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: '0.65em' }}>
+      <span style={{ color: ACCENT, fontWeight: 700, flexShrink: 0, lineHeight: 1.85 }}>•</span>
+      <span style={{ lineHeight: 1.85 }}>{renderInline(line.slice(1).trim()) || ' '}</span>
+    </div>
+  );
+  return <p key={j} style={{ margin: 0, marginBottom: '0.65em', textIndent: '0.5em' }}>{renderInline(line) || ' '}</p>;
+};
+
+/* ── 공통 스타일 ── */
+const SEC_TITLE = {
+  fontSize: '1rem', fontWeight: 800,
+  color: '#1a2e10', letterSpacing: '0.02em',
+  marginBottom: 10,
+};
+
+const SEC_DIVIDER = {
+  border: 'none', borderTop: '1px solid #e8ede4',
+  margin: '20px 0',
+};
+
+/* ── 타입 뱃지 ── */
+function TypeBadge({ type }) {
+  const c = TYPE_COLORS[type] || { bg: '#777', text: '#FFF' };
   return (
-    <div style={{
-      width: size / 2,
-      height: size,
-      flexShrink: 0,
-      backgroundImage: `url(${icon})`,
-      backgroundRepeat: 'no-repeat',
-      backgroundSize: `auto ${size}px`,
-      backgroundPosition: 'left center',
-      imageRendering: 'pixelated',
-    }} />
+    <span style={{
+      display: 'inline-block', padding: '2px 5px',
+      borderRadius: 4, background: c.bg, color: c.text,
+      fontSize: '0.58rem', fontWeight: 700, lineHeight: 1.4, letterSpacing: '0.02em',
+    }}>{type}</span>
   );
 }
 
-/* ── 목록 카드 ── */
-function MemberCard({ member, titles, onClick }) {
+/* ── 목록 카드 (3열 그리드) ── */
+function MemberCard({ member, isRevealed, onTap }) {
   const faceImg = getFaceImg(member);
-  const partner = getPartner(member);
-  const title = member.title && member.title !== 'none'
-    ? titles.find(t => t.id === member.title)?.label || ''
-    : '';
 
   return (
     <div
-      onClick={onClick}
+      onClick={onTap}
       style={{
-        display: 'flex', alignItems: 'center', gap: 12,
-        padding: '10px 14px',
-        background: 'rgba(255,255,255,0.88)',
-        borderRadius: 14,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
+        borderRadius: 12,
+        overflow: 'hidden',
         cursor: 'pointer',
+        position: 'relative',
+        aspectRatio: '3 / 4',
+        background: '#fff',
       }}
     >
-      <div style={{ width: 48, height: 48, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: '#e8f0e0' }}>
-        {faceImg
-          ? <CachedImage src={faceImg} alt={member.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
-          : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: '#7a9a60' }}>{member.name?.charAt(0)}</div>
-        }
+      {/* 이미지 */}
+      {faceImg
+        ? <CachedImage src={faceImg} alt={member.name}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', display: 'block' }}
+          />
+        : <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, color: '#fff' }}>
+            {member.name?.charAt(0)}
+          </div>
+      }
+      {/* 1탭 시 어두워지며 이름 정중앙 표시 */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: isRevealed ? 'rgba(0,0,0,0.52)' : 'rgba(0,0,0,0)',
+        transition: 'background 0.2s',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        pointerEvents: 'none',
+      }}>
+        {isRevealed && (
+          <span style={{
+            color: '#fff', fontWeight: 800,
+            fontSize: '0.88rem', lineHeight: 1.3,
+            textShadow: '0 1px 10px rgba(0,0,0,0.7)',
+            textAlign: 'center', padding: '0 6px',
+          }}>{member.name}</span>
+        )}
       </div>
-
-      <div style={{ flex: 1, minWidth: 0 }}>
-        {title && <div style={{ fontSize: 10, color: '#8aaa60', fontWeight: 600, letterSpacing: '0.04em', lineHeight: 1 }}>{title}</div>}
-        <div style={{ fontSize: 16, fontWeight: 700, color: '#1a2e10', lineHeight: 1.2 }}>{member.name}</div>
-        {member.bio && <div style={{ fontSize: 11, color: '#888', marginTop: 1, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{member.bio}</div>}
-      </div>
-
-      {partner && <PokemonHalfIcon pokemon={partner} size={36} />}
     </div>
   );
 }
 
-/* ── 멤버 상세 ── */
-function MemberDetail({ member, titles, onBack }) {
+/* ── 메인 탭 ── */
+function MainTab({ member, title, partner }) {
   const faceImg = getFaceImg(member);
-  const partner = getPartner(member);
-  const partnerSprite = partner ? getPokemonDbSprite(partner) : null;
-  const title = member.title && member.title !== 'none'
-    ? titles.find(t => t.id === member.title)?.label || ''
-    : '';
-  const party = (member?.caughtPokemon || []).filter(Boolean).slice(0, 6);
+  const keywords = (member.keywords || []).filter(Boolean);
+  const infoRows = [
+    member.age      && { label: '나이',   value: member.age },
+    member.birthday && { label: '생일',   value: member.birthday },
+    member.height   && { label: '키',     value: member.height },
+    member.weight   && { label: '몸무게', value: member.weight },
+    member.hometown && { label: '출신',   value: member.hometown },
+  ].filter(Boolean);
 
   return (
-    <div style={{ background: '#f4f8f0', paddingBottom: 100 }}>
+    <div>
+      {/* 따옴표 + 한마디 (bio) */}
+      {member.bio && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-start', gap: 4, marginBottom: 10 }}>
+          <span style={{
+            fontSize: '2rem',
+            fontFamily: "'Noto Serif KR', 'Georgia', 'Times New Roman', serif",
+            color: '#b8d098', lineHeight: 0.8, flexShrink: 0,
+          }}>&ldquo;</span>
+          <span style={{
+            fontSize: '0.88rem', color: '#444', fontWeight: 600,
+            lineHeight: 1.5, textAlign: 'right', maxWidth: '72%',
+          }}>{member.bio}</span>
+        </div>
+      )}
 
-      {/* 헤더 이미지 */}
-      <div style={{ position: 'relative', width: '100%', height: 200, background: '#d8e8c8', overflow: 'hidden', flexShrink: 0 }}>
-        {faceImg
-          ? <CachedImage src={faceImg} alt={member.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
-          : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 56 }}>{member.name?.charAt(0)}</div>
-        }
+      {/* 이름 + 이미지 — 가로 배치 */}
+      <div style={{ display: 'flex', gap: 14, alignItems: 'stretch', marginBottom: 16 }}>
+        {/* 왼쪽: 칭호 + 이름 + 키워드 + 캐치프레이즈 + 파트너 */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+          {title && (
+            <div style={{
+              fontSize: '0.72rem', color: '#aaa', fontWeight: 700,
+              letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 4,
+            }}>{title}</div>
+          )}
+          <div style={{
+            fontFamily: "'Noto Serif KR', serif",
+            fontSize: 'clamp(1.8rem, 8vw, 2.6rem)',
+            fontWeight: 900, color: '#111', lineHeight: 1.05,
+            marginBottom: 10,
+          }}>{member.name}</div>
+          {keywords.length > 0 && (
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+              {keywords.map((kw, i) => (
+                <span key={i} style={{ fontSize: '0.82rem', color: '#e05588', fontWeight: 700 }}>#{kw}</span>
+              ))}
+            </div>
+          )}
+          {member.catchphrase && (
+            <p style={{ fontSize: '0.85rem', color: '#555', lineHeight: 1.8, margin: '0 0 12px' }}>
+              {renderInline(member.catchphrase.replace(/\n/g, ' '))}
+            </p>
+          )}
+          {partner && (() => {
+            const sprite = getPokemonDbSprite(partner);
+            const icon = getPokemonLocalIconUrl(partner);
+            const src = sprite || icon;
+            return (
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginTop: 'auto', paddingTop: 8 }}>
+                {src && <img src={src} alt={getPokemonName(partner)} style={{ width: sprite ? 90 : 72, height: sprite ? 90 : 72, objectFit: 'contain', flexShrink: 0 }} />}
+                <div style={{ paddingBottom: 8 }}>
+                  <div style={{ fontSize: '0.6rem', color: '#8aaa78', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 3 }}>파트너</div>
+                  <div style={{ fontSize: '1rem', fontWeight: 800, color: '#1a2e10', lineHeight: 1.2 }}>{getPokemonName(partner)}</div>
+                  {partner.nickname && partner.nameKo && (
+                    <div style={{ fontSize: '0.72rem', color: '#888', marginTop: 1 }}>{partner.nameKo}</div>
+                  )}
+                  {(partner.types || []).length > 0 && (
+                    <div style={{ display: 'flex', gap: 3, marginTop: 5, flexWrap: 'wrap' }}>
+                      {partner.types.map(t => <TypeBadge key={t} type={t} />)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
 
-        {partnerSprite && (
-          <img
-            src={partnerSprite}
-            alt={getPokemonName(partner)}
+        {/* 오른쪽: 이미지 */}
+        {faceImg && (
+          <CachedImage
+            src={faceImg}
+            alt={member.name}
             style={{
-              position: 'absolute', bottom: -16, right: 16,
-              height: 72, width: 'auto', objectFit: 'contain',
-              filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.2))',
-              pointerEvents: 'none',
+              width: 165, height: 240,
+              objectFit: 'cover', objectPosition: 'top center',
+              borderRadius: 14, flexShrink: 0, display: 'block',
             }}
           />
         )}
       </div>
 
-      {/* 정보 카드 */}
-      <div style={{
-        margin: '0 16px', marginTop: -14,
-        background: '#fff', borderRadius: 20,
-        padding: '16px 18px 18px',
-        boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
-        position: 'relative', zIndex: 1,
-      }}>
-        {title && <div style={{ fontSize: 11, color: '#8aaa60', fontWeight: 600, letterSpacing: '0.05em', marginBottom: 2 }}>{title}</div>}
-        <h2 style={{ fontSize: 24, fontWeight: 700, color: '#1a2e10', margin: 0, lineHeight: 1.1 }}>{member.name}</h2>
-        {partner && (
-          <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
-            파트너 <strong style={{ color: '#e06080' }}>{getPokemonName(partner)}</strong>
-          </div>
-        )}
-        {member.bio && (
-          <p style={{ fontSize: 13, color: '#555', marginTop: 10, marginBottom: 0, lineHeight: 1.6 }}>{member.bio}</p>
-        )}
-      </div>
-
-      {/* 메모 */}
-      {member.note && (
-        <div style={{ margin: '10px 16px 0', background: '#fff', borderRadius: 16, padding: '14px 16px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: '#8aaa60', letterSpacing: '0.04em', marginBottom: 6 }}>메모</div>
-          <div style={{ fontSize: 13, color: '#444', lineHeight: 1.7 }}>
-            {member.note.split('\n').map((line, i) => (
-              <p key={i} style={{ margin: 0, marginBottom: '0.3em', textIndent: '0.5em' }}>{line || ' '}</p>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 엔트리 */}
-      {party.length > 0 && (
-        <div style={{ margin: '10px 16px 0', background: '#fff', borderRadius: 16, padding: '14px 16px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: '#8aaa60', letterSpacing: '0.04em', marginBottom: 10 }}>엔트리</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {party.map((p, i) => (
-              <div key={i} style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-                background: '#f5f8f2', borderRadius: 10, padding: '6px 8px', minWidth: 44,
-              }}>
-                <PokemonHalfIcon pokemon={p} size={36} />
-                <span style={{ fontSize: 10, color: '#666', textAlign: 'center', maxWidth: 44, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {getPokemonName(p)}
+      {/* 정보 그리드 */}
+      {infoRows.length > 0 && (
+        <>
+          <hr style={SEC_DIVIDER} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 0' }}>
+            {infoRows.map((row, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                <span style={{ fontSize: '0.68rem', color: '#8aaa78', fontWeight: 700, minWidth: 32, flexShrink: 0 }}>
+                  {row.label}
+                </span>
+                <span style={{ fontSize: '0.9rem', color: '#1a2e10', fontWeight: 700 }}>
+                  {row.value}
                 </span>
               </div>
             ))}
           </div>
-        </div>
+        </>
       )}
 
-      {/* 뒤로가기 — 우하단 고정 */}
-      <button
-        onClick={onBack}
-        style={{
-          position: 'fixed', bottom: 88, right: 20,
-          width: 44, height: 44, borderRadius: '50%',
-          background: 'rgba(30,60,20,0.75)', backdropFilter: 'blur(8px)',
-          border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#fff', cursor: 'pointer',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.25)',
-          zIndex: 100,
-        }}
-      >
-        <ChevronLeft size={22} />
-      </button>
+      {/* 메모 */}
+      {member.note && (
+        <>
+          <hr style={SEC_DIVIDER} />
+          <div style={{ fontSize: '0.9rem', color: '#666', lineHeight: 1.85 }}>
+            {member.note.split('\n').map(renderTextLine)}
+          </div>
+        </>
+      )}
+
+      {/* 파트너 포켓몬 소개 */}
+      {partner && member.partnerText && (
+        <>
+          <hr style={SEC_DIVIDER} />
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 8 }}>
+            <span style={{ fontSize: '0.58rem', color: '#8aaa78', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>Partner</span>
+            <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#1a2e10', whiteSpace: 'nowrap' }}>{getPokemonName(partner)}</span>
+          </div>
+          <div style={{ fontSize: '0.9rem', color: '#666', lineHeight: 1.85, whiteSpace: 'pre-wrap' }}>
+            {member.partnerText}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ── 프로필 탭: keywords + keywordTexts + etcText (데스크탑 2탭) ── */
+function ProfileTab({ member }) {
+  const keywords = member.keywords || [];
+  const keywordTexts = member.keywordTexts || [];
+  const etcText = member.etcText || '';
+
+  const sections = [
+    ...keywords.slice(0, 3).map((kw, i) => ({
+      label: kw ? `#${kw}` : null,
+      text: keywordTexts[i] || '',
+    })).filter(s => s.label),
+    ...(etcText ? [{ label: '기타', text: etcText }] : []),
+  ];
+
+  if (!sections.length) {
+    return <p style={{ color: '#bbb', fontSize: '0.85rem', textAlign: 'center', padding: '40px 0' }}>내용 없음</p>;
+  }
+
+  return (
+    <div>
+      {sections.map((s, i) => (
+        <React.Fragment key={i}>
+          {i > 0 && <hr style={SEC_DIVIDER} />}
+          <div>
+            <div style={{ ...SEC_TITLE, fontSize: '1.05rem', color: '#5a9a30' }}>{s.label}</div>
+            {s.text
+              ? <div style={{ fontSize: '0.9rem', color: '#555', lineHeight: 1.85 }}>
+                  {s.text.split('\n').map(renderTextLine)}
+                </div>
+              : <p style={{ fontSize: '0.82rem', color: '#ccc', margin: 0, fontStyle: 'italic' }}>내용 없음</p>
+            }
+          </div>
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
+/* ── 엔트리 탭 ── */
+function EntryTab({ party, allItems = [] }) {
+  if (!party.length) {
+    return <p style={{ color: '#bbb', fontSize: '0.85rem', textAlign: 'center', padding: '40px 0' }}>포켓몬 없음</p>;
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {party.map((p, i) => {
+        const sprite = getOwnedPokemonSpriteUrl(p) || getPokemonLocalIconUrl(p);
+        const types = (Array.isArray(p?.types) ? p.types : [p?.type]).filter(Boolean);
+        const ballUrl = getBallUrl(p, allItems);
+        const baseName = p?.nameKo || p?.name || '';
+        const nickname = p?.nickname && p.nickname !== baseName ? p.nickname : null;
+        const moves = (p?.moves || []).slice(0, 4);
+        const isPartner = p._isPartner;
+
+        return (
+          <div key={i} style={{
+            position: 'relative',
+            background: 'rgba(74,154,8,0.09)',
+            borderRadius: 14, padding: '10px 14px 10px 10px',
+            display: 'flex', gap: 10, alignItems: 'center',
+          }}>
+            <img src={ballUrl} alt="" style={{
+              position: 'absolute', top: 6, left: 6,
+              width: 'auto', height: 'auto', maxWidth: 36, maxHeight: 36,
+              imageRendering: 'pixelated', opacity: 0.75, pointerEvents: 'none',
+            }} />
+            <img
+              src={sprite}
+              alt={getPokemonName(p)}
+              style={{ maxWidth: 96, maxHeight: 96, width: 'auto', height: 'auto', flexShrink: 0, imageRendering: 'pixelated' }}
+              onError={e => { e.target.src = getPokemonLocalIconUrl(p); }}
+            />
+            <div style={{ flex: 1, minWidth: 0, paddingTop: 2 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap', marginBottom: 4 }}>
+                <span style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>{nickname || baseName}</span>
+                {p?.isShiny && <span style={{ color: '#dc2626', fontSize: 11, fontWeight: 900 }}>★</span>}
+                {nickname && <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.35)' }}>{baseName}</span>}
+                {p?.gender === 'male' && <GenderMale />}
+                {p?.gender === 'female' && <GenderFemale />}
+                {isPartner && <span style={{ fontSize: 10, fontWeight: 700, color: '#d97706' }}>파트너</span>}
+                {types.map((t, ti) => {
+                  const tc = TYPE_COLORS[t] || { bg: '#888', text: '#fff' };
+                  return <span key={ti} style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: tc.bg, color: tc.text }}>{t}</span>;
+                })}
+                {p?.ability && <span style={{ fontSize: 10, color: '#666', marginLeft: 'auto', whiteSpace: 'nowrap' }}>{p.ability}</span>}
+              </div>
+              {moves.length > 0 && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
+                  {moves.map((mv, mi) => {
+                    const mc = getMoveTypeColor(mv);
+                    return (
+                      <span key={mi} style={{
+                        fontSize: 10, fontWeight: 700, lineHeight: 1.2,
+                        color: mc.text, background: mc.bg,
+                        borderRadius: 999, padding: '3px 7px',
+                        textAlign: 'center', whiteSpace: 'nowrap',
+                        overflow: 'hidden', textOverflow: 'ellipsis',
+                      }}>
+                        {getMoveLabel(mv)}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── 멤버 상세 ── */
+const TABS = [
+  { key: 'main', label: 'MAIN' },
+  { key: 'profile', label: 'PROFILE' },
+  { key: 'entry', label: 'ENTRY' },
+];
+
+function MemberDetail({ member, titles, onBack }) {
+  const [activeTab, setActiveTab] = useState('main');
+  const [leaving, setLeaving] = useState(false);
+  const { allItems = [] } = useGame();
+  const party = getParty(member);
+  const partner = getPartner(member);
+  const title = member.title && member.title !== 'none'
+    ? titles.find(t => t.id === member.title)?.label || ''
+    : '';
+
+  const handleBack = () => {
+    setLeaving(true);
+    setTimeout(onBack, 500);
+  };
+
+  return (
+    <div className="mmv-detail-scroll" style={{
+      position: 'fixed', inset: 0, zIndex: 400,
+      overflowY: 'auto', overflowX: 'hidden',
+      background: '#fff',
+      WebkitOverflowScrolling: 'touch',
+      animation: leaving
+        ? 'mmv-fade-out 0.5s cubic-bezier(0.4,0,0.2,1) forwards'
+        : 'mmv-fade-in 0.8s cubic-bezier(0.4,0,0.2,1)',
+    }}>
+      <style>{`
+        .mmv-detail-scroll::-webkit-scrollbar{display:none}
+        .mmv-detail-scroll{scrollbar-width:none;-ms-overflow-style:none}
+        @keyframes mmv-fade-in{from{opacity:0}to{opacity:1}}
+        @keyframes mmv-fade-out{from{opacity:1}to{opacity:0}}
+      `}</style>
+
+      {/* 탭 네비 + 뒤로가기 — sticky */}
+      <div style={{
+        position: 'sticky', top: 0, zIndex: 5,
+        display: 'flex', alignItems: 'center',
+        background: '#fff',
+        borderBottom: '1px solid #e8ede4',
+        padding: '0 8px',
+      }}>
+        <button
+          onClick={handleBack}
+          style={{
+            flexShrink: 0, width: 36, height: 44,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: '#888', padding: 0,
+          }}
+        >
+          <ChevronLeft size={20} />
+        </button>
+        {TABS.map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => setActiveTab(key)}
+            style={{
+              flexShrink: 0, padding: '13px 12px 10px',
+              fontSize: '0.6rem', fontWeight: 800, letterSpacing: '0.08em',
+              color: activeTab === key ? '#3a6a20' : '#aaa',
+              background: 'none', border: 'none',
+              borderBottom: activeTab === key ? '2px solid #5a9a30' : '2px solid transparent',
+              cursor: 'pointer', whiteSpace: 'nowrap',
+              transition: 'color 0.15s',
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* 콘텐츠 */}
+      <div style={{ padding: '18px 20px 100px' }}>
+        {activeTab === 'main' && <MainTab member={member} title={title} partner={partner} />}
+        {activeTab === 'profile' && <ProfileTab member={member} />}
+        {activeTab === 'entry' && <EntryTab party={party} allItems={allItems} />}
+      </div>
     </div>
   );
 }
@@ -189,7 +525,23 @@ function MemberDetail({ member, titles, onBack }) {
 /* ── 메인 ── */
 export default function MobileMembersView({ members = {}, titles = [] }) {
   const [selected, setSelected] = useState(null);
+  const [revealedId, setRevealedId] = useState(null);
+  const revealTimer = useRef(null);
   const list = getMemberList(members);
+
+  useEffect(() => () => clearTimeout(revealTimer.current), []);
+
+  const handleCardTap = (m) => {
+    if (revealedId === m.id) {
+      clearTimeout(revealTimer.current);
+      setRevealedId(null);
+      setSelected(m);
+    } else {
+      clearTimeout(revealTimer.current);
+      setRevealedId(m.id);
+      revealTimer.current = setTimeout(() => setRevealedId(null), 2000);
+    }
+  };
 
   if (selected) {
     const m = members[selected.id] || selected;
@@ -197,11 +549,18 @@ export default function MobileMembersView({ members = {}, titles = [] }) {
   }
 
   return (
-    <div style={{ padding: '16px 16px 80px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1a2e10', margin: '0 0 4px' }}>멤버</h2>
-      {list.map(m => (
-        <MemberCard key={m.id} member={m} titles={titles} onClick={() => setSelected(m)} />
-      ))}
+    <div style={{
+      padding: '28px 14px 80px',
+      minHeight: 'calc(100dvh + 80px)',
+      background: 'transparent',
+      animation: 'mmv-fade-in 0.6s cubic-bezier(0.4,0,0.2,1)',
+    }}>
+      <style>{`@keyframes mmv-fade-in{from{opacity:0}to{opacity:1}}`}</style>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+        {list.map(m => (
+          <MemberCard key={m.id} member={m} isRevealed={revealedId === m.id} onTap={() => handleCardTap(m)} />
+        ))}
+      </div>
     </div>
   );
 }

@@ -1,31 +1,38 @@
-const imagePromiseCache = new Map();
-const decodedImageUrls = new Set();
+// url → { objectUrl: string | null, promise: Promise }
+const cache = new Map();
 
-export const isImageDecoded = (url) => decodedImageUrls.has(url);
+export const getCachedSrc = (url) => {
+  if (!url) return url;
+  return cache.get(url)?.objectUrl ?? url;
+};
 
-export const preloadDecodedImage = (url) => {
-  if (!url) return Promise.resolve(null);
-  if (imagePromiseCache.has(url)) return imagePromiseCache.get(url);
+export const isImageCached = (url) => !!(url && cache.get(url)?.objectUrl);
 
-  const promise = new Promise(resolve => {
-    const image = new Image();
-    image.onload = async () => {
-      try {
-        await image.decode?.();
-      } catch {
-        // A loaded image can still be displayed when decode() is unsupported.
-      }
-      decodedImageUrls.add(url);
-      resolve(image);
-    };
-    image.onerror = () => {
-      imagePromiseCache.delete(url);
-      resolve(null);
-    };
-    image.src = url;
-  });
+export const preloadImage = (url) => {
+  if (!url) return Promise.resolve(url);
 
-  imagePromiseCache.set(url, promise);
+  const existing = cache.get(url);
+  if (existing) return existing.promise;
+
+  const promise = fetch(url)
+    .then(res => {
+      if (!res.ok) throw new Error('fetch failed');
+      return res.blob();
+    })
+    .then(blob => {
+      const objectUrl = URL.createObjectURL(blob);
+      cache.get(url).objectUrl = objectUrl;
+      return objectUrl;
+    })
+    .catch(() => {
+      cache.delete(url);
+      return url;
+    });
+
+  cache.set(url, { objectUrl: null, promise });
   return promise;
 };
 
+// 하위 호환
+export const isImageDecoded = isImageCached;
+export const preloadDecodedImage = preloadImage;
