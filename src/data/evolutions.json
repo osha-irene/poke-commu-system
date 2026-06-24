@@ -3738,6 +3738,17 @@
     },
     {
       "from": 744,
+      "to": 10152,
+      "fromName": "rockruff",
+      "toName": "lycanroc-dusk",
+      "condition": {
+        "type": "level",
+        "level": 25,
+        "ability": "마이페이스"
+      }
+    },
+    {
+      "from": 744,
       "to": 745,
       "fromName": "rockruff",
       "toName": "lycanroc",

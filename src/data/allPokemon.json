@@ -42714,11 +42714,13 @@
     "weight": 92,
     "abilities": [
       "날카로운눈",
-      "의기양양"
+      "의기양양",
+      "마이페이스"
     ],
     "abilitiesEn": [
       "keen-eye",
-      "vital-spirit"
+      "vital-spirit",
+      "own-tempo"
     ],
     "hiddenAbility": "불굴의마음",
     "hiddenAbilityEn": "steadfast",

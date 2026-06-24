@@ -955,6 +955,11 @@ function MemberDetail({ member, titles, onBack, onTabChange, currentUserId }) {
     );
   };
   const renderDetailTextLine = (line, j, markRgb = selectedAccentRgb) => {
+    if (line.startsWith('#')) return (
+      <div key={j} style={{ display: 'block', background: `rgba(${markRgb}, 0.25)`, borderRadius: 0, padding: '4px 14px', marginBottom: '0.7em', marginLeft: '-0.5em', width: 'calc(100% + 1rem)', WebkitMaskImage: 'linear-gradient(to right, black 55%, transparent 85%)', maskImage: 'linear-gradient(to right, black 55%, transparent 85%)', fontSize: 16, fontWeight: 600 }}>
+        {renderMarkedText(line.slice(1).trim(), markRgb) || ' '}
+      </div>
+    );
     if (line.startsWith('*')) return (
       <div key={j} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: '0.7em' }}>
         <span style={{ color: `rgb(${markRgb})`, fontWeight: 700, flexShrink: 0, lineHeight: 1.75 }}>•</span>
@@ -1332,7 +1337,7 @@ function MemberDetail({ member, titles, onBack, onTabChange, currentUserId }) {
                         <>
                           <textarea
                             value={keywordTexts[i]}
-                            ref={el => { if (el) { el.style.height = 'auto'; requestAnimationFrame(() => { el.style.height = el.scrollHeight + 'px'; }); el.focus({ preventScroll: true }); } }}
+                            ref={el => { if (el && !el.dataset.initialized) { el.dataset.initialized = '1'; el.style.height = 'auto'; requestAnimationFrame(() => { el.style.height = el.scrollHeight + 'px'; }); el.focus({ preventScroll: true }); } }}
                             onChange={e => { setKeywordTexts(prev => { const n = [...prev]; n[i] = e.target.value; return n; }); const el = e.target; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }}
                             style={{ display: 'block', width: '100%', resize: 'none', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.6)', borderRadius: 8, padding: '10px 14px', fontSize: 15, color: '#333', lineHeight: 1.75, fontFamily: 'inherit', overflow: 'hidden', minHeight: 48 }}
                           />
@@ -1366,7 +1371,7 @@ function MemberDetail({ member, titles, onBack, onTabChange, currentUserId }) {
                     <>
                       <textarea
                         value={etcText}
-                        ref={el => { if (el) { el.style.height = 'auto'; requestAnimationFrame(() => { el.style.height = el.scrollHeight + 'px'; }); el.focus({ preventScroll: true }); } }}
+                        ref={el => { if (el && !el.dataset.initialized) { el.dataset.initialized = '1'; el.style.height = 'auto'; requestAnimationFrame(() => { el.style.height = el.scrollHeight + 'px'; }); el.focus({ preventScroll: true }); } }}
                         onChange={e => { setEtcText(e.target.value); const el = e.target; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }}
                         style={{ display: 'block', width: '100%', resize: 'none', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.6)', borderRadius: 8, padding: '10px 14px', fontSize: 15, color: '#333', lineHeight: 1.75, fontFamily: 'inherit', overflow: 'hidden', minHeight: 48 }}
                       />

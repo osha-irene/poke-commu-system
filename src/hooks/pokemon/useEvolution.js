@@ -29,6 +29,13 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
     );
   };
 
+  const findAllEvolutionsForPokemon = (pokemon) => {
+    const candidates = getPokemonNumberCandidates(pokemon);
+    return evolutionsData.evolutions.filter((evo) =>
+      candidates.includes(toPokemonNumber(evo.from))
+    );
+  };
+
   const findPokemonTemplateByNumber = (number) => {
     const targetNumber = toPokemonNumber(number);
     return allPokemonMaster.find((pokemon) =>
@@ -37,98 +44,82 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
     );
   };
 
+ // 단일 진화 조건 충족 여부 확인 (내부 헬퍼)
+  const checkSingleEvolutionCondition = (pokemon, evolution) => {
+    const { condition } = evolution;
+
+    if (condition.type === 'level') {
+      if (pokemon.level < condition.level) return false;
+
+      if (condition.ability) {
+        const hasAbility = pokemon.ability === condition.ability || pokemon.abilityEn === condition.ability;
+        console.log('💡 특성 조건:', condition.ability, '보유:', pokemon.ability, '충족:', hasAbility);
+        if (!hasAbility) return false;
+      }
+
+      if (condition.timeOfDay) {
+        const hour = new Date().getHours();
+        const currentTime = hour >= 6 && hour < 18 ? 'day' : 'night';
+        console.log('⏰ 시간 조건:', currentTime, '필요:', condition.timeOfDay);
+        if (currentTime !== condition.timeOfDay) return false;
+      }
+
+      if (condition.partyType) {
+        const hasType = currentUser.caughtPokemon
+          .slice(0, 6)
+          .some(p => p && (p.type === condition.partyType || p.type2 === condition.partyType));
+        if (!hasType) return false;
+      }
+
+      if (condition.knownMove) {
+        const hasMove = pokemon.moves?.some(
+          m => m.moveId === condition.knownMove || m.name?.toLowerCase() === condition.knownMove
+        );
+        if (!hasMove) return false;
+      }
+
+      return true;
+    }
+
+    if (condition.type === 'friendship') {
+      if ((pokemon.friendship || 0) < condition.friendship) return false;
+
+      if (condition.timeOfDay) {
+        const hour = new Date().getHours();
+        const currentTime = hour >= 6 && hour < 18 ? 'day' : 'night';
+        if (currentTime !== condition.timeOfDay) return false;
+      }
+
+      return true;
+    }
+
+    return false;
+  };
+
  // 진화 가능 여부 확인
   const checkEvolution = (pokemon) => {
     console.log('🔍 checkEvolution 호출:', pokemon.name, pokemon.number, 'Lv.', pokemon.level);
-    
+
     if (!pokemon) {
       console.log('❌ pokemon이 없음');
       return null;
     }
 
-    // 해당 포켓몬의 진화 정보 찾기
-    const evolution = findEvolutionForPokemon(pokemon);
-    
-    console.log('📋 찾은 진화 정보:', evolution);
+    // 해당 포켓몬의 모든 진화 경로 찾기 (특성 조건이 있는 것이 우선 배치됨)
+    const evolutions = findAllEvolutionsForPokemon(pokemon);
 
-    if (!evolution) {
+    console.log('📋 찾은 진화 경로 수:', evolutions.length);
+
+    if (evolutions.length === 0) {
       console.log('❌ 진화 정보 없음 (이 포켓몬은 진화하지 않거나 최종 진화형)');
       return null;
     }
 
-    const { condition } = evolution;
-    console.log('📝 진화 조건:', condition);
-
-    // 레벨 진화
-    if (condition.type === 'level') {
-      console.log('🎚️ 레벨 진화 체크:', pokemon.level, '>=', condition.level);
-      
-      if (pokemon.level >= condition.level) {
-        console.log('✅ 레벨 조건 충족!');
-        
-        // 추가 조건 확인
-        if (condition.timeOfDay) {
-          const hour = new Date().getHours();
-          const currentTime = hour >= 6 && hour < 18 ? 'day' : 'night';
-          console.log('⏰ 시간 조건:', currentTime, '필요:', condition.timeOfDay);
-          if (currentTime !== condition.timeOfDay) {
-            console.log('❌ 시간 조건 미충족');
-            return null;
-          }
-        }
-
-        if (condition.partyType) {
-          // 파티에 특정 타입 포켓몬이 있는지 확인
-          const hasType = currentUser.caughtPokemon
-            .slice(0, 6)
-            .some(p => p && (p.type === condition.partyType || p.type2 === condition.partyType));
-          console.log('🎭 파티 타입 조건:', condition.partyType, '보유:', hasType);
-          if (!hasType) {
-            console.log('❌ 파티 타입 조건 미충족');
-            return null;
-          }
-        }
-
-        if (condition.knownMove) {
-          // 특정 기술을 알고 있는지 확인
-          const hasMove = pokemon.moves?.some(
-            m => m.moveId === condition.knownMove || m.name?.toLowerCase() === condition.knownMove
-          );
-          console.log('⚔️ 기술 조건:', condition.knownMove, '보유:', hasMove);
-          if (!hasMove) {
-            console.log('❌ 기술 조건 미충족');
-            return null;
-          }
-        }
-
-        console.log('🎉 모든 조건 충족! 진화 가능!');
+    for (const evolution of evolutions) {
+      console.log('📝 진화 조건 체크:', evolution.toName, evolution.condition);
+      if (checkSingleEvolutionCondition(pokemon, evolution)) {
+        console.log('🎉 모든 조건 충족! 진화 가능!', evolution.toName);
         return evolution;
-      } else {
-        console.log('❌ 레벨 조건 미충족');
-      }
-    }
-
-    // 친밀도 진화
-    if (condition.type === 'friendship') {
-      console.log('💖 친밀도 진화 체크:', pokemon.friendship || 0, '>=', condition.friendship);
-      
-      if ((pokemon.friendship || 0) >= condition.friendship) {
-        console.log('✅ 친밀도 조건 충족!');
-        
-        if (condition.timeOfDay) {
-          const hour = new Date().getHours();
-          const currentTime = hour >= 6 && hour < 18 ? 'day' : 'night';
-          console.log('⏰ 시간 조건:', currentTime, '필요:', condition.timeOfDay);
-          if (currentTime !== condition.timeOfDay) {
-            console.log('❌ 시간 조건 미충족');
-            return null;
-          }
-        }
-        
-        console.log('🎉 모든 조건 충족! 진화 가능!');
-        return evolution;
-      } else {
-        console.log('❌ 친밀도 조건 미충족');
       }
     }
 
