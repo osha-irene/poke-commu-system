@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.e06426a1.css",
-    "main.js": "/static/js/main.87acfb41.js",
+    "main.css": "/static/css/main.21a5225a.css",
+    "main.js": "/static/js/main.956e7a70.js",
     "static/js/623.69c45dc4.chunk.js": "/static/js/623.69c45dc4.chunk.js",
     "static/media/forest-bg.png": "/static/media/forest-bg.ed51a4032d3a6a7016d2.png",
     "static/media/forest-bg (2).png": "/static/media/forest-bg (2).023aaebd6df83a1d1128.png",
@@ -13,16 +13,17 @@
     "static/media/main_npc.png": "/static/media/main_npc.b48850ebb2a6e5f6c1b5.png",
     "static/media/main_deco_leaves (2).png": "/static/media/main_deco_leaves (2).1d65fa47529c541e03ac.png",
     "static/media/logo_text.png": "/static/media/logo_text.fdb1298f93a712fc16a5.png",
+    "static/media/rubbing.mp3": "/static/media/rubbing.b846dd12125a470dd965.mp3",
     "static/media/badge4.png": "/static/media/badge4.49ba69cde289aa29c7e6.png",
     "static/media/badge2.png": "/static/media/badge2.e461e795fa5431fd609a.png",
     "static/media/badge5.png": "/static/media/badge5.cc7a611fdda026df198d.png",
     "static/media/badge6.png": "/static/media/badge6.6a7230c58a6c95f197f5.png",
     "static/media/badge3.png": "/static/media/badge3.c3f5217b637d2c2f4b39.png",
-    "static/media/ribbon1.png": "/static/media/ribbon1.4e2ef5763ecdfffe6b1d.png",
-    "static/media/ribbon4.png": "/static/media/ribbon4.4e2ef5763ecdfffe6b1d.png",
-    "static/media/ribbon5.png": "/static/media/ribbon5.3f1d36552d183a97702a.png",
-    "static/media/ribbon2.png": "/static/media/ribbon2.889ef5b6fa66bd1c47b7.png",
-    "static/media/ribbon3.png": "/static/media/ribbon3.87056127d0d0d4ee123f.png",
+    "static/media/ribbon-cute.png": "/static/media/ribbon-cute.4e2ef5763ecdfffe6b1d.png",
+    "static/media/ribbon-beauty.png": "/static/media/ribbon-beauty.3f1d36552d183a97702a.png",
+    "static/media/ribbon-cool.png": "/static/media/ribbon-cool.889ef5b6fa66bd1c47b7.png",
+    "static/media/ribbon-powerful.png": "/static/media/ribbon-powerful.545dc9368ba2c42cc17e.png",
+    "static/media/ribbon-intelligence.png": "/static/media/ribbon-intelligence.87056127d0d0d4ee123f.png",
     "static/media/badge7.png": "/static/media/badge7.4a05c0f52389c5d463d1.png",
     "static/media/badge8.png": "/static/media/badge8.dfead11dcf6831a8f341.png",
     "static/media/badge1.png": "/static/media/badge1.d7a397bb03f97522e531.png",
@@ -30,6 +31,7 @@
     "static/media/logo_compass.png": "/static/media/logo_compass.5e060dd19119f1f61b6d.png",
     "static/media/badge.png": "/static/media/badge.bcd50f739fcf99745baa.png",
     "static/media/main_heading.png": "/static/media/main_heading.d0a2d6b1e34bd6c29720.png",
+    "static/media/chime.mp3": "/static/media/chime.09264db5360929db9e16.mp3",
     "static/media/shop.png": "/static/media/shop.cc5ee513c61a15a159c6.png",
     "static/media/trainercard.png": "/static/media/trainercard.e2eae1016f14eff54c38.png",
     "static/media/dex.png": "/static/media/dex.af4ff9e1d9c3a41576c1.png",
@@ -47,12 +49,12 @@
     "static/media/pokeball.png": "/static/media/pokeball.0ce8227d4210c4d60ed5.png",
     "index.html": "/index.html",
     "static/media/pokemon-icon.svg": "/static/media/pokemon-icon.d36b6f0655c180980d5acb3287a88011.svg",
-    "main.e06426a1.css.map": "/static/css/main.e06426a1.css.map",
-    "main.87acfb41.js.map": "/static/js/main.87acfb41.js.map",
+    "main.21a5225a.css.map": "/static/css/main.21a5225a.css.map",
+    "main.956e7a70.js.map": "/static/js/main.956e7a70.js.map",
     "623.69c45dc4.chunk.js.map": "/static/js/623.69c45dc4.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.e06426a1.css",
-    "static/js/main.87acfb41.js"
+    "static/css/main.21a5225a.css",
+    "static/js/main.956e7a70.js"
   ]
 }
