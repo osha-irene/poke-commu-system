@@ -15,6 +15,7 @@ function MemberInfoTab({
   onDeleteMember,
   onUpdateBadgePieces,
   onUpdateRibbonPieces,
+  onUpdateRibbonTypes,
 }) {
   const [moneyInput, setMoneyInput] = useState(member.money || 0);
   const [expInput, setExpInput] = useState(member.trainerExp || 0);
@@ -22,12 +23,22 @@ function MemberInfoTab({
   const [editMaxWalkCount, setEditMaxWalkCount] = useState(member.maxDailyWalks);
   const [npcOrderInput, setNpcOrderInput] = useState(member.npcOrder || '');
   const [badgePieces, setBadgePieces] = useState(() => member.badgePieces || Array(8).fill(false));
-  const [ribbonPieces, setRibbonPieces] = useState(() => member.ribbonPieces || Array(5).fill(false));
+  const [ribbonPieces, setRibbonPieces] = useState(() => member.ribbonPieces || Array(8).fill(false));
+  const [ribbonTypes, setRibbonTypes] = useState(() => member.ribbonTypes || Array(8).fill(null));
 
   useEffect(() => {
     setBadgePieces(member.badgePieces || Array(8).fill(false));
-    setRibbonPieces(member.ribbonPieces || Array(5).fill(false));
+    setRibbonPieces(member.ribbonPieces || Array(8).fill(false));
+    setRibbonTypes(member.ribbonTypes || Array(8).fill(null));
   }, [member.id]);
+
+  const RIBBON_TYPE_OPTIONS = [
+    { value: 'cute',         label: '귀여움' },
+    { value: 'intelligence', label: '슬기로움' },
+    { value: 'powerful',     label: '강인함' },
+    { value: 'cool',         label: '근사함' },
+    { value: 'beauty',       label: '아름다움' },
+  ];
 
   useEffect(() => {
     setNpcOrderInput(member.npcOrder || '');
@@ -121,27 +132,39 @@ function MemberInfoTab({
         {/* 리본 수집 현황 */}
         <div className="bg-pink-50 border-2 border-pink-200 rounded-xl p-4">
           <h3 className="font-bold text-base mb-3">🎀 리본 수집 현황</h3>
-          <div className="flex gap-2 flex-wrap">
-            {ribbonPieces.map((checked, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  const next = [...ribbonPieces];
-                  next[i] = !next[i];
-                  setRibbonPieces(next);
-                  onUpdateRibbonPieces?.(member.id, next);
-                }}
-                className={`w-10 h-10 rounded-lg border-2 font-bold text-sm transition-all ${
-                  checked
-                    ? 'bg-pink-400 border-pink-500 text-white'
-                    : 'bg-white border-gray-300 text-gray-400 hover:border-pink-400'
-                }`}
-              >
-                {i + 1}
-              </button>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+            {[0, 1].map(col => (
+              <div key={col} className="space-y-2">
+                {[0,1,2,3].map(row => {
+                  const i = col * 4 + row;
+                  const checked = ribbonPieces[i];
+                  return (
+                    <div key={i} className="flex items-center gap-1.5">
+                      <span className={`w-7 h-7 rounded-lg border-2 font-bold text-xs flex-shrink-0 flex items-center justify-center ${ribbonTypes[i] ? 'bg-pink-400 border-pink-500 text-white' : 'bg-white border-gray-200 text-gray-400'}`}>
+                        {i + 1}
+                      </span>
+                      <select
+                        value={ribbonTypes[i] || ''}
+                        onChange={e => {
+                          const next = [...ribbonTypes];
+                          next[i] = e.target.value || null;
+                          setRibbonTypes(next);
+                          onUpdateRibbonTypes?.(member.id, next);
+                        }}
+                        className="flex-1 text-xs border border-gray-200 rounded-lg px-1.5 py-1 bg-white text-gray-700 focus:outline-none focus:border-pink-400 min-w-0"
+                      >
+                        <option value="">— 선택 —</option>
+                        {RIBBON_TYPE_OPTIONS.map(opt => (
+                          <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  );
+                })}
+              </div>
             ))}
           </div>
-          <p className="text-xs text-gray-400 mt-2">{ribbonPieces.filter(Boolean).length} / 5 수집</p>
+          <p className="text-xs text-gray-400 mt-2">{ribbonPieces.filter(Boolean).length} / 8 수집</p>
         </div>
       </div>
 

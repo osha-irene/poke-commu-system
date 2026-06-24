@@ -687,6 +687,32 @@ body.rmv-detail-open .site-header {
 .rmv-text-tab-in {
   animation: rmv-tab-slide-ltr 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+@keyframes rmv-achievements-in {
+  from { opacity: 0; transform: translateX(-80px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.rmv-achievements-text {
+  animation: rmv-achievements-in 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.05s;
+}
+.rmv-badge-sparkles span {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0.2) rotate(45deg);
+  background:
+    linear-gradient(90deg, transparent 38%, rgba(255,255,255,0.95) 48%, rgba(255,255,255,0.95) 52%, transparent 62%),
+    linear-gradient(0deg, transparent 38%, rgba(255,255,255,0.95) 48%, rgba(255,255,255,0.95) 52%, transparent 62%),
+    radial-gradient(circle, rgba(255,255,255,1) 0 18%, rgba(255,245,182,0.9) 19% 34%, transparent 58%);
+  filter: drop-shadow(0 0 5px rgba(255,245,182,0.9));
+  opacity: 0;
+  animation: rmv-badge-sparkle 1.6s ease-in-out infinite;
+}
+@keyframes rmv-badge-sparkle {
+  0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.2) rotate(45deg); }
+  28% { opacity: 1; transform: translate(-50%, -50%) scale(1.25) rotate(45deg); }
+  58% { opacity: 0; transform: translate(-50%, -50%) scale(0.45) rotate(45deg); }
+}
 
 @keyframes rmv-bg-reveal-rtl {
   from { clip-path: inset(0 0 0 100%); opacity: 0; }

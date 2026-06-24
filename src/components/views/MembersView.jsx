@@ -17,11 +17,11 @@ import npcButtonImg from '../../assets/members/npc-button.png';
 import topButtonImg from '../../assets/members/top-button.png';
 import memberBadgeImg from '../../assets/members/badge.png';
 import ribbonSilhouetteImg from '../../assets/members/ribbon/ribbon-silhouette.png';
-import ribbon1Img from '../../assets/members/ribbon/ribbon1.png';
-import ribbon2Img from '../../assets/members/ribbon/ribbon2.png';
-import ribbon3Img from '../../assets/members/ribbon/ribbon3.png';
-import ribbon4Img from '../../assets/members/ribbon/ribbon4.png';
-import ribbon5Img from '../../assets/members/ribbon/ribbon5.png';
+import ribbonCuteImg         from '../../assets/members/ribbon/ribbon-cute.png';
+import ribbonIntelligenceImg  from '../../assets/members/ribbon/ribbon-intelligence.png';
+import ribbonPowerfulImg      from '../../assets/members/ribbon/ribbon-powerful.png';
+import ribbonCoolImg          from '../../assets/members/ribbon/ribbon-cool.png';
+import ribbonBeautyImg        from '../../assets/members/ribbon/ribbon-beauty.png';
 import badge1Img from '../../assets/members/badge/badge1.png';
 import badge2Img from '../../assets/members/badge/badge2.png';
 import badge3Img from '../../assets/members/badge/badge3.png';
@@ -30,17 +30,110 @@ import badge5Img from '../../assets/members/badge/badge5.png';
 import badge6Img from '../../assets/members/badge/badge6.png';
 import badge7Img from '../../assets/members/badge/badge7.png';
 import badge8Img from '../../assets/members/badge/badge8.png';
+import chimeSound from '../../assets/sounds/chime.mp3';
+import rubbingSound from '../../assets/sounds/rubbing.mp3';
 
 const BADGE_IMGS = [badge1Img, badge2Img, badge3Img, badge4Img, badge5Img, badge6Img, badge7Img, badge8Img];
+const BADGE_CLEANLINESS_DEFAULT = 2;
+const BADGE_CLEANLINESS_MIN = 1;
+const BADGE_CLEANLINESS_MAX = 5;
+const BADGE_CLEANLINESS_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const BADGE_SPARKLE_DURATION_MS = 24 * 60 * 60 * 1000;
+const BADGE_SCRUB_STEP_MS = 2000;
+const BADGE_SCRUB_DURATION_MS = BADGE_SCRUB_STEP_MS * (BADGE_CLEANLINESS_MAX - BADGE_CLEANLINESS_MIN);
+const BADGE_DIRT_OPACITY = {
+  1: 0,
+  2: 0.08,
+  3: 0.18,
+  4: 0.32,
+  5: 0.52,
+};
+const BADGE_SPARKLES = [
+  { left: '18%', top: '28%', delay: '0s', size: 14 },
+  { left: '33%', top: '13%', delay: '0.35s', size: 10 },
+  { left: '62%', top: '20%', delay: '0.18s', size: 13 },
+  { left: '79%', top: '39%', delay: '0.52s', size: 9 },
+  { left: '22%', top: '66%', delay: '0.24s', size: 11 },
+  { left: '50%', top: '76%', delay: '0.64s', size: 14 },
+  { left: '72%', top: '67%', delay: '0.08s', size: 12 },
+];
 
-// 90° 왼쪽 회전한 W의 꼭짓점 5개: 좌-우-좌-우-좌 지그재그
-const RIBBON_IMGS = [ribbon1Img, ribbon2Img, ribbon3Img, ribbon4Img, ribbon5Img];
+function clampBadgeCleanliness(value) {
+  const level = Number(value);
+  if (!Number.isFinite(level)) return BADGE_CLEANLINESS_DEFAULT;
+  return Math.min(BADGE_CLEANLINESS_MAX, Math.max(BADGE_CLEANLINESS_MIN, Math.round(level)));
+}
+
+function getCurrentBadgeCleanliness(value, cleanedAt) {
+  const base = clampBadgeCleanliness(value);
+  const time = Number(cleanedAt);
+  if (!Number.isFinite(time) || time <= 0) return base;
+  const weeks = Math.max(0, Math.floor((Date.now() - time) / BADGE_CLEANLINESS_WEEK_MS));
+  return clampBadgeCleanliness(base + weeks);
+}
+
+function normalizeBadgeCleanlinessArray(value, fallbackValue) {
+  const source = Array.isArray(value) ? value : [];
+  return BADGE_IMGS.map((_, i) => clampBadgeCleanliness(source[i] ?? fallbackValue));
+}
+
+function normalizeBadgeCleanedAtArray(value, fallbackValue) {
+  const source = Array.isArray(value) ? value : [];
+  return BADGE_IMGS.map((_, i) => Number(source[i] ?? fallbackValue) || 0);
+}
+
+function getCurrentBadgeCleanlinessLevels(member) {
+  const baseLevels = normalizeBadgeCleanlinessArray(member.badgeCleanlinessLevels, member.badgeCleanliness);
+  const cleanedAtLevels = normalizeBadgeCleanedAtArray(member.badgeCleanedAtLevels, member.badgeCleanedAt);
+  return BADGE_IMGS.map((_, i) => getCurrentBadgeCleanliness(baseLevels[i], cleanedAtLevels[i]));
+}
+
+function normalizeDegrees(degrees) {
+  return ((degrees % 360) + 360) % 360;
+}
+
+function getUnrotatedBadgeUv(event, rotation) {
+  const rect = event.currentTarget.getBoundingClientRect();
+  const x = event.clientX - (rect.left + rect.width / 2);
+  const y = event.clientY - (rect.top + rect.height / 2);
+  const rad = normalizeDegrees(rotation) * Math.PI / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  const unrotatedX = x * cos + y * sin;
+  const unrotatedY = -x * sin + y * cos;
+  const u = unrotatedX / rect.width + 0.5;
+  const v = unrotatedY / rect.height + 0.5;
+  if (u < 0 || u > 1 || v < 0 || v > 1) return null;
+  return { u, v };
+}
+
+function getBadgePieceIndexFromPointer(event, rotation, masks) {
+  const uv = getUnrotatedBadgeUv(event, rotation);
+  if (!uv) return null;
+  if (masks?.length === BADGE_IMGS.length && masks.every(Boolean)) {
+    for (let i = 0; i < masks.length; i += 1) {
+      const mask = masks[i];
+      const x = Math.min(mask.width - 1, Math.max(0, Math.floor(uv.u * mask.width)));
+      const y = Math.min(mask.height - 1, Math.max(0, Math.floor(uv.v * mask.height)));
+      if (mask.ctx.getImageData(x, y, 1, 1).data[3] > 24) return i;
+    }
+    return null;
+  }
+  const angle = normalizeDegrees(Math.atan2(uv.v - 0.5, uv.u - 0.5) * 180 / Math.PI);
+  return Math.floor(((angle + 22.5) % 360) / 45);
+}
+
+const RIBBON_TYPE_IMGS = {
+  cute:         ribbonCuteImg,
+  intelligence: ribbonIntelligenceImg,
+  powerful:     ribbonPowerfulImg,
+  cool:         ribbonCoolImg,
+  beauty:       ribbonBeautyImg,
+};
 const RIBBON_POSITIONS = [
-  { left: '20%',  top: '0%'   },
-  { left: '80%',  top: '25%'  },
-  { left: '20%',  top: '50%'  },
-  { left: '80%',  top: '75%'  },
-  { left: '20%',  top: '100%' },
+  { left: '7%',  top: '8%'  }, { left: '50%', top: '8%'  }, { left: '93%', top: '8%'  },
+  { left: '7%',  top: '37%' }, { left: '50%', top: '37%' }, { left: '93%', top: '37%' },
+  { left: '50%', top: '66%' }, { left: '93%', top: '66%' },
 ];
 
 const GenderMale = () => (
@@ -513,7 +606,7 @@ function getQuoteAccentColor(color) {
 
 const imgCache = {}; // url → accent color (모듈 레벨 캐시)
 
-function MemberDetail({ member, titles, onBack, onTabChange }) {
+function MemberDetail({ member, titles, onBack, onTabChange, currentUserId }) {
   const { allItems = [] } = useGame();
   const fullImg = getFullImg(member);
   const imgRef = useRef(null);
@@ -579,10 +672,211 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
   const [partnerTextSaving, setPartnerTextSaving] = useState(false);
   const [badgeRotation, setBadgeRotation] = useState(0);
   const [badgeHovering, setBadgeHovering] = useState(false);
+  const [badgeCleanlinessLevels, setBadgeCleanlinessLevels] = useState(() => getCurrentBadgeCleanlinessLevels(member));
+  const [badgeCleanedAtLevels, setBadgeCleanedAtLevels] = useState(() => normalizeBadgeCleanedAtArray(member.badgeCleanedAtLevels, member.badgeCleanedAt));
+  const [badgeSparkleNow, setBadgeSparkleNow] = useState(() => Date.now());
+  const [badgeScrubPreview, setBadgeScrubPreview] = useState({ index: null, progress: 0 });
   const [hoveredRibbon, setHoveredRibbon] = useState(null);
   const badgePrevAngleRef = useRef(null);
+  const badgeScrubProgressRef = useRef(Array(8).fill(0));
+  const badgePointerRef = useRef(null);
+  const badgeLastScrubAtRef = useRef(0);
+  const badgeMaskRef = useRef([]);
+  const chimeAudioRef = useRef(null);
+  const chimeAudioContextRef = useRef(null);
+  const chimeAudioBufferRef = useRef(null);
+  const chimeAudioLoadingRef = useRef(null);
+  const rubbingAudioRef = useRef(null);
+  const rubbingAudioContextRef = useRef(null);
+  const rubbingAudioBufferRef = useRef(null);
+  const rubbingAudioSourceRef = useRef(null);
+  const rubbingAudioGainRef = useRef(null);
+  const rubbingAudioLoadingRef = useRef(null);
+  const badgeMouseDownRef = useRef(false);
+  const [badgeSparkle, setBadgeSparkle] = useState({ index: null, key: 0 });
   const badgePieces = member.badgePieces || Array(8).fill(false);
-  const ribbonPieces = member.ribbonPieces || Array(5).fill(false);
+  const ribbonPieces = member.ribbonPieces || Array(8).fill(false);
+  const ribbonTypes  = member.ribbonTypes  || Array(8).fill(null);
+  const canCleanBadge = String(member.id || '') === String(currentUserId || '');
+
+  const playChimeSound = async (cleanlinessLevel = BADGE_CLEANLINESS_MIN) => {
+    try {
+      const level = clampBadgeCleanliness(cleanlinessLevel);
+      const dirt = level - BADGE_CLEANLINESS_MIN;
+      const playbackRate = Math.max(0.55, 1 - dirt * 0.11);
+      const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextCtor) {
+        if (!chimeAudioContextRef.current) {
+          chimeAudioContextRef.current = new AudioContextCtor();
+        }
+        const context = chimeAudioContextRef.current;
+        if (context.state === 'suspended') await context.resume();
+        if (!chimeAudioBufferRef.current) {
+          if (!chimeAudioLoadingRef.current) {
+            chimeAudioLoadingRef.current = fetch(chimeSound)
+              .then(response => response.arrayBuffer())
+              .then(arrayBuffer => context.decodeAudioData(arrayBuffer));
+          }
+          chimeAudioBufferRef.current = await chimeAudioLoadingRef.current;
+        }
+        const source = context.createBufferSource();
+        const filter = context.createBiquadFilter();
+        const gain = context.createGain();
+        source.buffer = chimeAudioBufferRef.current;
+        source.playbackRate.value = playbackRate;
+        filter.type = 'lowpass';
+        filter.frequency.value = Math.max(1800, 9000 - dirt * 1800);
+        filter.Q.value = 0.6;
+        gain.gain.value = 0.8;
+        source.connect(filter);
+        filter.connect(gain);
+        gain.connect(context.destination);
+        source.start(0);
+        return;
+      }
+      if (!chimeAudioRef.current) chimeAudioRef.current = new Audio(chimeSound);
+      const audio = chimeAudioRef.current;
+      audio.preservesPitch = false;
+      audio.mozPreservesPitch = false;
+      audio.webkitPreservesPitch = false;
+      audio.playbackRate = playbackRate;
+      audio.volume = 0.8;
+      audio.currentTime = 0;
+      audio.play().catch(() => {});
+    } catch {}
+  };
+
+  const stopRubbingSound = () => {
+    if (rubbingAudioSourceRef.current) {
+      try { rubbingAudioSourceRef.current.stop(); } catch {}
+      try { rubbingAudioSourceRef.current.disconnect(); } catch {}
+      rubbingAudioSourceRef.current = null;
+    }
+    const audio = rubbingAudioRef.current;
+    if (!audio) return;
+    audio.pause();
+    audio.currentTime = 0;
+  };
+
+  const playRubbingSound = async () => {
+    try {
+      const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextCtor) {
+        if (!rubbingAudioContextRef.current) {
+          rubbingAudioContextRef.current = new AudioContextCtor();
+        }
+        const context = rubbingAudioContextRef.current;
+        if (context.state === 'suspended') await context.resume();
+        if (!rubbingAudioBufferRef.current) {
+          if (!rubbingAudioLoadingRef.current) {
+            rubbingAudioLoadingRef.current = fetch(rubbingSound)
+              .then(response => response.arrayBuffer())
+              .then(arrayBuffer => context.decodeAudioData(arrayBuffer));
+          }
+          rubbingAudioBufferRef.current = await rubbingAudioLoadingRef.current;
+        }
+        if (!rubbingAudioGainRef.current) {
+          const gain = context.createGain();
+          gain.gain.value = 0.55;
+          gain.connect(context.destination);
+          rubbingAudioGainRef.current = gain;
+        }
+        if (!rubbingAudioSourceRef.current) {
+          const source = context.createBufferSource();
+          source.buffer = rubbingAudioBufferRef.current;
+          source.loop = true;
+          source.connect(rubbingAudioGainRef.current);
+          source.start(0);
+          rubbingAudioSourceRef.current = source;
+        }
+        return;
+      }
+      if (!rubbingAudioRef.current) {
+        rubbingAudioRef.current = new Audio(rubbingSound);
+        rubbingAudioRef.current.loop = true;
+        rubbingAudioRef.current.volume = 0.55;
+      }
+      const audio = rubbingAudioRef.current;
+      if (audio.paused) audio.play().catch(() => {});
+    } catch {}
+  };
+
+  const saveBadgeCleanlinessLevels = async (nextLevels, cleanedIndex, markCleaned = false) => {
+    try {
+      const { getDatabase, ref, update } = await import('firebase/database');
+      const now = Date.now();
+      const nextCleanedAtLevels = badgeCleanedAtLevels.map((value, i) => {
+        if (i !== cleanedIndex) return value;
+        return markCleaned ? now : 0;
+      });
+      setBadgeCleanedAtLevels(nextCleanedAtLevels);
+      if (markCleaned) setBadgeSparkleNow(now);
+      await update(ref(getDatabase(), `members/${member.id}`), {
+        badgeCleanlinessLevels: nextLevels,
+        badgeCleanedAtLevels: nextCleanedAtLevels,
+      });
+    } catch (error) {
+      console.error('뱃지 청결도 저장 실패:', error);
+    }
+  };
+
+  const scrubBadgeCleanliness = (event) => {
+    if (!canCleanBadge || !badgeMouseDownRef.current) return;
+    const point = { x: event.clientX, y: event.clientY };
+    if (!badgePointerRef.current) {
+      badgePointerRef.current = point;
+      return;
+    }
+    const dx = point.x - badgePointerRef.current.x;
+    const dy = point.y - badgePointerRef.current.y;
+    badgePointerRef.current = point;
+    if (Math.hypot(dx, dy) < 1.5) return;
+
+    const pieceIndex = getBadgePieceIndexFromPointer(event, badgeRotation, badgeMaskRef.current);
+    if (pieceIndex === null || !badgePieces[pieceIndex]) {
+      setBadgeScrubPreview({ index: null, progress: 0 });
+      stopRubbingSound();
+      return;
+    }
+
+    playRubbingSound();
+    const now = performance.now();
+    const elapsed = badgeLastScrubAtRef.current ? Math.min(now - badgeLastScrubAtRef.current, 80) : 16;
+    badgeLastScrubAtRef.current = now;
+    badgeScrubProgressRef.current[pieceIndex] += elapsed;
+    const currentLevel = badgeCleanlinessLevels[pieceIndex] ?? BADGE_CLEANLINESS_DEFAULT;
+
+    if (currentLevel <= BADGE_CLEANLINESS_MIN) {
+      const progress = Math.min(1, badgeScrubProgressRef.current[pieceIndex] / BADGE_SCRUB_STEP_MS);
+      if (progress < 1) return;
+      badgeScrubProgressRef.current[pieceIndex] = 0;
+      setBadgeScrubPreview({ index: null, progress: 0 });
+      saveBadgeCleanlinessLevels(badgeCleanlinessLevels, pieceIndex, true);
+      setBadgeSparkle({ index: pieceIndex, key: Date.now() });
+      return;
+    }
+
+    if (badgeScrubProgressRef.current[pieceIndex] < BADGE_SCRUB_STEP_MS) {
+      setBadgeScrubPreview({ index: pieceIndex, progress: 0 });
+      return;
+    }
+
+    const steps = Math.floor(badgeScrubProgressRef.current[pieceIndex] / BADGE_SCRUB_STEP_MS);
+    badgeScrubProgressRef.current[pieceIndex] %= BADGE_SCRUB_STEP_MS;
+    const nextLevel = Math.max(BADGE_CLEANLINESS_MIN, currentLevel - steps);
+    const nextLevels = badgeCleanlinessLevels.map((level, i) => (
+      i === pieceIndex ? nextLevel : level
+    ));
+    const reachedBrightest = nextLevel === BADGE_CLEANLINESS_MIN;
+    if (reachedBrightest) {
+      badgeScrubProgressRef.current[pieceIndex] = 0;
+      setBadgeScrubPreview({ index: null, progress: 0 });
+    } else {
+      setBadgeScrubPreview({ index: pieceIndex, progress: 0 });
+    }
+    setBadgeCleanlinessLevels(nextLevels);
+    saveBadgeCleanlinessLevels(nextLevels, pieceIndex, false);
+  };
 
   const saveEtcText = async () => {
     setEtcSaving(true);
@@ -748,10 +1042,48 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
     setPartnerTextOpen(false);
   }, [member.id]);
 
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all(BADGE_IMGS.map(src => new Promise(resolve => {
+      const image = new Image();
+      image.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = image.naturalWidth || image.width;
+          canvas.height = image.naturalHeight || image.height;
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          ctx.drawImage(image, 0, 0);
+          resolve({ ctx, width: canvas.width, height: canvas.height });
+        } catch {
+          resolve(null);
+        }
+      };
+      image.onerror = () => resolve(null);
+      image.src = src;
+    }))).then(masks => {
+      if (!cancelled) badgeMaskRef.current = masks;
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    setBadgeCleanlinessLevels(getCurrentBadgeCleanlinessLevels(member));
+    setBadgeCleanedAtLevels(normalizeBadgeCleanedAtArray(member.badgeCleanedAtLevels, member.badgeCleanedAt));
+    badgeScrubProgressRef.current = Array(8).fill(0);
+    badgePointerRef.current = null;
+    badgeLastScrubAtRef.current = 0;
+    setBadgeScrubPreview({ index: null, progress: 0 });
+  }, [member.id, member.badgeCleanliness, member.badgeCleanedAt, member.badgeCleanlinessLevels, member.badgeCleanedAtLevels, tab]);
+
+  useEffect(() => {
+    const timer = setInterval(() => setBadgeSparkleNow(Date.now()), 60 * 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => () => {
     if (charTransitionTimerRef.current) clearTimeout(charTransitionTimerRef.current);
     if (charReturnTimerRef.current) clearTimeout(charReturnTimerRef.current);
+    stopRubbingSound();
   }, []);
 
   const moveScrollableCharacter = (event) => {
@@ -1065,6 +1397,17 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
       })()}
 
       {tab === 'extra' && (() => {
+        const sparklingBadgeIndexes = badgeCleanlinessLevels
+          .map((level, index) => {
+            const cleanedAt = Number(badgeCleanedAtLevels[index]) || 0;
+            const isRecentlyCleaned = cleanedAt > 0 && badgeSparkleNow - cleanedAt < BADGE_SPARKLE_DURATION_MS;
+            return level === BADGE_CLEANLINESS_MIN && isRecentlyCleaned ? index : null;
+          })
+          .filter(index => index !== null);
+        const getBadgeDirtOpacity = (index) => {
+          const level = badgeCleanlinessLevels[index] ?? BADGE_CLEANLINESS_DEFAULT;
+          return BADGE_DIRT_OPACITY[level] ?? BADGE_DIRT_OPACITY[BADGE_CLEANLINESS_DEFAULT];
+        };
         const handleBadgeMove = (event) => {
           const rect = event.currentTarget.getBoundingClientRect();
           const x = event.clientX - (rect.left + rect.width / 2);
@@ -1077,6 +1420,7 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
             setBadgeRotation(prev => prev + delta * 0.3);
           }
           badgePrevAngleRef.current = angle;
+          scrubBadgeCleanliness(event);
         };
         return (
           <>
@@ -1090,93 +1434,188 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
             pointerEvents: 'none',
             overflow: 'hidden',
           }}>
-            <div style={{
-              fontFamily: "'SUITE', sans-serif",
-              fontSize: 130,
-              fontWeight: 300,
-              lineHeight: 1,
-              letterSpacing: '-0.09em',
-              color: `rgb(${accentRgb})`,
-              opacity: 0.58,
-              transform: 'scaleX(1.1)',
-              transformOrigin: 'left center',
-              whiteSpace: 'nowrap',
-              marginLeft: '-5%',
-            }}>
-              ACHIEVEMENTS
+            <div className="rmv-achievements-text">
+              <div style={{
+                fontFamily: "'SUITE', sans-serif",
+                fontSize: 130,
+                fontWeight: 300,
+                lineHeight: 1,
+                letterSpacing: '-0.09em',
+                color: `rgb(${accentRgb})`,
+                opacity: 0.58,
+                transform: 'scaleX(1.1)',
+                transformOrigin: 'left center',
+                whiteSpace: 'nowrap',
+                marginLeft: '-5%',
+              }}>
+                ACHIEVEMENTS
+              </div>
             </div>
+          </div>
+          {/* 회전하는 뱃지 실루엣 안에서만 배경 텍스트를 흐리게 처리 */}
+          <div className="rmv-tab-content" style={{
+            position: 'absolute',
+            top: 'calc(8.5rem - 5px)', left: 'calc(39% + 3px)',
+            width: 430, height: 430,
+            zIndex: 5,
+            pointerEvents: 'none',
+            transform: `rotate(${badgeRotation}deg)`,
+            transition: badgeHovering ? 'transform 0.6s ease-out' : 'transform 0.75s cubic-bezier(0.22, 1, 0.36, 1)',
+            willChange: 'transform',
+            maskImage: `url(${memberBadgeImg})`,
+            WebkitMaskImage: `url(${memberBadgeImg})`,
+            maskSize: 'contain',
+            WebkitMaskSize: 'contain',
+            maskRepeat: 'no-repeat',
+            WebkitMaskRepeat: 'no-repeat',
+            maskPosition: 'center',
+            WebkitMaskPosition: 'center',
+            backdropFilter: 'blur(8px) saturate(1.12)',
+            WebkitBackdropFilter: 'blur(8px) saturate(1.12)',
+            background: 'rgba(255,255,255,0.18)',
+            boxShadow: 'inset 0 0 32px rgba(255,255,255,0.24)',
+          }}>
           </div>
           <div
             key="extra"
             className="rmv-tab-content"
+            onClick={(event) => {
+              event.stopPropagation();
+              const pieceIndex = getBadgePieceIndexFromPointer(event, badgeRotation, badgeMaskRef.current);
+              if (pieceIndex !== null && badgePieces[pieceIndex]) playChimeSound(badgeCleanlinessLevels[pieceIndex]);
+            }}
             onMouseMove={handleBadgeMove}
+            onMouseDown={(event) => {
+              if (!canCleanBadge) return;
+              badgeMouseDownRef.current = true;
+              badgePointerRef.current = { x: event.clientX, y: event.clientY };
+              badgeLastScrubAtRef.current = performance.now();
+            }}
+            onMouseUp={() => {
+              badgeMouseDownRef.current = false;
+              badgePointerRef.current = null;
+              badgeLastScrubAtRef.current = 0;
+              setBadgeScrubPreview({ index: null, progress: 0 });
+              stopRubbingSound();
+            }}
             onMouseEnter={(event) => {
               const rect = event.currentTarget.getBoundingClientRect();
               const x = event.clientX - (rect.left + rect.width / 2);
               const y = event.clientY - (rect.top + rect.height / 2);
               badgePrevAngleRef.current = Math.atan2(y, x) * 180 / Math.PI;
+              if (badgeMouseDownRef.current) {
+                badgePointerRef.current = { x: event.clientX, y: event.clientY };
+              }
               setBadgeHovering(true);
             }}
-            onMouseLeave={() => { badgePrevAngleRef.current = null; setBadgeHovering(false); }}
-            style={{ position: 'absolute', top: '8.5rem', left: '39%', width: 430, height: 430, display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', zIndex: 10 }}
+            onMouseLeave={() => {
+              badgeMouseDownRef.current = false;
+              badgePrevAngleRef.current = null;
+              badgePointerRef.current = null;
+              badgeLastScrubAtRef.current = 0;
+              setBadgeScrubPreview({ index: null, progress: 0 });
+              stopRubbingSound();
+              setBadgeHovering(false);
+            }}
+            style={{ position: 'absolute', top: 'calc(8.5rem - 5px)', left: 'calc(39% + 3px)', width: 430, height: 430, display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', zIndex: 10 }}
           >
+            {/* accent 오버레이 — z=1 */}
             <div style={{
-              position: 'relative',
-              width: '100%',
-              height: '100%',
+              position: 'absolute', inset: 0, zIndex: 1,
               transform: `rotate(${badgeRotation}deg)`,
               transition: badgeHovering ? 'transform 0.6s ease-out' : 'transform 0.75s cubic-bezier(0.22, 1, 0.36, 1)',
               willChange: 'transform',
             }}>
-              {/* 베이스 원형 */}
-              <img src={memberBadgeImg} alt="" draggable={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'brightness(1.1) saturate(1.5)' }} />
-              {/* 베이스 accent 그라데이션 오버레이 */}
               <div style={{
                 position: 'absolute', inset: 0,
                 background: `linear-gradient(to top, rgba(${accentRgb},0.10) 0%, rgba(${accentRgb},0.04) 100%)`,
                 maskImage: `url(${memberBadgeImg})`,
                 WebkitMaskImage: `url(${memberBadgeImg})`,
+                maskSize: 'contain', WebkitMaskSize: 'contain',
+                maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+                maskPosition: 'center', WebkitMaskPosition: 'center',
+              }} />
+            </div>
+            {/* 뱃지 조각 — z=3 */}
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 3,
+              transform: `rotate(${badgeRotation}deg)`,
+              transition: badgeHovering ? 'transform 0.6s ease-out' : 'transform 0.75s cubic-bezier(0.22, 1, 0.36, 1)',
+              willChange: 'transform',
+            }}>
+              {BADGE_IMGS.map((src, i) => (
+                <img key={i} src={src} alt="" draggable={false} style={{
+                  position: 'absolute', inset: 0,
+                  width: '100%', height: '100%',
+                  objectFit: 'contain', display: 'block',
+                  opacity: badgePieces[i] ? 1 : 0,
+                  transition: 'opacity 0.4s ease',
+                }} />
+              ))}
+            </div>
+            {BADGE_IMGS.map((src, i) => badgePieces[i] && (
+              <div key={`dirt-${i}`} style={{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 4,
+                pointerEvents: 'none',
+                transform: `rotate(${badgeRotation}deg)`,
+                transition: badgeHovering ? 'transform 0.6s ease-out' : 'transform 0.75s cubic-bezier(0.22, 1, 0.36, 1)',
+                opacity: getBadgeDirtOpacity(i),
+                background: 'linear-gradient(145deg, rgba(8,10,14,0.94) 0%, rgba(34,31,28,0.9) 52%, rgba(0,0,0,0.98) 100%)',
+                mixBlendMode: 'multiply',
+                maskImage: `url(${src})`,
+                WebkitMaskImage: `url(${src})`,
                 maskSize: 'contain',
                 WebkitMaskSize: 'contain',
                 maskRepeat: 'no-repeat',
                 WebkitMaskRepeat: 'no-repeat',
                 maskPosition: 'center',
                 WebkitMaskPosition: 'center',
+                willChange: 'opacity, transform',
               }} />
-              {/* 조각 레이어 */}
-              {BADGE_IMGS.map((src, i) => (
-                <img
-                  key={i}
-                  src={src}
-                  alt=""
-                  draggable={false}
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'contain',
-                    display: 'block',
-                    opacity: badgePieces[i] ? 1 : 0,
-                    transition: 'opacity 0.4s ease',
-                  }}
-                />
-              ))}
-            </div>
+            ))}
+            {sparklingBadgeIndexes.map(index => (
+              <div key={`${index}-${badgeCleanedAtLevels[index]}-${badgeSparkle.index === index ? badgeSparkle.key : 'active'}`} className="rmv-badge-sparkles" style={{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 6,
+                pointerEvents: 'none',
+                transform: `rotate(${badgeRotation}deg)`,
+                transition: badgeHovering ? 'transform 0.6s ease-out' : 'transform 0.75s cubic-bezier(0.22, 1, 0.36, 1)',
+                maskImage: `url(${BADGE_IMGS[index]})`,
+                WebkitMaskImage: `url(${BADGE_IMGS[index]})`,
+                maskSize: 'contain',
+                WebkitMaskSize: 'contain',
+                maskRepeat: 'no-repeat',
+                WebkitMaskRepeat: 'no-repeat',
+                maskPosition: 'center',
+                WebkitMaskPosition: 'center',
+              }}>
+                {BADGE_SPARKLES.map((sparkle, i) => (
+                  <span key={i} style={{
+                    left: sparkle.left,
+                    top: sparkle.top,
+                    width: sparkle.size,
+                    height: sparkle.size,
+                    animationDelay: sparkle.delay,
+                  }} />
+                ))}
+              </div>
+            ))}
           </div>
           {/* 리본 — 90° 회전 W 꼭짓점, 하단 고정 */}
-          <div style={{
+          <div className="rmv-tab-content" style={{
             position: 'fixed',
-            bottom: 90,
-            left: 'calc(30% + 30%)',
-            width: 230,
-            height: 270,
+            bottom: -75,
+            left: 'calc(30% + 33% - 62px)',
+            width: 280,
+            height: 480,
             pointerEvents: 'none',
             zIndex: 8,
-            // 개별 리본 hover는 자식에서 처리
           }}>
             {RIBBON_POSITIONS.map((pos, i) => (
-              <div key={i} style={{ position: 'absolute', left: pos.left, top: pos.top, transform: 'translate(-50%, -50%)', width: 160, isolation: 'isolate', pointerEvents: ribbonPieces[i] ? 'auto' : 'none' }}
+              <div key={i} style={{ position: 'absolute', left: pos.left, top: pos.top, transform: 'translate(-50%, -50%)', width: 145, height: 145, isolation: 'isolate', pointerEvents: ribbonTypes[i] ? 'auto' : 'none' }}
                 onMouseEnter={() => setHoveredRibbon(i)}
                 onMouseLeave={() => setHoveredRibbon(null)}
               >
@@ -1192,7 +1631,7 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
                   WebkitMaskRepeat: 'no-repeat',
                   maskPosition: 'center',
                   WebkitMaskPosition: 'center',
-                  opacity: ribbonPieces[i] ? 0 : 1,
+                  opacity: ribbonTypes[i] ? 0 : 1,
                   transition: 'opacity 0.4s ease',
                 }} />
                 {/* 실루엣 — multiply로 그라데이션과 합성 */}
@@ -1204,26 +1643,26 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
                     position: 'absolute', inset: 0,
                     width: '100%', height: 'auto',
                     objectFit: 'contain', display: 'block',
-                    opacity: ribbonPieces[i] ? 0 : 0.45,
+                    opacity: ribbonTypes[i] ? 0 : 0.45,
                     transition: 'opacity 0.4s ease',
                     filter: 'brightness(5) grayscale(1)',
                     mixBlendMode: 'multiply',
                   }}
                 />
-                {/* 컬러 — 수집 시 표시 */}
-                <img
-                  src={RIBBON_IMGS[i]}
+                {/* 컬러 — 수집 시 표시 (타입 지정된 슬롯만) */}
+                {RIBBON_TYPE_IMGS[ribbonTypes[i]] && <img
+                  src={RIBBON_TYPE_IMGS[ribbonTypes[i]]}
                   alt=""
                   draggable={false}
                   style={{
                     position: 'relative',
                     width: '100%', height: 'auto',
                     objectFit: 'contain',
-                    opacity: ribbonPieces[i] ? 1 : 0,
+                    opacity: ribbonTypes[i] ? 1 : 0,
                     transform: hoveredRibbon === i ? 'rotate(6deg)' : 'none',
                     transition: 'opacity 0.4s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
                   }}
-                />
+                />}
               </div>
             ))}
           </div>
@@ -1735,7 +2174,7 @@ export default function MembersView({ members = {}, isLoading, currentUserId, ti
             <img src={npcButtonImg} alt="NPC 보기" style={{ width: 150, height: 'auto', display: 'block' }} />
           </button>
         )}
-        {createPortal(
+        {!showDetail && createPortal(
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="tab-switch-btn"
@@ -1786,6 +2225,7 @@ export default function MembersView({ members = {}, isLoading, currentUserId, ti
             titles={titles}
             onBack={closeMember}
             onTabChange={setActiveTab}
+            currentUserId={currentUserId}
           />
         </div>
       )}

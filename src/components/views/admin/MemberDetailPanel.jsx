@@ -86,14 +86,39 @@ function MemberDetailPanel({ member, onClose }) {
 
   const handleUpdateBadgePieces = async (memberId, pieces) => {
     const { getDatabase, ref, update } = await import('firebase/database');
-    await update(ref(getDatabase(), `members/${memberId}`), { badgePieces: pieces });
-    setMembers(prev => ({ ...prev, [memberId]: { ...prev[memberId], badgePieces: pieces } }));
+    const currentMember = members?.[memberId] || member || {};
+    const prevPieces = currentMember.badgePieces || Array(8).fill(false);
+    const nextCleanlinessLevels = Array.isArray(currentMember.badgeCleanlinessLevels)
+      ? [...currentMember.badgeCleanlinessLevels]
+      : Array(8).fill(2);
+    const nextCleanedAtLevels = Array.isArray(currentMember.badgeCleanedAtLevels)
+      ? [...currentMember.badgeCleanedAtLevels]
+      : Array(8).fill(0);
+    pieces.forEach((checked, i) => {
+      if (checked && !prevPieces[i]) {
+        nextCleanlinessLevels[i] = 4;
+        nextCleanedAtLevels[i] = 0;
+      }
+    });
+    const updates = {
+      badgePieces: pieces,
+      badgeCleanlinessLevels: nextCleanlinessLevels,
+      badgeCleanedAtLevels: nextCleanedAtLevels,
+    };
+    await update(ref(getDatabase(), `members/${memberId}`), updates);
+    setMembers(prev => ({ ...prev, [memberId]: { ...prev[memberId], ...updates } }));
   };
 
   const handleUpdateRibbonPieces = async (memberId, pieces) => {
     const { getDatabase, ref, update } = await import('firebase/database');
     await update(ref(getDatabase(), `members/${memberId}`), { ribbonPieces: pieces });
     setMembers(prev => ({ ...prev, [memberId]: { ...prev[memberId], ribbonPieces: pieces } }));
+  };
+
+  const handleUpdateRibbonTypes = async (memberId, types) => {
+    const { getDatabase, ref, update } = await import('firebase/database');
+    await update(ref(getDatabase(), `members/${memberId}`), { ribbonTypes: types });
+    setMembers(prev => ({ ...prev, [memberId]: { ...prev[memberId], ribbonTypes: types } }));
   };
 
   const handleDeleteMember = async (memberId, memberName) => {
@@ -161,6 +186,7 @@ function MemberDetailPanel({ member, onClose }) {
               onDeleteMember={handleDeleteMember}
               onUpdateBadgePieces={handleUpdateBadgePieces}
               onUpdateRibbonPieces={handleUpdateRibbonPieces}
+              onUpdateRibbonTypes={handleUpdateRibbonTypes}
             />
           )}
 
