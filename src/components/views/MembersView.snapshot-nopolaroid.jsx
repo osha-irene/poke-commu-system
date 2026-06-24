@@ -12,7 +12,6 @@ import CachedImage from '../common/CachedImage';
 import { preloadDecodedImage } from '../../utils/imageCache';
 import { useGame } from '../../contexts/GameContext';
 import polaroidListWhite from '../../assets/members/polaroid-list-white.png';
-import polaroidDetailWhite from '../../assets/members/polaroid-detail-white.png';
 import npcButtonImg from '../../assets/members/npc-button.png';
 import topButtonImg from '../../assets/members/top-button.png';
 
@@ -113,41 +112,6 @@ const MOVE_TYPE_COLORS = {
 };
 
 const abilityList = Array.isArray(abilitiesData) ? abilitiesData : (abilitiesData.abilities || []);
-
-const SIZE_DESC = {
-  XXXS: '믿기 어려울 만큼 작은 크기인 것 같다.',
-  XXS:  '매우 작은 크기인 것 같다.',
-  XS:   '조금 작은 크기인 것 같다.',
-  M:    '중간 정도의 크기인 것 같다.',
-  XL:   '조금 큰 크기인 것 같다.',
-  XXL:  '매우 큰 크기인 것 같다.',
-  XXXL: '믿기 어려울 만큼 큰 크기인 것 같다.',
-};
-const getPokemonOriginLines = (p) => {
-  const lines = [];
-  if (p.isFromEgg) {
-    lines.push((p.parents?.parent1 || p.parents?.parent2)
-      ? `캠핑에서 생긴 알이 레벨 ${p.level}로 부화했다.`
-      : `특별한 만남을 가지고 레벨 ${p.level}로 알에서 부화했다.`);
-    if (p.parents?.parent1 || p.parents?.parent2) {
-      const pr = p.parents;
-      const p1 = pr.trainer1 ? `${pr.trainer1}의 ${pr.parent1}` : pr.parent1;
-      const p2 = pr.trainer2 ? `${pr.trainer2}의 ${pr.parent2}` : pr.parent2;
-      lines.push(p1 && p2 ? `${p1}와(과) ${p2}와(과) 성격이 닮은 것 같다.` : `${p1 || p2}와 성격이 닮은 것 같다.`);
-    }
-  } else if (p.isAdminGiven) {
-    lines.push(`레벨 ${p.level}에 특별한 만남을 가졌다.`);
-  } else {
-    lines.push(`레벨 ${p.level}에 ${p.caughtLocation || p.metLocation || '야생'}에서 만났다.`);
-  }
-  if (p.sizeRank) {
-    const sizeStr = SIZE_DESC[p.sizeRank] || '알 수 없는 크기인 것 같다.';
-    lines.push(p.favoriteFlavor ? `${sizeStr} ${p.favoriteFlavor}을 좋아한다.` : sizeStr);
-  } else if (p.favoriteFlavor) {
-    lines.push(`${p.favoriteFlavor}을 좋아한다.`);
-  }
-  return lines;
-};
 const getAbilityDesc = (abilityName) => {
   if (!abilityName) return null;
   const n = abilityName.trim().toLowerCase();
@@ -288,7 +252,9 @@ function MemberCard({ member, titles, onClick }) {
       className="cursor-pointer"
       style={{
         position: 'relative',
-        aspectRatio: '275 / 319',
+        aspectRatio: '222 / 246',
+        background: 'white',
+        borderRadius: 4,
         filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.18))',
         transform: hovered ? 'rotate(3deg)' : 'none',
         transition: 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -297,15 +263,8 @@ function MemberCard({ member, titles, onClick }) {
       onMouseEnter={() => { preloadFullImg(); setHovered(true); }}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* 폴라로이드 프레임 */}
-      <img
-        src={polaroidListWhite}
-        alt=""
-        draggable={false}
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill', pointerEvents: 'none', userSelect: 'none' }}
-      />
       {/* 멤버 사진 */}
-      <div style={{ position: 'absolute', left: '9.6%', top: '14%', width: '80.7%', height: '77.1%', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 4 }}>
         {faceImg ? (
           <CachedImage
             src={faceImg}
@@ -437,6 +396,7 @@ function extractDominantColor(imgEl) {
     }
     if (totalWeight < 6) return null;
     const [h, s, l] = rgbToHsl(Math.round(r/totalWeight), Math.round(g/totalWeight), Math.round(b/totalWeight));
+    // 채도 최소 0.65, 명도 0.35~0.45로 고정해서 짙고 선명하게
     const boostedSaturation = clamp(Math.max(s, 0.62) + 0.08, 0, 0.70);
     const correctedLightness = l > 0.62 ? 0.60 : clamp(l, 0.32, 0.48);
     return hslToRgb(h, boostedSaturation, correctedLightness);
@@ -474,7 +434,7 @@ function getOpaqueBottomRatio(imgEl) {
 function getSelectedAccentColor(color) {
   if (!color) return [102, 143, 221];
   const [h, s, l] = rgbToHsl(color[0], color[1], color[2]);
-  return hslToRgb(h, clamp(s + 0.07, 0.50, 0.62), clamp(l + 0.08, 0.46, 0.58));
+  return hslToRgb(h, clamp(s + 0.07, 0.66, 0.92), clamp(l + 0.08, 0.46, 0.58));
 }
 
 function getQuoteAccentColor(color) {
@@ -524,12 +484,7 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
     commitTabChange(id);
   };
   const [hoveredTab, setHoveredTab] = useState(null);
-  const manualAccent = (() => {
-    if (!member.accentColor) return null;
-    const hex = member.accentColor.replace('#', '');
-    return [parseInt(hex.slice(0,2),16), parseInt(hex.slice(2,4),16), parseInt(hex.slice(4,6),16)];
-  })();
-  const [accent, setAccent] = useState(() => manualAccent ?? imgCache[fullImg] ?? null);
+  const [accent, setAccent] = useState(() => imgCache[fullImg] ?? null);
   const [note, setNote] = useState(member.note || '');
   const [noteEditing, setNoteEditing] = useState(false);
   const [noteSaving, setNoteSaving] = useState(false);
@@ -620,7 +575,6 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
 
   const handleImgLoad = () => {
     setImgLoaded(true);
-    if (manualAccent) return; // 수동 색상 설정 시 자동 추출 스킵
     if (imgRef.current) {
       opaqueBottomRatioRef.current = getOpaqueBottomRatio(imgRef.current);
       const color = extractDominantColor(imgRef.current);
@@ -664,18 +618,14 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
   useEffect(() => {
     const memberChanged = prevMemberIdRef.current !== member.id;
     prevMemberIdRef.current = member.id;
-    if (member.accentColor) {
-      const hex = member.accentColor.replace('#', '');
-      setAccent([parseInt(hex.slice(0,2),16), parseInt(hex.slice(2,4),16), parseInt(hex.slice(4,6),16)]);
-      setImgLoaded(true);
-    } else if (imgCache[fullImg]) {
+    if (imgCache[fullImg]) {
       setImgLoaded(true);
       setAccent(imgCache[fullImg]);
     } else if (memberChanged) {
       setAccent(null);
       setImgLoaded(false);
     }
-  }, [fullImg, member.id, member.accentColor]);
+  }, [fullImg, member.id]);
 
 
   useEffect(() => {
@@ -738,51 +688,7 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
             />
           </div>
         )}
-        {fullImg && !member.profileImageFull ? (
-          /* 두상 이미지만 있을 때 — polaroid-detail-white 프레임 */
-          <div style={{
-            position: 'fixed',
-            top: 0, bottom: 0,
-            left: 0, width: 'calc(100% - 240px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'flex-start',
-            paddingLeft: '0%',
-            marginLeft: '-13%',
-            zIndex: 15, pointerEvents: 'none',
-          }}>
-            <div style={{
-              position: 'relative',
-              aspectRatio: '628 / 747',
-              height: '62vh',
-              marginTop: '-15%',
-              filter: 'drop-shadow(4px 5px 1px rgba(0,0,0,0.32))',
-              transform: 'rotate(-8deg)',
-            }}>
-              {/* 폴라로이드 프레임 — 아래 레이어 */}
-              <img src={polaroidDetailWhite} alt="" draggable={false} style={{
-                position: 'absolute', inset: 0, width: '100%', height: '100%',
-                objectFit: 'fill', pointerEvents: 'none', userSelect: 'none', zIndex: 1,
-              }} />
-              {/* 사진 — 프레임 위 레이어 */}
-              <div style={{
-                position: 'absolute', left: '6%', top: '15%', width: '88%', height: '80%',
-                overflow: 'hidden', zIndex: 2,
-              }}>
-                <CachedImage
-                  ref={imgRef}
-                  src={fullImg}
-                  alt={member.name}
-                  crossOrigin="anonymous"
-                  onLoad={handleImgLoad}
-                  style={{
-                    width: '100%', height: '100%',
-                    objectFit: 'cover', objectPosition: 'top center',
-                    display: 'block',
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        ) : fullImg ? (
+        {fullImg ? (
           member.charImageScrollEnabled && tab === 'main' ? (
             <div
               className={`rmv-char-scroll${charTabTransition === 'rmv-char-from-text' ? ' rmv-char-scroll-from-text' : ''}`}
@@ -1326,67 +1232,35 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
                         { label: 'D', val: e.specialDefense ?? e.spd ?? 0 },
                         { label: 'S', val: e.speed ?? e.spe ?? 0 },
                       ];
-                      const hasAny = evs.some(ev => ev.val > 0);
-                      if (!hasAny) return null;
                       return (
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4, marginTop: -10, marginBottom: -4 }}>
                           {evs.map(({ label, val }) => (
                             <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, background: '#fff', borderRadius: 999, padding: '0 4px', height: 14 }}>
-                              <span style={{ fontSize: 10, fontWeight: 800, color: '#111', lineHeight: 1 }}>{label}</span>
-                              <span style={{ fontSize: 10, fontWeight: 300, color: val > 0 ? '#111' : '#bbb', lineHeight: 1 }}>{val}</span>
+                              <span style={{ fontSize: 6, fontWeight: 800, color: '#111', lineHeight: 1 }}>{label}</span>
+                              <span style={{ fontSize: 7, fontWeight: 300, color: val > 0 ? '#111' : '#bbb', lineHeight: 1 }}>{val}</span>
                             </div>
                           ))}
                         </div>
                       );
                     })()}
                   </div>
-                  {/* 뒷면 — 출신 메모 + 컨디션 */}
+                  {/* 뒷면 — 특성 설명 */}
                   <div style={{
                     gridArea: '1/1',
                     borderRadius: 14,
                     background: `rgba(${accentRgb}, 0.92)`,
                     backdropFilter: 'blur(8px)',
-                    padding: '12px 14px',
-                    display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 7,
+                    padding: '14px 16px',
+                    display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6,
                     transition: 'opacity 0.18s ease, transform 0.18s ease',
                     opacity: isFlipped ? 1 : 0,
                     transform: isFlipped ? 'rotateY(0deg)' : 'rotateY(-90deg)',
                     pointerEvents: isFlipped ? 'auto' : 'none',
                   }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {/* 출신 메모 */}
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.90)', lineHeight: 1.75 }}>
-                        {getPokemonOriginLines(p).map((line, li) => (
-                          <div key={li}>{line}</div>
-                        ))}
-                      </div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', letterSpacing: '0.04em' }}>{p.ability || '특성 없음'}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.88)', lineHeight: 1.6 }}>
+                      {abilityDesc || '특성 설명이 없습니다.'}
                     </div>
-                    {/* 컨디션 — 하단 고정 */}
-                    {(() => {
-                      const cond = p.condition || {};
-                      const COND = [
-                        { key: 'elegance',     label: '근사함' },
-                        { key: 'beauty',       label: '아름다움' },
-                        { key: 'cuteness',     label: '귀여움' },
-                        { key: 'intelligence', label: '슬기로움' },
-                        { key: 'strength',     label: '강인함' },
-                      ];
-                      const hasAny = COND.some(({ key }) => Number(cond[key] || 0) > 0);
-                      if (!hasAny) return null;
-                      return (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(44px, 1fr))', gap: 4 }}>
-                          {COND.map(({ key, label }) => {
-                            const val = Number(cond[key] || 0);
-                            return (
-                              <div key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.18)', borderRadius: 999, padding: '2px 6px', height: 16 }}>
-                                <span style={{ fontSize: 8, fontWeight: 800, color: '#fff', lineHeight: 1, whiteSpace: 'nowrap', overflow: 'visible' }}>{label}</span>
-                                <span style={{ fontSize: 9, fontWeight: 300, color: val > 0 ? '#fff' : 'rgba(255,255,255,0.4)', lineHeight: 1, marginLeft: 'auto', flexShrink: 0 }}>{val}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    })()}
                   </div>
                 </div>
               );
@@ -1425,11 +1299,12 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
                 <path d={'M0,0 L28,0 L28,28 Z'} fill={'white'} />
               </svg>
               <span style={{
-                display: 'block',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
                 fontSize: 30, color: '#333', fontWeight: 400, lineHeight: 1.2,
-                wordBreak: 'break-all',
-                overflowWrap: 'break-word',
-                whiteSpace: 'pre-wrap',
+                wordBreak: 'keep-all',
                 fontFamily: ['Aggravo', 'Georgia', 'serif'].join(', '),
                 transform: 'translateY(8px)',
               }}>
@@ -1545,7 +1420,7 @@ export default function MembersView({ members = {}, isLoading, currentUserId, ti
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(5, 1fr)',
-          gap: '10px',
+          gap: '16px',
           padding: '20px 20px 60px',
           margin: '0 -40px',
         }}>

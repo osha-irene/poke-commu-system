@@ -1,11 +1,28 @@
 import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { Search, Star, ChevronLeft, ChevronRight, Shield, Swords, User } from 'lucide-react';
 import memberButtonImg from '../../assets/members/member-button.png';
+import npcBg from '../../assets/members/npcbg.png';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import { ProfileSection } from '../common/ProfileRenderer';
 import { useProfileTemplate, useMemberProfile } from '../../hooks/data/useProfileTemplate';
 
+const npcBadgeImages = require.context('../../assets/members/badge', false, /\.png$/);
 const PLACEHOLDER = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
+
+const getNpcOrder = m => {
+  const order = Number(m?.npcOrder);
+  return Number.isFinite(order) && order > 0 ? order : null;
+};
+
+const getNpcBadgeImg = m => {
+  const order = getNpcOrder(m);
+  if (!order) return '';
+  try {
+    return npcBadgeImages(`./${order}.png`);
+  } catch {
+    return '';
+  }
+};
 
 /* ── 유틸 ── */
 function getMemberList(members, npcOnly = false) {
@@ -14,6 +31,11 @@ function getMemberList(members, npcOnly = false) {
     .map(([id, m]) => ({ id, ...(m || {}) }))
     .filter(m => m && m.name && !m.hidden && (npcOnly ? !!m.isNPC : !m.isNPC))
     .sort((a, b) => {
+      if (npcOnly) {
+        const ao = getNpcOrder(a);
+        const bo = getNpcOrder(b);
+        if (ao !== null || bo !== null) return (ao ?? 999999) - (bo ?? 999999);
+      }
       const ar = a.isSuperAdmin ? 2 : a.isAdmin ? 1 : 0;
       const br = b.isSuperAdmin ? 2 : b.isAdmin ? 1 : 0;
       if (ar !== br) return br - ar;
@@ -27,10 +49,19 @@ const getFullImg     = m => m?.profileImageFull || m?.profileImage || m?.profile
 const getListImg     = m => m?.profileImage || m?.profileImageFull || m?.profileImageUrl || '';
 const getParty       = m => (m?.caughtPokemon || []).filter(Boolean).slice(0, 6);
 const getPartner     = m => {
+  if (m?.partnerPokemon) return m.partnerPokemon;
   const p = getParty(m);
   return p.find(x => x.isPartner) || p[0] || null;
 };
 const getBadges = m => (m?.gymBadges || m?.badges || []).filter(Boolean);
+
+const NPC_ALIGNMENT_MOCKS = Array.from({ length: 14 }, (_, i) => ({
+  id: `npc_alignment_mock_${i + 1}`,
+  name: `NPC ${String(i + 1).padStart(2, '0')}`,
+  hidden: false,
+  isNPC: true,
+  isMock: true,
+}));
 
 
 /* 스크롤 감지 등장 */
@@ -257,7 +288,17 @@ export default function NpcView({ members = {}, isLoading = false, isAdmin = fal
   const listRef = useRef(null);
   const [navState, setNavState] = useState({ prev: false, next: false });
 
-  const memberList = useMemo(() => getMemberList(members, npcOnly), [members, npcOnly]);
+  const memberList = useMemo(() => {
+    const list = getMemberList(members, npcOnly);
+    if (process.env.NODE_ENV !== 'development' || !npcOnly) return list;
+
+    const usedIds = new Set(list.map(m => m.id));
+    const mockFill = NPC_ALIGNMENT_MOCKS
+      .filter(m => !usedIds.has(m.id))
+      .slice(0, Math.max(0, 14 - list.length));
+
+    return [...list, ...mockFill];
+  }, [members, npcOnly]);
   const filtered   = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return memberList;
@@ -304,34 +345,49 @@ export default function NpcView({ members = {}, isLoading = false, isAdmin = fal
             <img src={memberButtonImg} alt="멤버 보기" style={{ width: 150, height: 'auto', display: 'block' }} />
           </button>
         )}
-        <div className="mbr-page">
-        <div className="mbr-roster" style={{ paddingTop: 100 }}>
-          <div className="mbr-list-stage">
-            <button className="mbr-list-nav mbr-list-nav-prev" hidden={!navState.prev} onClick={() => scrollList(-1)}>&#8249;</button>
-            <div className="mbr-list" ref={listRef}>
-              {!isLoading && filtered.map(m => {
-                const img = getListImg(m);
-                const party = getParty(m).slice(0, 6);
-                return (
-                  <button key={m.id} className="mbr-card" onClick={() => setActiveId(m.id)}>
-                    <span className="mbr-card-thumb">
-                      {img ? <img src={img} alt="" draggable={false} /> : <span className="mbr-card-initial">{m.name?.charAt(0)||'?'}</span>}
-                    </span>
-                    <span className="mbr-card-name">{m.name}</span>
-                    {getPartner(m) && (
-                      <span
-                        className="mbr-card-partner-badge"
-                        title={getPokemonName(getPartner(m))}
-                        style={{ backgroundImage: `url(${getPokemonIcon(getPartner(m))})` }}
-                      />
-                    )}
-                  </button>
-                );
-              })}
+        <div className="mbr-page npc-page">
+          <div className="npc-grid">
+              {[0, 1].map(row => (
+                <div key={row} className="mbr-list npc-row">
+                  {!isLoading && filtered.slice(row * 7, row * 7 + 7).map(m => {
+                    const img = getListImg(m);
+                    const badgeImg = m.npcPrivate ? getNpcBadgeImg(m) : '';
+                    const isPrivateNpc = !!m.npcPrivate;
+                    return (
+                      <button
+                        key={m.id}
+                        className={`mbr-card${isPrivateNpc ? ' mbr-card--private' : ''}`}
+                        onClick={() => {
+                          if (!isPrivateNpc) setActiveId(m.id);
+                        }}
+                        disabled={isPrivateNpc}
+                      >
+                        <span className="mbr-card-thumb">
+                          <span className="mbr-card-npc-panel" aria-hidden="true">
+                            <img src={npcBg} alt="" draggable={false} className="mbr-card-npc-bg" />
+                            {badgeImg && (
+                              <span className="mbr-card-npc-badge-wrap">
+                                <img src={badgeImg} alt="" draggable={false} className="mbr-card-npc-badge-shadow" />
+                                <img src={badgeImg} alt="" draggable={false} className="mbr-card-npc-badge" />
+                              </span>
+                            )}
+                          </span>
+                          {!isPrivateNpc && (img ? <img src={img} alt="" draggable={false} style={{ position: 'relative', zIndex: 1 }} /> : <span className="mbr-card-initial">{m.name?.charAt(0)||'?'}</span>)}
+                        </span>
+                        {!isPrivateNpc && <span className="mbr-card-name">{m.name}</span>}
+                        {!isPrivateNpc && getPartner(m) && (
+                          <span
+                            className="mbr-card-partner-badge"
+                            title={getPokemonName(getPartner(m))}
+                            style={{ backgroundImage: `url(${getPokemonIcon(getPartner(m))})` }}
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
-            <button className="mbr-list-nav mbr-list-nav-next" hidden={!navState.next} onClick={() => scrollList(1)}>&#8250;</button>
-          </div>
-        </div>
         </div>
       </div>
 

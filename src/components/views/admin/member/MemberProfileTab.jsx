@@ -132,6 +132,7 @@ function MemberProfileTab({ member, titles = [], onGrantTitle, onRevokeTitle, on
   const [charImageTop, setCharImageTop] = useState(member.charImageTop ?? '');
   const [charImageWidth, setCharImageWidth] = useState(member.charImageWidth ?? '');
   const [charImageScrollEnabled, setCharImageScrollEnabled] = useState(Boolean(member.charImageScrollEnabled));
+  const [accentColor, setAccentColor] = useState(member.accentColor || '');
   const [saving, setSaving] = useState(false);
 
   const assignedTitles = member.assignedTitles || [];
@@ -166,6 +167,7 @@ function MemberProfileTab({ member, titles = [], onGrantTitle, onRevokeTitle, on
       if (charImageTop.trim()) updates.charImageTop = charImageTop.trim(); else updates.charImageTop = null;
       if (charImageWidth.trim()) updates.charImageWidth = charImageWidth.trim(); else updates.charImageWidth = null;
       updates.charImageScrollEnabled = charImageScrollEnabled;
+      updates.accentColor = accentColor || null;
       await update(ref(db, `members/${member.id}`), updates);
     } finally {
       setSaving(false);
@@ -233,6 +235,32 @@ function MemberProfileTab({ member, titles = [], onGrantTitle, onRevokeTitle, on
             ) : (
               <p className="text-xs text-gray-400 mt-1">부여된 칭호가 없습니다.</p>
             )}
+          </div>
+
+          {/* 테마 색상 */}
+          <div className="bg-gray-50 rounded-lg p-4">
+            <h3 className="font-bold text-base mb-2">🎨 테마 색상</h3>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={accentColor || '#6688cc'}
+                onChange={e => canEdit && setAccentColor(e.target.value)}
+                disabled={!canEdit}
+                className="w-10 h-9 rounded border border-gray-300 cursor-pointer disabled:cursor-not-allowed p-0.5"
+              />
+              <input
+                type="text"
+                value={accentColor}
+                onChange={e => canEdit && setAccentColor(e.target.value)}
+                placeholder="#rrggbb (비우면 자동 추출)"
+                disabled={!canEdit}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:border-indigo-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400"
+              />
+              {accentColor && canEdit && (
+                <button onClick={() => setAccentColor('')} className="text-xs text-gray-400 hover:text-red-500 shrink-0">초기화</button>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 mt-1.5">비워두면 이미지에서 자동 추출.</p>
           </div>
         </div>
 

@@ -456,6 +456,61 @@
   display: block; filter: grayscale(1) saturate(0.7) brightness(0.88); transition: filter 0.58s;
 }
 .mbr-card:hover .mbr-card-thumb img { filter: none; }
+.mbr-card-npc-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: transparent;
+}
+.mbr-card-npc-bg {
+  position: absolute;
+  top: 0;
+  left: 51%;
+  width: 254px;
+  height: 304px;
+  transform: translate3d(-50%, 0, 0);
+  object-fit: fill !important;
+  object-position: left top !important;
+  filter: none !important;
+  transition: none !important;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+.mbr-card-npc-badge-wrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  width: 101px !important;
+  height: 101px !important;
+  transform: translate3d(-50%, -50%, 0) !important;
+  pointer-events: none;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+.mbr-card-thumb .mbr-card-npc-badge {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  filter: none !important;
+  transition: none !important;
+}
+.mbr-card-thumb .mbr-card-npc-badge-shadow {
+  position: absolute !important;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  opacity: 0;
+  filter: drop-shadow(3px 5px 3px rgba(0,0,0,0.34)) !important;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 0.24s ease !important;
+}
+.npc-row .mbr-card:hover .mbr-card-npc-badge-shadow {
+  opacity: 1;
+}
 .mbr-card-initial {
   width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
   font-size: clamp(2rem,5vw,4.5rem); font-weight: 800; color: rgba(255,255,255,0.55);
@@ -504,6 +559,83 @@
 .mbr-badge--super { background: rgba(239,68,68,0.18); color: #fca5a5; }
 .mbr-badge--admin { background: rgba(99,102,241,0.22); color: #a5b4fc; }
 .mbr-badge--member { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.8); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   NPC 그리드
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.npc-page { justify-content: center !important; }
+.npc-grid {
+  display: flex; flex-direction: column;
+  gap: 0;
+  width: 100%;
+}
+.npc-row {
+  clip-path: polygon(clamp(76px,8vw,118px) 0, 100% 0, calc(100% - clamp(76px,8vw,118px)) 100%, 0 100%) !important;
+  padding: 0 clamp(76px,8vw,118px) !important;
+  overflow: visible !important;
+  justify-content: center !important;
+}
+.npc-row .mbr-card {
+  height: 280px !important;
+}
+.npc-row .mbr-card:hover {
+  filter: brightness(1.05);
+}
+.npc-row .mbr-card--private {
+  cursor: default;
+}
+.npc-row .mbr-card--private:disabled {
+  opacity: 1;
+}
+.npc-row .mbr-card-thumb > img:not(.mbr-card-npc-bg):not(.mbr-card-npc-badge) {
+  position: absolute !important;
+  top: 0;
+  left: 50%;
+  width: 400px;
+  height: 280px;
+  max-width: none;
+  object-fit: contain !important;
+  object-position: center center !important;
+  transform: translate3d(-50%, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+.npc-row .mbr-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  background:
+    linear-gradient(
+      to bottom right,
+      transparent calc(50% - 2px),
+      rgba(255,255,255,0.36) calc(50% - 1.2px),
+      #fff calc(50% - 0.45px),
+      #fff calc(50% + 0.45px),
+      rgba(255,255,255,0.36) calc(50% + 1.2px),
+      transparent calc(50% + 2px)
+    ) left top / 110px 100% no-repeat,
+    linear-gradient(
+      to bottom right,
+      transparent calc(50% - 2px),
+      rgba(255,255,255,0.36) calc(50% - 1.2px),
+      #fff calc(50% - 0.45px),
+      #fff calc(50% + 0.45px),
+      rgba(255,255,255,0.36) calc(50% + 1.2px),
+      transparent calc(50% + 2px)
+    ) right top / 110px 100% no-repeat;
+}
+.npc-row .mbr-card::after {
+  content: '';
+  background: transparent;
+  box-shadow:
+    inset 0 0 0 1px #fff,
+    inset 0 0 0 2px rgba(255,255,255,0.34);
+  z-index: 3;
+}
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    전체화면 오버레이

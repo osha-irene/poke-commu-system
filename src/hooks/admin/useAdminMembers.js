@@ -1475,12 +1475,41 @@ export const useAdminMembers = (
     }
   };
 
+  const updateMemberNpcSettings = async (memberId, settings = {}) => {
+    if (!currentUser?.isAdmin) return;
+
+    const member = members[memberId];
+    if (!member) return;
+
+    const npcOrder = Number(settings.npcOrder);
+    const nextSettings = {
+      ...(settings.npcOrder !== undefined
+        ? { npcOrder: Number.isFinite(npcOrder) && npcOrder > 0 ? npcOrder : null }
+        : {}),
+      ...(settings.npcPrivate !== undefined ? { npcPrivate: !!settings.npcPrivate } : {}),
+    };
+    const updatedMember = { ...member, ...nextSettings };
+
+    try {
+      const memberRef = ref(database, `members/${memberId}`);
+      await update(memberRef, nextSettings);
+      setMembers(prev => ({ ...prev, [memberId]: updatedMember }));
+
+      if (currentUser?.id === memberId) {
+        updateCurrentUser(nextSettings);
+      }
+    } catch (error) {
+      console.error('NPC settings update failed:', error);
+    }
+  };
+
   return {
     addMember,
     toggleAdminStatus,
     toggleItemManagement,
     toggleMemberHidden,
     toggleMemberNPC,
+    updateMemberNpcSettings,
     updateMaxDailyWalks,
     resetMemberWalkCount,
     resetAllWalkCounts,

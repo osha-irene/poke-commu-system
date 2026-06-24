@@ -1,5 +1,5 @@
 // src/components/views/admin/member/MemberInfoTab.jsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 function MemberInfoTab({
   member,
@@ -7,6 +7,7 @@ function MemberInfoTab({
   onResetWalk,
   onToggleAdmin,
   onToggleNPC,
+  onUpdateNpcSettings,
   onUpdateMoney,
   onUpdateTrainerExp,
   onUpdateWalkCount,
@@ -17,6 +18,11 @@ function MemberInfoTab({
   const [expInput, setExpInput] = useState(member.trainerExp || 0);
   const [editWalkCount, setEditWalkCount] = useState(member.dailyWalks);
   const [editMaxWalkCount, setEditMaxWalkCount] = useState(member.maxDailyWalks);
+  const [npcOrderInput, setNpcOrderInput] = useState(member.npcOrder || '');
+
+  useEffect(() => {
+    setNpcOrderInput(member.npcOrder || '');
+  }, [member.id, member.npcOrder]);
 
   return (
     <div className="grid grid-cols-2 gap-5">
@@ -38,6 +44,39 @@ function MemberInfoTab({
                     className="w-4 h-4 rounded accent-indigo-600"
                   />
                   <span className="text-gray-700 font-medium">NPC 캐릭터</span>
+                </label>
+              </div>
+            )}
+            {trainer.isAdmin && member.isNPC && (
+              <div className="pt-3 space-y-2 border-t border-gray-200">
+                <label className="block">
+                  <span className="text-xs font-semibold text-gray-600 mb-1 block">NPC 나열 순서 / 배지 번호</span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      value={npcOrderInput}
+                      onChange={(e) => setNpcOrderInput(e.target.value)}
+                      className="w-24 px-2 py-1.5 border border-gray-300 rounded text-sm"
+                      placeholder="1"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => onUpdateNpcSettings?.(member.id, { npcOrder: npcOrderInput })}
+                      className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors text-sm font-semibold"
+                    >
+                      저장
+                    </button>
+                  </div>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={!!member.npcPrivate}
+                    onChange={(e) => onUpdateNpcSettings?.(member.id, { npcPrivate: e.target.checked })}
+                    className="w-4 h-4 rounded accent-indigo-600"
+                  />
+                  <span className="text-gray-700 font-medium">비공개 배지 표시</span>
                 </label>
               </div>
             )}
