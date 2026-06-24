@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.35f3044c.css",
-    "main.js": "/static/js/main.4a0d239d.js",
+    "main.css": "/static/css/main.13221302.css",
+    "main.js": "/static/js/main.93ff1876.js",
     "static/js/623.69c45dc4.chunk.js": "/static/js/623.69c45dc4.chunk.js",
     "static/media/forest-bg.png": "/static/media/forest-bg.ed51a4032d3a6a7016d2.png",
     "static/media/forest-bg (2).png": "/static/media/forest-bg (2).023aaebd6df83a1d1128.png",
@@ -27,15 +27,17 @@
     "static/media/map.png": "/static/media/map.a93920750eb1513e2792.png",
     "static/media/entry.png": "/static/media/entry.8d7a88f338ce8a9c4795.png",
     "static/media/bag.png": "/static/media/bag.1a11c2f1fe8c7374a447.png",
+    "static/media/member-button.png": "/static/media/member-button.5b0e7c70297c7d9f13e5.png",
+    "static/media/npc-button.png": "/static/media/npc-button.c04f7cb2244266547809.png",
     "static/media/pokeball.png": "/static/media/pokeball.0ce8227d4210c4d60ed5.png",
     "index.html": "/index.html",
     "static/media/pokemon-icon.svg": "/static/media/pokemon-icon.d36b6f0655c180980d5acb3287a88011.svg",
-    "main.35f3044c.css.map": "/static/css/main.35f3044c.css.map",
-    "main.4a0d239d.js.map": "/static/js/main.4a0d239d.js.map",
+    "main.13221302.css.map": "/static/css/main.13221302.css.map",
+    "main.93ff1876.js.map": "/static/js/main.93ff1876.js.map",
     "623.69c45dc4.chunk.js.map": "/static/js/623.69c45dc4.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.35f3044c.css",
-    "static/js/main.4a0d239d.js"
+    "static/css/main.13221302.css",
+    "static/js/main.93ff1876.js"
   ]
 }
