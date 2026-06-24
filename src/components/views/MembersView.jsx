@@ -946,17 +946,23 @@ function MemberDetail({ member, titles, onBack, onTabChange, currentUserId }) {
     0.114 * selectedAccent[2]
   ) > 165 ? '#151515' : '#fff';
   const renderMarkedText = (text, markRgb = selectedAccentRgb) => {
-    const parts = text.split(/(\|[^|]+\|)/g);
+    const parts = text.split(/(\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*|\|[^|]+\|)/g);
     if (parts.length === 1) return text || null;
-    return parts.map((part, k) =>
-      /^\|[^|]+\|$/.test(part)
-        ? <mark key={k} style={{ background: `rgba(${markRgb}, 0.22)`, color: 'inherit', borderRadius: 3, padding: '1px 4px', fontWeight: 500 }}>{part.slice(1, -1)}</mark>
-        : part
-    );
+    return parts.map((part, k) => {
+      if (/^\*\*\*[^*]+\*\*\*$/.test(part))
+        return <strong key={k} style={{ color: `rgb(${markRgb})` }}>{part.slice(3, -3)}</strong>;
+      if (/^\*\*[^*]+\*\*$/.test(part))
+        return <strong key={k}>{part.slice(2, -2)}</strong>;
+      if (/^\*[^*]+\*$/.test(part))
+        return <em key={k}>{part.slice(1, -1)}</em>;
+      if (/^\|[^|]+\|$/.test(part))
+        return <mark key={k} style={{ background: `rgba(${markRgb}, 0.22)`, color: 'inherit', borderRadius: 3, padding: '1px 4px', fontWeight: 500 }}>{part.slice(1, -1)}</mark>;
+      return part;
+    });
   };
   const renderDetailTextLine = (line, j, markRgb = selectedAccentRgb) => {
     if (line.startsWith('#')) return (
-      <div key={j} style={{ display: 'block', background: `rgba(${markRgb}, 0.25)`, borderRadius: 0, padding: '4px 14px', marginBottom: '0.7em', marginLeft: '-0.5em', width: 'calc(100% + 1rem)', WebkitMaskImage: 'linear-gradient(to right, black 55%, transparent 85%)', maskImage: 'linear-gradient(to right, black 55%, transparent 85%)', fontSize: 16, fontWeight: 600 }}>
+      <div key={j} style={{ display: 'block', background: `rgba(${markRgb}, 0.25)`, borderRadius: 0, padding: '4px 14px', marginTop: '1.2em', marginBottom: '0.7em', marginLeft: '-0.5em', width: 'calc(100% + 1rem)', WebkitMaskImage: 'linear-gradient(to right, black 55%, transparent 85%)', maskImage: 'linear-gradient(to right, black 55%, transparent 85%)', fontSize: 16, fontWeight: 600 }}>
         {renderMarkedText(line.slice(1).trim(), markRgb) || ' '}
       </div>
     );
@@ -1338,7 +1344,7 @@ function MemberDetail({ member, titles, onBack, onTabChange, currentUserId }) {
                           <textarea
                             value={keywordTexts[i]}
                             ref={el => { if (el && !el.dataset.initialized) { el.dataset.initialized = '1'; el.style.height = 'auto'; requestAnimationFrame(() => { el.style.height = el.scrollHeight + 'px'; }); el.focus({ preventScroll: true }); } }}
-                            onChange={e => { setKeywordTexts(prev => { const n = [...prev]; n[i] = e.target.value; return n; }); const el = e.target; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }}
+                            onChange={e => { setKeywordTexts(prev => { const n = [...prev]; n[i] = e.target.value; return n; }); const el = e.target; const sc = el.closest('.rmv-text-scroll'); const sv = sc?.scrollTop; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; if (sc != null && sv != null) sc.scrollTop = sv; }}
                             style={{ display: 'block', width: '100%', resize: 'none', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.6)', borderRadius: 8, padding: '10px 14px', fontSize: 15, color: '#333', lineHeight: 1.75, fontFamily: 'inherit', overflow: 'hidden', minHeight: 48 }}
                           />
                           <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
@@ -1372,7 +1378,7 @@ function MemberDetail({ member, titles, onBack, onTabChange, currentUserId }) {
                       <textarea
                         value={etcText}
                         ref={el => { if (el && !el.dataset.initialized) { el.dataset.initialized = '1'; el.style.height = 'auto'; requestAnimationFrame(() => { el.style.height = el.scrollHeight + 'px'; }); el.focus({ preventScroll: true }); } }}
-                        onChange={e => { setEtcText(e.target.value); const el = e.target; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }}
+                        onChange={e => { setEtcText(e.target.value); const el = e.target; const sc = el.closest('.rmv-text-scroll'); const sv = sc?.scrollTop; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; if (sc != null && sv != null) sc.scrollTop = sv; }}
                         style={{ display: 'block', width: '100%', resize: 'none', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.6)', borderRadius: 8, padding: '10px 14px', fontSize: 15, color: '#333', lineHeight: 1.75, fontFamily: 'inherit', overflow: 'hidden', minHeight: 48 }}
                       />
                       <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
@@ -1680,7 +1686,8 @@ function MemberDetail({ member, titles, onBack, onTabChange, currentUserId }) {
         <div
           key="main"
           className="rmv-tab-content flex flex-col justify-start gap-3"
-          style={{ position: 'absolute', top: '16.5rem', left: '57%', width: 280, maxHeight: 'calc(100vh - 2rem)', overflowY: 'visible', paddingBottom: 24, boxSizing: 'border-box', zIndex: 10 }}
+          onWheel={e => e.stopPropagation()}
+          style={{ position: 'absolute', top: '16.5rem', left: '57%', width: 280, maxHeight: 'calc(100vh - 18rem)', overflowY: 'auto', overflowX: 'visible', paddingBottom: 24, boxSizing: 'border-box', zIndex: 10 }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 28 }}>
             {(() => {
