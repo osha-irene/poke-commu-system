@@ -27,7 +27,7 @@ export function useRegister(setMembers) {
         canManageItems: false,
         dailyWalks: 10,
         maxDailyWalks: 10,
-        money: 10000,
+        money: 3000,
         trainerExp: 0,
         lastAttendanceDate: null,
         caughtPokemon: [null, null, null, null, null, null],

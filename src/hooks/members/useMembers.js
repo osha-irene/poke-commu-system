@@ -121,15 +121,8 @@ async function createInitialMembersWithAuth() {
     };
 
     const pokeBall = findItem(['poke ball', 'pokeball', '몬스터볼']);
-    const greatBall = findItem(['great ball', 'super ball', '슈퍼볼', '수퍼볼']);
-    const ultraBall = findItem(['ultra ball', 'hyper ball', '하이퍼볼']);
-    const rareCandy = findItem(['rare candy', '이상한사탕']);
-
     return [
-      { itemId: pokeBall?.id || 4, name: '몬스터볼', count: 15, imageUrl: pokeBall?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png' },
-      { itemId: greatBall?.id || 3, name: '슈퍼볼', count: 5, imageUrl: greatBall?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png' },
-      { itemId: ultraBall?.id || 2, name: '하이퍼볼', count: 2, imageUrl: ultraBall?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png' },
-      { itemId: rareCandy?.id || 50, name: '이상한사탕', count: 3, imageUrl: rareCandy?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/rare-candy.png' }
+      { itemId: pokeBall?.id || 4, name: '몬스터볼', count: 15, imageUrl: pokeBall?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png' }
     ];
   };
 
@@ -163,7 +156,7 @@ async function createInitialMembersWithAuth() {
         canManageItems: false,
         dailyWalks: 10,
         maxDailyWalks: 10,
-        money: 10000,
+        money: 3000,
         trainerExp: 0,
         lastAttendanceDate: null,
         caughtPokemon: [null, null, null, null, null, null],

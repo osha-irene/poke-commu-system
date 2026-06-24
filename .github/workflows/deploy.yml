@@ -53,12 +53,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Apply CORS to Firebase Storage
-        continue-on-error: true
-        run: |
-          cat > /tmp/cors.json << 'EOF'
-          [{"origin":["https://osha-irene.github.io"],"method":["GET","POST","PUT","DELETE","HEAD","OPTIONS"],"maxAgeSeconds":3600,"responseHeader":["Content-Type","Authorization","Content-Length","x-goog-resumable"]}]
-          EOF
-          gsutil cors set /tmp/cors.json gs://${{ secrets.REACT_APP_FIREBASE_STORAGE_BUCKET }}
+        run: gsutil cors set cors.json gs://poke-commu-system.firebasestorage.app
 
       # 5. GitHub Pages 배포
       - name: Deploy to GitHub Pages

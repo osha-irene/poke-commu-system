@@ -13,12 +13,21 @@ function MemberInfoTab({
   onUpdateWalkCount,
   onUpdateMaxWalkCount,
   onDeleteMember,
+  onUpdateBadgePieces,
+  onUpdateRibbonPieces,
 }) {
   const [moneyInput, setMoneyInput] = useState(member.money || 0);
   const [expInput, setExpInput] = useState(member.trainerExp || 0);
   const [editWalkCount, setEditWalkCount] = useState(member.dailyWalks);
   const [editMaxWalkCount, setEditMaxWalkCount] = useState(member.maxDailyWalks);
   const [npcOrderInput, setNpcOrderInput] = useState(member.npcOrder || '');
+  const [badgePieces, setBadgePieces] = useState(() => member.badgePieces || Array(8).fill(false));
+  const [ribbonPieces, setRibbonPieces] = useState(() => member.ribbonPieces || Array(5).fill(false));
+
+  useEffect(() => {
+    setBadgePieces(member.badgePieces || Array(8).fill(false));
+    setRibbonPieces(member.ribbonPieces || Array(5).fill(false));
+  }, [member.id]);
 
   useEffect(() => {
     setNpcOrderInput(member.npcOrder || '');
@@ -81,6 +90,58 @@ function MemberInfoTab({
               </div>
             )}
           </div>
+        </div>
+
+        {/* 뱃지 수집 현황 */}
+        <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
+          <h3 className="font-bold text-base mb-3">🏅 뱃지 수집 현황</h3>
+          <div className="flex gap-2 flex-wrap">
+            {badgePieces.map((checked, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  const next = [...badgePieces];
+                  next[i] = !next[i];
+                  setBadgePieces(next);
+                  onUpdateBadgePieces?.(member.id, next);
+                }}
+                className={`w-10 h-10 rounded-lg border-2 font-bold text-sm transition-all ${
+                  checked
+                    ? 'bg-yellow-400 border-yellow-500 text-white'
+                    : 'bg-white border-gray-300 text-gray-400 hover:border-yellow-400'
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400 mt-2">{badgePieces.filter(Boolean).length} / 8 수집</p>
+        </div>
+
+        {/* 리본 수집 현황 */}
+        <div className="bg-pink-50 border-2 border-pink-200 rounded-xl p-4">
+          <h3 className="font-bold text-base mb-3">🎀 리본 수집 현황</h3>
+          <div className="flex gap-2 flex-wrap">
+            {ribbonPieces.map((checked, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  const next = [...ribbonPieces];
+                  next[i] = !next[i];
+                  setRibbonPieces(next);
+                  onUpdateRibbonPieces?.(member.id, next);
+                }}
+                className={`w-10 h-10 rounded-lg border-2 font-bold text-sm transition-all ${
+                  checked
+                    ? 'bg-pink-400 border-pink-500 text-white'
+                    : 'bg-white border-gray-300 text-gray-400 hover:border-pink-400'
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400 mt-2">{ribbonPieces.filter(Boolean).length} / 5 수집</p>
         </div>
       </div>
 

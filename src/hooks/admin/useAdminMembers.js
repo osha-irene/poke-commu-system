@@ -342,17 +342,9 @@ export const useAdminMembers = (
       };
 
       const pokeBall = findItem(['poke ball', 'pokeball', '몬스터볼']);
-      const potion = findItem(['potion', '상처약', '상처 약']);
-    //  const greatBall = findItem(['great ball', 'super ball', '슈퍼볼', '수퍼볼']);
-     // const ultraBall = findItem(['ultra ball', 'hyper ball', '하이퍼볼']);
-      // const rareCandy = findItem(['rare candy', '이상한사탕']);
 
       return [
-        { itemId: pokeBall?.id || 4, name: '몬스터볼', count: 10, imageUrl: pokeBall?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png' },
-        { itemId: potion?.id || 17, name: '상처약', count: 2, imageUrl: potion?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/potion.png' }
-       // { itemId: greatBall?.id || 3, name: '슈퍼볼', count: 5, imageUrl: greatBall?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png' },
-       // { itemId: ultraBall?.id || 2, name: '하이퍼볼', count: 2, imageUrl: ultraBall?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png' },
-      //  { itemId: rareCandy?.id || 50, name: '이상한사탕', count: 3, imageUrl: rareCandy?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/rare-candy.png' }
+        { itemId: pokeBall?.id || 4, name: '몬스터볼', count: 15, imageUrl: pokeBall?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png' },
       ];
     };
 
@@ -367,7 +359,7 @@ export const useAdminMembers = (
       canManageItems: false,
       dailyWalks: 10,
       maxDailyWalks: 10,
-      money: 2000,
+      money: 3000,
       trainerExp: 0,
       lastAttendanceDate: null,
       caughtPokemon: [],

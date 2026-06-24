@@ -84,6 +84,18 @@ function MemberDetailPanel({ member, onClose }) {
     }
   };
 
+  const handleUpdateBadgePieces = async (memberId, pieces) => {
+    const { getDatabase, ref, update } = await import('firebase/database');
+    await update(ref(getDatabase(), `members/${memberId}`), { badgePieces: pieces });
+    setMembers(prev => ({ ...prev, [memberId]: { ...prev[memberId], badgePieces: pieces } }));
+  };
+
+  const handleUpdateRibbonPieces = async (memberId, pieces) => {
+    const { getDatabase, ref, update } = await import('firebase/database');
+    await update(ref(getDatabase(), `members/${memberId}`), { ribbonPieces: pieces });
+    setMembers(prev => ({ ...prev, [memberId]: { ...prev[memberId], ribbonPieces: pieces } }));
+  };
+
   const handleDeleteMember = async (memberId, memberName) => {
     if (!trainer?.isSuperAdmin) return;
     if (!window.confirm(`${memberName}님을 삭제하시겠습니까?\n\n회원 데이터가 삭제되며 이 작업은 되돌릴 수 없습니다.`)) {
@@ -147,6 +159,8 @@ function MemberDetailPanel({ member, onClose }) {
               onUpdateWalkCount={handleUpdateWalkCount}
               onUpdateMaxWalkCount={handleUpdateMaxWalkCount}
               onDeleteMember={handleDeleteMember}
+              onUpdateBadgePieces={handleUpdateBadgePieces}
+              onUpdateRibbonPieces={handleUpdateRibbonPieces}
             />
           )}
 

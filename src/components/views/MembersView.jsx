@@ -1,6 +1,6 @@
 ﻿import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronLeft, User, Text } from 'lucide-react';
+import { ChevronLeft, Award, User, Text } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import { getOwnedPokemonSpriteUrl } from '../../utils/pokemonImageUtils';
 import { TYPE_COLORS } from '../../constants/pokemon';
@@ -15,6 +15,33 @@ import polaroidListWhite from '../../assets/members/polaroid-list-white.png';
 import polaroidDetailWhite from '../../assets/members/polaroid-detail-white.png';
 import npcButtonImg from '../../assets/members/npc-button.png';
 import topButtonImg from '../../assets/members/top-button.png';
+import memberBadgeImg from '../../assets/members/badge.png';
+import ribbonSilhouetteImg from '../../assets/members/ribbon/ribbon-silhouette.png';
+import ribbon1Img from '../../assets/members/ribbon/ribbon1.png';
+import ribbon2Img from '../../assets/members/ribbon/ribbon2.png';
+import ribbon3Img from '../../assets/members/ribbon/ribbon3.png';
+import ribbon4Img from '../../assets/members/ribbon/ribbon4.png';
+import ribbon5Img from '../../assets/members/ribbon/ribbon5.png';
+import badge1Img from '../../assets/members/badge/badge1.png';
+import badge2Img from '../../assets/members/badge/badge2.png';
+import badge3Img from '../../assets/members/badge/badge3.png';
+import badge4Img from '../../assets/members/badge/badge4.png';
+import badge5Img from '../../assets/members/badge/badge5.png';
+import badge6Img from '../../assets/members/badge/badge6.png';
+import badge7Img from '../../assets/members/badge/badge7.png';
+import badge8Img from '../../assets/members/badge/badge8.png';
+
+const BADGE_IMGS = [badge1Img, badge2Img, badge3Img, badge4Img, badge5Img, badge6Img, badge7Img, badge8Img];
+
+// 90° 왼쪽 회전한 W의 꼭짓점 5개: 좌-우-좌-우-좌 지그재그
+const RIBBON_IMGS = [ribbon1Img, ribbon2Img, ribbon3Img, ribbon4Img, ribbon5Img];
+const RIBBON_POSITIONS = [
+  { left: '20%',  top: '0%'   },
+  { left: '80%',  top: '25%'  },
+  { left: '20%',  top: '50%'  },
+  { left: '80%',  top: '75%'  },
+  { left: '20%',  top: '100%' },
+];
 
 const GenderMale = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -370,6 +397,7 @@ const TABS = [
   { id: 'main', label: '메인', Icon: User },
   { id: 'text', label: '설정', Icon: Text },
   { id: 'entry', label: '엔트리', iconSrc: '/img/pokeball.png' },
+  { id: 'extra', label: '추가', Icon: Award },
 ];
 
 function rgbToHsl(r, g, b) {
@@ -549,6 +577,12 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
   const [partnerText, setPartnerText] = useState(() => member.partnerText || '');
   const [savedPartnerText, setSavedPartnerText] = useState(() => member.partnerText || '');
   const [partnerTextSaving, setPartnerTextSaving] = useState(false);
+  const [badgeRotation, setBadgeRotation] = useState(0);
+  const [badgeHovering, setBadgeHovering] = useState(false);
+  const [hoveredRibbon, setHoveredRibbon] = useState(null);
+  const badgePrevAngleRef = useRef(null);
+  const badgePieces = member.badgePieces || Array(8).fill(false);
+  const ribbonPieces = member.ribbonPieces || Array(5).fill(false);
 
   const saveEtcText = async () => {
     setEtcSaving(true);
@@ -617,6 +651,24 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
     0.587 * selectedAccent[1] +
     0.114 * selectedAccent[2]
   ) > 165 ? '#151515' : '#fff';
+  const renderMarkedText = (text, markRgb = selectedAccentRgb) => {
+    const parts = text.split(/(\|[^|]+\|)/g);
+    if (parts.length === 1) return text || null;
+    return parts.map((part, k) =>
+      /^\|[^|]+\|$/.test(part)
+        ? <mark key={k} style={{ background: `rgba(${markRgb}, 0.22)`, color: 'inherit', borderRadius: 3, padding: '1px 4px', fontWeight: 500 }}>{part.slice(1, -1)}</mark>
+        : part
+    );
+  };
+  const renderDetailTextLine = (line, j, markRgb = selectedAccentRgb) => {
+    if (line.startsWith('*')) return (
+      <div key={j} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: '0.7em' }}>
+        <span style={{ color: `rgb(${markRgb})`, fontWeight: 700, flexShrink: 0, lineHeight: 1.75 }}>•</span>
+        <span>{renderMarkedText(line.slice(1).trim(), markRgb) || ' '}</span>
+      </div>
+    );
+    return <p key={j} style={{ margin: 0, marginBottom: '0.7em', textIndent: '0.5em' }}>{renderMarkedText(line, markRgb) || ' '}</p>;
+  };
 
   const handleImgLoad = () => {
     setImgLoaded(true);
@@ -695,6 +747,7 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
     setSavedPartnerText(nextText);
     setPartnerTextOpen(false);
   }, [member.id]);
+
 
   useEffect(() => () => {
     if (charTransitionTimerRef.current) clearTimeout(charTransitionTimerRef.current);
@@ -925,24 +978,7 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
         const [ar, ag, ab] = selectedAccent;
         const lum = 0.299 * ar + 0.587 * ag + 0.114 * ab;
         const kwTextColor = lum > 160 ? '#111' : '#fff';
-        const renderInline = (text) => {
-          const parts = text.split(/(\|[^|]+\|)/g);
-          if (parts.length === 1) return text || null;
-          return parts.map((part, k) =>
-            /^\|[^|]+\|$/.test(part)
-              ? <mark key={k} style={{ background: `rgba(${selectedAccentRgb}, 0.22)`, color: 'inherit', borderRadius: 3, padding: '1px 4px', fontWeight: 500 }}>{part.slice(1, -1)}</mark>
-              : part
-          );
-        };
-        const renderTextLine = (line, j) => {
-          if (line.startsWith('*')) return (
-            <div key={j} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: '0.7em' }}>
-              <span style={{ color: `rgb(${selectedAccentRgb})`, fontWeight: 700, flexShrink: 0, lineHeight: 1.75 }}>•</span>
-              <span>{renderInline(line.slice(1).trim()) || ' '}</span>
-            </div>
-          );
-          return <p key={j} style={{ margin: 0, marginBottom: '0.7em', textIndent: '0.5em' }}>{renderInline(line) || ' '}</p>;
-        };
+        const renderTextLine = (line, j) => renderDetailTextLine(line, j, selectedAccentRgb);
         return (
           <>
             <div className="rmv-text-bg-reveal" style={{ position: 'fixed', top: 0, bottom: 0, left: '22%', right: 0, overflow: 'hidden', zIndex: 16, background: 'linear-gradient(to right, transparent 0%, rgba(255,255,255,0.85) 12%, rgba(255,255,255,0.97) 28%, rgba(255,255,255,0.97) 100%)', pointerEvents: 'none' }} />
@@ -1024,6 +1060,173 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
                 </div>
               </div>
             </div>
+          </>
+        );
+      })()}
+
+      {tab === 'extra' && (() => {
+        const handleBadgeMove = (event) => {
+          const rect = event.currentTarget.getBoundingClientRect();
+          const x = event.clientX - (rect.left + rect.width / 2);
+          const y = event.clientY - (rect.top + rect.height / 2);
+          const angle = Math.atan2(y, x) * 180 / Math.PI;
+          if (badgePrevAngleRef.current !== null) {
+            let delta = angle - badgePrevAngleRef.current;
+            if (delta > 180) delta -= 360;
+            if (delta < -180) delta += 360;
+            setBadgeRotation(prev => prev + delta * 0.3);
+          }
+          badgePrevAngleRef.current = angle;
+        };
+        return (
+          <>
+          {/* 배경 텍스트 */}
+          <div style={{
+            position: 'absolute',
+            top: '2rem',
+            left: 0,
+            right: 0,
+            zIndex: 0,
+            pointerEvents: 'none',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              fontFamily: "'SUITE', sans-serif",
+              fontSize: 130,
+              fontWeight: 300,
+              lineHeight: 1,
+              letterSpacing: '-0.09em',
+              color: `rgb(${accentRgb})`,
+              opacity: 0.58,
+              transform: 'scaleX(1.1)',
+              transformOrigin: 'left center',
+              whiteSpace: 'nowrap',
+              marginLeft: '-5%',
+            }}>
+              ACHIEVEMENTS
+            </div>
+          </div>
+          <div
+            key="extra"
+            className="rmv-tab-content"
+            onMouseMove={handleBadgeMove}
+            onMouseEnter={(event) => {
+              const rect = event.currentTarget.getBoundingClientRect();
+              const x = event.clientX - (rect.left + rect.width / 2);
+              const y = event.clientY - (rect.top + rect.height / 2);
+              badgePrevAngleRef.current = Math.atan2(y, x) * 180 / Math.PI;
+              setBadgeHovering(true);
+            }}
+            onMouseLeave={() => { badgePrevAngleRef.current = null; setBadgeHovering(false); }}
+            style={{ position: 'absolute', top: '8.5rem', left: '39%', width: 430, height: 430, display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', zIndex: 10 }}
+          >
+            <div style={{
+              position: 'relative',
+              width: '100%',
+              height: '100%',
+              transform: `rotate(${badgeRotation}deg)`,
+              transition: badgeHovering ? 'transform 0.6s ease-out' : 'transform 0.75s cubic-bezier(0.22, 1, 0.36, 1)',
+              willChange: 'transform',
+            }}>
+              {/* 베이스 원형 */}
+              <img src={memberBadgeImg} alt="" draggable={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'brightness(1.1) saturate(1.5)' }} />
+              {/* 베이스 accent 그라데이션 오버레이 */}
+              <div style={{
+                position: 'absolute', inset: 0,
+                background: `linear-gradient(to top, rgba(${accentRgb},0.10) 0%, rgba(${accentRgb},0.04) 100%)`,
+                maskImage: `url(${memberBadgeImg})`,
+                WebkitMaskImage: `url(${memberBadgeImg})`,
+                maskSize: 'contain',
+                WebkitMaskSize: 'contain',
+                maskRepeat: 'no-repeat',
+                WebkitMaskRepeat: 'no-repeat',
+                maskPosition: 'center',
+                WebkitMaskPosition: 'center',
+              }} />
+              {/* 조각 레이어 */}
+              {BADGE_IMGS.map((src, i) => (
+                <img
+                  key={i}
+                  src={src}
+                  alt=""
+                  draggable={false}
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                    display: 'block',
+                    opacity: badgePieces[i] ? 1 : 0,
+                    transition: 'opacity 0.4s ease',
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+          {/* 리본 — 90° 회전 W 꼭짓점, 하단 고정 */}
+          <div style={{
+            position: 'fixed',
+            bottom: 90,
+            left: 'calc(30% + 30%)',
+            width: 230,
+            height: 270,
+            pointerEvents: 'none',
+            zIndex: 8,
+            // 개별 리본 hover는 자식에서 처리
+          }}>
+            {RIBBON_POSITIONS.map((pos, i) => (
+              <div key={i} style={{ position: 'absolute', left: pos.left, top: pos.top, transform: 'translate(-50%, -50%)', width: 160, isolation: 'isolate', pointerEvents: ribbonPieces[i] ? 'auto' : 'none' }}
+                onMouseEnter={() => setHoveredRibbon(i)}
+                onMouseLeave={() => setHoveredRibbon(null)}
+              >
+                {/* 하단 그라데이션 복제 — 실루엣 마스크 안에서 multiply 기반 */}
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: `linear-gradient(to top, rgba(${accentRgb},0.28) 0%, rgba(${accentRgb},0.10) 100%)`,
+                  maskImage: `url(${ribbonSilhouetteImg})`,
+                  WebkitMaskImage: `url(${ribbonSilhouetteImg})`,
+                  maskSize: 'contain',
+                  WebkitMaskSize: 'contain',
+                  maskRepeat: 'no-repeat',
+                  WebkitMaskRepeat: 'no-repeat',
+                  maskPosition: 'center',
+                  WebkitMaskPosition: 'center',
+                  opacity: ribbonPieces[i] ? 0 : 1,
+                  transition: 'opacity 0.4s ease',
+                }} />
+                {/* 실루엣 — multiply로 그라데이션과 합성 */}
+                <img
+                  src={ribbonSilhouetteImg}
+                  alt=""
+                  draggable={false}
+                  style={{
+                    position: 'absolute', inset: 0,
+                    width: '100%', height: 'auto',
+                    objectFit: 'contain', display: 'block',
+                    opacity: ribbonPieces[i] ? 0 : 0.45,
+                    transition: 'opacity 0.4s ease',
+                    filter: 'brightness(5) grayscale(1)',
+                    mixBlendMode: 'multiply',
+                  }}
+                />
+                {/* 컬러 — 수집 시 표시 */}
+                <img
+                  src={RIBBON_IMGS[i]}
+                  alt=""
+                  draggable={false}
+                  style={{
+                    position: 'relative',
+                    width: '100%', height: 'auto',
+                    objectFit: 'contain',
+                    opacity: ribbonPieces[i] ? 1 : 0,
+                    transform: hoveredRibbon === i ? 'rotate(6deg)' : 'none',
+                    transition: 'opacity 0.4s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  }}
+                />
+              </div>
+            ))}
+          </div>
           </>
         );
       })()}
