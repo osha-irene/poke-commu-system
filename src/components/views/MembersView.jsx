@@ -1,6 +1,6 @@
 ﻿import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronLeft, Award, User, Text } from 'lucide-react';
+import { ChevronLeft, Award, User, Text, Users } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import { getOwnedPokemonSpriteUrl } from '../../utils/pokemonImageUtils';
 import { TYPE_COLORS } from '../../constants/pokemon';
@@ -491,6 +491,7 @@ const TABS = [
   { id: 'text', label: '설정', Icon: Text },
   { id: 'entry', label: '엔트리', iconSrc: '/img/pokeball.png' },
   { id: 'extra', label: '추가', Icon: Award },
+  { id: 'relation', label: '관계', Icon: Users },
 ];
 
 function rgbToHsl(r, g, b) {
@@ -606,7 +607,7 @@ function getQuoteAccentColor(color) {
 
 const imgCache = {}; // url → accent color (모듈 레벨 캐시)
 
-function MemberDetail({ member, titles, onBack, onTabChange, currentUserId }) {
+function MemberDetail({ member, members, titles, onBack, onTabChange, currentUserId }) {
   const { allItems = [] } = useGame();
   const fullImg = getFullImg(member);
   const imgRef = useRef(null);
@@ -621,9 +622,9 @@ function MemberDetail({ member, titles, onBack, onTabChange, currentUserId }) {
   const [charTabTransition, setCharTabTransition] = useState('');
 
   const commitTabChange = (id) => {
-    const transition = id === 'text'
+    const transition = (id === 'text' || id === 'relation')
       ? 'rmv-char-to-text'
-      : tab === 'text'
+      : (tab === 'text' || tab === 'relation')
         ? 'rmv-char-from-text'
         : '';
     if (charTransitionTimerRef.current) clearTimeout(charTransitionTimerRef.current);
@@ -669,6 +670,10 @@ function MemberDetail({ member, titles, onBack, onTabChange, currentUserId }) {
   const [partnerImgHeight, setPartnerImgHeight] = useState(128);
   const [partnerText, setPartnerText] = useState(() => member.partnerText || '');
   const [savedPartnerText, setSavedPartnerText] = useState(() => member.partnerText || '');
+  const [relations, setRelations] = useState(() => Array.isArray(member.relations) ? member.relations : []);
+  const [relationEditIdx, setRelationEditIdx] = useState(null);
+  const [relationDraft, setRelationDraft] = useState({ charName: '', intro: '', memo: '' });
+  const [relationSaving, setRelationSaving] = useState(false);
   const [partnerTextSaving, setPartnerTextSaving] = useState(false);
   const [badgeRotation, setBadgeRotation] = useState(0);
   const [badgeHovering, setBadgeHovering] = useState(false);
@@ -878,6 +883,25 @@ function MemberDetail({ member, titles, onBack, onTabChange, currentUserId }) {
     saveBadgeCleanlinessLevels(nextLevels, pieceIndex, false);
   };
 
+  const saveRelations = async (nextRelations) => {
+    setRelationSaving(true);
+    try {
+      const { getDatabase, ref, update } = await import('firebase/database');
+      await update(ref(getDatabase(), `members/${member.id}`), { relations: nextRelations });
+      setRelations(nextRelations);
+    } catch (err) {
+      console.error('관계 저장 실패:', err);
+    } finally {
+      setRelationSaving(false);
+    }
+  };
+
+  const findMemberFaceByName = (name) => {
+    if (!name || !members) return null;
+    const found = Object.values(members).find(m => m?.name === name);
+    return found ? getFaceImg(found) : null;
+  };
+
   const saveEtcText = async () => {
     setEtcSaving(true);
     try {
@@ -1054,6 +1078,12 @@ function MemberDetail({ member, titles, onBack, onTabChange, currentUserId }) {
   }, [member.id]);
 
   useEffect(() => {
+    setRelations(Array.isArray(member.relations) ? member.relations : []);
+    setRelationEditIdx(null);
+    setRelationDraft({ charName: '', intro: '', memo: '' });
+  }, [member.id]);
+
+  useEffect(() => {
     let cancelled = false;
     Promise.all(BADGE_IMGS.map(src => new Promise(resolve => {
       const image = new Image();
@@ -1110,12 +1140,12 @@ function MemberDetail({ member, titles, onBack, onTabChange, currentUserId }) {
   };
 
   return (
-    <div className="relative flex" style={{ height: '100vh' }} onWheel={member.charImageScrollEnabled && tab === 'main' ? moveScrollableCharacter : undefined}>
+    <div className="relative flex" style={{ height: '100vh', minHeight: '100dvh' }} onWheel={member.charImageScrollEnabled && tab === 'main' ? moveScrollableCharacter : undefined}>
 
 
 
       {/* 좌측: 캐치프레이즈(뒤) + 캐릭터 이미지 */}
-      <div className="relative" style={{ width: 'calc(100% - 240px)', flexShrink: 0 }}>
+      <div className="relative" style={{ width: 'calc(100% - 240px)', flexShrink: 0, height: '100vh', minHeight: '100dvh', overflow: 'visible' }}>
         {tab === 'main' && (
           <div
             className="rmv-catchphrase-fade"
@@ -1229,7 +1259,7 @@ function MemberDetail({ member, titles, onBack, onTabChange, currentUserId }) {
               crossOrigin="anonymous"
               onLoad={handleImgLoad}
               onError={() => setImgLoaded(true)}
-              className={`rmv-char-base${tab === 'text' ? ' rmv-char-pushed' : ''}${charTabTransition ? ` ${charTabTransition}` : ''}`}
+              className={`rmv-char-base${(tab === 'text' || tab === 'relation') ? ' rmv-char-pushed' : ''}${charTabTransition ? ` ${charTabTransition}` : ''}`}
               style={{
                 position: 'fixed',
                 top: member.charImageTop ?? 0,
@@ -1686,8 +1716,7 @@ function MemberDetail({ member, titles, onBack, onTabChange, currentUserId }) {
         <div
           key="main"
           className="rmv-tab-content flex flex-col justify-start gap-3"
-          onWheel={e => e.stopPropagation()}
-          style={{ position: 'absolute', top: '16.5rem', left: '57%', width: 280, maxHeight: 'calc(100vh - 18rem)', overflowY: 'auto', overflowX: 'visible', paddingBottom: 24, boxSizing: 'border-box', zIndex: 10 }}
+          style={{ position: 'absolute', top: '16.5rem', left: '57%', width: 280, overflowX: 'visible', paddingBottom: 24, boxSizing: 'border-box', zIndex: 10 }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 28 }}>
             {(() => {
@@ -1747,6 +1776,7 @@ function MemberDetail({ member, titles, onBack, onTabChange, currentUserId }) {
               <div
                 className={partnerTextOpen ? 'rmv-partner-text-in' : ''}
                 onClick={() => { if (!partnerEditing) setPartnerEditing(true); }}
+                onWheel={e => e.stopPropagation()}
                 style={{
                   position: 'relative',
                   zIndex: 6,
@@ -1755,6 +1785,8 @@ function MemberDetail({ member, titles, onBack, onTabChange, currentUserId }) {
                   padding: '10px 12px',
                   marginTop: 2,
                   minHeight: 36,
+                  maxHeight: 'calc(100vh - 25rem - 20px)',
+                  overflowY: 'auto',
                   cursor: partnerEditing ? 'text' : 'pointer',
                   transition: 'background 0.3s',
                 }}
@@ -1839,33 +1871,38 @@ function MemberDetail({ member, titles, onBack, onTabChange, currentUserId }) {
                 </div>
               ) : null;
             })()}
-            {noteEditing ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <textarea
-                  ref={el => { noteRef.current = el; if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; el.focus({ preventScroll: true }); } }}
-                  value={note}
-                  onChange={e => { setNote(e.target.value); if (noteRef.current) { noteRef.current.style.height = 'auto'; noteRef.current.style.height = noteRef.current.scrollHeight + 'px'; } }}
-                  style={{ width: '100%', resize: 'none', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(6px)', borderRadius: 10, padding: '10px 12px', fontSize: 15, color: '#333', lineHeight: 1.6, fontFamily: 'inherit', zIndex: 5, overflow: 'hidden', minHeight: 48, display: 'block' }}
-                />
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <button onClick={saveNote} disabled={noteSaving}
-                    style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: `rgb(${accentRgb})`, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                    {noteSaving ? '저장 중...' : '저장'}
-                  </button>
-                  <button onClick={() => { setNote(member.note || ''); setNoteEditing(false); }}
-                    style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: 'rgba(0,0,0,0.08)', color: '#555', fontSize: 13, cursor: 'pointer' }}>
-                    취소
-                  </button>
+            <div
+              onWheel={e => e.stopPropagation()}
+              style={{ maxHeight: 'calc(100vh - 26rem)', overflowY: 'auto', overflowX: 'hidden', paddingRight: 2 }}
+            >
+              {noteEditing ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <textarea
+                    ref={el => { noteRef.current = el; if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; el.focus({ preventScroll: true }); } }}
+                    value={note}
+                    onChange={e => { setNote(e.target.value); if (noteRef.current) { noteRef.current.style.height = 'auto'; noteRef.current.style.height = noteRef.current.scrollHeight + 'px'; } }}
+                    style={{ width: '100%', resize: 'none', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(6px)', borderRadius: 10, padding: '10px 12px', fontSize: 15, color: '#333', lineHeight: 1.6, fontFamily: 'inherit', zIndex: 5, overflow: 'hidden', minHeight: 48, display: 'block' }}
+                  />
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button onClick={saveNote} disabled={noteSaving}
+                      style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: `rgb(${accentRgb})`, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                      {noteSaving ? '저장 중...' : '저장'}
+                    </button>
+                    <button onClick={() => { setNote(member.note || ''); setNoteEditing(false); }}
+                      style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: 'rgba(0,0,0,0.08)', color: '#555', fontSize: 13, cursor: 'pointer' }}>
+                      취소
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div onClick={() => setNoteEditing(true)}
-                style={{ minHeight: 48, fontSize: 15, color: note ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.6, cursor: 'text', padding: '4px 2px', position: 'relative', zIndex: 1 }}>
-                {note
-                  ? note.split('\n').map((line, i) => <p key={i} style={{ margin: 0, marginBottom: '1.4em', textIndent: '0.5em' }}>{line || ' '}</p>)
-                  : '클릭해서 메모 추가...'}
-              </div>
-            )}
+              ) : (
+                <div onClick={() => setNoteEditing(true)}
+                  style={{ minHeight: 48, fontSize: 15, color: note ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.6, cursor: 'text', padding: '4px 2px', position: 'relative', zIndex: 1 }}>
+                  {note
+                    ? note.split('\n').map((line, i) => <p key={i} style={{ margin: 0, marginBottom: '1.4em', textIndent: '0.5em' }}>{line || ' '}</p>)
+                    : '클릭해서 메모 추가...'}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -2052,6 +2089,174 @@ function MemberDetail({ member, titles, onBack, onTabChange, currentUserId }) {
         </div>
         </>
       )}
+      {/* 관계 탭 콘텐츠 */}
+      {tab === 'relation' && (() => {
+        const [ar, ag, ab] = selectedAccent;
+        const kwTextColor = (0.299 * ar + 0.587 * ag + 0.114 * ab) > 160 ? '#111' : '#fff';
+        return (
+          <>
+            {/* 우상단 추가 버튼 */}
+            {relationEditIdx !== 'new' && (
+              <button
+                onClick={() => { setRelationEditIdx('new'); setRelationDraft({ charName: '', intro: '', memo: '' }); }}
+                onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.15)'}
+                onMouseLeave={e => e.currentTarget.style.filter = ''}
+                style={{ position: 'absolute', top: 195, right: 28, width: 36, height: 36, borderRadius: '50%', border: 'none', background: `rgb(${selectedAccentRgb})`, color: kwTextColor, fontSize: 22, fontWeight: 300, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 20, transition: 'filter 0.15s ease' }}
+              >
+                +
+              </button>
+            )}
+            {/* 배경 텍스트 — achievements 탭과 동일한 방식 */}
+            <div style={{ position: 'absolute', top: '2rem', left: 0, right: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+              <div className="rmv-achievements-text">
+                <div style={{ fontFamily: "'SUITE', sans-serif", fontSize: 145, fontWeight: 300, lineHeight: 1, letterSpacing: '-0.09em', color: `rgb(${accentRgb})`, opacity: 0.58, transform: 'scaleX(1.1)', transformOrigin: 'right center', whiteSpace: 'nowrap', textAlign: 'right', marginRight: '-5%' }}>
+                  RELATIONS
+                </div>
+              </div>
+            </div>
+            <div
+              style={{ position: 'fixed', top: 185, left: '40%', right: 0, bottom: 0, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', overscrollBehavior: 'contain', zIndex: 17, display: 'flex', flexDirection: 'column' }}
+            >
+              <div style={{ paddingTop: 42, paddingBottom: 40, paddingLeft: 32, paddingRight: 72, boxSizing: 'border-box', flex: '0 0 auto', minHeight: '100%' }}>
+                {/* 관계 목록 */}
+                {relations.map((rel, idx) => {
+                  const isEditing = relationEditIdx === idx;
+                  const faceImg = findMemberFaceByName(rel.charName);
+                  if (isEditing) {
+                    return (
+                      <div key={idx} style={{ marginBottom: 14, padding: '14px', background: `rgba(${selectedAccentRgb}, 0.08)`, borderRadius: 12 }}>
+                        <input
+                          value={relationDraft.charName}
+                          onChange={e => setRelationDraft(d => ({ ...d, charName: e.target.value }))}
+                          placeholder="캐릭터 이름"
+                          autoFocus
+                          style={{ display: 'block', width: '100%', marginBottom: 8, padding: '6px 10px', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.7)', borderRadius: 7, fontSize: 15, fontWeight: 700, fontFamily: 'inherit' }}
+                        />
+                        <input
+                          value={relationDraft.intro}
+                          onChange={e => setRelationDraft(d => ({ ...d, intro: e.target.value }))}
+                          placeholder="한줄소개"
+                          style={{ display: 'block', width: '100%', marginBottom: 8, padding: '6px 10px', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.7)', borderRadius: 7, fontSize: 13, fontFamily: 'inherit' }}
+                        />
+                        <textarea
+                          value={relationDraft.memo}
+                          onChange={e => setRelationDraft(d => ({ ...d, memo: e.target.value }))}
+                          placeholder="메모"
+                          rows={3}
+                          style={{ display: 'block', width: '100%', resize: 'none', padding: '6px 10px', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.7)', borderRadius: 7, fontSize: 14, fontFamily: 'inherit', lineHeight: 1.65 }}
+                        />
+                        <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                          <button
+                            onClick={async () => {
+                              const next = relations.map((r, i) => i === idx ? { charName: relationDraft.charName, intro: relationDraft.intro, memo: relationDraft.memo } : r);
+                              await saveRelations(next);
+                              setRelationEditIdx(null);
+                            }}
+                            disabled={relationSaving}
+                            style={{ flex: 1, padding: '6px 0', borderRadius: 7, border: 'none', background: `rgb(${selectedAccentRgb})`, color: kwTextColor, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                          >
+                            {relationSaving ? '저장 중...' : '저장'}
+                          </button>
+                          <button
+                            onClick={() => { setRelationEditIdx(null); setRelationDraft({ charName: '', intro: '', memo: '' }); }}
+                            style={{ padding: '6px 12px', borderRadius: 7, border: 'none', background: 'rgba(0,0,0,0.08)', color: '#555', fontSize: 13, cursor: 'pointer' }}
+                          >
+                            취소
+                          </button>
+                          <button
+                            onClick={async () => {
+                              const next = relations.filter((_, i) => i !== idx);
+                              await saveRelations(next);
+                              setRelationEditIdx(null);
+                            }}
+                            disabled={relationSaving}
+                            style={{ padding: '6px 12px', borderRadius: 7, border: 'none', background: 'rgba(220,38,38,0.08)', color: '#dc2626', fontSize: 13, cursor: 'pointer' }}
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div
+                      key={idx}
+                      className="rmv-relation-card"
+                      onClick={() => { setRelationEditIdx(idx); setRelationDraft({ charName: rel.charName || '', intro: rel.intro || '', memo: rel.memo || '' }); }}
+                      style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 14, alignItems: 'flex-start', padding: '14px 16px', marginBottom: 10, borderRadius: 12, background: 'rgba(255,255,255,0.95)', borderBottom: '1px solid rgba(0,0,0,0.07)', cursor: 'pointer' }}
+                    >
+                      <div style={{ width: 48, height: 48, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: `2px solid rgba(${selectedAccentRgb}, 0.3)`, background: `rgba(${selectedAccentRgb}, 0.1)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {faceImg ? (
+                          <img src={faceImg} alt={rel.charName} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', display: 'block' }} />
+                        ) : (
+                          <span style={{ fontSize: 18, fontWeight: 700, color: `rgb(${selectedAccentRgb})` }}>{rel.charName?.charAt(0) || '?'}</span>
+                        )}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, color: `rgb(${selectedAccentRgb})`, fontSize: 16, marginBottom: rel.intro ? 3 : 4, lineHeight: 1.2 }}>{rel.charName || '(이름 없음)'}</div>
+                        {rel.intro && (
+                          <div style={{ fontSize: 13, fontWeight: 700, color: `rgba(${selectedAccentRgb}, 0.55)`, lineHeight: 1.5, marginBottom: rel.memo ? 5 : 0 }}>{rel.intro}</div>
+                        )}
+                        {rel.memo && (
+                          <div style={{ fontSize: 14, color: '#555', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{rel.memo}</div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* 새 관계 추가 */}
+                {relationEditIdx === 'new' && (
+                  <div style={{ marginTop: 20, padding: '14px', background: `rgba(${selectedAccentRgb}, 0.08)`, borderRadius: 12 }}>
+                    <input
+                      value={relationDraft.charName}
+                      onChange={e => setRelationDraft(d => ({ ...d, charName: e.target.value }))}
+                      placeholder="캐릭터 이름"
+                      autoFocus
+                      style={{ display: 'block', width: '100%', marginBottom: 8, padding: '6px 10px', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.7)', borderRadius: 7, fontSize: 15, fontWeight: 700, fontFamily: 'inherit' }}
+                    />
+                    <input
+                      value={relationDraft.intro}
+                      onChange={e => setRelationDraft(d => ({ ...d, intro: e.target.value }))}
+                      placeholder="한줄소개"
+                      style={{ display: 'block', width: '100%', marginBottom: 8, padding: '6px 10px', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.7)', borderRadius: 7, fontSize: 13, fontFamily: 'inherit' }}
+                    />
+                    <textarea
+                      value={relationDraft.memo}
+                      onChange={e => setRelationDraft(d => ({ ...d, memo: e.target.value }))}
+                      placeholder="메모"
+                      rows={3}
+                      style={{ display: 'block', width: '100%', resize: 'none', padding: '6px 10px', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.7)', borderRadius: 7, fontSize: 14, fontFamily: 'inherit', lineHeight: 1.65 }}
+                    />
+                    <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                      <button
+                        onClick={async () => {
+                          if (!relationDraft.charName.trim()) return;
+                          const next = [...relations, { charName: relationDraft.charName.trim(), intro: relationDraft.intro.trim(), memo: relationDraft.memo.trim() }];
+                          await saveRelations(next);
+                          setRelationEditIdx(null);
+                          setRelationDraft({ charName: '', intro: '', memo: '' });
+                        }}
+                        disabled={relationSaving || !relationDraft.charName.trim()}
+                        style={{ flex: 1, padding: '6px 0', borderRadius: 7, border: 'none', background: `rgb(${selectedAccentRgb})`, color: kwTextColor, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                      >
+                        {relationSaving ? '저장 중...' : '추가'}
+                      </button>
+                      <button
+                        onClick={() => { setRelationEditIdx(null); setRelationDraft({ charName: '', intro: '', memo: '' }); }}
+                        style={{ padding: '6px 12px', borderRadius: 7, border: 'none', background: 'rgba(0,0,0,0.08)', color: '#555', fontSize: 13, cursor: 'pointer' }}
+                      >
+                        취소
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        );
+      })()}
+
     {/* 말풍선 — 메인 탭에서만 표시 */}
       {tab === 'main' && member.bio && (
         <div className="rmv-bio-slide" style={{ position: 'absolute', top: '6rem', right: 'calc(43% - 290px)', width: 'calc(43vw * 1/2)', zIndex: 1 }}>
@@ -2237,6 +2442,7 @@ export default function MembersView({ members = {}, isLoading, currentUserId, ti
         >
           <MemberDetail
             member={members[selected.id] || selected}
+            members={members}
             titles={titles}
             onBack={closeMember}
             onTabChange={setActiveTab}

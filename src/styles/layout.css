@@ -762,6 +762,24 @@ body.rmv-detail-open .site-header {
   opacity: 0.58;
 }
 
+.rmv-relation-card {
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.rmv-relation-card:hover {
+  z-index: 35 !important;
+  background: rgba(255,255,255,0.99) !important;
+  border-bottom-color: rgba(0,0,0,0.12) !important;
+  box-shadow:
+    0 3px 8px rgba(0,0,0,0.06),
+    0 2px 0 rgba(255,255,255,0.85) inset;
+  transform: translateY(-2px) scale(1.015);
+}
+
 .admin-corner-nav .trainer-nav__group {
   flex-direction: column-reverse;
   align-items: flex-start;
