@@ -1709,9 +1709,12 @@ function MemberDetail({ member, titles, onBack, onTabChange, currentUserId }) {
                 <button
                   type="button"
                   onClick={() => { setPartnerTextOpen(open => !open); setPartnerEditing(false); }}
-                  style={{ border: 0, padding: 0, background: 'transparent', fontSize: 22, fontWeight: 700, color: '#1a1a1a', cursor: 'pointer' }}
+                  style={{ border: 0, padding: 0, background: 'transparent', fontSize: 22, fontWeight: 700, color: '#1a1a1a', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                 >
-                  {getPokemonName(partner)}
+                  <span style={{ position: 'relative' }}>
+                    {getPokemonName(partner)}
+                    {partner.isShiny && <span style={{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)', color: '#e53e3e', fontSize: 13, lineHeight: 1, marginLeft: 3 }}>★</span>}
+                  </span>
                 </button>
                 <img
                   src={getPokeApiSprite(partner) || getPokemonDbSprite(partner)}
