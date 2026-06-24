@@ -33,6 +33,7 @@ import QnABoard from './components/views/QnABoard';
 import CookingView from './components/views/CookingView';
 import WorldView from './components/views/WorldView';
 import { noticeContent, systemContent } from './data/communityContent';
+import MOCK_MEMBERS from './data/mockMembers';
 import { PokemonProvider } from './contexts/PokemonContext';
 import { GameProvider } from './contexts/GameContext';
 import BattleView from './components/views/BattleView';
@@ -1422,7 +1423,17 @@ export default function App() {
   const isFeaturePage = currentTab !== 'home';
   const isMembersPage = currentTab === 'members';
   const isTopMenuPage = ['notice', 'world', 'system'].includes(currentTab);
-  const hasContentSurface = isFeaturePage && !isMembersPage && currentTab !== 'profile';
+  const prevTabRef = React.useRef(currentTab);
+  const tabDirection = React.useMemo(() => {
+    const TAB_ORDER = ['members', 'npcs'];
+    const prev = prevTabRef.current;
+    const prevIdx = TAB_ORDER.indexOf(prev);
+    const currIdx = TAB_ORDER.indexOf(currentTab);
+    prevTabRef.current = currentTab;
+    if (prevIdx === -1 || currIdx === -1) return 'forward';
+    return currIdx > prevIdx ? 'forward' : 'reverse';
+  }, [currentTab]);
+  const hasContentSurface = isFeaturePage && !isMembersPage && currentTab !== 'profile' && currentTab !== 'npcs';
   const isCoreLoading = isAuthLoading || isMembersLoading;
   const [isInitialPageReady, setIsInitialPageReady] = useState(false);
 
@@ -1958,8 +1969,8 @@ return (
             />
           )}
 
-          {currentTab === 'members' && <MobileMembersView members={members} titles={titles} />}
-          {currentTab === 'npcs' && <NpcView members={members} isLoading={isMembersLoading} isAdmin={isAdmin} npcOnly />}
+          {currentTab === 'members' && <div key="members" className={tabDirection === 'reverse' ? 'tab-view-enter-reverse' : 'tab-view-enter'}><MobileMembersView members={members} titles={titles} /></div>}
+          {currentTab === 'npcs' && <div key="npcs" className={tabDirection === 'reverse' ? 'tab-view-enter-reverse' : 'tab-view-enter'}><NpcView members={members} isLoading={isMembersLoading} isAdmin={isAdmin} npcOnly /></div>}
           {currentTab === 'pokemon' && <PokemonView />}
           {currentTab === 'items' && <ItemsView />}
           {currentTab === 'shop' && <ShopView />}
@@ -2071,8 +2082,8 @@ return (
 			/>
 		  )}
 		  
-		  {currentTab === 'members' && <MembersView members={members} isLoading={isMembersLoading} currentUserId={currentUser?.id} titles={titles} />}
-		  {currentTab === 'npcs' && <NpcView members={members} isLoading={isMembersLoading} isAdmin={isAdmin} npcOnly />}
+		  {currentTab === 'members' && <div key="members" className={tabDirection === 'reverse' ? 'tab-view-enter-reverse' : 'tab-view-enter'}><MembersView members={process.env.NODE_ENV === 'development' ? { ...MOCK_MEMBERS, ...members } : members} isLoading={isMembersLoading} currentUserId={currentUser?.id} titles={titles} onSwitchTab={setCurrentTab} /></div>}
+		  {currentTab === 'npcs' && <div key="npcs" className={tabDirection === 'reverse' ? 'tab-view-enter-reverse' : 'tab-view-enter'}><NpcView members={members} isLoading={isMembersLoading} isAdmin={isAdmin} npcOnly onSwitchTab={setCurrentTab} /></div>}
 		  {currentTab === 'pokemon' && <PokemonView />}
 		  {currentTab === 'items' && <ItemsView />}
 		  {currentTab === 'shop' && <ShopView />}

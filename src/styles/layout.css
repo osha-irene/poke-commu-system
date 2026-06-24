@@ -175,10 +175,6 @@ img[style*="pixelated"],
 }
 .main-shell:has(.mbr-page) {
   overflow: hidden;
-  background-image: url('../assets/forest-bg (2).png');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
 }
 .main-shell::before {
   content: '';
@@ -821,7 +817,7 @@ body.rmv-detail-open .site-header {
 }
 .content-stage:has(.mbr-page) {
   padding: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 .main-layout:has(.mbr-page) {
   min-height: 0;

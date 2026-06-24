@@ -1,4 +1,5 @@
 ﻿import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronLeft, User, Text } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import { getOwnedPokemonSpriteUrl } from '../../utils/pokemonImageUtils';
@@ -10,6 +11,9 @@ import abilitiesData from '../../data/abilities.json';
 import CachedImage from '../common/CachedImage';
 import { preloadDecodedImage } from '../../utils/imageCache';
 import { useGame } from '../../contexts/GameContext';
+import polaroidListWhite from '../../assets/members/polaroid-list-white.png';
+import npcButtonImg from '../../assets/members/npc-button.png';
+import topButtonImg from '../../assets/members/top-button.png';
 
 const GenderMale = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -33,7 +37,7 @@ const getMemberList = (members) =>
 
 const getParty = m => (m?.caughtPokemon || []).filter(Boolean).slice(0, 6);
 const getPartner = m => { const p = getParty(m); return p.find(x => x.isPartner) || p[0] || null; };
-const getFaceImg = m => m?.profileImage || m?.profileImageFull || m?.profileImageUrl || '';
+const getFaceImg = m => m?.profileImageThumb || m?.profileImage || m?.profileImageFull || m?.profileImageUrl || '';
 const getFullImg     = m => m?.profileImageFull || m?.profileImage || m?.profileImageUrl || '';
 
 const getPokemonImg = p => p?.sprite || p?.spriteUrl || p?.imageUrl || p?.iconUrl || '';
@@ -232,12 +236,8 @@ function PartySlot({ pokemon, large }) {
 
 /* ── 멤버 목록 카드 ── */
 function MemberCard({ member, titles, onClick }) {
-  const partner = getPartner(member);
-  const partnerIcon = partner ? getPokemonLocalIconUrl(partner) : null;
   const faceImg = getFaceImg(member);
-  const title = member.title && member.title !== 'none'
-    ? titles.find(t => t.id === member.title)?.label || ''
-    : '';
+  const [hovered, setHovered] = useState(false);
 
   const preloadFullImg = () => {
     const full = getFullImg(member);
@@ -246,20 +246,51 @@ function MemberCard({ member, titles, onClick }) {
 
   return (
     <div
-      className="rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden hover:-translate-y-1 group aspect-square bg-gray-100"
+      className="cursor-pointer"
+      style={{
+        position: 'relative',
+        aspectRatio: '275 / 319',
+        filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.18))',
+        transform: hovered ? 'rotate(3deg)' : 'none',
+        transition: 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+      }}
       onClick={onClick}
-      onMouseEnter={preloadFullImg}
+      onMouseEnter={() => { preloadFullImg(); setHovered(true); }}
+      onMouseLeave={() => setHovered(false)}
     >
-      {faceImg ? (
-        <CachedImage src={faceImg} alt={member.name} loading="eager" decoding="async" fetchPriority="high"
-          className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-indigo-50 to-purple-50">
-          <div className="w-20 h-20 rounded-full bg-indigo-100 border-4 border-white/80 flex items-center justify-center text-4xl shadow">
-            {member.name?.charAt(0)}
+      {/* 폴라로이드 프레임 */}
+      <img
+        src={polaroidListWhite}
+        alt=""
+        draggable={false}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill', pointerEvents: 'none', userSelect: 'none' }}
+      />
+      {/* 멤버 사진 — polaroid2(222×246) 영역, 프레임(311×359) 내 비율로 배치 */}
+      <div style={{
+        position: 'absolute',
+        left: '9.6%',
+        top: '14%',
+        width: '80.7%',
+        height: '77.1%',
+        overflow: 'hidden',
+      }}>
+        {faceImg ? (
+          <CachedImage
+            src={faceImg}
+            alt={member.name}
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', display: 'block' }}
+          />
+        ) : (
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(to bottom, #eef2ff, #f5f3ff)' }}>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#c7d2fe', border: '3px solid rgba(255,255,255,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 700, color: '#4f46e5' }}>
+              {member.name?.charAt(0)}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -1260,7 +1291,7 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
 }
 
 /* ── 메인 ── */
-export default function MembersView({ members = {}, isLoading, currentUserId, titles = [] }) {
+export default function MembersView({ members = {}, isLoading, currentUserId, titles = [], onSwitchTab }) {
   const [selected, setSelected] = useState(null);
   const [transitioning, setTransitioning] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
@@ -1338,7 +1369,32 @@ export default function MembersView({ members = {}, isLoading, currentUserId, ti
           pointerEvents: showDetail ? 'none' : 'auto',
         }}
       >
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 p-1">
+        {onSwitchTab && (
+          <button
+            onClick={() => onSwitchTab('npcs')}
+            className="tab-switch-btn"
+            style={{ position: 'absolute', top: -50, left: -70, zIndex: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+          >
+            <img src={npcButtonImg} alt="NPC 보기" style={{ width: 150, height: 'auto', display: 'block' }} />
+          </button>
+        )}
+        {createPortal(
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="tab-switch-btn"
+            style={{ position: 'fixed', bottom: 30, right: 'calc(max(0px, (100vw - 1548px) / 2) + 230px)', zIndex: 100, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+          >
+            <img src={topButtonImg} alt="맨 위로" style={{ width: 80, height: 'auto', display: 'block' }} />
+          </button>,
+          document.body
+        )}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(5, 1fr)',
+          gap: '10px',
+          padding: '20px 20px 60px',
+          margin: '0 -40px',
+        }}>
           {memberList.map(m => (
             <MemberCard
               key={m.id}

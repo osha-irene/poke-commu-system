@@ -33,7 +33,10 @@
         "eject": "react-scripts eject",
         "predeploy": "npm run build",
         "deploy": "gh-pages -d build --dotfiles",
-        "postbuild": "node scripts/ensure-cname.js"
+        "postbuild": "node scripts/ensure-cname.js",
+        "cors:dev": "gsutil cors set cors.json gs://poke-commu-system-dev.firebasestorage.app",
+        "cors:prod": "gsutil cors set cors.json gs://poke-commu-system.firebasestorage.app",
+        "cors": "npm run cors:dev && npm run cors:prod"
     },
     "eslintConfig": {
         "extends": [

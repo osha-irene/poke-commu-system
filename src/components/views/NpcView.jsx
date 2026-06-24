@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { Search, Star, ChevronLeft, ChevronRight, Shield, Swords, User } from 'lucide-react';
+import memberButtonImg from '../../assets/members/member-button.png';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import { ProfileSection } from '../common/ProfileRenderer';
 import { useProfileTemplate, useMemberProfile } from '../../hooks/data/useProfileTemplate';
@@ -249,7 +250,7 @@ function MemberOverlay({ member, onClose, isAdmin, closing }) {
 }
 
 /* ── 목록 뷰 ── */
-export default function NpcView({ members = {}, isLoading = false, isAdmin = false, npcOnly = false }) {
+export default function NpcView({ members = {}, isLoading = false, isAdmin = false, npcOnly = false, onSwitchTab }) {
   const [activeId, setActiveId]       = useState(null);
   const [closing, setClosing]         = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -293,13 +294,23 @@ export default function NpcView({ members = {}, isLoading = false, isAdmin = fal
   return (
     <>
       {/* 목록 */}
-      <div className="mbr-page">
-        <div className="mbr-roster">
+      <div style={{ position: 'relative' }}>
+        {onSwitchTab && (
+          <button
+            onClick={() => onSwitchTab('members')}
+            className="tab-switch-btn"
+            style={{ position: 'absolute', top: -16, left: -42, zIndex: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+          >
+            <img src={memberButtonImg} alt="멤버 보기" style={{ width: 150, height: 'auto', display: 'block' }} />
+          </button>
+        )}
+        <div className="mbr-page">
+        <div className="mbr-roster" style={{ paddingTop: 100 }}>
           <div className="mbr-list-stage">
             <button className="mbr-list-nav mbr-list-nav-prev" hidden={!navState.prev} onClick={() => scrollList(-1)}>&#8249;</button>
             <div className="mbr-list" ref={listRef}>
               {!isLoading && filtered.map(m => {
-                const img = getFullImg(m);
+                const img = getListImg(m);
                 const party = getParty(m).slice(0, 6);
                 return (
                   <button key={m.id} className="mbr-card" onClick={() => setActiveId(m.id)}>
@@ -320,6 +331,7 @@ export default function NpcView({ members = {}, isLoading = false, isAdmin = fal
             </div>
             <button className="mbr-list-nav mbr-list-nav-next" hidden={!navState.next} onClick={() => scrollList(1)}>&#8250;</button>
           </div>
+        </div>
         </div>
       </div>
 
