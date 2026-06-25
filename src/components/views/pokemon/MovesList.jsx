@@ -125,7 +125,13 @@ export default function MovesList({
               </span>
               <span className="flex items-center gap-1 text-xs">
                 <span className="text-gray-500">PP</span>
-                <span className="text-gray-700 font-bold">{move.pp || move.currentPp}</span>
+                <span className={`font-bold ${
+                  move.currentPp === 0 ? 'text-red-500' :
+                  move.pp && move.currentPp <= move.pp / 4 ? 'text-orange-500' :
+                  'text-gray-700'
+                }`}>
+                  {move.currentPp ?? move.pp}/{move.pp}
+                </span>
               </span>
             </div>
             {move.description && (

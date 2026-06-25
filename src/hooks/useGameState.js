@@ -422,6 +422,7 @@ export default function useGameState() {
     acceptEvolution: evolutionHook.acceptEvolution,
     cancelEvolution: evolutionHook.cancelEvolution,
     checkEvolution: evolutionHook.checkEvolution,
+    checkEvolutionOnLevelUp: evolutionHook.checkEvolutionOnLevelUp,
     manualEvolve: evolutionHook.manualEvolve,
     increaseEffort: pokemonManagement.increaseEffort,
     recipes: recipesHook.recipes,

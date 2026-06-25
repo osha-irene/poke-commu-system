@@ -586,7 +586,7 @@ const BattleLogArchiveModal = ({ logs, onClose, onDelete, loading }) => {
 };
 
 export function BattleView() {
-  const { systemSettings } = useGame();
+  const { systemSettings, checkEvolutionOnLevelUp } = useGame();
   const [battleItemsEnabled, setBattleItemsEnabled] = useState(false);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [loadingPokemon, setLoadingPokemon] = useState({ player1: false, player2: false });
@@ -777,8 +777,11 @@ export function BattleView() {
       await Promise.all([...memberIds].map(async (memberId) => {
         try {
           const snap = await get(ref(database, `members/${memberId}/caughtPokemon`));
-          const caught = snap.val();
-          if (!Array.isArray(caught)) return;
+          const rawCaught = snap.val();
+          if (!rawCaught) return;
+          const caught = Array.isArray(rawCaught)
+            ? rawCaught
+            : Object.assign(Array(Math.max(...Object.keys(rawCaught).map(Number)) + 1), rawCaught);
 
           const updated = caught.map(p => {
             const key = pokemonKey(p);
@@ -799,6 +802,17 @@ export function BattleView() {
           });
 
           await set(ref(database, `members/${memberId}/caughtPokemon`), updated);
+
+          // 배틀 후 진화 체크 (battleCrit 조건 등)
+          if (checkEvolutionOnLevelUp) {
+            for (const p of updated) {
+              if (!p) continue;
+              const key = pokemonKey(p);
+              if (crits[memberId]?.[key]) {
+                checkEvolutionOnLevelUp(p);
+              }
+            }
+          }
         } catch (e) {
           console.warn('moveUsage 업데이트 실패:', memberId, e);
         }

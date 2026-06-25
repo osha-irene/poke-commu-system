@@ -382,8 +382,31 @@ const usePokemonManagement = (
     if (newLevel === oldLevel && accExp === (Number(pokemon.exp) || 0)) return false;
 
     const isPartnerPokemon = currentUser.partnerPokemon?.uniqueId === uniqueId;
-    // 남은 exp를 pokemon에 저장
-    const updatedPokemonPatch = { ...pokemon, level: newLevel, exp: accExp };
+
+    // Firebase에서 최신 caughtPokemon을 읽어 moveUsage 등 직접 기록된 필드를 보존
+    let latestCaughtPokemon = currentUser.caughtPokemon;
+    if (!isPartnerPokemon) {
+      try {
+        const caughtSnap = await get(ref(database, `members/${currentUser.id}/caughtPokemon`));
+        if (caughtSnap.exists()) {
+          const val = caughtSnap.val();
+          if (Array.isArray(val)) {
+            latestCaughtPokemon = val;
+          } else if (val && typeof val === 'object') {
+            const maxIdx = Math.max(...Object.keys(val).map(Number));
+            latestCaughtPokemon = Array.from({ length: maxIdx + 1 }, (_, i) => val[i] ?? null);
+          }
+        }
+      } catch (e) {
+        console.warn('최신 caughtPokemon 로드 실패, 로컬 상태 사용:', e);
+      }
+    }
+
+    // 최신 pokemon 데이터로 패치 (moveUsage 등 보존)
+    const latestPokemon = isPartnerPokemon
+      ? pokemon
+      : (latestCaughtPokemon.find(p => p && p.uniqueId === uniqueId) || pokemon);
+    const updatedPokemonPatch = { ...latestPokemon, level: newLevel, exp: accExp };
 
     // trainerExp에서 배분한 만큼만 차감
     const newTrainerExp = Math.max(0, (Number(currentUser.trainerExp) || 0) - (Number(expAmount) || 0));
@@ -391,7 +414,7 @@ const usePokemonManagement = (
     if (isPartnerPokemon) {
       updateCurrentUser({ partnerPokemon: updatedPokemonPatch, trainerExp: newTrainerExp });
     } else {
-      const newCaughtPokemon = currentUser.caughtPokemon.map(p =>
+      const newCaughtPokemon = latestCaughtPokemon.map(p =>
         p && p.uniqueId === uniqueId ? updatedPokemonPatch : p
       );
       updateCurrentUser({ caughtPokemon: newCaughtPokemon, trainerExp: newTrainerExp });
@@ -411,9 +434,19 @@ const usePokemonManagement = (
 
         if (snapshot.exists()) {
           const latestUser = snapshot.val();
+          const rawCaught = latestUser.caughtPokemon;
+          let latestCaught;
+          if (Array.isArray(rawCaught)) {
+            latestCaught = rawCaught;
+          } else if (rawCaught && typeof rawCaught === 'object') {
+            const maxIdx = Math.max(...Object.keys(rawCaught).map(Number));
+            latestCaught = Array.from({ length: maxIdx + 1 }, (_, i) => rawCaught[i] ?? null);
+          } else {
+            latestCaught = [];
+          }
           const latestPokemon = isPartnerPokemon
             ? latestUser.partnerPokemon
-            : latestUser.caughtPokemon?.find(p => p && p.uniqueId === uniqueId);
+            : latestCaught.find(p => p && p.uniqueId === uniqueId);
 
           if (latestPokemon && checkEvolutionOnLevelUp) {
             const shouldShowEvolutionModal = checkEvolutionOnLevelUp(latestPokemon);

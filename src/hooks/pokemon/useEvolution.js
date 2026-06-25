@@ -50,7 +50,9 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
   // 레벨업이 필요한 조건 타입 (아이템/교환 진화는 즉시 적용)
   const LEVEL_UP_REQUIRED_CONDITIONS = new Set(['friendship', 'moveUsage']);
   const isLevelUpRequiredCondition = (condition) =>
-    LEVEL_UP_REQUIRED_CONDITIONS.has(condition?.type) || condition?.minBeauty !== undefined;
+    LEVEL_UP_REQUIRED_CONDITIONS.has(condition?.type) ||
+    condition?.minBeauty !== undefined ||
+    (!condition?.type && condition?.knownMove);
 
  // 단일 진화 조건 충족 여부 확인 (내부 헬퍼)
   const checkSingleEvolutionCondition = (pokemon, evolution, { onLevelUp = false } = {}) => {
@@ -127,6 +129,15 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
       const moveId = (condition.move || '').toLowerCase().replace(/[^a-z0-9]/g, '');
       const used = pokemon.moveUsage?.[moveId] || 0;
       return used >= (condition.count || 1);
+    }
+
+    // type 없이 knownMove만 있는 경우 (예: 꼬지지→미스터마임, 꼬지지→나무킹)
+    // 레벨업 시 해당 기술을 알고 있으면 진화
+    if (!condition.type && condition.knownMove) {
+      const hasMove = pokemon.moves?.some(
+        m => m.moveId === condition.knownMove || m.name?.toLowerCase() === condition.knownMove
+      );
+      return !!hasMove;
     }
 
     return false;

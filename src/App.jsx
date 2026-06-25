@@ -1965,6 +1965,7 @@ return (
               onUpdateMemo={updatePokedexMemo}
               onUpdatePokedexRegions={updatePokedexRegions}
               onResetPokedex={resetPokedex}
+              pokedexActiveTowns={systemSettings?.pokedexActiveTowns || []}
               isMobile
             />
           )}
@@ -2079,6 +2080,7 @@ return (
 			  onUpdateMemo={updatePokedexMemo}
 			  onUpdatePokedexRegions={updatePokedexRegions}
 			  onResetPokedex={resetPokedex}
+				  pokedexActiveTowns={systemSettings?.pokedexActiveTowns || []}
 			/>
 		  )}
 		  

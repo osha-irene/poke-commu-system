@@ -906,6 +906,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   };
 
   const saveEtcText = async () => {
+    if (!canEdit) return;
     setEtcSaving(true);
     try {
       const { getDatabase, ref, update } = await import('firebase/database');
@@ -917,6 +918,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   };
 
   const saveKeywordText = async (i) => {
+    if (!canEdit) return;
     setKwSaving(true);
     try {
       const { getDatabase, ref, update } = await import('firebase/database');
@@ -929,6 +931,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   };
 
   const saveNote = async () => {
+    if (!canEdit) return;
     setNoteSaving(true);
     try {
       const { getDatabase, ref, update } = await import('firebase/database');
@@ -940,6 +943,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   };
 
   const savePartnerText = async () => {
+    if (!canEdit) return false;
     const nextText = partnerText.trim();
     if (nextText === savedPartnerText) return true;
     setPartnerTextSaving(true);
@@ -1790,7 +1794,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                   minHeight: 36,
                   maxHeight: 'calc(100vh - 25rem - 20px)',
                   overflowY: 'auto',
-                  cursor: partnerEditing ? 'text' : 'pointer',
+                  cursor: partnerEditing ? 'text' : (canEdit ? 'pointer' : 'default'),
                   transition: 'background 0.3s',
                 }}
               >
@@ -1899,10 +1903,10 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                 </div>
               ) : (
                 <div onClick={() => canEdit && setNoteEditing(true)}
-                  style={{ minHeight: 48, fontSize: 15, color: note ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.6, cursor: 'text', padding: '4px 2px', position: 'relative', zIndex: 1 }}>
+                  style={{ minHeight: 48, fontSize: 15, color: note ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.6, cursor: canEdit ? 'text' : 'default', padding: '4px 2px', position: 'relative', zIndex: 1 }}>
                   {note
                     ? note.split('\n').map((line, i) => <p key={i} style={{ margin: 0, marginBottom: '1.4em', textIndent: '0.5em' }}>{line || ' '}</p>)
-                    : '클릭해서 메모 추가...'}
+                    : (canEdit ? '클릭해서 메모 추가...' : '')}
                 </div>
               )}
             </div>

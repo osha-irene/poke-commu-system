@@ -11,7 +11,7 @@ const REGIONAL_FORM_KO = {
 
 const getBaseName = (pokemon) => getPokemonDisplayParts(pokemon).name;
 
-export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updateGamePokedex }) {
+export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updateGamePokedex, regions = [], systemSettings = {}, updateSystemSettings }) {
   const [activeTab, setActiveTab] = useState('current');
   const [searchQuery, setSearchQuery] = useState('');
   const [generationFilter, setGenerationFilter] = useState('all');
@@ -28,10 +28,30 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
     return numbers;
   }, [gamePokedex]);
 
-  const currentPokedex = useMemo(() => 
+  const currentPokedex = useMemo(() =>
     gamePokedex.sort((a, b) => (a.newNumber || 0) - (b.newNumber || 0)),
     [gamePokedex]
   );
+
+  // 마을 목록: groupId가 있는 regions에서 고유 마을 추출
+  const towns = useMemo(() => {
+    const seen = new Map();
+    (regions || []).forEach(r => {
+      if (r.groupId && r.groupName && !seen.has(r.groupId)) {
+        seen.set(r.groupId, { groupId: r.groupId, groupName: r.groupName });
+      }
+    });
+    return [...seen.values()];
+  }, [regions]);
+
+  const pokedexActiveTowns = systemSettings.pokedexActiveTowns || [];
+
+  const toggleTown = async (groupId) => {
+    const next = pokedexActiveTowns.includes(groupId)
+      ? pokedexActiveTowns.filter(id => id !== groupId)
+      : [...pokedexActiveTowns, groupId];
+    await updateSystemSettings?.({ pokedexActiveTowns: next });
+  };
 
   const availableToAdd = useMemo(() => {
     const filtered = allPokemonMaster.filter(p => {
@@ -238,6 +258,26 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
 
   return (
     <div className="space-y-4">
+      {towns.length > 0 && (
+        <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-3">
+          <p className="mb-2 text-xs font-semibold text-indigo-700">
+            도감 표시 마을 (체크한 마을의 포켓몬만 멤버 도감에 표시 · 미선택 시 전체 표시)
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {towns.map(town => (
+              <label key={town.groupId} className="flex cursor-pointer items-center gap-1.5 rounded-full border border-indigo-300 bg-white px-3 py-1 text-sm hover:bg-indigo-100">
+                <input
+                  type="checkbox"
+                  checked={pokedexActiveTowns.includes(town.groupId)}
+                  onChange={() => toggleTown(town.groupId)}
+                  className="accent-indigo-600"
+                />
+                {town.groupName}
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="flex gap-2 border-b border-gray-300">
         <button
           onClick={() => { 

@@ -21,6 +21,10 @@ import {
   toShowdownItemName,
 } from '../utils/battleTranslations';
 
+// Showdown hardcodes ppUps=3 (PP Max, 1.6x base PP) for all moves internally.
+// Patch to base PP so internal PP and display PP are 1:1.
+Battle.prototype.calculatePP = (move) => move.pp;
+
 const FORMAT_ID = 'gen9customgame';
 
 const registerCustomBattleData = () => {
@@ -564,9 +568,7 @@ const getMoveData = (battle, moveSlot, requestMove = null, abilityName = '', spe
     basePower: moveData?.basePower || 0,
     accuracy: moveData?.accuracy === true ? 100 : (moveData?.accuracy ?? true),
     pp: moveData?.pp ?? null,
-    currentPP: (moveSlot?.pp != null && moveSlot?.maxpp && moveData?.pp)
-      ? Math.round(moveSlot.pp * (moveData.pp / moveSlot.maxpp))
-      : (moveSlot?.pp ?? null),
+    currentPP: moveSlot?.pp ?? null,
     disabled: Boolean(requestMove?.disabled ?? moveSlot?.disabled),
     disabledSource: disabledSource ? translateEffectName(disabledSource) : '',
   };

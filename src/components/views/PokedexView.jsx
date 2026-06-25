@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Search, Lock, CheckCircle, Edit2, MapPin } from 'lucide-react';
 import { COLORS } from '../../styles/theme';
 import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
@@ -26,6 +26,7 @@ export default function PokedexView({
   onUpdateMemo,
   onUpdatePokedexRegions,
   onResetPokedex,
+  pokedexActiveTowns = [],
   isMobile = false,
 }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -120,7 +121,29 @@ export default function PokedexView({
     return true;
   });
 
-  const filteredPokedex = visiblePokedex.filter(pokemon => {
+  // 활성 마을에 속한 포켓몬 번호 집합 계산
+  const activeTownPokemonNums = useMemo(() => {
+    if (!pokedexActiveTowns || pokedexActiveTowns.length === 0) return null;
+    const nums = new Set();
+    (regions || []).forEach(region => {
+      if (region.isTownMeta || !pokedexActiveTowns.includes(region.groupId)) return;
+      (region.pokemons || []).forEach(n => nums.add(Number(n)));
+      (region.places || []).forEach(place => {
+        (place.pokemons || []).forEach(n => nums.add(Number(n)));
+      });
+    });
+    return nums;
+  }, [pokedexActiveTowns, regions]);
+
+  const townFilteredPokedex = activeTownPokemonNums
+    ? visiblePokedex.filter(pokemon => {
+        const num = toDexNumber(pokemon.number);
+        const orig = toDexNumber(pokemon.originalNumber);
+        return (num && activeTownPokemonNums.has(num)) || (orig && activeTownPokemonNums.has(orig));
+      })
+    : visiblePokedex;
+
+  const filteredPokedex = townFilteredPokedex.filter(pokemon => {
     if (!searchTerm) return true;
     if (!isPokemonUnlocked(pokemon)) return false;
 
@@ -133,8 +156,8 @@ export default function PokedexView({
     );
   });
 
-  const unlockedCount = visiblePokedex.filter(isPokemonUnlocked).length;
-  const totalCount = visiblePokedex.length;
+  const unlockedCount = townFilteredPokedex.filter(isPokemonUnlocked).length;
+  const totalCount = townFilteredPokedex.length;
   const percentage = totalCount > 0 ? Math.round((unlockedCount / totalCount) * 100) : 0;
 
   const getPokemonRegions = (pokemon) => {

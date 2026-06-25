@@ -821,6 +821,9 @@ export default function AdminView() {
             allPokemonMaster={allPokemonMaster}
             gamePokedex={gamePokedex}
             updateGamePokedex={updateGamePokedex}
+            regions={regions}
+            systemSettings={systemSettings}
+            updateSystemSettings={updateSystemSettings}
           />
         </Card>
       )}
