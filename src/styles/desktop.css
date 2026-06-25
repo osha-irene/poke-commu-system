@@ -44,8 +44,8 @@
 
 @media (min-width: 901px) and (max-height: 820px) {
   :root {
-    --login-form-top: 112px;
-    --session-panel-top: 112px;
+    --login-form-top: 102px;
+    --session-panel-top: 102px;
   }
 }
 @media (max-width: 900px) {

@@ -445,7 +445,7 @@ const categories = CATEGORIES.map(cat => {
           </select>
         </div>
 
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+        <div id="item-category-filter" className="flex gap-2 mb-6 pb-2" style={{ overflowX: 'auto' }}>
           {categories.map(cat => {
             const Icon = cat.Icon;
             return (

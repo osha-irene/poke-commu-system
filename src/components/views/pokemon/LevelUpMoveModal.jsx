@@ -73,7 +73,7 @@ export default function LevelUpMoveModal({
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="min-h-0 flex-1 overflow-y-auto p-6 space-y-6" style={{ scrollbarWidth: 'thin', scrollbarColor: '#a3e635 #f0fdf4' }}>
           {/* 새로 배울 수 있는 기술 */}
           <div>
             <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">

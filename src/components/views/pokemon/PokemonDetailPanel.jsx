@@ -369,6 +369,10 @@ const ballImage = getBallImage();
     form.name !== pokemon.name
   ));
   const canChangeForm = isAdmin && availableForms.length > 0 && typeof onChangeForm === 'function';
+  const isOwner = !isAdmin && currentUser && (
+    (currentUser.caughtPokemon || []).some(p => p && p.uniqueId === pokemon.uniqueId) ||
+    currentUser.partnerPokemon?.uniqueId === pokemon.uniqueId
+  );
 
   // Effects
   useEffect(() => {
@@ -805,11 +809,11 @@ const ballImage = getBallImage();
               <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-sm font-semibold text-gray-700">배운 기술 ({pokemon.moves?.length || 0}/4)</h3>
-                  {isAdmin && (!pokemon.moves || pokemon.moves.length < 4) && (
+                  {(isAdmin || isOwner) && (!pokemon.moves || pokemon.moves.length < 4) && (
                     <button onClick={() => setShowMoveSelectModal(true)} className="text-xs bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 font-semibold transition-colors">+ 기술 추가</button>
                   )}
                 </div>
-                <MovesList moves={pokemon.moves || []} onForgetMove={onForgetMove ? (moveId) => onForgetMove(pokemon.uniqueId, moveId) : undefined} canEdit={!!onForgetMove} allMoves={allMoves} />
+                <MovesList moves={pokemon.moves || []} onForgetMove={(isAdmin || isOwner) && onForgetMove ? (moveId) => onForgetMove(pokemon.uniqueId, moveId) : undefined} canEdit={(isAdmin || isOwner) && !!onForgetMove} allMoves={allMoves} />
               </div>
             </div>
           )}
@@ -1027,7 +1031,9 @@ const ballImage = getBallImage();
           pokemon={pokedexEntry ? { ...pokemon, ...pokedexEntry } : pokemon}
           allMoves={allMoves}
           pokemonLearnsets={pokemonLearnsets}
-          currentMoves={pokemon.moves || []} 
+          currentMoves={pokemon.moves || []}
+          levelUpOnly={!isAdmin}
+          maxLevel={!isAdmin ? (pokemon.level || 100) : undefined}
           onSelect={(move) => {
             if (onLearnMove) {
               onLearnMove(pokemon.uniqueId, move);

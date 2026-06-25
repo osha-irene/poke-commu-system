@@ -1603,7 +1603,7 @@ img.emoji {
   pointer-events: none;
   z-index: 0;
   filter: drop-shadow(3px 4px 1px rgba(0, 0, 0, 0.38));
-  top:100px;
+  top:102px;
 }
 
 .home-dashboard__panel:nth-child(1)::before {
@@ -1613,7 +1613,7 @@ img.emoji {
 }
 
 .home-dashboard__panel:nth-child(2)::before {
-  inset: -9.5%;
+  inset: -16%;
   background-image: url('../assets/main_player.png');
   transform: translate(var(--player-shift-x), var(--player-shift-y));
 }
@@ -1915,11 +1915,11 @@ img.emoji {
   top: var(--login-form-top);
   right: var(--login-form-right);
   z-index: 6;
-  width: 226px;
+  width: 252px;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 10px;
+  gap: 13px;
   transform: translate(var(--player-shift-x), var(--player-shift-y));
   color: #1d2119;
   font-family: Georgia, 'Times New Roman', serif;
@@ -1955,7 +1955,7 @@ img.emoji {
   padding: 6px 11px 6px 36px;
   background: rgba(92, 73, 50, 0.22);
   color: #2d2419;
-  font: 600 13px/1.2 'SUITE', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font: 600 14px/1.2 'SUITE', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   outline: none;
   box-shadow: none;
 }
@@ -1972,7 +1972,7 @@ img.emoji {
   border-radius: 6px;
   background: rgba(47, 67, 38, 0.78);
   color: rgba(255, 255, 247, 0.96);
-  font: 700 12px/1 Georgia, 'Times New Roman', serif;
+  font: 700 13px/1 Georgia, 'Times New Roman', serif;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   cursor: pointer;
@@ -1987,10 +1987,10 @@ img.emoji {
   top: var(--session-panel-top);
   right: var(--session-panel-right);
   z-index: 6;
-  width: 240px;
+  width: 270px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
   color: rgba(29, 33, 25, 0.82);
   font-family: Georgia, 'Times New Roman', serif;
 }
@@ -2000,6 +2000,7 @@ img.emoji {
   display: flex;
   gap: 10px;
   align-items: flex-start;
+  margin-top: 4px;
 }
 
 .home-session-panel__member-img {
@@ -2070,7 +2071,7 @@ img.emoji {
   font-size: 26px;
   font-weight: 600;
   line-height: 1;
-  margin-top: -6px;
+  margin-top: -4px;
   padding: 6px 0 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2115,6 +2116,8 @@ img.emoji {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 4px;
   width: 100%;
+  position: relative;
+  top: 2px;
 }
 
 .home-session-panel__quick-actions button {
@@ -2143,6 +2146,9 @@ img.emoji {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 4px;
+  margin-top: auto;
+  position: relative;
+  top: -2px;
 }
 
 .home-session-panel__report,

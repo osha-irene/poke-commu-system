@@ -20,20 +20,23 @@ const getCategoryIcon = (category) => {
   }
 };
 
-export default function MoveSelectModal({ 
-  pokemon, 
-  allMoves = [], 
+export default function MoveSelectModal({
+  pokemon,
+  allMoves = [],
   pokemonLearnsets = {},
   currentMoves = [],
-  onSelect, 
-  onClose 
+  levelUpOnly = false,
+  maxLevel,
+  onSelect,
+  onClose
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [showLearnableOnly, setShowLearnableOnly] = useState(true);
+  const [hoveredMove, setHoveredMove] = useState(null);
   const [selectedMove, setSelectedMove] = useState(null);
 
-  const learnedMoveIds = useMemo(() => 
+  const learnedMoveIds = useMemo(() =>
     currentMoves.map(m => m.moveId),
     [currentMoves]
   );
@@ -41,7 +44,16 @@ export default function MoveSelectModal({
 const learnableMovesIds = useMemo(() => {
   const learnset = getPokemonLearnset(pokemonLearnsets, pokemon);
   if (!learnset) return [];
-  
+
+  if (levelUpOnly) {
+    // 레벨업 기술 중 maxLevel 이하만
+    return [...new Set(
+      (learnset.levelUpMoves || [])
+        .filter(lm => maxLevel == null || lm.level <= maxLevel)
+        .map(lm => lm.moveId)
+    )];
+  }
+
   // 모든 배울 수 있는 기술 통합
   const allLearnableMoves = [
     ...(learnset.levelUpMoves?.map(lm => lm.moveId) || []),
@@ -49,16 +61,16 @@ const learnableMovesIds = useMemo(() => {
     ...(learnset.eggMoves || []),
     ...(learnset.tutorMoves || [])
   ];
-  
+
   // 중복 제거
   return [...new Set(allLearnableMoves)];
-}, [pokemon, pokemonLearnsets]);
+}, [pokemon, pokemonLearnsets, levelUpOnly, maxLevel]);
 
 
   const filteredMoves = useMemo(() => {
     let moves = allMoves;
 
-    if (showLearnableOnly) {
+    if (levelUpOnly || showLearnableOnly) {
       moves = moves.filter(m => learnableMovesIds.includes(m.id));
     }
 
@@ -88,7 +100,10 @@ const learnableMovesIds = useMemo(() => {
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] min-h-0 flex flex-col overflow-hidden">
+      <div
+        className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] min-h-0 flex flex-col"
+        onMouseLeave={() => { if (!selectedMove) setHoveredMove(null); }}
+      >
         {/* 헤더 */}
         <div className="border-b-2 border-lime-300 bg-white/95 p-6 rounded-t-xl flex-shrink-0">
           <div className="flex justify-between items-center">
@@ -119,27 +134,29 @@ const learnableMovesIds = useMemo(() => {
           </div>
 
           {/* 타입 필터 */}
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          <div id="move-modal-type-filter" className="flex gap-2" style={{ overflowX: 'auto', paddingBottom: '6px' }}>
             {types.map(type => {
               const typeColors = type !== 'all' ? getTypeColor(type) : null;
               const isSelected = filterType === type;
-              
+
+              const selectedStyle = type === 'all'
+                ? { backgroundColor: COLORS.brand.primary, color: '#fff' }
+                : typeColors
+                ? { backgroundColor: typeColors.bg, color: typeColors.text }
+                : {};
+
+              const unselectedStyle = type === 'all'
+                ? { backgroundColor: 'rgba(134,188,87,0.15)', color: '#4a7a2a', border: '1.5px solid rgba(134,188,87,0.4)' }
+                : typeColors
+                ? { backgroundColor: typeColors.bg + '28', color: typeColors.bg, border: `1.5px solid ${typeColors.bg}55` }
+                : {};
+
               return (
                 <button
                   key={type}
                   onClick={() => setFilterType(type)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex-shrink-0 ${
-                    isSelected
-                      ? 'text-white scale-105 shadow-md'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                  style={
-                    isSelected && type !== 'all' && typeColors
-                      ? { backgroundColor: typeColors.bg, color: typeColors.text }
-                      : isSelected && type === 'all'
-                      ? { backgroundColor: COLORS.brand.primary }
-                      : {}
-                  }
+                  className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all flex-shrink-0 ${isSelected ? 'scale-105 shadow-sm' : ''}`}
+                  style={isSelected ? selectedStyle : unselectedStyle}
                 >
                   {type === 'all' ? '전체' : type}
                 </button>
@@ -148,19 +165,25 @@ const learnableMovesIds = useMemo(() => {
           </div>
 
           {/* 배울 수 있는 기술만 */}
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showLearnableOnly}
-              onChange={(e) => setShowLearnableOnly(e.target.checked)}
-              className="rounded cursor-pointer"
-            />
-            <span>이 포켓몬이 배울 수 있는 기술만 표시</span>
-          </label>
+          {levelUpOnly ? (
+            <p className="text-xs text-indigo-600 font-medium">
+              현재 레벨({maxLevel}) 이하에서 배우는 레벨업 기술만 추가할 수 있습니다.
+            </p>
+          ) : (
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showLearnableOnly}
+                onChange={(e) => setShowLearnableOnly(e.target.checked)}
+                className="rounded cursor-pointer"
+              />
+              <span>이 포켓몬이 배울 수 있는 기술만 표시</span>
+            </label>
+          )}
         </div>
 
         {/* 기술 목록 */}
-        <div className="min-h-0 flex-1 overflow-y-auto p-4">
+        <div id="move-modal-scroll-area" className="move-modal-scroll min-h-0 flex-1 p-4" style={{ overflowY: 'scroll' }}>
           {filteredMoves.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
               <div className="text-4xl mb-2">🔍</div>
@@ -175,17 +198,19 @@ const learnableMovesIds = useMemo(() => {
                 return (
                   <button
                     key={move.id}
-                    onClick={() => !isLearned && onSelect(move)}
+                    onClick={() => { if (!isLearned) { setSelectedMove(move); setHoveredMove(null); } }}
                     disabled={isLearned}
-                    className={`bg-white border-2 rounded-lg p-4 transition-all text-left ${
-                      isLearned 
-                        ? 'border-gray-200 opacity-50 cursor-not-allowed' 
+                    className={`border-2 rounded-lg p-4 transition-all text-left ${isLearned ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    style={
+                      isLearned
+                        ? { background: '#fff', borderColor: '#e5e7eb' }
                         : selectedMove?.id === move.id
-                        ? 'border-indigo-400 bg-indigo-50 shadow-md'
-                        : 'border-gray-200 hover:border-indigo-300 hover:shadow-md cursor-pointer'
-                    }`}
-                    onMouseEnter={() => !isLearned && setSelectedMove(move)}
-                    onMouseLeave={() => setSelectedMove(null)}
+                        ? { background: '#e4eeec', borderColor: '#6a9e96' }
+                        : hoveredMove?.id === move.id
+                        ? { background: '#fff', borderColor: '#a8c5c0' }
+                        : { background: '#fff', borderColor: '#e5e7eb' }
+                    }
+                    onMouseEnter={() => !isLearned && !selectedMove && setHoveredMove(move)}
                   >
                     {/* 기술 이름 & 타입 */}
                     <div className="flex items-center gap-2 mb-2">
@@ -243,23 +268,31 @@ const learnableMovesIds = useMemo(() => {
           )}
         </div>
 
-        {/* 푸터 */}
-        {selectedMove && !learnedMoveIds.includes(selectedMove.id) && (
-          <div className="p-4 bg-indigo-50 border-t border-indigo-200 flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">선택된 기술</p>
-                <p className="font-bold text-indigo-900">{selectedMove.name}</p>
-              </div>
-              <button
-                onClick={() => onSelect(selectedMove)}
-                className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
-              >
-                선택
-              </button>
+        {/* 푸터 - 항상 영역 확보 */}
+        {(() => {
+          const displayMove = selectedMove || hoveredMove;
+          const isEmpty = !displayMove || learnedMoveIds.includes(displayMove.id);
+          return (
+            <div className="p-4 bg-indigo-50 border-t border-indigo-200 flex-shrink-0" style={{ minHeight: '72px' }}>
+              {!isEmpty && (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">{selectedMove ? '선택된 기술' : '미리보기'}</p>
+                    <p className="font-bold text-indigo-900">{displayMove.name}</p>
+                  </div>
+                  {selectedMove && (
+                    <button
+                      onClick={() => onSelect(selectedMove)}
+                      className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
+                    >
+                      선택
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );

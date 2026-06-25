@@ -1261,6 +1261,87 @@ button:active {
     background: transparent !important;
     border: 0 !important;
   }
+
+  .main-shell .move-modal-scroll:not(textarea) {
+    scrollbar-width: thin !important;
+    overflow-y: scroll !important;
+  }
+  .main-shell .move-modal-scroll:not(textarea)::-webkit-scrollbar {
+    width: 6px !important;
+    height: 6px !important;
+    display: block !important;
+  }
+  .main-shell .move-modal-scroll:not(textarea)::-webkit-scrollbar-track {
+    background: #f0fdf4 !important;
+    display: block !important;
+  }
+  .main-shell .move-modal-scroll:not(textarea)::-webkit-scrollbar-thumb {
+    background: #5a7a5a !important;
+    border-radius: 3px !important;
+    display: block !important;
+  }
+
+  /* ID 셀렉터(specificity 1,0,0)로 scrollbar 숨김 규칙 강제 override */
+  #move-modal-scroll-area {
+    scrollbar-width: thin !important;
+    scrollbar-color: #5a7a5a transparent !important;
+    overflow-y: scroll !important;
+  }
+  #move-modal-scroll-area::-webkit-scrollbar {
+    width: 5px !important;
+    display: block !important;
+  }
+  #move-modal-scroll-area::-webkit-scrollbar-track {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  #move-modal-scroll-area::-webkit-scrollbar-button:start,
+  #move-modal-scroll-area::-webkit-scrollbar-button:end {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  #move-modal-scroll-area::-webkit-scrollbar-thumb {
+    background: #5a7a5a !important;
+    border-radius: 9999px !important;
+    display: block !important;
+    min-height: 30px !important;
+  }
+
+  #item-category-filter,
+  #move-modal-type-filter {
+    scrollbar-width: thin !important;
+    scrollbar-color: #5a7a5a transparent !important;
+    overflow-x: auto !important;
+  }
+  #item-category-filter::-webkit-scrollbar,
+  #move-modal-type-filter::-webkit-scrollbar {
+    height: 5px !important;
+    display: block !important;
+  }
+  #item-category-filter::-webkit-scrollbar-track,
+  #move-modal-type-filter::-webkit-scrollbar-track {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  #item-category-filter::-webkit-scrollbar-button:start,
+  #item-category-filter::-webkit-scrollbar-button:end,
+  #move-modal-type-filter::-webkit-scrollbar-button:start,
+  #move-modal-type-filter::-webkit-scrollbar-button:end {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  #item-category-filter::-webkit-scrollbar-thumb,
+  #move-modal-type-filter::-webkit-scrollbar-thumb {
+    background: #5a7a5a !important;
+    border-radius: 9999px !important;
+    display: block !important;
+    min-width: 30px !important;
+  }
+
 }
 
 @media (min-width: 901px) {
