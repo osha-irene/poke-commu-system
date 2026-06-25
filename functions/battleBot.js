@@ -318,7 +318,29 @@ const moveChoiceTokenFromText = (content) => {
 const teamChoiceFromText = (content) => {
   const text = extractBracketText(content);
   const match = text.match(/^(?:포켓몬|엔트리|선택)\s*([1-6])$/i) || text.match(/^([1-6])번?$/);
-  return match ? Number(match[1]) : null;
+  if (match) return { type: 'index', value: Number(match[1]) };
+  if (text && !/^(캠핑|계속|만족|교환|배틀|기권)/i.test(text)) return { type: 'name', value: text };
+  return null;
+};
+
+const resolveTeamChoice = (token, entries) => {
+  if (!token) return null;
+  if (token.type === 'index') return token.value;
+  const q = normalizeId(token.value);
+  // 닉네임 정확 일치 우선, 그 다음 종족명
+  const idx = entries.findIndex(e => normalizeId(e.nickname || '') === q && e.nickname);
+  if (idx >= 0) return idx + 1;
+  const idx2 = entries.findIndex(e => normalizeId(e.species || '') === q || normalizeId(e.name || '') === q);
+  return idx2 >= 0 ? idx2 + 1 : null;
+};
+
+const isExplicitMoveText = (content) => {
+  // 기술 번호 또는 '기술' 접두어 있는 경우만 명시적 기술 선택으로 인정
+  const stripped = stripCommandText(content).replace(/\[?\s*메가\s*진화\s*\]?/gi, '').trim();
+  if (/\[?\s*기술\s*[1-4]\s*\]?/i.test(stripped)) return true;
+  const bracket = extractBracketText(stripped);
+  if (!bracket) return false;
+  return /^기술\s+\S/i.test(bracket); // [기술 리프스톰] 형태만
 };
 
 const isBattleMoveLikeText = (content) => {
@@ -326,17 +348,18 @@ const isBattleMoveLikeText = (content) => {
   if (!text) return false;
   if (/^(캠핑|계속|만족|교환|배틀\s*(신청|수락|거절|도움말|help)|기권)/i.test(text)) return false;
   if (/^(포켓몬|엔트리|선택)\s*[1-6]$/i.test(text)) return false;
-  return Boolean(moveChoiceTokenFromText(content));
+  return isExplicitMoveText(content);
 };
 
 const getBattleCommand = (content) => {
   if (/\[?\s*배틀\s*신청\s*\]?/i.test(content)) return 'challenge';
   if (/\[?\s*배틀\s*수락\s*\]?/i.test(content)) return 'accept';
   if (/\[?\s*배틀\s*거절\s*\]?/i.test(content)) return 'decline';
+  if (/\[?\s*배틀\s*종료\s*\]?/i.test(content)) return 'endByHp';
   if (/\[?\s*기권\s*\]?/i.test(content)) return 'forfeit';
   if (/\[?\s*배틀\s*(?:도움말|help)\s*\]?/i.test(content)) return 'help';
-  if (teamChoiceFromText(content) !== null) return 'selectPokemon';
   if (isBattleMoveLikeText(content)) return 'move';
+  if (teamChoiceFromText(content) !== null) return 'selectPokemon';
   return null;
 };
 
@@ -620,6 +643,8 @@ const protocolToMessage = (line) => {
       return `${parts[2]} 쪽의 ${parts[3]} 효과가 사라졌다.`;
     case '-prepare':
       return `${extractName(parts[2])}은(는) ${translateMoveName(parts[3])}을(를) 준비하고 있다!`;
+    case '-hitcount':
+      return `${extractName(parts[2])}은(는) ${parts[3]}번 맞았다!`;
     case '-mustrecharge':
       return `${extractName(parts[2])}은(는) 반동으로 움직일 수 없다!`;
     case '-singleturn':
@@ -638,6 +663,90 @@ const protocolToMessage = (line) => {
       }
       return null;
   }
+};
+
+// 배틀 로그에서 기술 사용 횟수를 파싱해 members DB에 누적
+const recordMoveUsage = async (db, log, session) => {
+  // p1/p2 선택된 포켓몬 uniqueId
+  const p1Key = session.player1Entries?.[session.pendingTeamChoices?.p1 - 1]?.key
+    || session.player1Entries?.[0]?.key;
+  const p2Key = session.player2Entries?.[session.pendingTeamChoices?.p2 - 1]?.key
+    || session.player2Entries?.[0]?.key;
+
+  // 슬롯 → {memberId, pokemonKey} 매핑
+  const slotMap = {
+    p1a: { memberId: session.player1Id, key: p1Key },
+    p2a: { memberId: session.player2Id, key: p2Key },
+  };
+
+  // 기술 사용 횟수 / 급소 횟수 집계
+  // usage: { memberId: { pokemonKey: { moveId: count } } }
+  // crits: { memberId: { pokemonKey: count } }  ← 이 배틀에서 맞힌 급소 수
+  const usage = {};
+  const crits = {}; // 급소를 "맞힌" 포켓몬 슬롯 기준
+  let lastMoveSlot = null; // 직전 move 라인의 슬롯 (급소는 공격자 기준)
+
+  for (const line of log) {
+    if (!line) continue;
+    const parts = line.split('|');
+
+    if (line.startsWith('|move|')) {
+      const slotRaw = parts[2] || '';
+      const slot = slotRaw.split(':')[0].trim().toLowerCase();
+      const moveName = (parts[3] || '').trim();
+      lastMoveSlot = slot;
+      if (!moveName || moveName === 'Struggle') continue;
+      const info = slotMap[slot];
+      if (!info?.memberId || !info?.key) continue;
+      const moveId = normalizeId(moveName);
+      if (!usage[info.memberId]) usage[info.memberId] = {};
+      if (!usage[info.memberId][info.key]) usage[info.memberId][info.key] = {};
+      usage[info.memberId][info.key][moveId] = (usage[info.memberId][info.key][moveId] || 0) + 1;
+    }
+
+    if (line.startsWith('|-crit|') && lastMoveSlot) {
+      // 급소는 공격자(lastMoveSlot) 기준으로 카운트
+      const info = slotMap[lastMoveSlot];
+      if (info?.memberId && info?.key) {
+        if (!crits[info.memberId]) crits[info.memberId] = {};
+        crits[info.memberId][info.key] = (crits[info.memberId][info.key] || 0) + 1;
+      }
+    }
+  }
+
+  // 각 멤버의 caughtPokemon에서 해당 pokemon을 찾아 업데이트
+  const memberIds = new Set([...Object.keys(usage), ...Object.keys(crits)]);
+  await Promise.all([...memberIds].map(async (memberId) => {
+    const snap = await db.ref(`members/${memberId}/caughtPokemon`).once('value');
+    const caught = snap.val();
+    if (!Array.isArray(caught)) return;
+
+    const updated = caught.map(p => {
+      const key = pokemonKey(p);
+      let next = p;
+
+      if (usage[memberId]?.[key]) {
+        const prev = next.moveUsage || {};
+        const merged = { ...prev };
+        for (const [mid, cnt] of Object.entries(usage[memberId][key])) {
+          merged[mid] = (merged[mid] || 0) + cnt;
+        }
+        next = { ...next, moveUsage: merged };
+      }
+
+      if (crits[memberId]?.[key]) {
+        // 이 배틀에서의 급소 횟수만 저장 (누적 아님 — 진화 조건이 "한 배틀에서" 이므로)
+        next = { ...next, lastBattleCritCount: crits[memberId][key] };
+      } else if (next.lastBattleCritCount !== undefined) {
+        // 배틀마다 초기화
+        next = { ...next, lastBattleCritCount: 0 };
+      }
+
+      return next;
+    });
+
+    await db.ref(`members/${memberId}/caughtPokemon`).set(updated);
+  }));
 };
 
 const collectTurnMessages = (battle, fromIndex) => {
@@ -922,6 +1031,8 @@ const createBattleBot = ({
       player1Entries: player1Pokemon.map(pokemon => ({
         key: pokemonKey(pokemon),
         name: formatPokemonName(pokemon),
+        nickname: (pokemon.nickname || '').trim() || null,
+        species: pokemon.name || pokemon.species || '',
         level: pokemon.level || 50,
       })),
       player2Id: opponent.id,
@@ -931,6 +1042,8 @@ const createBattleBot = ({
       player2Entries: player2Pokemon.map(pokemon => ({
         key: pokemonKey(pokemon),
         name: formatPokemonName(pokemon),
+        nickname: (pokemon.nickname || '').trim() || null,
+        species: pokemon.name || pokemon.species || '',
         level: pokemon.level || 50,
       })),
       pendingChoices: {},
@@ -970,15 +1083,17 @@ const createBattleBot = ({
 
   const selectPokemon = async ({ author, content }) => {
     const selecting = await findSelectingBattle(author.id);
-    if (!selecting) return '선택 중인 배틀이 없어요.';
+    // 포켓몬 선택 단계가 아니면 기술 이름으로 재시도 (예: [리프스톰])
+    if (!selecting) return chooseMove({ author, content });
 
     const { sessionKey, session } = selecting;
     const side = session.player1Id === author.id ? 'p1' : 'p2';
-    const selectedSlot = teamChoiceFromText(content);
     const entries = side === 'p1' ? session.player1Entries : session.player2Entries;
+    const token = teamChoiceFromText(content);
+    const selectedSlot = resolveTeamChoice(token, entries);
 
     if (!selectedSlot || selectedSlot < 1 || selectedSlot > entries.length) {
-      return `선택할 수 있는 번호를 찾지 못했어요. [포켓몬 1]처럼 입력해 주세요.\n${formatEntryList(side === 'p1' ? session.player1Name : session.player2Name, entries)}`;
+      return `선택할 수 있는 번호나 이름을 찾지 못했어요. [포켓몬 1] 또는 [피카츄]처럼 입력해 주세요.\n${formatEntryList(side === 'p1' ? session.player1Name : session.player2Name, entries)}`;
     }
 
     const pendingTeamChoices = {
@@ -1038,6 +1153,26 @@ const createBattleBot = ({
       updatedAt: new Date().toISOString(),
     });
     return withBattleMentions(active.session, `${winner} 승리! 상대가 기권했습니다.`);
+  };
+
+  const endByHp = async ({ author }) => {
+    const active = await findActiveBattle(author.id);
+    if (!active) return '진행 중인 배틀이 없어요.';
+    const { sessionKey, session } = active;
+
+    const loser = author.id === session.player1Id ? session.player1Name : session.player2Name;
+    const winner = author.id === session.player1Id ? session.player2Name : session.player1Name;
+
+    const battle = createBattle(session);
+    await db.ref(`gameData/battleSessions/${sessionKey}`).update({
+      status: 'completed',
+      winner,
+      completedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    await recordMoveUsage(db, battle.log, session);
+
+    return withBattleMentions(session, `${loser}이(가) 먼저 종료를 선언했습니다. ${winner} 승리!`);
   };
 
   const chooseMove = async ({ author, content }) => {
@@ -1116,6 +1251,9 @@ const createBattleBot = ({
 
     await db.ref(`gameData/battleSessions/${sessionKey}`).update(updates);
 
+    // 기술 사용 횟수 기록 (배틀 전체 로그 파싱)
+    await recordMoveUsage(db, battle.log, session);
+
     return withBattleMentions(session, [
       '결과',
       ...messages,
@@ -1133,13 +1271,24 @@ const createBattleBot = ({
     if (command === 'selectPokemon') return selectPokemon({ author, content });
     if (command === 'decline') return declineChallenge({ author });
     if (command === 'forfeit') return forfeit({ author });
+    if (command === 'endByHp') return endByHp({ author });
     if (command === 'move') return chooseMove({ author, content });
     return formatHelp();
+  };
+
+  const findSessionByMember = async (memberId) => {
+    const active = await findActiveBattle(memberId);
+    if (active) return active;
+    const selecting = await findSelectingBattle(memberId);
+    if (selecting) return selecting;
+    const pending = await findPendingChallenge(memberId);
+    return pending || null;
   };
 
   return {
     getCommand: getBattleCommand,
     handle,
+    findSessionByMember,
   };
 };
 

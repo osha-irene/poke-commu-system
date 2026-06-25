@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import evolutionsData from '../../data/evolutions.json';
+import movesDataRaw from '../../data/moves.json';
 import { getBaseStatPatch } from '../../utils/pokemonBaseStats';
 import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
+
+const allMovesData = Array.isArray(movesDataRaw) ? movesDataRaw : movesDataRaw.moves || [];
 
 const getBaseName = (pokemon) => getPokemonDisplayParts(pokemon).name;
 
@@ -44,9 +47,17 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
     );
   };
 
+  // 레벨업이 필요한 조건 타입 (아이템/교환 진화는 즉시 적용)
+  const LEVEL_UP_REQUIRED_CONDITIONS = new Set(['friendship', 'moveUsage']);
+  const isLevelUpRequiredCondition = (condition) =>
+    LEVEL_UP_REQUIRED_CONDITIONS.has(condition?.type) || condition?.minBeauty !== undefined;
+
  // 단일 진화 조건 충족 여부 확인 (내부 헬퍼)
-  const checkSingleEvolutionCondition = (pokemon, evolution) => {
+  const checkSingleEvolutionCondition = (pokemon, evolution, { onLevelUp = false } = {}) => {
     const { condition } = evolution;
+
+    // 레벨업 필요 조건: 레벨업 시 또는 이미 레벨업으로 조건 충족된 경우만 허용
+    if (isLevelUpRequiredCondition(condition) && !onLevelUp && !pokemon.evolutionReady) return false;
 
     if (condition.type === 'level') {
       if (pokemon.level < condition.level) return false;
@@ -90,14 +101,39 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
         if (currentTime !== condition.timeOfDay) return false;
       }
 
+      if (condition.knownMoveType) {
+        const targetType = condition.knownMoveType.toLowerCase();
+        const hasFairyMove = pokemon.moves?.some(m => {
+          const moveId = m.moveId || m.id || '';
+          const moveData = allMovesData.find(md => md.id === moveId);
+          const moveType = (moveData?.type || m.type || m.moveType || '').toLowerCase();
+          return moveType === targetType;
+        });
+        if (!hasFairyMove) return false;
+      }
+
       return true;
+    }
+
+    if (condition.type === 'battleCrit') {
+      return (pokemon.lastBattleCritCount || 0) >= (condition.count || 1);
+    }
+
+    if (condition.minBeauty !== undefined) {
+      return (pokemon.condition?.beauty || 0) >= condition.minBeauty;
+    }
+
+    if (condition.type === 'moveUsage') {
+      const moveId = (condition.move || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const used = pokemon.moveUsage?.[moveId] || 0;
+      return used >= (condition.count || 1);
     }
 
     return false;
   };
 
- // 진화 가능 여부 확인
-  const checkEvolution = (pokemon) => {
+ // 진화 가능 여부 확인 (onLevelUp: 레벨업 시 호출 여부)
+  const checkEvolution = (pokemon, { onLevelUp = false } = {}) => {
     console.log('🔍 checkEvolution 호출:', pokemon.name, pokemon.number, 'Lv.', pokemon.level);
 
     if (!pokemon) {
@@ -117,7 +153,7 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
 
     for (const evolution of evolutions) {
       console.log('📝 진화 조건 체크:', evolution.toName, evolution.condition);
-      if (checkSingleEvolutionCondition(pokemon, evolution)) {
+      if (checkSingleEvolutionCondition(pokemon, evolution, { onLevelUp })) {
         console.log('🎉 모든 조건 충족! 진화 가능!', evolution.toName);
         return evolution;
       }
@@ -146,22 +182,30 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
       return false;
     }
     
-    const evolution = checkEvolution(pokemon);
+    const evolution = checkEvolution(pokemon, { onLevelUp: true });
     console.log('🎯 진화 정보:', evolution);
     
     if (evolution) {
       console.log('✨ 진화 가능! 모달 띄우기');
-      
+
       const evolvedPokemonData = findPokemonTemplateByNumber(evolution.to);
-      
+
       if (!evolvedPokemonData) {
         console.log('❌ 진화할 포켓몬 데이터 없음');
         return false;
       }
-      
+
+      // 레벨업으로 조건 충족됨을 기록 → 이후 수동 진화 허용
+      if (!pokemon.evolutionReady) {
+        const updatedCaught = (currentUser.caughtPokemon || []).map(p =>
+          p?.uniqueId === pokemon.uniqueId ? { ...p, evolutionReady: true } : p
+        );
+        updateCurrentUser({ caughtPokemon: updatedCaught });
+      }
+
       setEvolutionModal({
         show: true,
-        pokemon: pokemon,
+        pokemon: { ...pokemon, evolutionReady: true },
         evolution: evolution,
         fromPokemon: pokemon,
         toPokemon: evolvedPokemonData,
@@ -193,13 +237,22 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
     const normalizedItemName = normalizeItemName(itemName);
     console.log('🔥 normalizedItemName:', normalizedItemName);
     
+    const isLinkingCord = normalizedItemName === 'linkingcord' || normalizedItemName === 'linkedcord';
+    const isPartner = Boolean(pokemon?.isPartner);
     const evolution = findEvolutionForPokemon(pokemon, (evo) => {
-      if (evo.condition.type !== 'item') return false;
-      
-      const evolItem = normalizeItemName(evo.condition.item || '');
-      console.log('🔥 체크 중:', evo.from, '→', evo.to, '아이템:', evolItem, '===', normalizedItemName);
-      
-      return evolItem === normalizedItemName;
+      // 일반 아이템 진화 (누구나)
+      if (evo.condition.type === 'item') {
+        const evolItem = normalizeItemName(evo.condition.item || '');
+        return evolItem === normalizedItemName;
+      }
+      // 교환 진화는 파트너만 아이템으로 대체 가능
+      if (!isPartner) return false;
+      if (isLinkingCord) return evo.condition.type === 'trade' && !evo.condition.heldItem;
+      if (evo.condition.type === 'trade' && evo.condition.heldItem) {
+        const evolItem = normalizeItemName(evo.condition.heldItem || '');
+        return evolItem === normalizedItemName;
+      }
+      return false;
     });
     
     console.log('🔥 찾은 진화:', evolution);

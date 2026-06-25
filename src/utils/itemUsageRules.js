@@ -65,11 +65,20 @@ export const findItemEvolution = (pokemon, item, itemData = null) => {
 
   if (itemNames.length === 0) return null;
 
-  return (evolutionsData.evolutions || []).find(evolution => (
-    pokemonNumbers.has(Number(evolution.from)) &&
-    evolution.condition?.type === 'item' &&
-    itemNames.includes(normalizeItemNameForUse(evolution.condition.item))
-  )) || null;
+  const isPartner = Boolean(pokemon?.isPartner);
+  const isLinkingCord = itemNames.some(n => n === 'linkingcord' || n === 'linkedcord');
+
+  return (evolutionsData.evolutions || []).find(evolution => {
+    if (!pokemonNumbers.has(Number(evolution.from))) return false;
+    const cond = evolution.condition;
+    // 일반 아이템 진화 (누구나)
+    if (cond?.type === 'item') return itemNames.includes(normalizeItemNameForUse(cond.item));
+    // 교환 진화는 파트너만 아이템으로 대체 가능
+    if (!isPartner) return false;
+    if (cond?.type === 'trade' && !cond.heldItem) return isLinkingCord;
+    if (cond?.type === 'trade' && cond.heldItem) return itemNames.includes(normalizeItemNameForUse(cond.heldItem));
+    return false;
+  }) || null;
 };
 
 const canUseEVItemOnPokemon = (pokemon, itemName) => {

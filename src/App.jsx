@@ -2082,7 +2082,7 @@ return (
 			/>
 		  )}
 		  
-		  {currentTab === 'members' && <div key="members" className={tabDirection === 'reverse' ? 'tab-view-enter-reverse' : 'tab-view-enter'}><MembersView members={process.env.NODE_ENV === 'development' ? { ...MOCK_MEMBERS, ...members } : members} isLoading={isMembersLoading} currentUserId={currentUser?.id} titles={titles} onSwitchTab={setCurrentTab} /></div>}
+		  {currentTab === 'members' && <div key="members" className={tabDirection === 'reverse' ? 'tab-view-enter-reverse' : 'tab-view-enter'}><MembersView members={process.env.NODE_ENV === 'development' ? { ...MOCK_MEMBERS, ...members } : members} isLoading={isMembersLoading} currentUserId={currentUser?.id} isAdmin={isAdmin} titles={titles} onSwitchTab={setCurrentTab} /></div>}
 		  {currentTab === 'npcs' && <div key="npcs" className={tabDirection === 'reverse' ? 'tab-view-enter-reverse' : 'tab-view-enter'}><NpcView members={members} isLoading={isMembersLoading} isAdmin={isAdmin} npcOnly onSwitchTab={setCurrentTab} /></div>}
 		  {currentTab === 'pokemon' && <PokemonView />}
 		  {currentTab === 'items' && <ItemsView />}

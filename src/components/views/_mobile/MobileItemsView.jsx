@@ -19,10 +19,15 @@ export default function MobileItemsView() {
     items = [],
     allItems = [],
     caughtPokemon = [],
+    partnerPokemon = null,
     sellItem: onSellItem,
     useItemOnPokemon: onUseItem,
     currentUser: trainer,
   } = useGame();
+
+  const allPokemonForItem = partnerPokemon
+    ? [partnerPokemon, ...caughtPokemon.filter(p => p?.uniqueId !== partnerPokemon.uniqueId)]
+    : caughtPokemon;
 
   const isSuperAdmin = trainer?.isSuperAdmin || false;
 
@@ -284,11 +289,11 @@ export default function MobileItemsView() {
               <button onClick={closeAction} style={{ background: 'none', border: 'none', cursor: 'pointer', color: P.muted, padding: 4 }}><X size={20} /></button>
             </div>
             <div style={{ overflowY: 'auto', padding: 12, scrollbarWidth: 'none', flex: 1 }}>
-              {caughtPokemon.filter(p => p && p !== 'null' && p.uniqueId).length === 0 ? (
+              {allPokemonForItem.filter(p => p && p !== 'null' && p.uniqueId).length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '24px 0', color: P.muted, fontSize: 13 }}>보유한 포켓몬이 없습니다</div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 8 }}>
-                  {caughtPokemon.filter(p => p && p !== 'null' && p.uniqueId).map(pokemon => (
+                  {allPokemonForItem.filter(p => p && p !== 'null' && p.uniqueId).map(pokemon => (
                     <button
                       key={pokemon.uniqueId}
                       onClick={() => setSelectedPokemon(pokemon)}

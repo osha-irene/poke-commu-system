@@ -1,0 +1,373 @@
+const { toProbability, clamp, accountMention } = require('./shared');
+
+const DEFAULT_CAMPING_SETTINGS = {
+  minCampingCount: 1,
+  maxCampingCount: 5,
+  duoSuccessBonus: 0.15,
+  eggChance: 0.05,
+  minFriendshipForBonus: 160,
+  bonusItems: [
+    { itemId: 50, name: '이상한사탕', weight: 15 },
+    { itemId: 92, name: '금구슬', weight: 20 },
+  ],
+  eggHatchStepsByGroup: {
+    monster: 5000, water1: 5000, bug: 3000, flying: 3000, field: 5000,
+    fairy: 5000, grass: 5000, humanlike: 6000, water3: 5000, mineral: 6000,
+    amorphous: 5000, water2: 5000, ditto: 6000, dragon: 8000, undiscovered: 0,
+  },
+  stages: [
+    { stage: 1, friendshipBonus: 10, expBonus: 50,  successRate: 1,   message: '캠핑을 시작했어요. [만족]으로 마치거나 [계속]으로 다음 단계에 도전할 수 있어요.' },
+    { stage: 2, friendshipBonus: 20, expBonus: 100, successRate: 0.8, message: '캠핑이 조금 더 깊어졌어요. [만족] 또는 [계속]을 선택해 주세요.' },
+    { stage: 3, friendshipBonus: 30, expBonus: 150, successRate: 0.6, message: '포켓몬들이 꽤 즐거워 보여요. [만족] 또는 [계속]을 선택해 주세요.' },
+    { stage: 4, friendshipBonus: 40, expBonus: 200, successRate: 0.4, message: '캠핑 분위기가 무르익었어요. [만족] 또는 [계속]을 선택해 주세요.' },
+    { stage: 5, friendshipBonus: 50, expBonus: 300, successRate: 0.2, message: '최고 단계까지 왔어요. 캠핑을 마무리합니다.' },
+  ],
+};
+
+const normalizeStage = (stage, index) => ({
+  stage: Number(stage?.stage ?? index + 1),
+  friendshipBonus: Math.max(0, Number(stage?.friendshipBonus ?? 0) || 0),
+  expBonus: Math.max(0, Number(stage?.expBonus ?? 0) || 0),
+  successRate: toProbability(stage?.successRate, 1),
+  message: String(stage?.message || DEFAULT_CAMPING_SETTINGS.stages[index]?.message || ''),
+});
+
+const normalizeSettings = (raw = {}) => {
+  const legacyEggChance =
+    raw.eggChance ?? raw.mastodonTaggedEggChance ?? raw.eggChanceWithFriendship ?? raw.eggChanceBase;
+  const stagesSource =
+    Array.isArray(raw.stages) ? raw.stages :
+    Array.isArray(raw.stageRewards) ? raw.stageRewards :
+    Array.isArray(raw.cookingStages) ? raw.cookingStages :
+    DEFAULT_CAMPING_SETTINGS.stages;
+  const stages = DEFAULT_CAMPING_SETTINGS.stages.map((d, i) =>
+    normalizeStage({ ...d, ...(stagesSource[i] || {}) }, i)
+  );
+  const minCampingCount = Math.max(1, Number(raw.minCampingCount ?? raw.minStage ?? DEFAULT_CAMPING_SETTINGS.minCampingCount) || 1);
+  const maxCampingCount = Math.max(minCampingCount, Number(raw.maxCampingCount ?? raw.maxStage ?? DEFAULT_CAMPING_SETTINGS.maxCampingCount) || DEFAULT_CAMPING_SETTINGS.maxCampingCount);
+  return {
+    ...DEFAULT_CAMPING_SETTINGS, ...raw,
+    minCampingCount,
+    maxCampingCount: Math.min(maxCampingCount, stages.length),
+    duoSuccessBonus: toProbability(raw.duoSuccessBonus, DEFAULT_CAMPING_SETTINGS.duoSuccessBonus),
+    eggChance: toProbability(legacyEggChance, DEFAULT_CAMPING_SETTINGS.eggChance),
+    minFriendshipForBonus: Number(raw.minFriendshipForBonus ?? DEFAULT_CAMPING_SETTINGS.minFriendshipForBonus) || 160,
+    bonusItems: Array.isArray(raw.bonusItems) ? raw.bonusItems : DEFAULT_CAMPING_SETTINGS.bonusItems,
+    eggHatchStepsByGroup: { ...DEFAULT_CAMPING_SETTINGS.eggHatchStepsByGroup, ...(raw.eggHatchStepsByGroup || {}) },
+    stages,
+  };
+};
+
+const getCommand = content => {
+  if (/\[?\s*캠핑\s*시작\s*\]?/i.test(content) || /\[캠핑\]/i.test(content)) return 'start';
+  if (/\[?\s*계속\s*\]?/i.test(content)) return 'continue';
+  if (/\[?\s*만족\s*\]?/i.test(content)) return 'satisfy';
+  return null;
+};
+
+const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAccounts, normalizeAccount, localUsername, botAccount }) => {
+  let evolutionsData = [];
+  try {
+    const evo = require('./data/evolutions.json');
+    evolutionsData = evo.evolutions || [];
+  } catch (_) {}
+
+  const TRADE_HELD_ITEM_MAP = {
+    '왕의징표석': 'kings-rock', '금속코트': 'metal-coat', '프로텍터': 'protector',
+    '용의비늘': 'dragon-scale', '에레키부스터': 'electirizer', '마그마부스터': 'magmarizer',
+    '업그레이드': 'up-grade', '괴상한패치': 'dubious-disc', '영계의천': 'reaper-cloth',
+    '심해의이빨': 'deep-sea-tooth', '심해의비늘': 'deep-sea-scale',
+    '고운비늘': 'prism-scale', '향기주머니': 'sachet', '휘핑팝': 'whipped-dream', '복합금속': 'metal-alloy',
+  };
+  const getItemNameEn = (name) => TRADE_HELD_ITEM_MAP[name] || String(name || '').toLowerCase().replace(/\s+/g, '-');
+
+  const loadCampingSettings = async () => {
+    const refs = [
+      db.ref('gameData/systemSettings/campingSettings'),
+      db.ref('gameData/campingSettings'),
+      db.ref('gameData/systemSettings/camping'),
+    ];
+    for (const r of refs) {
+      const snap = await r.once('value');
+      if (snap.exists()) return normalizeSettings(snap.val());
+    }
+    return normalizeSettings();
+  };
+
+  const getParticipantPokemon = member => {
+    const caught = Array.isArray(member?.caughtPokemon) ? member.caughtPokemon.slice(0, 6).filter(Boolean) : [];
+    const partner = member?.partnerPokemon ? [member.partnerPokemon] : [];
+    const byId = new Map();
+    [...partner, ...caught].forEach(p => {
+      const key = p.uniqueId || p.id || p.pokemonId || `${p.number}_${p.name}`;
+      if (key && !byId.has(key)) byId.set(key, p);
+    });
+    return Array.from(byId.values());
+  };
+
+  const pokemonKey = p => p?.uniqueId || p?.id || p?.pokemonId || `${p?.number}_${p?.name}`;
+  const formatPokemonList = list => list.length ? list.map(p => p.nickname || p.name || `No.${p.number}`).join(', ') : '없음';
+
+  const getStageSettings = (settings, stage) =>
+    settings.stages.find(s => Number(s.stage) === Number(stage)) ||
+    settings.stages[clamp(Number(stage) - 1, 0, settings.stages.length - 1)];
+
+  const rollStageSuccess = (settings, stage, isDuo) => {
+    const s = getStageSettings(settings, stage);
+    const chance = clamp(s.successRate + (isDuo ? settings.duoSuccessBonus : 0), 0, 1);
+    return { success: Math.random() < chance, stageSettings: s };
+  };
+
+  const getMasterPokemon = p => pokemonData.find(d => Number(d.number) === Number(p?.number));
+  const getPokemonOriginalNumber = p => Number(p?.originalNumber || p?.displayNumber || p?.number || 0);
+
+  const gendersAreCompatible = (p1, p2) => {
+    const g1 = String(p1?.gender || '').toLowerCase();
+    const g2 = String(p2?.gender || '').toLowerCase();
+    if (!g1 || !g2 || g1 === 'ditto' || g2 === 'ditto') return true;
+    return (g1 === 'female' && g2 === 'male') || (g1 === 'male' && g2 === 'female');
+  };
+
+  const eggGroupsMatch = (p1, p2) => {
+    const d1 = getMasterPokemon(p1);
+    const d2 = getMasterPokemon(p2);
+    const g1 = d1?.eggGroups || p1?.eggGroups || [];
+    const g2 = d2?.eggGroups || p2?.eggGroups || [];
+    if (!g1.length || !g2.length) return null;
+    if (g1.includes('undiscovered') || g2.includes('undiscovered')) return null;
+    const groups = g1.filter(g => g2.includes(g));
+    return groups.length ? { data1: d1, data2: d2, groups } : null;
+  };
+
+  const rollEgg = (memberPokemon, partnerPokemon, settings, name1, name2) => {
+    if (!memberPokemon.length || !partnerPokemon.length) return null;
+    const validPairs = [];
+    for (const p1 of memberPokemon) {
+      for (const p2 of partnerPokemon) {
+        const match = eggGroupsMatch(p1, p2);
+        if (match && gendersAreCompatible(p1, p2)) validPairs.push({ p1, p2, match });
+      }
+    }
+    if (!validPairs.length || Math.random() >= settings.eggChance) return null;
+    const { p1, p2, match } = validPairs[Math.floor(Math.random() * validPairs.length)];
+    const mother = String(p2.gender).toLowerCase() === 'female' ? p2 : p1;
+    const motherData = getMasterPokemon(mother) || match.data1 || match.data2;
+    if (!motherData) return null;
+    const eggGroup = (motherData.eggGroups || match.groups)[0] || 'field';
+    const hatchSteps = settings.eggHatchStepsByGroup[eggGroup] || 5000;
+    return {
+      eggId: `egg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+      species: motherData.name, speciesNumber: motherData.number,
+      speciesOriginalNumber: getPokemonOriginalNumber(motherData),
+      motherSpeciesNumber: motherData.number,
+      motherOriginalNumber: getPokemonOriginalNumber(motherData),
+      motherRegionalForm: motherData.regionalForm || null,
+      motherFormVariant: motherData.formVariant || null,
+      parent1Name: p1.nickname || p1.name, parent2Name: p2.nickname || p2.name,
+      parent1TrainerName: name1 || null, parent2TrainerName: name2 || null,
+      parent1Ball: { caughtWithBall: p1.caughtWithBall || '몬스터볼', ballImageUrl: p1.ballImageUrl || null },
+      parent2Ball: { caughtWithBall: p2.caughtWithBall || '몬스터볼', ballImageUrl: p2.ballImageUrl || null },
+      parentBalls: [
+        { caughtWithBall: p1.caughtWithBall || '몬스터볼', ballImageUrl: p1.ballImageUrl || null },
+        { caughtWithBall: p2.caughtWithBall || '몬스터볼', ballImageUrl: p2.ballImageUrl || null },
+      ],
+      eggGroups: motherData.eggGroups || match.groups,
+      hatchSteps, stepsRemaining: hatchSteps, hatchProgress: 0,
+      receivedDate: new Date().toISOString(),
+      imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/egg.png',
+      parentMoves: [...(p1.moves || []), ...(p2.moves || [])].filter(Boolean),
+      parentHeldItems: [p1.heldItem || null, p2.heldItem || null],
+      parent1Number: p1.number || null, parent2Number: p2.number || null,
+      parent1Nature: p1.nature || null, parent2Nature: p2.nature || null,
+    };
+  };
+
+  const rollBonusItem = (settings, currentStage) => {
+    const idx = typeof currentStage === 'number' ? currentStage - 1 : -1;
+    const stageItems = idx >= 0 ? settings.stages?.[idx]?.bonusItems : null;
+    const pool = Array.isArray(stageItems) && stageItems.length > 0 ? stageItems : settings.bonusItems;
+    const items = (pool || []).filter(item => Number(item.weight) > 0);
+    const total = items.reduce((s, item) => s + Number(item.weight), 0);
+    if (!total) return null;
+    let roll = Math.random() * total;
+    for (const item of items) { roll -= Number(item.weight); if (roll <= 0) return item; }
+    return null;
+  };
+
+  const addInventoryItem = (inventory = [], item) => {
+    if (!item) return inventory;
+    const itemId = item.itemId || item.id;
+    const idx = inventory.findIndex(e => String(e.itemId || e.id) === String(itemId));
+    if (idx >= 0) return inventory.map((e, i) => i === idx ? { ...e, count: Number(e.count || 0) + 1 } : e);
+    return [...inventory, { itemId, name: item.name || String(itemId), count: 1 }];
+  };
+
+  const applyFriendship = (memberData, participantKeys, bonus) => {
+    const keys = new Set(participantKeys);
+    const caughtPokemon = Array.isArray(memberData.caughtPokemon)
+      ? memberData.caughtPokemon.map(p => p && keys.has(pokemonKey(p)) ? { ...p, friendship: Math.min(255, Number(p.friendship || 0) + bonus) } : p)
+      : memberData.caughtPokemon;
+    let partnerPokemon = memberData.partnerPokemon || null;
+    if (partnerPokemon && keys.has(pokemonKey(partnerPokemon))) {
+      partnerPokemon = { ...partnerPokemon, friendship: Math.min(255, Number(partnerPokemon.friendship || 0) + bonus) };
+    }
+    return { caughtPokemon, partnerPokemon };
+  };
+
+  const findActiveSession = async memberId => {
+    const snap = await db.ref('gameData/campingSessions').once('value');
+    const sessions = snap.val() || {};
+    const active = Object.entries(sessions)
+      .filter(([, s]) => s.memberId === memberId && !['completed', 'applied', 'failed'].includes(s.status))
+      .sort((a, b) => String(b[1].createdAt || '').localeCompare(String(a[1].createdAt || '')));
+    if (!active.length) return null;
+    return { sessionKey: active[0][0], session: active[0][1] };
+  };
+
+  const createSession = async ({ memberId, member, partnerId, partner, statusId, settings }) => {
+    const entryPokemon = getParticipantPokemon(member);
+    const partnerPokemon = partner ? getParticipantPokemon(partner) : [];
+    const session = {
+      id: `camping_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+      memberId,
+      memberName: member.name || member.nickname || memberId,
+      partnerId: partnerId || '',
+      partnerName: partner?.name || partner?.nickname || '',
+      entryPokemon: entryPokemon.map(p => ({ uniqueId: p.uniqueId || '', pokemonId: p.id || p.pokemonId || '', number: p.number || 0, name: p.nickname || p.name || '이름 없음' })),
+      partnerEntryPokemon: partnerPokemon.map(p => ({ uniqueId: p.uniqueId || '', pokemonId: p.id || p.pokemonId || '', number: p.number || 0, name: p.nickname || p.name || '이름 없음' })),
+      isDuo: !!partnerId,
+      status: 'in_progress',
+      currentStage: settings.minCampingCount,
+      mastodonStatusId: statusId,
+      createdAt: new Date().toISOString(),
+      lastUpdatedAt: new Date().toISOString(),
+    };
+    const ref = db.ref('gameData/campingSessions').push();
+    await ref.set(session);
+    return { sessionKey: ref.key, session, entryPokemon, partnerPokemon };
+  };
+
+  const applyRewards = async ({ sessionKey, session, settings, success }) => {
+    const stageSettings = getStageSettings(settings, session.currentStage);
+    const memberRef = db.ref(`members/${session.memberId}`);
+    const snap = await memberRef.once('value');
+    if (!snap.exists()) throw new Error('Member not found');
+    const memberData = snap.val();
+    const participantKeys = (session.entryPokemon || []).map(pokemonKey).filter(Boolean);
+    const { friendshipBonus = 0, expBonus = 0 } = stageSettings;
+    const friendshipResult = applyFriendship(memberData, participantKeys, friendshipBonus);
+
+    const entryIdSet = new Set((session.entryPokemon || []).flatMap(e => [e.uniqueId, e.pokemonId]).filter(Boolean));
+    const isEntry = p => p && (entryIdSet.has(p.uniqueId) || entryIdSet.has(p.id) || entryIdSet.has(p.pokemonId));
+    const memberEntryPokemon = [
+      ...(friendshipResult.caughtPokemon || []).filter(isEntry),
+      ...(friendshipResult.partnerPokemon ? [friendshipResult.partnerPokemon] : []),
+    ];
+    const highFriendship = memberEntryPokemon.some(p => Number(p.friendship || 0) >= settings.minFriendshipForBonus);
+
+    let inventory = memberData.inventory || [];
+    let bonusItem = null;
+    if (success && highFriendship) {
+      bonusItem = rollBonusItem(settings, session.currentStage);
+      inventory = addInventoryItem(inventory, bonusItem);
+    }
+
+    let egg = null;
+    if (success && session.isDuo && session.partnerId && !memberData.egg) {
+      const partnerSnap = await db.ref(`members/${session.partnerId}`).once('value');
+      if (partnerSnap.exists()) {
+        const partnerData = partnerSnap.val();
+        egg = rollEgg(getParticipantPokemon(memberData), getParticipantPokemon(partnerData), settings, memberData.name, partnerData.name);
+      }
+    }
+
+    const updates = {
+      caughtPokemon: friendshipResult.caughtPokemon,
+      characterExp: Number(memberData.characterExp || 0) + expBonus,
+      trainerExp: Number(memberData.trainerExp || 0) + expBonus,
+      inventory,
+      'campingData/lastCampingDate': new Date().toISOString(),
+      'campingData/totalCampings': Number(memberData.campingData?.totalCampings || 0) + 1,
+      'campingData/bestStageReached': Math.max(Number(memberData.campingData?.bestStageReached || 0), Number(session.currentStage || 0)),
+    };
+    if (friendshipResult.partnerPokemon) updates.partnerPokemon = friendshipResult.partnerPokemon;
+    if (egg) updates.egg = egg;
+
+    await memberRef.update(updates);
+    await db.ref(`gameData/campingSessions/${sessionKey}`).update({
+      status: 'applied', appliedAt: new Date().toISOString(), success,
+      reward: { stage: session.currentStage, friendshipBonus, expBonus, bonusItem: bonusItem || null, egg: egg || null },
+    });
+    return { stageSettings, friendshipBonus, expBonus, bonusItem, egg };
+  };
+
+  const finishSession = async ({ sessionKey, session, settings, success }) => {
+    const rewards = await applyRewards({ sessionKey, session, settings, success });
+    const lines = [
+      success ? `캠핑 완료! 단계 ${session.currentStage}` : `캠핑 종료! 단계 ${session.currentStage} 보상을 지급합니다.`,
+      `친밀도 +${rewards.friendshipBonus}`, `경험치 +${rewards.expBonus}`,
+    ];
+    if (rewards.bonusItem) lines.push(`보너스 아이템: ${rewards.bonusItem.name}`);
+    if (rewards.egg) lines.push('어라? 포켓몬의 알이 있다!');
+    return lines.join('\n');
+  };
+
+  const findTaggedPartner = (members, status, authorAccount) => {
+    const author = normalizeAccount(authorAccount);
+    const accounts = extractMentionAccounts(status)
+      .map(normalizeAccount)
+      .filter(a => localUsername(a) !== botAccount && a !== author);
+    for (const a of accounts) {
+      const match = findMemberByAccount(members, a);
+      if (match) return match;
+    }
+    return null;
+  };
+
+  return {
+    getCommand,
+    handle: async ({ status, content, command, members, author, authorAccount }) => {
+      const settings = await loadCampingSettings();
+      if (command === 'start') {
+        const partner = findTaggedPartner(members, status, authorAccount);
+        return startCamping({ status, memberId: author.id, member: author.member, partnerId: partner?.id || null, partner: partner?.member || null, settings });
+      }
+      if (command === 'continue') return continueCamping({ memberId: author.id, settings });
+      return satisfyCamping({ memberId: author.id, settings });
+    },
+  };
+
+  async function startCamping({ status, memberId, member, partnerId, partner, settings }) {
+    const active = await findActiveSession(memberId);
+    if (active) return '이미 진행 중인 캠핑이 있어요. [만족] 또는 [계속]으로 먼저 마무리해 주세요.';
+    const created = await createSession({ memberId, member, partnerId, partner, statusId: status.id, settings });
+    const lines = ['캠핑 시작!', `함께 캠핑하는 포켓몬: ${formatPokemonList(created.entryPokemon)}`];
+    if (partner) lines.push(`${partner.name || partner.nickname || '상대'}의 포켓몬: ${formatPokemonList(created.partnerPokemon)}`);
+    const stageSettings = getStageSettings(settings, created.session.currentStage);
+    if (stageSettings.message) lines.push(stageSettings.message);
+    return lines.join('\n');
+  }
+
+  async function continueCamping({ memberId, settings }) {
+    const active = await findActiveSession(memberId);
+    if (!active) return '진행 중인 캠핑이 없어요. [캠핑 시작]으로 시작해 주세요.';
+    const { sessionKey, session } = active;
+    const { success } = rollStageSuccess(settings, session.currentStage, session.isDuo);
+    if (!success) return finishSession({ sessionKey, session, settings, success: false });
+    const nextStage = Number(session.currentStage || settings.minCampingCount) + 1;
+    if (nextStage > settings.maxCampingCount) return finishSession({ sessionKey, session, settings, success: true });
+    const updatedSession = { ...session, currentStage: nextStage };
+    await db.ref(`gameData/campingSessions/${sessionKey}`).update({ currentStage: nextStage, lastUpdatedAt: new Date().toISOString() });
+    if (nextStage === settings.maxCampingCount) return finishSession({ sessionKey, session: updatedSession, settings, success: true });
+    const nextStageSettings = getStageSettings(settings, nextStage);
+    return nextStageSettings.message || `단계 ${nextStage}로 진행했어요. [만족] 또는 [계속]을 선택해 주세요.`;
+  }
+
+  async function satisfyCamping({ memberId, settings }) {
+    const active = await findActiveSession(memberId);
+    if (!active) return '진행 중인 캠핑이 없어요. [캠핑 시작]으로 시작해 주세요.';
+    return finishSession({ sessionKey: active.sessionKey, session: active.session, settings, success: true });
+  }
+};
+
+module.exports = { createCampBot, getCommand };

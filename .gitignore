@@ -35,5 +35,6 @@ yarn-error.log*
 .env.development
 .env.production
 .env.local
+functions/.env
 
 Generation 9 Pack v3.3.2.rarpublic/img/icons/

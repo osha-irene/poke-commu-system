@@ -1122,6 +1122,8 @@ export function useAdvancedBattle(initialOptions = {}) {
     delete pendingChoicesRef.current[player];
   }, []);
 
+  const getRawLog = () => battleRef.current?.log || [];
+
   return {
     battleState,
     startBattle,
@@ -1138,6 +1140,7 @@ export function useAdvancedBattle(initialOptions = {}) {
     showdownIntegration,
     fieldEffectsManager,
     statusManager,
+    getRawLog,
   };
 }
 

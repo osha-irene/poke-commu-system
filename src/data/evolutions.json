@@ -1,6 +1,4 @@
 {
-  "generatedAt": "2025-10-13T07:49:52.135Z",
-  "totalEvolutions": 452,
   "evolutions": [
     {
       "from": 1,
@@ -847,6 +845,17 @@
     },
     {
       "from": 133,
+      "to": 700,
+      "fromName": "eevee",
+      "toName": "sylveon",
+      "condition": {
+        "type": "friendship",
+        "friendship": 160,
+        "knownMoveType": "Fairy"
+      }
+    },
+    {
+      "from": 133,
       "to": 196,
       "fromName": "eevee",
       "toName": "espeon",
@@ -865,33 +874,6 @@
         "type": "friendship",
         "friendship": 160,
         "timeOfDay": "night"
-      }
-    },
-    {
-      "from": 133,
-      "to": 470,
-      "fromName": "eevee",
-      "toName": "leafeon",
-      "condition": {
-        "location": "eterna-forest"
-      }
-    },
-    {
-      "from": 133,
-      "to": 471,
-      "fromName": "eevee",
-      "toName": "glaceon",
-      "condition": {
-        "location": "sinnoh-route-217"
-      }
-    },
-    {
-      "from": 133,
-      "to": 700,
-      "fromName": "eevee",
-      "toName": "sylveon",
-      "condition": {
-        "minAffection": 2
       }
     },
     {
@@ -4517,456 +4499,697 @@
         "level": 35
       }
     },
-	
-	
-  {
-    "from": 957,
-    "to": 958,
-    "fromName": "tinkatink",
-    "toName": "tinkatuff",
-    "condition": {
-      "type": "level",
-      "level": 24
+    {
+      "from": 957,
+      "to": 958,
+      "fromName": "tinkatink",
+      "toName": "tinkatuff",
+      "condition": {
+        "type": "level",
+        "level": 24
+      }
+    },
+    {
+      "from": 958,
+      "to": 959,
+      "fromName": "tinkatuff",
+      "toName": "tinkaton",
+      "condition": {
+        "type": "level",
+        "level": 38
+      }
+    },
+    {
+      "from": 960,
+      "to": 961,
+      "fromName": "wiglett",
+      "toName": "wugtrio",
+      "condition": {
+        "type": "level",
+        "level": 26
+      }
+    },
+    {
+      "from": 962,
+      "to": 963,
+      "fromName": "bombirdier",
+      "toName": "finizen",
+      "condition": {
+        "type": "level",
+        "level": 38
+      }
+    },
+    {
+      "from": 965,
+      "to": 966,
+      "fromName": "varoom",
+      "toName": "revavroom",
+      "condition": {
+        "type": "level",
+        "level": 40
+      }
+    },
+    {
+      "from": 967,
+      "to": 968,
+      "fromName": "cyclizar",
+      "toName": "orthworm",
+      "condition": {
+        "type": "level",
+        "level": 30
+      }
+    },
+    {
+      "from": 974,
+      "to": 975,
+      "fromName": "cetoddle",
+      "toName": "cetitan",
+      "condition": {
+        "type": "item",
+        "item": "ice-stone"
+      }
+    },
+    {
+      "from": 976,
+      "to": 977,
+      "fromName": "veluza",
+      "toName": "dondozo",
+      "condition": {
+        "type": "level",
+        "level": 38
+      }
+    },
+    {
+      "from": 909,
+      "to": 910,
+      "fromName": "fuecoco",
+      "toName": "crocalor",
+      "condition": {
+        "type": "level",
+        "level": 16
+      }
+    },
+    {
+      "from": 910,
+      "to": 911,
+      "fromName": "crocalor",
+      "toName": "skeledirge",
+      "condition": {
+        "type": "level",
+        "level": 36
+      }
+    },
+    {
+      "from": 912,
+      "to": 913,
+      "fromName": "sprigatito",
+      "toName": "floragato",
+      "condition": {
+        "type": "level",
+        "level": 16
+      }
+    },
+    {
+      "from": 913,
+      "to": 914,
+      "fromName": "floragato",
+      "toName": "meowscarada",
+      "condition": {
+        "type": "level",
+        "level": 36
+      }
+    },
+    {
+      "from": 915,
+      "to": 916,
+      "fromName": "quaxly",
+      "toName": "quaxwell",
+      "condition": {
+        "type": "level",
+        "level": 16
+      }
+    },
+    {
+      "from": 916,
+      "to": 917,
+      "fromName": "quaxwell",
+      "toName": "quaquaval",
+      "condition": {
+        "type": "level",
+        "level": 36
+      }
+    },
+    {
+      "from": 919,
+      "to": 920,
+      "fromName": "nymble",
+      "toName": "lokix",
+      "condition": {
+        "type": "level",
+        "level": 24
+      }
+    },
+    {
+      "from": 921,
+      "to": 922,
+      "fromName": "pawmi",
+      "toName": "pawmo",
+      "condition": {
+        "type": "level",
+        "level": 18
+      }
+    },
+    {
+      "from": 922,
+      "to": 923,
+      "fromName": "pawmo",
+      "toName": "pawmot",
+      "condition": {
+        "type": "level",
+        "level": 32
+      }
+    },
+    {
+      "from": 924,
+      "to": 925,
+      "fromName": "tandemaus",
+      "toName": "maushold",
+      "condition": {
+        "type": "level",
+        "level": 25
+      }
+    },
+    {
+      "from": 926,
+      "to": 927,
+      "fromName": "fidough",
+      "toName": "dachsbun",
+      "condition": {
+        "type": "level",
+        "level": 26
+      }
+    },
+    {
+      "from": 928,
+      "to": 929,
+      "fromName": "smoliv",
+      "toName": "dolliv",
+      "condition": {
+        "type": "level",
+        "level": 25
+      }
+    },
+    {
+      "from": 929,
+      "to": 930,
+      "fromName": "dolliv",
+      "toName": "arboliva",
+      "condition": {
+        "type": "level",
+        "level": 35
+      }
+    },
+    {
+      "from": 931,
+      "to": 932,
+      "fromName": "squawkabilly",
+      "toName": "nacli",
+      "condition": {
+        "type": "level",
+        "level": 24
+      }
+    },
+    {
+      "from": 932,
+      "to": 933,
+      "fromName": "nacli",
+      "toName": "naclstack",
+      "condition": {
+        "type": "level",
+        "level": 24
+      }
+    },
+    {
+      "from": 933,
+      "to": 934,
+      "fromName": "naclstack",
+      "toName": "garganacl",
+      "condition": {
+        "type": "level",
+        "level": 38
+      }
+    },
+    {
+      "from": 935,
+      "to": 936,
+      "fromName": "charcadet",
+      "toName": "armarouge",
+      "condition": {
+        "type": "item",
+        "item": "auspicious-armor"
+      }
+    },
+    {
+      "from": 935,
+      "to": 937,
+      "fromName": "charcadet",
+      "toName": "ceruledge",
+      "condition": {
+        "type": "item",
+        "item": "malicious-armor"
+      }
+    },
+    {
+      "from": 938,
+      "to": 939,
+      "fromName": "tadbulb",
+      "toName": "bellibolt",
+      "condition": {
+        "type": "item",
+        "item": "thunder-stone"
+      }
+    },
+    {
+      "from": 940,
+      "to": 941,
+      "fromName": "wattrel",
+      "toName": "kilowattrel",
+      "condition": {
+        "type": "level",
+        "level": 25
+      }
+    },
+    {
+      "from": 942,
+      "to": 943,
+      "fromName": "maschiff",
+      "toName": "mabosstiff",
+      "condition": {
+        "type": "level",
+        "level": 30
+      }
+    },
+    {
+      "from": 944,
+      "to": 945,
+      "fromName": "shroodle",
+      "toName": "grafaiai",
+      "condition": {
+        "type": "level",
+        "level": 28
+      }
+    },
+    {
+      "from": 946,
+      "to": 947,
+      "fromName": "bramblin",
+      "toName": "brambleghast",
+      "condition": {
+        "type": "level",
+        "level": 30
+      }
+    },
+    {
+      "from": 948,
+      "to": 949,
+      "fromName": "toedscool",
+      "toName": "toedscruel",
+      "condition": {
+        "type": "level",
+        "level": 30
+      }
+    },
+    {
+      "from": 951,
+      "to": 952,
+      "fromName": "capsakid",
+      "toName": "scovillain",
+      "condition": {
+        "type": "item",
+        "item": "fire-stone"
+      }
+    },
+    {
+      "from": 953,
+      "to": 954,
+      "fromName": "rellor",
+      "toName": "rabsca",
+      "condition": {
+        "type": "level",
+        "level": 30
+      }
+    },
+    {
+      "from": 996,
+      "to": 997,
+      "fromName": "frigibax",
+      "toName": "arctibax",
+      "condition": {
+        "type": "level",
+        "level": 35
+      }
+    },
+    {
+      "from": 997,
+      "to": 998,
+      "fromName": "arctibax",
+      "toName": "baxcalibur",
+      "condition": {
+        "type": "level",
+        "level": 54
+      }
+    },
+    {
+      "from": 349,
+      "to": 350,
+      "fromName": "feebas",
+      "toName": "milotic",
+      "condition": {
+        "type": "trade",
+        "heldItem": "prism-scale"
+      }
+    },
+    {
+      "from": 840,
+      "to": 1011,
+      "fromName": "applin",
+      "toName": "dipplin",
+      "condition": {
+        "type": "item",
+        "item": "syrupy-apple"
+      }
+    },
+    {
+      "from": 1012,
+      "to": 1013,
+      "fromName": "poltchageist",
+      "toName": "sinistcha",
+      "condition": {
+        "type": "item",
+        "item": "masterpiece-mug"
+      }
+    },
+    {
+      "from": 1012,
+      "to": 1013,
+      "fromName": "poltchageist",
+      "toName": "sinistcha",
+      "condition": {
+        "type": "item",
+        "item": "unremarkable-teacup"
+      }
+    },
+    {
+      "from": 884,
+      "to": 1018,
+      "fromName": "duraludon",
+      "toName": "archaludon",
+      "condition": {
+        "type": "item",
+        "item": "metal-alloy"
+      }
+    },
+    {
+      "from": 10091,
+      "to": 10092,
+      "fromName": "rattata-alola",
+      "toName": "raticate-alola",
+      "condition": {
+        "type": "level",
+        "level": 20,
+        "timeOfDay": "night"
+      }
+    },
+    {
+      "from": 10101,
+      "to": 10102,
+      "fromName": "sandshrew-alola",
+      "toName": "sandslash-alola",
+      "condition": {
+        "type": "item",
+        "item": "ice-stone"
+      }
+    },
+    {
+      "from": 10103,
+      "to": 10104,
+      "fromName": "vulpix-alola",
+      "toName": "ninetales-alola",
+      "condition": {
+        "type": "item",
+        "item": "ice-stone"
+      }
+    },
+    {
+      "from": 10105,
+      "to": 10106,
+      "fromName": "diglett-alola",
+      "toName": "dugtrio-alola",
+      "condition": {
+        "type": "level",
+        "level": 26
+      }
+    },
+    {
+      "from": 10107,
+      "to": 10108,
+      "fromName": "meowth-alola",
+      "toName": "persian-alola",
+      "condition": {
+        "type": "friendship",
+        "friendship": 160
+      }
+    },
+    {
+      "from": 10109,
+      "to": 10110,
+      "fromName": "geodude-alola",
+      "toName": "graveler-alola",
+      "condition": {
+        "type": "level",
+        "level": 25
+      }
+    },
+    {
+      "from": 10110,
+      "to": 10111,
+      "fromName": "graveler-alola",
+      "toName": "golem-alola",
+      "condition": {
+        "type": "trade"
+      }
+    },
+    {
+      "from": 10112,
+      "to": 10113,
+      "fromName": "grimer-alola",
+      "toName": "muk-alola",
+      "condition": {
+        "type": "level",
+        "level": 38
+      }
+    },
+    {
+      "from": 10161,
+      "to": 863,
+      "fromName": "meowth-galar",
+      "toName": "perrserker",
+      "condition": {
+        "type": "level",
+        "level": 28
+      }
+    },
+    {
+      "from": 10162,
+      "to": 10163,
+      "fromName": "ponyta-galar",
+      "toName": "rapidash-galar",
+      "condition": {
+        "type": "level",
+        "level": 40
+      }
+    },
+    {
+      "from": 10164,
+      "to": 10165,
+      "fromName": "slowpoke-galar",
+      "toName": "slowbro-galar",
+      "condition": {
+        "type": "item",
+        "item": "galarica-cuff"
+      }
+    },
+    {
+      "from": 10164,
+      "to": 10172,
+      "fromName": "slowpoke-galar",
+      "toName": "slowking-galar",
+      "condition": {
+        "type": "item",
+        "item": "galarica-wreath"
+      }
+    },
+    {
+      "from": 10173,
+      "to": 864,
+      "fromName": "corsola-galar",
+      "toName": "cursola",
+      "condition": {
+        "type": "level",
+        "level": 38
+      }
+    },
+    {
+      "from": 10174,
+      "to": 10175,
+      "fromName": "zigzagoon-galar",
+      "toName": "linoone-galar",
+      "condition": {
+        "type": "level",
+        "level": 20
+      }
+    },
+    {
+      "from": 10175,
+      "to": 862,
+      "fromName": "linoone-galar",
+      "toName": "obstagoon",
+      "condition": {
+        "type": "level",
+        "level": 35,
+        "timeOfDay": "night"
+      }
+    },
+    {
+      "from": 10176,
+      "to": 10177,
+      "fromName": "darumaka-galar",
+      "toName": "darmanitan-galar",
+      "condition": {
+        "type": "item",
+        "item": "ice-stone"
+      }
+    },
+    {
+      "from": 10179,
+      "to": 867,
+      "fromName": "yamask-galar",
+      "toName": "runerigus",
+      "condition": {
+        "type": "level",
+        "level": 34
+      }
+    },
+    {
+      "from": 10229,
+      "to": 10230,
+      "fromName": "growlithe-hisui",
+      "toName": "arcanine-hisui",
+      "condition": {
+        "type": "item",
+        "item": "fire-stone"
+      }
+    },
+    {
+      "from": 10231,
+      "to": 10232,
+      "fromName": "voltorb-hisui",
+      "toName": "electrode-hisui",
+      "condition": {
+        "type": "item",
+        "item": "leaf-stone"
+      }
+    },
+    {
+      "from": 10234,
+      "to": 904,
+      "fromName": "qwilfish-hisui",
+      "toName": "overqwil",
+      "condition": {
+        "type": "level",
+        "level": 28
+      }
+    },
+    {
+      "from": 10235,
+      "to": 903,
+      "fromName": "sneasel-hisui",
+      "toName": "sneasler",
+      "condition": {
+        "type": "item",
+        "item": "razor-claw"
+      }
+    },
+    {
+      "from": 10238,
+      "to": 10239,
+      "fromName": "zorua-hisui",
+      "toName": "zoroark-hisui",
+      "condition": {
+        "type": "level",
+        "level": 30
+      }
+    },
+    {
+      "from": 10241,
+      "to": 10242,
+      "fromName": "sliggoo-hisui",
+      "toName": "goodra-hisui",
+      "condition": {
+        "type": "level",
+        "level": 50
+      }
+    },
+    {
+      "from": 10253,
+      "to": 980,
+      "fromName": "wooper-paldea",
+      "toName": "clodsire",
+      "condition": {
+        "type": "level",
+        "level": 20
+      }
+    },
+    {
+      "from": 57,
+      "to": 979,
+      "fromName": "primeape",
+      "toName": "annihilape",
+      "condition": {
+        "type": "moveUsage",
+        "move": "ragefist",
+        "count": 20
+      }
+    },
+    {
+      "from": 133,
+      "to": 470,
+      "fromName": "eevee",
+      "toName": "leafeon",
+      "condition": {
+        "type": "item",
+        "item": "leaf-stone"
+      }
+    },
+    {
+      "from": 133,
+      "to": 471,
+      "fromName": "eevee",
+      "toName": "glaceon",
+      "condition": {
+        "type": "item",
+        "item": "ice-stone"
+      }
+    },
+    {
+      "from": 10166,
+      "to": 865,
+      "fromName": "farfetchd-galar",
+      "toName": "sirfetchd",
+      "condition": {
+        "type": "battleCrit",
+        "count": 3
+      }
     }
-  },
-  {
-    "from": 958,
-    "to": 959,
-    "fromName": "tinkatuff",
-    "toName": "tinkaton",
-    "condition": {
-      "type": "level",
-      "level": 38
-    }
-  },
-  {
-    "from": 960,
-    "to": 961,
-    "fromName": "wiglett",
-    "toName": "wugtrio",
-    "condition": {
-      "type": "level",
-      "level": 26
-    }
-  },
-  {
-    "from": 962,
-    "to": 963,
-    "fromName": "bombirdier",
-    "toName": "finizen",
-    "condition": {
-      "type": "level",
-      "level": 38
-    }
-  },
-  {
-    "from": 965,
-    "to": 966,
-    "fromName": "varoom",
-    "toName": "revavroom",
-    "condition": {
-      "type": "level",
-      "level": 40
-    }
-  },
-  {
-    "from": 967,
-    "to": 968,
-    "fromName": "cyclizar",
-    "toName": "orthworm",
-    "condition": {
-      "type": "level",
-      "level": 30
-    }
-  },
-  {
-    "from": 974,
-    "to": 975,
-    "fromName": "cetoddle",
-    "toName": "cetitan",
-    "condition": {
-      "type": "item",
-      "item": "ice-stone"
-    }
-  },
-  {
-    "from": 976,
-    "to": 977,
-    "fromName": "veluza",
-    "toName": "dondozo",
-    "condition": {
-      "type": "level",
-      "level": 38
-    }
-  },
-  {
-    "from": 978,
-    "to": 979,
-    "fromName": "tatsugiri",
-    "toName": "annihilape",
-    "condition": {
-      "type": "level",
-      "level": 35
-    }
-  },
-  {
-    "from": 909,
-    "to": 910,
-    "fromName": "fuecoco",
-    "toName": "crocalor",
-    "condition": {
-      "type": "level",
-      "level": 16
-    }
-  },
-  {
-    "from": 910,
-    "to": 911,
-    "fromName": "crocalor",
-    "toName": "skeledirge",
-    "condition": {
-      "type": "level",
-      "level": 36
-    }
-  },
-  {
-    "from": 912,
-    "to": 913,
-    "fromName": "sprigatito",
-    "toName": "floragato",
-    "condition": {
-      "type": "level",
-      "level": 16
-    }
-  },
-  {
-    "from": 913,
-    "to": 914,
-    "fromName": "floragato",
-    "toName": "meowscarada",
-    "condition": {
-      "type": "level",
-      "level": 36
-    }
-  },
-  {
-    "from": 915,
-    "to": 916,
-    "fromName": "quaxly",
-    "toName": "quaxwell",
-    "condition": {
-      "type": "level",
-      "level": 16
-    }
-  },
-  {
-    "from": 916,
-    "to": 917,
-    "fromName": "quaxwell",
-    "toName": "quaquaval",
-    "condition": {
-      "type": "level",
-      "level": 36
-    }
-  },
-  {
-    "from": 919,
-    "to": 920,
-    "fromName": "nymble",
-    "toName": "lokix",
-    "condition": {
-      "type": "level",
-      "level": 24
-    }
-  },
-  {
-    "from": 921,
-    "to": 922,
-    "fromName": "pawmi",
-    "toName": "pawmo",
-    "condition": {
-      "type": "level",
-      "level": 18
-    }
-  },
-  {
-    "from": 922,
-    "to": 923,
-    "fromName": "pawmo",
-    "toName": "pawmot",
-    "condition": {
-      "type": "level",
-      "level": 32
-    }
-  },
-  {
-    "from": 924,
-    "to": 925,
-    "fromName": "tandemaus",
-    "toName": "maushold",
-    "condition": {
-      "type": "level",
-      "level": 25
-    }
-  },
-  {
-    "from": 926,
-    "to": 927,
-    "fromName": "fidough",
-    "toName": "dachsbun",
-    "condition": {
-      "type": "level",
-      "level": 26
-    }
-  },
-  {
-    "from": 928,
-    "to": 929,
-    "fromName": "smoliv",
-    "toName": "dolliv",
-    "condition": {
-      "type": "level",
-      "level": 25
-    }
-  },
-  {
-    "from": 929,
-    "to": 930,
-    "fromName": "dolliv",
-    "toName": "arboliva",
-    "condition": {
-      "type": "level",
-      "level": 35
-    }
-  },
-  {
-    "from": 931,
-    "to": 932,
-    "fromName": "squawkabilly",
-    "toName": "nacli",
-    "condition": {
-      "type": "level",
-      "level": 24
-    }
-  },
-  {
-    "from": 932,
-    "to": 933,
-    "fromName": "nacli",
-    "toName": "naclstack",
-    "condition": {
-      "type": "level",
-      "level": 24
-    }
-  },
-  {
-    "from": 933,
-    "to": 934,
-    "fromName": "naclstack",
-    "toName": "garganacl",
-    "condition": {
-      "type": "level",
-      "level": 38
-    }
-  },
-  {
-    "from": 935,
-    "to": 936,
-    "fromName": "charcadet",
-    "toName": "armarouge",
-    "condition": {
-      "type": "item",
-      "item": "auspicious-armor"
-    }
-  },
-  {
-    "from": 935,
-    "to": 937,
-    "fromName": "charcadet",
-    "toName": "ceruledge",
-    "condition": {
-      "type": "item",
-      "item": "malicious-armor"
-    }
-  },
-  {
-    "from": 938,
-    "to": 939,
-    "fromName": "tadbulb",
-    "toName": "bellibolt",
-    "condition": {
-      "type": "item",
-      "item": "thunder-stone"
-    }
-  },
-  {
-    "from": 940,
-    "to": 941,
-    "fromName": "wattrel",
-    "toName": "kilowattrel",
-    "condition": {
-      "type": "level",
-      "level": 25
-    }
-  },
-  {
-    "from": 942,
-    "to": 943,
-    "fromName": "maschiff",
-    "toName": "mabosstiff",
-    "condition": {
-      "type": "level",
-      "level": 30
-    }
-  },
-  {
-    "from": 944,
-    "to": 945,
-    "fromName": "shroodle",
-    "toName": "grafaiai",
-    "condition": {
-      "type": "level",
-      "level": 28
-    }
-  },
-  {
-    "from": 946,
-    "to": 947,
-    "fromName": "bramblin",
-    "toName": "brambleghast",
-    "condition": {
-      "type": "level",
-      "level": 30
-    }
-  },
-  {
-    "from": 948,
-    "to": 949,
-    "fromName": "toedscool",
-    "toName": "toedscruel",
-    "condition": {
-      "type": "level",
-      "level": 30
-    }
-  },
-  {
-    "from": 951,
-    "to": 952,
-    "fromName": "capsakid",
-    "toName": "scovillain",
-    "condition": {
-      "type": "item",
-      "item": "fire-stone"
-    }
-  },
-  {
-    "from": 953,
-    "to": 954,
-    "fromName": "rellor",
-    "toName": "rabsca",
-    "condition": {
-      "type": "level",
-      "level": 30
-    }
-  },
-  {
-    "from": 996,
-    "to": 997,
-    "fromName": "frigibax",
-    "toName": "arctibax",
-    "condition": {
-      "type": "level",
-      "level": 35
-    }
-  },
-  {
-    "from": 997,
-    "to": 998,
-    "fromName": "arctibax",
-    "toName": "baxcalibur",
-    "condition": {
-      "type": "level",
-      "level": 54
-    }
-  },
-  {
-    "from": 349,
-    "to": 350,
-    "fromName": "feebas",
-    "toName": "milotic",
-    "condition": {
-      "type": "trade",
-      "heldItem": "prism-scale"
-    }
-  },
-  {
-    "from": 840,
-    "to": 1011,
-    "fromName": "applin",
-    "toName": "dipplin",
-    "condition": {
-      "type": "item",
-      "item": "syrupy-apple"
-    }
-  },
-  {
-    "from": 1012,
-    "to": 1013,
-    "fromName": "poltchageist",
-    "toName": "sinistcha",
-    "condition": {
-      "type": "item",
-      "item": "masterpiece-mug"
-    }
-  },
-  {
-    "from": 1012,
-    "to": 1013,
-    "fromName": "poltchageist",
-    "toName": "sinistcha",
-    "condition": {
-      "type": "item",
-      "item": "unremarkable-teacup"
-    }
-  },
-  {
-    "from": 884,
-    "to": 1018,
-    "fromName": "duraludon",
-    "toName": "archaludon",
-    "condition": {
-      "type": "item",
-      "item": "metal-alloy"
-    }
-  },
-
-  {"from":10091,"to":10092,"fromName":"rattata-alola","toName":"raticate-alola","condition":{"type":"level","level":20,"timeOfDay":"night"}},
-  {"from":10101,"to":10102,"fromName":"sandshrew-alola","toName":"sandslash-alola","condition":{"type":"item","item":"ice-stone"}},
-  {"from":10103,"to":10104,"fromName":"vulpix-alola","toName":"ninetales-alola","condition":{"type":"item","item":"ice-stone"}},
-  {"from":10105,"to":10106,"fromName":"diglett-alola","toName":"dugtrio-alola","condition":{"type":"level","level":26}},
-  {"from":10107,"to":10108,"fromName":"meowth-alola","toName":"persian-alola","condition":{"type":"friendship","friendship":160}},
-  {"from":10109,"to":10110,"fromName":"geodude-alola","toName":"graveler-alola","condition":{"type":"level","level":25}},
-  {"from":10110,"to":10111,"fromName":"graveler-alola","toName":"golem-alola","condition":{"type":"trade"}},
-  {"from":10112,"to":10113,"fromName":"grimer-alola","toName":"muk-alola","condition":{"type":"level","level":38}},
-
-  {"from":10161,"to":863,"fromName":"meowth-galar","toName":"perrserker","condition":{"type":"level","level":28}},
-  {"from":10162,"to":10163,"fromName":"ponyta-galar","toName":"rapidash-galar","condition":{"type":"level","level":40}},
-  {"from":10164,"to":10165,"fromName":"slowpoke-galar","toName":"slowbro-galar","condition":{"type":"item","item":"galarica-cuff"}},
-  {"from":10164,"to":10172,"fromName":"slowpoke-galar","toName":"slowking-galar","condition":{"type":"item","item":"galarica-wreath"}},
-  {"from":10166,"to":865,"fromName":"farfetchd-galar","toName":"sirfetchd","condition":{"type":"level","level":30}},
-  {"from":10173,"to":864,"fromName":"corsola-galar","toName":"cursola","condition":{"type":"level","level":38}},
-  {"from":10174,"to":10175,"fromName":"zigzagoon-galar","toName":"linoone-galar","condition":{"type":"level","level":20}},
-  {"from":10175,"to":862,"fromName":"linoone-galar","toName":"obstagoon","condition":{"type":"level","level":35,"timeOfDay":"night"}},
-  {"from":10176,"to":10177,"fromName":"darumaka-galar","toName":"darmanitan-galar","condition":{"type":"item","item":"ice-stone"}},
-  {"from":10179,"to":867,"fromName":"yamask-galar","toName":"runerigus","condition":{"type":"level","level":34}},
-
-  {"from":10229,"to":10230,"fromName":"growlithe-hisui","toName":"arcanine-hisui","condition":{"type":"item","item":"fire-stone"}},
-  {"from":10231,"to":10232,"fromName":"voltorb-hisui","toName":"electrode-hisui","condition":{"type":"item","item":"leaf-stone"}},
-  {"from":10234,"to":904,"fromName":"qwilfish-hisui","toName":"overqwil","condition":{"type":"level","level":28}},
-  {"from":10235,"to":903,"fromName":"sneasel-hisui","toName":"sneasler","condition":{"type":"item","item":"razor-claw"}},
-  {"from":10238,"to":10239,"fromName":"zorua-hisui","toName":"zoroark-hisui","condition":{"type":"level","level":30}},
-  {"from":10241,"to":10242,"fromName":"sliggoo-hisui","toName":"goodra-hisui","condition":{"type":"level","level":50}},
-
-  {"from":10253,"to":980,"fromName":"wooper-paldea","toName":"clodsire","condition":{"type":"level","level":20}}
   ]
 }

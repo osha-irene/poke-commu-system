@@ -1,14 +1,24 @@
-// 마스토돈 설정 (환경변수로 관리 권장)
+const INSTANCE = process.env.REACT_APP_MASTODON_INSTANCE || 'https://poketodon.monster';
+
 export const MASTODON_CONFIG = {
-  instanceUrl: 'https://poketodon.monster',
-  botAccount: '@pokemonbot@poketodon.monster',
-  accessToken: process.env.REACT_APP_MASTODON_TOKEN, // .env 파일에서 관리
-  
-  // 명령어 패턴
-  commands: {
-    camping: {
-      trigger: '[캠핑]',
-      aliases: ['캠핑', 'camping']
-    }
-  }
+  battle: {
+    instanceUrl: INSTANCE,
+    botAccount:  process.env.REACT_APP_MASTODON_BOT_BATTLE  || '@battlebot@poketodon.monster',
+    accessToken: process.env.REACT_APP_MASTODON_TOKEN_BATTLE,
+  },
+  trade: {
+    instanceUrl: INSTANCE,
+    botAccount:  process.env.REACT_APP_MASTODON_BOT_TRADE   || '@tradebot@poketodon.monster',
+    accessToken: process.env.REACT_APP_MASTODON_TOKEN_TRADE,
+  },
+  notify: {
+    instanceUrl: INSTANCE,
+    botAccount:  process.env.REACT_APP_MASTODON_BOT_NOTIFY  || '@notifybot@poketodon.monster',
+    accessToken: process.env.REACT_APP_MASTODON_TOKEN_NOTIFY,
+  },
+  camp: {
+    instanceUrl: INSTANCE,
+    botAccount:  process.env.REACT_APP_MASTODON_BOT_CAMP    || '@campbot@poketodon.monster',
+    accessToken: process.env.REACT_APP_MASTODON_TOKEN_CAMP,
+  },
 };

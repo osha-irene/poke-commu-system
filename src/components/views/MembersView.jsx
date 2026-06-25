@@ -607,8 +607,11 @@ function getQuoteAccentColor(color) {
 
 const imgCache = {}; // url → accent color (모듈 레벨 캐시)
 
-function MemberDetail({ member, members, titles, onBack, onTabChange, currentUserId }) {
+function MemberDetail({ member, members, titles, onBack, onTabChange, currentUserId, isAdmin }) {
   const { allItems = [] } = useGame();
+  const isOwner = String(member.id || '') === String(currentUserId || '');
+  const canEdit = isAdmin;
+  const canEditRelations = isAdmin || isOwner;
   const fullImg = getFullImg(member);
   const imgRef = useRef(null);
   const opaqueBottomRatioRef = useRef(1);
@@ -1389,8 +1392,8 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                           </div>
                         </>
                       ) : (
-                        <div onClick={() => setKwEditing(i)}
-                          style={{ fontSize: 15, color: keywordTexts[i] ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.75, cursor: 'text', minHeight: 40, paddingLeft: 18 }}>
+                        <div onClick={() => canEdit && setKwEditing(i)}
+                          style={{ fontSize: 15, color: keywordTexts[i] ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.75, cursor: canEdit ? 'text' : 'default', minHeight: 40, paddingLeft: 18 }}>
                           {keywordTexts[i]
                             ? keywordTexts[i].split('\n').map(renderTextLine)
                             : '클릭해서 내용 추가...'}
@@ -1423,8 +1426,8 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                       </div>
                     </>
                   ) : (
-                    <div onClick={() => setEtcEditing(true)}
-                      style={{ fontSize: 15, color: etcText ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.75, cursor: 'text', minHeight: 40, paddingLeft: 18 }}>
+                    <div onClick={() => canEdit && setEtcEditing(true)}
+                      style={{ fontSize: 15, color: etcText ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.75, cursor: canEdit ? 'text' : 'default', minHeight: 40, paddingLeft: 18 }}>
                       {etcText
                         ? etcText.split('\n').map(renderTextLine)
                         : '클릭해서 내용 추가...'}
@@ -1775,7 +1778,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               <div style={{ overflow: 'hidden' }}>
               <div
                 className={partnerTextOpen ? 'rmv-partner-text-in' : ''}
-                onClick={() => { if (!partnerEditing) setPartnerEditing(true); }}
+                onClick={() => { if (!partnerEditing && canEdit) setPartnerEditing(true); }}
                 onWheel={e => e.stopPropagation()}
                 style={{
                   position: 'relative',
@@ -1873,7 +1876,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             })()}
             <div
               onWheel={e => e.stopPropagation()}
-              style={{ maxHeight: 'calc(100vh - 26rem)', overflowY: 'auto', overflowX: 'hidden', paddingRight: 2 }}
+              style={{ maxHeight: 'calc(100vh - 26rem)', overflowY: 'auto', overflowX: 'hidden', paddingRight: 2, paddingBottom: 48 }}
             >
               {noteEditing ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -1895,7 +1898,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                   </div>
                 </div>
               ) : (
-                <div onClick={() => setNoteEditing(true)}
+                <div onClick={() => canEdit && setNoteEditing(true)}
                   style={{ minHeight: 48, fontSize: 15, color: note ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.6, cursor: 'text', padding: '4px 2px', position: 'relative', zIndex: 1 }}>
                   {note
                     ? note.split('\n').map((line, i) => <p key={i} style={{ margin: 0, marginBottom: '1.4em', textIndent: '0.5em' }}>{line || ' '}</p>)
@@ -2096,7 +2099,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
         return (
           <>
             {/* 우상단 추가 버튼 */}
-            {relationEditIdx !== 'new' && (
+            {canEditRelations && relationEditIdx !== 'new' && (
               <button
                 onClick={() => { setRelationEditIdx('new'); setRelationDraft({ charName: '', intro: '', memo: '' }); }}
                 onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.15)'}
@@ -2182,8 +2185,8 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                     <div
                       key={idx}
                       className="rmv-relation-card"
-                      onClick={() => { setRelationEditIdx(idx); setRelationDraft({ charName: rel.charName || '', intro: rel.intro || '', memo: rel.memo || '' }); }}
-                      style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 14, alignItems: 'flex-start', padding: '14px 16px', marginBottom: 10, borderRadius: 12, background: 'rgba(255,255,255,0.95)', borderBottom: '1px solid rgba(0,0,0,0.07)', cursor: 'pointer' }}
+                      onClick={() => { if (canEditRelations) { setRelationEditIdx(idx); setRelationDraft({ charName: rel.charName || '', intro: rel.intro || '', memo: rel.memo || '' }); } }}
+                      style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 14, alignItems: 'flex-start', padding: '14px 16px', marginBottom: 10, borderRadius: 12, background: 'rgba(255,255,255,0.95)', borderBottom: '1px solid rgba(0,0,0,0.07)', cursor: canEditRelations ? 'pointer' : 'default' }}
                     >
                       <div style={{ width: 48, height: 48, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: `2px solid rgba(${selectedAccentRgb}, 0.3)`, background: `rgba(${selectedAccentRgb}, 0.1)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {faceImg ? (
@@ -2307,7 +2310,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
 }
 
 /* ── 메인 ── */
-export default function MembersView({ members = {}, isLoading, currentUserId, titles = [], onSwitchTab }) {
+export default function MembersView({ members = {}, isLoading, currentUserId, isAdmin = false, titles = [], onSwitchTab }) {
   const [selected, setSelected] = useState(null);
   const [transitioning, setTransitioning] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
@@ -2447,6 +2450,7 @@ export default function MembersView({ members = {}, isLoading, currentUserId, ti
             onBack={closeMember}
             onTabChange={setActiveTab}
             currentUserId={currentUserId}
+            isAdmin={isAdmin}
           />
         </div>
       )}

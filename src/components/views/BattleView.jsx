@@ -731,6 +731,79 @@ export function BattleView() {
     } catch (e) {
       console.warn('배틀 로그 Firebase 저장 실패:', e);
     }
+
+    // moveUsage / lastBattleCritCount 업데이트
+    const rawLog = battleSummary.rawLog || [];
+    if (rawLog.length > 0) {
+      const normalizeId = v => String(v || '').toLowerCase().replace(/[\s_\-'.:]/g, '').replace(/[^a-z0-9぀-鿿가-힣]/g, '');
+      const pokemonKey = p => p?.uniqueId || p?.id || p?.pokemonId || `${p?.number}_${p?.name}`;
+
+      // 슬롯 → { memberId, pokemon } 매핑 (선택된 1번 포켓몬 기준)
+      const slotMap = {
+        p1a: { memberId: selectedUser1, pokemon: player1Team[0] },
+        p2a: { memberId: selectedUser2, pokemon: player2Team[0] },
+      };
+
+      const usage = {};   // { memberId: { key: { moveId: count } } }
+      const crits = {};   // { memberId: { key: count } }
+      let lastMoveSlot = null;
+
+      for (const line of rawLog) {
+        if (!line) continue;
+        const parts = line.split('|');
+        if (line.startsWith('|move|')) {
+          const slot = (parts[2] || '').split(':')[0].trim().toLowerCase();
+          const moveName = (parts[3] || '').trim();
+          lastMoveSlot = slot;
+          if (!moveName || moveName === 'Struggle') continue;
+          const info = slotMap[slot];
+          if (!info?.memberId || !info?.pokemon) continue;
+          const key = pokemonKey(info.pokemon);
+          const mid = normalizeId(moveName);
+          if (!usage[info.memberId]) usage[info.memberId] = {};
+          if (!usage[info.memberId][key]) usage[info.memberId][key] = {};
+          usage[info.memberId][key][mid] = (usage[info.memberId][key][mid] || 0) + 1;
+        }
+        if (line.startsWith('|-crit|') && lastMoveSlot) {
+          const info = slotMap[lastMoveSlot];
+          if (!info?.memberId || !info?.pokemon) continue;
+          const key = pokemonKey(info.pokemon);
+          if (!crits[info.memberId]) crits[info.memberId] = {};
+          crits[info.memberId][key] = (crits[info.memberId][key] || 0) + 1;
+        }
+      }
+
+      const memberIds = new Set([...Object.keys(usage), ...Object.keys(crits)]);
+      await Promise.all([...memberIds].map(async (memberId) => {
+        try {
+          const snap = await get(ref(database, `members/${memberId}/caughtPokemon`));
+          const caught = snap.val();
+          if (!Array.isArray(caught)) return;
+
+          const updated = caught.map(p => {
+            const key = pokemonKey(p);
+            let next = p;
+            if (usage[memberId]?.[key]) {
+              const merged = { ...(next.moveUsage || {}) };
+              for (const [mid, cnt] of Object.entries(usage[memberId][key])) {
+                merged[mid] = (merged[mid] || 0) + cnt;
+              }
+              next = { ...next, moveUsage: merged };
+            }
+            if (crits[memberId]?.[key]) {
+              next = { ...next, lastBattleCritCount: crits[memberId][key] };
+            } else if (next.lastBattleCritCount !== undefined) {
+              next = { ...next, lastBattleCritCount: 0 };
+            }
+            return next;
+          });
+
+          await set(ref(database, `members/${memberId}/caughtPokemon`), updated);
+        } catch (e) {
+          console.warn('moveUsage 업데이트 실패:', memberId, e);
+        }
+      }));
+    }
   };
 
   // 배틀 중 아이템 소모 처리 (로컬 인벤토리 차감 + Firebase 저장)

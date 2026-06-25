@@ -216,6 +216,7 @@ export function AdvancedBattleSimulator({
     confirmAndSubmit,
     resetBattle,
     previewDamage,
+    getRawLog,
   } = useAdvancedBattle({
     player1Team,
     player2Team,
@@ -313,6 +314,7 @@ export function AdvancedBattleSimulator({
       player1Fainted: battleState.player1.fainted.length,
       player2Fainted: battleState.player2.fainted.length,
       log: battleState.log,
+      rawLog: getRawLog(),
     });
   }, [
     battleState.log,

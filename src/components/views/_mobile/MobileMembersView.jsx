@@ -7,6 +7,34 @@ import { translateMoveName } from '../../../battle/utils/move-translations';
 import movesData from '../../../data/moves.json';
 import CachedImage from '../../common/CachedImage';
 import { useGame } from '../../../contexts/GameContext';
+import badge1Img from '../../../assets/members/badge/badge1.png';
+import badge2Img from '../../../assets/members/badge/badge2.png';
+import badge3Img from '../../../assets/members/badge/badge3.png';
+import badge4Img from '../../../assets/members/badge/badge4.png';
+import badge5Img from '../../../assets/members/badge/badge5.png';
+import badge6Img from '../../../assets/members/badge/badge6.png';
+import badge7Img from '../../../assets/members/badge/badge7.png';
+import badge8Img from '../../../assets/members/badge/badge8.png';
+import ribbonSilhouetteImg from '../../../assets/members/ribbon/ribbon-silhouette.png';
+import ribbonCuteImg from '../../../assets/members/ribbon/ribbon-cute.png';
+import ribbonIntelligenceImg from '../../../assets/members/ribbon/ribbon-intelligence.png';
+import ribbonPowerfulImg from '../../../assets/members/ribbon/ribbon-powerful.png';
+import ribbonCoolImg from '../../../assets/members/ribbon/ribbon-cool.png';
+import ribbonBeautyImg from '../../../assets/members/ribbon/ribbon-beauty.png';
+
+const BADGE_IMGS = [badge1Img, badge2Img, badge3Img, badge4Img, badge5Img, badge6Img, badge7Img, badge8Img];
+const RIBBON_TYPE_IMGS = {
+  cute: ribbonCuteImg,
+  intelligence: ribbonIntelligenceImg,
+  powerful: ribbonPowerfulImg,
+  cool: ribbonCoolImg,
+  beauty: ribbonBeautyImg,
+};
+const RIBBON_POSITIONS = [
+  { left: '18%', top: '8%'  }, { left: '50%', top: '8%'  }, { left: '82%', top: '8%'  },
+  { left: '18%', top: '37%' }, { left: '50%', top: '37%' }, { left: '82%', top: '37%' },
+  { left: '34%', top: '66%' }, { left: '66%', top: '66%' },
+];
 
 const GenderMale = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -435,17 +463,169 @@ function EntryTab({ party, allItems = [] }) {
   );
 }
 
+const BADGE_CLEANLINESS_DEFAULT = 2;
+const BADGE_CLEANLINESS_MIN = 1;
+const BADGE_CLEANLINESS_MAX = 5;
+const BADGE_CLEANLINESS_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const BADGE_DIRT_OPACITY = { 1: 0, 2: 0.08, 3: 0.18, 4: 0.32, 5: 0.52 };
+
+function clampBadgeCleanliness(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return BADGE_CLEANLINESS_DEFAULT;
+  return Math.min(BADGE_CLEANLINESS_MAX, Math.max(BADGE_CLEANLINESS_MIN, Math.round(n)));
+}
+function getCurrentBadgeCleanliness(value, cleanedAt) {
+  const base = clampBadgeCleanliness(value);
+  const t = Number(cleanedAt);
+  if (!Number.isFinite(t) || t <= 0) return base;
+  const weeks = Math.max(0, Math.floor((Date.now() - t) / BADGE_CLEANLINESS_WEEK_MS));
+  return clampBadgeCleanliness(base + weeks);
+}
+function getCleanlinessLevels(member) {
+  const src = Array.isArray(member.badgeCleanlinessLevels) ? member.badgeCleanlinessLevels : [];
+  const cleanedAtSrc = Array.isArray(member.badgeCleanedAtLevels) ? member.badgeCleanedAtLevels : [];
+  return BADGE_IMGS.map((_, i) => getCurrentBadgeCleanliness(src[i] ?? member.badgeCleanliness, cleanedAtSrc[i] ?? member.badgeCleanedAt));
+}
+
+/* ── 업적 탭 ── */
+function AchievementsTab({ member }) {
+  const badgePieces = member.badgePieces || Array(8).fill(false);
+  const ribbonTypes  = member.ribbonTypes  || Array(8).fill(null);
+  const cleanlinessLevels = getCleanlinessLevels(member);
+
+  return (
+    <div style={{ paddingBottom: 24 }}>
+      {/* 뱃지 — 겹쳐서 하나의 원형으로 */}
+      <div style={{ fontSize: 14, color: '#aaa', marginBottom: 16, textAlign: 'center', letterSpacing: '0.08em' }}>BADGE</div>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 48 }}>
+        <div style={{ position: 'relative', width: 270, height: 270 }}>
+          {BADGE_IMGS.map((src, i) => (
+            <img
+              key={i}
+              src={src}
+              alt=""
+              style={{
+                position: 'absolute', inset: 0,
+                width: '100%', height: '100%',
+                objectFit: 'contain',
+                opacity: badgePieces[i] ? 1 : 0.13,
+                filter: badgePieces[i] ? 'none' : 'grayscale(1)',
+                transition: 'opacity 0.3s',
+              }}
+            />
+          ))}
+          {/* 청결도 오물 오버레이 */}
+          {BADGE_IMGS.map((src, i) => badgePieces[i] && (
+            <div
+              key={`dirt-${i}`}
+              style={{
+                position: 'absolute', inset: 0,
+                pointerEvents: 'none',
+                opacity: BADGE_DIRT_OPACITY[cleanlinessLevels[i]] ?? 0,
+                background: 'linear-gradient(145deg, rgba(8,10,14,0.94) 0%, rgba(34,31,28,0.9) 52%, rgba(0,0,0,0.98) 100%)',
+                mixBlendMode: 'multiply',
+                maskImage: `url(${src})`,
+                WebkitMaskImage: `url(${src})`,
+                maskSize: 'contain', WebkitMaskSize: 'contain',
+                maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+                maskPosition: 'center', WebkitMaskPosition: 'center',
+                transition: 'opacity 0.4s',
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* 리본 그리드 */}
+      <div style={{ fontSize: 14, color: '#aaa', marginBottom: 16, textAlign: 'center', letterSpacing: '0.08em' }}>RIBBON</div>
+      <div style={{ position: 'relative', width: 300, height: 320, margin: '0 auto' }}>
+        {RIBBON_POSITIONS.map((pos, i) => (
+          <div key={i} style={{ position: 'absolute', left: pos.left, top: pos.top, transform: 'translate(-50%, -50%)', width: 82, height: 82 }}>
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'rgba(0,0,0,0.08)',
+              maskImage: `url(${ribbonSilhouetteImg})`,
+              WebkitMaskImage: `url(${ribbonSilhouetteImg})`,
+              maskSize: 'contain', WebkitMaskSize: 'contain',
+              maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+              maskPosition: 'center', WebkitMaskPosition: 'center',
+              opacity: ribbonTypes[i] ? 0 : 1,
+              transition: 'opacity 0.3s',
+            }} />
+            <img
+              src={ribbonSilhouetteImg}
+              alt=""
+              style={{
+                position: 'absolute', inset: 0,
+                width: '100%', height: 'auto',
+                objectFit: 'contain',
+                opacity: ribbonTypes[i] ? 0 : 0.35,
+                transition: 'opacity 0.3s',
+                filter: 'brightness(5) grayscale(1)',
+                mixBlendMode: 'multiply',
+              }}
+            />
+            {RIBBON_TYPE_IMGS[ribbonTypes[i]] && (
+              <img
+                src={RIBBON_TYPE_IMGS[ribbonTypes[i]]}
+                alt=""
+                style={{ position: 'absolute', inset: 0, width: '100%', height: 'auto', objectFit: 'contain' }}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── 관계 탭 ── */
+function RelationsTab({ member, allMembers = {} }) {
+  const relations = Array.isArray(member.relations) ? member.relations : [];
+  if (!relations.length) {
+    return <p style={{ color: '#bbb', fontSize: '0.85rem', textAlign: 'center', padding: '40px 0' }}>관계 없음</p>;
+  }
+  const findFace = (name) => {
+    const found = Object.values(allMembers).find(m => m?.name === name || m?.charName === name);
+    return found?.profileImageThumb || found?.profileImage || null;
+  };
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {relations.map((rel, i) => {
+        const face = findFace(rel.charName);
+        return (
+          <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '12px 14px', borderRadius: 12, background: 'rgba(74,154,8,0.07)' }}>
+            <div style={{ width: 44, height: 44, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: 'rgba(90,154,48,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {face
+                ? <img src={face} alt={rel.charName} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
+                : <span style={{ fontSize: 17, fontWeight: 700, color: '#5a9a30' }}>{rel.charName?.charAt(0) || '?'}</span>
+              }
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 700, color: '#3a6a20', fontSize: 15, marginBottom: rel.intro ? 2 : 0 }}>{rel.charName || '(이름 없음)'}</div>
+              {rel.intro && <div style={{ fontSize: 12, fontWeight: 700, color: '#7aaa50', lineHeight: 1.5, marginBottom: rel.memo ? 4 : 0 }}>{rel.intro}</div>}
+              {rel.memo && <div style={{ fontSize: 13, color: '#555', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{rel.memo}</div>}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 /* ── 멤버 상세 ── */
 const TABS = [
   { key: 'main', label: 'MAIN' },
   { key: 'profile', label: 'PROFILE' },
   { key: 'entry', label: 'ENTRY' },
+  { key: 'achievement', label: 'BADGE' },
+  { key: 'relation', label: 'RELATIONS' },
 ];
 
 function MemberDetail({ member, titles, onBack }) {
   const [activeTab, setActiveTab] = useState('main');
   const [leaving, setLeaving] = useState(false);
-  const { allItems = [] } = useGame();
+  const { allItems = [], members: allMembers = {} } = useGame();
   const party = getParty(member);
   const partner = getPartner(member);
   const title = member.title && member.title !== 'none'
@@ -481,6 +661,7 @@ function MemberDetail({ member, titles, onBack }) {
         background: '#fff',
         borderBottom: '1px solid #e8ede4',
         padding: '0 8px',
+        overflowX: 'auto',
       }}>
         <button
           onClick={handleBack}
@@ -517,6 +698,8 @@ function MemberDetail({ member, titles, onBack }) {
         {activeTab === 'main' && <MainTab member={member} title={title} partner={partner} />}
         {activeTab === 'profile' && <ProfileTab member={member} />}
         {activeTab === 'entry' && <EntryTab party={party} allItems={allItems} />}
+        {activeTab === 'achievement' && <AchievementsTab member={member} />}
+        {activeTab === 'relation' && <RelationsTab member={member} allMembers={allMembers} />}
       </div>
     </div>
   );

@@ -375,6 +375,7 @@ export default function useGameState() {
     isAdmin: currentUser?.isAdmin || false,
     trainer: currentUser || {},
     caughtPokemon: currentUser?.caughtPokemon || [],
+    partnerPokemon: currentUser?.partnerPokemon || null,
     items: currentUser?.inventory || [],
     encounterPokemon,
     firstCatchPokemon,

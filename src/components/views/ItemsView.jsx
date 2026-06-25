@@ -13,6 +13,7 @@ function DesktopItemsView() {
     items = [],
     allItems = [],
     caughtPokemon = [],
+    partnerPokemon = null,
     allMoves = [],
     pokemonLearnsets = {},
     sellItem: onSellItem,
@@ -21,6 +22,11 @@ function DesktopItemsView() {
     getPokemonFormCandidates,
     systemSettings = {},
   } = useGame();
+
+  // 파트너 포켓몬을 아이템 대상 목록 맨 앞에 포함
+  const allPokemonForItem = partnerPokemon
+    ? [partnerPokemon, ...caughtPokemon.filter(p => p?.uniqueId !== partnerPokemon.uniqueId)]
+    : caughtPokemon;
 
   const isSuperAdmin = trainer?.isSuperAdmin || false;
   const onTrashItem = null;
@@ -781,11 +787,11 @@ const categories = CATEGORIES.map(cat => {
                           <>
                             <p className="text-gray-700 mb-3">아이템을 사용할 포켓몬을 선택하세요</p>
                             <div className="max-h-96 overflow-y-auto mb-4 border border-gray-200 rounded-lg p-3">
-                              {caughtPokemon.length === 0 ? (
+                              {allPokemonForItem.length === 0 ? (
                                 <div className="text-center py-8 text-gray-400">보유한 포켓몬이 없습니다</div>
                               ) : (
                                 <div className="grid grid-cols-3 gap-2">
-                                  {caughtPokemon.filter(p => p && p !== 'null' && p.uniqueId).map((pokemon) => {
+                                  {allPokemonForItem.filter(p => p && p !== 'null' && p.uniqueId).map((pokemon) => {
                                     const canUseTarget = canUseItemOnPokemonTarget({
                                       item: selectedItem,
                                       itemData: details.itemData,
