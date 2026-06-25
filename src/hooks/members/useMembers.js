@@ -10,6 +10,18 @@ import { fillMissingBaseStats, findPokemonTemplate } from '../../utils/pokemonBa
 import { getAbilityEnglishName } from '../../utils/abilityUtils';
 import { DEFAULT_IVS, withNormalizedIVs } from '../../utils/pokemonIndividualValues';
 
+// Firebase sometimes returns sparse arrays as objects with numeric keys — normalize back to array
+const normalizePokemonArray = (value) => {
+  if (!value) return value;
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'object') {
+    const maxIndex = Math.max(...Object.keys(value).map(Number));
+    const arr = Array.from({ length: maxIndex + 1 }, (_, i) => value[i] ?? null);
+    return arr;
+  }
+  return value;
+};
+
 export const useMembers = (allPokemonData) => {
   const [members, setMembers] = useState({});
   const [isLoading, setIsLoading] = useState(true);
@@ -29,7 +41,8 @@ export const useMembers = (allPokemonData) => {
           Object.keys(loadedMembers).forEach(userId => {
             const member = loadedMembers[userId];
 
-            const updatedCaughtPokemon = member.caughtPokemon?.map(pokemon => {
+            const normalizedCaughtPokemon = normalizePokemonArray(member.caughtPokemon);
+            const updatedCaughtPokemon = normalizedCaughtPokemon?.map(pokemon => {
               if (!pokemon) return pokemon;
 
               const template = findPokemonTemplate(pokemon, allPokemonData);
@@ -43,7 +56,7 @@ export const useMembers = (allPokemonData) => {
               }
 
               return withNormalizedIVs(pokemon, DEFAULT_IVS);
-            }) || member.caughtPokemon;
+            }) || normalizedCaughtPokemon;
 
             updated[userId] = {
               ...member,
@@ -88,7 +101,12 @@ export const useMembers = (allPokemonData) => {
           setMembers(prev => {
             const updated = {};
             Object.keys(data).forEach(userId => {
-              updated[userId] = { ...data[userId], id: userId };
+              const member = data[userId];
+              updated[userId] = {
+                ...member,
+                id: userId,
+                caughtPokemon: normalizePokemonArray(member.caughtPokemon),
+              };
             });
             return JSON.stringify(prev) === JSON.stringify(updated) ? prev : updated;
           });
