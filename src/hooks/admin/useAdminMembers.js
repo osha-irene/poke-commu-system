@@ -1025,7 +1025,7 @@ export const useAdminMembers = (
       return newValue !== undefined ? newValue : oldValue;
     };
 
-    const updatedPokemon = member.caughtPokemon.map(p => {
+    const updatedPokemon = (member.caughtPokemon || []).map(p => {
       if (p && p.uniqueId === pokemonUniqueId) {
         const pokemonTemplate = findPokemonTemplateForOwned(p);
 
