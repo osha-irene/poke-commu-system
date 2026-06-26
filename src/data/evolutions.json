@@ -3741,6 +3741,17 @@
       }
     },
     {
+      "from": 744,
+      "to": 10126,
+      "fromName": "rockruff",
+      "toName": "lycanroc-midnight",
+      "condition": {
+        "type": "level",
+        "level": 25,
+        "timeOfDay": "night"
+      }
+    },
+    {
       "from": 747,
       "to": 748,
       "fromName": "mareanie",

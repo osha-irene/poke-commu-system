@@ -531,9 +531,9 @@
 
 /* 이름 — clip-path 상단 가시영역(x>110px) 안에 배치 */
 .mbr-card-name {
-  position: absolute; top: 16px; left: 118px; right: 8px; z-index: 2;
+  position: absolute; top: 12px; left: 88px; right: 8px; z-index: 2;
   text-align: left;
-  color: #fff; font-size: clamp(1.1rem, 2vw, 1.6rem); font-weight: 900;
+  color: #fff; font-size: clamp(1.6rem, 2.6vw, 2.2rem); font-weight: 900;
   text-shadow: 0 2px 8px rgba(0,0,0,0.6);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   opacity: 0; transform: translateX(-6px);
@@ -544,7 +544,7 @@
 /* 파티 아이콘 — 우측 정렬, 비스듬 */
 .mbr-card-partner-badge {
   position: absolute;
-  bottom: 14px; right: 110px;
+  bottom: 14px; right: 90px;
   z-index: 3;
   width: 64px; height: 64px;
   border-radius: 50%;

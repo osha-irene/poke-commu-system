@@ -71,7 +71,7 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
       }
 
       if (condition.timeOfDay) {
-        const hour = new Date().getHours();
+        const hour = (new Date().getUTCHours() + 9) % 24;
         const currentTime = hour >= 6 && hour < 18 ? 'day' : 'night';
         console.log('⏰ 시간 조건:', currentTime, '필요:', condition.timeOfDay);
         if (currentTime !== condition.timeOfDay) return false;
@@ -98,7 +98,7 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
       if ((pokemon.friendship || 0) < condition.friendship) return false;
 
       if (condition.timeOfDay) {
-        const hour = new Date().getHours();
+        const hour = (new Date().getUTCHours() + 9) % 24;
         const currentTime = hour >= 6 && hour < 18 ? 'day' : 'night';
         if (currentTime !== condition.timeOfDay) return false;
       }
