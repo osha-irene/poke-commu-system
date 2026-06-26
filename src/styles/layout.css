@@ -174,7 +174,9 @@ img[style*="pixelated"],
   overflow-x: hidden;
 }
 .main-shell:has(.mbr-page) {
-  overflow: hidden;
+  overflow: visible;
+  height: 100vh;
+  max-height: 100vh;
 }
 .main-shell::before {
   content: '';

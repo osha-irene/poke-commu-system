@@ -1,5 +1,19 @@
 @import url('https://cdn.jsdelivr.net/gh/sun-typeface/SUITE@2/fonts/static/woff2/SUITE.css');
 
+@font-face {
+    font-family: 'ChangwonDangamRounded';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-1@1.0/ChangwonDangamRound-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Paperlogy';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-6SemiBold.woff2') format('woff2');
+    font-weight: 600;
+    font-display: swap;
+}
+
 
 
 @font-face {
@@ -302,12 +316,18 @@ body {
   margin: 0;
   min-width: 100%;
   overflow-x: hidden;
-  overflow-y: visible;
+  overflow-y: auto;
   background-color: #3f4a2a;
   background-image: url('../assets/forest-bg (2).png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
+}
+body:has(.npc-page) {
+  overflow: hidden;
+}
+html:has(.npc-page) {
+  overflow: hidden;
 }
 
 #root {

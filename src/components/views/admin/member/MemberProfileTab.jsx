@@ -119,7 +119,6 @@ function MemberProfileTab({ member, titles = [], onGrantTitle, onRevokeTitle, on
   const [titlePopupOpen, setTitlePopupOpen] = useState(false);
 
   const [bio, setBio] = useState(member.bio || '');
-  const [catchphrase, setCatchphrase] = useState(member.catchphrase || '');
   const [keywords, setKeywords] = useState(() => {
     const k = member.keywords || [];
     return [k[0] || '', k[1] || '', k[2] || ''];
@@ -128,6 +127,12 @@ function MemberProfileTab({ member, titles = [], onGrantTitle, onRevokeTitle, on
   const [height, setHeight] = useState(member.height || '');
   const [weight, setWeight] = useState(member.weight || '');
   const [hometown, setHometown] = useState(member.hometown || '');
+  // NPC 전용 필드
+  const [npcQuote, setNpcQuote] = useState(member.npcQuote || '');
+  const [npcAge, setNpcAge] = useState(member.npcAge || '');
+  const [npcOccupation, setNpcOccupation] = useState(member.npcOccupation || '');
+  const [npcBio, setNpcBio] = useState(member.npcBio || '');
+  const [catchphrase, setCatchphrase] = useState(member.catchphrase || '');
   const [charImageLeft, setCharImageLeft] = useState(member.charImageLeft ?? '');
   const [charImageTop, setCharImageTop] = useState(member.charImageTop ?? '');
   const [charImageWidth, setCharImageWidth] = useState(member.charImageWidth ?? '');
@@ -154,7 +159,13 @@ function MemberProfileTab({ member, titles = [], onGrantTitle, onRevokeTitle, on
     setSaving(true);
     try {
       const db = getDatabase();
-      const updates = {
+      const updates = member.isNPC ? {
+        catchphrase: catchphrase.trim() || null,
+        npcQuote: npcQuote.trim() || null,
+        npcAge: npcAge.trim() || null,
+        npcOccupation: npcOccupation.trim() || null,
+        npcBio: npcBio.trim() || null,
+      } : {
         bio: bio.trim(),
         catchphrase: catchphrase.trim(),
         keywords: keywords.map(k => k.trim()),
@@ -267,72 +278,135 @@ function MemberProfileTab({ member, titles = [], onGrantTitle, onRevokeTitle, on
         {/* 오른쪽: 프로필 텍스트 */}
         <div className="space-y-3">
           <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-            <h3 className="font-bold text-base">✏️ 프로필 텍스트</h3>
+            <h3 className="font-bold text-base">✏️ {member.isNPC ? 'NPC 프로필' : '프로필 텍스트'}</h3>
 
-            <div>
-              <label className="text-xs font-semibold text-gray-600 block mb-2">📋 기본 정보</label>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { label: '나이', value: age, set: setAge, placeholder: '예: 22살' },
-                  { label: '키', value: height, set: setHeight, placeholder: '예: 175cm' },
-                  { label: '몸무게', value: weight, set: setWeight, placeholder: '예: 65kg' },
-                  { label: '출신지역', value: hometown, set: setHometown, placeholder: '예: 음현시티' },
-                ].map(({ label, value, set, placeholder }) => (
-                  <div key={label}>
-                    <label className="text-xs text-gray-500 block mb-1">{label}</label>
+            {member.isNPC ? (
+              /* ── NPC 전용 필드 ── */
+              <>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 block mb-1">캐치프레이즈 <span className="text-gray-400 font-normal">(오버레이 인트로 문구)</span></label>
+                  <input
+                    type="text"
+                    value={catchphrase}
+                    onChange={e => canEdit && setCatchphrase(e.target.value)}
+                    placeholder="등장 시 표시되는 문구..."
+                    disabled={!canEdit}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 block mb-1">한마디</label>
+                  <input
+                    type="text"
+                    value={npcQuote}
+                    onChange={e => canEdit && setNpcQuote(e.target.value)}
+                    placeholder="NPC의 한마디..."
+                    disabled={!canEdit}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <label className="text-xs font-semibold text-gray-600 block mb-1">나이</label>
                     <input
                       type="text"
-                      value={value}
-                      onChange={e => canEdit && set(e.target.value)}
-                      placeholder={placeholder}
+                      value={npcAge}
+                      onChange={e => canEdit && setNpcAge(e.target.value)}
+                      placeholder="예: 28"
                       disabled={!canEdit}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400"
                     />
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-gray-600 block mb-1">한마디</label>
-              <input
-                type="text"
-                value={bio}
-                onChange={e => canEdit && setBio(e.target.value)}
-                placeholder="한 줄 소개..."
-                disabled={!canEdit}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-gray-600 block mb-1">캐치프레이즈</label>
-              <textarea
-                rows={3}
-                value={catchphrase}
-                onChange={e => canEdit && setCatchphrase(e.target.value)}
-                placeholder="캐치프레이즈..."
-                disabled={!canEdit}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:outline-none resize-none disabled:bg-gray-100 disabled:text-gray-400"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-gray-600 block mb-2">키워드 (최대 3개)</label>
-              <div className="flex flex-col gap-2">
-                {keywords.map((kw, i) => (
+                  <div className="flex-[2]">
+                    <label className="text-xs font-semibold text-gray-600 block mb-1">직업</label>
+                    <input
+                      type="text"
+                      value={npcOccupation}
+                      onChange={e => canEdit && setNpcOccupation(e.target.value)}
+                      placeholder="예: 포켓몬 박사"
+                      disabled={!canEdit}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 block mb-1">소개</label>
+                  <textarea
+                    rows={5}
+                    value={npcBio}
+                    onChange={e => canEdit && setNpcBio(e.target.value)}
+                    placeholder="NPC 소개 문구..."
+                    disabled={!canEdit}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:outline-none resize-none disabled:bg-gray-100 disabled:text-gray-400"
+                  />
+                </div>
+              </>
+            ) : (
+              /* ── 일반 멤버 필드 ── */
+              <>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 block mb-2">📋 기본 정보</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { label: '나이', value: age, set: setAge, placeholder: '예: 22살' },
+                      { label: '키', value: height, set: setHeight, placeholder: '예: 175cm' },
+                      { label: '몸무게', value: weight, set: setWeight, placeholder: '예: 65kg' },
+                      { label: '출신지역', value: hometown, set: setHometown, placeholder: '예: 음현시티' },
+                    ].map(({ label, value, set, placeholder }) => (
+                      <div key={label}>
+                        <label className="text-xs text-gray-500 block mb-1">{label}</label>
+                        <input
+                          type="text"
+                          value={value}
+                          onChange={e => canEdit && set(e.target.value)}
+                          placeholder={placeholder}
+                          disabled={!canEdit}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 block mb-1">한마디</label>
                   <input
-                    key={i}
                     type="text"
-                    value={kw}
-                    onChange={e => canEdit && setKeywords(prev => prev.map((v, j) => j === i ? e.target.value : v))}
-                    placeholder={`키워드 ${i + 1}`}
+                    value={bio}
+                    onChange={e => canEdit && setBio(e.target.value)}
+                    placeholder="한 줄 소개..."
                     disabled={!canEdit}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400"
                   />
-                ))}
-              </div>
-            </div>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 block mb-1">캐치프레이즈</label>
+                  <textarea
+                    rows={3}
+                    value={catchphrase}
+                    onChange={e => canEdit && setCatchphrase(e.target.value)}
+                    placeholder="캐치프레이즈..."
+                    disabled={!canEdit}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:outline-none resize-none disabled:bg-gray-100 disabled:text-gray-400"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 block mb-2">키워드 (최대 3개)</label>
+                  <div className="flex flex-col gap-2">
+                    {keywords.map((kw, i) => (
+                      <input
+                        key={i}
+                        type="text"
+                        value={kw}
+                        onChange={e => canEdit && setKeywords(prev => prev.map((v, j) => j === i ? e.target.value : v))}
+                        placeholder={`키워드 ${i + 1}`}
+                        disabled={!canEdit}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400"
+                      />
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
 
             <div>
               <label className="text-xs font-semibold text-gray-600 block mb-2">🎭 캐릭터 이미지 위치</label>

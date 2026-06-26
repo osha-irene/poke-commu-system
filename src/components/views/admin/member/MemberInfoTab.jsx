@@ -68,7 +68,8 @@ function MemberInfoTab({
               </div>
             )}
             {trainer.isAdmin && member.isNPC && (
-              <div className="pt-3 space-y-2 border-t border-gray-200">
+              <div className="pt-3 space-y-3 border-t border-gray-200">
+                {/* 순서/배지 */}
                 <label className="block">
                   <span className="text-xs font-semibold text-gray-600 mb-1 block">NPC 나열 순서 / 배지 번호</span>
                   <div className="flex items-center gap-2">
@@ -84,9 +85,7 @@ function MemberInfoTab({
                       type="button"
                       onClick={() => onUpdateNpcSettings?.(member.id, { npcOrder: npcOrderInput })}
                       className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors text-sm font-semibold"
-                    >
-                      저장
-                    </button>
+                    >저장</button>
                   </div>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -98,6 +97,7 @@ function MemberInfoTab({
                   />
                   <span className="text-gray-700 font-medium">비공개 배지 표시</span>
                 </label>
+
               </div>
             )}
           </div>

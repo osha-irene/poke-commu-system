@@ -387,7 +387,7 @@
   padding: clamp(24px,4vh,48px) 0 0 0;
   justify-content: flex-start;
   align-items: center;
-  overflow: hidden;
+  overflow: visible;
 }
 .mbr-roster { background: transparent; border: none; padding: 0; width: 100%; display: flex; justify-content: center; }
 
@@ -563,22 +563,34 @@
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    NPC 그리드
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.npc-page { justify-content: center !important; }
+.npc-page { justify-content: center !important; overflow: visible !important; padding-bottom: 0 !important; height: 100% !important; }
 .npc-grid {
   display: flex; flex-direction: column;
   gap: 0;
-  width: 100%;
+  width: 120%;
+  margin-left: -10%;
+  transform: scale(0.9) translateY(-36px) translateX(100px);
+  transform-origin: center center;
+  overflow: visible;
 }
+.npc-row + .npc-row { margin-top: -28px; }
 .npc-row {
-  clip-path: polygon(clamp(76px,8vw,118px) 0, 100% 0, calc(100% - clamp(76px,8vw,118px)) 100%, 0 100%) !important;
+  clip-path: none !important;
   padding: 0 clamp(76px,8vw,118px) !important;
   overflow: visible !important;
   justify-content: center !important;
 }
 .npc-row .mbr-card {
-  height: 280px !important;
+  height: 370px !important;
+  flex: 0 0 195px !important;
+  clip-path: polygon(80px 0, 100% 0, calc(100% - 80px) 100%, 0 100%) !important;
+  margin-left: -81px !important;
+  transform: scale(0.9);
+  transition: flex-basis 0.72s cubic-bezier(0.22,1,0.36,1), filter 0.42s, transform 0.42s;
 }
+.npc-row .mbr-card:first-child { margin-left: 0 !important; }
 .npc-row .mbr-card:hover {
+  flex-basis: 390px !important;
   filter: brightness(1.05);
 }
 .npc-row .mbr-card--private {
@@ -592,7 +604,7 @@
   top: 0;
   left: 50%;
   width: 400px;
-  height: 280px;
+  height: 370px;
   max-width: none;
   object-fit: contain !important;
   object-position: center center !important;
@@ -617,7 +629,7 @@
       #fff calc(50% + 0.45px),
       rgba(255,255,255,0.36) calc(50% + 1.2px),
       transparent calc(50% + 2px)
-    ) left top / 110px 100% no-repeat,
+    ) left top / 80px 100% no-repeat,
     linear-gradient(
       to bottom right,
       transparent calc(50% - 2px),
@@ -626,7 +638,7 @@
       #fff calc(50% + 0.45px),
       rgba(255,255,255,0.36) calc(50% + 1.2px),
       transparent calc(50% + 2px)
-    ) right top / 110px 100% no-repeat;
+    ) right top / 80px 100% no-repeat;
 }
 .npc-row .mbr-card::after {
   content: '';
@@ -679,7 +691,11 @@ body.mbr-overlay-open .mbr-page {
 }
 .mbr-intro--visible { opacity: 1; }
 .mbr-intro-quote {
-  overflow: hidden;
+  overflow: visible;
+  background: none;
+}
+.mbr-intro-quote {
+  filter: drop-shadow(0 4px 32px rgba(0,0,0,0.5));
 }
 .mbr-intro-text {
   display: block;
@@ -687,7 +703,6 @@ body.mbr-overlay-open .mbr-page {
   font-size: clamp(2rem, 5vw, 4.5rem);
   font-weight: 900; color: #fff;
   letter-spacing: -0.01em; line-height: 1.2;
-  text-shadow: 0 4px 32px rgba(0,0,0,0.5);
   clip-path: inset(0 100% 0 0);
   animation: mbrTextReveal 0.9s cubic-bezier(0.22,1,0.36,1) 0.05s both;
 }
@@ -740,16 +755,14 @@ body.mbr-overlay-open .mbr-page {
   filter: blur(6px) saturate(1.4) brightness(0.75);
   pointer-events: none;
   z-index: 1;
-  animation: mbrBgFadeIn 1.0s ease 0.1s both;
   transform: translateX(18%);
-  transition: transform 0.72s cubic-bezier(0.22,1,0.36,1);
+  transition: opacity 0.7s ease, transform 0.72s cubic-bezier(0.22,1,0.36,1);
+}
+.mbr-main-char-bg--loaded {
+  opacity: 0.55;
 }
 .mbr-main--panel-open .mbr-main-char-bg {
   transform: translateX(0);
-}
-@keyframes mbrBgFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 0.55; }
 }
 .mbr-main-char {
   position: relative; z-index: 1;
@@ -780,7 +793,6 @@ body.mbr-overlay-open .mbr-page {
   display: inline-flex; flex-direction: column; gap: 8px; align-items: flex-start;
   width: 55%;
   padding: 18px 0 18px 0;
-  background: linear-gradient(90deg, rgba(120,200,80,0.45) 0%, rgba(120,200,80,0.22) 50%, transparent 100%);
   clip-path: inset(0 100% 0 0);
   animation: mbrIdentityReveal 0.8s cubic-bezier(0.22,1,0.36,1) 0.3s both;
 }
@@ -800,7 +812,7 @@ body.mbr-overlay-open .mbr-page {
   position: relative; z-index: 10;
   background: rgba(255,255,255,0.95);
   border-radius: 24px 0 0 24px;
-  overflow: visible;
+  overflow: hidden;
   scrollbar-width: none;
   transform: translateX(100%);
   transition: transform 0.72s cubic-bezier(0.22,1,0.36,1);
@@ -809,10 +821,9 @@ body.mbr-overlay-open .mbr-page {
   transform: translateX(0);
 }
 .mbr-main-data-inner {
-  overflow-y: auto; overflow-x: hidden;
+  overflow: hidden;
   max-height: 100vh;
-  scrollbar-width: none;
-  padding: 52px clamp(16px,2vw,24px) clamp(32px,4vh,56px);
+  padding: 52px calc(clamp(16px,2vw,24px) + 10px) 0;
   display: flex; flex-direction: column; gap: 28px;
 }
 .mbr-panel-grad {
@@ -828,17 +839,6 @@ body.mbr-overlay-open .mbr-page {
   transform: translateX(-100%);
   display: flex; flex-direction: column; gap: 4px;
   z-index: 20;
-}
-/* 탭: 디테일뷰 진입 시 화면 바깥 우측→우측 끝 슬라이드 */
-.mbr-tabs .mbr-tab:nth-child(1) {
-  animation: mbrTabIn 0.55s cubic-bezier(0.22,1,0.36,1) 0.3s both;
-}
-.mbr-tabs .mbr-tab:nth-child(2) {
-  animation: mbrTabIn 0.55s cubic-bezier(0.22,1,0.36,1) 0.42s both;
-}
-@keyframes mbrTabIn {
-  from { transform: translateX(120px); }
-  to   { transform: translateX(0); }
 }
 .mbr-tab {
   width: 60px; height: 60px;
