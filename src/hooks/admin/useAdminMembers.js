@@ -1437,10 +1437,8 @@ export const useAdminMembers = (
     if (!member) return;
     const updatedMember = { ...member, isNPC: !member.isNPC };
     try {
-      const { id, ...dataToSave } = updatedMember;
-      if (Array.isArray(dataToSave.caughtPokemon)) {
-        dataToSave.caughtPokemon = dataToSave.caughtPokemon.map(p => p === undefined ? null : p);
-      }
+      const { id, ...raw } = updatedMember;
+      const dataToSave = JSON.parse(JSON.stringify(raw, (_, v) => v === undefined ? null : v));
       const memberRef = ref(database, `members/${memberId}`);
       await set(memberRef, dataToSave);
       setMembers(prev => ({ ...prev, [memberId]: updatedMember }));
