@@ -2342,6 +2342,32 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
     };
   }, [showDetail]);
 
+  // URL의 member 파라미터로 자동 오픈
+  useEffect(() => {
+    if (memberList.length === 0) return;
+    const params = new URLSearchParams(window.location.search);
+    const memberId = params.get('member');
+    if (!memberId) return;
+    const target = memberList.find(m => String(m.id) === String(memberId));
+    if (target) openMember(target);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [memberList.length]);
+
+  // 브라우저 뒤로가기로 멤버 프로필 닫기
+  useEffect(() => {
+    const onPop = () => {
+      const params = new URLSearchParams(window.location.search);
+      if (!params.get('member') && showDetail) {
+        setIsClosing(true);
+        setShowDetail(false);
+        setActiveTab('main');
+        setTimeout(() => { setSelected(null); setTransitioning(false); setIsClosing(false); }, 450);
+      }
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, [showDetail]);
+
   const openMember = (member) => {
     const full = getFullImg(member);
     if (full) preloadDecodedImage(full);
@@ -2352,6 +2378,11 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
       requestAnimationFrame(() => setShowDetail(true));
     });
     setTimeout(() => setTransitioning(false), 400);
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', 'members');
+    url.searchParams.set('member', member.id);
+    window.history.pushState({ tab: 'members', member: member.id }, '', url.toString());
   };
 
   const closeMember = () => {
@@ -2359,6 +2390,10 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
     setShowDetail(false);
     setActiveTab('main');
     setTimeout(() => { setSelected(null); setTransitioning(false); setIsClosing(false); }, 450);
+
+    const url = new URL(window.location.href);
+    url.searchParams.delete('member');
+    window.history.pushState({ tab: 'members' }, '', url.toString());
   };
 
   if (isLoading) return (

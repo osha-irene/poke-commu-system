@@ -194,6 +194,7 @@ export const useGameData = (allPokemonData) => {
           escapeMode: savedEscapeMode,
           campingSettings: savedSystemSettings.campingSettings || {},
           ...(savedSystemSettings.conditionMax != null && { conditionMax: Number(savedSystemSettings.conditionMax) }),
+          ...(savedSystemSettings.pokedexActiveTowns != null && { pokedexActiveTowns: savedSystemSettings.pokedexActiveTowns }),
         };
         await set(systemSettingsRef, normalizedSystemSettings);
         setSystemSettings(normalizedSystemSettings);

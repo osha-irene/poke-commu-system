@@ -630,6 +630,7 @@ function HomeDashboard({
   members = {},
   titles = [],
   onUpdateTitle,
+  onProfileClick,
 }) {
   const [loginUserId, setLoginUserId] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -719,7 +720,13 @@ function HomeDashboard({
           {index === 1 && !showLogin && onLogout && (
             <div className="home-session-panel">
               <div className="home-session-panel__top">
-                <div className="home-session-panel__member-img">
+                <div
+                  className="home-session-panel__member-img"
+                  onClick={onProfileClick}
+                  style={onProfileClick ? { cursor: 'pointer' } : undefined}
+                  role={onProfileClick ? 'button' : undefined}
+                  aria-label={onProfileClick ? '내 프로필 보기' : undefined}
+                >
                   <div className="home-session-panel__member-clip">
                     {(trainer?.profileImageThumb || trainer?.profileImage) && (
                       <CachedImage
@@ -2040,6 +2047,13 @@ return (
           members={members}
           titles={titles || []}
           onUpdateTitle={updateSelfTitle}
+          onProfileClick={trainer?.id ? () => {
+            const url = new URL(window.location.href);
+            url.searchParams.set('tab', 'members');
+            url.searchParams.set('member', trainer.id);
+            window.history.pushState({ tab: 'members', member: trainer.id }, '', url.toString());
+            setCurrentTab('members');
+          } : undefined}
         />
       )}
       {currentTab === 'notice' && (

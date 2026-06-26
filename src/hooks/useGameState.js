@@ -41,18 +41,29 @@ import { useAdminTitles } from './admin/useAdminTitles';
 
 export default function useGameState() {
   const [currentTab, setCurrentTab] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabFromUrl = params.get('tab');
+    if (tabFromUrl) return tabFromUrl;
     const s = window.history.state;
     return (s && s.tab) ? s.tab : 'home';
   });
 
   const navigateTab = useCallback((tab) => {
-    window.history.pushState({ tab }, '', window.location.href);
+    const url = new URL(window.location.href);
+    if (tab === 'home') {
+      url.searchParams.delete('tab');
+    } else {
+      url.searchParams.set('tab', tab);
+    }
+    url.searchParams.delete('member');
+    window.history.pushState({ tab }, '', url.toString());
     setCurrentTab(tab);
   }, []);
 
   useEffect(() => {
     const onPop = (e) => {
-      const tab = e.state?.tab || 'home';
+      const params = new URLSearchParams(window.location.search);
+      const tab = e.state?.tab || params.get('tab') || 'home';
       setCurrentTab(tab);
     };
     window.addEventListener('popstate', onPop);
