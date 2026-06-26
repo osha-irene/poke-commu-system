@@ -125,7 +125,8 @@ function BonusItemChancePanel({ bonusItems, onUpdate, onOpenPicker, label, hint,
       ) : (
         <div className="flex flex-wrap gap-2">
           {bonusItems.map(b => (
-            <div key={b.itemId} className="flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 pl-3 pr-1 py-1">
+            <div key={b.itemId} className="flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 pl-2 pr-1 py-1">
+              {b.imageUrl && <img src={b.imageUrl} alt={b.name} className="w-6 h-6 object-contain shrink-0" />}
               <span className="text-sm font-medium text-amber-900">{b.name}</span>
               <input
                 type="number" min={0} max={100} value={b.chance ?? 10}
@@ -186,7 +187,8 @@ function FailRewardPanel({ failRewards, onUpdate, onOpenPicker, friendshipMin, f
       ) : (
         <div className="flex flex-wrap gap-2">
           {failRewards.map(r => (
-            <div key={r.itemId} className="flex items-center gap-1 rounded-full border border-red-200 bg-white pl-3 pr-1 py-1">
+            <div key={r.itemId} className="flex items-center gap-1 rounded-full border border-red-200 bg-white pl-2 pr-1 py-1">
+              {r.spriteUrl && <img src={r.spriteUrl} alt={r.name} className="w-6 h-6 object-contain shrink-0" />}
               <span className="text-sm font-medium text-red-900">{r.name}</span>
               <span className="text-sm text-red-400 mx-1">×</span>
               <input
@@ -227,7 +229,8 @@ function StageItemPoolPanel({ bonusItems, onUpdate, onOpenPicker, minPick, maxPi
         ? <p className="text-xs text-gray-400">없음 (단계 아이템 보상 없음)</p>
         : <div className="flex flex-wrap gap-1.5">
             {bonusItems.map(b => (
-              <div key={b.itemId} className="flex items-center gap-1 rounded-full border border-sky-200 bg-white px-2.5 py-1">
+              <div key={b.itemId} className="flex items-center gap-1 rounded-full border border-sky-200 bg-white pl-1.5 pr-2 py-1">
+                {b.imageUrl && <img src={b.imageUrl} alt={b.name} className="w-5 h-5 object-contain shrink-0" />}
                 <span className="text-xs font-medium text-sky-900">{b.name}</span>
                 <button onClick={() => removeItem(b.itemId)} className="text-sky-400 hover:text-red-500 ml-1"><X size={11} /></button>
               </div>
@@ -548,7 +551,7 @@ export default function CampingAdminPanel({
         show={itemModalTarget !== null}
         onClose={() => setItemModalTarget(null)}
         onSelect={item => {
-          const newEntry = { itemId: item.id, name: item.name, weight: 10 };
+          const newEntry = { itemId: item.id, name: item.name, weight: 10, imageUrl: item.spriteUrl || item.imageUrl || '' };
           if (itemModalTarget === 'failReward') {
             const failEntry = { itemId: item.id, name: item.name, count: 1, spriteUrl: item.spriteUrl || item.imageUrl || '' };
             if (!draft.failRewards.some(r => String(r.itemId) === String(item.id)))

@@ -253,7 +253,7 @@ export default function MobileMapView({
 
   /* ── 마을/구역 목록 ── */
   return (
-    <div style={{ paddingBottom: 88, maxWidth: 520, margin: '0 auto' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: window.innerWidth <= 768 ? 'center' : 'flex-start', paddingBottom: 88, maxWidth: 400, margin: '0 auto', width: '88%' }}>
     <div style={{ padding: '14px 14px 0' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {towns.map(town => {

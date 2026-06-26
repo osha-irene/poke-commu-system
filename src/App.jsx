@@ -1834,10 +1834,10 @@ if (!currentUser || !currentUser.id) {
             setCurrentTab={handlePublicNavigation}
             isAdmin={false}
           />
-          {hasContentSurface && <span className="content-stage__surface" aria-hidden="true" />}
+          {hasContentSurface && <span className={`content-stage__surface${currentTab === 'qna' ? ' content-stage__surface--light' : ''}`} aria-hidden="true" />}
           <main className={`content-stage ${currentTab === 'home' ? 'content-stage--home' : 'content-stage--view'} ${isFeaturePage ? 'content-stage--feature' : ''} ${isTopMenuPage ? 'content-stage--world' : ''}`}>
             {/* ✅ 4. 비로그인 유저라도 허용된 탭에 따라 화면을 다르게 보여주도록 스위칭 처리 */}
-            {currentTab === 'home' && <HomeDashboard showLogin onLogin={handleLogin} members={members} />}
+            {currentTab === 'home' && <div key="home" className="tab-view-enter-home"><HomeDashboard showLogin onLogin={handleLogin} members={members} /></div>}
             {currentTab === 'notice' && <CommunityPlaceholder type="notice" trainer={trainer} />}
             {currentTab === 'world' && <CommunityPlaceholder type="world" trainer={trainer} />}
             {currentTab === 'system' && <CommunityPlaceholder type="system" trainer={trainer} />}
@@ -2041,10 +2041,11 @@ return (
             onToggleSound={() => setSoundEnabled(!soundEnabled)}
           />
 
-      {hasContentSurface && <span className="content-stage__surface" aria-hidden="true" />}
+      {hasContentSurface && <span className={`content-stage__surface${currentTab === 'qna' ? ' content-stage__surface--light' : ''}`} aria-hidden="true" />}
 
 		<main className={`content-stage ${currentTab === 'home' ? 'content-stage--home' : 'content-stage--view'} ${isFeaturePage ? 'content-stage--feature' : ''} ${isTopMenuPage ? 'content-stage--world' : ''}`}>
       {currentTab === 'home' && (
+        <div key="home" className="tab-view-enter-home">
         <HomeDashboard
           trainer={trainer}
           onLogout={handleLogout}
@@ -2065,6 +2066,7 @@ return (
             setCurrentTab('members');
           } : undefined}
         />
+        </div>
       )}
       {currentTab === 'notice' && (
         <CommunityPlaceholder

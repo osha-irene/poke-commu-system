@@ -412,9 +412,9 @@ function MemberProfileTab({ member, titles = [], onGrantTitle, onRevokeTitle, on
               <label className="text-xs font-semibold text-gray-600 block mb-2">🎭 캐릭터 이미지 위치</label>
               <div className="flex flex-col gap-2">
                 {[
-                  { label: '좌우 위치 (left)', value: charImageLeft, set: setCharImageLeft, placeholder: '기본값: 9vw' },
-                  { label: '상하 위치 (top)', value: charImageTop, set: setCharImageTop, placeholder: '기본값: 0' },
-                  { label: '크기 (width)', value: charImageWidth, set: setCharImageWidth, placeholder: '기본값: 70vh' },
+                  { label: '좌우 위치 (left)', value: charImageLeft, set: setCharImageLeft, placeholder: member.isNPC ? 'auto' : '9vw' },
+                  { label: '상하 위치 (top)', value: charImageTop, set: setCharImageTop, placeholder: '0' },
+                  { label: '크기 (width)', value: charImageWidth, set: setCharImageWidth, placeholder: member.isNPC ? 'auto' : '70vh' },
                 ].map(({ label, value, set, placeholder }) => (
                   <div key={label} className="flex items-center gap-2">
                     <span className="text-xs text-gray-500 w-28 shrink-0">{label}</span>

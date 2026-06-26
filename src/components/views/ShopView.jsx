@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShoppingCart, Star, Coins, Calendar, Package, CircleDot, X } from 'lucide-react';
+import { ShoppingCart, Coins, CircleDot, X } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCalendarDays, faStore, faGift, faStar, faBoxOpen } from '@fortawesome/free-solid-svg-icons';
 import { useGame } from '../../contexts/GameContext';
 import { getItemPocket, POCKET_LABELS } from '../../utils/itemUtils';
 import RandomBoxShop from './RandomBoxShop';
@@ -243,21 +245,21 @@ export default function ShopView() {
         labelBg: 'bg-purple-600',
         border: 'border-purple-300',
         bg: 'bg-purple-50',
-        icon: Star
+        icon: faStar
       },
       daily: {
         label: `${todayNameKo} 한정`,
         labelBg: 'bg-blue-600',
         border: 'border-blue-300',
         bg: 'bg-blue-50',
-        icon: Calendar
+        icon: faCalendarDays
       },
       permanent: {
         label: '상시 판매',
         labelBg: 'bg-green-600',
         border: 'border-green-300',
         bg: 'bg-green-50',
-        icon: Package
+        icon: faBoxOpen
       }
     };
     
@@ -293,7 +295,7 @@ export default function ShopView() {
         )}
         
         <div className={`absolute top-0 left-0 ${style.labelBg} text-white text-xs px-3 py-1 font-bold flex items-center gap-1 rounded-br-lg z-10`}>
-          <Icon size={12} />
+          <FontAwesomeIcon icon={Icon} style={{ fontSize: 12 }} />
           <span>{style.label}</span>
         </div>
         
@@ -403,7 +405,8 @@ export default function ShopView() {
         {todayDailyItems.length > 0 && (
           <div style={{ margin: '0 12px 14px' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 8, background: P.daily, borderRadius: 6, padding: '4px 10px' }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>📅 {todayNameKo} 한정판매</span>
+              <FontAwesomeIcon icon={faCalendarDays} style={{ color: '#fff', fontSize: 11 }} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>{todayNameKo} 한정판매</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {todayDailyItems.map(shopItem => {
@@ -507,7 +510,7 @@ export default function ShopView() {
                           onClick={() => { setSelectedItem({ ...box, type: 'randombox' }); setQuantity(1); }}
                           style={{ flex: 1, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 12, border: `2px solid ${isSelected ? '#5828a0' : 'rgba(100,50,180,0.28)'}`, background: isSelected ? 'rgba(244,238,255,0.99)' : 'rgba(250,246,255,0.97)', cursor: 'pointer', textAlign: 'left', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', width: '100%' }}
                         >
-                          <span style={{ fontSize: 24, flexShrink: 0 }}>🎁</span>
+                          <FontAwesomeIcon icon={faGift} style={{ color: '#7840c0', fontSize: 22, flexShrink: 0 }} />
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 12, fontWeight: 700, color: '#2a1040' }}>{box.name}</div>
                             <div style={{ fontSize: 10, color: '#6848a0', lineHeight: 1.4 }}>{box.description || `${box.items?.length || 0}종 랜덤`}</div>
@@ -527,7 +530,8 @@ export default function ShopView() {
         {permanentItems.length > 0 && (
           <div style={{ margin: '0 12px 14px' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 8, background: '#2a7a30', borderRadius: 6, padding: '4px 10px' }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>🏪 상시 판매</span>
+              <FontAwesomeIcon icon={faStore} style={{ color: '#fff', fontSize: 11 }} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>상시 판매</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {(() => {
@@ -543,8 +547,10 @@ export default function ShopView() {
                   return (
                     <React.Fragment key={`perm-${shopItem.itemId}`}>
                       {showHeader && (
-                        <div style={{ fontSize: 11, fontWeight: 700, color: P.muted, marginTop: 4, marginBottom: 2, paddingLeft: 2, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                          {POCKET_LABELS[pocket] || pocket}
+                        <div style={{ display: 'inline-flex', alignItems: 'center', marginTop: 6, marginBottom: 4 }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: '#1a2e10', background: 'rgba(255,255,255,0.92)', borderRadius: 20, padding: '3px 10px', border: '1px solid rgba(90,160,30,0.25)' }}>
+                            {POCKET_LABELS[pocket] || pocket}
+                          </span>
                         </div>
                       )}
                       <button
@@ -593,7 +599,7 @@ export default function ShopView() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ width: 48, height: 48, background: 'rgba(255,255,255,0.75)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: selectedItem.type === 'randombox' ? 24 : 'unset' }}>
                 {selectedItem.type === 'randombox'
-                  ? '🎁'
+                  ? <FontAwesomeIcon icon={faGift} style={{ color: '#7840c0', fontSize: 24 }} />
                   : selectedItem.type === 'gachaball'
                     ? <span style={{ fontSize: 22 }}>✦</span>
                     : <img src={selectedItem.spriteUrl} alt={selectedItem.name} style={{ width: 36, height: 36, imageRendering: 'pixelated', objectFit: 'contain' }} />
@@ -699,7 +705,7 @@ export default function ShopView() {
             return (
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <Star size={14} className="text-purple-600" />
+                  <FontAwesomeIcon icon={faStar} style={{ color: '#9333ea', fontSize: 14 }} />
                   <span className="text-xs font-bold text-purple-600 uppercase tracking-wide">한정 아이템</span>
                   <div className="flex-1 h-px bg-purple-200" />
                 </div>
@@ -725,7 +731,7 @@ export default function ShopView() {
                       </div>
                     )}
                     <div className="absolute top-0 left-0 bg-purple-600 text-white text-xs px-3 py-1 font-bold flex items-center gap-1 rounded-br-lg z-10">
-                      <Star size={12} /><span>한정</span>
+                      <FontAwesomeIcon icon={faStar} style={{ fontSize: 12 }} /><span>한정</span>
                     </div>
                     <div className="bg-purple-50 p-4 pt-8">
                       <div className="flex items-start gap-3 mb-3">
@@ -761,7 +767,7 @@ export default function ShopView() {
             return (
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <Calendar size={14} className="text-blue-600" />
+                  <FontAwesomeIcon icon={faCalendarDays} style={{ color: '#2563eb', fontSize: 14 }} />
                   <span className="text-xs font-bold text-blue-600 uppercase tracking-wide">{todayNameKo} 한정판매</span>
                   <div className="flex-1 h-px bg-blue-200" />
                 </div>
@@ -853,7 +859,7 @@ export default function ShopView() {
             return (
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <Package size={14} className="text-green-600" />
+                  <FontAwesomeIcon icon={faBoxOpen} style={{ color: '#16a34a', fontSize: 14 }} />
                   <span className="text-xs font-bold text-green-600 uppercase tracking-wide">상시 판매</span>
                   <div className="flex-1 h-px bg-green-200" />
                 </div>

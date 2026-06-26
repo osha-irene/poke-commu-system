@@ -1561,3 +1561,125 @@ html body button:disabled,
 html body .cursor-not-allowed {
   cursor: not-allowed !important;
 }
+
+/* ── QnA 모바일 ── */
+@media (max-width: 768px) {
+  .qna-list {
+    mask-image: none !important;
+    -webkit-mask-image: none !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .qna-header {
+    padding-top: 16px;
+  }
+
+  .qna-title {
+    color: #fff !important;
+  }
+
+  .qna-header {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .qna-search {
+    background: rgba(255,255,255,0.4) !important;
+  }
+
+  .qna-search-icon {
+    color: #fff !important;
+  }
+
+  .qna-write-btn {
+    display: none !important;
+  }
+
+  .qna-write-btn svg {
+    color: rgba(230,248,220,1) !important;
+  }
+
+  .qna-list-icon {
+    color: rgba(50,70,30,0.55) !important;
+    margin-right: 8px !important;
+  }
+
+  .qna-cats {
+    transition: opacity 0.22s ease, max-width 0.28s ease, transform 0.28s ease;
+    max-width: 400px;
+    transform: translateX(0);
+  }
+
+  .qna-cats--hidden {
+    opacity: 0;
+    pointer-events: none;
+    max-width: 0;
+    overflow: hidden;
+    transform: translateX(-16px);
+  }
+
+  .qna-header__bottom {
+    height: 32px;
+    overflow: visible;
+  }
+
+  .qna-search input {
+    color: rgba(255,255,255,0.9) !important;
+  }
+
+  .qna-search input::placeholder {
+    color: rgba(255,255,255,0.5) !important;
+  }
+
+  .main-layout--world .content-stage__surface--light {
+    opacity: 0.97 !important;
+  }
+
+  .qna-list button {
+    background: rgba(255,255,255,0.9) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08) !important;
+  }
+
+  .qna-list button:nth-child(even) {
+    background: rgba(235,242,228,0.9) !important;
+  }
+
+  .qna-list-row {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  .qna-time {
+    color: rgba(60,80,40,0.7) !important;
+  }
+
+  .qna-page-arrow--desktop {
+    display: none !important;
+  }
+
+  .qna-page-arrow--mobile {
+    display: inline-flex !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    background: transparent !important;
+    color: rgba(255,255,255,0.95) !important;
+    font-size: 1.4rem !important;
+    padding: 0 8px !important;
+    -webkit-text-fill-color: rgba(255,255,255,0.95) !important;
+    opacity: 1 !important;
+  }
+  .qna-page-arrow--mobile:disabled {
+    opacity: 0.5 !important;
+  }
+
+  .qna-meta {
+    color: rgba(60,80,40,0.5) !important;
+  }
+
+  .qna-cats button[data-active="false"] {
+    background: rgba(0,0,0,0.18) !important;
+    color: rgba(255,255,255,0.75) !important;
+  }
+}

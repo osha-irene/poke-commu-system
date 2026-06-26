@@ -1,8 +1,11 @@
-import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
-import { Star, ChevronLeft, ChevronRight, Shield, Swords, User } from 'lucide-react';
+﻿import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
+import { Heart, ChevronLeft, ChevronRight, Shield, User } from 'lucide-react';
 import memberButtonImg from '../../assets/members/member-button.png';
 import npcBg from '../../assets/members/npcbg.png';
+import { TYPE_COLORS } from '../../constants/pokemon';
+import { getTypeColor } from '../../styles/theme';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
+import CachedImage from '../common/CachedImage';
 
 const npcBadgeImages = require.context('../../assets/members/badge', false, /\.png$/);
 const PLACEHOLDER = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
@@ -86,7 +89,7 @@ const getNpcBadgeImg = m => {
   }
 };
 
-/* ── 유틸 ── */
+/* ?? ?좏떥 ?? */
 function getMemberList(members, npcOnly = false) {
   if (!members) return [];
   return Object.entries(members)
@@ -104,7 +107,7 @@ function getMemberList(members, npcOnly = false) {
       return (a.name || '').localeCompare(b.name || '', 'ko');
     });
 }
-const getPokemonName = p => p?.nickname || p?.name || p?.nameKo || p?.nameEn || '포켓몬';
+const getPokemonName = p => p?.nickname || p?.name || p?.nameKo || p?.nameEn || '?';
 const getPokemonImg  = p => p?.sprite || p?.spriteUrl || p?.imageUrl || p?.iconUrl || p?.frontSprite || PLACEHOLDER;
 const getPokemonIcon = p => getPokemonLocalIconUrl(p) || PLACEHOLDER;
 const getFullImg     = m => m?.profileImageFull || m?.profileImage || m?.profileImageUrl || '';
@@ -114,6 +117,14 @@ const getPartner     = m => {
   if (m?.partnerPokemon) return m.partnerPokemon;
   const p = getParty(m);
   return p.find(x => x.isPartner) || p[0] || null;
+};
+const getPokemonIdentity = p => p?.uniqueId || p?.id || p?.pokemonId || null;
+const isSamePokemon = (a, b) => {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const aId = getPokemonIdentity(a);
+  const bId = getPokemonIdentity(b);
+  return !!aId && !!bId && String(aId) === String(bId);
 };
 const getBadges = m => (m?.gymBadges || m?.badges || []).filter(Boolean);
 
@@ -147,46 +158,45 @@ function Reveal({ children, delay = 0 }) {
   );
 }
 
-/* 타입 색상 */
-const TYPE_COLOR = {
-  불:'#ef4444',물:'#3b82f6',풀:'#22c55e',전기:'#eab308',얼음:'#06b6d4',
-  격투:'#dc2626',독:'#a855f7',땅:'#d97706',비행:'#8b5cf6',에스퍼:'#ec4899',
-  벌레:'#84cc16',바위:'#92400e',고스트:'#6d28d9',드래곤:'#1d4ed8',
-  악:'#111827',강철:'#64748b',페어리:'#f472b6',노말:'#94a3b8',
-  fire:'#ef4444',water:'#3b82f6',grass:'#22c55e',electric:'#eab308',
-  ice:'#06b6d4',fighting:'#dc2626',poison:'#a855f7',ground:'#d97706',
-  flying:'#8b5cf6',psychic:'#ec4899',bug:'#84cc16',rock:'#92400e',
-  ghost:'#6d28d9',dragon:'#1d4ed8',dark:'#111827',steel:'#64748b',
-  fairy:'#f472b6',normal:'#94a3b8',
+const getPokemonTypes = pokemon => {
+  const rawTypes = [
+    ...(Array.isArray(pokemon?.types) ? pokemon.types : []),
+    pokemon?.type,
+    pokemon?.type2,
+  ].filter(Boolean);
+  return Array.from(new Set(rawTypes.map(type => String(type).trim()).filter(Boolean)));
 };
 
-function PkDetailCard({ pokemon, large }) {
-  const types = Array.isArray(pokemon?.types) ? pokemon.types : [pokemon?.type].filter(Boolean);
-  const moves = (pokemon?.moves || []).filter(Boolean).slice(0, 4);
+const getPokemonAbility = pokemon => pokemon?.ability || pokemon?.abilityKo || pokemon?.abilityName || '';
+
+function PkDetailCard({ pokemon, large, isPartner = false }) {
+  const types = getPokemonTypes(pokemon);
+  const ability = getPokemonAbility(pokemon);
   return (
-    <div className={`mbr-pk${large ? ' mbr-pk--large' : ''}`}>
+    <div className={`mbr-pk${large ? ' mbr-pk--large' : ''}${isPartner ? ' mbr-pk--partner' : ''}`}>
+      {isPartner && <Heart className="mbr-pk-partner-heart" size={18} aria-label="partner" fill="currentColor" strokeWidth={1.8} />}
       <div className="mbr-pk-img">
-        <img src={getPokemonImg(pokemon)} alt={getPokemonName(pokemon)}
-          style={{ imageRendering:'pixelated', width: large?96:56, height: large?96:56, objectFit:'contain' }} />
+        <CachedImage src={getPokemonImg(pokemon)} alt={getPokemonName(pokemon)}
+          style={{ imageRendering:'auto', width: large?112:96, height: large?112:96, maxWidth: 'none', flexShrink: 0, objectFit:'contain' }} />
       </div>
       <div className="mbr-pk-info">
-        <div className="mbr-pk-name">{getPokemonName(pokemon)}</div>
-        <div className="mbr-pk-lv">Lv.{pokemon?.level || 1}</div>
+        <div className="mbr-pk-title">
+          <span className="mbr-pk-name">{getPokemonName(pokemon)}</span>
+          <span className="mbr-pk-lv">Lv.{pokemon?.level || 1}</span>
+        </div>
         {types.length > 0 && (
           <div className="mbr-pk-types">
-            {types.map((t,i) => (
-              <span key={i} className="mbr-pk-type"
-                style={{ background: TYPE_COLOR[String(t).toLowerCase()] || '#94a3b8' }}>{t}</span>
-            ))}
+            {types.map((t,i) => {
+              const colors = TYPE_COLORS[t] || getTypeColor(t) || { bg: '#888', text: '#fff' };
+              return (
+                <span key={`${t}-${i}`} className="mbr-pk-type" style={{ background: colors.bg, color: colors.text }}>
+                  {t}
+                </span>
+              );
+            })}
           </div>
         )}
-        {moves.length > 0 && (
-          <div className="mbr-pk-moves">
-            {moves.map((mv,i) => (
-              <span key={i} className="mbr-pk-move">{mv?.nameKo || mv?.name || mv?.moveId || '—'}</span>
-            ))}
-          </div>
-        )}
+        {ability && <div className="mbr-pk-ability">{ability}</div>}
       </div>
     </div>
   );
@@ -208,10 +218,11 @@ function MemberOverlay({ member, onClose, isAdmin, closing }) {
 
   const party      = getParty(member);
   const partner    = getPartner(member);
-  const nonPartner = party.filter(p => p !== partner);
+  const nonPartner = party.filter(p => !isSamePokemon(p, partner));
+  const entryPokemon = partner ? [partner, ...nonPartner].slice(0, 6) : nonPartner.slice(0, 6);
   const badges     = getBadges(member);
   const fullImg    = getFullImg(member);
-  const catchphrase = member.catchphrase || member.bio || member.quote || '캐치프레이즈';
+  const catchphrase = member.catchphrase || member.bio || member.quote || '罹먯튂?꾨젅?댁쫰';
 
   useEffect(() => {
     const t1 = setTimeout(() => setIntroVisible(true), 50);
@@ -226,14 +237,15 @@ function MemberOverlay({ member, onClose, isAdmin, closing }) {
   }, []);
 
   const handleCharLoad = () => {
-    setCharLoaded(true);
-    if (member.accentColor) return;
+    if (member.accentColor) { setCharLoaded(true); return; }
     if (imgRef.current) {
       const color = extractDominantColor(imgRef.current);
       if (color) { npcImgCache[fullImg] = color; setAccent(color); }
     }
+    setCharLoaded(true);
   };
 
+  const accentReady = !!accent || !fullImg || charLoaded;
   const accentRgb = accent ? `${accent[0]},${accent[1]},${accent[2]}` : '80,120,200';
   // 이름용 짙은 액센트 — HSL로 명도 낮추기
   const darkAccentColor = (() => {
@@ -259,7 +271,7 @@ function MemberOverlay({ member, onClose, isAdmin, closing }) {
 
       {/* ── 메인 페이즈 ── */}
       {phase === 'main' && (
-        <div className={`mbr-main${panelOpen ? ' mbr-main--panel-open' : ''}`}>
+        <div className={`mbr-main${panelOpen ? ' mbr-main--panel-open' : ''}${accentReady ? ' mbr-main--accent-ready' : ''}`}>
 
           {/* 뒤로가기 */}
           <button className="mbr-close" onClick={onClose}>
@@ -267,31 +279,40 @@ function MemberOverlay({ member, onClose, isAdmin, closing }) {
           </button>
 
           {/* 왼쪽: 캐릭터 이미지 */}
-          {member.profileImageFull && <img src={member.profileImageFull} alt="" className={`mbr-main-char-bg${charLoaded ? ' mbr-main-char-bg--loaded' : ''}`} aria-hidden="true" />}
+          {member.profileImageFull && <CachedImage src={member.profileImageFull} alt="" className={`mbr-main-char-bg${charLoaded ? ' mbr-main-char-bg--loaded' : ''}`} aria-hidden="true" style={{ opacity: 0.55 }} />}
 
           <div className="mbr-main-visual" onClick={e => e.stopPropagation()}>
             {fullImg
-              ? <img
+              ? <CachedImage
                   ref={imgRef}
                   src={fullImg} alt={member.name}
                   className={`mbr-main-char${charLoaded ? ' mbr-main-char--loaded' : ''}`}
                   crossOrigin="anonymous"
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
                   onLoad={handleCharLoad}
+                  onError={() => setCharLoaded(true)}
+                  style={{
+                    ...(member.charImageTop   != null && member.charImageTop   !== '' && { top:   member.charImageTop }),
+                    ...(member.charImageLeft  != null && member.charImageLeft  !== '' && { left:  member.charImageLeft }),
+                    ...(member.charImageWidth != null && member.charImageWidth !== '' && { width: member.charImageWidth, height: 'auto' }),
+                  }}
                 />
               : <div className="mbr-main-char-empty">{member.name?.charAt(0) || '?'}</div>
             }
           </div>
 
-          {/* 이름 */}
+          {/* 캐치프레이즈 */}
           <div className="mbr-main-identity">
             <div className="mbr-main-identity-box" style={{
               background: `linear-gradient(to right, rgba(${accentRgb},0.72) 0%, rgba(${accentRgb},0.38) 55%, transparent 100%)`,
             }}>
-              <span className="mbr-main-name" style={{ color: '#fff', textShadow: `0 1px 6px rgba(0,0,0,0.45)` }}>{member.name}</span>
+              <span className="mbr-main-name" style={{ color: '#fff' }}>{catchphrase}</span>
             </div>
           </div>
 
-          {/* 오른쪽: 패널 — 탭 없이 단일 패널 */}
+          {/* 오른쪽: 패널 */}
           <div className="mbr-main-data">
             <button className="mbr-panel-close" onClick={() => setPanelOpen(false)} title="접기"
               style={{ color: `rgb(${accentRgb})` }}>
@@ -313,7 +334,7 @@ function MemberOverlay({ member, onClose, isAdmin, closing }) {
             </div>
             <div className="mbr-main-data-inner">
 
-              {/* ── NPC 전용 레이아웃 ── */}
+              {/* ?? NPC ?꾩슜 ?덉씠?꾩썐 ?? */}
 
               {/* 한마디 */}
               {member.npcQuote && (
@@ -321,7 +342,7 @@ function MemberOverlay({ member, onClose, isAdmin, closing }) {
                   <p style={{
                     fontFamily: "'SUITE', sans-serif",
                     fontSize: 'clamp(1.55rem, 3vw, 2.1rem)',
-                    fontWeight: 800,
+                    fontWeight: 650,
                     color: `rgba(${accentRgb}, 0.78)`,
                     lineHeight: 1.3,
                     marginBottom: 14,
@@ -345,14 +366,14 @@ function MemberOverlay({ member, onClose, isAdmin, closing }) {
               {/* 이름 이하 패딩 래퍼 */}
               <div style={{ padding: '0 20px 0 30px' }}>
 
-              {/* 이름 + 나이 + 직업 */}
+              {/* ?대쫫 + ?섏씠 + 吏곸뾽 */}
               <Reveal delay={60}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-                  <span style={{ fontFamily: 'Paperlogy, sans-serif', fontSize: 'clamp(3.4rem, 6.4vw, 5rem)', fontWeight: 700, color: darkAccentColor, lineHeight: 1.05, marginRight: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
+                  <span style={{ fontFamily: 'Paperozi, sans-serif', fontSize: 'clamp(3rem, 5.8vw, 4.5rem)', fontWeight: 800, color: darkAccentColor, lineHeight: 1.05, marginRight: 10 }}>
                     {member.name}
                   </span>
                   {(member.npcAge || member.npcOccupation) && (
-                    <span style={{ fontSize: '1.3rem', color: 'rgba(60,60,80,0.6)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ fontSize: '1.15rem', color: 'rgba(60,60,80,0.6)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5 }}>
                       {member.npcAge && <span>{member.npcAge}세</span>}
                       {member.npcAge && member.npcOccupation && <span>·</span>}
                       {member.npcOccupation && <span>{member.npcOccupation}</span>}
@@ -369,8 +390,8 @@ function MemberOverlay({ member, onClose, isAdmin, closing }) {
                     color: 'rgba(40,40,60,0.75)',
                     lineHeight: 1.75,
                     whiteSpace: 'pre-line',
-                    marginBottom: 20,
-                    borderLeft: `2px solid rgba(${accentRgb},0.4)`,
+                    marginBottom: 46,
+                    borderLeft: `3px solid rgba(${accentRgb},0.4)`,
                     paddingLeft: 10,
                   }}>
                     {member.npcBio}
@@ -379,23 +400,21 @@ function MemberOverlay({ member, onClose, isAdmin, closing }) {
               )}
 
               {/* 파트너 + 엔트리 */}
-              {(partner || nonPartner.length > 0) && (
+              {entryPokemon.length > 0 && (
+                <div className="mbr-entry-section">
                 <Reveal delay={180}>
-                  {partner && <>
-                    <div className="mbr-data-section-label" style={{ color: `rgb(${accentRgb})` }}><Star size={11} />파트너</div>
-                    <PkDetailCard pokemon={partner} large />
-                  </>}
-                  {nonPartner.length > 0 && <>
-                    <div className="mbr-data-section-label" style={{ color: `rgb(${accentRgb})`, marginTop: partner ? 12 : 0 }}><Swords size={11} />엔트리</div>
+                  <div className="mbr-data-section-label mbr-data-section-label--entry" style={{ color: `rgb(${accentRgb})` }}>
+                    <span className="mbr-entry-icon" style={{ '--entry-icon-color': `rgb(${accentRgb})` }} aria-hidden="true" />
+                    엔트리</div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                      {nonPartner.slice(0, 6).map((p, i) => (
+                      {entryPokemon.map((p, i) => (
                         <Reveal key={p.uniqueId || i} delay={i * 40}>
-                          <PkDetailCard pokemon={p} large={false} />
+                        <PkDetailCard pokemon={p} large={false} isPartner={isSamePokemon(p, partner)} />
                         </Reveal>
                       ))}
                     </div>
-                  </>}
                 </Reveal>
+                </div>
               )}
 
               {/* 뱃지 */}
@@ -430,6 +449,7 @@ function MemberOverlay({ member, onClose, isAdmin, closing }) {
 export default function NpcView({ members = {}, isLoading = false, isAdmin = false, npcOnly = false, onSwitchTab }) {
   const [activeId, setActiveId] = useState(null);
   const [closing, setClosing]   = useState(false);
+  const [returning, setReturning] = useState(false);
 
   const memberList = useMemo(() => {
     const list = getMemberList(members, npcOnly);
@@ -445,23 +465,28 @@ export default function NpcView({ members = {}, isLoading = false, isAdmin = fal
 
   const handleClose = useCallback(() => {
     setClosing(true);
-    setTimeout(() => { setActiveId(null); setClosing(false); }, 420);
+    setTimeout(() => {
+      setActiveId(null);
+      setClosing(false);
+      setReturning(true);
+      setTimeout(() => setReturning(false), 700);
+    }, 420);
   }, []);
 
   return (
     <>
-      {/* 목록 */}
+      {/* 紐⑸줉 */}
       <div style={{ position: 'relative' }}>
         {onSwitchTab && !activeMember && (
           <button
             onClick={() => onSwitchTab('members')}
             className="tab-switch-btn"
-            style={{ position: 'absolute', top: -16, left: -42, zIndex: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+            style={{ position: 'absolute', top: 40, left: -42, zIndex: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
           >
             <img src={memberButtonImg} alt="멤버 보기" style={{ width: 150, height: 'auto', display: 'block' }} />
           </button>
         )}
-        <div className="mbr-page npc-page">
+        <div className={`mbr-page npc-page${returning ? ' npc-page--returning' : ''}`}>
           <div className="npc-grid">
               {[0, 1].map(row => (
                 <div key={row} className="mbr-list npc-row" style={{ transform: row === 0 ? 'translateX(-10px)' : 'translateX(10px)' }}>
@@ -488,7 +513,7 @@ export default function NpcView({ members = {}, isLoading = false, isAdmin = fal
                               </span>
                             )}
                           </span>
-                          {!isPrivateNpc && (img ? <img src={img} alt="" draggable={false} style={{ position: 'relative', zIndex: 1 }} /> : <span className="mbr-card-initial">{m.name?.charAt(0)||'?'}</span>)}
+                          {!isPrivateNpc && (img ? <CachedImage src={img} alt="" draggable={false} style={{ position: 'relative', zIndex: 1 }} /> : <span className="mbr-card-initial">{m.name?.charAt(0)||'?'}</span>)}
                         </span>
                         {!isPrivateNpc && <span className="mbr-card-name">{m.name}</span>}
                         {!isPrivateNpc && getPartner(m) && (

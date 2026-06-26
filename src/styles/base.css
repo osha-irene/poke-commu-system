@@ -14,6 +14,13 @@
     font-display: swap;
 }
 
+@font-face {
+    font-family: 'Paperlogy';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-9Black.woff2') format('woff2');
+    font-weight: 900;
+    font-display: swap;
+}
+
 
 
 @font-face {
@@ -323,10 +330,8 @@ body {
   background-position: center;
   background-attachment: fixed;
 }
+html:has(.npc-page),
 body:has(.npc-page) {
-  overflow: hidden;
-}
-html:has(.npc-page) {
   overflow: hidden;
 }
 

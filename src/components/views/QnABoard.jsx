@@ -1,5 +1,8 @@
-﻿import React, { useState } from 'react';
-import { Lock, MessageSquare, Pencil, Plus, Send, Trash2, X } from 'lucide-react';
+﻿import React, { useEffect, useState } from 'react';
+import ReactDOM from 'react-dom';
+import { ChevronLeft, ChevronRight, Image, Lock, MessageSquare, Pencil, Plus, PlusCircle, Search, Send, Trash2, X } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
 
 const inputClass =
   'w-full rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none transition focus:border-gray-400 focus:ring-2 focus:ring-gray-100';
@@ -7,9 +10,9 @@ const inputClass =
 const CATEGORIES = ['질문', '정산', '휴식'];
 
 const CATEGORY_STYLE = {
-  '질문': { bg: 'rgba(100,160,220,0.25)', text: 'rgba(180,220,255,1)' },
-  '정산': { bg: 'rgba(220,180,80,0.25)',  text: 'rgba(255,235,150,1)' },
-  '휴식': { bg: 'rgba(120,200,140,0.25)', text: 'rgba(180,255,200,1)' },
+  '질문': { bg: 'rgba(80,130,200,0.55)', text: 'rgba(220,238,255,1)' },
+  '정산': { bg: 'rgba(195,150,40,0.55)',  text: 'rgba(255,240,180,1)' },
+  '휴식': { bg: 'rgba(80,170,110,0.55)', text: 'rgba(210,255,225,1)' },
 };
 
 export default function QnABoard({
@@ -23,10 +26,15 @@ export default function QnABoard({
 }) {
   const [showWriteModal, setShowWriteModal] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState(null);
-  const [newPost, setNewPost] = useState({ title: '', content: '', isPrivate: false, category: '질문' });
+  const [newPost, setNewPost] = useState({ title: '', content: '', isPrivate: false, category: '질문', images: [] });
+  const [newImageUrl, setNewImageUrl] = useState('');
   const [commentText, setCommentText] = useState('');
   const [activeTab, setActiveTab] = useState('전체');
   const [editingPost, setEditingPost] = useState(null); // { title, content, category, isPrivate }
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const PAGE_SIZE = 10;
 
   const isAdmin = currentUser?.isAdmin || currentUser?.isSuperAdmin;
 
@@ -34,7 +42,17 @@ export default function QnABoard({
     !post.isPrivate || isAdmin || post.authorId === currentUser?.id
   );
 
-  const visiblePosts = posts.filter(canViewPost).filter(p => activeTab === '전체' || p.category === activeTab);
+  const allVisiblePosts = posts.filter(canViewPost)
+    .filter(p => activeTab === '전체' || p.category === activeTab)
+    .filter(p => {
+      const q = search.trim();
+      if (!q) return true;
+      if (p.title.includes(q)) return true;
+      if (!p.isPrivate && p.content.includes(q)) return true;
+      return false;
+    });
+  const totalPages = Math.max(1, Math.ceil(allVisiblePosts.length / PAGE_SIZE));
+  const visiblePosts = allVisiblePosts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const selectedPost = posts.find(post => post.id === selectedPostId) || null;
 
   const formatDate = (dateString) => {
@@ -63,10 +81,12 @@ export default function QnABoard({
       content: newPost.content.trim(),
       isPrivate: newPost.isPrivate,
       category: newPost.category,
+      images: newPost.images,
       createdAt: new Date().toISOString(),
       comments: [],
     });
-    setNewPost({ title: '', content: '', isPrivate: false, category: '질문' });
+    setNewPost({ title: '', content: '', isPrivate: false, category: '질문', images: [] });
+    setNewImageUrl('');
     setShowWriteModal(false);
   };
 
@@ -77,6 +97,7 @@ export default function QnABoard({
       content: editingPost.content.trim(),
       category: editingPost.category,
       isPrivate: editingPost.isPrivate,
+      images: editingPost.images || [],
     });
     setEditingPost(null);
   };
@@ -95,21 +116,22 @@ export default function QnABoard({
 
   return (
     <div className="mx-auto w-full max-w-5xl">
-      <header className="mb-5 border-b border-white/20 pb-4">
-        <div className="flex items-center justify-between mb-3">
-          <h1 className="text-2xl font-bold text-white">Q&A</h1>
+      <header className="qna-header mb-5 border-b border-black/10 pb-4">
+        <div className="qna-header__top flex items-center justify-between mb-3">
+          <h1 className="qna-title text-2xl font-bold text-gray-800">Q&A</h1>
           <button
             type="button"
             onClick={() => setShowWriteModal(true)}
-            className="inline-flex h-10 items-center gap-2 rounded-md px-4 text-sm font-semibold transition"
-            style={{background:'rgba(100, 140, 85, 0.65)', color:'rgba(230, 248, 220, 1)'}}
+            className="qna-write-btn inline-flex h-10 items-center gap-2 rounded-md px-4 text-sm font-semibold transition"
+            style={{background:'rgba(80, 120, 60, 0.85)', color:'rgba(230, 248, 220, 1)'}}
           >
             <Plus size={17} />
             질문 작성
           </button>
         </div>
-        {/* 카테고리 탭 */}
-        <div className="flex gap-1">
+        {/* 카테고리 탭 + 검색 */}
+        <div className="qna-header__bottom relative flex items-center justify-between gap-2">
+          <div className={`qna-cats flex gap-1 transition-all duration-250 ${searchOpen ? 'qna-cats--hidden' : ''}`}>
           {['전체', ...CATEGORIES].map(tab => {
             const isActive = activeTab === tab;
             const catStyle = CATEGORY_STYLE[tab];
@@ -117,25 +139,58 @@ export default function QnABoard({
               <button
                 key={tab}
                 type="button"
-                onClick={() => setActiveTab(tab)}
+                onClick={() => { setActiveTab(tab); setPage(1); }}
+                data-active={isActive ? 'true' : 'false'}
                 className="rounded-full px-3 py-1 text-sm font-semibold transition"
                 style={isActive
-                  ? { background: catStyle ? catStyle.bg.replace('0.25','0.6') : 'rgba(255,255,255,0.25)', color: catStyle ? catStyle.text : '#fff', outline: '1px solid rgba(255,255,255,0.3)' }
-                  : { background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }
+                  ? { background: catStyle ? catStyle.bg.replace('0.55','0.82') : 'rgba(255,255,255,0.4)', color: catStyle ? catStyle.text : '#fff', outline: '1px solid rgba(255,255,255,0.3)' }
+                  : { background: 'rgba(0,0,0,0.07)', color: 'rgba(40,60,20,0.5)' }
                 }
               >
                 {tab}
               </button>
             );
           })}
+          </div>
+          <div className="flex items-center gap-1">
+            <div
+              className="qna-search relative shrink-0 flex items-center rounded-md overflow-hidden transition-all"
+              style={{ background: 'rgba(0,0,0,0.08)', width: searchOpen ? '160px' : '32px', height: '32px', transition: 'width 0.28s ease' }}
+            >
+              <button
+                type="button"
+                onClick={() => setSearchOpen(v => !v)}
+                className="flex items-center justify-center shrink-0"
+                style={{ width: '32px', height: '32px' }}
+              >
+                <Search size={14} className="qna-search-icon text-gray-400" />
+              </button>
+              <input
+                type="text"
+                value={search}
+                onChange={e => { setSearch(e.target.value); setPage(1); }}
+                placeholder="검색"
+                className="h-full pr-2 text-sm outline-none bg-transparent"
+                style={{ color: 'rgba(30,50,15,0.85)', minWidth: 0, flex: 1, opacity: searchOpen ? 1 : 0, transition: 'opacity 0.2s ease' }}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowWriteModal(true)}
+              className="qna-write-icon-btn flex items-center justify-center rounded-md shrink-0"
+              style={{ width: '32px', height: '32px', background: 'rgba(80,120,60,0.85)', color: 'rgba(230,248,220,1)' }}
+            >
+              <Plus size={20} strokeWidth={3} />
+            </button>
+          </div>
         </div>
       </header>
 
-      <section className="relative" style={{maskImage:'linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%)', WebkitMaskImage:'linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%)'}}>
+      <section className="qna-list relative" style={{minHeight: '640px'}}>
         {visiblePosts.length === 0 ? (
           <div className="flex min-h-64 flex-col items-center justify-center px-6 text-center">
-            <MessageSquare size={30} className="mb-3 text-white/30" />
-            <p className="text-sm font-semibold text-white/60">등록된 질문이 없습니다.</p>
+            <MessageSquare size={30} className="mb-3 text-gray-400/60" />
+            <p className="text-sm font-semibold text-gray-600">등록된 질문이 없습니다.</p>
           </div>
         ) : (
           visiblePosts.map((post, index) => {
@@ -145,14 +200,14 @@ export default function QnABoard({
                 type="button"
                 key={post.id}
                 onClick={() => setSelectedPostId(post.id)}
-                className={`flex w-full items-center gap-4 px-12 py-4 text-left transition ${index > 0 ? 'border-t border-white/20' : ''}`}
-                style={{background: index % 2 === 0 ? 'rgba(160, 175, 145, 0.65)' : 'rgba(145, 160, 130, 0.52)'}}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(100, 115, 85, 0.75)'}
-                onMouseLeave={e => e.currentTarget.style.background = index % 2 === 0 ? 'rgba(160, 175, 145, 0.65)' : 'rgba(145, 160, 130, 0.52)'}
+                className={`qna-list-row flex w-full items-center gap-4 px-12 py-4 text-left transition rounded-xl ${index > 0 ? 'mt-1' : ''}`}
+                style={{background: index % 2 === 0 ? 'rgba(200,218,178,0.75)' : 'rgba(188,208,165,0.62)'}}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(175,198,148,0.82)'}
+                onMouseLeave={e => e.currentTarget.style.background = index % 2 === 0 ? 'rgba(200,218,178,0.75)' : 'rgba(188,208,165,0.62)'}
               >
                 {/* 번호 열 */}
                 <div className="shrink-0 w-10 text-center">
-                  <span className="text-sm font-bold text-white/80">#{visiblePosts.length - index}</span>
+                  <span className="text-sm font-bold text-gray-700">{visiblePosts.length - index}</span>
                 </div>
                 {/* 카테고리 열 */}
                 <div className="shrink-0 w-14 text-center">
@@ -164,25 +219,54 @@ export default function QnABoard({
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    {post.isPrivate && <Lock size={14} className="shrink-0 text-white/70" />}
-                    <h2 className="truncate text-base font-bold text-white drop-shadow">{post.title}</h2>
+                    {post.isPrivate && <Lock size={14} className="qna-list-icon shrink-0 text-gray-500" />}
+                    <h2 className="truncate text-base font-bold text-gray-800 drop-shadow">{post.title}</h2>
                     {!!post.comments?.length && (
-                      <span className="shrink-0 text-xs font-bold text-green-300">[{post.comments.length}]</span>
+                      <span className="shrink-0 text-xs font-bold text-green-700">[{post.comments.length}]</span>
                     )}
                   </div>
-                  <div className="mt-1 flex items-center gap-2 text-xs text-white/70">
-                    <span className="font-semibold text-white/90">{post.authorName}</span>
+                  <div className="mt-1 flex items-center gap-2 text-xs text-gray-500 qna-meta">
+                    <span className="font-semibold text-gray-800">{post.authorName}</span>
                     <span aria-hidden="true">·</span>
-                    <time>{formatDate(post.createdAt)}</time>
-                    {post.isPrivate && <span className="text-white/50">비공개</span>}
+                    <time className="qna-time">{formatDate(post.createdAt)}</time>
                   </div>
                 </div>
-                <MessageSquare size={16} className="shrink-0 text-white/50" />
               </button>
             );
           })
         )}
       </section>
+
+      <div className="flex items-center justify-center gap-1 mt-4">
+          <button type="button" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+            className="qna-page-arrow qna-page-arrow--desktop rounded px-3 py-1.5 text-sm font-semibold transition disabled:opacity-30"
+            style={{ background: 'rgba(80,120,60,0.6)', color: 'rgba(230,248,220,1)' }}
+          ><ChevronLeft size={16} /></button>
+          <button type="button" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+            className="qna-page-arrow qna-page-arrow--mobile rounded px-2 py-1 transition"
+            style={{ background: 'transparent' }}
+          ><ChevronLeft size={22} color="#fff" strokeWidth={2.5} /></button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => setPage(n)}
+              className="rounded px-3 py-1.5 text-sm font-semibold transition"
+              style={n === page
+                ? { background: 'rgba(60,100,40,0.85)', color: 'rgba(230,248,220,1)' }
+                : { background: 'rgba(80,120,60,0.35)', color: 'rgba(40,70,20,0.8)' }
+              }
+            >{n}</button>
+          ))}
+          <button type="button" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+            className="qna-page-arrow qna-page-arrow--desktop rounded px-3 py-1.5 text-sm font-semibold transition disabled:opacity-30"
+            style={{ background: 'rgba(80,120,60,0.6)', color: 'rgba(230,248,220,1)' }}
+          ><ChevronRight size={16} /></button>
+          <button type="button" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+            className="qna-page-arrow qna-page-arrow--mobile rounded px-2 py-1 transition"
+            style={{ background: 'transparent' }}
+          ><ChevronRight size={22} color="#fff" strokeWidth={2.5} /></button>
+        </div>
 
       {showWriteModal && (
         <div
@@ -241,6 +325,54 @@ export default function QnABoard({
                   style={{background:'rgba(0,0,0,0.05)', border:'1px solid rgba(80,120,60,0.25)', color:'rgba(30,50,15,0.9)'}}
                 />
               </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold" style={{color:'rgba(60,80,40,0.6)'}}>
+                  이미지 링크 <span style={{color:'rgba(60,80,40,0.4)'}}>({newPost.images.length}/10)</span>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newImageUrl}
+                    onChange={e => setNewImageUrl(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const url = newImageUrl.trim();
+                        if (url && newPost.images.length < 10 && !newPost.images.includes(url))
+                          setNewPost(p => ({ ...p, images: [...p.images, url] }));
+                        setNewImageUrl('');
+                      }
+                    }}
+                    placeholder="이미지 URL 입력 후 Enter"
+                    className="flex-1 rounded-lg px-3 py-2 text-sm outline-none"
+                    style={{background:'rgba(0,0,0,0.05)', border:'1px solid rgba(80,120,60,0.25)', color:'rgba(25,40,15,1)'}}
+                  />
+                  <button type="button"
+                    onClick={() => {
+                      const url = newImageUrl.trim();
+                      if (url && newPost.images.length < 10 && !newPost.images.includes(url))
+                        setNewPost(p => ({ ...p, images: [...p.images, url] }));
+                      setNewImageUrl('');
+                    }}
+                    className="rounded-lg px-3 py-2 text-sm font-semibold"
+                    style={{background:'rgba(80,120,60,0.6)', color:'rgba(230,248,220,1)'}}
+                  ><Image size={15} /></button>
+                </div>
+                {newPost.images.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {newPost.images.map((url, i) => (
+                      <div key={i} className="relative group">
+                        <img src={url} alt="" className="h-16 w-16 rounded object-cover" style={{border:'1px solid rgba(80,120,60,0.3)'}} />
+                        <button type="button"
+                          onClick={() => setNewPost(p => ({ ...p, images: p.images.filter((_, j) => j !== i) }))}
+                          className="absolute -top-1.5 -right-1.5 rounded-full w-4 h-4 flex items-center justify-center text-xs"
+                          style={{background:'rgba(180,40,40,0.85)', color:'#fff'}}
+                        >×</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <label className="flex cursor-pointer items-center gap-2 text-sm" style={{color:'rgba(60,80,40,0.65)'}}>
                 <input
                   type="checkbox"
@@ -265,9 +397,9 @@ export default function QnABoard({
         </div>
       )}
 
-      {selectedPost && (
+      {selectedPost && ReactDOM.createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4"
+          className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/35 p-4"
           onClick={() => setSelectedPostId(null)}
         >
           <article
@@ -295,7 +427,7 @@ export default function QnABoard({
                   {(selectedPost.authorId === currentUser.id || isAdmin) && !editingPost && (
                     <button
                       type="button"
-                      onClick={() => setEditingPost({ title: selectedPost.title, content: selectedPost.content, category: selectedPost.category || '질문', isPrivate: selectedPost.isPrivate })}
+                      onClick={() => setEditingPost({ title: selectedPost.title, content: selectedPost.content, category: selectedPost.category || '질문', isPrivate: selectedPost.isPrivate, images: selectedPost.images || [], newImageUrl: '' })}
                       className="inline-flex items-center transition"
                       style={{color:'rgba(60,120,200,0.7)'}}
                     >
@@ -347,15 +479,72 @@ export default function QnABoard({
                     className="w-full rounded-lg px-3 py-2.5 text-base outline-none resize-none"
                     style={{background:'rgba(0,0,0,0.06)', border:'1px solid rgba(80,120,60,0.25)', color:'rgba(30,50,15,0.9)'}}
                   />
+                  <div>
+                    <p className="mb-1.5 text-xs font-semibold" style={{color:'rgba(60,80,40,0.6)'}}>이미지 링크 ({editingPost.images.length}/10)</p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={editingPost.newImageUrl}
+                        onChange={e => setEditingPost(p => ({...p, newImageUrl: e.target.value}))}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const url = editingPost.newImageUrl.trim();
+                            if (url && editingPost.images.length < 10 && !editingPost.images.includes(url))
+                              setEditingPost(p => ({ ...p, images: [...p.images, url], newImageUrl: '' }));
+                            else setEditingPost(p => ({...p, newImageUrl: ''}));
+                          }
+                        }}
+                        placeholder="이미지 URL 입력 후 Enter"
+                        className="flex-1 rounded-lg px-3 py-2 text-sm outline-none"
+                        style={{background:'rgba(0,0,0,0.06)', border:'1px solid rgba(80,120,60,0.25)', color:'rgba(25,40,15,1)'}}
+                      />
+                      <button type="button"
+                        onClick={() => {
+                          const url = editingPost.newImageUrl.trim();
+                          if (url && editingPost.images.length < 10 && !editingPost.images.includes(url))
+                            setEditingPost(p => ({ ...p, images: [...p.images, url], newImageUrl: '' }));
+                          else setEditingPost(p => ({...p, newImageUrl: ''}));
+                        }}
+                        className="rounded-lg px-3 py-2 text-sm font-semibold"
+                        style={{background:'rgba(80,120,60,0.6)', color:'rgba(230,248,220,1)'}}
+                      ><Image size={15} /></button>
+                    </div>
+                    {editingPost.images.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {editingPost.images.map((url, i) => (
+                          <div key={i} className="relative">
+                            <img src={url} alt="" className="h-16 w-16 rounded object-cover" style={{border:'1px solid rgba(80,120,60,0.3)'}} />
+                            <button type="button"
+                              onClick={() => setEditingPost(p => ({ ...p, images: p.images.filter((_, j) => j !== i) }))}
+                              className="absolute -top-1.5 -right-1.5 rounded-full w-4 h-4 flex items-center justify-center text-xs"
+                              style={{background:'rgba(180,40,40,0.85)', color:'#fff'}}
+                            >×</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <div className="flex justify-end gap-2">
                     <button type="button" onClick={() => setEditingPost(null)} className="rounded-lg px-4 py-2 text-sm font-semibold" style={{background:'rgba(0,0,0,0.07)', color:'rgba(60,80,40,0.6)'}}>취소</button>
                     <button type="button" onClick={handleSaveEdit} className="rounded-lg px-4 py-2 text-sm font-semibold" style={{background:'rgba(80,130,60,0.8)', color:'rgba(240,255,230,1)'}}>저장</button>
                   </div>
                 </div>
               ) : (
-                <p className="mt-6 whitespace-pre-wrap text-lg leading-7" style={{color:'rgba(30,50,15,0.85)'}}>
-                  {selectedPost.content}
-                </p>
+                <>
+                  <p className="mt-6 whitespace-pre-wrap text-lg leading-7" style={{color:'rgba(30,50,15,0.85)'}}>
+                    {selectedPost.content}
+                  </p>
+                  {selectedPost.images?.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {selectedPost.images.map((url, i) => (
+                        <a key={i} href={url} target="_blank" rel="noreferrer">
+                          <img src={url} alt="" className="rounded-lg object-cover max-h-48" style={{border:'1px solid rgba(80,120,60,0.25)'}} />
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </header>
 
@@ -407,7 +596,8 @@ export default function QnABoard({
               </div>
             </section>}
           </article>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -362,8 +362,16 @@
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+@keyframes tabEnterHome {
+  from { opacity: 0; transform: scale(0.97) translateY(14px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.tab-view-enter-home {
+  animation: tabEnterHome 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  display: contents;
+}
 .tab-view-enter {
-  animation: tabEnter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: tabEnter 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -371,7 +379,7 @@
   width: 100%;
 }
 .tab-view-enter-reverse {
-  animation: tabEnterReverse 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: tabEnterReverse 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -563,13 +571,21 @@
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    NPC 그리드
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.npc-page { justify-content: center !important; overflow: visible !important; padding-bottom: 0 !important; height: 100% !important; }
+.npc-page { justify-content: center !important; overflow: visible !important; padding-bottom: 0 !important; height: auto !important; }
+@keyframes npcPageReturn {
+  from { opacity: 0; transform: scale(0.97) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.npc-page--returning {
+  animation: npcPageReturn 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
 .npc-grid {
   display: flex; flex-direction: column;
   gap: 0;
   width: 120%;
+  margin-bottom: -106px;
   margin-left: -10%;
-  transform: scale(0.9) translateY(-36px) translateX(100px);
+  transform: scale(0.9) translateY(-16px) translateX(100px);
   transform-origin: center center;
   overflow: visible;
 }
@@ -584,7 +600,7 @@
   height: 370px !important;
   flex: 0 0 195px !important;
   clip-path: polygon(80px 0, 100% 0, calc(100% - 80px) 100%, 0 100%) !important;
-  margin-left: -81px !important;
+  margin-left: -86px !important;
   transform: scale(0.9);
   transition: flex-basis 0.72s cubic-bezier(0.22,1,0.36,1), filter 0.42s, transform 0.42s;
 }
@@ -601,13 +617,13 @@
 }
 .npc-row .mbr-card-thumb > img:not(.mbr-card-npc-bg):not(.mbr-card-npc-badge) {
   position: absolute !important;
-  top: 0;
+  bottom: 0;
   left: 50%;
   width: 400px;
   height: 370px;
   max-width: none;
   object-fit: contain !important;
-  object-position: center center !important;
+  object-position: center bottom !important;
   transform: translate3d(-50%, 0, 0);
   backface-visibility: hidden;
   will-change: transform;
@@ -701,7 +717,7 @@ body.mbr-overlay-open .mbr-page {
   display: block;
   font-family: 'SUITE', sans-serif;
   font-size: clamp(2rem, 5vw, 4.5rem);
-  font-weight: 900; color: #fff;
+  font-weight: 650; color: rgba(255,255,255,0.75);
   letter-spacing: -0.01em; line-height: 1.2;
   clip-path: inset(0 100% 0 0);
   animation: mbrTextReveal 0.9s cubic-bezier(0.22,1,0.36,1) 0.05s both;
@@ -752,14 +768,14 @@ body.mbr-overlay-open .mbr-page {
   width: 100%; height: 200%;
   object-fit: contain; object-position: top left;
   opacity: 0;
-  filter: blur(6px) saturate(1.4) brightness(0.75);
+  filter: blur(6px) saturate(0.7) brightness(0.75);
   pointer-events: none;
   z-index: 1;
   transform: translateX(18%);
   transition: opacity 0.7s ease, transform 0.72s cubic-bezier(0.22,1,0.36,1);
 }
 .mbr-main-char-bg--loaded {
-  opacity: 0.55;
+  opacity: 0.3;
 }
 .mbr-main--panel-open .mbr-main-char-bg {
   transform: translateX(0);
@@ -802,8 +818,8 @@ body.mbr-overlay-open .mbr-page {
 }
 .mbr-main-name {
   display: block; color: #fff;
-  font-size: clamp(2rem, 4vw, 3.8rem); font-weight: 900;
-  text-shadow: 0 4px 24px rgba(0,0,0,0.5); line-height: 1.1;
+  font-size: clamp(1.6rem, 3.2vw, 3rem); font-weight: 600;
+  line-height: 1.1;
   padding-left: 28px;
 }
 
@@ -820,9 +836,22 @@ body.mbr-overlay-open .mbr-page {
 .mbr-main--panel-open .mbr-main-data {
   transform: translateX(0);
 }
+.mbr-main:not(.mbr-main--accent-ready) .mbr-main-identity,
+.mbr-main:not(.mbr-main--accent-ready) .mbr-main-data {
+  opacity: 0;
+  pointer-events: none;
+}
+.mbr-main--accent-ready .mbr-main-identity,
+.mbr-main--accent-ready .mbr-main-data {
+  opacity: 1;
+  transition: opacity 0.22s ease, transform 0.72s cubic-bezier(0.22,1,0.36,1);
+}
 .mbr-main-data-inner {
+  position: relative;
   overflow: hidden;
+  height: 100vh;
   max-height: 100vh;
+  box-sizing: border-box;
   padding: 52px calc(clamp(16px,2vw,24px) + 10px) 0;
   display: flex; flex-direction: column; gap: 28px;
 }
@@ -891,17 +920,67 @@ body.mbr-overlay-open .mbr-page {
   padding-bottom: 8px;
   border-bottom: 1px solid rgba(0,0,0,0.07);
 }
-
+.mbr-data-section-label--entry {
+  gap: 8px;
+  font-size: 0.95rem;
+}
+.mbr-entry-icon {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  display: inline-block;
+}
+.mbr-entry-icon::before,
+.mbr-entry-icon::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  mask: url('../../public/pokeball.png') center / contain no-repeat;
+  -webkit-mask: url('../../public/pokeball.png') center / contain no-repeat;
+}
+.mbr-entry-icon::before {
+  background: #fff;
+  transform: translate(1px, 1px);
+}
+.mbr-entry-icon::after {
+  background: var(--entry-icon-color, currentColor);
+}
+.mbr-entry-section {
+  position: absolute;
+  top: clamp(350px, 52vh, 460px);
+  left: 42px;
+  right: 8px;
+  z-index: 3;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
 /* 포켓몬 카드 */
 .mbr-pk {
-  display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: flex-start;
+  position: relative;
+  display: grid; grid-template-columns: 90px 1fr; gap: 10px; align-items: flex-start;
   background: rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.07);
   border-radius: 12px; padding: 12px;
   transition: background 0.2s;
 }
 .mbr-pk:hover { background: rgba(0,0,0,0.07); }
+.mbr-pk--partner {
+  background: rgba(var(--accent-rgb, 80,120,200), 0.14);
+  border-color: rgba(var(--accent-rgb, 80,120,200), 0.28);
+}
+.mbr-pk--partner:hover {
+  background: rgba(var(--accent-rgb, 80,120,200), 0.20);
+}
+.mbr-pk-partner-heart {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: #fff;
+  stroke: rgba(var(--accent-rgb, 80,120,200), 0.72);
+  filter: none;
+}
 .mbr-pk--large {
-  grid-template-columns: 104px 1fr;
+  grid-template-columns: 120px 1fr;
   padding: 16px 18px;
   background: rgba(99,102,241,0.06);
   border-color: rgba(99,102,241,0.18);
@@ -909,15 +988,23 @@ body.mbr-overlay-open .mbr-page {
 .mbr-pk-img {
   display: flex; align-items: center; justify-content: center;
   background: rgba(0,0,0,0.04); border-radius: 8px; aspect-ratio: 1;
+  overflow: visible;
 }
+.mbr-pk-title { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
 .mbr-pk-name { font-size: 0.95rem; font-weight: 800; color: #1e293b; }
 .mbr-pk--large .mbr-pk-name { font-size: 1.15rem; }
-.mbr-pk-lv { font-size: 0.7rem; color: #94a3b8; margin-top: 2px; }
+.mbr-pk-lv { font-size: 0.7rem; color: #94a3b8; font-weight: 700; }
 .mbr-pk-types { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
 .mbr-pk-type {
-  font-size: 0.56rem; font-weight: 700; padding: 2px 7px; border-radius: 999px;
-  color: #fff; text-transform: uppercase; letter-spacing: 0.04em;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 4px;
+  line-height: 1.2;
+  text-shadow: none;
+}
+.mbr-pk-ability {
+  margin-top: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #555;
 }
 .mbr-pk-moves { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
 .mbr-pk-move {
@@ -964,3 +1051,33 @@ body.mbr-overlay-open {
 
 
 
+.qna-list {
+  mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+}
+
+@media (min-width: 769px) {
+  .qna-search {
+    width: 160px !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .qna-write-icon-btn {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .qna-page-arrow {
+    background: rgba(80,120,60,0.6);
+    color: rgba(230,248,220,1);
+  }
+}
+
+.qna-page-arrow--mobile { display: none; }
+
+@media (max-width: 768px) {
+  .qna-page-arrow--desktop { display: none; }
+  .qna-page-arrow--mobile { display: inline-flex; }
+}

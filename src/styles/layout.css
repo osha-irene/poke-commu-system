@@ -178,6 +178,11 @@ img[style*="pixelated"],
   height: 100vh;
   max-height: 100vh;
 }
+.main-shell:has(.npc-page) {
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
 .main-shell::before {
   content: '';
   position: fixed;
@@ -868,6 +873,11 @@ body.rmv-detail-open .site-header {
 .main-layout:has(.mbr-page) {
   min-height: 0;
 }
+.main-layout:has(.npc-page) {
+  margin-top: 0;
+  margin-bottom: 0;
+  overflow: hidden;
+}
 
 .content-stage--feature {
   background: transparent;
@@ -901,6 +911,13 @@ body.rmv-detail-open .site-header {
   mix-blend-mode: multiply;
   opacity: 1;
   z-index: 0;
+}
+
+.main-layout--world .content-stage__surface--light {
+  background: rgb(199, 214, 181);
+  mix-blend-mode: normal;
+  border-color: rgba(160, 185, 130, 0.55);
+  opacity: 0.86;
 }
 
 .content-stage--feature::after {
