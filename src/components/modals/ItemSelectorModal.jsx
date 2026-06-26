@@ -1,4 +1,4 @@
-// src/components/modals/ItemSelectorModal.jsx
+﻿// src/components/modals/ItemSelectorModal.jsx
 import React, { useState, useMemo } from 'react';
 import { X, Search } from 'lucide-react';
 import { 
@@ -124,10 +124,10 @@ export default function ItemSelectorModal({
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full h-[85vh] min-h-0 flex flex-col">
         {/* 헤더 */}
         <div className="flex shrink-0 items-center justify-between p-6 border-b border-gray-200">
-          <h3 className="text-2xl font-bold text-gray-800">
+          <h3 className="text-3xl font-bold text-gray-800">
             {title}
             {multiSelect && (
-              <span className="ml-2 text-sm text-gray-500">
+              <span className="ml-2 text-base text-gray-500">
                 ({localSelectedItems.length}개 선택됨)
               </span>
             )}
@@ -163,7 +163,7 @@ export default function ItemSelectorModal({
                   <button
                     key={cat.id}
                     onClick={() => setCategory(cat.id)}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
+                    className={`px-4 py-2 rounded-lg text-base font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
                       category === cat.id
                         ? cat.color + ' shadow-lg scale-105'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -178,7 +178,7 @@ export default function ItemSelectorModal({
           )}
 
           {/* 결과 개수 */}
-          <div className="text-sm text-gray-600">
+          <div className="text-base text-gray-600">
             {filteredItems.length}개의 아이템
           </div>
         </div>
@@ -233,7 +233,7 @@ export default function ItemSelectorModal({
 
                     {/* 아이템 이름 */}
                     <div className="p-2 bg-white border-t border-gray-200">
-                      <div className={`text-xs font-semibold text-center truncate ${
+                      <div className={`text-sm font-semibold text-center truncate ${
                         isSelected ? 'text-indigo-700' : 'text-gray-800 group-hover:text-indigo-700'
                       }`}>
                         {item.name}
@@ -253,8 +253,8 @@ export default function ItemSelectorModal({
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-gray-400">
               <Search size={64} className="mb-4 text-gray-300" />
-              <p className="text-lg font-semibold">검색 결과가 없습니다</p>
-              <p className="text-sm mt-2">다른 검색어나 카테고리를 시도해보세요</p>
+              <p className="text-xl font-semibold">검색 결과가 없습니다</p>
+              <p className="text-base mt-2">다른 검색어나 카테고리를 시도해보세요</p>
             </div>
           )}
         </div>
@@ -280,3 +280,4 @@ export default function ItemSelectorModal({
     </div>
   );
 }
+

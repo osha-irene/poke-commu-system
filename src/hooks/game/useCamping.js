@@ -205,7 +205,68 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
       const session = snapshot.val();
       
       if (!session.cookingSuccess) {
-        alert('요리에 실패했으므로 보상이 없습니다');
+        // 실패 보상 지급
+        const configRef = ref(database, 'gameData/campingSettings');
+        const configSnap = await get(configRef);
+        const failSettings = configSnap.exists() ? configSnap.val() : {};
+        const failRewards = Array.isArray(failSettings.failRewards) ? failSettings.failRewards : [];
+        const failFriendshipMin = Number(failSettings.failFriendshipMin ?? 0);
+        const failFriendshipMax = Number(failSettings.failFriendshipMax ?? failFriendshipMin);
+        const failExpMin = Number(failSettings.failExpMin ?? 0);
+        const failExpMax = Number(failSettings.failExpMax ?? failExpMin);
+
+        const rollRange = (lo, hi) => lo >= hi ? lo : Math.floor(Math.random() * (hi - lo + 1)) + lo;
+        const failFriendship = failFriendshipMax > 0 ? rollRange(failFriendshipMin, failFriendshipMax) : 0;
+        const failExp = failExpMax > 0 ? rollRange(failExpMin, failExpMax) : 0;
+
+        const memberRef2 = ref(database, `members/${session.memberId}`);
+        const memberSnap2 = await get(memberRef2);
+        if (memberSnap2.exists()) {
+          const mData = memberSnap2.val();
+          let inv = mData.inventory || [];
+          for (const reward of failRewards) {
+            const idx = inv.findIndex(i => i.name === reward.name || String(i.itemId) === String(reward.itemId));
+            if (idx >= 0) {
+              inv = inv.map((item, i) => i === idx ? { ...item, count: item.count + (reward.count || 1) } : item);
+            } else {
+              inv = [...inv, { itemId: reward.itemId, name: reward.name, count: reward.count || 1, imageUrl: reward.imageUrl || reward.spriteUrl || '' }];
+            }
+          }
+
+          // 실패 친밀도 적용
+          let failPokemon = mData.caughtPokemon || [];
+          let failPartner = mData.partnerPokemon || null;
+          if (failFriendship > 0) {
+            const failEntryIds = new Set(
+              (session.entryPokemon || []).map(e => e.pokemonId).filter(Boolean)
+            );
+            failPokemon = failPokemon.map(p => {
+              if (p && (failEntryIds.has(p.uniqueId) || failEntryIds.has(p.id) || failEntryIds.has(p.pokemonId))) {
+                const bonus = Math.max(0, Math.floor(failFriendship * (p.friendshipGainMultiplier || 1)));
+                return { ...p, friendship: Math.min(255, (p.friendship || 0) + bonus) };
+              }
+              return p;
+            });
+            if (failPartner) {
+              const bonus = Math.max(0, Math.floor(failFriendship * (failPartner.friendshipGainMultiplier || 1)));
+              failPartner = { ...failPartner, friendship: Math.min(255, (failPartner.friendship || 0) + bonus) };
+            }
+          }
+
+          const failCharExp = failExp > 0 ? (mData.characterExp || 0) + failExp : (mData.characterExp || 0);
+          const failUpdates = { inventory: inv, caughtPokemon: failPokemon, characterExp: failCharExp };
+          if (failPartner) failUpdates.partnerPokemon = failPartner;
+          await update(memberRef2, failUpdates);
+          updateCurrentUser({ inventory: inv, caughtPokemon: failPokemon, characterExp: failCharExp, ...(failPartner ? { partnerPokemon: failPartner } : {}) });
+
+          const msgs = ['요리에 실패했습니다.'];
+          if (failFriendship > 0) msgs.push(`친밀도 +${failFriendship}`);
+          if (failExp > 0) msgs.push(`경험치 +${failExp}`);
+          if (failRewards.length > 0) msgs.push('위로 아이템: ' + failRewards.map(r => `${r.name} ×${r.count || 1}`).join(', '));
+          alert(msgs.join('\n'));
+        } else {
+          alert('요리에 실패했으므로 보상이 없습니다');
+        }
         await update(sessionRef, { status: 'applied' });
         return;
       }
@@ -221,6 +282,11 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
       const memberData = memberSnapshot.val();
       const stageData = session.cookingResult.stageData;
 
+      // 캠핑 설정 로드 (보너스 아이템 등)
+      const configRef2 = ref(database, 'gameData/campingSettings');
+      const configSnap2 = await get(configRef2);
+      const campingSettings = configSnap2.exists() ? configSnap2.val() : {};
+
       // 세션에 저장된 엔트리 포켓몬 ID 목록
       const entryIds = new Set(
         (session.entryPokemon || []).map(e => e.pokemonId).filter(Boolean)
@@ -228,12 +294,22 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
       const isEntryPokemon = (p) =>
         p && (entryIds.has(p.uniqueId) || entryIds.has(p.id) || entryIds.has(p.pokemonId));
 
+      // 친밀도 범위 → 랜덤 값 계산
+      const randRange = (min, max, fallback) => {
+        const lo = Number(min ?? fallback ?? 0);
+        const hi = Number(max ?? lo);
+        if (lo >= hi) return lo;
+        return Math.floor(Math.random() * (hi - lo + 1)) + lo;
+      };
+
+      const friendshipBonus = randRange(stageData.friendshipMin, stageData.friendshipMax, stageData.friendshipBonus);
+      const expBonus = randRange(stageData.expMin, stageData.expMax, stageData.expBonus);
+
       // 엔트리 포켓몬만 친밀도 증가
       const updatedPokemon = memberData.caughtPokemon.map((pokemon) => {
         if (isEntryPokemon(pokemon)) {
-          const friendshipBonus = Math.max(0, Math.floor(stageData.friendshipBonus * (pokemon.friendshipGainMultiplier || 1)));
-          const newFriendship = Math.min(255, (pokemon.friendship || 0) + friendshipBonus);
-          console.log(`친밀도 업데이트: ${pokemon.name} ${pokemon.friendship || 0} → ${newFriendship}`);
+          const bonus = Math.max(0, Math.floor(friendshipBonus * (pokemon.friendshipGainMultiplier || 1)));
+          const newFriendship = Math.min(255, (pokemon.friendship || 0) + bonus);
           return { ...pokemon, friendship: newFriendship };
         }
         return pokemon;
@@ -242,49 +318,76 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
       // 파트너 포켓몬은 항상 친밀도 증가
       let updatedPartnerPokemon = memberData.partnerPokemon || null;
       if (updatedPartnerPokemon) {
-        const friendshipBonus = Math.max(0, Math.floor(stageData.friendshipBonus * (updatedPartnerPokemon.friendshipGainMultiplier || 1)));
+        const bonus = Math.max(0, Math.floor(friendshipBonus * (updatedPartnerPokemon.friendshipGainMultiplier || 1)));
         updatedPartnerPokemon = {
           ...updatedPartnerPokemon,
-          friendship: Math.min(255, (updatedPartnerPokemon.friendship || 0) + friendshipBonus)
+          friendship: Math.min(255, (updatedPartnerPokemon.friendship || 0) + bonus)
         };
       }
 
       // 캐릭터 경험치 증가
-      const newExp = (memberData.characterExp || 0) + stageData.expBonus;
+      const newExp = (memberData.characterExp || 0) + expBonus;
 
-      // 친밀도 160 이상 포켓몬이 있는지 확인 (엔트리 + 파트너 기준)
-      const hasHighFriendshipPokemon = [
-        ...updatedPokemon.filter(isEntryPokemon),
-        ...(updatedPartnerPokemon ? [updatedPartnerPokemon] : [])
-      ].some(p => (p.friendship || 0) >= 160);
-
-      let bonusItem = null;
       let updatedInventory = memberData.inventory || [];
+      const obtainedStageItems = [];
+      const obtainedBonusItems = [];
 
-      if (hasHighFriendshipPokemon) {
-        bonusItem = campingHelper.rollBonusItem(allItems);
-        
-        if (bonusItem) {
-          const existingItemIndex = updatedInventory.findIndex(i => i.itemId === bonusItem.id);
-          
-          if (existingItemIndex >= 0) {
+      // 단계별 아이템 풀 — 해당 단계 아이템 풀에서 minPick~maxPick개 랜덤 획득
+      const stagePool = Array.isArray(stageData.bonusItems) ? stageData.bonusItems : [];
+      if (stagePool.length > 0) {
+        const minPick = Math.max(1, Number(stageData.minPick ?? 1));
+        const maxPick = Math.max(minPick, Number(stageData.maxPick ?? minPick));
+        const pickCount = Math.min(randRange(minPick, maxPick), stagePool.length);
+        // Fisher-Yates shuffle → 앞 pickCount개 사용
+        const pool = [...stagePool];
+        for (let i = pool.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+        for (const picked of pool.slice(0, pickCount)) {
+          const existingIdx = updatedInventory.findIndex(i =>
+            String(i.itemId) === String(picked.itemId) || i.name === picked.name
+          );
+          if (existingIdx >= 0) {
             updatedInventory = updatedInventory.map((item, idx) =>
-              idx === existingItemIndex
-                ? { ...item, count: item.count + 1 }
-                : item
+              idx === existingIdx ? { ...item, count: item.count + 1 } : item
             );
           } else {
             updatedInventory = [
               ...updatedInventory,
-              {
-                itemId: bonusItem.id,
-                name: bonusItem.name,
-                count: 1,
-                imageUrl: bonusItem.imageUrl || bonusItem.spriteUrl
-              }
+              { itemId: picked.itemId, name: picked.name, count: 1, imageUrl: picked.spriteUrl || picked.imageUrl || '' }
             ];
           }
-          console.log(`보너스 아이템 획득: ${bonusItem.name}`);
+          obtainedStageItems.push(picked.name);
+        }
+      }
+
+      // 보너스 아이템 — 친밀도 기준 이상 포켓몬이 있으면 각 아이템 독립 확률로 추첨
+      const minFriendship = Number(campingSettings.minFriendshipForBonus ?? 160);
+      const hasHighFriendshipPokemon = [
+        ...updatedPokemon.filter(isEntryPokemon),
+        ...(updatedPartnerPokemon ? [updatedPartnerPokemon] : [])
+      ].some(p => (p.friendship || 0) >= minFriendship);
+
+      if (hasHighFriendshipPokemon) {
+        const bonusItemList = Array.isArray(campingSettings.bonusItems) ? campingSettings.bonusItems : [];
+        for (const bonusCfg of bonusItemList) {
+          const chance = Number(bonusCfg.chance ?? bonusCfg.weight ?? 0);
+          if (chance <= 0 || Math.random() * 100 > chance) continue;
+          const existingIdx = updatedInventory.findIndex(i =>
+            String(i.itemId) === String(bonusCfg.itemId) || i.name === bonusCfg.name
+          );
+          if (existingIdx >= 0) {
+            updatedInventory = updatedInventory.map((item, idx) =>
+              idx === existingIdx ? { ...item, count: item.count + 1 } : item
+            );
+          } else {
+            updatedInventory = [
+              ...updatedInventory,
+              { itemId: bonusCfg.itemId, name: bonusCfg.name, count: 1, imageUrl: bonusCfg.spriteUrl || bonusCfg.imageUrl || '' }
+            ];
+          }
+          obtainedBonusItems.push(bonusCfg.name);
         }
       }
 
@@ -355,9 +458,10 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
 
       alert(
         `✅ 결과 반영 완료!\n\n` +
-        `친밀도 +${stageData.friendshipBonus}\n` +
-        `경험치 +${stageData.expBonus}\n` +
-        (bonusItem ? `보너스 아이템: ${bonusItem.name} 획득!\n` : '') +
+        `친밀도 +${friendshipBonus}\n` +
+        `경험치 +${expBonus}\n` +
+        (obtainedStageItems.length > 0 ? `단계 아이템: ${obtainedStageItems.join(', ')} 획득!\n` : '') +
+        (obtainedBonusItems.length > 0 ? `보너스 아이템: ${obtainedBonusItems.join(', ')} 획득!\n` : '') +
         (eggObtained ? '어라? 포켓몬의 알이 있다!' : '')
       );
     } catch (error) {

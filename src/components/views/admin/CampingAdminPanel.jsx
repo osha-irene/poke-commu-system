@@ -6,11 +6,11 @@ import ItemSelectorModal from '../../modals/ItemSelectorModal';
 import useMediaQuery from '../../../hooks/useMediaQuery';
 
 const DEFAULT_STAGES = [
-  { stage: 1, successRate: 100, friendshipBonus: 10, expBonus: 50, message: '캠핑을 시작했어요. [만족] 또는 [계속]을 선택해 주세요.' },
-  { stage: 2, successRate: 80,  friendshipBonus: 20, expBonus: 100, message: '캠핑이 조금 더 깊어졌어요. [만족] 또는 [계속]을 선택해 주세요.' },
-  { stage: 3, successRate: 60,  friendshipBonus: 30, expBonus: 150, message: '포켓몬들이 꽤 즐거워 보여요. [만족] 또는 [계속]을 선택해 주세요.' },
-  { stage: 4, successRate: 40,  friendshipBonus: 40, expBonus: 200, message: '캠핑 분위기가 무르익었어요. [만족] 또는 [계속]을 선택해 주세요.' },
-  { stage: 5, successRate: 20,  friendshipBonus: 50, expBonus: 300, message: '최고 단계까지 왔어요. 캠핑을 마무리합니다.' },
+  { stage: 1, successRate: 100, friendshipMin: 10, friendshipMax: 10, expMin: 50,  expMax: 50,  message: '캠핑을 시작했어요. [만족] 또는 [계속]을 선택해 주세요.' },
+  { stage: 2, successRate: 80,  friendshipMin: 20, friendshipMax: 20, expMin: 100, expMax: 100, message: '캠핑이 조금 더 깊어졌어요. [만족] 또는 [계속]을 선택해 주세요.' },
+  { stage: 3, successRate: 60,  friendshipMin: 30, friendshipMax: 30, expMin: 150, expMax: 150, message: '포켓몬들이 꽤 즐거워 보여요. [만족] 또는 [계속]을 선택해 주세요.' },
+  { stage: 4, successRate: 40,  friendshipMin: 40, friendshipMax: 40, expMin: 200, expMax: 200, message: '캠핑 분위기가 무르익었어요. [만족] 또는 [계속]을 선택해 주세요.' },
+  { stage: 5, successRate: 20,  friendshipMin: 50, friendshipMax: 50, expMin: 300, expMax: 300, message: '최고 단계까지 왔어요. 캠핑을 마무리합니다.' },
 ];
 
 const DEFAULT_SETTINGS = {
@@ -20,9 +20,12 @@ const DEFAULT_SETTINGS = {
   eggChance: 5,
   minFriendshipForBonus: 160,
   bonusItems: [
-    { itemId: 50,  name: '이상한사탕', weight: 15 },
-    { itemId: 92, name: '금구슬',    weight: 20 },
+    { itemId: 50, name: '이상한사탕', chance: 15 },
+    { itemId: 92, name: '금구슬',    chance: 20 },
   ],
+  failRewards: [],
+  failFriendshipMin: 0,
+  failFriendshipMax: 0,
   stages: DEFAULT_STAGES,
 };
 
@@ -40,25 +43,46 @@ const buildDraft = (settings = {}) => ({
     settings.eggChance ?? settings.mastodonTaggedEggChance ?? settings.eggChanceWithFriendship ?? settings.eggChanceBase,
     DEFAULT_SETTINGS.eggChance
   ),
-  bonusItems: Array.isArray(settings.bonusItems) ? settings.bonusItems : DEFAULT_SETTINGS.bonusItems,
+  bonusItems: (Array.isArray(settings.bonusItems) ? settings.bonusItems : DEFAULT_SETTINGS.bonusItems).map(b => ({
+    ...b,
+    // 기존 weight 필드가 있으면 chance로 마이그레이션
+    chance: b.chance ?? b.weight ?? 10,
+  })),
+  failRewards: Array.isArray(settings.failRewards) ? settings.failRewards : [],
+  failFriendshipMin: Number(settings.failFriendshipMin ?? 0),
+  failFriendshipMax: Number(settings.failFriendshipMax ?? 0),
+  failExpMin: Number(settings.failExpMin ?? 0),
+  failExpMax: Number(settings.failExpMax ?? 0),
   stages: DEFAULT_STAGES.map((defaultStage, index) => {
     const saved = settings.stages?.[index] || settings.stageRewards?.[index] || settings.cookingStages?.[index] || {};
+    // 기존 단일값 → 범위로 마이그레이션
+    const fMin = saved.friendshipMin ?? saved.friendshipBonus ?? defaultStage.friendshipMin;
+    const fMax = saved.friendshipMax ?? saved.friendshipBonus ?? defaultStage.friendshipMax;
+    const eMin = saved.expMin ?? saved.expBonus ?? defaultStage.expMin;
+    const eMax = saved.expMax ?? saved.expBonus ?? defaultStage.expMax;
     return {
       ...defaultStage,
       ...saved,
       successRate: normalizePercent(saved.successRate ?? defaultStage.successRate, defaultStage.successRate),
+      friendshipMin: Number(fMin),
+      friendshipMax: Number(fMax),
+      expMin: Number(eMin),
+      expMax: Number(eMax),
+      bonusItems: Array.isArray(saved.bonusItems) ? saved.bonusItems : [],
+      minPick: Number(saved.minPick ?? 1),
+      maxPick: Number(saved.maxPick ?? 1),
     };
   }),
 });
 
 function InfoLabel({ children, tooltip }) {
   return (
-    <label className="flex items-center gap-1 text-sm font-semibold text-gray-700">
+    <label className="flex items-center gap-1 text-base font-semibold text-gray-700">
       {children}
       {tooltip && (
         <span className="relative group">
-          <HelpCircle size={14} className="text-gray-400" />
-          <span className="pointer-events-none absolute left-1/2 top-5 z-30 hidden w-64 -translate-x-1/2 rounded bg-gray-900 px-3 py-2 text-xs font-normal leading-relaxed text-white shadow-lg group-hover:block">
+          <HelpCircle size={15} className="text-gray-400" />
+          <span className="pointer-events-none absolute left-1/2 top-5 z-30 hidden w-64 -translate-x-1/2 rounded bg-gray-900 px-3 py-2 text-sm font-normal leading-relaxed text-white shadow-lg group-hover:block">
             {tooltip}
           </span>
         </span>
@@ -74,14 +98,14 @@ function NumberInput({ value, onChange, min = 0 }) {
       min={min}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="mt-1 w-full rounded border border-lime-300 bg-white px-3 py-2 text-sm focus:border-lime-500 focus:outline-none focus:ring-2 focus:ring-lime-200"
+      className="mt-1 w-full rounded border border-lime-300 bg-white px-3 py-2 text-base focus:border-lime-500 focus:outline-none focus:ring-2 focus:ring-lime-200"
     />
   );
 }
 
-function BonusItemWeightPanel({ bonusItems, onUpdate, onOpenPicker, label, hint, compact = false }) {
-  const updateWeight = (itemId, weight) =>
-    onUpdate(bonusItems.map(b => String(b.itemId) === String(itemId) ? { ...b, weight: Number(weight) || 0 } : b));
+function BonusItemChancePanel({ bonusItems, onUpdate, onOpenPicker, label, hint, compact = false }) {
+  const updateChance = (itemId, chance) =>
+    onUpdate(bonusItems.map(b => String(b.itemId) === String(itemId) ? { ...b, chance: Math.min(100, Math.max(0, Number(chance) || 0)) } : b));
   const removeItem = (itemId) =>
     onUpdate(bonusItems.filter(b => String(b.itemId) !== String(itemId)));
 
@@ -89,31 +113,128 @@ function BonusItemWeightPanel({ bonusItems, onUpdate, onOpenPicker, label, hint,
     <div>
       <div className="flex items-center gap-3 mb-2">
         <div className="flex-1">
-          {label && <span className={`font-semibold text-gray-700 ${compact ? 'text-xs' : 'text-sm'}`}>{label}</span>}
-          {hint && <span className="ml-2 text-xs text-gray-400">{hint}</span>}
+          {label && <span className={`font-semibold text-gray-700 ${compact ? 'text-sm' : 'text-base'}`}>{label}</span>}
+          {hint && <span className="ml-2 text-sm text-gray-400">{hint}</span>}
         </div>
         <Button variant="ghost" size="sm" onClick={onOpenPicker}>
-          <Plus size={12} /> 추가
+          <Plus size={13} /> 추가
         </Button>
       </div>
       {bonusItems.length === 0 ? (
-        <p className={`text-gray-400 ${compact ? 'text-xs' : 'text-sm'}`}>없음 (기본 아이템 사용)</p>
+        <p className={`text-gray-400 ${compact ? 'text-sm' : 'text-base'}`}>없음</p>
       ) : (
         <div className="flex flex-wrap gap-2">
           {bonusItems.map(b => (
             <div key={b.itemId} className="flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 pl-3 pr-1 py-1">
-              <span className="text-xs font-medium text-amber-900">{b.name}</span>
+              <span className="text-sm font-medium text-amber-900">{b.name}</span>
               <input
-                type="number" min={1} value={b.weight}
-                onChange={e => updateWeight(b.itemId, e.target.value)}
-                className="w-10 rounded border border-amber-200 bg-white px-1 py-0.5 text-xs text-center mx-1"
-                title="가중치"
+                type="number" min={0} max={100} value={b.chance ?? 10}
+                onChange={e => updateChance(b.itemId, e.target.value)}
+                className="w-14 rounded border border-amber-200 bg-white px-1 py-0.5 text-sm text-center mx-1"
+                title="획득 확률 (%)"
               />
-              <button onClick={() => removeItem(b.itemId)} className="text-amber-400 hover:text-red-500"><X size={11} /></button>
+              <span className="text-sm text-amber-600 mr-1">%</span>
+              <button onClick={() => removeItem(b.itemId)} className="text-amber-400 hover:text-red-500"><X size={12} /></button>
             </div>
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function FailRewardPanel({ failRewards, onUpdate, onOpenPicker, friendshipMin, friendshipMax, onFriendshipMinChange, onFriendshipMaxChange, expMin, expMax, onExpMinChange, onExpMaxChange }) {
+  const updateCount = (itemId, count) =>
+    onUpdate(failRewards.map(r => String(r.itemId) === String(itemId) ? { ...r, count: Math.max(1, Number(count) || 1) } : r));
+  const removeItem = (itemId) =>
+    onUpdate(failRewards.filter(r => String(r.itemId) !== String(itemId)));
+
+  const rangeInputCls = "w-16 rounded border border-red-200 bg-white px-2 py-1 text-sm text-center";
+  const rangeLabelCls = "text-sm text-gray-600 w-24 shrink-0";
+
+  return (
+    <div className="mb-5 rounded border border-red-100 bg-red-50/30 p-3">
+      <div className="font-semibold text-red-800 text-base mb-3">실패 보상</div>
+
+      {/* 실패 친밀도 + 경험치 범위 */}
+      <div className="flex flex-wrap gap-x-6 gap-y-2 mb-3">
+        <div className="flex items-center gap-2">
+          <span className={rangeLabelCls}>친밀도 범위</span>
+          <input type="number" min={0} value={friendshipMin} onChange={e => onFriendshipMinChange(e.target.value)} className={rangeInputCls} placeholder="min" />
+          <span className="text-sm text-gray-400">~</span>
+          <input type="number" min={0} value={friendshipMax} onChange={e => onFriendshipMaxChange(e.target.value)} className={rangeInputCls} placeholder="max" />
+          <span className="text-sm text-gray-400">(0이면 없음)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={rangeLabelCls}>경험치 범위</span>
+          <input type="number" min={0} value={expMin} onChange={e => onExpMinChange(e.target.value)} className={rangeInputCls} placeholder="min" />
+          <span className="text-sm text-gray-400">~</span>
+          <input type="number" min={0} value={expMax} onChange={e => onExpMaxChange(e.target.value)} className={rangeInputCls} placeholder="max" />
+          <span className="text-sm text-gray-400">(0이면 없음)</span>
+        </div>
+      </div>
+
+      {/* 실패 아이템 */}
+      <div className="flex items-center gap-3 mb-2">
+        <span className="text-sm text-gray-600 flex-1">위로 아이템</span>
+        <Button variant="ghost" size="sm" onClick={onOpenPicker}>
+          <Plus size={13} /> 추가
+        </Button>
+      </div>
+      {failRewards.length === 0 ? (
+        <p className="text-gray-400 text-sm">없음 (실패 시 아이템 보상 없음)</p>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {failRewards.map(r => (
+            <div key={r.itemId} className="flex items-center gap-1 rounded-full border border-red-200 bg-white pl-3 pr-1 py-1">
+              <span className="text-sm font-medium text-red-900">{r.name}</span>
+              <span className="text-sm text-red-400 mx-1">×</span>
+              <input
+                type="number" min={1} value={r.count || 1}
+                onChange={e => updateCount(r.itemId, e.target.value)}
+                className="w-12 rounded border border-red-200 bg-white px-1 py-0.5 text-sm text-center"
+                title="지급 개수"
+              />
+              <button onClick={() => removeItem(r.itemId)} className="text-red-400 hover:text-red-600 ml-1"><X size={12} /></button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StageItemPoolPanel({ bonusItems, onUpdate, onOpenPicker, minPick, maxPick, onMinPickChange, onMaxPickChange }) {
+  const removeItem = (itemId) => onUpdate(bonusItems.filter(b => String(b.itemId) !== String(itemId)));
+  return (
+    <div className="mt-2 rounded border border-sky-100 bg-sky-50/40 p-2">
+      <div className="flex items-center gap-3 mb-2">
+        <span className="text-sm font-semibold text-sky-800 flex-1">단계 아이템 풀</span>
+        <div className="flex items-center gap-1 text-xs text-gray-500 shrink-0">
+          획득 개수
+          <input type="number" min={1} value={minPick}
+            onChange={e => onMinPickChange(Math.max(1, Number(e.target.value) || 1))}
+            className="w-10 rounded border border-sky-200 bg-white px-1 py-0.5 text-center text-xs mx-0.5" />
+          ~
+          <input type="number" min={1} value={maxPick}
+            onChange={e => onMaxPickChange(Math.max(1, Number(e.target.value) || 1))}
+            className="w-10 rounded border border-sky-200 bg-white px-1 py-0.5 text-center text-xs mx-0.5" />
+          개
+        </div>
+        <Button variant="ghost" size="sm" onClick={onOpenPicker}><Plus size={12} /> 추가</Button>
+      </div>
+      {bonusItems.length === 0
+        ? <p className="text-xs text-gray-400">없음 (단계 아이템 보상 없음)</p>
+        : <div className="flex flex-wrap gap-1.5">
+            {bonusItems.map(b => (
+              <div key={b.itemId} className="flex items-center gap-1 rounded-full border border-sky-200 bg-white px-2.5 py-1">
+                <span className="text-xs font-medium text-sky-900">{b.name}</span>
+                <button onClick={() => removeItem(b.itemId)} className="text-sky-400 hover:text-red-500 ml-1"><X size={11} /></button>
+              </div>
+            ))}
+          </div>
+      }
+      <p className="text-xs text-gray-400 mt-1.5">해당 단계에서 완료 시 풀에서 {minPick}~{maxPick}개를 랜덤 획득</p>
     </div>
   );
 }
@@ -205,13 +326,22 @@ export default function CampingAdminPanel({
         eggChance: Math.max(0, Number(draft.eggChance) || 0),
         minFriendshipForBonus: Math.max(0, Number(draft.minFriendshipForBonus) || 0),
         bonusItems: draft.bonusItems,
+        failRewards: draft.failRewards,
+        failFriendshipMin: Math.max(0, Number(draft.failFriendshipMin) || 0),
+        failFriendshipMax: Math.max(0, Number(draft.failFriendshipMax) || 0),
+        failExpMin: Math.max(0, Number(draft.failExpMin) || 0),
+        failExpMax: Math.max(0, Number(draft.failExpMax) || 0),
         stages: draft.stages.map((s, i) => ({
           stage: i + 1,
           successRate: Math.max(0, Number(s.successRate) || 0),
-          friendshipBonus: Math.max(0, Number(s.friendshipBonus) || 0),
-          expBonus: Math.max(0, Number(s.expBonus) || 0),
+          friendshipMin: Math.max(0, Number(s.friendshipMin) || 0),
+          friendshipMax: Math.max(0, Number(s.friendshipMax) || 0),
+          expMin: Math.max(0, Number(s.expMin) || 0),
+          expMax: Math.max(0, Number(s.expMax) || 0),
           message: s.message || '',
-          bonusItems: s.bonusItems || [],
+          bonusItems: (s.bonusItems || []).map(({ chance, ...rest }) => rest), // chance 제거, 순수 풀
+          minPick: Math.max(1, Number(s.minPick) || 1),
+          maxPick: Math.max(1, Number(s.maxPick) || 1),
         })),
       },
     });
@@ -244,7 +374,7 @@ export default function CampingAdminPanel({
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-xl font-bold text-green-950">캠핑 시스템 설정</h2>
-                <p className="mt-1 text-sm text-green-800">단계별 보상, 자동 메시지와 마스토돈 진행 횟수를 설정합니다.</p>
+                <p className="mt-1 text-base text-green-800">단계별 보상, 자동 메시지와 마스토돈 진행 횟수를 설정합니다.</p>
               </div>
               <Button variant="primary" size="sm" onClick={handleSave}>설정 저장</Button>
             </div>
@@ -273,66 +403,89 @@ export default function CampingAdminPanel({
               </div>
             </div>
 
-            {/* 글로벌 기본 보너스 아이템 */}
-            <div className="mb-5">
-              <BonusItemWeightPanel
+            {/* 보너스 아이템 */}
+            <div className="mb-5 rounded border border-amber-100 bg-amber-50/30 p-3">
+              <div className="font-semibold text-amber-800 text-base mb-1">보너스 아이템</div>
+              <p className="text-sm text-gray-500 mb-3">친밀도 기준 이상의 포켓몬이 함께하면 각 아이템을 지정한 확률(%)로 독립적으로 획득합니다.</p>
+              <BonusItemChancePanel
                 bonusItems={draft.bonusItems}
-                allItems={allItems}
                 onUpdate={items => updateDraft('bonusItems', items)}
                 onOpenPicker={() => setItemModalTarget('global')}
-                label="기본 보너스 아이템"
-                hint="단계별 아이템이 없을 때 사용됩니다"
+                label=""
+                hint=""
               />
             </div>
 
+            {/* 실패 보상 */}
+            <FailRewardPanel
+              failRewards={draft.failRewards}
+              onUpdate={items => updateDraft('failRewards', items)}
+              onOpenPicker={() => setItemModalTarget('failReward')}
+              friendshipMin={draft.failFriendshipMin}
+              friendshipMax={draft.failFriendshipMax}
+              onFriendshipMinChange={v => updateDraft('failFriendshipMin', Math.max(0, Number(v) || 0))}
+              onFriendshipMaxChange={v => updateDraft('failFriendshipMax', Math.max(0, Number(v) || 0))}
+              expMin={draft.failExpMin}
+              expMax={draft.failExpMax}
+              onExpMinChange={v => updateDraft('failExpMin', Math.max(0, Number(v) || 0))}
+              onExpMaxChange={v => updateDraft('failExpMax', Math.max(0, Number(v) || 0))}
+            />
+
             {/* 단계별 보상 */}
             <div className="space-y-3">
-              <h3 className="font-bold text-gray-800">단계별 보상 및 메시지</h3>
+              <h3 className="font-bold text-gray-800 text-base">단계별 보상 및 메시지</h3>
               {draft.stages.map((stage, index) => (
                 <div key={index} className="rounded border border-lime-200 bg-lime-50/40 p-3 space-y-3">
-                  <div className="font-bold text-green-800 text-sm">Lv.{index + 1}</div>
-                  <div className={`grid gap-2 ${isMobile ? 'grid-cols-3' : 'grid-cols-12'} items-end`}>
-                    <div className={isMobile ? 'col-span-1' : 'col-span-2'}>
+                  <div className="font-bold text-green-800 text-base">Lv.{index + 1}</div>
+                  {/* 성공률 + 범위 입력 */}
+                  <div className="flex flex-wrap items-end gap-3">
+                    <div className="shrink-0">
                       <InfoLabel>성공률 %</InfoLabel>
-                      <NumberInput value={stage.successRate} onChange={v => updateStage(index, 'successRate', v)} />
+                      <input type="number" min={0} value={stage.successRate}
+                        onChange={e => updateStage(index, 'successRate', e.target.value)}
+                        className="mt-1 w-20 rounded border border-lime-300 bg-white px-2 py-2 text-base text-center focus:border-lime-500 focus:outline-none focus:ring-2 focus:ring-lime-200" />
                     </div>
-                    <div className={isMobile ? 'col-span-1' : 'col-span-2'}>
-                      <InfoLabel>친밀도</InfoLabel>
-                      <NumberInput value={stage.friendshipBonus} onChange={v => updateStage(index, 'friendshipBonus', v)} />
-                    </div>
-                    <div className={isMobile ? 'col-span-1' : 'col-span-2'}>
-                      <InfoLabel>경험치</InfoLabel>
-                      <NumberInput value={stage.expBonus} onChange={v => updateStage(index, 'expBonus', v)} />
-                    </div>
-                    {!isMobile && (
-                      <div className="col-span-5">
-                        <InfoLabel>단계 메시지</InfoLabel>
-                        <input
-                          value={stage.message}
-                          onChange={e => updateStage(index, 'message', e.target.value)}
-                          className="mt-1 w-full rounded border border-lime-300 bg-white px-3 py-2 text-sm focus:border-lime-500 focus:outline-none focus:ring-2 focus:ring-lime-200"
-                        />
+                    <div className="shrink-0">
+                      <InfoLabel tooltip="친밀도 min ~ max 사이 랜덤 지급">친밀도 범위</InfoLabel>
+                      <div className="flex items-center gap-1 mt-1">
+                        <input type="number" min={0} value={stage.friendshipMin}
+                          onChange={e => updateStage(index, 'friendshipMin', Number(e.target.value))}
+                          className="w-16 rounded border border-lime-300 bg-white px-1 py-2 text-base text-center focus:border-lime-500 focus:outline-none" />
+                        <span className="text-gray-400 text-sm shrink-0">~</span>
+                        <input type="number" min={0} value={stage.friendshipMax}
+                          onChange={e => updateStage(index, 'friendshipMax', Number(e.target.value))}
+                          className="w-16 rounded border border-lime-300 bg-white px-1 py-2 text-base text-center focus:border-lime-500 focus:outline-none" />
                       </div>
-                    )}
-                  </div>
-                  {isMobile && (
-                    <div>
+                    </div>
+                    <div className="shrink-0">
+                      <InfoLabel tooltip="경험치 min ~ max 사이 랜덤 지급">경험치 범위</InfoLabel>
+                      <div className="flex items-center gap-1 mt-1">
+                        <input type="number" min={0} value={stage.expMin}
+                          onChange={e => updateStage(index, 'expMin', Number(e.target.value))}
+                          className="w-20 rounded border border-lime-300 bg-white px-1 py-2 text-base text-center focus:border-lime-500 focus:outline-none" />
+                        <span className="text-gray-400 text-sm shrink-0">~</span>
+                        <input type="number" min={0} value={stage.expMax}
+                          onChange={e => updateStage(index, 'expMax', Number(e.target.value))}
+                          className="w-20 rounded border border-lime-300 bg-white px-1 py-2 text-base text-center focus:border-lime-500 focus:outline-none" />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-40">
                       <InfoLabel>단계 메시지</InfoLabel>
                       <input
                         value={stage.message}
                         onChange={e => updateStage(index, 'message', e.target.value)}
-                        className="mt-1 w-full rounded border border-lime-300 bg-white px-3 py-2 text-sm focus:border-lime-500 focus:outline-none focus:ring-2 focus:ring-lime-200"
+                        className="mt-1 w-full rounded border border-lime-300 bg-white px-3 py-2 text-base focus:border-lime-500 focus:outline-none focus:ring-2 focus:ring-lime-200"
                       />
                     </div>
-                  )}
-                  <BonusItemWeightPanel
+                  </div>
+                  <StageItemPoolPanel
                     bonusItems={stage.bonusItems || []}
-                    allItems={allItems}
                     onUpdate={items => updateStage(index, 'bonusItems', items)}
                     onOpenPicker={() => setItemModalTarget(index)}
-                    label={`Lv.${index + 1} 전용 아이템`}
-                    hint="설정 시 기본 아이템 대신 이 목록에서 추첨"
-                    compact
+                    minPick={stage.minPick ?? 1}
+                    maxPick={stage.maxPick ?? 1}
+                    onMinPickChange={v => updateStage(index, 'minPick', v)}
+                    onMaxPickChange={v => updateStage(index, 'maxPick', v)}
                   />
                 </div>
               ))}
@@ -396,7 +549,11 @@ export default function CampingAdminPanel({
         onClose={() => setItemModalTarget(null)}
         onSelect={item => {
           const newEntry = { itemId: item.id, name: item.name, weight: 10 };
-          if (itemModalTarget === 'global') {
+          if (itemModalTarget === 'failReward') {
+            const failEntry = { itemId: item.id, name: item.name, count: 1, spriteUrl: item.spriteUrl || item.imageUrl || '' };
+            if (!draft.failRewards.some(r => String(r.itemId) === String(item.id)))
+              updateDraft('failRewards', [...draft.failRewards, failEntry]);
+          } else if (itemModalTarget === 'global') {
             if (!draft.bonusItems.some(b => String(b.itemId) === String(item.id)))
               updateDraft('bonusItems', [...draft.bonusItems, newEntry]);
           } else if (typeof itemModalTarget === 'number') {
@@ -407,7 +564,7 @@ export default function CampingAdminPanel({
           setItemModalTarget(null);
         }}
         items={allItems}
-        title={itemModalTarget === 'global' ? '기본 보너스 아이템 추가' : `Lv.${typeof itemModalTarget === 'number' ? itemModalTarget + 1 : ''} 아이템 추가`}
+        title={itemModalTarget === 'failReward' ? '실패 보상 아이템 추가' : itemModalTarget === 'global' ? '기본 보너스 아이템 추가' : `Lv.${typeof itemModalTarget === 'number' ? itemModalTarget + 1 : ''} 아이템 추가`}
       />
     </div>
   );

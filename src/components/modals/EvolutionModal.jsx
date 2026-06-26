@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
 
@@ -48,16 +48,16 @@ export default function EvolutionModal({
                     imageRendering: 'pixelated'
                   }}
                 />
-                <h3 className="text-xl font-bold text-gray-800 mb-1">
+                <h3 className="text-2xl font-bold text-gray-800 mb-1">
                   {pokemon.nickname || getBaseName(pokemon)}
                 </h3>
-                <p className="text-sm text-gray-600">Lv. {pokemon.level}</p>
+                <p className="text-base text-gray-600">Lv. {pokemon.level}</p>
                 <div className="flex gap-2 justify-center mt-3">
-                  <span className="text-xs px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold">
+                  <span className="text-sm px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold">
                     {pokemon.type}
                   </span>
                   {pokemon.type2 && (
-                    <span className="text-xs px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold">
+                    <span className="text-sm px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold">
                       {pokemon.type2}
                     </span>
                   )}
@@ -68,7 +68,7 @@ export default function EvolutionModal({
             {/* 화살표 */}
             <div className="flex flex-col items-center">
               <ArrowRight size={48} className="text-yellow-500 animate-pulse" />
-              <span className="text-xs text-gray-500 mt-2">진화!</span>
+              <span className="text-sm text-gray-500 mt-2">진화!</span>
             </div>
 
             {/* 진화 후 */}
@@ -84,16 +84,16 @@ export default function EvolutionModal({
                     imageRendering: 'pixelated'
                   }}
                 />
-                <h3 className="text-xl font-bold text-gray-800 mb-1 relative z-10">
+                <h3 className="text-2xl font-bold text-gray-800 mb-1 relative z-10">
                   {getBaseName(evolvedPokemon)}
                 </h3>
-                <p className="text-sm text-gray-600 relative z-10">Lv. {pokemon.level}</p>
+                <p className="text-base text-gray-600 relative z-10">Lv. {pokemon.level}</p>
                 <div className="flex gap-2 justify-center mt-3 relative z-10">
-                  <span className="text-xs px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 font-semibold">
+                  <span className="text-sm px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 font-semibold">
                     {evolvedPokemon.type}
                   </span>
                   {evolvedPokemon.type2 && (
-                    <span className="text-xs px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 font-semibold">
+                    <span className="text-sm px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 font-semibold">
                       {evolvedPokemon.type2}
                     </span>
                   )}
@@ -104,7 +104,7 @@ export default function EvolutionModal({
 
           {/* 진화 조건 표시 */}
           <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <p className="text-sm text-gray-700 text-center">
+            <p className="text-base text-gray-700 text-center">
               {evolution.condition.type === 'level' && (
                 <>✨ 레벨 {evolution.condition.level} 달성으로 진화 조건 충족!</>
               )}
@@ -139,3 +139,4 @@ export default function EvolutionModal({
     </div>
   );
 }
+

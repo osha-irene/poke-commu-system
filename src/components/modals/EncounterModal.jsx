@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import PokemonPreviewInfo from '../views/pokemon/PokemonPreviewInfo';
 import { calculateBallMultiplier, calculateCaptureChance } from '../../utils/catchMechanics';
 import {
@@ -297,8 +297,8 @@ export default function EncounterModal({
               <div className="flex justify-end mb-6">
                 <div className="text-center relative">
                   <div className="bg-white rounded-lg px-4 py-1 mb-3 border-2 border-gray-800 inline-block">
-                    <div className="font-bold text-base">야생의 {pokemon.name}</div>
-                    <div className="text-xs text-gray-600">Lv.???</div>
+                    <div className="font-bold text-lg">야생의 {pokemon.name}</div>
+                    <div className="text-sm text-gray-600">Lv.???</div>
                   </div>
 
                   {/* 이로치 반짝임 효과 */}
@@ -407,17 +407,17 @@ export default function EncounterModal({
               <div className="bg-white rounded-lg border-4 border-gray-800 p-4 mb-4">
                 {/* 메시지 표시 (줄바꿈 지원) */}
                 {message ? (
-                  <div className="text-lg font-bold text-gray-800">
+                  <div className="text-xl font-bold text-gray-800">
                     {message.split('\n').map((line, i) => (
                       <p key={i}>{line}</p>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-lg font-bold text-gray-800">
+                  <p className="text-xl font-bold text-gray-800">
                     야생의 {pokemon.name}이(가) 나타났다!
                   </p>
                 )}
-                <p className="text-xs text-gray-600 mt-1">
+                <p className="text-sm text-gray-600 mt-1">
                   <PokemonPreviewInfo pokemon={pokemon} />
                   {escapeAttempts > 0 && (
                     <span className="ml-2 text-orange-600 font-semibold">
@@ -429,10 +429,10 @@ export default function EncounterModal({
 
               <div className="bg-white rounded-lg border-4 border-gray-800 p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="font-bold text-base">볼을 선택하세요</span>
+                  <span className="font-bold text-lg">볼을 선택하세요</span>
                   <button
                     onClick={handleCloseClick}
-                    className="flex items-center gap-1 text-gray-500 hover:text-gray-700 font-bold text-sm"
+                    className="flex items-center gap-1 text-gray-500 hover:text-gray-700 font-bold text-base"
                   >
                     <Footprints size={16} />
                     도망치기
@@ -463,7 +463,7 @@ export default function EncounterModal({
                                 : 'border-gray-300 hover:border-gray-400 hover:shadow-md'
                           }`}
                         >
-                          <div className="absolute top-1 right-1 bg-gray-800 text-white px-1 py-0 rounded text-xs font-bold leading-tight">
+                          <div className="absolute top-1 right-1 bg-gray-800 text-white px-1 py-0 rounded text-sm font-bold leading-tight">
                             {count}
                           </div>
                           <div
@@ -477,7 +477,7 @@ export default function EncounterModal({
                             }}
                           />
                           <div className="text-center w-full">
-                            <div className="font-bold text-xs text-gray-800 leading-tight break-keep">{ball.name}</div>
+                            <div className="font-bold text-sm text-gray-800 leading-tight break-keep">{ball.name}</div>
                           </div>
                         </button>
                       );
@@ -488,7 +488,7 @@ export default function EncounterModal({
                 {selectedBall && (
                   <button
                     onClick={handleCatch}
-                    className="w-full mt-4 flex items-center justify-center gap-2 bg-green-500 text-white py-3 rounded-lg font-bold text-lg hover:bg-green-600 border-4 border-green-700 transition-all hover:scale-105"
+                    className="w-full mt-4 flex items-center justify-center gap-2 bg-green-500 text-white py-3 rounded-lg font-bold text-xl hover:bg-green-600 border-4 border-green-700 transition-all hover:scale-105"
                   >
                     <Zap size={20} />
                     {selectedBall.name}을(를) 던진다!
@@ -544,10 +544,10 @@ export default function EncounterModal({
                 <CheckCircle2 size={96} />
               </div>
               <h3 className="text-4xl font-bold text-green-600 mb-4">잡았다!</h3>
-              <p className="text-2xl text-gray-800 mb-2">{pokemon.name}을(를) 잡았다!</p>
+              <p className="text-3xl text-gray-800 mb-2">{pokemon.name}을(를) 잡았다!</p>
               {isFirstCatch && (
                 <div className="inline-block bg-yellow-100 px-6 py-3 rounded-lg border-2 border-yellow-400 mt-4">
-                  <p className="text-sm text-gray-600">
+                  <p className="text-base text-gray-600">
                     {pokemon.name}의 데이터가 도감에 등록되었습니다
                   </p>
                 </div>
@@ -563,9 +563,9 @@ export default function EncounterModal({
                 <Wind size={96} />
               </div>
               <h3 className="text-4xl font-bold text-red-600 mb-4">앗! 아깝다!</h3>
-              <p className="text-2xl text-gray-800 mb-2">{pokemon.name}이(가) 볼에서 나왔다!</p>
+              <p className="text-3xl text-gray-800 mb-2">{pokemon.name}이(가) 볼에서 나왔다!</p>
               <div className="inline-block bg-red-100 px-6 py-3 rounded-lg border-2 border-red-400 mt-4">
-                <p className="text-sm text-gray-600">
+                <p className="text-base text-gray-600">
                   야생의 {pokemon.name}은(는) 도망쳤다...
                 </p>
               </div>
@@ -584,3 +584,4 @@ export default function EncounterModal({
     </div>
   );
 }
+

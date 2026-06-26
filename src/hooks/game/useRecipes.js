@@ -121,13 +121,10 @@ export const useRecipes = (currentUser, updateCurrentUser) => {
   const discoverRecipe = async (recipeId) => {
     if (!currentUser) return false;
     
-    const userDiscovered = discoveredRecipes[currentUser.id] || [];
-    
-    if (!userDiscovered.includes(recipeId)) {
-      const updated = {
-        ...discoveredRecipes,
-        [currentUser.id]: [...userDiscovered, recipeId]
-      };
+    const globalDiscovered = Array.isArray(discoveredRecipes) ? discoveredRecipes : Object.values(discoveredRecipes || {}).flat();
+
+    if (!globalDiscovered.includes(recipeId)) {
+      const updated = [...new Set([...globalDiscovered, recipeId])];
       setDiscoveredRecipes(updated);
       
       try {
@@ -233,7 +230,7 @@ export const useRecipes = (currentUser, updateCurrentUser) => {
 
   return {
     recipes,
-    discoveredRecipes: discoveredRecipes[currentUser?.id] || [],
+    discoveredRecipes: Array.isArray(discoveredRecipes) ? discoveredRecipes : Object.values(discoveredRecipes || {}).flat(),
     createRecipe,
     updateRecipe,
     deleteRecipe,

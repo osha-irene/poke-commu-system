@@ -2314,7 +2314,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
 }
 
 /* ── 메인 ── */
-export default function MembersView({ members = {}, isLoading, currentUserId, isAdmin = false, titles = [], onSwitchTab }) {
+export default function MembersView({ members = {}, isLoading, currentUserId, isAdmin = false, titles = [], onSwitchTab, initialMemberId = null, onClearInitialMember }) {
   const [selected, setSelected] = useState(null);
   const [transitioning, setTransitioning] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
@@ -2342,16 +2342,20 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
     };
   }, [showDetail]);
 
-  // URL의 member 파라미터로 자동 오픈
+  // initialMemberId prop으로 자동 오픈 (URL 직접 접근 또는 프로필 클릭)
   useEffect(() => {
-    if (memberList.length === 0) return;
-    const params = new URLSearchParams(window.location.search);
-    const memberId = params.get('member');
-    if (!memberId) return;
+    const memberId = initialMemberId || (() => {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('member');
+    })();
+    if (!memberId || memberList.length === 0) return;
     const target = memberList.find(m => String(m.id) === String(memberId));
-    if (target) openMember(target);
+    if (target) {
+      openMember(target);
+      onClearInitialMember?.();
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [memberList.length]);
+  }, [initialMemberId, memberList.length]);
 
   // 브라우저 뒤로가기로 멤버 프로필 닫기
   useEffect(() => {

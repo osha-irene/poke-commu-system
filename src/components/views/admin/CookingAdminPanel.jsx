@@ -62,7 +62,10 @@ const emptyResultItem = () => ({
   friendshipBoost: 0,
   conditionBoost: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
   effortBoost: { hp: 0, attack: 0, defense: 0, spAttack: 0, spDefense: 0, speed: 0 },
-  spriteUrl: ''
+  spriteUrl: '',
+  // 특수 효과 — conditionSelect/evSelect: 사용 시 유저가 항목 선택
+  specialEffect: null,
+  boostAmount: 0,
 });
 
 const emptyRequiredStats = () => ({
@@ -91,7 +94,7 @@ const recipeSupports = (recipe, type) => {
   return recipe.type === type;
 };
 
-export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDeleteRecipe, allItems = [], recipes = [] }) {
+export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDeleteRecipe, onCreateCustomItem, onUpdateCustomItem, allItems = [], recipes = [] }) {
   const [recipeType, setRecipeType] = useState('fixed');
   const [enabledRecipeTypes, setEnabledRecipeTypes] = useState({ fixed: true, stat: false });
   const [ingredients, setIngredients] = useState(emptyIngredients);
@@ -178,23 +181,62 @@ export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDe
       result: {
         ...resultItem,
         name: resultItem.name,
-        effect: resultItem.effect
+        effect: resultItem.effect,
+        specialEffect: resultItem.specialEffect || null,
+        boostAmount: resultItem.boostAmount || 0,
       }
     };
   };
 
-  const handleSaveRecipe = () => {
+  const handleSaveRecipe = async () => {
     const payload = buildRecipePayload();
     if (!payload) return;
 
+    const recipeId = editingRecipeId || `recipe_${Date.now()}`;
+
     if (editingRecipeId) {
-      onUpdateRecipe?.(editingRecipeId, payload);
+      await onUpdateRecipe?.(editingRecipeId, payload);
+      // 커스텀 아이템 목록에서도 이름/효과/이미지 업데이트
+      if (onUpdateCustomItem) {
+        const existCustomId = `recipe_item_${editingRecipeId}`;
+        await onUpdateCustomItem(existCustomId, {
+          name: payload.result.name,
+          effect: payload.result.effect,
+          spriteUrl: payload.result.spriteUrl || '',
+          specialEffect: payload.result.specialEffect || null,
+
+          boostAmount: payload.result.boostAmount || 0,
+          conditionBoost: payload.result.conditionBoost || {},
+          effortBoost: payload.result.effortBoost || {},
+          friendshipBoost: payload.result.friendshipBoost || 0,
+          pocket: payload.result.pocket || 'misc',
+        });
+      }
     } else {
-      onCreateRecipe?.({
-        id: `recipe_${Date.now()}`,
-        ...payload,
-        createdAt: new Date().toISOString()
-      });
+      await onCreateRecipe?.({ id: recipeId, ...payload, createdAt: new Date().toISOString() });
+      // 커스텀 아이템으로도 등록
+      if (onCreateCustomItem && payload.result.name) {
+        await onCreateCustomItem({
+          id: `recipe_item_${recipeId}`,
+          name: payload.result.name,
+          effect: payload.result.effect,
+          spriteUrl: payload.result.spriteUrl || '',
+          pocket: payload.result.pocket || 'misc',
+          category: payload.result.pocket || 'misc',
+          isCustom: true,
+          isRecipe: true,
+          recipeId,
+          specialEffect: payload.result.specialEffect || null,
+
+          boostAmount: payload.result.boostAmount || 0,
+          conditionBoost: payload.result.conditionBoost || {},
+          effortBoost: payload.result.effortBoost || {},
+          friendshipBoost: payload.result.friendshipBoost || 0,
+          cost: 0,
+          sellPrice: 0,
+          canSell: false,
+        });
+      }
     }
 
     resetForm();
@@ -218,12 +260,15 @@ export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDe
     setIngredients(nextIngredients);
     setRequiredStats({ ...emptyRequiredStats(), ...(recipe.requiredStats || {}) });
     setRequiredEfforts({ ...emptyRequiredEfforts(), ...(recipe.requiredEfforts || {}) });
+    const r = recipe.result || {};
     setResultItem({
       ...emptyResultItem(),
-      ...(recipe.result || {}),
-      name: recipe.result?.name || recipe.name || '',
-      effect: recipe.result?.effect || recipe.description || '',
-      spriteUrl: recipe.result?.spriteUrl || ''
+      ...r,
+      name: r.name || recipe.name || '',
+      effect: r.effect || recipe.description || '',
+      spriteUrl: r.spriteUrl || '',
+      specialEffect: r.specialEffect || null,
+      boostAmount: r.boostAmount || 0,
     });
   };
 
@@ -528,6 +573,44 @@ export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDe
                     ))}
                   </div>
                 </div>
+
+                {/* 특수 효과 */}
+                <div className="mb-2">
+                  <label className="block text-xs text-gray-600 mb-1">특수 효과 (선택)</label>
+                  <select
+                    value={resultItem.specialEffect || ''}
+                    onChange={e => setResultItem({ ...resultItem, specialEffect: e.target.value || null, boostAmount: 0 })}
+                    className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                  >
+                    <option value="">없음</option>
+                    <option value="conditionSelect">컨디션 특정 항목 고정 상승</option>
+                    <option value="evSelect">노력치 특정 항목 고정 상승</option>
+                  </select>
+                </div>
+
+                {resultItem.specialEffect === 'conditionSelect' && (
+                  <div className="bg-green-50 border border-green-200 rounded p-2 mb-2 flex gap-3 items-center">
+                    <p className="flex-1 text-xs text-green-700">사용 시 사용자가 원하는 컨디션 항목을 직접 선택해 올립니다</p>
+                    <div className="shrink-0">
+                      <label className="block text-[10px] text-gray-500 mb-0.5">상승량</label>
+                      <input type="number" min={1} value={resultItem.boostAmount}
+                        onChange={e => setResultItem({ ...resultItem, boostAmount: parseInt(e.target.value) || 0 })}
+                        className="w-16 px-2 py-1 border border-gray-300 rounded text-xs text-center" />
+                    </div>
+                  </div>
+                )}
+
+                {resultItem.specialEffect === 'evSelect' && (
+                  <div className="bg-purple-50 border border-purple-200 rounded p-2 mb-2 flex gap-3 items-center">
+                    <p className="flex-1 text-xs text-purple-700">사용 시 사용자가 원하는 노력치 항목을 직접 선택해 올립니다</p>
+                    <div className="shrink-0">
+                      <label className="block text-[10px] text-gray-500 mb-0.5">상승량</label>
+                      <input type="number" min={1} value={resultItem.boostAmount}
+                        onChange={e => setResultItem({ ...resultItem, boostAmount: parseInt(e.target.value) || 0 })}
+                        className="w-16 px-2 py-1 border border-gray-300 rounded text-xs text-center" />
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-auto pt-4 flex justify-end">
                   <Button variant="primary" size="md" onClick={handleSaveRecipe} className="px-8">

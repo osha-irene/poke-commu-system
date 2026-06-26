@@ -1,12 +1,51 @@
-// src/components/views/admin/member/MemberPokemonEditMode.jsx
-import React from 'react';
-import { 
-  X, Save, Sparkles, Image, Gift, Star, Award, Zap, Heart, Plus, Trash2, ImageIcon
+﻿import React from 'react';
+import {
+  X, Save, Sparkles, Award,
+  Plus, Trash2, ChevronsUp,
 } from 'lucide-react';
 import { POKEBALL_LIST } from '../../../../styles/theme';
 import { getPokemonGenderOptions } from '../../../../utils/pokemonGender';
+import { getPokemonDisplayParts } from '../../../../utils/pokemonDisplayName';
 
-export default function MemberPokemonEditMode({ 
+const STAT_FIELDS = [
+  { key: 'hp', label: 'HP' },
+  { key: 'attack', label: '공격' },
+  { key: 'defense', label: '방어' },
+  { key: 'specialAttack', label: '특공' },
+  { key: 'specialDefense', label: '특방' },
+  { key: 'speed', label: '스피드' },
+];
+
+const CONDITION_FIELDS = [
+  { key: 'elegance', label: '근사함' },
+  { key: 'beauty', label: '아름다움' },
+  { key: 'cuteness', label: '귀여움' },
+  { key: 'intelligence', label: '슬기로움' },
+  { key: 'strength', label: '강인함' },
+];
+
+const SIZE_RANKS = ['XXXS', 'XXS', 'XS', 'M', 'XL', 'XXL', 'XXXL'];
+
+function SectionHeader({ children }) {
+  return (
+    <div className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-2 pb-1 border-b border-gray-100">
+      {children}
+    </div>
+  );
+}
+
+function Field({ label, children }) {
+  return (
+    <div>
+      <label className="block text-sm font-semibold text-gray-500 mb-1">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+const inputCls = "w-full px-2.5 py-1.5 border border-gray-200 rounded-md text-base focus:outline-none focus:ring-1 focus:ring-indigo-400";
+
+export default function MemberPokemonEditMode({
   pokemon,
   pokemonTemplate,
   editData,
@@ -16,438 +55,386 @@ export default function MemberPokemonEditMode({
   onCancel,
   onDelete,
   onOpenItemModal,
-  onOpenMoveModal
+  onOpenMoveModal,
+  evolutionCandidates = [],
+  onAdminEvolve,
+  allPokemonMaster = [],
 }) {
   const genderOptions = getPokemonGenderOptions(pokemonTemplate || pokemon);
   const isGenderless = genderOptions.length === 1 && genderOptions[0] === 'none';
   const genderValue = genderOptions.includes(editData.gender) ? editData.gender : 'random';
+
   const abilityOptions = Array.from(new Set([
     ...(pokemonTemplate?.abilities || []),
-    ...(editData.ability ? [editData.ability] : [])
+    ...(editData.ability ? [editData.ability] : []),
   ]));
   const hiddenAbility = pokemonTemplate?.hiddenAbility || '';
 
+  const displayName = getPokemonDisplayParts(pokemon).name;
+  const spriteUrl = editData.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`;
+
   return (
-    <div className="bg-white rounded-lg border p-4 space-y-4">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-bold">포켓몬 수정</h3>
-        <button onClick={onCancel}>
-          <X size={20} />
-        </button>
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+
+      {/* ── 헤더: 현재 포켓몬 좌측 + 진화 루트 우측 ── */}
+      <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200 gap-3">
+        {/* 좌: 현재 포켓몬 */}
+        <div className="flex items-center gap-3 min-w-0">
+          <img
+            src={spriteUrl}
+            alt={displayName}
+            className="w-12 h-12 object-contain flex-shrink-0"
+            style={{ imageRendering: 'pixelated' }}
+            onError={e => { e.currentTarget.style.display = 'none'; }}
+          />
+          <div className="min-w-0">
+            <p className="text-sm text-gray-400">편집 중</p>
+            <p className="font-bold text-gray-800 leading-tight truncate">{displayName}</p>
+          </div>
+        </div>
+
+        {/* 우: 진화 루트 */}
+        <div className="flex items-center gap-2 ml-auto">
+          {evolutionCandidates.length > 0 && evolutionCandidates.map((evo) => {
+            const toTemplate = allPokemonMaster.find(p =>
+              Number(p.number) === Number(evo.to) ||
+              Number(p.originalNumber) === Number(evo.to)
+            );
+            const toName = toTemplate ? getPokemonDisplayParts(toTemplate).name : evo.toName;
+            const toSprite = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${evo.to}.png`;
+            return (
+              <button
+                key={evo.to}
+                type="button"
+                onClick={() => onAdminEvolve(evo)}
+                title={`→ ${toName}으로 진화 (조건 무시)`}
+                className="flex flex-col items-center gap-0.5 group"
+              >
+                <span className="text-[10px] font-bold text-purple-600 bg-purple-100 border border-purple-200 rounded-full px-2 py-0.5 group-hover:bg-purple-200 transition-colors flex items-center gap-1">
+                  <ChevronsUp size={10} />
+                  {toName}
+                </span>
+                <img
+                  src={toSprite}
+                  alt={toName}
+                  className="w-10 h-10 object-contain"
+                  style={{ imageRendering: 'pixelated' }}
+                  onError={e => { e.currentTarget.style.display = 'none'; }}
+                />
+              </button>
+            );
+          })}
+          <button onClick={onCancel} className="p-1 rounded hover:bg-gray-200 text-gray-500 flex-shrink-0 ml-1">
+            <X size={18} />
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
-        {/* 왼쪽 컬럼 */}
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold mb-1">레벨</label>
-              <input
-                type="number"
-                min="1"
-                max="100"
-                value={editData.level}
-                onChange={(e) => setEditData(prev => ({ ...prev, level: e.target.value }))}
-                className="w-full px-3 py-2 border rounded"
-              />
+      <div className="p-4 space-y-4">
+
+        {/* ── 2열 그리드 ── */}
+        <div className="grid grid-cols-2 gap-4">
+
+          {/* 1열: 기본 정보 + 속성 + 기술 */}
+          <div className="space-y-3">
+            <SectionHeader>기본 정보</SectionHeader>
+
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="레벨">
+                <input
+                  type="number" min="1" max="100"
+                  value={editData.level}
+                  onChange={e => setEditData(p => ({ ...p, level: e.target.value }))}
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="성별">
+                <select
+                  value={isGenderless ? 'none' : genderValue}
+                  onChange={e => setEditData(p => ({ ...p, gender: e.target.value }))}
+                  className={inputCls}
+                  disabled={isGenderless}
+                >
+                  {!isGenderless && <option value="random">랜덤</option>}
+                  {genderOptions.includes('male') && <option value="male">♂ 수컷</option>}
+                  {genderOptions.includes('female') && <option value="female">♀ 암컷</option>}
+                  {isGenderless && <option value="none">무성</option>}
+                </select>
+              </Field>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold mb-1">닉네임</label>
+            <Field label="닉네임">
               <input
                 type="text"
                 value={editData.nickname}
-                onChange={(e) => setEditData(prev => ({ ...prev, nickname: e.target.value }))}
-                className="w-full px-3 py-2 border rounded"
+                onChange={e => setEditData(p => ({ ...p, nickname: e.target.value }))}
+                className={inputCls}
+                placeholder="없으면 종족명 표시"
               />
-            </div>
-          </div>
+            </Field>
 
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="editShiny"
-              checked={editData.isShiny}
-              onChange={(e) => setEditData(prev => ({ ...prev, isShiny: e.target.checked }))}
-            />
-            <label htmlFor="editShiny" className="text-sm font-semibold flex items-center gap-1">
-              <Sparkles size={14} className="text-yellow-500" />
-              이로치 (스프라이트 자동변경)
-            </label>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold mb-1 flex items-center gap-2">
-              <Image size={14} />
-              스프라이트 URL
-            </label>
-            <input
-              type="text"
-              value={editData.spriteUrl}
-              onChange={(e) => setEditData(prev => ({ ...prev, spriteUrl: e.target.value }))}
-              className="w-full px-3 py-2 border rounded text-xs"
-              placeholder="https://..."
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold mb-1">이미지 크기 (%)</label>
-            <input
-              type="number"
-              value={editData.spriteSize ?? ''}
-              onChange={(e) => setEditData(prev => ({ ...prev, spriteSize: e.target.value ? Number(e.target.value) : null }))}
-              className="w-full px-3 py-2 border rounded"
-              placeholder="기본값 (75)"
-              min={10}
-              max={200}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold mb-1">포획볼</label>
-              <select
-                 value={editData.caughtWithBall || '몬스터볼'}  // ⭐ 추가
-                onChange={(e) => setEditData(prev => ({ ...prev, caughtWithBall: e.target.value }))}
-                className="w-full px-3 py-2 border rounded"
-              >
-                {POKEBALL_LIST.map(ball => (
-                  <option key={ball.nameEn} value={ball.name}>{ball.name}</option>
-                ))}
-                <option value="기타">기타 (직접입력)</option>
-              </select>
-            </div>
-
-            {editData.caughtWithBall === '기타' && (
-              <div>
-                <label className="block text-sm font-semibold mb-1 flex items-center gap-1">
-                  <ImageIcon size={14} />
-                  볼 이미지 URL
-                </label>
-                <input
-                  type="text"
-                  value={editData.customBallImage || ''}
-                  onChange={(e) => setEditData(prev => ({ ...prev, customBallImage: e.target.value }))}
-                  placeholder="이미지 URL 입력"
-                  className="w-full px-3 py-2 border rounded text-sm"
-                />
-              </div>
-            )}
-          </div>
-
-              {/* ⭐ 성별 선택 */}
-              <div>
-                <label className="block text-sm font-semibold mb-2">성별</label>
-                <select
-                  value={isGenderless ? 'none' : genderValue}
-                  onChange={(e) => setEditData(prev => ({ ...prev, gender: e.target.value }))}
-                  className="w-full px-3 py-2 border rounded"
-                >
-                  {!isGenderless && <option value="random">랜덤</option>}
-                  {genderOptions.includes('male') && <option value="male">수컷 (♂)</option>}
-                  {genderOptions.includes('female') && <option value="female">암컷 (♀)</option>}
-                  {isGenderless && <option value="none">무성</option>}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold mb-2 flex items-center gap-1">
-                  <Zap size={14} />
-                  특성
-                </label>
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="특성">
                 <select
                   value={editData.ability || abilityOptions[0] || ''}
-                  onChange={(e) => {
-                    const selectedAbility = e.target.value;
-                    setEditData(prev => ({
-                      ...prev,
-                      ability: selectedAbility,
-                      isHiddenAbility: Boolean(hiddenAbility && selectedAbility === hiddenAbility)
+                  onChange={e => {
+                    const v = e.target.value;
+                    setEditData(p => ({
+                      ...p,
+                      ability: v,
+                      isHiddenAbility: Boolean(hiddenAbility && v === hiddenAbility),
                     }));
                   }}
-                  className="w-full px-3 py-2 border rounded"
+                  className={inputCls}
                 >
                   {abilityOptions.length === 0 && <option value="">특성 없음</option>}
-                  {abilityOptions.map((ability, index) => (
-                    <option key={`${ability}-${index}`} value={ability}>{ability}</option>
+                  {abilityOptions.map((a, i) => (
+                    <option key={`${a}-${i}`} value={a}>{a}</option>
                   ))}
                   {hiddenAbility && (
                     <option value={hiddenAbility}>{hiddenAbility} (숨특)</option>
                   )}
                 </select>
-              </div>
-
-              {/* ⭐ 체구 등급 */}
-              <div>
-                <label className="block text-sm font-semibold mb-2">체구 등급</label>
-                <div className="grid grid-cols-7 gap-2">
-                  {['XXXS', 'XXS', 'XS', 'M', 'XL', 'XXL', 'XXXL'].map(size => (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => setEditData(prev => ({ ...prev, sizeRank: size }))}
-                      className={`px-3 py-2 rounded font-semibold text-xs transition-all ${
-                        editData.sizeRank === size
-                          ? 'bg-indigo-600 text-white shadow-md'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* ⭐ 키 변동률 */}
-              <div>
-                <label className="block text-sm font-semibold mb-2">
-                  키 변동률 (%)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="200"
-                  step="0.1"
-                  value={editData.heightVariation || 100}
-                  onChange={(e) => setEditData(prev => ({ 
-                    ...prev, 
-                    heightVariation: parseFloat(e.target.value) || 100
-                  }))}
-                  className="w-full px-3 py-2 border rounded"
-                />
-              </div>
-
-              {/* ⭐ 무게 변동률 */}
-              <div>
-                <label className="block text-sm font-semibold mb-2">
-                  무게 변동률 (%)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="200"
-                  step="0.1"
-                  value={editData.weightVariation || 100}
-                  onChange={(e) => setEditData(prev => ({ 
-                    ...prev, 
-                    weightVariation: parseFloat(e.target.value) || 100
-                  }))}
-                  className="w-full px-3 py-2 border rounded"
-                />
-              </div>
-
-          <div>
-            <label className="block text-sm font-semibold mb-2 flex items-center gap-2">
-              <Star size={14} />
-              기술 ({editData.moves.length}/4)
-            </label>
-            <div className="space-y-2 mb-2">
-              {editData.moves.map((move, index) => {
-                const moveData = allMoves.find(m => m.id === move.moveId);
-                return (
-                  <div key={index} className="flex items-center gap-2 bg-gray-50 p-2 rounded border">
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold">{moveData?.name || '???'}</p>
-                      <p className="text-xs text-gray-500">PP: {move.currentPp}/{moveData?.pp || 0}</p>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setEditData(prev => ({
-                          ...prev,
-                          moves: prev.moves.filter((_, i) => i !== index)
-                        }));
-                      }}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <Trash2 size={16} />
+              </Field>
+              <Field label="지닌 물건">
+                {editData.heldItem ? (
+                  <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1.5">
+                    <span className="text-base text-gray-700 truncate">{editData.heldItem}</span>
+                    <button onClick={() => setEditData(p => ({ ...p, heldItem: null }))} className="text-red-400 hover:text-red-600 ml-1 flex-shrink-0">
+                      <X size={14} />
                     </button>
                   </div>
-                );
-              })}
-            </div>
-
-            {editData.moves.length < 4 && (
-              <button
-                type="button"
-                onClick={onOpenMoveModal}
-                className="w-full bg-indigo-50 text-indigo-600 px-4 py-2 rounded border-2 border-indigo-200 hover:bg-indigo-100 font-semibold"
-              >
-                <Plus size={16} className="inline mr-2" />
-                기술 추가
-              </button>
-            )}
-          </div>
-        </div>
-
-       {/* 오른쪽 컬럼 */}
-          <div className="space-y-4">
-            {/* ⭐ 친밀도 입력 필드 추가 */}
-            <div>
-              <label className="block text-sm font-semibold mb-2 flex items-center gap-2">
-                <Heart size={14} />
-                친밀도
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="255"
-                value={editData.friendship || 0}
-                onChange={(e) => setEditData(prev => ({ 
-                  ...prev, 
-                  friendship: Math.min(255, Math.max(0, parseInt(e.target.value) || 0))
-                }))}
-                className="w-full px-3 py-2 border rounded"
-                placeholder="0-255"
-              />
-              <div className="mt-1 w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-pink-500 h-2 rounded-full transition-all" 
-                  style={{ width: `${((editData.friendship || 0) / 255) * 100}%` }} 
-                />
-              </div>
-            </div>
-
-  
-          <div>
-            <label className="block text-sm font-semibold mb-2 flex items-center gap-2">
-              <Gift size={14} />
-              지닌 물건
-            </label>
-            <div className="flex gap-2">
-              {editData.heldItem ? (
-                <div className="flex-1 bg-gray-50 border rounded px-3 py-2 flex items-center justify-between">
-                  <span className="text-sm">{editData.heldItem}</span>
+                ) : (
                   <button
-                    onClick={() => setEditData(prev => ({ ...prev, heldItem: null }))}
-                    className="text-red-600 hover:text-red-800"
+                    type="button"
+                    onClick={onOpenItemModal}
+                    className="w-full text-base text-gray-400 border border-dashed border-gray-300 rounded-md py-1.5 hover:border-indigo-400 hover:text-indigo-600 transition-colors"
                   >
-                    <X size={16} />
+                    <Plus size={13} className="inline mr-1" />
+                    아이템
                   </button>
-                </div>
-              ) : (
+                )}
+              </Field>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="포획볼">
+                <select
+                  value={editData.caughtWithBall || '몬스터볼'}
+                  onChange={e => setEditData(p => ({ ...p, caughtWithBall: e.target.value }))}
+                  className={inputCls}
+                >
+                  {POKEBALL_LIST.map(ball => (
+                    <option key={ball.nameEn} value={ball.name}>{ball.name}</option>
+                  ))}
+                  <option value="기타">기타</option>
+                </select>
+              </Field>
+              <Field label="친밀도">
+                <input
+                  type="number" min="0" max="255"
+                  value={editData.friendship || 0}
+                  onChange={e => setEditData(p => ({
+                    ...p, friendship: Math.min(255, Math.max(0, parseInt(e.target.value) || 0))
+                  }))}
+                  className={inputCls}
+                />
+              </Field>
+            </div>
+
+            {editData.caughtWithBall === '기타' && (
+              <Field label="볼 이미지 URL">
+                <input
+                  type="text"
+                  value={editData.customBallImage || ''}
+                  onChange={e => setEditData(p => ({ ...p, customBallImage: e.target.value }))}
+                  className={inputCls}
+                  placeholder="https://..."
+                />
+              </Field>
+            )}
+
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={editData.isShiny}
+                onChange={e => setEditData(p => ({ ...p, isShiny: e.target.checked }))}
+                className="accent-yellow-500"
+              />
+              <span className="text-base font-semibold text-gray-700 flex items-center gap-1">
+                <Sparkles size={13} className="text-yellow-500" />
+                이로치
+              </span>
+            </label>
+
+            <Field label="체구">
+              <div className="flex flex-wrap gap-1">
+                {SIZE_RANKS.map(size => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => setEditData(p => ({ ...p, sizeRank: size }))}
+                    className={`px-2 py-1 rounded text-[10px] font-bold transition-all ${
+                      editData.sizeRank === size
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
                 <button
                   type="button"
-                  onClick={onOpenItemModal}
-                  className="flex-1 bg-gray-50 text-gray-600 px-3 py-2 rounded border-2 border-dashed border-gray-300 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600"
+                  onClick={() => setEditData(p => ({ ...p, sizeRank: SIZE_RANKS[Math.floor(Math.random() * SIZE_RANKS.length)] }))}
+                  className="px-2 py-1 rounded text-[10px] font-bold bg-amber-100 text-amber-600 hover:bg-amber-200 transition-all"
                 >
-                  <Plus size={16} className="inline mr-2" />
-                  아이템 선택
+                  랜덤
+                </button>
+              </div>
+            </Field>
+
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="스프라이트 URL">
+                <input
+                  type="text"
+                  value={editData.spriteUrl}
+                  onChange={e => setEditData(p => ({ ...p, spriteUrl: e.target.value }))}
+                  className={`${inputCls} text-sm`}
+                  placeholder="https://..."
+                />
+              </Field>
+              <Field label="이미지 크기 (%)">
+                <input
+                  type="number" min="10" max="200"
+                  value={editData.spriteSize ?? ''}
+                  onChange={e => setEditData(p => ({ ...p, spriteSize: e.target.value ? Number(e.target.value) : null }))}
+                  className={inputCls}
+                  placeholder="기본 75"
+                />
+              </Field>
+            </div>
+
+          </div>
+
+          {/* 2열: 기술 + 스탯 상세 */}
+          <div className="space-y-3">
+
+            {/* 기술 */}
+            <div>
+              <SectionHeader>기술 ({editData.moves.length}/4)</SectionHeader>
+              <div className="space-y-1.5">
+                {editData.moves.map((move, index) => {
+                  const moveData = allMoves.find(m => m.id === move.moveId);
+                  return (
+                    <div key={index} className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1.5">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-base font-semibold text-gray-800 truncate">{moveData?.name || '???'}</p>
+                        <p className="text-sm text-gray-400">PP {move.currentPp}/{moveData?.pp || 0}</p>
+                      </div>
+                      <button
+                        onClick={e => {
+                          e.preventDefault();
+                          setEditData(p => ({ ...p, moves: p.moves.filter((_, i) => i !== index) }));
+                        }}
+                        className="text-red-400 hover:text-red-600 flex-shrink-0"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  );
+                })}
+                {editData.moves.length === 0 && (
+                  <p className="text-sm text-gray-400 text-center py-2">기술 없음</p>
+                )}
+              </div>
+              {editData.moves.length < 4 && (
+                <button
+                  type="button"
+                  onClick={onOpenMoveModal}
+                  className="mt-1.5 w-full text-base text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-md py-1.5 hover:bg-indigo-100 font-semibold transition-colors"
+                >
+                  <Plus size={13} className="inline mr-1" />
+                  기술 추가
                 </button>
               )}
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-semibold mb-2 flex items-center gap-2">
-              <Award size={14} />
-              개체값 (IVs)
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { key: 'hp', label: 'HP' },
-                { key: 'attack', label: '공격' },
-                { key: 'defense', label: '방어' },
-                { key: 'specialAttack', label: '특공' },
-                { key: 'specialDefense', label: '특방' },
-                { key: 'speed', label: '스피드' }
-              ].map(({ key, label }) => (
-                <div key={key}>
-                  <label className="text-xs text-gray-600">{label}</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="31"
-                    value={editData.ivs[key]}
-                    onChange={(e) => setEditData(prev => ({
-                      ...prev,
-                      ivs: { ...prev.ivs, [key]: parseInt(e.target.value) || 0 }
-                    }))}
-                    className="w-full px-2 py-1 border rounded text-sm"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
+            {/* 스탯 상세: IVs / EVs / 컨디션 — 각각 세로 1줄 */}
+            <SectionHeader>
+              <span className="flex items-center gap-1.5"><Award size={12} />스탯 상세</span>
+            </SectionHeader>
 
-          <div>
-            <label className="block text-sm font-semibold mb-2 flex items-center gap-2">
-              <Zap size={14} />
-              노력치 (EVs)
-            </label>
+            {/* 개체값 | 노력치 | 컨디션 — 3열, 각 열이 세로 한 줄 */}
             <div className="grid grid-cols-3 gap-2">
-              {[
-                { key: 'hp', label: 'HP' },
-                { key: 'attack', label: '공격' },
-                { key: 'defense', label: '방어' },
-                { key: 'specialAttack', label: '특공' },
-                { key: 'specialDefense', label: '특방' },
-                { key: 'speed', label: '스피드' }
-              ].map(({ key, label }) => (
-                <div key={key}>
-                  <label className="text-xs text-gray-600">{label}</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="252"
-                    value={editData.effort[key]}
-                    onChange={(e) => setEditData(prev => ({
-                      ...prev,
-                      effort: { ...prev.effort, [key]: parseInt(e.target.value) || 0 }
-                    }))}
-                    className="w-full px-2 py-1 border rounded text-sm"
-                  />
+              {/* IVs */}
+              <div>
+                <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">개체값 (0–31)</p>
+                <div className="space-y-1">
+                  {STAT_FIELDS.map(({ key, label }) => (
+                    <div key={key} className="flex items-center gap-1">
+                      <span className="text-[11px] text-gray-400 w-7 flex-shrink-0">{label}</span>
+                      <input
+                        type="number" min="0" max="31"
+                        value={editData.ivs[key]}
+                        onChange={e => setEditData(p => ({ ...p, ivs: { ...p.ivs, [key]: parseInt(e.target.value) || 0 } }))}
+                        className="w-full px-1 py-1 border border-gray-200 rounded text-sm text-center focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold mb-2 flex items-center gap-2">
-              <Heart size={14} />
-              컨디션
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { key: 'elegance', label: '근사함' },
-                { key: 'beauty', label: '아름다움' },
-                { key: 'cuteness', label: '귀여움' },
-                { key: 'intelligence', label: '슬기로움' },
-                { key: 'strength', label: '강인함' }
-              ].map(({ key, label }) => (
-                <div key={key}>
-                  <label className="text-xs text-gray-600">{label}</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="255"
-                    value={editData.condition[key]}
-                    onChange={(e) => setEditData(prev => ({
-                      ...prev,
-                      condition: { ...prev.condition, [key]: parseInt(e.target.value) || 0 }
-                    }))}
-                    className="w-full px-2 py-1 border rounded text-sm"
-                  />
+              </div>
+              {/* EVs */}
+              <div>
+                <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">노력치 (0–252)</p>
+                <div className="space-y-1">
+                  {STAT_FIELDS.map(({ key, label }) => (
+                    <div key={key} className="flex items-center gap-1">
+                      <span className="text-[11px] text-gray-400 w-7 flex-shrink-0">{label}</span>
+                      <input
+                        type="number" min="0" max="252"
+                        value={editData.effort[key]}
+                        onChange={e => setEditData(p => ({ ...p, effort: { ...p.effort, [key]: parseInt(e.target.value) || 0 } }))}
+                        className="w-full px-1 py-1 border border-gray-200 rounded text-sm text-center focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+              {/* 컨디션 */}
+              <div>
+                <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">컨디션 (0–255)</p>
+                <div className="space-y-1">
+                  {CONDITION_FIELDS.map(({ key, label }) => (
+                    <div key={key} className="flex items-center gap-1">
+                      <span className="text-[11px] text-gray-400 w-7 flex-shrink-0">{label}</span>
+                      <input
+                        type="number" min="0" max="255"
+                        value={editData.condition[key]}
+                        onChange={e => setEditData(p => ({ ...p, condition: { ...p.condition, [key]: parseInt(e.target.value) || 0 } }))}
+                        className="w-full px-1 py-1 border border-gray-200 rounded text-sm text-center focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="flex gap-2 pt-4 border-t">
+        {/* ── 액션 버튼 ── */}
+        <div className="flex gap-2 pt-1 border-t border-gray-100">
           <button
             onClick={onSave}
-            className="flex-1 bg-blue-500 text-white px-4 py-2 rounded font-semibold hover:bg-blue-600"
+            className="flex-1 flex items-center justify-center gap-1.5 bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold text-base hover:bg-indigo-700 transition-colors"
           >
-            <Save size={16} className="inline mr-2" />
+            <Save size={15} />
             저장
           </button>
           <button
             onClick={onCancel}
-            className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded font-semibold hover:bg-gray-400"
+            className="flex-1 flex items-center justify-center gap-1.5 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-semibold text-base hover:bg-gray-200 transition-colors"
           >
-            <X size={16} className="inline mr-2" />
+            <X size={15} />
             취소
           </button>
           <button
@@ -456,12 +443,14 @@ export default function MemberPokemonEditMode({
                 onDelete?.(pokemon.uniqueId);
               }
             }}
-            className="bg-red-500 text-white px-4 py-2 rounded font-semibold hover:bg-red-600"
+            className="flex items-center justify-center gap-1.5 bg-red-50 text-red-600 px-4 py-2 rounded-lg font-semibold text-base hover:bg-red-100 border border-red-200 transition-colors"
           >
-            <Trash2 size={16} className="inline mr-2" />
+            <Trash2 size={15} />
             삭제
           </button>
         </div>
+      </div>
     </div>
   );
 }
+

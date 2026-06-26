@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
 
 export default function RegionEditModal({ region, allPokemon, onClose, onSave }) {
@@ -155,8 +155,8 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
       >
         {/* 헤더 */}
         <div className="bg-indigo-600 text-white p-6 flex-shrink-0">
-          <h2 className="text-2xl font-bold">{region.name} - 포켓몬 출현 설정</h2>
-          <p className="text-sm text-indigo-100 mt-1">
+          <h2 className="text-3xl font-bold">{region.name} - 포켓몬 출현 설정</h2>
+          <p className="text-base text-indigo-100 mt-1">
             등장 포켓몬: {selectedPokemon.size}종 | 포켓몬 출현율: {encounterRate}% | 미출현: {100 - encounterRate}%
           </p>
         </div>
@@ -186,12 +186,12 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
         </div>
       
       <div className="bg-white/40 rounded-lg p-6 mb-6 border-2 border-lime-200">
-  <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+  <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
     📊 야생 포켓몬 레벨 범위
   </h3>
   <div className="grid grid-cols-2 gap-4">
     <div>
-      <label className="text-sm font-semibold text-gray-700 mb-2 block">최소 레벨</label>
+      <label className="text-base font-semibold text-gray-700 mb-2 block">최소 레벨</label>
       <input
         type="number"
         min="1"
@@ -205,11 +205,11 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
             alert('최소 레벨은 최대 레벨보다 작아야 합니다!');
           }
         }}
-        className="w-full border-2 border-orange-300 rounded-lg px-4 py-2 text-center font-bold text-lg focus:border-orange-500 focus:outline-none"
+        className="w-full border-2 border-orange-300 rounded-lg px-4 py-2 text-center font-bold text-xl focus:border-orange-500 focus:outline-none"
       />
     </div>
     <div>
-      <label className="text-sm font-semibold text-gray-700 mb-2 block">최대 레벨</label>
+      <label className="text-base font-semibold text-gray-700 mb-2 block">최대 레벨</label>
       <input
         type="number"
         min="1"
@@ -223,11 +223,11 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
             alert('최대 레벨은 최소 레벨보다 커야 합니다!');
           }
         }}
-        className="w-full border-2 border-orange-300 rounded-lg px-4 py-2 text-center font-bold text-lg focus:border-orange-500 focus:outline-none"
+        className="w-full border-2 border-orange-300 rounded-lg px-4 py-2 text-center font-bold text-xl focus:border-orange-500 focus:outline-none"
       />
     </div>
   </div>
-  <div className="mt-3 text-sm text-gray-600 text-center">
+  <div className="mt-3 text-base text-gray-600 text-center">
     💡 이 지역에서 나타나는 야생 포켓몬의 레벨: Lv.{minLevel} ~ Lv.{maxLevel}
   </div>
 </div>
@@ -237,7 +237,7 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
           <div className="flex-1 overflow-y-auto p-4">
             {/* ⭐ 전체 출현율 설정 */}
             <div className="bg-white/40 rounded-lg p-6 mb-6 border-2 border-lime-200">
-              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                 🌟 포켓몬 출현율 설정
               </h3>
               <div className="space-y-4">
@@ -263,19 +263,19 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
                       const val = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0));
                       setEncounterRate(val);
                     }}
-                    className="w-20 border-2 border-indigo-300 rounded-lg px-3 py-2 text-center font-bold text-lg focus:border-indigo-500 focus:outline-none"
+                    className="w-20 border-2 border-indigo-300 rounded-lg px-3 py-2 text-center font-bold text-xl focus:border-indigo-500 focus:outline-none"
                   />
-                  <span className="text-lg font-bold text-gray-700">%</span>
+                  <span className="text-xl font-bold text-gray-700">%</span>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-2 gap-4 text-base">
                   <div className="bg-green-50 rounded-lg p-3 border border-green-200">
                     <div className="text-green-700 font-semibold mb-1">✅ 포켓몬 출현</div>
-                    <div className="text-2xl font-bold text-green-600">{encounterRate}%</div>
+                    <div className="text-3xl font-bold text-green-600">{encounterRate}%</div>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                     <div className="text-gray-700 font-semibold mb-1">❌ 미출현 (아이템만)</div>
-                    <div className="text-2xl font-bold text-gray-600">{100 - encounterRate}%</div>
+                    <div className="text-3xl font-bold text-gray-600">{100 - encounterRate}%</div>
                   </div>
                 </div>
               </div>
@@ -299,13 +299,13 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-gray-700">📊 전체 확률 합계:</span>
                     <div className="flex items-center gap-2">
-                      <span className={`text-2xl font-bold ${
+                      <span className={`text-3xl font-bold ${
                         totalRate > 100 ? 'text-red-600' : totalRate === 100 ? 'text-green-600' : 'text-yellow-600'
                       }`}>
                         {totalRate.toFixed(1)}%
                       </span>
-                      {totalRate > 100 && <span className="text-red-600 text-sm font-semibold">⚠️ 100% 초과!</span>}
-                      {totalRate === 100 && <span className="text-green-600 text-sm font-semibold">✅ 완벽!</span>}
+                      {totalRate > 100 && <span className="text-red-600 text-base font-semibold">⚠️ 100% 초과!</span>}
+                      {totalRate === 100 && <span className="text-green-600 text-base font-semibold">✅ 완벽!</span>}
                     </div>
                   </div>
                 </div>
@@ -336,22 +336,22 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
                           {/* 포켓몬 정보 */}
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="font-bold text-sm">
+                              <span className="font-bold text-base">
                                 No.{String(pokemon.newNumber || pokemon.number).padStart(3, '0')}
                               </span>
                               {pokemon.newNumber && pokemon.originalNumber && (
-                                <span className="text-xs text-gray-500">
+                                <span className="text-sm text-gray-500">
                                   (전국 No.{String(pokemon.originalNumber).padStart(3, '0')})
                                 </span>
                               )}
-                              <span className="font-semibold text-lg">{pokemon.name}</span>
+                              <span className="font-semibold text-xl">{pokemon.name}</span>
                             </div>
                             <div className="flex gap-1">
-                              <span className={`text-white text-xs px-2 py-0.5 rounded ${typeColors[pokemon.type] || 'bg-gray-400'}`}>
+                              <span className={`text-white text-sm px-2 py-0.5 rounded ${typeColors[pokemon.type] || 'bg-gray-400'}`}>
                                 {pokemon.type}
                               </span>
                               {pokemon.type2 && (
-                                <span className={`text-white text-xs px-2 py-0.5 rounded ${typeColors[pokemon.type2] || 'bg-gray-400'}`}>
+                                <span className={`text-white text-sm px-2 py-0.5 rounded ${typeColors[pokemon.type2] || 'bg-gray-400'}`}>
                                   {pokemon.type2}
                                 </span>
                               )}
@@ -361,7 +361,7 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
                           {/* 확률 설정 */}
                           <div className="flex items-center gap-3">
                             <div className="text-center">
-                              <div className="text-xs text-gray-500 mb-1">상대 확률</div>
+                              <div className="text-sm text-gray-500 mb-1">상대 확률</div>
                               <div className="flex items-center gap-2">
                                 <input
                                   type="number"
@@ -377,16 +377,16 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
                             </div>
                             
                             <div className="text-center">
-                              <div className="text-xs text-gray-500 mb-1">실제 출현율</div>
+                              <div className="text-sm text-gray-500 mb-1">실제 출현율</div>
                               <div className="bg-indigo-50 px-3 py-1 rounded-lg">
-                                <span className="font-bold text-indigo-600 text-lg">{actualRate}%</span>
+                                <span className="font-bold text-indigo-600 text-xl">{actualRate}%</span>
                               </div>
                             </div>
 
                             {/* 제거 버튼 */}
                             <button
                               onClick={() => togglePokemon(pokemon)}
-                              className="bg-red-100 text-red-700 px-3 py-2 rounded-lg hover:bg-red-200 text-sm font-semibold"
+                              className="bg-red-100 text-red-700 px-3 py-2 rounded-lg hover:bg-red-200 text-base font-semibold"
                             >
                               제거
                             </button>
@@ -465,25 +465,25 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
                           }}
                         />
                         {isSelected && (
-                          <div className="absolute top-0 right-0 bg-green-500 text-white w-4 h-4 rounded-full flex items-center justify-center text-xs">
+                          <div className="absolute top-0 right-0 bg-green-500 text-white w-4 h-4 rounded-full flex items-center justify-center text-sm">
                             ✓
                           </div>
                         )}
                       </div>
                       <div className="text-center">
-                        <div className="text-xs text-gray-500">
+                        <div className="text-sm text-gray-500">
                           #{pokemon.newNumber || pokemon.number}
                         </div>
-                        <div className="font-semibold text-xs truncate">{displayNameParts.name}</div>
+                        <div className="font-semibold text-sm truncate">{displayNameParts.name}</div>
                         {displayNameParts.formLabel && (
                           <div className="text-[10px] text-gray-500 truncate">{displayNameParts.formLabel}</div>
                         )}
                         <div className="flex gap-0.5 justify-center mt-1">
-                          <span className={`text-white text-xs px-1 py-0.5 rounded ${typeColors[pokemon.type] || 'bg-gray-400'}`}>
+                          <span className={`text-white text-sm px-1 py-0.5 rounded ${typeColors[pokemon.type] || 'bg-gray-400'}`}>
                             {pokemon.type}
                           </span>
                           {pokemon.type2 && (
-                            <span className={`text-white text-xs px-1 py-0.5 rounded ${typeColors[pokemon.type2] || 'bg-gray-400'}`}>
+                            <span className={`text-white text-sm px-1 py-0.5 rounded ${typeColors[pokemon.type2] || 'bg-gray-400'}`}>
                               {pokemon.type2}
                             </span>
                           )}
@@ -499,7 +499,7 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
 
         {/* 푸터 */}
         <div className="p-4 border-t border-gray-200 flex justify-between items-center flex-shrink-0">
-          <div className="text-sm text-gray-600">
+          <div className="text-base text-gray-600">
             💡 실제 출현율 = 포켓몬 출현율 × (개별 확률 ÷ 전체 확률 합계)
           </div>
           <div className="flex gap-3">
@@ -526,3 +526,4 @@ export default function RegionEditModal({ region, allPokemon, onClose, onSave })
     </div>
   );
 }
+

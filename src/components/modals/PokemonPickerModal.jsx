@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { X, Globe } from 'lucide-react';
 
 const REGIONAL_FORM_LABELS = {
@@ -97,12 +97,12 @@ export default function PokemonPickerModal({ allPokemon = [], onSelect, onClose 
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="이름 또는 번호로 검색..."
-            className="flex-1 min-w-[160px] rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+            className="flex-1 min-w-[160px] rounded-lg border border-gray-300 px-3 py-1.5 text-base focus:border-indigo-500 focus:outline-none"
           />
           <select
             value={generationFilter}
             onChange={e => setGenerationFilter(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+            className="rounded-lg border border-gray-300 px-3 py-1.5 text-base focus:border-indigo-500 focus:outline-none"
           >
             <option value="all">전체 세대</option>
             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(gen => (
@@ -112,7 +112,7 @@ export default function PokemonPickerModal({ allPokemon = [], onSelect, onClose 
           <select
             value={typeFilter}
             onChange={e => setTypeFilter(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+            className="rounded-lg border border-gray-300 px-3 py-1.5 text-base focus:border-indigo-500 focus:outline-none"
           >
             <option value="all">전체 타입</option>
             {Object.keys(TYPE_COLORS).map(type => (
@@ -121,7 +121,7 @@ export default function PokemonPickerModal({ allPokemon = [], onSelect, onClose 
           </select>
           <button
             onClick={() => setShowRegionalForms(v => !v)}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-base font-semibold transition-colors ${
               showRegionalForms
                 ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -160,7 +160,7 @@ export default function PokemonPickerModal({ allPokemon = [], onSelect, onClose 
                             }}
                           />
                         </div>
-                        <p className="w-full truncate text-center text-xs font-semibold text-gray-800">{base}</p>
+                        <p className="w-full truncate text-center text-sm font-semibold text-gray-800">{base}</p>
                         {region
                           ? <p className="text-[9px] text-indigo-500 font-medium">{region}</p>
                           : <p className="text-[10px] text-gray-400">No.{pokemon.number}</p>
@@ -190,3 +190,4 @@ export default function PokemonPickerModal({ allPokemon = [], onSelect, onClose 
     </div>
   );
 }
+

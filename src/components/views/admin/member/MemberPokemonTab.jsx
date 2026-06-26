@@ -10,6 +10,8 @@ import { getLearnsetTmMoves, getPokemonLearnset } from '../../../../utils/pokemo
 import { DEFAULT_IVS, generateRandomIVs, normalizeIVs } from '../../../../utils/pokemonIndividualValues';
 import { getPokemonGenderOptions } from '../../../../utils/pokemonGender';
 import { getPokemonDisplayParts } from '../../../../utils/pokemonDisplayName';
+import evolutionsData from '../../../../data/evolutions.json';
+import { getBaseStatPatch } from '../../../../utils/pokemonBaseStats';
 
 const emptyEffort = { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 };
 const emptyCondition = { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 };
@@ -288,6 +290,69 @@ function MemberPokemonTab({
     setShowEditItemModal(false);
     setMode('view');
     setSelectedPokemon(null);
+  };
+
+  // 어드민 강제 진화
+  const getEvolutionCandidates = (pokemon) => {
+    if (!pokemon) return [];
+    const candidates = new Set(
+      [pokemon.number, pokemon.originalNumber, pokemon.pokemonId]
+        .map(v => Number(v))
+        .filter(n => Number.isFinite(n) && n > 0)
+    );
+    return evolutionsData.evolutions.filter(evo => candidates.has(Number(evo.from)));
+  };
+
+  const handleAdminEvolve = (evolutionEntry) => {
+    if (!selectedPokemon || !evolutionEntry) return;
+    const evolvedTemplate = allPokemonMaster.find(p =>
+      Number(p.number) === Number(evolutionEntry.to) ||
+      Number(p.originalNumber) === Number(evolutionEntry.to)
+    );
+    if (!evolvedTemplate) {
+      alert('진화 대상 포켓몬 데이터를 찾을 수 없습니다.');
+      return;
+    }
+    const fromName = selectedPokemon.nickname || getPokemonDisplayParts(selectedPokemon).name;
+    const toName = getPokemonDisplayParts(evolvedTemplate).name;
+    if (!window.confirm(`${fromName}을(를) ${toName}(으)로 진화시키겠습니까?`)) return;
+
+    const basePatch = getBaseStatPatch(evolvedTemplate);
+    const newName = getPokemonDisplayParts(evolvedTemplate).name;
+    const oldName = getPokemonDisplayParts(selectedPokemon).name;
+    const currentNickname = selectedPokemon.nickname;
+    // 닉네임이 없거나 종족명과 같으면 null로 초기화 (진화 후 새 이름으로 표시)
+    const isCustomNickname = currentNickname &&
+      currentNickname !== oldName &&
+      currentNickname !== selectedPokemon.name &&
+      currentNickname !== selectedPokemon.nameEn;
+    const updates = {
+      number: evolvedTemplate.number,
+      originalNumber: evolvedTemplate.originalNumber || evolvedTemplate.number,
+      pokemonId: evolvedTemplate.number,
+      name: newName,
+      nameEn: evolvedTemplate.nameEn,
+      type: evolvedTemplate.type,
+      type2: evolvedTemplate.type2 || null,
+      ...basePatch,
+      imageUrl: evolvedTemplate.imageUrl,
+      iconUrl: (() => {
+        const orig = evolvedTemplate.originalNumber;
+        const n = (orig === 710 || orig === 711) ? orig : evolvedTemplate.number;
+        return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${n}.png`;
+      })(),
+      spriteUrl: selectedPokemon.isShiny
+        ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${evolvedTemplate.number}.png`
+        : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${evolvedTemplate.number}.png`,
+      nickname: isCustomNickname ? currentNickname : null,
+      evolutionCancelled: false,
+      evolutionReady: false,
+    };
+
+    onEditPokemon(member.id, selectedPokemon.uniqueId, updates);
+    setMode('view');
+    setSelectedPokemon(null);
+    alert(`✅ ${fromName}이(가) ${toName}(으)로 진화했습니다!`);
   };
 
   const handleStartTransferPokemon = (pokemon) => {
@@ -573,6 +638,9 @@ function MemberPokemonTab({
     }}
           onOpenItemModal={() => setShowEditItemModal(true)}
           onOpenMoveModal={() => setShowMoveModal(true)}
+          evolutionCandidates={getEvolutionCandidates(selectedPokemon)}
+          onAdminEvolve={handleAdminEvolve}
+          allPokemonMaster={allPokemonMaster}
         />
       )}
 

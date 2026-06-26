@@ -69,6 +69,7 @@
       "description": "완벽한 떡볶이"
     }
   ],
+  "failRewards": [],
   "bonusItems": [
     {
       "itemId": 101,

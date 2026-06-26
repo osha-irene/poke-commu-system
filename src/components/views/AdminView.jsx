@@ -22,51 +22,91 @@ import { Badge } from '../ui/Badge';
 
 const CONDITION_LABELS = { elegance:'근사함', beauty:'아름다움', cuteness:'귀여움', intelligence:'슬기로움', strength:'강인함' };
 
-function CustomItemList({ items, onUpdate, onDelete }) {
+function CustomItemManageModal({ items, onUpdate, onDelete, onClose }) {
   const [editingItem, setEditingItem] = useState(null);
+  const [filter, setFilter] = useState('all'); // all | custom | recipe
 
-  if (items.length === 0) return null;
+  const filtered = items.filter(i => {
+    if (filter === 'custom') return !i.isRecipe;
+    if (filter === 'recipe') return !!i.isRecipe;
+    return true;
+  });
 
-  return (
-    <div className="space-y-2 mt-2">
-      <p className="text-sm font-semibold text-gray-600">등록된 커스텀 아이템 ({items.length}개)</p>
-      {items.map(item => {
-        const cb = item.conditionBoost || {};
-        const cbStr = Object.entries(cb).filter(([,v]) => Number(v) > 0)
-          .map(([k,v]) => `${CONDITION_LABELS[k]||k}+${v}`).join(', ');
-        return (
-          <div key={item.id} className="bg-gray-50 rounded-lg border border-gray-200 px-3 py-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 flex-wrap">
-                {item.spriteUrl && <img src={item.spriteUrl} alt="" className="w-6 h-6" style={{imageRendering:'pixelated'}} />}
-                <span className="font-semibold text-sm text-gray-800">{item.name}</span>
-                {item.nameEn && <span className="text-xs text-gray-400 font-mono">{item.nameEn}</span>}
-                {item.friendshipBoost > 0 && <span className="text-xs text-pink-600 bg-pink-50 px-1 rounded">친밀도+{item.friendshipBoost}</span>}
-                {cbStr && <span className="text-xs text-green-700 bg-green-50 px-1 rounded">컨디션: {cbStr}</span>}
-                {item.ivBoost && Object.values(item.ivBoost).some(v=>v>0) && <span className="text-xs text-blue-600 bg-blue-50 px-1 rounded">개체값</span>}
-                {item.evBoost && Object.values(item.evBoost).some(v=>v>0) && <span className="text-xs text-purple-600 bg-purple-50 px-1 rounded">노력치</span>}
+  const effectTag = (item) => {
+    const tags = [];
+    if (item.friendshipBoost > 0) tags.push({ label: `친밀도+${item.friendshipBoost}`, cls: 'bg-pink-50 text-pink-700' });
+    const cb = item.conditionBoost || {};
+    const cbStr = Object.entries(cb).filter(([,v]) => Number(v) > 0).map(([k,v]) => `${CONDITION_LABELS[k]||k}+${v}`).join(', ');
+    if (cbStr) tags.push({ label: `컨디션: ${cbStr}`, cls: 'bg-green-50 text-green-700' });
+    if (item.specialEffect === 'conditionSelect' && item.conditionTarget) tags.push({ label: `${CONDITION_LABELS[item.conditionTarget]||item.conditionTarget}+${item.boostAmount}(선택)`, cls: 'bg-green-50 text-green-700' });
+    if (item.specialEffect === 'evSelect' && item.evTarget) tags.push({ label: `노력치 ${item.evTarget}+${item.boostAmount}(선택)`, cls: 'bg-purple-50 text-purple-700' });
+    if (item.ivBoost && Object.values(item.ivBoost).some(v=>v>0)) tags.push({ label: '개체값', cls: 'bg-blue-50 text-blue-700' });
+    if (item.evBoost && Object.values(item.evBoost).some(v=>v>0)) tags.push({ label: '노력치', cls: 'bg-purple-50 text-purple-700' });
+    if (item.isRecipe) tags.push({ label: '레시피 아이템', cls: 'bg-amber-50 text-amber-700' });
+    return tags;
+  };
+
+  return createPortal(
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-white rounded-xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+        {/* 헤더 */}
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">✨ 커스텀 아이템 관리</h2>
+            <p className="text-sm text-gray-500 mt-0.5">커스텀 생성 및 레시피 결과 아이템을 수정·삭제합니다</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 p-1 rounded"><X size={20} /></button>
+        </div>
+
+        {/* 필터 탭 */}
+        <div className="flex gap-2 px-6 pt-3">
+          {[['all','전체'], ['custom','커스텀'], ['recipe','레시피']].map(([v, label]) => (
+            <button key={v} onClick={() => setFilter(v)}
+              className={`px-3 py-1 rounded-full text-sm font-semibold transition ${filter === v ? 'bg-lime-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+              {label} ({items.filter(i => v === 'all' ? true : v === 'recipe' ? i.isRecipe : !i.isRecipe).length})
+            </button>
+          ))}
+        </div>
+
+        {/* 목록 */}
+        <div className="overflow-y-auto flex-1 px-6 py-3 space-y-2">
+          {filtered.length === 0 && <p className="text-center text-gray-400 py-8">아이템이 없습니다</p>}
+          {filtered.map(item => (
+            <div key={item.id} className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 hover:bg-white transition cursor-pointer group"
+              onClick={() => setEditingItem(item)}>
+              {item.spriteUrl
+                ? <img src={item.spriteUrl} alt="" className="w-8 h-8 shrink-0" style={{imageRendering:'pixelated'}} />
+                : <div className="w-8 h-8 rounded bg-gray-200 shrink-0" />}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold text-sm text-gray-800">{item.name}</span>
+                  {effectTag(item).map((t, i) => (
+                    <span key={i} className={`text-xs px-1.5 py-0.5 rounded ${t.cls}`}>{t.label}</span>
+                  ))}
+                </div>
+                {item.effect && <p className="text-xs text-gray-400 truncate mt-0.5">{item.effect}</p>}
               </div>
-              <div className="flex gap-1 ml-2 shrink-0">
-                <button onClick={() => setEditingItem(item)} className="text-blue-500 hover:text-blue-700 text-xs px-2 py-1 rounded hover:bg-blue-50 transition-colors">수정</button>
-                <button
-                  onClick={async () => {
-                    if (!window.confirm(`"${item.name}" 커스텀 아이템을 삭제하시겠습니까?\n(회원 인벤토리의 아이템은 유지됩니다)`)) return;
+              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
+                <button className="text-blue-500 text-xs px-2 py-1 rounded hover:bg-blue-50"
+                  onClick={e => { e.stopPropagation(); setEditingItem(item); }}>수정</button>
+                <button className="text-red-500 text-xs px-2 py-1 rounded hover:bg-red-50"
+                  onClick={async e => {
+                    e.stopPropagation();
+                    if (!window.confirm(`"${item.name}" 아이템을 삭제하시겠습니까?`)) return;
                     const ok = await onDelete(item.id);
                     if (ok) alert(`"${item.name}" 삭제 완료.`);
-                  }}
-                  className="text-red-500 hover:text-red-700 text-xs px-2 py-1 rounded hover:bg-red-50 transition-colors"
-                >삭제</button>
+                  }}>삭제</button>
               </div>
             </div>
-          </div>
-        );
-      })}
+          ))}
+        </div>
+      </div>
 
       {editingItem && (
         <CustomItemModal
           editItem={editingItem}
           onSubmit={async (payload) => {
-            const { id, isCustom, createdBy, createdAt, ...fields } = payload;
+            const { id, isCustom, isRecipe, createdBy, createdAt, recipeId, ...fields } = payload;
             const ok = await onUpdate(editingItem.id, fields);
             if (ok) alert(`"${fields.name}" 수정 완료.`);
             return ok;
@@ -74,7 +114,8 @@ function CustomItemList({ items, onUpdate, onDelete }) {
           onClose={() => setEditingItem(null)}
         />
       )}
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -279,6 +320,7 @@ export default function AdminView() {
 
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [adminTab, setAdminTab] = useState('members');
+  const [showCustomItemManage, setShowCustomItemManage] = useState(false);
   const [maxWalks, setMaxWalks] = useState(trainer?.maxDailyWalks || 5);
   const [maxNonPartnerPokemon, setMaxNonPartnerPokemon] = useState(systemSettings.maxNonPartnerPokemon || 18);
   const [conditionMax, setConditionMax] = useState(systemSettings.conditionMax || 100);
@@ -847,6 +889,8 @@ export default function AdminView() {
           onUpdateRecipe={updateRecipe}
           onUpdateIngredientStats={updateIngredientStats}
           onDeleteRecipe={handleDeleteRecipe}
+          onCreateCustomItem={(data) => createCustomItem(data, { silent: true })}
+          onUpdateCustomItem={(id, fields) => updateCustomItem(id, fields)}
           allItems={allItems}
           recipes={recipes}
         />
@@ -914,25 +958,35 @@ export default function AdminView() {
 
           {/* 커스텀 아이템 */}
           <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-2">
               <div>
                 <h3 className="text-xl font-bold text-gray-800">✨ 커스텀 아이템</h3>
-                <p className="text-sm text-gray-600 mt-1">나만의 특별한 아이템을 만들어보세요</p>
+                <p className="text-sm text-gray-600 mt-1">직접 제작한 아이템과 레시피 결과물을 관리합니다</p>
               </div>
-              <CustomItemCreator
-                onCreateItem={async (data) => {
-                  const ok = await createCustomItem(data);
-                  return ok;
-                }}
-              />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowCustomItemManage(true)}
+                  className="flex items-center gap-1.5 border border-gray-300 bg-white text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50 font-semibold text-sm transition"
+                >
+                  관리 ({allItems.filter(i => i.isCustom).length})
+                </button>
+                <CustomItemCreator
+                  onCreateItem={async (data) => {
+                    const ok = await createCustomItem(data);
+                    return ok;
+                  }}
+                />
+              </div>
             </div>
-            {/* 커스텀 아이템 목록 */}
-            <CustomItemList
+          </Card>
+          {showCustomItemManage && (
+            <CustomItemManageModal
               items={allItems.filter(i => i.isCustom)}
               onUpdate={updateCustomItem}
               onDelete={deleteCustomItem}
+              onClose={() => setShowCustomItemManage(false)}
             />
-          </Card>
+          )}
 
           <Card className="p-6 space-y-6">
             <div>

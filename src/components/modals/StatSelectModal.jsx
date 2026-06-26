@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { X } from 'lucide-react';
 
 const CONDITION_OPTIONS = [
@@ -33,14 +33,14 @@ export default function StatSelectModal({ type, amount, pokemonName, onSelect, o
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h3 className="font-bold text-gray-800 text-base">
+          <h3 className="font-bold text-gray-800 text-lg">
             {label} 항목 선택
           </h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X size={18} />
           </button>
         </div>
-        <p className="text-sm text-gray-500">
+        <p className="text-base text-gray-500">
           {pokemonName}에게 어느 {label}을 +{amount} 올릴까요?
         </p>
         <div className="space-y-2">
@@ -48,7 +48,7 @@ export default function StatSelectModal({ type, amount, pokemonName, onSelect, o
             <button
               key={key}
               onClick={() => onSelect(key)}
-              className="w-full py-2.5 px-4 rounded-xl border-2 border-gray-200 hover:border-indigo-400 hover:bg-indigo-50 text-sm font-semibold text-gray-700 transition-colors text-left"
+              className="w-full py-2.5 px-4 rounded-xl border-2 border-gray-200 hover:border-indigo-400 hover:bg-indigo-50 text-base font-semibold text-gray-700 transition-colors text-left"
             >
               {optLabel} +{amount}
             </button>
@@ -58,3 +58,4 @@ export default function StatSelectModal({ type, amount, pokemonName, onSelect, o
     </div>
   );
 }
+

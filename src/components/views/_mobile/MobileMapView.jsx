@@ -110,16 +110,18 @@ export default function MobileMapView({
       : selectedArea.encounterRate;
 
     return (
-      <div style={{ minHeight: '100vh', background: 'rgba(20,40,10,0.20)', backdropFilter: 'blur(2px)' }}>
+      <div style={{ minHeight: '100vh', maxWidth: 520, margin: '0 auto' }}>
         {/* 헤더 */}
         <div style={{
           position: 'sticky', top: 0, zIndex: 10,
           display: 'flex', alignItems: 'center',
           padding: '12px 14px',
           background: 'rgba(255,255,255,0.94)',
-          borderBottom: `1px solid ${P.border}`,
+          border: `1px solid ${P.border}`,
+          borderRadius: window.innerWidth >= 901 ? 16 : 0,
           backdropFilter: 'blur(12px)',
           minHeight: 56,
+          marginBottom: 8,
         }}>
           <button onClick={handleBack} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px 10px', color: P.muted, flexShrink: 0, position: 'relative', zIndex: 2, ...TAP }}>
             <ChevronLeft size={22} />
@@ -251,9 +253,9 @@ export default function MobileMapView({
 
   /* ── 마을/구역 목록 ── */
   return (
-    <div style={{ paddingBottom: 88 }}>
+    <div style={{ paddingBottom: 88, maxWidth: 520, margin: '0 auto' }}>
     <div style={{ padding: '14px 14px 0' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: 'calc(100vh - 120px)', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {towns.map(town => {
           const isOpen      = expandedTown === town.groupId;
           const rgb         = hexToRgb(town.color);

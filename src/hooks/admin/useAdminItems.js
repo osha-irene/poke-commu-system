@@ -125,14 +125,14 @@ export const useAdminItems = (
   };
 
   // ========== 커스텀 아이템 생성 ==========
-  const createCustomItem = async (itemData) => {
+  const createCustomItem = async (itemData, { silent = false } = {}) => {
     if (!currentUser?.isAdmin) {
       return false;
     }
     
     const newItem = {
       ...itemData,
-      id: `custom_${Date.now()}`,
+      id: itemData.id || `custom_${Date.now()}`,
       isCustom: true,
       createdBy: currentUser.name,
       createdAt: new Date().toISOString(),
@@ -148,8 +148,7 @@ export const useAdminItems = (
       itemsArray.push(newItem);
       
       await set(customItemsRef, itemsArray);
-      
-      alert(`커스텀 아이템 "${itemData.name}"이 생성되었습니다!`);
+      if (!silent) alert(`커스텀 아이템 "${itemData.name}"이 생성되었습니다!`);
       return true;
     } catch (error) {
       console.error('❌ 커스텀 아이템 생성 실패:', error);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { X, Plus, Minus, Sparkles, Heart, Star, Zap, TrendingUp } from 'lucide-react';
 import { 
   getItemEffect, 
@@ -131,10 +131,10 @@ const actualIncrease = afterValue - currentValue;
             <div className="flex items-center gap-3">
               {getIcon()}
               <div>
-                <h2 className="text-2xl font-bold">
+                <h2 className="text-3xl font-bold">
                   {isRareCandy ? '🍬 레벨업' : '아이템 사용'}
                 </h2>
-                <p className="text-sm mt-1 text-green-800">
+                <p className="text-base mt-1 text-green-800">
                   {pokemon.nickname || pokemon.name}에게 사용
                 </p>
               </div>
@@ -157,13 +157,13 @@ const actualIncrease = afterValue - currentValue;
               />
             </div>
             <div className="flex-1">
-              <h3 className="font-bold text-lg text-gray-800">{item.name}</h3>
-              <p className="text-sm text-gray-600">보유: {item.count}개</p>
+              <h3 className="font-bold text-xl text-gray-800">{item.name}</h3>
+              <p className="text-base text-gray-600">보유: {item.count}개</p>
               {item.effect && (
-                <p className="text-xs text-gray-500 mt-1">{item.effect}</p>
+                <p className="text-sm text-gray-500 mt-1">{item.effect}</p>
               )}
               {item.onUse?.effectLabel && (
-                <p className="text-xs text-purple-600 font-semibold mt-1">
+                <p className="text-sm text-purple-600 font-semibold mt-1">
                   ✨ {item.onUse.effectLabel}
                 </p>
               )}
@@ -174,10 +174,10 @@ const actualIncrease = afterValue - currentValue;
           {isRareCandy && (
             <div className="bg-white/40 rounded-lg p-4 border-2 border-lime-200">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl">🍬</span>
-                <span className="font-bold text-lg text-gray-800">이상한 사탕</span>
+                <span className="text-3xl">🍬</span>
+                <span className="font-bold text-xl text-gray-800">이상한 사탕</span>
               </div>
-              <div className="space-y-2 text-sm text-gray-700">
+              <div className="space-y-2 text-base text-gray-700">
                 <p>• 포켓몬의 레벨이 1 올라갑니다</p>
                 <p>• 새로 배울 수 있는 기술이 있으면 선택할 수 있습니다</p>
                 <p>• 한 번에 1개씩만 사용 가능합니다</p>
@@ -185,14 +185,14 @@ const actualIncrease = afterValue - currentValue;
               <div className="mt-3 pt-3 border-t border-yellow-300">
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-gray-700">현재 레벨</span>
-                  <span className="text-2xl font-bold text-gray-800">Lv. {pokemon.level}</span>
+                  <span className="text-3xl font-bold text-gray-800">Lv. {pokemon.level}</span>
                 </div>
                 <div className="flex items-center justify-center my-2">
                   <span className="text-3xl text-yellow-600">↓</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-green-700">레벨업 후</span>
-                  <span className="text-2xl font-bold text-green-600">Lv. {pokemon.level + 1}</span>
+                  <span className="text-3xl font-bold text-green-600">Lv. {pokemon.level + 1}</span>
                 </div>
               </div>
             </div>
@@ -201,7 +201,7 @@ const actualIncrease = afterValue - currentValue;
           {/* 다중 스탯 선택 */}
           {isMultiStat && statChoices.length > 0 && (
             <div className="space-y-3">
-              <label className="block text-sm font-semibold text-gray-700">
+              <label className="block text-base font-semibold text-gray-700">
                 {getEffectTypeInfo(effect.type)?.name || '능력치'} 선택
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -221,10 +221,10 @@ const actualIncrease = afterValue - currentValue;
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-lg">{stat.icon}</span>
+                        <span className="text-xl">{stat.icon}</span>
                         <div className="flex-1">
-                          <div className="font-semibold text-sm text-gray-800">{stat.name}</div>
-                          <div className="text-xs text-gray-600 mt-1">
+                          <div className="font-semibold text-base text-gray-800">{stat.name}</div>
+                          <div className="text-sm text-gray-600 mt-1">
                             {stat.current}/{stat.max} {isMax && '(최대)'}
                           </div>
                         </div>
@@ -239,20 +239,20 @@ const actualIncrease = afterValue - currentValue;
           {/* 일반 아이템 효과 표시 */}
           {effect && !isRareCandy && !isMultiStat && (
             <div className="bg-white/40 rounded-lg p-4 border-2 border-lime-200">
-              <div className="text-sm font-semibold text-gray-700 mb-3">
+              <div className="text-base font-semibold text-gray-700 mb-3">
                 📊 효과 미리보기
               </div>
               
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">능력치</span>
-                  <span className="font-bold text-lg text-indigo-600">
+                  <span className="text-base text-gray-600">능력치</span>
+                  <span className="font-bold text-xl text-indigo-600">
                     {getDisplayStatName()}
                   </span>
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">현재</span>
+                  <span className="text-base text-gray-600">현재</span>
                   <span className="font-bold text-gray-800">
                     {currentValue} / {maxValue}
                   </span>
@@ -266,10 +266,10 @@ const actualIncrease = afterValue - currentValue;
                 </div>
                 
                 <div className="flex items-center justify-between pt-2 border-t border-blue-200">
-                  <span className="text-sm font-semibold text-green-600">사용 후</span>
-                  <span className="font-bold text-xl text-green-600">
+                  <span className="text-base font-semibold text-green-600">사용 후</span>
+                  <span className="font-bold text-2xl text-green-600">
                     {afterValue} / {maxValue}
-                    <span className="text-sm ml-2">
+                    <span className="text-base ml-2">
                       (+{actualIncrease})
                     </span>
                   </span>
@@ -291,7 +291,7 @@ const actualIncrease = afterValue - currentValue;
               <p className="text-yellow-700 font-semibold">
                 ⚠️ 이 아이템은 포켓몬에게 직접 사용할 수 없습니다
               </p>
-              <p className="text-sm text-yellow-600 mt-1">
+              <p className="text-base text-yellow-600 mt-1">
                 배틀 중에 사용하거나 다른 방식으로 활용하세요
               </p>
             </div>
@@ -300,7 +300,7 @@ const actualIncrease = afterValue - currentValue;
           {/* 수량 선택 - 이상한 사탕이 아니고 다중 스탯도 아닌 경우 */}
           {effect && !isRareCandy && !isMultiStat && actualIncrease > 0 && (
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
+              <label className="block text-base font-semibold text-gray-700 mb-3">
                 사용 개수 선택
               </label>
               <div className="flex items-center gap-4">
@@ -322,7 +322,7 @@ const actualIncrease = afterValue - currentValue;
                       const val = parseInt(e.target.value) || 1;
                       setQuantity(Math.min(maxQuantity, Math.max(1, val)));
                     }}
-                    className="w-full text-center text-2xl font-bold border-2 border-gray-300 rounded-lg py-2 focus:border-indigo-500 focus:outline-none"
+                    className="w-full text-center text-3xl font-bold border-2 border-gray-300 rounded-lg py-2 focus:border-indigo-500 focus:outline-none"
                   />
                 </div>
                 
@@ -338,25 +338,25 @@ const actualIncrease = afterValue - currentValue;
               <div className="flex gap-2 mt-3">
                 <button
                   onClick={() => setQuantity(1)}
-                  className="flex-1 text-xs bg-gray-100 text-gray-700 px-3 py-2 rounded hover:bg-gray-200 font-semibold"
+                  className="flex-1 text-sm bg-gray-100 text-gray-700 px-3 py-2 rounded hover:bg-gray-200 font-semibold"
                 >
                   1개
                 </button>
                 <button
                   onClick={() => setQuantity(Math.min(5, maxQuantity))}
-                  className="flex-1 text-xs bg-gray-100 text-gray-700 px-3 py-2 rounded hover:bg-gray-200 font-semibold"
+                  className="flex-1 text-sm bg-gray-100 text-gray-700 px-3 py-2 rounded hover:bg-gray-200 font-semibold"
                 >
                   5개
                 </button>
                 <button
                   onClick={() => setQuantity(Math.min(10, maxQuantity))}
-                  className="flex-1 text-xs bg-gray-100 text-gray-700 px-3 py-2 rounded hover:bg-gray-200 font-semibold"
+                  className="flex-1 text-sm bg-gray-100 text-gray-700 px-3 py-2 rounded hover:bg-gray-200 font-semibold"
                 >
                   10개
                 </button>
                 <button
                   onClick={() => setQuantity(maxQuantity)}
-                  className="flex-1 text-xs bg-indigo-100 text-indigo-700 px-3 py-2 rounded hover:bg-indigo-200 font-semibold"
+                  className="flex-1 text-sm bg-indigo-100 text-indigo-700 px-3 py-2 rounded hover:bg-indigo-200 font-semibold"
                 >
                   최대
                 </button>
@@ -389,3 +389,4 @@ const actualIncrease = afterValue - currentValue;
     </div>
   );
 }
+

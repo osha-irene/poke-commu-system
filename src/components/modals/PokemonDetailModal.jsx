@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { ArrowUpCircle, ArrowDownCircle, Trash2, Heart, X, Edit2, Check } from 'lucide-react';
 
 export default function PokemonDetailPanel({ 
@@ -37,7 +37,7 @@ export default function PokemonDetailPanel({
   return (
     <div className="w-full bg-white rounded-lg border border-gray-200 p-6">
       <div className="flex justify-between items-start mb-4">
-        <h3 className="text-xl font-bold text-gray-800">포켓몬 정보</h3>
+        <h3 className="text-2xl font-bold text-gray-800">포켓몬 정보</h3>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
           <X size={20} />
         </button>
@@ -64,11 +64,11 @@ export default function PokemonDetailPanel({
           {/* 기본 정보 */}
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs bg-gray-200 px-2 py-1 rounded">No.{pokemon.number}</span>
-              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-semibold">
+              <span className="text-sm bg-gray-200 px-2 py-1 rounded">No.{pokemon.number}</span>
+              <span className="text-sm bg-blue-100 text-blue-700 px-2 py-1 rounded font-semibold">
                 {pokemon.type}
               </span>
-              <span className="text-xs text-gray-500">{pokemon.name}</span>
+              <span className="text-sm text-gray-500">{pokemon.name}</span>
             </div>
             
             {/* 별명 편집 */}
@@ -79,7 +79,7 @@ export default function PokemonDetailPanel({
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                   maxLength={12}
-                  className="text-2xl font-bold border-b-2 border-indigo-500 focus:outline-none bg-transparent"
+                  className="text-3xl font-bold border-b-2 border-indigo-500 focus:outline-none bg-transparent"
                   autoFocus
                   onKeyPress={(e) => e.key === 'Enter' && handleSaveNickname()}
                 />
@@ -98,7 +98,7 @@ export default function PokemonDetailPanel({
               </div>
             ) : (
               <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-2xl font-bold">{nickname}</h2>
+                <h2 className="text-3xl font-bold">{nickname}</h2>
                 <button
                   onClick={() => setIsEditingNickname(true)}
                   className="text-gray-400 hover:text-gray-600"
@@ -108,14 +108,14 @@ export default function PokemonDetailPanel({
               </div>
             )}
             
-            <div className="text-lg text-gray-600">Lv. {pokemon.level}</div>
+            <div className="text-xl text-gray-600">Lv. {pokemon.level}</div>
           </div>
 
           {/* HP 바 */}
           <div className="bg-gray-50 rounded-lg p-3">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-semibold text-gray-700">HP</span>
-              <span className="text-sm text-gray-600">{pokemon.hp}/{pokemon.maxHp}</span>
+              <span className="text-base font-semibold text-gray-700">HP</span>
+              <span className="text-base text-gray-600">{pokemon.hp}/{pokemon.maxHp}</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div className={`h-2 rounded-full transition-all ${hpColor}`} style={{ width: `${hpPercent}%` }} />
@@ -125,19 +125,19 @@ export default function PokemonDetailPanel({
           {/* 경험치 + 친밀도 */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
-              <div className="text-xs text-gray-600">경험치</div>
-              <div className="text-lg font-bold text-purple-600">{pokemon.exp || 0}</div>
+              <div className="text-sm text-gray-600">경험치</div>
+              <div className="text-xl font-bold text-purple-600">{pokemon.exp || 0}</div>
             </div>
 
             <div className="bg-pink-50 rounded-lg p-3 border border-pink-200">
               <div className="flex items-center gap-1 mb-2">
                 <Heart size={12} className="text-pink-500" />
-                <span className="text-xs font-semibold text-gray-700">친밀도</span>
+                <span className="text-sm font-semibold text-gray-700">친밀도</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
                 <div className="bg-pink-500 h-2 rounded-full" style={{ width: `${pokemon.friendship || 50}%` }} />
               </div>
-              <div className="text-xs text-gray-600 text-right">
+              <div className="text-sm text-gray-600 text-right">
                 {pokemon.friendship || 50}/100
               </div>
             </div>
@@ -188,3 +188,4 @@ export default function PokemonDetailPanel({
     </div>
   );
 }
+
