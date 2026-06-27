@@ -861,8 +861,8 @@ export default function ShopView() {
       {phase === 'shop' && selectedShopItem && !purchaseMsg && (
         <div style={{
           position: 'absolute',
-          right: '3%',
-          bottom: 'calc(6% + 3px)',
+          right: '39%',
+          bottom: 'calc(6% + 40px)',
           zIndex: 40,
           pointerEvents: 'auto',
         }}>
