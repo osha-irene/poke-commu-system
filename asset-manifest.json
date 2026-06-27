@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.cba49129.css",
-    "main.js": "/static/js/main.974d780b.js",
+    "main.css": "/static/css/main.c0bb8ff1.css",
+    "main.js": "/static/js/main.b55eb345.js",
     "static/js/623.69c45dc4.chunk.js": "/static/js/623.69c45dc4.chunk.js",
     "static/media/forest-bg.png": "/static/media/forest-bg.ed51a4032d3a6a7016d2.png",
     "static/media/forest-bg (2).png": "/static/media/forest-bg (2).023aaebd6df83a1d1128.png",
@@ -10,6 +10,7 @@
     "static/media/doctor_wpen.png": "/static/media/doctor_wpen.d1d9dd1e8d1cdb4271a9.png",
     "static/media/main_player.png": "/static/media/main_player.e7faba9211c9be0d3ba5.png",
     "static/media/main_schedule.png": "/static/media/main_schedule.08afd157600a8606a2b3.png",
+    "static/media/cramorant.png": "/static/media/cramorant.b77088b896dded6e516a.png",
     "static/media/main_npc.png": "/static/media/main_npc.b48850ebb2a6e5f6c1b5.png",
     "static/media/main_deco_leaves (2).png": "/static/media/main_deco_leaves (2).1d65fa47529c541e03ac.png",
     "static/media/logo_text.png": "/static/media/logo_text.fdb1298f93a712fc16a5.png",
@@ -44,17 +45,16 @@
     "static/media/map.png": "/static/media/map.a93920750eb1513e2792.png",
     "static/media/entry.png": "/static/media/entry.8d7a88f338ce8a9c4795.png",
     "static/media/bag.png": "/static/media/bag.1a11c2f1fe8c7374a447.png",
-    "static/media/member-button.png": "/static/media/member-button.5b0e7c70297c7d9f13e5.png",
-    "static/media/npc-button.png": "/static/media/npc-button.c04f7cb2244266547809.png",
+    "static/media/context2.png": "/static/media/context2.a3c6c0a747ca66a59ab4.png",
     "static/media/pokeball.png": "/static/media/pokeball.0ce8227d4210c4d60ed5.png",
     "index.html": "/index.html",
     "static/media/pokemon-icon.svg": "/static/media/pokemon-icon.d36b6f0655c180980d5acb3287a88011.svg",
-    "main.cba49129.css.map": "/static/css/main.cba49129.css.map",
-    "main.974d780b.js.map": "/static/js/main.974d780b.js.map",
+    "main.c0bb8ff1.css.map": "/static/css/main.c0bb8ff1.css.map",
+    "main.b55eb345.js.map": "/static/js/main.b55eb345.js.map",
     "623.69c45dc4.chunk.js.map": "/static/js/623.69c45dc4.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.cba49129.css",
-    "static/js/main.974d780b.js"
+    "static/css/main.c0bb8ff1.css",
+    "static/js/main.b55eb345.js"
   ]
 }
