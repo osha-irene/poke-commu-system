@@ -1,6 +1,7 @@
 // src/components/pokemon/PokemonPreviewInfo.jsx
 import React from 'react';
 import { shouldShowGenderIcon } from '../../../utils/pokemonGender';
+import { getAbilityKoreanName } from '../../../utils/abilityUtils';
 
 /**
  * 야생 포켓몬의 정보를 한 줄로 표시하는 컴포넌트
@@ -33,7 +34,7 @@ export default function PokemonPreviewInfo({ pokemon }) {
       <span className="text-gray-400 mx-1">|</span>
       
       {/* 특성 */}
-      <span className="text-purple-600 font-semibold">{pokemon.ability || '???'}</span>
+      <span className="text-purple-600 font-semibold">{getAbilityKoreanName(pokemon.ability) || pokemon.ability || '???'}</span>
       
       {shouldShowGenderIcon(pokemon.gender) && (
         <>

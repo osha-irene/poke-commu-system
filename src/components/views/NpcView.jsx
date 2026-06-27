@@ -481,9 +481,9 @@ export default function NpcView({ members = {}, isLoading = false, isAdmin = fal
           <button
             onClick={() => onSwitchTab('members')}
             className="tab-switch-btn"
-            style={{ position: 'absolute', top: 40, left: -42, zIndex: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+            style={{ position: 'absolute', top: 40, left: 28, zIndex: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
           >
-            <img src={memberButtonImg} alt="멤버 보기" style={{ width: 150, height: 'auto', display: 'block' }} />
+            <img src={memberButtonImg} alt="멤버 보기" style={{ width: 198, height: 'auto', display: 'block' }} />
           </button>
         )}
         <div className={`mbr-page npc-page${returning ? ' npc-page--returning' : ''}`}>

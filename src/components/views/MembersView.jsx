@@ -8,6 +8,7 @@ import { POKEBALL_LIST } from '../../styles/theme';
 import { translateMoveName } from '../../battle/utils/move-translations';
 import movesData from '../../data/moves.json';
 import abilitiesData from '../../data/abilities.json';
+import { getAbilityKoreanName } from '../../utils/abilityUtils';
 import CachedImage from '../common/CachedImage';
 import { preloadDecodedImage } from '../../utils/imageCache';
 import { useGame } from '../../contexts/GameContext';
@@ -2004,7 +2005,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                             const tc = TYPE_COLORS[t] || { bg: '#888', text: '#fff' };
                             return <span key={ti} style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: tc.bg, color: tc.text }}>{t}</span>;
                           })}
-                          {p.ability && <span style={{ fontSize: 11, color: '#555', marginLeft: 'auto', whiteSpace: 'nowrap' }}>{p.ability}</span>}
+                          {p.ability && <span style={{ fontSize: 11, color: '#555', marginLeft: 'auto', whiteSpace: 'nowrap' }}>{getAbilityKoreanName(p.ability) || p.ability}</span>}
                           {p.isPartner && <span style={{ fontSize: 11, fontWeight: 600, color: '#d97706' }}>파트너</span>}
                         </div>
                         {moves.length > 0 && (
@@ -2435,9 +2436,9 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
           <button
             onClick={() => onSwitchTab('npcs')}
             className="tab-switch-btn"
-            style={{ position: 'absolute', top: -50, left: -70, zIndex: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+            style={{ position: 'absolute', top: -51, left: 0, zIndex: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
           >
-            <img src={npcButtonImg} alt="NPC 보기" style={{ width: 150, height: 'auto', display: 'block' }} />
+            <img src={npcButtonImg} alt="NPC 보기" style={{ width: 198, height: 'auto', display: 'block' }} />
           </button>
         )}
         {!showDetail && createPortal(

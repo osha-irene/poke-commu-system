@@ -607,9 +607,8 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
         });
       }
 
-      const premierMsg = premierBallCount > 0 ? `\n🎁 프레미어볼 ${premierBallCount}개 증정!` : '';
-      alert(`${itemData.name} ${quantity}개를 구매했습니다!${premierMsg}`);
-      return true;
+      const premierMsg = premierBallCount > 0 ? `프레미어볼 ${premierBallCount}개를 증정 받았다!` : '';
+      return { success: true, premierMsg };
       
     } catch (error) {
       console.error('❌ 재고 업데이트 실패:', error);

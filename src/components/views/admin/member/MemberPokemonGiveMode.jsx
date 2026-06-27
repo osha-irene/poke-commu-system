@@ -8,6 +8,7 @@ import { POKEBALL_LIST } from '../../../../styles/theme';
 import { getPokemonGenderOptions } from '../../../../utils/pokemonGender';
 import { getGenderedSpriteUrl } from '../../../../utils/pokemonImageUtils';
 import { getPokemonDisplayParts } from '../../../../utils/pokemonDisplayName';
+import { getAbilityKoreanName } from '../../../../utils/abilityUtils';
 
 export default function MemberPokemonGiveMode({
   allPokemonMaster,
@@ -230,12 +231,12 @@ export default function MemberPokemonGiveMode({
                   className="w-full px-3 py-2 border rounded text-sm"
                 >
                   <option value="">기본 특성 (랜덤)</option>
-                  {giveData.selectedPokemon?.abilities?.map((ab, idx) => (
-                    <option key={idx} value={ab}>{ab}</option>
+                  {giveData.selectedPokemon?.abilitiesEn?.map((ab, idx) => (
+                    <option key={idx} value={ab}>{getAbilityKoreanName(ab) || ab}</option>
                   ))}
-                  {giveData.selectedPokemon?.hiddenAbility && (
-                    <option value={giveData.selectedPokemon.hiddenAbility}>
-                      {giveData.selectedPokemon.hiddenAbility} (숨특)
+                  {giveData.selectedPokemon?.hiddenAbilityEn && (
+                    <option value={giveData.selectedPokemon.hiddenAbilityEn}>
+                      {getAbilityKoreanName(giveData.selectedPokemon.hiddenAbilityEn) || giveData.selectedPokemon.hiddenAbilityEn} (숨특)
                     </option>
                   )}
                 </select>

@@ -5,6 +5,7 @@ import { getOwnedPokemonSpriteUrl } from '../../../utils/pokemonImageUtils';
 import { TYPE_COLORS, POKEBALL_LIST } from '../../../constants/pokemon';
 import { translateMoveName } from '../../../battle/utils/move-translations';
 import movesData from '../../../data/moves.json';
+import { getAbilityKoreanName } from '../../../utils/abilityUtils';
 import CachedImage from '../../common/CachedImage';
 import { useGame } from '../../../contexts/GameContext';
 import badge1Img from '../../../assets/members/badge/badge1.png';
@@ -435,7 +436,7 @@ function EntryTab({ party, allItems = [] }) {
                   const tc = TYPE_COLORS[t] || { bg: '#888', text: '#fff' };
                   return <span key={ti} style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: tc.bg, color: tc.text }}>{t}</span>;
                 })}
-                {p?.ability && <span style={{ fontSize: 10, color: '#666', marginLeft: 'auto', whiteSpace: 'nowrap' }}>{p.ability}</span>}
+                {p?.ability && <span style={{ fontSize: 10, color: '#666', marginLeft: 'auto', whiteSpace: 'nowrap' }}>{getAbilityKoreanName(p.ability) || p.ability}</span>}
               </div>
               {moves.length > 0 && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>

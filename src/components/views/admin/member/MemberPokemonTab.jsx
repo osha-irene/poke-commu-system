@@ -134,11 +134,9 @@ function MemberPokemonTab({
     species: template.species || template.nameEn || pokemon.species,
     type: template.type || pokemon.type,
     type2: template.type2 || null,
-    abilities: template.abilities || pokemon.abilities,
     abilitiesEn: template.abilitiesEn || pokemon.abilitiesEn,
-    ability: template.abilities?.[0] || pokemon.ability,
+    ability: template.abilitiesEn?.[0] || pokemon.abilityEn || pokemon.ability,
     abilityEn: template.abilitiesEn?.[0] || pokemon.abilityEn,
-    hiddenAbility: template.hiddenAbility ?? pokemon.hiddenAbility,
     hiddenAbilityEn: template.hiddenAbilityEn ?? pokemon.hiddenAbilityEn,
     baseHp: template.baseHp ?? pokemon.baseHp,
     baseAttack: template.baseAttack ?? pokemon.baseAttack,
@@ -243,7 +241,7 @@ function MemberPokemonTab({
   const handleSaveEdit = () => {
     if (!selectedPokemon) return;
     const pokemonTemplate = getPokemonTemplate(selectedPokemon);
-    const finalAbility = editData.ability || pokemonTemplate?.abilities?.[0] || selectedPokemon.ability || '없음';
+    const finalAbility = editData.ability || pokemonTemplate?.abilitiesEn?.[0] || selectedPokemon.abilityEn || selectedPokemon.ability || '';
 
     let finalSpriteUrl = editData.spriteUrl;
     if (editData.isShiny !== selectedPokemon.isShiny) {
@@ -265,7 +263,7 @@ function MemberPokemonTab({
       isShiny: editData.isShiny,
       heldItem: editData.heldItem,
       ability: finalAbility,
-      isHiddenAbility: Boolean(pokemonTemplate?.hiddenAbility && finalAbility === pokemonTemplate.hiddenAbility),
+      isHiddenAbility: Boolean(pokemonTemplate?.hiddenAbilityEn && finalAbility === pokemonTemplate.hiddenAbilityEn),
       friendship: editData.friendship,
        gender: editData.gender, 
     sizeRank: editData.sizeRank,  

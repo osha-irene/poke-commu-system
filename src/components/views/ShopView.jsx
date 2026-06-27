@@ -1,4 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+      import React, { useState, useEffect, useRef } from 'react';
+import ballsImage from '../../assets/shop/balls.png';
+import cramorantImage from '../../assets/shop/cramorant.png';
+import contextImage from '../../assets/shop/context.png';
+import contextCompleteImage from '../../assets/shop/context2.png';
+import skipImage from '../../assets/shop/skip.png';
+import buyImage from '../../assets/shop/buy.png';
+import buy2Image from '../../assets/shop/buy2.png';
 import { ShoppingCart, Coins, CircleDot, X } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarDays, faStore, faGift, faStar, faBoxOpen } from '@fortawesome/free-solid-svg-icons';
@@ -338,6 +345,105 @@ export default function ShopView() {
     );
   };
 
+  const sceneMessage = '당신을 빤히 바라보고 있다. 당신에게 흥미가 있는 듯 하다. 입에서 무언가 뱉어낼 듯하다.';
+  const askingMessage = '어떤 아이템을 볼까?';
+  // phase: 'intro' | 'asking' | 'shop'
+  const [phase, setPhase] = useState('intro');
+  const [visibleLength, setVisibleLength] = useState(0);
+  const [askingLength, setAskingLength] = useState(0);
+  const [selectedShopItem, setSelectedShopItem] = useState(null);
+  const isMessageComplete = visibleLength >= sceneMessage.length;
+  const isAskingComplete = askingLength >= askingMessage.length;
+  const scenePermanentItems = (shopData.permanentItems || [])
+    .map((shopItem) => ({
+      ...shopItem,
+      item: allItems.find((item) => item.id === shopItem.itemId)
+    }))
+    .filter(({ item }) => Boolean(item));
+
+  // intro 메시지 타이핑
+  useEffect(() => {
+    setPhase('intro');
+    setVisibleLength(0);
+    setAskingLength(0);
+    setSelectedShopItem(null);
+    const timer = window.setInterval(() => {
+      setVisibleLength((len) => {
+        if (len >= sceneMessage.length) { window.clearInterval(timer); return len; }
+        return len + 1;
+      });
+    }, 70);
+    return () => window.clearInterval(timer);
+  }, [sceneMessage]);
+
+  // asking 메시지 타이핑
+  useEffect(() => {
+    if (phase !== 'asking') return undefined;
+    setAskingLength(0);
+    const timer = window.setInterval(() => {
+      setAskingLength((len) => {
+        if (len >= askingMessage.length) { window.clearInterval(timer); return len; }
+        return len + 1;
+      });
+    }, 70);
+    return () => window.clearInterval(timer);
+  }, [phase]);
+
+  const [showBuy2, setShowBuy2] = useState(false);
+  const [buyConfirming, setBuyConfirming] = useState(false);
+  const buy2Ref = useRef(null);
+
+  useEffect(() => {
+    if (!buyConfirming) return;
+    const handler = (e) => {
+      if (buy2Ref.current && !buy2Ref.current.contains(e.target)) {
+        setBuyConfirming(false);
+        setShowBuy2(false);
+        setQuantity(1);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [buyConfirming]);
+  const [purchaseMsg, setPurchaseMsg] = useState('');
+
+  const getEulReul = (name) => {
+    if (!name) return '을';
+    const code = name.charCodeAt(name.length - 1);
+    if (code < 0xAC00 || code > 0xD7A3) return '을';
+    return (code - 0xAC00) % 28 === 0 ? '를' : '을';
+  };
+
+  const handleAdvance = () => {
+    if (phase === 'intro') {
+      if (!isMessageComplete) { setVisibleLength(sceneMessage.length); return; }
+      setPhase('asking');
+    } else if (phase === 'asking') {
+      if (!isAskingComplete) { setAskingLength(askingMessage.length); return; }
+      // A 누르면 첫 번째 아이템 자동 선택
+      if (scenePermanentItems.length > 0) {
+        setSelectedShopItem(scenePermanentItems[0]);
+      }
+      setPhase('shop');
+    }
+  };
+
+  // 키보드 A 키
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'a' || e.key === 'A') handleAdvance(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [phase, isMessageComplete, isAskingComplete]);
+
+  const getItemDetailText = (shopItem) => {
+    if (!shopItem?.item) return '';
+
+    const { item } = shopItem;
+    const description = item.effect || item.description || '상세 설명이 없습니다.';
+
+    return description;
+  };
+
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   if (isMobile) {
@@ -652,336 +758,187 @@ export default function ShopView() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      {/* 헤더 */}
-      <div className="rounded-lg border-2 border-lime-300 bg-white/55 p-6 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2 flex items-center gap-3 text-green-950">
-              <ShoppingCart size={32} className="text-lime-700" />
-              포켓몬 상점
-            </h1>
-            <p className="text-green-800">필요한 아이템을 구매하세요!</p>
+    <section
+      className="shop-scene"
+      aria-label="상점"
+      onClick={(e) => {
+        if (phase === 'intro' || phase === 'asking') { handleAdvance(); return; }
+        if (phase === 'shop' && buyConfirming) { setBuyConfirming(false); setShowBuy2(false); setQuantity(1); }
+      }}
+      style={(phase === 'intro' || phase === 'asking' || buyConfirming) ? { cursor: 'pointer' } : undefined}
+    >
+      <div className="shop-scene__dialogue">
+        <img
+          className="shop-scene__balls"
+          src={ballsImage}
+          alt=""
+          aria-hidden="true"
+        />
+        <img
+          className="shop-scene__context"
+          src={contextImage}
+          alt=""
+          aria-hidden="true"
+          onClick={phase !== 'shop' ? handleAdvance : buyConfirming ? () => { setBuyConfirming(false); setShowBuy2(false); setQuantity(1); } : undefined}
+          style={(phase !== 'shop' || buyConfirming) ? { cursor: 'pointer', pointerEvents: 'auto' } : undefined}
+        />
+
+        {/* intro: 기본 메시지 타이핑 */}
+        {phase === 'intro' && (
+          <div className="shop-scene__text-box" onClick={handleAdvance} style={{ cursor: 'pointer' }}>
+            <span>{sceneMessage.slice(0, visibleLength)}</span>
+            {isMessageComplete && (
+              <img className="shop-scene__skip" src={skipImage} alt="" aria-hidden="true" />
+            )}
           </div>
-          <div className="text-right text-green-950">
-            <div className="text-sm text-green-700 mb-1">보유 금액</div>
-            <div className="text-4xl font-bold flex items-center gap-2">
-              <Coins size={32} className="text-lime-700" />
-              {trainer.money?.toLocaleString() || 0}원
-            </div>
+        )}
+
+        {/* asking + shop: 아이템 목록 공통 */}
+        {(phase === 'asking' || phase === 'shop') && (
+          <div className="shop-scene__permanent-list">
+              {scenePermanentItems.length > 0 ? (
+                scenePermanentItems.map((shopItem) => (
+                  <button
+                    className={`shop-scene__shop-item ${selectedShopItem?.item?.id === shopItem.item.id ? 'is-selected' : ''}`}
+                    key={shopItem.item.id}
+                    onClick={() => { setSelectedShopItem(shopItem); setPhase('shop'); setShowBuy2(false); setBuyConfirming(false); setQuantity(1); setPurchaseMsg(''); }}
+                    type="button"
+                  >
+                    <span className="shop-scene__shop-item-icon">
+                      <img
+                        src={shopItem.item.spriteUrl || shopItem.item.imageUrl}
+                        alt=""
+                        aria-hidden="true"
+                      />
+                    </span>
+                    <span className="shop-scene__shop-item-body">
+                      <span className="shop-scene__shop-item-name">{shopItem.item.name}</span>
+                      <span className="shop-scene__shop-item-meta">
+                        {Number(shopItem.price || 0).toLocaleString()}원
+                        {shopItem.stock !== 99 && shopItem.stock != null ? ` / ${shopItem.stock}개 제한` : ''}
+                      </span>
+                    </span>
+                  </button>
+                ))
+              ) : (
+                <div className="shop-scene__shop-empty">상시판매 상품이 없습니다.</div>
+              )}
           </div>
-        </div>
+        )}
+
+        {/* asking: 텍스트 타이핑 */}
+        {phase === 'asking' && (
+          <div className="shop-scene__text-box" onClick={handleAdvance} style={{ cursor: 'pointer' }}>
+            <span>{askingMessage.slice(0, askingLength)}</span>
+            {isAskingComplete && (
+              <img className="shop-scene__skip" src={skipImage} alt="" aria-hidden="true" />
+            )}
+          </div>
+        )}
+
+        {/* shop: 아이템 설명 / 구매확인 / 구매완료 텍스트 */}
+        {phase === 'shop' && selectedShopItem && (
+          <div className="shop-scene__text-box">
+            {purchaseMsg
+              ? purchaseMsg
+              : buyConfirming
+                ? `${selectedShopItem?.item?.name || ''}${getEulReul(selectedShopItem?.item?.name || '')} ${quantity}개 구매할까?`
+                : getItemDetailText(selectedShopItem)}
+          </div>
+        )}
+
       </div>
 
-      {/* 랜덤박스 섹션 */}
-      <RandomBoxShop 
-        shopData={shopData}
-        currentUser={trainer}
-        allItems={allItems}
-        onBuyRandomBox={buyRandomBox}
-        selectedItem={selectedItem}
-        onSelectBox={(box) => setSelectedItem(box)}
-      />
+      {/* 확인 단계: 외부 클릭 감지 오버레이 (section 직속, dialogue 밖) */}
+      {phase === 'shop' && buyConfirming && (
+        <div
+          onClick={() => { setBuyConfirming(false); setShowBuy2(false); setQuantity(1); }}
+          style={{ position: 'absolute', inset: 0, zIndex: 30, cursor: 'pointer' }}
+        />
+      )}
 
-      {/* 상점 메인 */}
-      <div className="bg-white rounded-lg border-2 border-gray-200 shadow-lg">
-        <div className="border-b-2 border-gray-200 bg-gray-50 px-6 py-3">
-          <div className="text-sm font-semibold text-gray-500 flex items-center gap-2">
-            <ShoppingCart size={16} />
-            포켓몬 상점
-          </div>
-        </div>
-
-        <div className="p-6 space-y-8">
-
-          {/* 한정 아이템 (1인 1개) */}
-          {shopData.rareItemConfig?.enabled && shopData.rareDailyItem?.itemId && (() => {
-            const item = getItemDetails(shopData.rareDailyItem);
-            if (!item) return null;
-            const purchaseHistory = trainer?.purchaseHistory || {};
-            const todayDate = new Date().toISOString().split('T')[0];
-            const alreadyPurchased = ((purchaseHistory[todayDate] || {})[shopData.rareDailyItem.itemId] || 0) >= 1;
-            const isSelected = selectedItem?.itemId === shopData.rareDailyItem.itemId;
-            return (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <FontAwesomeIcon icon={faStar} style={{ color: '#9333ea', fontSize: 14 }} />
-                  <span className="text-xs font-bold text-purple-600 uppercase tracking-wide">한정 아이템</span>
-                  <div className="flex-1 h-px bg-purple-200" />
+      {/* BUY / BUY2 — section 직속, dialogue 밖 (구매완료 메시지 중엔 숨김) */}
+      {phase === 'shop' && selectedShopItem && !purchaseMsg && (
+        <div style={{
+          position: 'absolute',
+          right: '3%',
+          bottom: 'calc(6% + 3px)',
+          zIndex: 40,
+          pointerEvents: 'auto',
+        }}>
+          {showBuy2 ? (
+            <div ref={buy2Ref} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0 }}>
+              {!buyConfirming && (
+                <div style={{ position: 'relative', display: 'inline-block' }}>
+                  <img src={buy2Image} alt="" aria-hidden="true" style={{ height: 56, display: 'block' }} />
+                  <div style={{
+                    position: 'absolute', inset: 0, paddingTop: 2,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                  }}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setQuantity(q => Math.max(1, q - 1)); }}
+                      style={{ fontFamily: "'Mona12 Text KR','Mona12',monospace", color: '#fff', background: 'none', border: 'none', fontSize: 22, fontWeight: 700, cursor: 'pointer', lineHeight: 1, padding: '0 2px' }}
+                    >−</button>
+                    <span style={{ fontFamily: "'Mona12 Text KR','Mona12',monospace", color: '#fff', fontSize: 22, fontWeight: 700, minWidth: 28, textAlign: 'center' }}>{quantity}</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setQuantity(q => q + 1); }}
+                      style={{ fontFamily: "'Mona12 Text KR','Mona12',monospace", color: '#fff', background: 'none', border: 'none', fontSize: 22, fontWeight: 700, cursor: 'pointer', lineHeight: 1, padding: '0 2px' }}
+                    >+</button>
+                  </div>
                 </div>
-                <div className="grid grid-cols-3 gap-4">
+              )}
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                <img src={buy2Image} alt="" aria-hidden="true" style={{ height: 56, display: 'block' }} />
+                <div style={{
+                  position: 'absolute', inset: 0, paddingTop: 2,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
                   <button
-                    onClick={() => {
-                      if (alreadyPurchased) return;
-                      setSelectedItem({ ...item, type: 'rare', price: shopData.rareDailyItem.price, stock: shopData.rareDailyItem.stock || 1 });
-                      setQuantity(1);
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (!buyConfirming) {
+                        setBuyConfirming(true);
+                      } else {
+                        const itemName = selectedShopItem?.item?.name || '';
+                        const shopItemForPurchase = {
+                          ...selectedShopItem.item,
+                          price: selectedShopItem.price,
+                        };
+                        const result = await onPurchase(shopItemForPurchase, quantity);
+                        const ok = result === true || result?.success;
+                        if (ok) {
+                          setShowBuy2(false);
+                          setBuyConfirming(false);
+                          const baseMsg = `${itemName}${getEulReul(itemName)} ${quantity}개 구매하였다!`;
+                          const premier = result?.premierMsg ? `\n${result.premierMsg}` : '';
+                          setPurchaseMsg(baseMsg + premier);
+                          setQuantity(1);
+                          setSelectedItem(null);
+                          const aud = new Audio('/sound/purchase.mp3'); aud.currentTime = 0.4; aud.play().catch(() => {});
+                        }
+                      }
                     }}
-                    disabled={alreadyPurchased}
-                    className={`relative border-2 rounded-lg overflow-hidden transition-all ${
-                      alreadyPurchased
-                        ? 'opacity-50 cursor-not-allowed grayscale border-gray-300 bg-gray-100'
-                        : isSelected
-                          ? 'border-yellow-400 shadow-lg scale-105 bg-white'
-                          : 'border-gray-200 hover:border-gray-300 hover:shadow-md hover:scale-102 bg-white'
-                    }`}
-                  >
-                    {alreadyPurchased && (
-                      <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center z-20">
-                        <div className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg transform rotate-12 shadow-xl">품절</div>
-                      </div>
-                    )}
-                    <div className="absolute top-0 left-0 bg-purple-600 text-white text-xs px-3 py-1 font-bold flex items-center gap-1 rounded-br-lg z-10">
-                      <FontAwesomeIcon icon={faStar} style={{ fontSize: 12 }} /><span>한정</span>
-                    </div>
-                    <div className="bg-purple-50 p-4 pt-8">
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className="w-16 h-16 flex items-center justify-center flex-shrink-0 bg-white rounded-lg">
-                          <img src={item.spriteUrl} alt={item.name} className="max-w-full max-h-full" style={{ imageRendering: 'pixelated', transform: 'scale(2)' }} />
-                        </div>
-                        <div className="flex-1 text-left">
-                          <div className="font-bold text-sm text-gray-800 mb-1">{item.name}</div>
-                          <div className="text-xs text-gray-600 line-clamp-2">{item.effect?.replace(/\n/g, ' ')}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between pt-3 border-t-2 border-gray-200">
-                        <div className="flex items-center gap-1 text-yellow-600 font-bold">
-                          <Coins size={16} />{shopData.rareDailyItem.price.toLocaleString()}원
-                        </div>
-                        <div className={`text-xs font-semibold ${alreadyPurchased ? 'text-red-600' : 'text-gray-600'}`}>
-                          {alreadyPurchased ? '구매완료' : '1인 1개'}
-                        </div>
-                      </div>
-                    </div>
-                  </button>
+                    style={{ fontFamily: "'Mona12 Text KR','Mona12',monospace", color: '#fff', background: 'none', border: 'none', fontSize: 22, fontWeight: 800, cursor: 'pointer', padding: 0 }}
+                  >확인</button>
                 </div>
               </div>
-            );
-          })()}
-
-          {/* 한정판매 (오늘 요일 한정) - 카테고리 순 정렬 */}
-          {(() => {
-            const todayDailyItems = getSortedItems(
-              (shopData.dailyItems?.[todayName] || []).map(i => ({ ...i, type: 'daily' }))
-            );
-            if (todayDailyItems.length === 0) return null;
-            return (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <FontAwesomeIcon icon={faCalendarDays} style={{ color: '#2563eb', fontSize: 14 }} />
-                  <span className="text-xs font-bold text-blue-600 uppercase tracking-wide">{todayNameKo} 한정판매</span>
-                  <div className="flex-1 h-px bg-blue-200" />
-                </div>
-                <div className="grid grid-cols-3 gap-4">
-                  {todayDailyItems.map(shopItem => renderItemCard(shopItem))}
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* 규토리볼 가챠 */}
-          {(() => {
-            const gachaEnabled = shopData.gachaBall?.enabled;
-            const gachaBallsAll = shopData.gachaBall?.balls || [];
-            const gachaBalls = getDailyGachaBalls(gachaBallsAll);
-            if (!gachaEnabled || gachaBallsAll.length < 2) return null;
-            const isSelected = selectedItem?.type === 'gachaball';
-            return (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <CircleDot size={14} className="text-orange-600" />
-                  <span className="text-xs font-bold text-orange-600 uppercase tracking-wide">규토리볼 가챠</span>
-                  <div className="flex-1 h-px bg-orange-200" />
-                </div>
-                <div
-                  className={`relative border-4 rounded-xl overflow-hidden transition-all ${
-                    isSelected ? 'border-yellow-400 shadow-xl' : 'border-orange-300 hover:border-orange-400 hover:shadow-lg'
-                  }`}
-                >
-                  <div className="bg-orange-50 p-4">
-                    <div className="grid grid-cols-2 gap-3 mb-3">
-                      {gachaBalls.map((ballItem) => {
-                        const item = allItems.find(i => i.id === ballItem.itemId);
-                        if (!item) return null;
-                        return (
-                          <button
-                            key={ballItem.itemId}
-                            onClick={() => { setSelectedItem({ type: 'gachaball', name: '규토리볼 가챠', price: 200, gachaBalls, description: '오늘의 2종 중 랜덤으로 몬스터볼 1개를 획득합니다' }); setQuantity(1); }}
-                            className="relative border-2 rounded-lg overflow-hidden transition-all bg-white border-gray-200 hover:border-gray-300 hover:shadow-md"
-                          >
-                            <div className="bg-white p-4">
-                              <div className="flex items-start gap-3 mb-3">
-                                <div className="w-16 h-16 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                                  <img src={item.imageUrl} alt={item.name} className="max-w-full max-h-full" style={{ imageRendering: 'pixelated', transform: 'scale(2)' }} />
-                                </div>
-                                <div className="flex-1 text-left">
-                                  <div className="font-bold text-sm text-gray-800 mb-1">{item.name}</div>
-                                  <div className="text-xs text-gray-600 line-clamp-2">{item.effect || item.description}</div>
-                                </div>
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div className="text-xs text-center py-2 bg-white rounded-lg border-2 border-orange-200 font-semibold text-orange-700 mb-3">
-                      💫 오늘의 2종 중 랜덤으로 1개를 획득합니다
-                    </div>
-                    <div className="flex items-center justify-between px-4 py-3 bg-white rounded-lg border-2 border-orange-200">
-                      <div className="flex items-center gap-1 text-yellow-600 font-bold"><Coins size={16} />200원</div>
-                      <div className="text-xs font-semibold text-gray-600">무제한</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* 상시 판매 - 카테고리 순 정렬 */}
-          {(() => {
-            const permItems = getSortedItems((shopData.permanentItems || []).map(i => ({ ...i, type: 'permanent' })));
-            if (permItems.length === 0) return null;
-            const result = [];
-            let lastPocket = null;
-            permItems.forEach((shopItem, idx) => {
-              const itemData = allItems.find(i => i.id === shopItem.itemId);
-              const pocket = getItemPocket(itemData || shopItem);
-              if (pocket !== lastPocket) {
-                lastPocket = pocket;
-                result.push(
-                  <div key={`pheader-${pocket}-${idx}`} className="col-span-full flex items-center gap-2 mt-2 mb-1">
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">{POCKET_LABELS[pocket] || pocket}</span>
-                    <div className="flex-1 h-px bg-gray-200" />
-                  </div>
-                );
-              }
-              result.push(renderItemCard(shopItem));
-            });
-            return (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <FontAwesomeIcon icon={faBoxOpen} style={{ color: '#16a34a', fontSize: 14 }} />
-                  <span className="text-xs font-bold text-green-600 uppercase tracking-wide">상시 판매</span>
-                  <div className="flex-1 h-px bg-green-200" />
-                </div>
-                <div className="grid grid-cols-3 gap-4">{result}</div>
-              </div>
-            );
-          })()}
-
-          {!shopData.rareItemConfig?.enabled &&
-           (shopData.dailyItems?.[todayName] || []).length === 0 &&
-           (shopData.permanentItems || []).length === 0 &&
-           (!shopData.gachaBall?.enabled || (shopData.gachaBall?.balls?.length || 0) < 2) && (
-            <div className="text-center py-16 text-gray-400">
-              <ShoppingCart size={64} className="mx-auto mb-4 opacity-50" />
-              <p className="text-lg">판매 중인 상품이 없습니다</p>
-              <p className="text-sm mt-2">나중에 다시 확인해보세요</p>
             </div>
+          ) : (
+            <button
+              onClick={() => { setShowBuy2(true); setQuantity(1); }}
+              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+            >
+              <img src={buyImage} alt="구매" style={{ height: 56, display: 'block' }} />
+            </button>
           )}
         </div>
-      </div>
-
-      {/* 구매 패널 */}
-      {selectedItem && selectedItem.type !== 'randombox' && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-4 border-indigo-600 shadow-2xl p-6 z-50">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-center gap-6">
-              {selectedItem.type === 'gachaball' ? (
-                <>
-                  <div className="w-24 h-24 bg-orange-50 rounded-lg p-2 border-2 border-orange-200">
-                    <div className="grid grid-cols-2 gap-1 h-full">
-                      {selectedItem.gachaBalls.map((ballItem) => {
-                        const item = allItems.find(i => i.id === ballItem.itemId);
-                        if (!item) return null;
-                        return (
-                          <div key={ballItem.itemId} className="bg-white rounded flex items-center justify-center">
-                            <img 
-                              src={item.imageUrl} 
-                              alt={item.name}
-                              className="max-w-full max-h-full"
-                              style={{ imageRendering: 'pixelated' }}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  
-                  <div className="flex-1">
-                    <h3 className="text-2xl font-bold mb-1 flex items-center gap-2">
-                      <CircleDot size={24} className="text-orange-600" />
-                      {selectedItem.name}
-                    </h3>
-                    <p className="text-gray-600 text-sm mb-2">{selectedItem.description}</p>
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2 text-yellow-600 font-bold text-xl">
-                        <Coins size={20} />
-                        {selectedItem.price.toLocaleString()}원 × {quantity}
-                      </div>
-                      <div className="text-2xl font-bold text-indigo-600">
-                        = {(selectedItem.price * quantity).toLocaleString()}원
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="w-24 h-24 flex items-center justify-center bg-gray-100 rounded-lg">
-                    <img 
-                      src={selectedItem.spriteUrl} 
-                      alt={selectedItem.name}
-                      className="max-w-full max-h-full"
-                      style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
-                    />
-                  </div>
-                  
-                  <div className="flex-1">
-                    <h3 className="text-2xl font-bold mb-1">{selectedItem.name}</h3>
-                    <p className="text-gray-600 text-sm mb-2">{selectedItem.effect?.replace(/\n/g, ' ')}</p>
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2 text-yellow-600 font-bold text-xl">
-                        <Coins size={20} />
-                        {selectedItem.price.toLocaleString()}원 × {quantity}
-                      </div>
-                      <div className="text-2xl font-bold text-indigo-600">
-                        = {(selectedItem.price * quantity).toLocaleString()}원
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-              
-              <div className="flex items-center gap-4">
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-semibold text-gray-700">수량</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max={selectedItem.stock === 99 ? 999 : selectedItem.stock}
-                    value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-24 border-2 border-gray-300 rounded-lg px-3 py-2 text-center text-lg font-bold focus:border-indigo-500 focus:outline-none"
-                  />
-                </div>
-                
-                <button
-                  onClick={handlePurchase}
-                  className="bg-indigo-600 text-white px-8 py-4 rounded-lg hover:bg-indigo-700 font-bold text-lg shadow-lg transition-all hover:scale-105"
-                >
-                  {selectedItem.type === 'gachaball' ? '뽑기' : '구매하기'}
-                </button>
-                
-                <button
-                  onClick={() => setSelectedItem(null)}
-                  className="bg-gray-200 text-gray-700 px-6 py-4 rounded-lg hover:bg-gray-300 font-semibold"
-                >
-                  취소
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
       )}
-    </div>
+
+      <img
+        className="shop-scene__cramorant"
+        src={cramorantImage}
+        alt="상점의 윽우지"
+      />
+    </section>
   );
 }

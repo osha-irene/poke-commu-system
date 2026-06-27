@@ -8,6 +8,7 @@ import { POKEBALL_LIST } from '../../styles/theme';
 import { translateMoveName } from '../../battle/utils/move-translations';
 import movesData from '../../data/moves.json';
 import abilitiesData from '../../data/abilities.json';
+import { getAbilityKoreanName } from '../../utils/abilityUtils';
 import CachedImage from '../common/CachedImage';
 import { preloadDecodedImage } from '../../utils/imageCache';
 import { useGame } from '../../contexts/GameContext';
@@ -1214,7 +1215,7 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
                             const tc = TYPE_COLORS[t] || { bg: '#888', text: '#fff' };
                             return <span key={ti} style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: tc.bg, color: tc.text }}>{t}</span>;
                           })}
-                          {p.ability && <span style={{ fontSize: 11, color: '#555', marginLeft: 'auto', whiteSpace: 'nowrap' }}>{p.ability}</span>}
+                          {p.ability && <span style={{ fontSize: 11, color: '#555', marginLeft: 'auto', whiteSpace: 'nowrap' }}>{getAbilityKoreanName(p.ability) || p.ability}</span>}
                           {p.isPartner && <span style={{ fontSize: 11, fontWeight: 600, color: '#d97706' }}>파트너</span>}
                         </div>
                         {moves.length > 0 && (
@@ -1262,7 +1263,7 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
                     transform: isFlipped ? 'rotateY(0deg)' : 'rotateY(-90deg)',
                     pointerEvents: isFlipped ? 'auto' : 'none',
                   }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', letterSpacing: '0.04em' }}>{p.ability || '특성 없음'}</div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', letterSpacing: '0.04em' }}>{getAbilityKoreanName(p.ability) || p.ability || '특성 없음'}</div>
                     <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.88)', lineHeight: 1.6 }}>
                       {abilityDesc || '특성 설명이 없습니다.'}
                     </div>
@@ -1409,7 +1410,7 @@ export default function MembersView({ members = {}, isLoading, currentUserId, ti
             className="tab-switch-btn"
             style={{ position: 'absolute', top: -50, left: -70, zIndex: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
           >
-            <img src={npcButtonImg} alt="NPC 보기" style={{ width: 150, height: 'auto', display: 'block' }} />
+            <img src={npcButtonImg} alt="NPC 보기" style={{ width: 180, height: 'auto', display: 'block' }} />
           </button>
         )}
         {createPortal(

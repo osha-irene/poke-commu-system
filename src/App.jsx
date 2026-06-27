@@ -1440,7 +1440,7 @@ export default function App() {
     if (prevIdx === -1 || currIdx === -1) return 'forward';
     return currIdx > prevIdx ? 'forward' : 'reverse';
   }, [currentTab]);
-  const hasContentSurface = isFeaturePage && !isMembersPage && currentTab !== 'profile' && currentTab !== 'npcs' && currentTab !== 'map';
+  const hasContentSurface = isFeaturePage && !isMembersPage && currentTab !== 'profile' && currentTab !== 'npcs' && currentTab !== 'map' && (isMobile || currentTab !== 'shop');
   const isCoreLoading = isAuthLoading || isMembersLoading;
   const [isInitialPageReady, setIsInitialPageReady] = useState(false);
 
@@ -1824,18 +1824,18 @@ if (!currentUser || !currentUser.id) {
     return (
       <>
       <PlaylistWidget />
-      <div className={`main-shell ${currentTab === 'home' ? 'main-shell--home' : ''}`}>
+      <div className={`main-shell ${currentTab === 'home' ? 'main-shell--home' : ''} ${!isMobile && currentTab === 'shop' ? 'main-shell--shop' : ''}`}>
         <SakuraEffect />
         {/* ✅ 3. 현재 탭 상태(currentTab)를 고정이 아닌 state 기반으로 매핑 */}
         <Header currentTab={currentTab} setCurrentTab={handlePublicNavigation} />
-        <div className={`main-layout ${currentTab === 'home' ? 'main-layout--home' : ''} ${isTopMenuPage ? 'main-layout--world' : ''}`}>
+        <div className={`main-layout ${currentTab === 'home' ? 'main-layout--home' : ''} ${!isMobile && currentTab === 'shop' ? 'main-layout--shop' : ''} ${isTopMenuPage ? 'main-layout--world' : ''}`}>
           <Sidebar
             currentTab={currentTab}
             setCurrentTab={handlePublicNavigation}
             isAdmin={false}
           />
           {hasContentSurface && <span className={`content-stage__surface${currentTab === 'qna' ? ' content-stage__surface--light' : ''}`} aria-hidden="true" />}
-          <main className={`content-stage ${currentTab === 'home' ? 'content-stage--home' : 'content-stage--view'} ${isFeaturePage ? 'content-stage--feature' : ''} ${isTopMenuPage ? 'content-stage--world' : ''}`}>
+          <main className={`content-stage ${currentTab === 'home' ? 'content-stage--home' : 'content-stage--view'} ${!isMobile && currentTab === 'shop' ? 'content-stage--shop' : ''} ${isFeaturePage ? 'content-stage--feature' : ''} ${isTopMenuPage ? 'content-stage--world' : ''}`}>
             {/* ✅ 4. 비로그인 유저라도 허용된 탭에 따라 화면을 다르게 보여주도록 스위칭 처리 */}
             {currentTab === 'home' && <div key="home" className="tab-view-enter-home"><HomeDashboard showLogin onLogin={handleLogin} members={members} /></div>}
             {currentTab === 'notice' && <CommunityPlaceholder type="notice" trainer={trainer} />}
@@ -2026,11 +2026,11 @@ return (
           {currentTab === 'battle' && isAdmin && <BattleView />}
         </MobileLayout>
       ) : (
-        <div className={`main-shell ${currentTab === 'home' ? 'main-shell--home' : ''}`}>
+        <div className={`main-shell ${currentTab === 'home' ? 'main-shell--home' : ''} ${!isMobile && currentTab === 'shop' ? 'main-shell--shop' : ''}`}>
           <SakuraEffect />
           <Header currentTab={currentTab} setCurrentTab={setCurrentTab} />
 
-          <div className={`main-layout ${currentTab === 'home' ? 'main-layout--home' : ''} ${isTopMenuPage ? 'main-layout--world' : ''}`}>
+          <div className={`main-layout ${currentTab === 'home' ? 'main-layout--home' : ''} ${!isMobile && currentTab === 'shop' ? 'main-layout--shop' : ''} ${isTopMenuPage ? 'main-layout--world' : ''}`}>
           <Sidebar
             currentTab={currentTab}
             setCurrentTab={setCurrentTab}
@@ -2043,7 +2043,7 @@ return (
 
       {hasContentSurface && <span className={`content-stage__surface${currentTab === 'qna' ? ' content-stage__surface--light' : ''}`} aria-hidden="true" />}
 
-		<main className={`content-stage ${currentTab === 'home' ? 'content-stage--home' : 'content-stage--view'} ${isFeaturePage ? 'content-stage--feature' : ''} ${isTopMenuPage ? 'content-stage--world' : ''}`}>
+		<main className={`content-stage ${currentTab === 'home' ? 'content-stage--home' : 'content-stage--view'} ${!isMobile && currentTab === 'shop' ? 'content-stage--shop' : ''} ${isFeaturePage ? 'content-stage--feature' : ''} ${isTopMenuPage ? 'content-stage--world' : ''}`}>
       {currentTab === 'home' && (
         <div key="home" className="tab-view-enter-home">
         <HomeDashboard

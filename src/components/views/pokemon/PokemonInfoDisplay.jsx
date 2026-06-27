@@ -1,4 +1,5 @@
-// 포켓몬 정보 표시 컴포넌트 예시
+import { getAbilityKoreanName } from '../../../utils/abilityUtils';
+
 const PokemonInfoDisplay = ({ pokemon }) => {
   const getGenderIcon = (gender) => {
     if (gender === 'male') return '♂';
@@ -101,7 +102,7 @@ const PokemonInfoDisplay = ({ pokemon }) => {
         <div className={`font-bold ${
           pokemon.isHiddenAbility ? 'text-yellow-700' : 'text-indigo-700'
         }`}>
-          {pokemon.ability || '없음'}
+          {getAbilityKoreanName(pokemon.ability) || pokemon.ability || '없음'}
         </div>
       </div>
     </div>

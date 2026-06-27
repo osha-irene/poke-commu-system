@@ -6,6 +6,7 @@ import {
 import { POKEBALL_LIST } from '../../../../styles/theme';
 import { getPokemonGenderOptions } from '../../../../utils/pokemonGender';
 import { getPokemonDisplayParts } from '../../../../utils/pokemonDisplayName';
+import { getAbilityKoreanName } from '../../../../utils/abilityUtils';
 
 const STAT_FIELDS = [
   { key: 'hp', label: 'HP' },
@@ -65,10 +66,10 @@ export default function MemberPokemonEditMode({
   const genderValue = genderOptions.includes(editData.gender) ? editData.gender : 'random';
 
   const abilityOptions = Array.from(new Set([
-    ...(pokemonTemplate?.abilities || []),
+    ...(pokemonTemplate?.abilitiesEn || []),
     ...(editData.ability ? [editData.ability] : []),
   ]));
-  const hiddenAbility = pokemonTemplate?.hiddenAbility || '';
+  const hiddenAbility = pokemonTemplate?.hiddenAbilityEn || '';
 
   const displayName = getPokemonDisplayParts(pokemon).name;
   const spriteUrl = editData.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`;
@@ -189,10 +190,10 @@ export default function MemberPokemonEditMode({
                 >
                   {abilityOptions.length === 0 && <option value="">특성 없음</option>}
                   {abilityOptions.map((a, i) => (
-                    <option key={`${a}-${i}`} value={a}>{a}</option>
+                    <option key={`${a}-${i}`} value={a}>{getAbilityKoreanName(a) || a}</option>
                   ))}
                   {hiddenAbility && (
-                    <option value={hiddenAbility}>{hiddenAbility} (숨특)</option>
+                    <option value={hiddenAbility}>{getAbilityKoreanName(hiddenAbility) || hiddenAbility} (숨특)</option>
                   )}
                 </select>
               </Field>

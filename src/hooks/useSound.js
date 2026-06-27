@@ -57,7 +57,7 @@ export function useSound(currentUser) {
 
     const handleGlobalClick = () => {
       if (!soundEnabled) return;
-      audio.currentTime = 0;
+      audio.currentTime = 0.2;
       audio.play().catch(() => {});
     };
 
