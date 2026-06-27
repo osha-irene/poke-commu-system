@@ -6,6 +6,8 @@ import contextCompleteImage from '../../assets/shop/context2.png';
 import skipImage from '../../assets/shop/skip.png';
 import buyImage from '../../assets/shop/buy.png';
 import buy2Image from '../../assets/shop/buy2.png';
+import specialImage from '../../assets/shop/special.png';
+import dailyLimitedImage from '../../assets/shop/daily-limited.png';
 import { ShoppingCart, Coins, CircleDot, X } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarDays, faStore, faGift, faStar, faBoxOpen } from '@fortawesome/free-solid-svg-icons';
@@ -345,7 +347,8 @@ export default function ShopView() {
     );
   };
 
-  const sceneMessage = '당신을 빤히 바라보고 있다. 당신에게 흥미가 있는 듯 하다. 입에서 무언가 뱉어낼 듯하다.';
+  const sceneMessage = '당신을 빤히 바라보고 있다. 당신에게 흥미가 있는 듯 하다.';
+  const listButtonMessage = '입에서 무언가 뱉어낼 듯하다.';
   const askingMessage = '어떤 아이템을 볼까?';
   // phase: 'intro' | 'asking' | 'shop'
   const [phase, setPhase] = useState('intro');
@@ -394,7 +397,7 @@ export default function ShopView() {
   const buy2Ref = useRef(null);
 
   useEffect(() => {
-    if (!buyConfirming) return;
+    if (!showBuy2) return;
     const handler = (e) => {
       if (buy2Ref.current && !buy2Ref.current.contains(e.target)) {
         setBuyConfirming(false);
@@ -404,8 +407,12 @@ export default function ShopView() {
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [buyConfirming]);
+  }, [showBuy2]);
   const [purchaseMsg, setPurchaseMsg] = useState('');
+  const [shopTextLength, setShopTextLength] = useState(0);
+  const [listMessage, setListMessage] = useState('');
+  const [activeListButton, setActiveListButton] = useState(null);
+  const [thrownItem, setThrownItem] = useState(null);
 
   const getEulReul = (name) => {
     if (!name) return '을';
@@ -414,14 +421,21 @@ export default function ShopView() {
     return (code - 0xAC00) % 28 === 0 ? '를' : '을';
   };
 
-  const handleAdvance = () => {
+  const handleAdvance = (source = 'mouse') => {
     if (phase === 'intro') {
       if (!isMessageComplete) { setVisibleLength(sceneMessage.length); return; }
+      setListMessage('');
+      setActiveListButton(null);
+      setThrownItem(null);
       setPhase('asking');
     } else if (phase === 'asking') {
       if (!isAskingComplete) { setAskingLength(askingMessage.length); return; }
+      if (source !== 'keyboard') return;
+      setListMessage('');
+      setActiveListButton(null);
+      setThrownItem(null);
       // A 누르면 첫 번째 아이템 자동 선택
-      if (scenePermanentItems.length > 0) {
+      if (source === 'keyboard' && scenePermanentItems.length > 0) {
         setSelectedShopItem(scenePermanentItems[0]);
       }
       setPhase('shop');
@@ -430,7 +444,7 @@ export default function ShopView() {
 
   // 키보드 A 키
   useEffect(() => {
-    const onKey = (e) => { if (e.key === 'a' || e.key === 'A') handleAdvance(); };
+    const onKey = (e) => { if (e.key === 'a' || e.key === 'A') handleAdvance('keyboard'); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [phase, isMessageComplete, isAskingComplete]);
@@ -443,6 +457,107 @@ export default function ShopView() {
 
     return description;
   };
+
+  const getListButtonItem = (kind) => {
+    const shopItem = kind === 'special'
+      ? shopData.rareDailyItem
+      : (shopData.dailyItems?.[todayName] || [])[0];
+    if (!shopItem?.itemId) return null;
+
+    const item = getItemDetails(shopItem);
+    if (!item?.id && !item?.itemId) return null;
+
+    return item;
+  };
+
+  const handleListButtonClick = (kind) => {
+    const firstMessage = kind === 'special'
+      ? '입에서 무언가 특별한 걸 뱉어낼 듯하다.'
+      : listButtonMessage;
+
+    if (activeListButton === kind && !thrownItem) {
+      const item = getListButtonItem(kind);
+      setThrownItem(item);
+      setListMessage(item ? `당신에게 ${item.name}을 던집니다` : '아무것도 나오지 않았습니다.');
+      return;
+    }
+
+    setActiveListButton(kind);
+    setThrownItem(null);
+    setListMessage(firstMessage);
+  };
+
+  const shopText = thrownItem
+    ? `당신에게 ${thrownItem.name}을 던집니다`
+    : listMessage || (
+    phase === 'shop' && selectedShopItem
+      ? purchaseMsg
+        ? purchaseMsg
+        : buyConfirming
+          ? `${selectedShopItem?.item?.name || ''}${getEulReul(selectedShopItem?.item?.name || '')} ${quantity}개 구매할까?`
+          : getItemDetailText(selectedShopItem)
+      : ''
+  );
+  const isShopTextComplete = shopTextLength >= shopText.length;
+
+  const renderShopText = () => {
+    if (!thrownItem) {
+      return <span>{shopText.slice(0, shopTextLength)}</span>;
+    }
+
+    const prefix = '당신에게 ';
+    const itemName = thrownItem.name || '';
+    const suffix = '을 던집니다';
+    const prefixLength = prefix.length;
+    const itemEnd = prefixLength + itemName.length;
+
+    return (
+      <>
+        <span>{shopText.slice(0, Math.min(shopTextLength, prefixLength))}</span>
+        {shopTextLength > prefixLength && (
+          <span className="shop-scene__item-hover">
+            {itemName.slice(0, Math.min(shopTextLength - prefixLength, itemName.length))}
+            {shopTextLength >= itemEnd && (
+              <span className="shop-scene__item-tooltip" role="tooltip">
+                <span className="shop-scene__item-tooltip-icon">
+                  <img
+                    src={thrownItem.spriteUrl || thrownItem.imageUrl}
+                    alt=""
+                    aria-hidden="true"
+                  />
+                </span>
+                <span className="shop-scene__item-tooltip-body">
+                  <span className="shop-scene__item-tooltip-name">{thrownItem.name}</span>
+                  <span className="shop-scene__item-tooltip-desc">
+                    {thrownItem.effect || thrownItem.description || '상세 설명이 없습니다.'}
+                  </span>
+                </span>
+              </span>
+            )}
+          </span>
+        )}
+        {shopTextLength > itemEnd && (
+          <span>{suffix.slice(0, shopTextLength - itemEnd)}</span>
+        )}
+      </>
+    );
+  };
+
+  useEffect(() => {
+    if (!shopText) {
+      setShopTextLength(0);
+      return undefined;
+    }
+
+    setShopTextLength(0);
+    const timer = window.setInterval(() => {
+      setShopTextLength((len) => {
+        if (len >= shopText.length) { window.clearInterval(timer); return len; }
+        return len + 1;
+      });
+    }, 35);
+    return () => window.clearInterval(timer);
+  }, [shopText]);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -762,10 +877,11 @@ export default function ShopView() {
       className="shop-scene"
       aria-label="상점"
       onClick={(e) => {
-        if (phase === 'intro' || phase === 'asking') { handleAdvance(); return; }
-        if (phase === 'shop' && buyConfirming) { setBuyConfirming(false); setShowBuy2(false); setQuantity(1); }
+        if (phase === 'intro' || phase === 'asking') { handleAdvance('mouse'); return; }
+        if (phase === 'shop' && showBuy2) { setBuyConfirming(false); setShowBuy2(false); setQuantity(1); return; }
+        if (phase === 'shop' && shopText && !isShopTextComplete) { setShopTextLength(shopText.length); }
       }}
-      style={(phase === 'intro' || phase === 'asking' || buyConfirming) ? { cursor: 'pointer' } : undefined}
+      style={(phase === 'intro' || phase === 'asking' || showBuy2 || (phase === 'shop' && shopText && !isShopTextComplete)) ? { cursor: 'pointer' } : undefined}
     >
       <div className="shop-scene__dialogue">
         <img
@@ -779,13 +895,13 @@ export default function ShopView() {
           src={contextImage}
           alt=""
           aria-hidden="true"
-          onClick={phase !== 'shop' ? handleAdvance : buyConfirming ? () => { setBuyConfirming(false); setShowBuy2(false); setQuantity(1); } : undefined}
-          style={(phase !== 'shop' || buyConfirming) ? { cursor: 'pointer', pointerEvents: 'auto' } : undefined}
+          onClick={phase !== 'shop' ? () => handleAdvance('mouse') : showBuy2 ? () => { setBuyConfirming(false); setShowBuy2(false); setQuantity(1); } : undefined}
+          style={(phase !== 'shop' || showBuy2) ? { cursor: 'pointer', pointerEvents: 'auto' } : undefined}
         />
 
         {/* intro: 기본 메시지 타이핑 */}
         {phase === 'intro' && (
-          <div className="shop-scene__text-box" onClick={handleAdvance} style={{ cursor: 'pointer' }}>
+          <div className="shop-scene__text-box" onClick={() => handleAdvance('mouse')} style={{ cursor: 'pointer' }}>
             <span>{sceneMessage.slice(0, visibleLength)}</span>
             {isMessageComplete && (
               <img className="shop-scene__skip" src={skipImage} alt="" aria-hidden="true" />
@@ -795,13 +911,28 @@ export default function ShopView() {
 
         {/* asking + shop: 아이템 목록 공통 */}
         {(phase === 'asking' || phase === 'shop') && (
-          <div className="shop-scene__permanent-list">
+          <div className="shop-scene__list-panel">
+              <div className="shop-scene__list-badges">
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); handleListButtonClick('special'); }}
+                >
+                  <img src={specialImage} alt="특별 아이템" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); handleListButtonClick('daily'); }}
+                >
+                  <img src={dailyLimitedImage} alt="기간 한정 아이템" />
+                </button>
+              </div>
+            <div className="shop-scene__permanent-list">
               {scenePermanentItems.length > 0 ? (
                 scenePermanentItems.map((shopItem) => (
                   <button
                     className={`shop-scene__shop-item ${selectedShopItem?.item?.id === shopItem.item.id ? 'is-selected' : ''}`}
                     key={shopItem.item.id}
-                    onClick={() => { setSelectedShopItem(shopItem); setPhase('shop'); setShowBuy2(false); setBuyConfirming(false); setQuantity(1); setPurchaseMsg(''); }}
+                    onClick={() => { setSelectedShopItem(shopItem); setPhase('shop'); setShowBuy2(false); setBuyConfirming(false); setQuantity(1); setPurchaseMsg(''); setListMessage(''); setActiveListButton(null); setThrownItem(null); }}
                     type="button"
                   >
                     <span className="shop-scene__shop-item-icon">
@@ -823,12 +954,13 @@ export default function ShopView() {
               ) : (
                 <div className="shop-scene__shop-empty">상시판매 상품이 없습니다.</div>
               )}
+            </div>
           </div>
         )}
 
         {/* asking: 텍스트 타이핑 */}
-        {phase === 'asking' && (
-          <div className="shop-scene__text-box" onClick={handleAdvance} style={{ cursor: 'pointer' }}>
+        {phase === 'asking' && !listMessage && (
+          <div className="shop-scene__text-box" onClick={() => handleAdvance('mouse')} style={{ cursor: 'pointer' }}>
             <span>{askingMessage.slice(0, askingLength)}</span>
             {isAskingComplete && (
               <img className="shop-scene__skip" src={skipImage} alt="" aria-hidden="true" />
@@ -837,20 +969,19 @@ export default function ShopView() {
         )}
 
         {/* shop: 아이템 설명 / 구매확인 / 구매완료 텍스트 */}
-        {phase === 'shop' && selectedShopItem && (
+        {(listMessage || (phase === 'shop' && selectedShopItem)) && (
           <div className="shop-scene__text-box">
-            {purchaseMsg
-              ? purchaseMsg
-              : buyConfirming
-                ? `${selectedShopItem?.item?.name || ''}${getEulReul(selectedShopItem?.item?.name || '')} ${quantity}개 구매할까?`
-                : getItemDetailText(selectedShopItem)}
+            {renderShopText()}
+            {isShopTextComplete && (
+              <img className="shop-scene__skip" src={skipImage} alt="" aria-hidden="true" />
+            )}
           </div>
         )}
 
       </div>
 
       {/* 확인 단계: 외부 클릭 감지 오버레이 (section 직속, dialogue 밖) */}
-      {phase === 'shop' && buyConfirming && (
+      {phase === 'shop' && showBuy2 && (
         <div
           onClick={() => { setBuyConfirming(false); setShowBuy2(false); setQuantity(1); }}
           style={{ position: 'absolute', inset: 0, zIndex: 30, cursor: 'pointer' }}
@@ -888,39 +1019,42 @@ export default function ShopView() {
                 </div>
               )}
               <div style={{ position: 'relative', display: 'inline-block' }}>
-                <img src={buy2Image} alt="" aria-hidden="true" style={{ height: 56, display: 'block' }} />
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (!buyConfirming) {
+                      setBuyConfirming(true);
+                    } else {
+                      const itemName = selectedShopItem?.item?.name || '';
+                      const shopItemForPurchase = {
+                        ...selectedShopItem.item,
+                        price: selectedShopItem.price,
+                      };
+                      const result = await onPurchase(shopItemForPurchase, quantity);
+                      const ok = result === true || result?.success;
+                      if (ok) {
+                        setShowBuy2(false);
+                        setBuyConfirming(false);
+                        const baseMsg = `${itemName}${getEulReul(itemName)} ${quantity}개 구매하였다!`;
+                        const premier = result?.premierMsg ? `\n${result.premierMsg}` : '';
+                        setPurchaseMsg(baseMsg + premier);
+                        setQuantity(1);
+                        setSelectedItem(null);
+                        const aud = new Audio('/sound/purchase.mp3'); aud.currentTime = 0.4; aud.play().catch(() => {});
+                      }
+                    }
+                  }}
+                  style={{ position: 'relative', display: 'block', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                >
+                  <img src={buy2Image} alt="" aria-hidden="true" style={{ height: 56, display: 'block' }} />
                 <div style={{
                   position: 'absolute', inset: 0, paddingTop: 2,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  pointerEvents: 'none',
                 }}>
-                  <button
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      if (!buyConfirming) {
-                        setBuyConfirming(true);
-                      } else {
-                        const itemName = selectedShopItem?.item?.name || '';
-                        const shopItemForPurchase = {
-                          ...selectedShopItem.item,
-                          price: selectedShopItem.price,
-                        };
-                        const result = await onPurchase(shopItemForPurchase, quantity);
-                        const ok = result === true || result?.success;
-                        if (ok) {
-                          setShowBuy2(false);
-                          setBuyConfirming(false);
-                          const baseMsg = `${itemName}${getEulReul(itemName)} ${quantity}개 구매하였다!`;
-                          const premier = result?.premierMsg ? `\n${result.premierMsg}` : '';
-                          setPurchaseMsg(baseMsg + premier);
-                          setQuantity(1);
-                          setSelectedItem(null);
-                          const aud = new Audio('/sound/purchase.mp3'); aud.currentTime = 0.4; aud.play().catch(() => {});
-                        }
-                      }
-                    }}
-                    style={{ fontFamily: "'Mona12 Text KR','Mona12',monospace", color: '#fff', background: 'none', border: 'none', fontSize: 22, fontWeight: 800, cursor: 'pointer', padding: 0 }}
-                  >확인</button>
+                  <span style={{ fontFamily: "'Mona12 Text KR','Mona12',monospace", color: '#fff', fontSize: 25, fontWeight: 800, lineHeight: 1 }}>확인</span>
                 </div>
+                </button>
               </div>
             </div>
           ) : (
