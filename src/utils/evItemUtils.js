@@ -95,10 +95,13 @@ export const applyEVItem = (pokemon, itemName, updatePokemon) => {
   updatePokemon({ ...pokemon, effort: updatedEffort });
   
   const statNameKo = getStatNameKo(stat);
-  const changeText = change > 0 ? `+${change}` : change;
+  const changedAmount = Math.abs(newValue - currentValue);
+  const changeMessage = change > 0
+    ? `${statNameKo} 기초포인트 ${changedAmount}이 상승하였다!`
+    : `${statNameKo} 기초포인트 ${changedAmount}이 감소하였다!`;
   
   return { 
     success: true, 
-    message: `${pokemon.nickname || pokemon.name}의 ${statNameKo} 노력치가 ${changeText} 변경되었습니다! (${currentValue} → ${newValue})` 
+    message: `${pokemon.nickname || pokemon.name}의 ${changeMessage}` 
   };
 };

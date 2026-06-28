@@ -33,7 +33,6 @@ function CustomItemManageModal({ items, onUpdate, onDelete, onClose }) {
 
   const effectTag = (item) => {
     const tags = getItemEffectBadges(item);
-    if (item.ivBoost && Object.values(item.ivBoost).some(v=>v>0)) tags.push({ label: '개체값', cls: 'bg-blue-50 text-blue-700' });
     if (item.isRecipe) tags.push({ label: '레시피 아이템', cls: 'bg-amber-50 text-amber-700' });
     return tags;
   };
@@ -69,7 +68,7 @@ function CustomItemManageModal({ items, onUpdate, onDelete, onClose }) {
             <div key={item.id} className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 hover:bg-white transition cursor-pointer group"
               onClick={() => setEditingItem(item)}>
               {item.spriteUrl
-                ? <img src={item.spriteUrl} alt="" className="w-8 h-8 shrink-0" style={{imageRendering:'pixelated'}} />
+                ? <img src={item.spriteUrl} alt="" className="custom-item-image-32 shrink-0" style={{imageRendering:'pixelated'}} />
                 : <div className="w-8 h-8 rounded bg-gray-200 shrink-0" />}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">

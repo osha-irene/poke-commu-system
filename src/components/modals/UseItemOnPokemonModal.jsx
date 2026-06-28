@@ -152,7 +152,7 @@ const actualIncrease = afterValue - currentValue;
               <img 
                 src={item.imageUrl}
                 alt={item.name}
-                className="w-14 h-14"
+                className={item.isCustom ? 'custom-item-image-64' : 'w-14 h-14'}
                 style={{ imageRendering: 'pixelated' }}
               />
             </div>

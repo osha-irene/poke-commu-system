@@ -1,6 +1,7 @@
 import evolutionsData from '../data/evolutions.json';
 import { getLearnsetTmMoves, getPokemonLearnset } from './pokemonLearnsets';
 import { getEVItemEffect, isEVItem } from './evItemUtils';
+import { isSoyYYNItem } from './specialItemUtils';
 
 export const FORM_CHANGE_ITEM_POKEMON = {
   'rotom-catalog': [479],
@@ -111,12 +112,13 @@ const hasBoost = (boost) => boost && Object.values(boost).some(v => Number(v) > 
 
 const canUseBoostItemOnPokemon = (pokemon, item, itemData, systemSettings = {}) => {
   const src = itemData || item;
+  if (isSoyYYNItem(item) || isSoyYYNItem(itemData)) return true;
 
   const friendshipBoost = src.friendshipBoost;
   if (Number(friendshipBoost) > 0 && Number(pokemon.friendship || 0) >= 255) return false;
 
   const ivBoost = src.ivBoost;
-  if (hasBoost(ivBoost)) {
+  if (!src.isCustom && hasBoost(ivBoost)) {
     return Object.keys(ivBoost).some(stat => Number(ivBoost[stat]) > 0 && Number(pokemon.ivs?.[stat] || 0) < 31);
   }
 
@@ -135,6 +137,8 @@ const canUseBoostItemOnPokemon = (pokemon, item, itemData, systemSettings = {}) 
     const condMax = systemSettings?.conditionMax || 100;
     return Object.keys(conditionBoost).some(stat => Number(conditionBoost[stat]) > 0 && Number(condition[stat] || 0) < condMax);
   }
+
+  if (src.isCustom && (src.specialEffect === 'iv' || hasBoost(ivBoost))) return false;
 
   return true;
 };

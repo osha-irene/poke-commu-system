@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Sparkles, ShoppingCart, Trash2, Search, Package } from 'lucide-react';
 import { useGame } from '../../../contexts/GameContext';
 import { getItemPocket, canUseItem, CATEGORIES, getItemIcon, POCKET_LABELS } from '../../../utils/itemUtils';
-import { getItemEffectBadges } from '../../../utils/itemEffectBadges';
+import { isSoyYYNItem } from '../../../utils/specialItemUtils';
 
 const P = {
   card:     'rgba(255,255,255,0.90)',
@@ -69,12 +69,13 @@ export default function MobileItemsView() {
       sellPrice: itemData?.sellPrice ?? item.sellPrice ?? 0,
       pocket,
       canSell: item.canSell !== undefined ? item.canSell : (itemData?.canSell ?? true),
-      canUse: canUseItem(itemData || item),
+      canUse: isSoyYYNItem(item) || isSoyYYNItem(itemData) ? true : canUseItem(itemData || item),
       specialEffect: item.specialEffect || itemData?.specialEffect || null,
       evBoost: item.evBoost || itemData?.evBoost,
       friendshipBoost: item.friendshipBoost || itemData?.friendshipBoost,
       conditionBoost: item.conditionBoost || itemData?.conditionBoost,
       boostAmount: item.boostAmount || itemData?.boostAmount,
+      isCustom: Boolean(item.isCustom || itemData?.isCustom),
       itemData,
     };
   };
@@ -203,7 +204,6 @@ export default function MobileItemsView() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 8 }}>
             {filteredItems.map((item, i) => {
               const details = getItemDetails(item);
-              const effectBadges = getItemEffectBadges(details);
               const pocketName = POCKET_LABELS[details.pocket] || '기타';
               const isSelected = selectedItem?.name === item.name;
               return (
@@ -216,28 +216,19 @@ export default function MobileItemsView() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 34, height: 34, flexShrink: 0, background: 'rgba(245,250,238,0.9)', borderRadius: 8, border: `1px solid ${P.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {details.imageUrl
-                        ? <img src={details.imageUrl} alt={details.name} style={{ width: 26, height: 26, objectFit: 'contain', imageRendering: 'pixelated' }} />
+                        ? <img src={details.imageUrl} alt={details.name} className={details.isCustom ? 'custom-item-image-32' : ''} style={{ width: 26, height: 26, objectFit: 'contain', imageRendering: 'pixelated' }} />
                         : <span style={{ fontSize: 16 }}>📦</span>
                       }
                     </div>
                     <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
                       <span style={{ fontSize: 11, fontWeight: 700, color: P.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{details.name}</span>
-                      {effectBadges.map((badge, index) => (
-                        <span
-                          key={index}
-                          title={badge.title || badge.label}
-                          className={`item-effect-pill item-effect-pill--${badge.tone || 'default'}`}
-                        >
-                          {badge.label}
-                        </span>
-                      ))}
                       <span style={{ fontSize: 9, fontWeight: 700, color: P.muted, background: P.accentBg, borderRadius: 4, padding: '1px 5px', flexShrink: 0 }}>{pocketName}</span>
                     </div>
                     <span style={{ fontSize: 12, fontWeight: 800, color: P.accent, flexShrink: 0 }}>{isSuperAdmin ? '∞' : `×${item.count}`}</span>
                   </div>
                   {/* 하단: 설명 (이미지 왼쪽 기준) */}
                   {details.description && (
-                    <div style={{ fontSize: 10, color: P.muted, lineHeight: 1.4, whiteSpace: 'normal', wordBreak: 'keep-all' }}>
+                    <div style={{ fontSize: 10, color: P.muted, lineHeight: 1.4, whiteSpace: 'normal', wordBreak: 'keep-all', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                       {details.description}
                     </div>
                   )}
@@ -259,9 +250,9 @@ export default function MobileItemsView() {
         }}>
           {/* 아이템 정보 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 48, height: 48, background: 'rgba(255,255,255,0.75)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ width: selectedDetails.isCustom ? 64 : 48, height: selectedDetails.isCustom ? 64 : 48, background: 'rgba(255,255,255,0.75)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               {selectedDetails.imageUrl
-                ? <img src={selectedDetails.imageUrl} alt={selectedDetails.name} style={{ width: 36, height: 36, objectFit: 'contain', imageRendering: 'pixelated' }} />
+                ? <img src={selectedDetails.imageUrl} alt={selectedDetails.name} className={selectedDetails.isCustom ? 'custom-item-image-64' : ''} style={{ width: 36, height: 36, objectFit: 'contain', imageRendering: 'pixelated' }} />
                 : <span style={{ fontSize: 24 }}>📦</span>
               }
             </div>

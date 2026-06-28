@@ -3,6 +3,7 @@ import { useRef, useEffect } from 'react';
 import { isEVItem, applyEVItem } from '../../utils/evItemUtils';
 import { getLearnsetTmMoves, getPokemonLearnset } from '../../utils/pokemonLearnsets';
 import { isRareCandyItem, resolveItemData } from '../../utils/itemUsageRules';
+import { isSoyYYNItem } from '../../utils/specialItemUtils';
 
 // 아이템 nameEn → 변경 가능한 포켓몬 originalNumber 목록
 const FORM_CHANGE_ITEMS = {
@@ -219,10 +220,51 @@ export const useItemEffects = (
     // itemData(마스터)가 있으면 마스터 데이터만, 없을 때만 item 데이터 사용
     // itemData(allItems 원본)에 호출자가 넘긴 item의 override(conditionBoost/evBoost/specialEffect 등)를 병합
     const src = itemData ? { ...itemData, ...Object.fromEntries(
-      ['conditionBoost', 'evBoost', 'ivBoost', 'specialEffect', 'boostAmount', 'friendshipBoost']
+      ['conditionBoost', 'evBoost', 'ivBoost', 'specialEffect', 'boostAmount', 'friendshipBoost', 'effortOverride']
         .filter(k => item[k] !== undefined)
         .map(k => [k, item[k]])
     ) } : item;
+    if (src.isCustom && src.specialEffect === 'iv') {
+      src.specialEffect = null;
+    }
+
+    if (src.specialEffect === 'effortEdit' && src.effortOverride) {
+      const nextEffort = {
+        hp: 0,
+        attack: 0,
+        defense: 0,
+        specialAttack: 0,
+        specialDefense: 0,
+        speed: 0,
+        ...Object.fromEntries(
+          Object.entries(src.effortOverride).map(([key, value]) => [
+            key,
+            Math.min(252, Math.max(0, Number(value) || 0))
+          ])
+        )
+      };
+      const totalEffort = Object.values(nextEffort).reduce((sum, value) => sum + Number(value || 0), 0);
+      if (totalEffort > 510) {
+        alert('기초포인트 총합은 510을 초과할 수 없습니다.');
+        return;
+      }
+      updatedPokemon.effort = nextEffort;
+      if (updatedPokemon.effortValues) {
+        updatedPokemon.effortValues = nextEffort;
+      }
+      updatePokemonInUser(updatedPokemon);
+      alert(`${pokemon.nickname || pokemon.name}의 기초포인트를 수정했습니다!`);
+      consumeItem(item);
+      return;
+    }
+
+    if (isSoyYYNItem(item) || isSoyYYNItem(itemData) || isSoyYYNItem(src)) {
+      if (onRequestStatSelection) {
+        releaseItemUseLock();
+        onRequestStatSelection(item, pokemon, 'effortEdit', 0);
+        return;
+      }
+    }
 
     if (src.friendshipBoost) {
       const baseBoost = src.friendshipBoost;
@@ -235,7 +277,7 @@ export const useItemEffects = (
       itemUsed = true;
     }
 
-    if (src.ivBoost) {
+    if (src.ivBoost && !src.isCustom) {
       const boost = src.ivBoost;
       Object.keys(boost).forEach(stat => {
         if (updatedPokemon.ivs && updatedPokemon.ivs[stat] !== undefined) {
@@ -261,22 +303,36 @@ export const useItemEffects = (
 
     if (src.evBoost) {
       const boost = src.evBoost;
-      const totalEV = Object.values(updatedPokemon.effortValues || {}).reduce((sum, v) => sum + v, 0);
+      const effort = {
+        hp: 0,
+        attack: 0,
+        defense: 0,
+        specialAttack: 0,
+        specialDefense: 0,
+        speed: 0,
+        ...(updatedPokemon.effort || updatedPokemon.effortValues || {})
+      };
 
       Object.keys(boost).forEach(stat => {
-        if (updatedPokemon.effortValues && updatedPokemon.effortValues[stat] !== undefined) {
-          const current = updatedPokemon.effortValues[stat] || 0;
+        if (effort[stat] !== undefined) {
+          const current = Number(effort[stat] || 0);
+          const totalEV = Object.values(effort).reduce((sum, v) => sum + Number(v || 0), 0);
           const remaining = 510 - totalEV;
-          const actualBoost = Math.min(boost[stat], remaining, 252 - current);
+          const actualBoost = Math.min(Number(boost[stat]) || 0, remaining, 252 - current);
 
           if (actualBoost > 0) {
             const newValue = current + actualBoost;
-            updatedPokemon.effortValues[stat] = newValue;
-            effectMessages.push((statNameKo[stat] || stat) + ' 노력치가 ' + newValue + '으로 올랐습니다!');
+            effort[stat] = newValue;
+            effectMessages.push((statNameKo[stat] || stat) + ' 기초포인트 ' + actualBoost + '이 상승하였다!');
             itemUsed = true;
           }
         }
       });
+
+      updatedPokemon.effort = effort;
+      if (updatedPokemon.effortValues) {
+        updatedPokemon.effortValues = effort;
+      }
     }
 
     if (src.conditionBoost) {

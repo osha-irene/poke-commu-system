@@ -237,8 +237,20 @@ export default function useGameState() {
 
   const handleStatSelectComplete = (statKey) => {
     if (!statSelectPending) return;
+    if (!statKey) {
+      setStatSelectPending(null);
+      return;
+    }
     const { item, pokemon, type, amount } = statSelectPending;
     setStatSelectPending(null);
+    if (type === 'effortEdit') {
+      itemEffectsHook.useItemOnPokemon({
+        ...item,
+        specialEffect: 'effortEdit',
+        effortOverride: statKey
+      }, pokemon);
+      return;
+    }
     const boostedItem = type === 'conditionSelect'
       ? { ...item, specialEffect: null, conditionBoost: { [statKey]: amount } }
       : { ...item, specialEffect: null, evBoost: { [statKey]: amount } };

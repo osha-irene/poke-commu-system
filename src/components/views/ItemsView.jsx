@@ -2,7 +2,7 @@ import useMediaQuery from '../../hooks/useMediaQuery';
 import MobileItemsView from './_mobile/MobileItemsView';
 import { getItemPocket, canUseItem, CATEGORIES } from '../../utils/itemUtils';
 import { canUseItemOnPokemonTarget, FORM_CHANGE_ITEM_POKEMON } from '../../utils/itemUsageRules';
-import { getItemEffectBadges } from '../../utils/itemEffectBadges';
+import { isSoyYYNItem } from '../../utils/specialItemUtils';
 import { Package, Circle, Heart, Dumbbell, Apple, Disc, Backpack, Sparkles, Sword, Key, Search, X,Trash2, ShoppingCart } from 'lucide-react'; 
 import React, { useState } from 'react';
 
@@ -89,7 +89,9 @@ function DesktopItemsView() {
                      item.description || 
                      '유용한 아이템';
 
-  const canUse = item.canUse !== undefined ? item.canUse : canUseItem(itemData || item);
+  const canUse = isSoyYYNItem(item) || isSoyYYNItem(itemData)
+    ? true
+    : item.canUse !== undefined ? item.canUse : canUseItem(itemData || item);
 
   return {
     name: item.name,
@@ -107,6 +109,7 @@ function DesktopItemsView() {
     friendshipBoost: item.friendshipBoost || itemData?.friendshipBoost,
     conditionBoost: item.conditionBoost || itemData?.conditionBoost,
     boostAmount: item.boostAmount || itemData?.boostAmount,
+    isCustom: Boolean(item.isCustom || itemData?.isCustom),
     itemData: itemData
   };
 };
@@ -479,7 +482,6 @@ const categories = CATEGORIES.map(cat => {
           <div className="grid grid-cols-2 gap-4">
             {filteredItems.map((item, i) => {
               const details = getItemDetails(item);
-              const effectBadges = getItemEffectBadges(details);
               const pocketColor = getPocketColor(details.pocket);
               const badge = getPocketBadge(details.pocket);
               
@@ -495,7 +497,7 @@ const categories = CATEGORIES.map(cat => {
                       <img 
                         src={details.imageUrl}
                         alt={details.name}
-                        className="item-sprite item-sprite-2x object-contain"
+                        className={details.isCustom ? 'custom-item-image-64' : 'item-sprite item-sprite-2x object-contain'}
                         style={{ imageRendering: 'pixelated' }}
                       />
                     </div>
@@ -503,21 +505,12 @@ const categories = CATEGORIES.map(cat => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <div className="font-bold text-base text-gray-800 truncate">{details.name}</div>
-                        {effectBadges.map((effectBadge, index) => (
-                          <span
-                            key={index}
-                            title={effectBadge.title || effectBadge.label}
-                            className={`item-effect-pill item-effect-pill--${effectBadge.tone || 'default'}`}
-                          >
-                            {effectBadge.label}
-                          </span>
-                        ))}
                         <span className={`text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0 ${badge.color}`}>
                           {badge.text}
                         </span>
                       </div>
                       
-                      <div className="text-sm text-gray-600 line-clamp-2 mb-2">
+                      <div className="text-sm text-gray-600 line-clamp-3 mb-2">
                         {details.description}
                       </div>
                       
@@ -598,7 +591,7 @@ const categories = CATEGORIES.map(cat => {
                       <img 
                         src={details.imageUrl}
                         alt={details.name}
-                        className="max-w-full max-h-full object-contain"
+                        className={details.isCustom ? 'custom-item-image-64' : 'max-w-full max-h-full object-contain'}
                         style={{ imageRendering: 'pixelated' }}
                       />
                     </div>

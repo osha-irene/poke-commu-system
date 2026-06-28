@@ -220,8 +220,8 @@ export default function ItemSelectorModal({
                         <img
                           src={item.imageUrl}
                           alt={item.name}
-                          className="max-w-full max-h-full object-contain"
-                          style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
+                          className={item.isCustom ? 'custom-item-image-64' : 'max-w-full max-h-full object-contain'}
+                          style={{ imageRendering: 'pixelated', transform: item.isCustom ? 'none' : 'scale(2)' }}
                           onError={(e) => {
                             e.target.style.display = 'none';
                             e.target.nextSibling.style.display = 'flex';

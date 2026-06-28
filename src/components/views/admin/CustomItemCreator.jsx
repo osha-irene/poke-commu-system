@@ -1,6 +1,7 @@
 // src/components/views/admin/CustomItemCreator.jsx
 import React, { useState, useEffect } from 'react';
 import { Sparkles } from 'lucide-react';
+import { isSoyYYNItem } from '../../../utils/specialItemUtils';
 
 const EMPTY_ITEM = {
   name: '',
@@ -13,7 +14,6 @@ const EMPTY_ITEM = {
   effect: '',
   spriteUrl: '',
   specialEffect: null,
-  ivBoost: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
   evBoost: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
   friendshipBoost: 0,
   conditionBoost: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
@@ -45,9 +45,12 @@ const CONDITION_LABELS = {
 
 // 기존 아이템 데이터를 편집 폼 형태로 정규화
 function normalizeForEdit(item) {
-  const specialEffect = item.specialEffect ||
-    (item.ivBoost && Object.values(item.ivBoost).some(v => Number(v) > 0) ? 'iv' :
-     item.evBoost && Object.values(item.evBoost).some(v => Number(v) > 0) ? 'ev' :
+  const isFixedSpecialEffect = isSoyYYNItem(item);
+  const rawSpecialEffect = isFixedSpecialEffect
+    ? 'effortEdit'
+    : item.specialEffect === 'iv' ? null : item.specialEffect;
+  const specialEffect = rawSpecialEffect ||
+    (item.evBoost && Object.values(item.evBoost).some(v => Number(v) > 0) ? 'ev' :
      item.friendshipBoost > 0 ? 'friendship' :
      item.conditionBoost && Object.values(item.conditionBoost).some(v => Number(v) > 0) ? 'condition' :
      null);
@@ -63,7 +66,7 @@ function normalizeForEdit(item) {
   return {
     ...EMPTY_ITEM,
     ...item,
-    ivBoost: { ...EMPTY_ITEM.ivBoost, ...(item.ivBoost || {}) },
+    ivBoost: {},
     evBoost: { ...EMPTY_ITEM.evBoost, ...(item.evBoost || {}) },
     conditionBoost: { ...EMPTY_ITEM.conditionBoost, ...(item.conditionBoost || {}) },
     friendshipBoost: item.friendshipBoost || 0,
@@ -86,6 +89,7 @@ export function CustomItemModal({ editItem = null, onSubmit, onClose }) {
   }, [editItem]);
 
   const set = (fields) => setItemData(prev => ({ ...prev, ...fields }));
+  const isFixedSpecialEffect = isSoyYYNItem(itemData);
 
   const handleSubmit = async () => {
     if (!itemData.name.trim()) { alert('아이템 이름을 입력해주세요!'); return; }
@@ -93,19 +97,21 @@ export function CustomItemModal({ editItem = null, onSubmit, onClose }) {
     const cleanConditionBoost = Object.fromEntries(
       Object.entries(itemData.conditionBoost).filter(([, v]) => Number(v) > 0)
     );
-    const cleanIvBoost = Object.fromEntries(
-      Object.entries(itemData.ivBoost).filter(([, v]) => Number(v) > 0)
-    );
     const cleanEvBoost = Object.fromEntries(
       Object.entries(itemData.evBoost).filter(([, v]) => Number(v) > 0)
     );
 
     let finalConditionBoost = cleanConditionBoost;
     let finalEvBoost = cleanEvBoost;
-    let finalSpecialEffect = itemData.specialEffect;
+    let finalSpecialEffect = isFixedSpecialEffect
+      ? 'effortEdit'
+      : itemData.specialEffect === 'iv' ? null : itemData.specialEffect;
 
-    if (itemData.specialEffect === 'conditionSelect' || itemData.specialEffect === 'evSelect') {
+    if (!isFixedSpecialEffect && (itemData.specialEffect === 'conditionSelect' || itemData.specialEffect === 'evSelect')) {
       if (!itemData.boostAmount || itemData.boostAmount <= 0) { alert('상승량을 입력해주세요!'); return; }
+      finalConditionBoost = {};
+      finalEvBoost = {};
+    } else if (isFixedSpecialEffect) {
       finalConditionBoost = {};
       finalEvBoost = {};
     }
@@ -115,7 +121,7 @@ export function CustomItemModal({ editItem = null, onSubmit, onClose }) {
       pocket: itemData.pocket || itemData.category,
       sellPrice: itemData.sellPrice || Math.floor(itemData.cost * 0.5),
       conditionBoost: finalConditionBoost,
-      ivBoost: cleanIvBoost,
+      ivBoost: {},
       evBoost: finalEvBoost,
       specialEffect: finalSpecialEffect,
     };
@@ -245,42 +251,31 @@ export function CustomItemModal({ editItem = null, onSubmit, onClose }) {
 
           {/* 특수 효과 선택 */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">특수 효과 (선택)</label>
-            <select
-              value={itemData.specialEffect || ''}
-              onChange={e => set({ specialEffect: e.target.value || null })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            >
-              <option value="">없음</option>
-              <option value="iv">기초 포인트(개체값) 상승</option>
-              <option value="ev">노력치 상승 (전체 입력)</option>
-              <option value="evSelect">노력치 상승 (항목 선택)</option>
-              <option value="friendship">친밀도 상승</option>
-              <option value="condition">컨디션 상승 (전체 입력)</option>
-              <option value="conditionSelect">컨디션 상승 (항목 선택)</option>
-            </select>
+            {isFixedSpecialEffect ? (
+              <>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">정해진 특수효과</label>
+                <div className="w-full px-4 py-2 border border-purple-200 rounded-lg bg-purple-50 text-purple-700 font-semibold">
+                  노력치 자유 배분
+                </div>
+              </>
+            ) : (
+              <>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">특수 효과 (선택)</label>
+                <select
+                  value={itemData.specialEffect || ''}
+                  onChange={e => set({ specialEffect: e.target.value || null })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="">없음</option>
+                  <option value="ev">노력치 상승 (전체 입력)</option>
+                  <option value="evSelect">노력치 상승 (항목 선택)</option>
+                  <option value="friendship">친밀도 상승</option>
+                  <option value="condition">컨디션 상승 (전체 입력)</option>
+                  <option value="conditionSelect">컨디션 상승 (항목 선택)</option>
+                </select>
+              </>
+            )}
           </div>
-
-          {/* 개체값 */}
-          {itemData.specialEffect === 'iv' && (
-            <div className="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
-              <h4 className="font-bold text-blue-800 mb-3">💎 기초 포인트 상승량 (0-31)</h4>
-              <div className="grid grid-cols-3 gap-3">
-                {Object.keys(itemData.ivBoost).map(stat => (
-                  <div key={stat}>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1">{STAT_LABELS[stat]}</label>
-                    <input
-                      type="number" min="0" max="31"
-                      value={itemData.ivBoost[stat]}
-                      onChange={e => set({ ivBoost: { ...itemData.ivBoost, [stat]: Math.min(31, Math.max(0, parseInt(e.target.value) || 0)) } })}
-                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                    />
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-blue-600 mt-2">💡 현재 개체값에 추가됩니다 (최대 31)</p>
-            </div>
-          )}
 
           {/* 노력치 */}
           {itemData.specialEffect === 'ev' && (

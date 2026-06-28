@@ -1,3 +1,5 @@
+import { isSoyYYNItem } from './specialItemUtils';
+
 const CONDITION_LABELS = {
   elegance: '우아함',
   beauty: '아름다움',
@@ -36,6 +38,15 @@ const summarizeBoost = (entries, categoryLabel, statLabels, suffix = '') => {
 
 export const getItemEffectBadges = (item = {}) => {
   const badges = [];
+
+  if (isSoyYYNItem(item)) {
+    badges.push({
+      label: '노력치 자유 배분',
+      title: '노력치 자유 배분',
+      tone: 'effort',
+      cls: 'bg-purple-50 text-purple-700'
+    });
+  }
 
   const friendshipBoost = Number(item.friendshipBoost) || 0;
   if (friendshipBoost > 0) {

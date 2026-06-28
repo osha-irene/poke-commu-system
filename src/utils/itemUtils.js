@@ -1,5 +1,6 @@
 // src/utils/itemUtils.js
 import { Package, Circle, Heart, Zap, Sparkles, Disc, ShoppingBag, Cpu, Dumbbell, Key, ChefHat } from 'lucide-react';
+import { isSoyYYNItem } from './specialItemUtils';
 
 export const ITEM_POCKETS = {
   POKEBALLS: 'pokeballs',
@@ -207,6 +208,7 @@ const FORM_CHANGE_ITEM_NAMES = new Set([
 
 export const canUseItem = (item) => {
   if (!item) return false;
+  if (isSoyYYNItem(item)) return true;
 
   const nameEn = item.nameEn || item.name || '';
   if (FORM_CHANGE_ITEM_NAMES.has(nameEn)) return true;
@@ -225,9 +227,9 @@ export const canUseItem = (item) => {
     category?.includes('evolution') ||
     category?.includes('berry') ||
     item.isTM ||
-    item.specialEffect ||
+    (item.specialEffect && !(item.isCustom && item.specialEffect === 'iv')) ||
     item.friendshipBoost ||
-    item.ivBoost ||
+    (!item.isCustom && item.ivBoost) ||
     item.evBoost ||
     item.conditionBoost
   );

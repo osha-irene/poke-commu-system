@@ -2189,6 +2189,7 @@ return (
           type={statSelectPending.type}
           amount={statSelectPending.amount}
           pokemonName={statSelectPending.pokemon?.nickname || statSelectPending.pokemon?.name}
+          currentEffort={statSelectPending.pokemon?.effort || statSelectPending.pokemon?.effortValues}
           onSelect={handleStatSelectComplete}
           onClose={() => handleStatSelectComplete(null)}
         />
