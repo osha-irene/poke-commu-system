@@ -1281,6 +1281,30 @@ button:active {
     display: block !important;
   }
 
+  .main-shell .shop-scene__permanent-list:not(textarea) {
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(41, 88, 62, 0.78) transparent !important;
+    overflow-y: scroll !important;
+  }
+
+  .main-shell .shop-scene__permanent-list:not(textarea)::-webkit-scrollbar {
+    width: 6px !important;
+    height: 6px !important;
+    display: block !important;
+  }
+
+  .main-shell .shop-scene__permanent-list:not(textarea)::-webkit-scrollbar-track {
+    background: transparent !important;
+    display: block !important;
+  }
+
+  .main-shell .shop-scene__permanent-list:not(textarea)::-webkit-scrollbar-thumb {
+    background: rgba(41, 88, 62, 0.78) !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    display: block !important;
+  }
+
   /* ID 셀렉터(specificity 1,0,0)로 scrollbar 숨김 규칙 강제 override */
   #move-modal-scroll-area {
     scrollbar-width: thin !important;
