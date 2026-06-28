@@ -1,71 +1,65 @@
-# Getting Started with Create React App
-
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
 # poke-commu-system
+
+포켓몬 커뮤니티 운영을 위한 개인 프로젝트입니다.  
+커뮤니티용 멤버 관리, 도감, 상점, 배틀, 캠핑, 요리, 공지/게시판 등의 기능을 React 기반으로 구성합니다.
+
+배포 페이지: https://originbeyond.homes
+
+## 사용 기술
+
+- React 18
+- Create React App
+- Firebase
+- GitHub Pages
+- Tailwind CSS
+
+## 실행 방법
+
+```bash
+npm install
+npm start
+```
+
+개발 서버는 기본적으로 `http://localhost:3000`에서 실행됩니다.
+
+## 빌드
+
+```bash
+npm run build
+```
+
+프로덕션 빌드는 `build` 폴더에 생성됩니다.
+
+## 배포
+
+```bash
+npm run deploy
+```
+
+배포 전 `npm run predeploy`를 통해 CORS 설정과 프로덕션 빌드가 함께 실행됩니다.
+
+## 라이선스와 에셋 사용 안내
+
+이 저장소의 소스 코드는 개인 프로젝트의 운영과 유지보수를 위해 공개되어 있습니다.
+
+단, 저장소와 배포 페이지에 포함된 일러스트, 캐릭터 이미지, 배경 이미지, UI 이미지, 아이콘, 사운드, 폰트 등 모든 시각/청각 에셋은 각 권리자의 허락을 받아 이 프로젝트에서만 사용됩니다.
+
+따라서 별도의 명시적 허락 없이 해당 에셋을 복사, 재배포, 수정, 재업로드, 2차 사용하거나 다른 프로젝트에 포함할 수 없습니다.
+
+### 재사용 금지 대상
+
+- `src/assets/` 아래의 이미지, 사운드, 폰트 파일
+- `public/img/` 아래의 이미지 파일
+- `public/sound/` 아래의 사운드 파일
+- 그 외 저장소에 포함된 커뮤니티 전용 이미지, UI 리소스, 배포용 정적 에셋
+
+## 외부 권리 고지
+
+이 프로젝트는 팬 커뮤니티 운영을 위한 비공식 개인 프로젝트입니다.  
+포켓몬 및 관련 명칭, 이미지, 데이터의 권리는 각 권리자에게 있습니다.
+
+프로젝트 내에서 사용된 별도 제작 이미지와 커뮤니티 전용 에셋은 원작자 또는 제작자의 허락 범위 안에서만 사용됩니다.
+
+## 문의
+
+에셋 사용 허락, 권리 표기, 삭제 요청이 필요한 경우 저장소 관리자에게 문의해 주세요.
