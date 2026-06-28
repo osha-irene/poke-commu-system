@@ -467,7 +467,7 @@ function EntryTab({ party, allItems = [] }) {
 const BADGE_CLEANLINESS_DEFAULT = 2;
 const BADGE_CLEANLINESS_MIN = 1;
 const BADGE_CLEANLINESS_MAX = 5;
-const BADGE_CLEANLINESS_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const BADGE_CLEANLINESS_PERIOD_MS = 3 * 24 * 60 * 60 * 1000;
 const BADGE_DIRT_OPACITY = { 1: 0, 2: 0.08, 3: 0.18, 4: 0.32, 5: 0.52 };
 
 function clampBadgeCleanliness(v) {
@@ -479,8 +479,8 @@ function getCurrentBadgeCleanliness(value, cleanedAt) {
   const base = clampBadgeCleanliness(value);
   const t = Number(cleanedAt);
   if (!Number.isFinite(t) || t <= 0) return base;
-  const weeks = Math.max(0, Math.floor((Date.now() - t) / BADGE_CLEANLINESS_WEEK_MS));
-  return clampBadgeCleanliness(base + weeks);
+  const periods = Math.max(0, Math.floor((Date.now() - t) / BADGE_CLEANLINESS_PERIOD_MS));
+  return clampBadgeCleanliness(base + periods);
 }
 function getCleanlinessLevels(member) {
   const src = Array.isArray(member.badgeCleanlinessLevels) ? member.badgeCleanlinessLevels : [];

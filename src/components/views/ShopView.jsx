@@ -6,10 +6,15 @@ import contextCompleteImage from '../../assets/shop/context2.png';
 import skipImage from '../../assets/shop/skip.png';
 import buyImage from '../../assets/shop/buy.png';
 import buy2Image from '../../assets/shop/buy2.png';
+import confirmImage from '../../assets/shop/confirm.png';
 import specialImage from '../../assets/shop/special.png';
 import specialActiveImage from '../../assets/shop/special2.png';
 import dailyLimitedImage from '../../assets/shop/daily-limited.png';
 import dailyLimitedActiveImage from '../../assets/shop/daily-limited2.png';
+import apricornImage from '../../assets/shop/apricorn.png';
+import apricornActiveImage from '../../assets/shop/apricorn2.png';
+import randomImage from '../../assets/shop/random.png';
+import randomActiveImage from '../../assets/shop/random2.png';
 import { ShoppingCart, Coins, CircleDot, X } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarDays, faStore, faGift, faStar, faBoxOpen } from '@fortawesome/free-solid-svg-icons';
@@ -47,6 +52,8 @@ const getDailyGachaBalls = (balls) => {
   const idx2 = idx2Raw >= idx1 ? idx2Raw + 1 : idx2Raw;
   return [balls[idx1], balls[idx2]];
 };
+
+const DEFAULT_GACHA_PRICE = 1000;
 
 export default function ShopView() {
   const {
@@ -131,7 +138,8 @@ export default function ShopView() {
 
     // 규토리볼 가챠 구매
     if (selectedItem.type === 'gachaball') {
-      if (trainer.money < 200) {
+      const gachaPrice = selectedItem.price ?? shopData.gachaBall?.price ?? DEFAULT_GACHA_PRICE;
+      if (trainer.money < gachaPrice) {
         alert('돈이 부족합니다!');
         return;
       }
@@ -171,7 +179,7 @@ export default function ShopView() {
           ];
 
       updateCurrentUser({
-        money: trainer.money - (200 * quantity),
+        money: trainer.money - (gachaPrice * quantity),
         inventory: newInventory
       });
 
@@ -366,6 +374,15 @@ export default function ShopView() {
       item: allItems.find((item) => item.id === shopItem.itemId)
     }))
     .filter(({ item }) => Boolean(item));
+  const desktopGachaBallsAll = shopData.gachaBall?.balls || [];
+  const desktopGachaBalls = getDailyGachaBalls(desktopGachaBallsAll)
+    .map((ballItem) => ({
+      ...ballItem,
+      item: allItems.find((item) => item.id === ballItem.itemId)
+    }))
+    .filter(({ item }) => Boolean(item));
+  const hasDesktopGacha = Boolean(shopData.gachaBall?.enabled && desktopGachaBallsAll.length >= 2);
+  const desktopRandomBoxes = (shopData.randomBoxes || []).filter((box) => box.enabled);
 
   // intro 메시지 타이핑
   useEffect(() => {
@@ -397,7 +414,9 @@ export default function ShopView() {
 
   const [showBuy2, setShowBuy2] = useState(false);
   const [buyConfirming, setBuyConfirming] = useState(false);
+  const [shopListMode, setShopListMode] = useState('permanent');
   const buy2Ref = useRef(null);
+  const skipNextSceneClickRef = useRef(false);
   const permanentListRef = useRef(null);
   const [permanentListScrollbar, setPermanentListScrollbar] = useState({ visible: false, height: 0, top: 0 });
 
@@ -461,12 +480,13 @@ export default function ShopView() {
       resizeObserver?.disconnect();
       window.removeEventListener('resize', updatePermanentListScrollbar);
     };
-  }, [phase, scenePermanentItems.length, updatePermanentListScrollbar]);
+  }, [phase, scenePermanentItems.length, desktopGachaBalls.length, desktopRandomBoxes.length, shopListMode, updatePermanentListScrollbar]);
 
   useEffect(() => {
     if (!showBuy2) return;
     const handler = (e) => {
       if (buy2Ref.current && !buy2Ref.current.contains(e.target)) {
+        skipNextSceneClickRef.current = true;
         setBuyConfirming(false);
         setShowBuy2(false);
         setQuantity(1);
@@ -484,12 +504,203 @@ export default function ShopView() {
   const [closedListButtons, setClosedListButtons] = useState({});
   const [pendingClosedMouth, setPendingClosedMouth] = useState(false);
   const [pressedListButton, setPressedListButton] = useState(null);
+  const [gachaContextStep, setGachaContextStep] = useState(0);
+  const [randomBoxIntroActive, setRandomBoxIntroActive] = useState(false);
+  const [purchaseReturnMode, setPurchaseReturnMode] = useState(null);
 
   const getEulReul = (name) => {
     if (!name) return '을';
     const code = name.charCodeAt(name.length - 1);
     if (code < 0xAC00 || code > 0xD7A3) return '을';
     return (code - 0xAC00) % 28 === 0 ? '를' : '을';
+  };
+
+  const getIGa = (name) => {
+    if (!name) return '이';
+    const code = name.charCodeAt(name.length - 1);
+    if (code < 0xAC00 || code > 0xD7A3) return '가';
+    return (code - 0xAC00) % 28 === 0 ? '가' : '이';
+  };
+
+  const getWaGwa = (name) => {
+    if (!name) return '과';
+    const code = name.charCodeAt(name.length - 1);
+    if (code < 0xAC00 || code > 0xD7A3) return '와';
+    return (code - 0xAC00) % 28 === 0 ? '와' : '과';
+  };
+
+  const getDesktopGachaPrice = (shopItem = selectedShopItem) => Number(shopItem?.price ?? shopData.gachaBall?.price ?? DEFAULT_GACHA_PRICE);
+
+  const formatGachaResults = (results) => {
+    const parts = results.map(({ item, count }) => `${item.name} ${count}개`);
+    if (parts.length <= 1) {
+      const onlyItem = parts[0] || '';
+      return `${onlyItem}${getEulReul(onlyItem)} 던졌다.`;
+    }
+    const lastItem = parts[parts.length - 1];
+    return `${parts.slice(0, -1).join(', ')}${getWaGwa(parts[parts.length - 2])} ${lastItem}${getEulReul(lastItem)} 던졌다.`;
+  };
+
+  const purchaseDesktopGacha = (shopItem, count) => {
+    if (!trainer || !shopItem?.gachaBalls?.length) return false;
+
+    const price = getDesktopGachaPrice(shopItem);
+    const totalPrice = price * count;
+    if ((trainer.money || 0) < totalPrice) {
+      alert('돈이 부족합니다!');
+      return false;
+    }
+
+    const pickedItems = [];
+    for (let i = 0; i < count; i += 1) {
+      const randomBall = shopItem.gachaBalls[Math.floor(Math.random() * shopItem.gachaBalls.length)];
+      const wonItem = allItems.find((item) => item.id === randomBall.itemId) || randomBall.item;
+      if (wonItem) pickedItems.push(wonItem);
+    }
+    if (pickedItems.length === 0) {
+      alert('아이템을 찾을 수 없습니다!');
+      return false;
+    }
+
+    const resultMap = new Map();
+    pickedItems.forEach((item) => {
+      const key = item.id || item.itemId || item.name;
+      const current = resultMap.get(key) || { item, count: 0 };
+      current.count += 1;
+      resultMap.set(key, current);
+    });
+    const results = Array.from(resultMap.values());
+
+    const inventory = Array.isArray(trainer.inventory) ? trainer.inventory : [];
+    const newInventory = [...inventory];
+    results.forEach(({ item, count: itemCount }) => {
+      const existingIndex = newInventory.findIndex((inventoryItem) => (
+        inventoryItem.itemId === item.id || inventoryItem.name === item.name
+      ));
+
+      if (existingIndex >= 0) {
+        newInventory[existingIndex] = {
+          ...newInventory[existingIndex],
+          count: (newInventory[existingIndex].count || 0) + itemCount
+        };
+        return;
+      }
+
+      newInventory.push({
+        itemId: item.id,
+        name: item.name,
+        nameEn: item.nameEn,
+        count: itemCount,
+        imageUrl: item.spriteUrl || item.imageUrl,
+        cost: item.cost || 0,
+        sellPrice: item.sellPrice || 0,
+        category: item.category,
+        pocket: item.pocket || getItemPocket(item)
+      });
+    });
+
+    updateCurrentUser({
+      money: (trainer.money || 0) - totalPrice,
+      inventory: newInventory
+    });
+
+    return {
+      success: true,
+      message: `윽우지가 ${formatGachaResults(results)}`
+    };
+  };
+
+  const pickRandomBoxItem = (box) => {
+    const items = Array.isArray(box?.items) ? box.items : [];
+    if (items.length === 0) return null;
+
+    const totalWeight = items.reduce((sum, item) => sum + (parseInt(item.weight, 10) || 0), 0);
+    if (totalWeight <= 0) return null;
+
+    let random = Math.random() * totalWeight;
+    for (const item of items) {
+      random -= parseInt(item.weight, 10) || 0;
+      if (random <= 0) {
+        const minCount = parseInt(item.minCount, 10) || 1;
+        const maxCount = parseInt(item.maxCount, 10) || minCount;
+        const itemCount = Math.floor(Math.random() * (maxCount - minCount + 1)) + minCount;
+        const itemData = allItems.find((entry) => entry.id === item.itemId);
+        return {
+          itemId: item.itemId,
+          name: item.name || itemData?.name || item.itemId,
+          count: itemCount,
+          itemData
+        };
+      }
+    }
+
+    return null;
+  };
+
+  const purchaseDesktopRandomBox = (box, count) => {
+    if (!trainer) return false;
+
+    const price = Number(box?.price || 0);
+    const totalPrice = price * count;
+    if ((trainer.money || 0) < totalPrice) {
+      alert('돈이 부족합니다!');
+      return false;
+    }
+
+    const resultsByItem = new Map();
+    for (let i = 0; i < count; i += 1) {
+      const result = pickRandomBoxItem(box);
+      if (!result) {
+        alert('아이템 추첨에 실패했습니다!');
+        return false;
+      }
+      const key = result.itemId || result.name;
+      const current = resultsByItem.get(key) || { ...result, count: 0 };
+      current.count += result.count;
+      resultsByItem.set(key, current);
+    }
+
+    const results = Array.from(resultsByItem.values());
+    const inventory = Array.isArray(trainer.inventory) ? trainer.inventory : [];
+    const newInventory = [...inventory];
+
+    results.forEach((result) => {
+      const itemData = result.itemData || allItems.find((item) => item.id === result.itemId);
+      const existingIndex = newInventory.findIndex((inventoryItem) => (
+        inventoryItem.itemId === result.itemId || inventoryItem.name === result.name
+      ));
+
+      if (existingIndex >= 0) {
+        newInventory[existingIndex] = {
+          ...newInventory[existingIndex],
+          count: (newInventory[existingIndex].count || 0) + result.count
+        };
+        return;
+      }
+
+      newInventory.push({
+        itemId: result.itemId,
+        name: result.name,
+        nameEn: itemData?.nameEn,
+        count: result.count,
+        imageUrl: itemData?.spriteUrl || itemData?.imageUrl,
+        cost: itemData?.cost || 0,
+        sellPrice: itemData?.sellPrice || 0,
+        category: itemData?.category,
+        pocket: itemData?.pocket || getItemPocket(itemData || result)
+      });
+    });
+
+    updateCurrentUser({
+      money: (trainer.money || 0) - totalPrice,
+      inventory: newInventory
+    });
+
+    const resultText = results.map((result) => `${result.name} ${result.count}개`).join(', ');
+    return {
+      success: true,
+      message: `${resultText}${getEulReul(resultText)} 얻었다!`
+    };
   };
 
   const handleAdvance = (source = 'mouse') => {
@@ -499,6 +710,7 @@ export default function ShopView() {
       setActiveListButton(null);
       setThrownItem(null);
       setThrownShopItem(null);
+      setAskingLength(0);
       setPhase('asking');
     } else if (phase === 'asking') {
       if (!isAskingComplete) { setAskingLength(askingMessage.length); return; }
@@ -529,6 +741,12 @@ export default function ShopView() {
     const description = item.effect || item.description || '상세 설명이 없습니다.';
 
     return description;
+  };
+
+  const getRandomBoxContextText = (boxItem) => {
+    const boxName = boxItem?.item?.name || boxItem?.name || '랜덤박스';
+    const displayName = boxName.replace(/\s*박스$/, '') || boxName;
+    return `랜덤한 ${displayName}${getIGa(displayName)} 들어있다.`;
   };
 
   const getListButtonShopItem = (kind) => {
@@ -594,11 +812,14 @@ export default function ShopView() {
     setBuyConfirming(false);
     setQuantity(1);
     setPurchaseMsg('');
-    setListMessage(shopItem?.item ? `당신에게 ${shopItem.item.name}을 던진다.` : '아무것도 나오지 않았다.');
+    setListMessage(shopItem?.item ? `당신에게 ${shopItem.item.name}${getEulReul(shopItem.item.name)} 던진다.` : '아무것도 나오지 않았다.');
   };
 
   const handleListButtonClick = (kind) => {
     setPressedListButton(kind);
+    setShopListMode('permanent');
+    setRandomBoxIntroActive(false);
+    setPurchaseReturnMode(null);
 
     if (isListButtonClosed(kind)) {
       setActiveListButton(kind);
@@ -608,6 +829,7 @@ export default function ShopView() {
       setShowBuy2(false);
       setBuyConfirming(false);
       setQuantity(1);
+      setGachaContextStep(0);
       setPurchaseMsg('');
       setPendingClosedMouth(false);
       setListMessage('입을 다물고 있다.');
@@ -624,6 +846,8 @@ export default function ShopView() {
     }
 
     setActiveListButton(kind);
+    setGachaContextStep(0);
+    setRandomBoxIntroActive(false);
     setThrownItem(null);
     setThrownShopItem(null);
     setSelectedShopItem(null);
@@ -633,6 +857,39 @@ export default function ShopView() {
     setPurchaseMsg('');
     setPendingClosedMouth(false);
     setListMessage(firstMessage);
+  };
+
+  const handleShopListModeClick = (mode) => {
+    setPressedListButton(mode);
+    setShopListMode(mode);
+    setGachaContextStep(0);
+    setRandomBoxIntroActive(mode === 'random');
+    setPurchaseReturnMode(null);
+    if (mode === 'apricorn' && hasDesktopGacha) {
+      setSelectedShopItem({
+        type: 'gachaball',
+        price: shopData.gachaBall?.price ?? DEFAULT_GACHA_PRICE,
+        stock: 99,
+        gachaBalls: desktopGachaBalls,
+        item: {
+          id: 'gachaball',
+          name: '규토리볼 가챠',
+          effect: '규토리볼 가챠'
+        }
+      });
+    } else {
+      setSelectedShopItem(null);
+    }
+    setShowBuy2(false);
+    setBuyConfirming(false);
+    setQuantity(1);
+    setPurchaseMsg('');
+    setListMessage(mode === 'random' ? '윽우지가 벽의 종이를 가리킨다.' : '');
+    setActiveListButton(null);
+    setThrownItem(null);
+    setThrownShopItem(null);
+    setPhase('shop');
+    window.requestAnimationFrame(updatePermanentListScrollbar);
   };
 
   const handleAdvanceListMessage = () => {
@@ -646,22 +903,106 @@ export default function ShopView() {
   };
 
   const isListInteractionActive = Boolean(activeListButton || listMessage || thrownItem || thrownShopItem);
-  const listButtonImageState = pressedListButton || (isListInteractionActive ? activeListButton : null);
+  const listButtonImageState = pressedListButton || (randomBoxIntroActive ? 'random' : isListInteractionActive ? activeListButton : shopListMode === 'permanent' ? null : shopListMode);
 
   const handleSceneAdvanceClick = () => {
+    if (skipNextSceneClickRef.current) {
+      skipNextSceneClickRef.current = false;
+      return;
+    }
+
     setPressedListButton(null);
 
-    if (purchaseMsg && isShopTextComplete && pendingClosedMouth) {
+    if (purchaseMsg) {
+      if (!isShopTextComplete) {
+        setShopTextLength(shopText.length);
+        return;
+      }
+
+      const purchasedType = purchaseReturnMode || selectedShopItem?.type;
       setPurchaseMsg('');
+      setPurchaseReturnMode(null);
       setPendingClosedMouth(false);
       setThrownItem(null);
       setThrownShopItem(null);
-      setSelectedShopItem(null);
       setShowBuy2(false);
       setBuyConfirming(false);
       setQuantity(1);
-      setListMessage('입을 다물고 있다.');
+
+      if (pendingClosedMouth) {
+        setSelectedShopItem(null);
+        setListMessage('입을 다물고 있다.');
+        return;
+      }
+
+      if (purchasedType === 'gachaball') {
+        setSelectedShopItem({
+          type: 'gachaball',
+          price: shopData.gachaBall?.price ?? DEFAULT_GACHA_PRICE,
+          stock: 99,
+          gachaBalls: desktopGachaBalls,
+          item: {
+            id: 'gachaball',
+            name: '규토리볼 가챠',
+            effect: '규토리볼 가챠'
+          }
+        });
+        setShopListMode('apricorn');
+        setPressedListButton('apricorn');
+        setActiveListButton(null);
+        setGachaContextStep(0);
+        setRandomBoxIntroActive(false);
+        setListMessage('');
+        setPhase('shop');
+        return;
+      }
+
+      if (purchasedType === 'randombox') {
+        setSelectedShopItem(null);
+        setShopListMode('random');
+        setPressedListButton('random');
+        setActiveListButton(null);
+        setGachaContextStep(0);
+        setRandomBoxIntroActive(true);
+        setListMessage('윽우지가 벽의 종이를 가리킨다.');
+        setPhase('shop');
+        return;
+      }
+
+      setSelectedShopItem(null);
+      setActiveListButton(null);
+      setListMessage('');
+      setAskingLength(0);
+      setPhase('asking');
       return;
+    }
+
+    if (phase === 'shop' && selectedShopItem?.type === 'gachaball' && !showBuy2 && !buyConfirming) {
+      if (shopText && !isShopTextComplete) {
+        setShopTextLength(shopText.length);
+        return;
+      }
+      if (gachaContextStep === 0) {
+        setGachaContextStep(1);
+        return;
+      }
+      return;
+    }
+
+    if (randomBoxIntroActive) {
+      if (shopText && !isShopTextComplete) {
+        setShopTextLength(shopText.length);
+        return;
+      }
+      return;
+    }
+
+    if (shopListMode !== 'permanent' && !isListInteractionActive && !purchaseMsg) {
+      setShopListMode('permanent');
+      if (selectedShopItem?.type === 'gachaball' || selectedShopItem?.type === 'randombox') {
+        setSelectedShopItem(null);
+      }
+      window.requestAnimationFrame(updatePermanentListScrollbar);
     }
 
     if (handleAdvanceListMessage()) return;
@@ -677,17 +1018,32 @@ export default function ShopView() {
   const shopText = purchaseMsg
     ? purchaseMsg
     : buyConfirming && selectedShopItem
-      ? `${selectedShopItem?.item?.name || ''}${getEulReul(selectedShopItem?.item?.name || '')} ${quantity}개 구매할까?`
+      ? selectedShopItem.type === 'gachaball'
+        ? `규토리볼 가챠를 ${quantity}번 돌릴까?`
+        : `${selectedShopItem?.item?.name || ''}${getEulReul(selectedShopItem?.item?.name || '')} ${quantity}개 구매할까?`
       : thrownItem
-        ? `당신에게 ${thrownItem.name}을 던진다.`
+        ? `당신에게 ${thrownItem.name}${getEulReul(thrownItem.name)} 던진다.`
         : listMessage || (
           phase === 'shop' && selectedShopItem
-            ? getItemDetailText(selectedShopItem)
+            ? selectedShopItem.type === 'gachaball'
+              ? gachaContextStep === 0
+                ? '윽우지가 벽의 종이를 가리킨다.'
+                : `규토리볼 가챠 1회 ${getDesktopGachaPrice(selectedShopItem).toLocaleString()}원.`
+              : selectedShopItem.type === 'randombox'
+                ? getRandomBoxContextText(selectedShopItem)
+              : getItemDetailText(selectedShopItem)
             : ''
   );
   const displayedShopTextLength = previousShopTextRef.current === shopText ? shopTextLength : 0;
   const isShopTextComplete = displayedShopTextLength >= shopText.length;
   const isThrownShopText = Boolean(thrownItem && !purchaseMsg && !buyConfirming);
+  const isGachaContextActive = Boolean(
+    phase === 'shop'
+    && selectedShopItem?.type === 'gachaball'
+    && !purchaseMsg
+    && !showBuy2
+    && !buyConfirming
+  );
 
   const renderShopText = () => {
     if (!isThrownShopText) {
@@ -696,7 +1052,7 @@ export default function ShopView() {
 
     const prefix = '당신에게 ';
     const itemName = thrownItem.name || '';
-    const suffix = '을 던진다.';
+    const suffix = `${getEulReul(itemName)} 던진다.`;
     const prefixLength = prefix.length;
     const itemEnd = prefixLength + itemName.length;
 
@@ -917,10 +1273,10 @@ export default function ShopView() {
                         })}
                       </div>
                       <button
-                        onClick={() => { setSelectedItem({ type: 'gachaball', name: '규토리볼 가챠', price: 200, gachaBalls, stock: 99 }); setQuantity(1); }}
+                        onClick={() => { setSelectedItem({ type: 'gachaball', name: '규토리볼 가챠', price: shopData.gachaBall?.price ?? DEFAULT_GACHA_PRICE, gachaBalls, stock: 99 }); setQuantity(1); }}
                         style={{ width: '100%', padding: '7px', borderRadius: 8, border: 'none', background: '#b05510', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                       >
-                        200원 뽑기
+                        {(shopData.gachaBall?.price ?? DEFAULT_GACHA_PRICE).toLocaleString()}원 뽑기
                       </button>
                     </div>
                   </div>
@@ -1088,12 +1444,14 @@ export default function ShopView() {
       className="shop-scene"
       aria-label="상점"
       onClick={(e) => {
+        if (purchaseMsg) { handleSceneAdvanceClick(); return; }
         if (phase === 'intro' || phase === 'asking') { handleSceneAdvanceClick(); return; }
         if (phase === 'shop' && showBuy2) { setBuyConfirming(false); setShowBuy2(false); setQuantity(1); return; }
+        if (isGachaContextActive) { handleSceneAdvanceClick(); return; }
         if (isListInteractionActive) { handleSceneAdvanceClick(); return; }
         if (phase === 'shop' && shopText && !isShopTextComplete) { setShopTextLength(shopText.length); }
       }}
-      style={(phase === 'intro' || phase === 'asking' || showBuy2 || (phase === 'shop' && shopText && !isShopTextComplete)) ? { cursor: 'pointer' } : undefined}
+      style={(phase === 'intro' || phase === 'asking' || showBuy2 || purchaseMsg || isGachaContextActive || (phase === 'shop' && shopText && !isShopTextComplete)) ? { cursor: 'pointer' } : undefined}
     >
       <div className="shop-scene__dialogue">
         <img
@@ -1107,8 +1465,8 @@ export default function ShopView() {
           src={contextImage}
           alt=""
           aria-hidden="true"
-          onClick={phase !== 'shop' ? (e) => { e.stopPropagation(); handleSceneAdvanceClick(); } : showBuy2 ? () => { setBuyConfirming(false); setShowBuy2(false); setQuantity(1); } : isListInteractionActive ? (e) => { e.stopPropagation(); handleSceneAdvanceClick(); } : undefined}
-          style={(phase !== 'shop' || showBuy2) ? { cursor: 'pointer', pointerEvents: 'auto' } : undefined}
+          onClick={phase !== 'shop' ? (e) => { e.stopPropagation(); handleSceneAdvanceClick(); } : showBuy2 ? (e) => { e.stopPropagation(); setBuyConfirming(false); setShowBuy2(false); setQuantity(1); } : (purchaseMsg || isListInteractionActive || isGachaContextActive) ? (e) => { e.stopPropagation(); handleSceneAdvanceClick(); } : undefined}
+          style={(phase !== 'shop' || showBuy2 || purchaseMsg || isGachaContextActive) ? { cursor: 'pointer', pointerEvents: 'auto' } : undefined}
         />
 
         {/* intro: 기본 메시지 타이핑 */}
@@ -1137,18 +1495,101 @@ export default function ShopView() {
                 >
                   <img src={listButtonImageState === 'daily' ? dailyLimitedActiveImage : dailyLimitedImage} alt="기간 한정 아이템" />
                 </button>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); handleShopListModeClick('apricorn'); }}
+                >
+                  <img src={listButtonImageState === 'apricorn' ? apricornActiveImage : apricornImage} alt="규토리볼" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); handleShopListModeClick('random'); }}
+                >
+                  <img src={listButtonImageState === 'random' ? randomActiveImage : randomImage} alt="랜덤" />
+                </button>
               </div>
             <div
               ref={permanentListRef}
-              className="shop-scene__permanent-list"
+              className={`shop-scene__permanent-list ${shopListMode === 'random' ? 'shop-scene__permanent-list--single' : ''}`}
               onScroll={updatePermanentListScrollbar}
             >
-              {scenePermanentItems.length > 0 ? (
+              {shopListMode === 'apricorn' ? (
+                hasDesktopGacha ? desktopGachaBalls.map((ballItem) => (
+                  <button
+                    className="shop-scene__shop-item shop-scene__shop-item--gacha"
+                    key={`gacha-${ballItem.item.id}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPressedListButton('apricorn');
+                    }}
+                    type="button"
+                  >
+                    <span className="shop-scene__shop-item-icon">
+                      <img src={ballItem.item.spriteUrl || ballItem.item.imageUrl} alt="" aria-hidden="true" />
+                    </span>
+                    <span className="shop-scene__shop-item-body">
+                      <span className="shop-scene__shop-item-name">{ballItem.item.name}</span>
+                      <span className="shop-scene__shop-item-divider" aria-hidden="true" />
+                      <span className="shop-scene__shop-item-desc">
+                        {ballItem.item.effect || ballItem.item.description || '규토리로 만든 특별한 볼이다.'}
+                      </span>
+                    </span>
+                  </button>
+                )) : (
+                  <div className="shop-scene__shop-empty">규토리볼 목록이 없습니다.</div>
+                )
+              ) : shopListMode === 'random' ? (
+                desktopRandomBoxes.length > 0 ? desktopRandomBoxes.map((box) => (
+                  <button
+                    className={`shop-scene__shop-item ${selectedShopItem?.type === 'randombox' && selectedShopItem?.id === box.id ? 'is-selected' : ''}`}
+                    key={`random-${box.id}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedShopItem({
+                        ...box,
+                        type: 'randombox',
+                        stock: 99,
+                        item: {
+                          id: `randombox-${box.id}`,
+                          name: box.name,
+                          effect: box.description || `${box.items?.length || 0}종 랜덤`,
+                          iconType: 'box'
+                        }
+                      });
+                      setPhase('shop');
+                      setPressedListButton('random');
+                      setGachaContextStep(0);
+                      setRandomBoxIntroActive(false);
+                      setShowBuy2(false);
+                      setBuyConfirming(false);
+                      setQuantity(1);
+                      setPurchaseMsg('');
+                      setListMessage('');
+                      setActiveListButton(null);
+                      setThrownItem(null);
+                      setThrownShopItem(null);
+                    }}
+                    type="button"
+                  >
+                    <span className="shop-scene__shop-item-icon">
+                      <FontAwesomeIcon icon={faBoxOpen} aria-hidden="true" />
+                    </span>
+                    <span className="shop-scene__shop-item-body">
+                      <span className="shop-scene__shop-item-name">{box.name}</span>
+                      <span className="shop-scene__shop-item-meta">
+                        {Number(box.price || 0).toLocaleString()}원 / {box.items?.length || 0}종 랜덤
+                      </span>
+                    </span>
+                  </button>
+                )) : (
+                  <div className="shop-scene__shop-empty">랜덤박스가 없습니다.</div>
+                )
+              ) : scenePermanentItems.length > 0 ? (
                 scenePermanentItems.map((shopItem) => (
                   <button
                     className={`shop-scene__shop-item ${selectedShopItem?.item?.id === shopItem.item.id ? 'is-selected' : ''}`}
                     key={shopItem.item.id}
-                    onClick={(e) => { e.stopPropagation(); setPressedListButton(null); setSelectedShopItem(shopItem); setPhase('shop'); setShowBuy2(false); setBuyConfirming(false); setQuantity(1); setPurchaseMsg(''); setListMessage(''); setActiveListButton(null); setThrownItem(null); setThrownShopItem(null); }}
+                    onClick={(e) => { e.stopPropagation(); setPressedListButton(null); setGachaContextStep(0); setRandomBoxIntroActive(false); setPurchaseReturnMode(null); setSelectedShopItem(shopItem); setPhase('shop'); setShowBuy2(false); setBuyConfirming(false); setQuantity(1); setPurchaseMsg(''); setListMessage(''); setActiveListButton(null); setThrownItem(null); setThrownShopItem(null); }}
                     type="button"
                   >
                     <span className="shop-scene__shop-item-icon">
@@ -1212,13 +1653,13 @@ export default function ShopView() {
       {/* 확인 단계: 외부 클릭 감지 오버레이 (section 직속, dialogue 밖) */}
       {phase === 'shop' && showBuy2 && (
         <div
-          onClick={() => { setBuyConfirming(false); setShowBuy2(false); setQuantity(1); }}
+          onClick={(e) => { e.stopPropagation(); setBuyConfirming(false); setShowBuy2(false); setQuantity(1); }}
           style={{ position: 'absolute', inset: 0, zIndex: 30, cursor: 'pointer' }}
         />
       )}
 
       {/* BUY / BUY2 — section 직속, dialogue 밖 (구매완료 메시지 중엔 숨김) */}
-      {phase === 'shop' && selectedShopItem && !purchaseMsg && (!thrownShopItem || isShopTextComplete || showBuy2) && (
+      {phase === 'shop' && selectedShopItem && !purchaseMsg && (!thrownShopItem || isShopTextComplete || showBuy2) && (selectedShopItem.type !== 'gachaball' || showBuy2 || (gachaContextStep >= 1 && isShopTextComplete)) && (
         <div style={{
           position: 'absolute',
           right: '39%',
@@ -1227,7 +1668,7 @@ export default function ShopView() {
           pointerEvents: 'auto',
         }}>
           {showBuy2 ? (
-            <div ref={buy2Ref} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0 }}>
+            <div ref={buy2Ref} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0, transform: 'translateY(-3px)' }}>
               {!buyConfirming && (
                 <div style={{ position: 'relative', display: 'inline-block' }}>
                   <img src={buy2Image} alt="" aria-hidden="true" style={{ height: 56, display: 'block' }} />
@@ -1255,6 +1696,34 @@ export default function ShopView() {
                       setBuyConfirming(true);
                     } else {
                       const itemName = selectedShopItem?.item?.name || '';
+                      if (selectedShopItem.type === 'gachaball') {
+                        const result = purchaseDesktopGacha(selectedShopItem, quantity);
+                        if (result?.success) {
+                          setShowBuy2(false);
+                          setBuyConfirming(false);
+                          setPurchaseReturnMode('gachaball');
+                          setPurchaseMsg(result.message);
+                          setPendingClosedMouth(false);
+                          setQuantity(1);
+                          setSelectedItem(null);
+                          const aud = new Audio('/sound/purchase.mp3'); aud.currentTime = 0.4; aud.play().catch(() => {});
+                        }
+                        return;
+                      }
+                      if (selectedShopItem.type === 'randombox') {
+                        const result = purchaseDesktopRandomBox(selectedShopItem, quantity);
+                        if (result?.success) {
+                          setShowBuy2(false);
+                          setBuyConfirming(false);
+                          setPurchaseReturnMode('randombox');
+                          setPurchaseMsg(result.message);
+                          setPendingClosedMouth(false);
+                          setQuantity(1);
+                          setSelectedItem(null);
+                          const aud = new Audio('/sound/purchase.mp3'); aud.currentTime = 0.4; aud.play().catch(() => {});
+                        }
+                        return;
+                      }
                       const shopItemForPurchase = {
                         ...selectedShopItem.item,
                         price: selectedShopItem.price,
@@ -1285,20 +1754,13 @@ export default function ShopView() {
                   }}
                   style={{ position: 'relative', display: 'block', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
                 >
-                  <img src={buy2Image} alt="" aria-hidden="true" style={{ height: 56, display: 'block' }} />
-                <div style={{
-                  position: 'absolute', inset: 0, paddingTop: 2,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  pointerEvents: 'none',
-                }}>
-                  <span style={{ fontFamily: "'Mona12 Text KR','Mona12',monospace", color: '#fff', fontSize: 25, fontWeight: 800, lineHeight: 1 }}>확인</span>
-                </div>
+                  <img src={confirmImage} alt="확인" style={{ height: 56, display: 'block' }} />
                 </button>
               </div>
             </div>
           ) : (
             <button
-              onClick={() => { setShowBuy2(true); setQuantity(1); }}
+              onClick={(e) => { e.stopPropagation(); setShowBuy2(true); setQuantity(1); }}
               style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
             >
               <img src={buyImage} alt="구매" style={{ height: 56, display: 'block' }} />

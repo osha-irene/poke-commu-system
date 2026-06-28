@@ -38,7 +38,7 @@ const BADGE_IMGS = [badge1Img, badge2Img, badge3Img, badge4Img, badge5Img, badge
 const BADGE_CLEANLINESS_DEFAULT = 2;
 const BADGE_CLEANLINESS_MIN = 1;
 const BADGE_CLEANLINESS_MAX = 5;
-const BADGE_CLEANLINESS_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const BADGE_CLEANLINESS_PERIOD_MS = 3 * 24 * 60 * 60 * 1000;
 const BADGE_SPARKLE_DURATION_MS = 24 * 60 * 60 * 1000;
 const BADGE_SCRUB_STEP_MS = 2000;
 const BADGE_SCRUB_DURATION_MS = BADGE_SCRUB_STEP_MS * (BADGE_CLEANLINESS_MAX - BADGE_CLEANLINESS_MIN);
@@ -69,8 +69,8 @@ function getCurrentBadgeCleanliness(value, cleanedAt) {
   const base = clampBadgeCleanliness(value);
   const time = Number(cleanedAt);
   if (!Number.isFinite(time) || time <= 0) return base;
-  const weeks = Math.max(0, Math.floor((Date.now() - time) / BADGE_CLEANLINESS_WEEK_MS));
-  return clampBadgeCleanliness(base + weeks);
+  const periods = Math.max(0, Math.floor((Date.now() - time) / BADGE_CLEANLINESS_PERIOD_MS));
+  return clampBadgeCleanliness(base + periods);
 }
 
 function normalizeBadgeCleanlinessArray(value, fallbackValue) {
@@ -2317,9 +2317,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
 /* ── 메인 ── */
 export default function MembersView({ members = {}, isLoading, currentUserId, isAdmin = false, titles = [], onSwitchTab, initialMemberId = null, onClearInitialMember }) {
   const [selected, setSelected] = useState(null);
-  const [transitioning, setTransitioning] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
   const [activeTab, setActiveTab] = useState('main');
   const listRef = useRef(null);
 
@@ -2363,10 +2361,9 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
     const onPop = () => {
       const params = new URLSearchParams(window.location.search);
       if (!params.get('member') && showDetail) {
-        setIsClosing(true);
+        setSelected(null);
         setShowDetail(false);
         setActiveTab('main');
-        setTimeout(() => { setSelected(null); setTransitioning(false); setIsClosing(false); }, 450);
       }
     };
     window.addEventListener('popstate', onPop);
@@ -2376,13 +2373,8 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
   const openMember = (member) => {
     const full = getFullImg(member);
     if (full) preloadDecodedImage(full);
-    setIsClosing(false);
     setSelected(member);
-    setTransitioning(true);
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => setShowDetail(true));
-    });
-    setTimeout(() => setTransitioning(false), 400);
+    setShowDetail(true);
 
     const url = new URL(window.location.href);
     url.searchParams.set('tab', 'members');
@@ -2391,10 +2383,9 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
   };
 
   const closeMember = () => {
-    setIsClosing(true);
+    setSelected(null);
     setShowDetail(false);
     setActiveTab('main');
-    setTimeout(() => { setSelected(null); setTransitioning(false); setIsClosing(false); }, 450);
 
     const url = new URL(window.location.href);
     url.searchParams.delete('member');
@@ -2426,7 +2417,6 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
         style={{
           position: showDetail ? 'absolute' : 'relative',
           top: 0, left: 0, right: 0,
-          transition: 'opacity 0.25s',
           transform: 'none',
           opacity: showDetail ? 0 : 1,
           pointerEvents: showDetail ? 'none' : 'auto',
@@ -2451,7 +2441,7 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
           </button>,
           document.body
         )}
-        <div style={{
+        <div className="member-list-enter" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(5, 1fr)',
           gap: '10px',
@@ -2480,8 +2470,7 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
             overflow: 'visible',
             background: 'rgba(255, 255, 255)',
             boxShadow: '0 0 80px rgba(0,0,0,0.18), 0 0 200px rgba(0,0,0,0.08)',
-            transition: 'transform 0.45s cubic-bezier(0.22,1,0.36,1), opacity 0.4s, right 0.45s cubic-bezier(0.22,1,0.36,1)',
-            transform: showDetail ? 'translateX(0)' : isClosing ? 'translateX(-60px)' : 'translateX(60px)',
+            transform: 'translateX(0)',
             opacity: showDetail ? 1 : 0,
             pointerEvents: showDetail ? 'auto' : 'none',
             backdropFilter: 'blur(6px)',
@@ -2511,7 +2500,6 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
             zIndex: 55,
             opacity: showDetail ? 1 : 0,
             pointerEvents: showDetail ? 'auto' : 'none',
-            transition: 'opacity 0.3s, transform 0.3s ease-out',
           }}
         >
           <ChevronLeft className="w-14 h-14" strokeWidth={1.5} />

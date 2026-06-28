@@ -487,7 +487,7 @@ export default function NpcView({ members = {}, isLoading = false, isAdmin = fal
           </button>
         )}
         <div className={`mbr-page npc-page${returning ? ' npc-page--returning' : ''}`}>
-          <div className="npc-grid">
+          <div className="npc-grid member-list-enter">
               {[0, 1].map(row => (
                 <div key={row} className="mbr-list npc-row" style={{ transform: row === 0 ? 'translateX(-10px)' : 'translateX(10px)' }}>
                   {!isLoading && memberList.slice(row * 7, row * 7 + 7).map(m => {

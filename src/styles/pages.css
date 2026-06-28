@@ -512,11 +512,11 @@
   left: 50%;
   bottom: calc(100% + 12px);
   z-index: 20;
-  width: min(360px, 36vw);
+  width: min(370px, 37vw);
   min-height: 72px;
   display: none;
-  grid-template-columns: 32px minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 22px;
   align-items: center;
   padding: 12px 14px;
   border: 4px solid #29583e;
@@ -558,11 +558,11 @@
 }
 
 .shop-scene__item-tooltip-icon {
-  width: 32px;
-  height: 32px;
+  width: 42px;
+  height: 42px;
   display: grid;
   place-items: center;
-  transform: translateY(3px);
+  transform: translate(7px, 6px);
   border-radius: 8px;
   background: rgba(217, 239, 228, 0.72);
 }
@@ -592,13 +592,14 @@
 }
 
 .shop-scene__item-tooltip-desc {
-  display: -webkit-box;
-  overflow: hidden;
+  display: block;
+  overflow: visible;
   color: rgba(43, 33, 25, 0.72);
   font-size: 13px;
   line-height: 1.35;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 .shop-scene__item-tooltip-meta {
@@ -644,6 +645,10 @@
   scrollbar-color: rgba(41, 88, 62, 0.78) transparent;
   scrollbar-gutter: stable;
   direction: ltr;
+}
+
+.shop-scene__permanent-list--single {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .shop-scene__permanent-scrollbar {
@@ -737,6 +742,11 @@
   box-shadow: 0 0 0 2px rgba(41, 88, 62, 0.36);
 }
 
+.shop-scene__shop-item--gacha {
+  align-items: start;
+  min-height: 82px;
+}
+
 .shop-scene__shop-item-icon {
   width: 36px;
   height: 36px;
@@ -750,6 +760,12 @@
   height: 32px;
   image-rendering: pixelated;
   object-fit: contain;
+}
+
+.shop-scene__shop-item-icon svg {
+  width: 28px;
+  height: 28px;
+  color: #7840c0;
 }
 
 .shop-scene__shop-item-body {
@@ -775,6 +791,21 @@
   line-height: 1.1;
 }
 
+.shop-scene__shop-item-divider {
+  display: block;
+  width: 100%;
+  height: 1px;
+  margin: 4px 0 3px;
+  background: rgba(43, 33, 25, 0.24);
+}
+
+.shop-scene__shop-item-desc {
+  color: rgba(43, 33, 25, 0.72);
+  font-size: clamp(10px, 0.78vw, 12px);
+  line-height: 1.25;
+  white-space: normal;
+}
+
 .shop-scene__shop-empty {
   grid-column: 1 / -1;
   direction: ltr;
@@ -796,14 +827,13 @@
 
 /* ── 탭 전환 버튼 호버 ── */
 .tab-switch-btn {
-  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.22s ease;
+  transition: none;
 }
 .tab-switch-btn:hover {
-  transform: scale(1.04) translateY(-2px);
+  transform: none;
 }
 .tab-switch-btn:active {
-  transform: scale(0.96);
-  transition-duration: 0.1s;
+  transform: none;
 }
 
 /* ── 탭 전환 애니메이션 ── */
@@ -818,6 +848,15 @@
 @keyframes tabEnterHome {
   from { opacity: 0; transform: scale(0.97) translateY(14px); }
   to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes memberListEnter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.member-list-enter {
+  animation: memberListEnter 0.32s ease-out both;
 }
 .tab-view-enter-home {
   animation: tabEnterHome 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
