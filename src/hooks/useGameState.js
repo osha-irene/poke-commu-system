@@ -291,7 +291,13 @@ export default function useGameState() {
 
   // 조우 닫기
   const handleCloseEncounter = () => {
+    const exhaustedExp = Number(encounterPokemon?.pendingDailyExploreExhaustedExp) || 0;
     setEncounterPokemon(null);
+    if (exhaustedExp > 0) {
+      setTimeout(() => {
+        alert(`오늘의 모든 탐험을 완료했습니다!\n경험치 ${exhaustedExp}을 받았습니다.`);
+      }, 0);
+    }
   };
 
   // 포켓몬 잡기

@@ -161,7 +161,13 @@ export const usePokemonCatch = (
     
     console.log('🎉 포켓몬 잡기 완료!');
     
-    updateCurrentUser({ caughtPokemon: updatedCaughtPokemon });
+    const exhaustedExp = Number(pokemon.pendingDailyExploreExhaustedExp) || 0;
+    await updateCurrentUser({
+      caughtPokemon: updatedCaughtPokemon,
+      ...(exhaustedExp > 0 && Number(currentUser.dailyWalks) > 0
+        ? { trainerExp: (Number(currentUser.trainerExp) || 0) + exhaustedExp }
+        : {})
+    });
 
     // 첫 포획 기록
     const formNumber = String(pokemonTemplate.number);

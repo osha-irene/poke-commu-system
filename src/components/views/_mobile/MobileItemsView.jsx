@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Sparkles, ShoppingCart, Trash2, Search, Package } from 'lucide-react';
 import { useGame } from '../../../contexts/GameContext';
 import { getItemPocket, canUseItem, CATEGORIES, getItemIcon, POCKET_LABELS } from '../../../utils/itemUtils';
+import { getItemEffectBadges } from '../../../utils/itemEffectBadges';
 
 const P = {
   card:     'rgba(255,255,255,0.90)',
@@ -69,6 +70,11 @@ export default function MobileItemsView() {
       pocket,
       canSell: item.canSell !== undefined ? item.canSell : (itemData?.canSell ?? true),
       canUse: canUseItem(itemData || item),
+      specialEffect: item.specialEffect || itemData?.specialEffect || null,
+      evBoost: item.evBoost || itemData?.evBoost,
+      friendshipBoost: item.friendshipBoost || itemData?.friendshipBoost,
+      conditionBoost: item.conditionBoost || itemData?.conditionBoost,
+      boostAmount: item.boostAmount || itemData?.boostAmount,
       itemData,
     };
   };
@@ -197,6 +203,7 @@ export default function MobileItemsView() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 8 }}>
             {filteredItems.map((item, i) => {
               const details = getItemDetails(item);
+              const effectBadges = getItemEffectBadges(details);
               const pocketName = POCKET_LABELS[details.pocket] || '기타';
               const isSelected = selectedItem?.name === item.name;
               return (
@@ -215,6 +222,15 @@ export default function MobileItemsView() {
                     </div>
                     <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
                       <span style={{ fontSize: 11, fontWeight: 700, color: P.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{details.name}</span>
+                      {effectBadges.map((badge, index) => (
+                        <span
+                          key={index}
+                          title={badge.title || badge.label}
+                          className={`item-effect-pill item-effect-pill--${badge.tone || 'default'}`}
+                        >
+                          {badge.label}
+                        </span>
+                      ))}
                       <span style={{ fontSize: 9, fontWeight: 700, color: P.muted, background: P.accentBg, borderRadius: 4, padding: '1px 5px', flexShrink: 0 }}>{pocketName}</span>
                     </div>
                     <span style={{ fontSize: 12, fontWeight: 800, color: P.accent, flexShrink: 0 }}>{isSuperAdmin ? '∞' : `×${item.count}`}</span>

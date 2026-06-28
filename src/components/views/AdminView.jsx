@@ -19,8 +19,7 @@ import ScheduleAdminPanel from './admin/ScheduleAdminPanel';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
-
-const CONDITION_LABELS = { elegance:'근사함', beauty:'아름다움', cuteness:'귀여움', intelligence:'슬기로움', strength:'강인함' };
+import { getItemEffectBadges } from '../../utils/itemEffectBadges';
 
 function CustomItemManageModal({ items, onUpdate, onDelete, onClose }) {
   const [editingItem, setEditingItem] = useState(null);
@@ -33,20 +32,15 @@ function CustomItemManageModal({ items, onUpdate, onDelete, onClose }) {
   });
 
   const effectTag = (item) => {
-    const tags = [];
-    if (item.friendshipBoost > 0) tags.push({ label: `친밀도+${item.friendshipBoost}`, cls: 'bg-pink-50 text-pink-700' });
-    const cb = item.conditionBoost || {};
-    const cbStr = Object.entries(cb).filter(([,v]) => Number(v) > 0).map(([k,v]) => `${CONDITION_LABELS[k]||k}+${v}`).join(', ');
-    if (cbStr) tags.push({ label: `컨디션: ${cbStr}`, cls: 'bg-green-50 text-green-700' });
-    if (item.specialEffect === 'conditionSelect' && item.conditionTarget) tags.push({ label: `${CONDITION_LABELS[item.conditionTarget]||item.conditionTarget}+${item.boostAmount}(선택)`, cls: 'bg-green-50 text-green-700' });
-    if (item.specialEffect === 'evSelect' && item.evTarget) tags.push({ label: `노력치 ${item.evTarget}+${item.boostAmount}(선택)`, cls: 'bg-purple-50 text-purple-700' });
+    const tags = getItemEffectBadges(item);
     if (item.ivBoost && Object.values(item.ivBoost).some(v=>v>0)) tags.push({ label: '개체값', cls: 'bg-blue-50 text-blue-700' });
-    if (item.evBoost && Object.values(item.evBoost).some(v=>v>0)) tags.push({ label: '노력치', cls: 'bg-purple-50 text-purple-700' });
     if (item.isRecipe) tags.push({ label: '레시피 아이템', cls: 'bg-amber-50 text-amber-700' });
     return tags;
   };
 
-  return createPortal(
+  return (
+    <>
+    {createPortal(
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div className="bg-white rounded-xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
         {/* 헤더 */}
@@ -81,12 +75,12 @@ function CustomItemManageModal({ items, onUpdate, onDelete, onClose }) {
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-semibold text-sm text-gray-800">{item.name}</span>
                   {effectTag(item).map((t, i) => (
-                    <span key={i} className={`text-xs px-1.5 py-0.5 rounded ${t.cls}`}>{t.label}</span>
+                    <span key={i} title={t.title || t.label} className={`item-effect-pill item-effect-pill--${t.tone || 'default'}`}>{t.label}</span>
                   ))}
                 </div>
                 {item.effect && <p className="text-xs text-gray-400 truncate mt-0.5">{item.effect}</p>}
               </div>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
+              <div className="flex gap-1 shrink-0">
                 <button className="text-blue-500 text-xs px-2 py-1 rounded hover:bg-blue-50"
                   onClick={e => { e.stopPropagation(); setEditingItem(item); }}>수정</button>
                 <button className="text-red-500 text-xs px-2 py-1 rounded hover:bg-red-50"
@@ -102,20 +96,23 @@ function CustomItemManageModal({ items, onUpdate, onDelete, onClose }) {
         </div>
       </div>
 
-      {editingItem && (
-        <CustomItemModal
-          editItem={editingItem}
-          onSubmit={async (payload) => {
-            const { id, isCustom, isRecipe, createdBy, createdAt, recipeId, ...fields } = payload;
-            const ok = await onUpdate(editingItem.id, fields);
-            if (ok) alert(`"${fields.name}" 수정 완료.`);
-            return ok;
-          }}
-          onClose={() => setEditingItem(null)}
-        />
-      )}
     </div>,
     document.body
+    )}
+    {editingItem && createPortal(
+      <CustomItemModal
+        editItem={editingItem}
+        onSubmit={async (payload) => {
+          const { id, isCustom, isRecipe, createdBy, createdAt, recipeId, ...fields } = payload;
+          const ok = await onUpdate(editingItem.id, fields);
+          if (ok) alert(`"${fields.name}" 수정 완료.`);
+          return ok;
+        }}
+        onClose={() => setEditingItem(null)}
+      />,
+      document.body
+    )}
+    </>
   );
 }
 

@@ -7,6 +7,7 @@ import {
   getItemIcon, 
   filterItemsByPocket 
 } from '../../utils/itemUtils';
+import { getItemEffectBadges } from '../../utils/itemEffectBadges';
 
 /**
  * 재사용 가능한 아이템 선택 모달
@@ -189,6 +190,7 @@ export default function ItemSelectorModal({
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {filteredItems.map(item => {
                 const ItemIcon = getItemIcon(item);
+                const effectBadges = getItemEffectBadges(item);
                 const isSelected = multiSelect 
                   ? localSelectedItems.includes(item.id)
                   : false;
@@ -238,6 +240,19 @@ export default function ItemSelectorModal({
                       }`}>
                         {item.name}
                       </div>
+                      {effectBadges.length > 0 && (
+                        <div className="mt-1 flex flex-wrap justify-center gap-1">
+                          {effectBadges.map((badge, index) => (
+                            <span
+                              key={index}
+                              title={badge.title || badge.label}
+                              className={`item-effect-pill item-effect-pill--${badge.tone || 'default'}`}
+                            >
+                              {badge.label}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       
                       {/* 추가 정보 표시 (선택적) */}
                       {item.cooking?.isIngredient && (

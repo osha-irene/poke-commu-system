@@ -482,9 +482,12 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
                     </div>
                     </>
                   ) : (
-                    <div className="text-center py-2 text-gray-400 flex items-center justify-center gap-2">
-                      <HelpCircle size={20} />
-                      <p className="text-sm font-semibold">미발견 레시피</p>
+                    <div className="text-center py-3 text-gray-500 flex flex-col items-center justify-center gap-1.5">
+                      <div className="flex items-center justify-center gap-2">
+                        <HelpCircle size={20} />
+                        <p className="text-sm font-bold text-gray-700">{recipe.name}</p>
+                      </div>
+                      <p className="text-xs font-semibold text-gray-400">미발견 레시피</p>
                     </div>
                   )}
                 </div>

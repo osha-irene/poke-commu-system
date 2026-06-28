@@ -11,6 +11,11 @@ export const useAdminItems = (
   updateCurrentUser,
   allItems
 ) => {
+  const canManageItems = () => Boolean(
+    currentUser?.isAdmin ||
+    currentUser?.isSuperAdmin ||
+    currentUser?.canManageItems
+  );
 
   // ========== 자신에게 아이템 추가 ==========
   const addItemToSelf = (item, count) => {
@@ -19,7 +24,7 @@ export const useAdminItems = (
       return;
     }
     
-    if (!(currentUser.isSuperAdmin || currentUser.canManageItems)) {
+    if (!canManageItems()) {
       alert('아이템 관리 권한이 없습니다!');
       return;
     }
@@ -57,7 +62,7 @@ export const useAdminItems = (
 
   // ========== 회원에게 아이템 지급 ==========
   const giveItemToMember = async (memberId, item, count) => {
-    if (!currentUser?.isAdmin) return;
+    if (!canManageItems()) return;
     
     const member = members[memberId];
     if (!member) return;
@@ -126,7 +131,7 @@ export const useAdminItems = (
 
   // ========== 커스텀 아이템 생성 ==========
   const createCustomItem = async (itemData, { silent = false } = {}) => {
-    if (!currentUser?.isAdmin) {
+    if (!canManageItems()) {
       return false;
     }
     
@@ -144,7 +149,7 @@ export const useAdminItems = (
       const snapshot = await get(customItemsRef);
       
       const customItems = snapshot.exists() ? snapshot.val() : [];
-      const itemsArray = Array.isArray(customItems) ? customItems : [];
+      const itemsArray = Array.isArray(customItems) ? customItems : Object.values(customItems || {});
       itemsArray.push(newItem);
       
       await set(customItemsRef, itemsArray);
@@ -158,15 +163,23 @@ export const useAdminItems = (
   };
 
   const updateCustomItem = async (itemId, updatedFields) => {
-    if (!currentUser?.isAdmin) return false;
+    if (!canManageItems()) return false;
     try {
       const customItemsRef = ref(database, 'gameData/customItems');
       const snapshot = await get(customItemsRef);
       const customItems = snapshot.exists() ? snapshot.val() : [];
-      const updated = (Array.isArray(customItems) ? customItems : []).map(i =>
-        i.id === itemId ? { ...i, ...updatedFields } : i
+      const itemsArray = Array.isArray(customItems) ? customItems : Object.values(customItems || {});
+      let found = false;
+      const updated = itemsArray.map(i => {
+        if (i.id !== itemId) return i;
+        found = true;
+        return { ...i, ...updatedFields };
+      });
+      if (!found) return false;
+      const cleanUpdated = JSON.parse(
+        JSON.stringify(updated, (key, value) => value === undefined ? null : value)
       );
-      await set(customItemsRef, updated);
+      await set(customItemsRef, cleanUpdated);
       return true;
     } catch (error) {
       console.error('커스텀 아이템 수정 실패:', error);
@@ -175,12 +188,13 @@ export const useAdminItems = (
   };
 
   const deleteCustomItem = async (itemId) => {
-    if (!currentUser?.isAdmin) return false;
+    if (!canManageItems()) return false;
     try {
       const customItemsRef = ref(database, 'gameData/customItems');
       const snapshot = await get(customItemsRef);
       const customItems = snapshot.exists() ? snapshot.val() : [];
-      const filtered = (Array.isArray(customItems) ? customItems : []).filter(i => i.id !== itemId);
+      const itemsArray = Array.isArray(customItems) ? customItems : Object.values(customItems || {});
+      const filtered = itemsArray.filter(i => i.id !== itemId);
       await set(customItemsRef, filtered);
       return true;
     } catch (error) {

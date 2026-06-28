@@ -120,17 +120,28 @@ export function CustomItemModal({ editItem = null, onSubmit, onClose }) {
       specialEffect: finalSpecialEffect,
     };
 
-    const success = await onSubmit(payload);
-    if (success) onClose();
+    try {
+      const success = await onSubmit(payload);
+      if (success) {
+        onClose();
+      } else {
+        alert(isEdit ? '아이템 수정에 실패했습니다.' : '아이템 생성에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error(isEdit ? '커스텀 아이템 수정 실패:' : '커스텀 아이템 생성 실패:', error);
+      alert(isEdit ? '아이템 수정 중 오류가 발생했습니다.' : '아이템 생성 중 오류가 발생했습니다.');
+    }
   };
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+      style={{ zIndex: 1000, pointerEvents: 'auto' }}
       onClick={onClose}
     >
       <div
         className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        style={{ pointerEvents: 'auto' }}
         onClick={e => e.stopPropagation()}
       >
         <div className="border-b-2 border-lime-300 bg-white/95 p-6">
@@ -418,12 +429,14 @@ export function CustomItemModal({ editItem = null, onSubmit, onClose }) {
           {/* 하단 버튼 */}
           <div className="flex gap-3 pt-4 border-t">
             <button
+              type="button"
               onClick={onClose}
               className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-semibold transition-colors"
             >
               취소
             </button>
             <button
+              type="button"
               onClick={handleSubmit}
               className="flex-1 px-4 py-2 border-2 border-lime-300 bg-white/55 text-green-950 rounded-lg hover:bg-lime-100/70 font-semibold transition-all shadow-sm"
             >

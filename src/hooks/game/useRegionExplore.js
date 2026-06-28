@@ -5,6 +5,7 @@ import { useIndividualValues } from './useIndividualValues';
 import { DEFAULT_IVS } from '../../utils/pokemonIndividualValues';
 
 const SAFARI_BALL_DAILY_REWARD_COUNT = 10;
+const DAILY_EXPLORE_EXHAUSTED_EXP = 100;
 
 const getLocalDateKey = (date = new Date()) => {
   const year = date.getFullYear();
@@ -99,10 +100,12 @@ export const useRegionExplore = (
         && safariBall
         && currentUser.lastSafariBallRewardDate !== todayKey;
       const nextDailyWalks = currentUser.dailyWalks - 1;
+      const isDailyExploreExhausted = nextDailyWalks === 0;
 
       // 탐험 횟수 차감 (사파리볼은 포획 시 지급)
       await updateCurrentUser({
         dailyWalks: nextDailyWalks,
+        ...(isDailyExploreExhausted ? { trainerExp: (Number(currentUser.trainerExp) || 0) + DAILY_EXPLORE_EXHAUSTED_EXP } : {}),
         ...(canReceiveSafariBalls ? { lastSafariBallRewardDate: todayKey } : {})
       });
       console.log('✅ 탐험 횟수 차감 완료:', nextDailyWalks);
@@ -118,6 +121,9 @@ export const useRegionExplore = (
         applyLoot(loot, null);
         const itemText = itemList.length > 0 ? `\n🎁 ${itemList.join(', ')}` : '';
         alert(`🌿 ${encounterLocationName}을(를) 탐험했지만 포켓몬을 발견하지 못했습니다!\n\n💰 ${loot.money}원을 획득했습니다!${itemText}`);
+        if (isDailyExploreExhausted) {
+          alert(`오늘의 모든 탐험을 완료했습니다!\n경험치 ${DAILY_EXPLORE_EXHAUSTED_EXP}을 받았습니다.`);
+        }
         return;
       }
 
@@ -190,6 +196,7 @@ export const useRegionExplore = (
       isSafari,
       minLevel,
       maxLevel,
+      pendingDailyExploreExhaustedExp: isDailyExploreExhausted ? DAILY_EXPLORE_EXHAUSTED_EXP : 0,
       pendingSafariBallReward: canReceiveSafariBalls ? SAFARI_BALL_DAILY_REWARD_COUNT : 0,
 		};
 
@@ -198,6 +205,9 @@ export const useRegionExplore = (
 
       } else {
         alert(placeName ? '이 장소에는 포켓몬이 없습니다!' : '이 지역에는 포켓몬이 없습니다!');
+        if (isDailyExploreExhausted) {
+          alert(`오늘의 모든 탐험을 완료했습니다!\n경험치 ${DAILY_EXPLORE_EXHAUSTED_EXP}을 받았습니다.`);
+        }
       }
     } else {
       alert('오늘의 탐험 횟수를 모두 소진했습니다!');

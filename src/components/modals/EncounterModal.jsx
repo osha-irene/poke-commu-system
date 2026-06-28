@@ -225,10 +225,10 @@ export default function EncounterModal({
               setResult('success');
               setCatching(false);
 
-              setTimeout(() => {
+              setTimeout(async () => {
                 alert(`${pokemon.name}을(를) 잡았습니다!`);
 
-                onCatchSuccess(pokemon, selectedBall);
+                await onCatchSuccess(pokemon, selectedBall);
                 onClose();
               }, 2500);
             } else {
