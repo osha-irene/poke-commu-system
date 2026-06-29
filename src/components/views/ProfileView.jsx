@@ -4,7 +4,11 @@ import { getDatabase, ref, get, set } from 'firebase/database';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import titleBg from '../../assets/login/title.png';
 import CachedImage from '../common/CachedImage';
-import { MASTODON_HOST, MASTODON_INSTANCE_URL } from '../../config/mastodonDomain';
+import {
+  formatMastodonAccount,
+  getMastodonProfileUrl,
+  getMastodonUsername,
+} from '../../config/mastodonDomain';
 
 function VerticalBarcode({ text, width = 32, height = 180 }) {
   const bits = [1, 0, 1];
@@ -62,8 +66,7 @@ export default function ProfileView({ trainer, caughtPokemon, items, titles = []
     get(ref(db, `members/${trainer.id}/mastodonAccount`)).then(snapshot => {
       if (snapshot.exists()) {
         const val = snapshot.val();
-        const match = val.match(/@?([\w]+)@/);
-        const username = match ? match[1] : val;
+        const username = getMastodonUsername(val);
         setMastodonAccount(username);
         setMastodonInput(username);
       }
@@ -71,12 +74,12 @@ export default function ProfileView({ trainer, caughtPokemon, items, titles = []
   }, [trainer]);
 
   const saveMastodon = async () => {
-    const username = mastodonInput.trim().replace(/^@/, '');
+    const username = getMastodonUsername(mastodonInput);
     if (!username) return;
     setMastodonLoading(true);
     try {
       const db = getDatabase();
-      await set(ref(db, `members/${trainer.id}/mastodonAccount`), `@${username}@${MASTODON_HOST}`);
+      await set(ref(db, `members/${trainer.id}/mastodonAccount`), formatMastodonAccount(username));
       setMastodonAccount(username);
       setMastodonSaved(true);
       setIsEditingMastodon(false);
@@ -188,7 +191,7 @@ export default function ProfileView({ trainer, caughtPokemon, items, titles = []
                     <Link className="w-3 h-3 text-purple-300 flex-shrink-0" />
                     <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                       {mastodonAccount
-                        ? `@${mastodonAccount}@${MASTODON_HOST.toUpperCase()}`
+                        ? formatMastodonAccount(mastodonAccount).toUpperCase()
                         : <span className="text-gray-300 font-normal">마스토돈 미연결</span>}
                     </span>
                     <Pencil className="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -223,13 +226,13 @@ export default function ProfileView({ trainer, caughtPokemon, items, titles = []
               {/* 바코드 */}
               {mastodonAccount && (
                 <a
-                  href={`${MASTODON_INSTANCE_URL}/@${mastodonAccount}`}
+                  href={getMastodonProfileUrl(mastodonAccount)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 flex items-center opacity-100 hover:opacity-100 transition-opacity"
                 >
                   <VerticalBarcode
-                    text={`${MASTODON_INSTANCE_URL}/@${mastodonAccount}`}
+                    text={getMastodonProfileUrl(mastodonAccount)}
                     width={60}
                     height={200}
                   />

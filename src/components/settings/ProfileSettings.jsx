@@ -3,7 +3,11 @@
 import { useState, useEffect } from 'react';
 import { User, Link } from 'lucide-react';
 import { getDatabase, ref, get, set } from 'firebase/database';
-import { MASTODON_HOST } from '../../config/mastodonDomain';
+import {
+  MASTODON_HOST,
+  formatMastodonAccount,
+  getMastodonUsername,
+} from '../../config/mastodonDomain';
 
 function ProfileSettings({ trainer }) {  // ← props로 trainer 받기
   const [mastodonAccount, setMastodonAccount] = useState('');
@@ -37,12 +41,12 @@ function ProfileSettings({ trainer }) {  // ← props로 trainer 받기
       return;
     }
 
-    const accountMatch = mastodonAccount.trim().match(/^@?([\w]+)(?:@[\w.-]+)?$/);
-    if (!accountMatch) {
+    const username = getMastodonUsername(mastodonAccount);
+    if (!username || !/^[\w-]+$/.test(username)) {
       setMessage(`올바른 형식이 아니에요! 예: @username@${MASTODON_HOST}`);
       return;
     }
-    const normalizedAccount = `@${accountMatch[1]}@${MASTODON_HOST}`;
+    const normalizedAccount = formatMastodonAccount(username);
 
     setLoading(true);
     try {
