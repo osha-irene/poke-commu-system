@@ -362,7 +362,6 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
     }
 
     const updates = {
-      caughtPokemon: friendshipResult.caughtPokemon,
       characterExp: Number(memberData.characterExp || 0) + expBonus,
       trainerExp: Number(memberData.trainerExp || 0) + expBonus,
       inventory,
@@ -370,6 +369,7 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
       'campingData/totalCampings': Number(memberData.campingData?.totalCampings || 0) + 1,
       'campingData/bestStageReached': Math.max(Number(memberData.campingData?.bestStageReached || 0), Number(session.currentStage || 0)),
     };
+    if (Array.isArray(friendshipResult.caughtPokemon)) updates.caughtPokemon = friendshipResult.caughtPokemon;
     if (friendshipResult.partnerPokemon) updates.partnerPokemon = friendshipResult.partnerPokemon;
     if (egg) updates.egg = egg;
 
