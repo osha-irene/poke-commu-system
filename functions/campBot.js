@@ -381,7 +381,7 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
     return { stageSettings, friendshipBonus, expBonus, dishItem, bonusItem, egg };
   };
 
-  const finishSession = async ({ sessionKey, session, settings, success }) => {
+  const finishSession = async ({ sessionKey, session, settings, success, prefixLines = [] }) => {
     const sessionRef = db.ref(`gameData/campingSessions/${sessionKey}`);
     await sessionRef.update({
       status: 'applying',
@@ -408,6 +408,7 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
       ].join('\n');
     }
     const lines = [
+      ...prefixLines.filter(Boolean),
       success ? `캠핑 완료! 단계 ${session.currentStage}` : `캠핑 종료! 단계 ${session.currentStage} 보상을 지급합니다.`,
       `친밀도 +${rewards.friendshipBonus}`, `경험치 +${rewards.expBonus}`,
     ];
@@ -450,6 +451,8 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
     const active = await findActiveSession(memberId);
     if (active) return '이미 진행 중인 캠핑이 있어요. [만족] 또는 [계속]으로 먼저 마무리해 주세요.';
     const created = await createSession({ memberId, member, partnerId, partner, statusId: status.id, settings, dishChoice });
+    const { success } = rollStageSuccess(settings, created.session.currentStage, created.session.isDuo);
+    if (!success) return finishSession({ sessionKey: created.sessionKey, session: created.session, settings, success: false });
     const lines = [`${dishChoice.label} 떡볶이 캠핑 시작!`, `함께 캠핑하는 포켓몬: ${formatPokemonList(created.entryPokemon)}`];
     if (partner) lines.push(`${partner.name || partner.nickname || '상대'}의 포켓몬: ${formatPokemonList(created.partnerPokemon)}`);
     const stageSettings = getStageSettings(settings, created.session.currentStage);
@@ -485,14 +488,22 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
     const active = await findActiveSession(memberId);
     if (!active) return '진행 중인 캠핑이 없어요. [캠핑 시작]으로 시작해 주세요.';
     const { sessionKey, session } = active;
-    const { success } = rollStageSuccess(settings, session.currentStage, session.isDuo);
-    if (!success) return finishSession({ sessionKey, session, settings, success: false });
     const nextStage = Number(session.currentStage || settings.minCampingCount) + 1;
     if (nextStage > settings.maxCampingCount) return finishSession({ sessionKey, session, settings, success: true });
+    const nextStageSettings = getStageSettings(settings, nextStage);
+    const { success } = rollStageSuccess(settings, nextStage, session.isDuo);
+    if (!success) return finishSession({ sessionKey, session, settings, success: false });
     const updatedSession = { ...session, currentStage: nextStage };
     await db.ref(`gameData/campingSessions/${sessionKey}`).update({ currentStage: nextStage, lastUpdatedAt: new Date().toISOString() });
-    if (nextStage === settings.maxCampingCount) return finishSession({ sessionKey, session: updatedSession, settings, success: true });
-    const nextStageSettings = getStageSettings(settings, nextStage);
+    if (nextStage === settings.maxCampingCount) {
+      return finishSession({
+        sessionKey,
+        session: updatedSession,
+        settings,
+        success: true,
+        prefixLines: [nextStageSettings.message],
+      });
+    }
     return nextStageSettings.message || `단계 ${nextStage}로 진행했어요. [만족] 또는 [계속]을 선택해 주세요.`;
   }
 
