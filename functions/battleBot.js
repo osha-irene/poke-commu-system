@@ -162,6 +162,7 @@ Object.entries(customBattleData.aliases?.abilityLabels || {}).forEach(([key, val
 const itemIdMap = new Map([
   [normalizeId('디안시나이트'), 'Diancite'],
 ]);
+const itemNameMap = new Map();
 Object.entries(customBattleData.aliases?.items || {}).forEach(([key, value]) => {
   itemIdMap.set(normalizeId(key), value);
 });
@@ -169,6 +170,7 @@ Object.entries(customBattleData.aliases?.items || {}).forEach(([key, value]) => 
   [item.id, item.nameEn, item.name].forEach((key) => {
     const normalized = normalizeId(key);
     if (normalized) itemIdMap.set(normalized, item.nameEn || item.id);
+    if (normalized) itemNameMap.set(normalized, item.name || item.nameEn || item.id);
   });
 });
 
@@ -219,6 +221,7 @@ const ensureBattleDataMaps = () => {
     [item.id, item.nameEn, item.name].forEach((key) => {
       const normalized = normalizeId(key);
       if (normalized) itemIdMap.set(normalized, item.nameEn || item.id);
+      if (normalized) itemNameMap.set(normalized, item.name || item.nameEn || item.id);
     });
   });
 
@@ -253,6 +256,12 @@ const resolveItemName = (value) => {
   ensureBattleDataMaps();
   const normalized = normalizeId(value);
   return itemIdMap.get(normalized) || value || '';
+};
+
+const translateItemName = (value) => {
+  ensureBattleDataMaps();
+  const normalized = normalizeId(value);
+  return itemNameMap.get(normalized) || value || '아이템';
 };
 
 const translatePokemonName = (value) => {
@@ -496,9 +505,14 @@ const formatMoveSource = (parts = []) => {
 };
 
 const formatBattleEffect = effect => {
-  const cleaned = String(effect || '').replace(/^move:\s*/i, '');
+  const text = String(effect || '').trim();
+  if (/^ability:\s*/i.test(text)) return translateAbilityName(text.replace(/^ability:\s*/i, ''));
+  if (/^item:\s*/i.test(text)) return translateItemName(text.replace(/^item:\s*/i, ''));
+  const cleaned = text.replace(/^move:\s*/i, '');
   return translateMoveName(cleaned);
 };
+
+const formatSideEffect = effect => formatBattleEffect(effect);
 
 const formatWeather = weather => ({
   SunnyDay: '쾌청',
@@ -610,9 +624,9 @@ const protocolToMessage = (line) => {
     case '-crit':
       return '급소에 맞았다!';
     case '-item':
-      return `${extractName(parts[2])}의 ${parts[3]}!`;
+      return `${extractName(parts[2])}의 ${translateItemName(parts[3])}!`;
     case '-enditem':
-      return `${extractName(parts[2])}의 ${parts[3]}은(는) 사라졌다.`;
+      return `${extractName(parts[2])}의 ${translateItemName(parts[3])}은(는) 사라졌다.`;
     case '-ability':
       return `${extractName(parts[2])}의 특성 ${translateAbilityName(parts[3])}!`;
     case '-endability':
@@ -632,15 +646,15 @@ const protocolToMessage = (line) => {
     case '-end':
       return `${extractName(parts[2])}의 ${formatBattleEffect(parts[3])} 효과가 사라졌다.`;
     case '-activate':
-      return `${extractName(parts[2])}의 ${parts[3]} 효과가 발동했다!`;
+      return `${extractName(parts[2])}의 ${formatBattleEffect(parts[3])} 효과가 발동했다!`;
     case '-fieldstart':
-      return `${parts[2]}이(가) 전개되었다!`;
+      return `${formatSideEffect(parts[2])}이(가) 전개되었다!`;
     case '-fieldend':
-      return `${parts[2]}이(가) 사라졌다.`;
+      return `${formatSideEffect(parts[2])}이(가) 사라졌다.`;
     case '-sidestart':
-      return `${parts[2]} 쪽에 ${parts[3]} 효과가 펼쳐졌다!`;
+      return `${parts[2]} 쪽에 ${formatSideEffect(parts[3])} 효과가 펼쳐졌다!`;
     case '-sideend':
-      return `${parts[2]} 쪽의 ${parts[3]} 효과가 사라졌다.`;
+      return `${parts[2]} 쪽의 ${formatSideEffect(parts[3])} 효과가 사라졌다.`;
     case '-prepare':
       return `${extractName(parts[2])}은(는) ${translateMoveName(parts[3])}을(를) 준비하고 있다!`;
     case '-hitcount':
@@ -648,7 +662,7 @@ const protocolToMessage = (line) => {
     case '-mustrecharge':
       return `${extractName(parts[2])}은(는) 반동으로 움직일 수 없다!`;
     case '-singleturn':
-      return `${extractName(parts[2])}은(는) ${parts[3]} 태세를 취했다!`;
+      return `${extractName(parts[2])}은(는) ${formatBattleEffect(parts[3])} 태세를 취했다!`;
     case 'switch':
       return `${extractName(parts[2])}, 등장!`;
     case 'faint':
