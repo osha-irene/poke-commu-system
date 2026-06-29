@@ -34,6 +34,74 @@ const makeConfiguredCookingResult = (stage, isDuo, settings = {}) => {
   };
 };
 
+const CAMPING_DISH_CHOICES = [
+  { type: 'spicy', label: '고추장', aliases: ['고추장', 'spicy'] },
+  { type: 'cream', label: '크림', aliases: ['크림', 'cream'] },
+  { type: 'soy', label: '궁중', aliases: ['궁중', '간장', 'soy'] },
+];
+
+const CAMPING_DISH_STAGE_SUFFIXES = {
+  1: 'wobbuffet',
+  2: 'milcery',
+  3: 'wailord',
+  4: { spicy: 'charizard', cream: 'blastoise', soy: 'venusaur' },
+  5: 'yyn',
+};
+
+const getCampingDishChoice = (value) => {
+  const normalized = String(value || '').trim().toLowerCase();
+  return CAMPING_DISH_CHOICES.find(choice =>
+    choice.aliases.some(alias => new RegExp(`(^|\\s|\\[|\\])${alias.toLowerCase()}($|\\s|\\[|\\])`, 'i').test(normalized))
+  ) || null;
+};
+
+const promptCampingDishChoice = () => {
+  const input = window.prompt('무슨 떡볶이를 만들까?\n\n고추장 / 크림 / 궁중 중 하나를 입력해주세요.');
+  if (input === null) return null;
+  return getCampingDishChoice(input);
+};
+
+const getDishStageSuffix = (dishType, stage) => {
+  const suffix = CAMPING_DISH_STAGE_SUFFIXES[Number(stage)] || CAMPING_DISH_STAGE_SUFFIXES[5];
+  return typeof suffix === 'object' ? suffix[dishType] || 'yyn' : suffix;
+};
+
+const getCampingDishItem = (allItems = [], dishType, stage) => {
+  const type = String(dishType || '').trim().toLowerCase();
+  if (!type) return null;
+  const suffix = getDishStageSuffix(type, stage);
+  const target = `${type}_${suffix}`;
+  const candidates = allItems.map(item => ({
+    item,
+    keys: [item?.id, item?.itemId, item?.nameEn, item?.name]
+      .map(value => String(value || '').trim().toLowerCase())
+      .filter(Boolean),
+  }));
+  return (
+    candidates.find(({ keys }) => keys.includes(target))?.item ||
+    candidates.find(({ keys }) => keys.some(key => key === target || key.endsWith(`/${target}`)))?.item ||
+    null
+  );
+};
+
+const addInventoryItem = (inventory = [], item, count = 1) => {
+  if (!item) return inventory;
+  const itemId = item.itemId ?? item.id;
+  const name = item.name || item.nameKo || item.nameEn || String(itemId);
+  const existingIdx = inventory.findIndex(i =>
+    String(i.itemId) === String(itemId) || i.name === name
+  );
+  if (existingIdx >= 0) {
+    return inventory.map((entry, idx) =>
+      idx === existingIdx ? { ...entry, count: (entry.count || 0) + count } : entry
+    );
+  }
+  return [
+    ...inventory,
+    { itemId, name, count, imageUrl: item.spriteUrl || item.imageUrl || '' }
+  ];
+};
+
 export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, allItems) => {
   const [campingSessions, setCampingSessions] = useState([]);
   const [userCampingData, setUserCampingData] = useState(null);
@@ -82,7 +150,7 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
   }, []);
 
   // 캠핑 시작
-  const startCamping = async (entryPokemon, partnerId = null, partnerName = null) => {
+  const startCamping = async (entryPokemon, partnerId = null, partnerName = null, dishType = null) => {
     if (!currentUser?.id) {
       alert('로그인이 필요합니다');
       return { success: false };
@@ -102,6 +170,12 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
       }
     }
 
+    const selectedDish = getCampingDishChoice(dishType) || promptCampingDishChoice();
+    if (!selectedDish) {
+      alert('고추장, 크림, 궁중 중 하나를 선택해주세요.');
+      return { success: false };
+    }
+
     setIsLoading(true);
 
     try {
@@ -110,7 +184,8 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
         currentUser.name,
         entryPokemon,
         partnerId,
-        partnerName
+        partnerName,
+        selectedDish
       );
 
       const sessionsRef = ref(database, 'gameData/campingSessions');
@@ -119,7 +194,7 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
 
       setCampingSessions(prev => [...prev, { firebaseKey: newSessionRef.key, ...session }]);
 
-      alert(`✅ 캠핑을 시작했습니다!\n\n관리자가 마스토돈에서 진행 상황을 안내할 예정입니다.`);
+      alert(`${selectedDish.label} 떡볶이 캠핑을 시작했습니다!\n\n관리자가 마스토돈에서 진행 상황을 안내할 예정입니다.`);
       
       return { success: true, sessionId: session.id };
     } catch (error) {
@@ -365,6 +440,14 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
       let updatedInventory = memberData.inventory || [];
       const obtainedStageItems = [];
       const obtainedBonusItems = [];
+      const obtainedDishItems = [];
+
+      const dishChoice = session.campingDish || getCampingDishChoice(session.campingDishType);
+      const dishItem = getCampingDishItem(allItems, dishChoice?.type, session.currentStage);
+      if (dishChoice && dishItem) {
+        updatedInventory = addInventoryItem(updatedInventory, dishItem, 1);
+        obtainedDishItems.push(dishItem.name || dishItem.nameKo || dishItem.nameEn || dishChoice.label);
+      }
 
       // 단계별 아이템 풀 — 해당 단계 아이템 풀에서 minPick~maxPick개 랜덤 획득
       const stagePool = Array.isArray(stageData.bonusItems) ? stageData.bonusItems : [];
@@ -479,7 +562,17 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
       }
 
       await update(memberRef, updates);
-      await update(sessionRef, { status: 'applied', eggObtained: !!eggObtained });
+      await update(sessionRef, {
+        status: 'applied',
+        eggObtained: !!eggObtained,
+        reward: {
+          stage: session.currentStage,
+          friendshipBonus,
+          expBonus,
+          dishItem: dishItem || null,
+          egg: eggObtained || null,
+        },
+      });
 
       setCampingSessions(prev => prev.map(s => s.firebaseKey === sessionKey ? { ...s, status: 'applied' } : s));
 
@@ -494,6 +587,7 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
         `✅ 결과 반영 완료!\n\n` +
         `친밀도 +${friendshipBonus}\n` +
         `경험치 +${expBonus}\n` +
+        (obtainedDishItems.length > 0 ? `떡볶이 아이템: ${obtainedDishItems.join(', ')} 획득!\n` : '') +
         (obtainedStageItems.length > 0 ? `단계 아이템: ${obtainedStageItems.join(', ')} 획득!\n` : '') +
         (obtainedBonusItems.length > 0 ? `보너스 아이템: ${obtainedBonusItems.join(', ')} 획득!\n` : '') +
         (eggObtained ? '어라? 포켓몬의 알이 있다!' : '')

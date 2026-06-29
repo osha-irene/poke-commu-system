@@ -854,6 +854,16 @@
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+@keyframes npcGridEnter {
+  from {
+    opacity: 0;
+    transform: scale(var(--npc-list-scale)) translateY(34px) translateX(var(--npc-list-x));
+  }
+  to {
+    opacity: 1;
+    transform: scale(var(--npc-list-scale)) translateY(24px) translateX(var(--npc-list-x));
+  }
+}
 
 .member-list-enter {
   animation: memberListEnter 0.32s ease-out both;
@@ -1072,14 +1082,19 @@
   animation: npcPageReturn 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .npc-grid {
+  --npc-list-scale: 0.9;
+  --npc-list-x: 100px;
   display: flex; flex-direction: column;
   gap: 0;
   width: 120%;
   margin-bottom: -106px;
   margin-left: -10%;
-  transform: scale(0.9) translateY(24px) translateX(100px);
+  transform: scale(var(--npc-list-scale)) translateY(24px) translateX(var(--npc-list-x));
   transform-origin: center center;
   overflow: visible;
+}
+.npc-grid.member-list-enter {
+  animation-name: npcGridEnter;
 }
 .npc-row + .npc-row { margin-top: -28px; }
 .npc-row {

@@ -29,6 +29,20 @@ const DEFAULT_SETTINGS = {
   stages: DEFAULT_STAGES,
 };
 
+const CAMPING_DISH_CHOICES = [
+  { type: 'spicy', label: '고추장' },
+  { type: 'cream', label: '크림' },
+  { type: 'soy', label: '궁중' },
+];
+
+const CAMPING_DISH_STAGE_SUFFIXES = [
+  { stage: 1, label: '1단계', suffix: 'wobbuffet' },
+  { stage: 2, label: '2단계', suffix: 'milcery' },
+  { stage: 3, label: '3단계', suffix: 'wailord' },
+  { stage: 4, label: '4단계', suffixByType: { spicy: 'charizard', cream: 'blastoise', soy: 'venusaur' } },
+  { stage: 5, label: '5단계', suffix: 'yyn' },
+];
+
 const normalizePercent = (value, fallback) => {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return fallback;
@@ -242,6 +256,73 @@ function StageItemPoolPanel({ bonusItems, onUpdate, onOpenPicker, minPick, maxPi
   );
 }
 
+function CampingDishRewardPanel({ allItems = [] }) {
+  const normalizeKeys = (item = {}) =>
+    [item.id, item.itemId, item.nameEn, item.name]
+      .map(value => String(value || '').trim().toLowerCase())
+      .filter(Boolean);
+
+  const findItem = (type, stageReward) => {
+    const suffix = stageReward.suffixByType?.[type] || stageReward.suffix;
+    const target = `${type}_${suffix}`;
+    return allItems.find(item => {
+      const keys = normalizeKeys(item);
+      return keys.includes(target) || keys.some(key => key === target || key.endsWith(`/${target}`));
+    }) || null;
+  };
+
+  return (
+    <div className="mb-5 rounded border border-amber-200 bg-amber-50/40 p-3">
+      <div className="mb-1 flex items-center gap-2 font-semibold text-amber-900 text-base">
+        <Gift size={16} />
+        떡볶이 단계 보상
+      </div>
+      <p className="mb-3 text-sm text-gray-500">
+        캠핑 완료 단계에 따라 선택한 떡볶이 맛의 커스텀 아이템을 1개 지급합니다.
+      </p>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[560px] border-separate border-spacing-y-1 text-sm">
+          <thead>
+            <tr className="text-left text-xs font-semibold text-gray-500">
+              <th className="px-2 py-1">단계</th>
+              {CAMPING_DISH_CHOICES.map(choice => (
+                <th key={choice.type} className="px-2 py-1">{choice.label}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {CAMPING_DISH_STAGE_SUFFIXES.map(stageReward => (
+              <tr key={stageReward.stage}>
+                <td className="whitespace-nowrap rounded-l bg-white px-2 py-2 font-semibold text-gray-700">{stageReward.label}</td>
+                {CAMPING_DISH_CHOICES.map(choice => {
+                  const suffix = stageReward.suffixByType?.[choice.type] || stageReward.suffix;
+                  const target = `${choice.type}_${suffix}`;
+                  const item = findItem(choice.type, stageReward);
+                  return (
+                    <td key={choice.type} className="bg-white px-2 py-2 last:rounded-r">
+                      <div className="flex items-center gap-2">
+                        {(item?.spriteUrl || item?.imageUrl) && (
+                          <img src={item.spriteUrl || item.imageUrl} alt={item.name || target} className="h-7 w-7 object-contain" />
+                        )}
+                        <div className="min-w-0">
+                          <div className={`truncate font-semibold ${item ? 'text-amber-900' : 'text-red-500'}`}>
+                            {item?.name || '미등록'}
+                          </div>
+                          <div className="truncate text-xs text-gray-400">{target}</div>
+                        </div>
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 function SessionCard({ session, onDelete }) {
   const isFinished = ['completed', 'applied', 'failed'].includes(session.status);
   const reward = session.reward;
@@ -263,6 +344,9 @@ function SessionCard({ session, onDelete }) {
             }`}>{session.status}</span>
           </div>
           <div className="mt-1 text-sm text-gray-500">단계 {session.currentStage || 0}</div>
+          {session.campingDishLabel && (
+            <div className="mt-1 text-xs font-semibold text-amber-700">{session.campingDishLabel} 떡볶이</div>
+          )}
           <div className="mt-2 flex flex-wrap gap-1">
             {(session.entryPokemon || []).filter(Boolean).map((p, i) => (
               <span key={i} className="rounded bg-lime-50 px-2 py-0.5 text-xs text-green-800">{p.name}</span>
@@ -272,7 +356,8 @@ function SessionCard({ session, onDelete }) {
             <div className="mt-2 text-xs text-gray-500 flex flex-wrap gap-3">
               {reward.friendshipBonus > 0 && <span>친밀도 +{reward.friendshipBonus}</span>}
               {reward.expBonus > 0 && <span>경험치 +{reward.expBonus}</span>}
-              {reward.bonusItem && <span className="text-amber-600 font-semibold">🎁 {reward.bonusItem.name}</span>}
+              {reward.dishItem && <span className="inline-flex items-center gap-1 text-amber-600 font-semibold"><Gift size={12} />{reward.dishItem.name}</span>}
+              {reward.bonusItem && <span className="inline-flex items-center gap-1 text-amber-600 font-semibold"><Gift size={12} />{reward.bonusItem.name}</span>}
               {reward.egg && <span className="text-purple-600 font-semibold">🥚 알 획득</span>}
             </div>
           )}
@@ -420,6 +505,8 @@ export default function CampingAdminPanel({
             </div>
 
             {/* 실패 보상 */}
+            <CampingDishRewardPanel allItems={allItems} />
+
             <FailRewardPanel
               failRewards={draft.failRewards}
               onUpdate={items => updateDraft('failRewards', items)}

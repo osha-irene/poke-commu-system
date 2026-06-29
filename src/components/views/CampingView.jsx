@@ -159,6 +159,9 @@ export default function CampingView({ trainer, campingSessions = [] }) {
                           {s.isDuo && s.partnerName && (
                             <span style={{ fontSize: 11, color: '#9b6fcf' }}>👥 {s.partnerName}</span>
                           )}
+                          {s.campingDishLabel && (
+                            <span style={{ fontSize: 11, color: '#b07800', fontWeight: 700 }}>{s.campingDishLabel} 떡볶이</span>
+                          )}
                         </div>
 
                         {reward && (
@@ -178,6 +181,12 @@ export default function CampingView({ trainer, campingSessions = [] }) {
                               </span>
                             )}
                             {reward.expBonus > 0 && <span>경험치 +{reward.expBonus}</span>}
+                            {reward.dishItem && (
+                              <span style={{ color: '#b07800', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3 }}>
+                                <Gift size={10} />
+                                {reward.dishItem.name}
+                              </span>
+                            )}
                             {reward.bonusItem && (
                               <span style={{ color: '#b07800', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3 }}>
                                 <Gift size={10} />

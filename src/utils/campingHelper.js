@@ -326,13 +326,16 @@ export function getNextCampingDate(lastCampingDate) {
 /**
  * 캠핑 세션 데이터 생성
  */
-export function createCampingSession(memberId, memberName, entryPokemon, partnerId = null, partnerName = null) {
+export function createCampingSession(memberId, memberName, entryPokemon, partnerId = null, partnerName = null, dishChoice = null) {
   return {
     id: `camping_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     memberId,
     memberName,
     partnerId: partnerId || '',
     partnerName: partnerName || '',
+    campingDishType: dishChoice?.type || '',
+    campingDishLabel: dishChoice?.label || '',
+    campingDish: dishChoice || null,
     entryPokemon: entryPokemon
       .filter(p => p !== null && p !== undefined)
       .map(p => ({

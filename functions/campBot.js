@@ -24,6 +24,32 @@ const DEFAULT_CAMPING_SETTINGS = {
   ],
 };
 
+const CAMPING_DISH_CHOICES = [
+  { type: 'spicy', label: '고추장', aliases: ['고추장', 'spicy'] },
+  { type: 'cream', label: '크림', aliases: ['크림', 'cream'] },
+  { type: 'soy', label: '궁중', aliases: ['궁중', '간장', 'soy'] },
+];
+
+const CAMPING_DISH_STAGE_SUFFIXES = {
+  1: 'wobbuffet',
+  2: 'milcery',
+  3: 'wailord',
+  4: { spicy: 'charizard', cream: 'blastoise', soy: 'venusaur' },
+  5: 'yyn',
+};
+
+const getCampingDishChoice = content => {
+  const normalized = String(content || '').toLowerCase();
+  return CAMPING_DISH_CHOICES.find(choice =>
+    choice.aliases.some(alias => new RegExp(`(^|\\s|\\[|\\])${alias.toLowerCase()}($|\\s|\\[|\\])`, 'i').test(normalized))
+  ) || null;
+};
+
+const normalizeItemKeys = item =>
+  [item?.id, item?.itemId, item?.nameEn, item?.name]
+    .map(value => String(value || '').trim().toLowerCase())
+    .filter(Boolean);
+
 const normalizeStage = (stage, index) => ({
   stage: Number(stage?.stage ?? index + 1),
   friendshipBonus: Math.max(0, Number(stage?.friendshipBonus ?? 0) || 0),
@@ -60,6 +86,7 @@ const normalizeSettings = (raw = {}) => {
 
 const getCommand = content => {
   if (/\[?\s*캠핑\s*시작\s*\]?/i.test(content) || /\[캠핑\]/i.test(content)) return 'start';
+  if (getCampingDishChoice(content)) return 'dish';
   if (/\[?\s*계속\s*\]?/i.test(content)) return 'continue';
   if (/\[?\s*만족\s*\]?/i.test(content)) return 'satisfy';
   return null;
@@ -199,8 +226,52 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
     const itemId = item.itemId || item.id;
     const idx = inventory.findIndex(e => String(e.itemId || e.id) === String(itemId));
     if (idx >= 0) return inventory.map((e, i) => i === idx ? { ...e, count: Number(e.count || 0) + 1 } : e);
-    return [...inventory, { itemId, name: item.name || String(itemId), count: 1 }];
+    return [...inventory, { itemId, name: item.name || item.nameKo || item.nameEn || String(itemId), count: 1, imageUrl: item.imageUrl || item.spriteUrl || '' }];
   };
+
+  const loadCustomItems = async () => {
+    const snap = await db.ref('gameData/customItems').once('value');
+    const raw = snap.exists() ? snap.val() : [];
+    return Array.isArray(raw)
+      ? raw
+      : Object.entries(raw || {}).map(([id, item]) => ({ id, ...(item || {}) }));
+  };
+
+  const getDishStageSuffix = (dishType, stage) => {
+    const suffix = CAMPING_DISH_STAGE_SUFFIXES[Number(stage)] || CAMPING_DISH_STAGE_SUFFIXES[5];
+    return typeof suffix === 'object' ? suffix[dishType] || 'yyn' : suffix;
+  };
+
+  const findCampingDishItem = async (dishType, stage) => {
+    const type = String(dishType || '').trim().toLowerCase();
+    if (!type) return null;
+    const suffix = getDishStageSuffix(type, stage);
+    const target = `${type}_${suffix}`;
+    const candidates = (await loadCustomItems()).map(item => ({ item, keys: normalizeItemKeys(item) }));
+    return (
+      candidates.find(({ keys }) => keys.includes(target))?.item ||
+      candidates.find(({ keys }) => keys.some(key => key === target || key.endsWith(`/${target}`)))?.item ||
+      null
+    );
+  };
+
+  const pendingRef = memberId => db.ref(`gameData/campingPending/${memberId}`);
+
+  const savePendingStart = async ({ memberId, partnerId, statusId }) => {
+    await pendingRef(memberId).set({
+      memberId,
+      partnerId: partnerId || '',
+      statusId: statusId || '',
+      createdAt: new Date().toISOString(),
+    });
+  };
+
+  const loadPendingStart = async memberId => {
+    const snap = await pendingRef(memberId).once('value');
+    return snap.exists() ? snap.val() : null;
+  };
+
+  const clearPendingStart = memberId => pendingRef(memberId).remove();
 
   const applyFriendship = (memberData, participantKeys, bonus) => {
     const keys = new Set(participantKeys);
@@ -224,7 +295,7 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
     return { sessionKey: active[0][0], session: active[0][1] };
   };
 
-  const createSession = async ({ memberId, member, partnerId, partner, statusId, settings }) => {
+  const createSession = async ({ memberId, member, partnerId, partner, statusId, settings, dishChoice }) => {
     const entryPokemon = getParticipantPokemon(member);
     const partnerPokemon = partner ? getParticipantPokemon(partner) : [];
     const session = {
@@ -235,6 +306,9 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
       partnerName: partner?.name || partner?.nickname || '',
       entryPokemon: entryPokemon.map(p => ({ uniqueId: p.uniqueId || '', pokemonId: p.id || p.pokemonId || '', number: p.number || 0, name: p.nickname || p.name || '이름 없음' })),
       partnerEntryPokemon: partnerPokemon.map(p => ({ uniqueId: p.uniqueId || '', pokemonId: p.id || p.pokemonId || '', number: p.number || 0, name: p.nickname || p.name || '이름 없음' })),
+      campingDishType: dishChoice.type,
+      campingDishLabel: dishChoice.label,
+      campingDish: dishChoice,
       isDuo: !!partnerId,
       status: 'in_progress',
       currentStage: settings.minCampingCount,
@@ -266,6 +340,8 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
     const highFriendship = memberEntryPokemon.some(p => Number(p.friendship || 0) >= settings.minFriendshipForBonus);
 
     let inventory = memberData.inventory || [];
+    const dishItem = await findCampingDishItem(session.campingDishType || session.campingDish?.type, session.currentStage);
+    inventory = addInventoryItem(inventory, dishItem);
     let bonusItem = null;
     if (success && highFriendship) {
       bonusItem = rollBonusItem(settings, session.currentStage);
@@ -296,9 +372,9 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
     await memberRef.update(updates);
     await db.ref(`gameData/campingSessions/${sessionKey}`).update({
       status: 'applied', appliedAt: new Date().toISOString(), success,
-      reward: { stage: session.currentStage, friendshipBonus, expBonus, bonusItem: bonusItem || null, egg: egg || null },
+      reward: { stage: session.currentStage, friendshipBonus, expBonus, dishItem: dishItem || null, bonusItem: bonusItem || null, egg: egg || null },
     });
-    return { stageSettings, friendshipBonus, expBonus, bonusItem, egg };
+    return { stageSettings, friendshipBonus, expBonus, dishItem, bonusItem, egg };
   };
 
   const finishSession = async ({ sessionKey, session, settings, success }) => {
@@ -307,6 +383,7 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
       success ? `캠핑 완료! 단계 ${session.currentStage}` : `캠핑 종료! 단계 ${session.currentStage} 보상을 지급합니다.`,
       `친밀도 +${rewards.friendshipBonus}`, `경험치 +${rewards.expBonus}`,
     ];
+    if (rewards.dishItem) lines.push(`떡볶이 아이템: ${rewards.dishItem.name || rewards.dishItem.nameEn}`);
     if (rewards.bonusItem) lines.push(`보너스 아이템: ${rewards.bonusItem.name}`);
     if (rewards.egg) lines.push('어라? 포켓몬의 알이 있다!');
     return lines.join('\n');
@@ -330,22 +407,50 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
       const settings = await loadCampingSettings();
       if (command === 'start') {
         const partner = findTaggedPartner(members, status, authorAccount);
-        return startCamping({ status, memberId: author.id, member: author.member, partnerId: partner?.id || null, partner: partner?.member || null, settings });
+        return askCampingDish({ status, memberId: author.id, partnerId: partner?.id || null });
+      }
+      if (command === 'dish') {
+        const dishChoice = getCampingDishChoice(content);
+        return startCampingFromDish({ status, memberId: author.id, member: author.member, members, settings, dishChoice });
       }
       if (command === 'continue') return continueCamping({ memberId: author.id, settings });
       return satisfyCamping({ memberId: author.id, settings });
     },
   };
 
-  async function startCamping({ status, memberId, member, partnerId, partner, settings }) {
+  async function startCamping({ status, memberId, member, partnerId, partner, settings, dishChoice }) {
     const active = await findActiveSession(memberId);
     if (active) return '이미 진행 중인 캠핑이 있어요. [만족] 또는 [계속]으로 먼저 마무리해 주세요.';
-    const created = await createSession({ memberId, member, partnerId, partner, statusId: status.id, settings });
-    const lines = ['캠핑 시작!', `함께 캠핑하는 포켓몬: ${formatPokemonList(created.entryPokemon)}`];
+    const created = await createSession({ memberId, member, partnerId, partner, statusId: status.id, settings, dishChoice });
+    const lines = [`${dishChoice.label} 떡볶이 캠핑 시작!`, `함께 캠핑하는 포켓몬: ${formatPokemonList(created.entryPokemon)}`];
     if (partner) lines.push(`${partner.name || partner.nickname || '상대'}의 포켓몬: ${formatPokemonList(created.partnerPokemon)}`);
     const stageSettings = getStageSettings(settings, created.session.currentStage);
     if (stageSettings.message) lines.push(stageSettings.message);
     return lines.join('\n');
+  }
+
+  async function askCampingDish({ status, memberId, partnerId }) {
+    const active = await findActiveSession(memberId);
+    if (active) return '이미 진행 중인 캠핑이 있어요. [만족] 또는 [계속]으로 먼저 마무리해 주세요.';
+    await savePendingStart({ memberId, partnerId, statusId: status.id });
+    return '무슨 떡볶이를 만들까?\n[고추장] [크림] [궁중] 중 하나를 골라 답해 주세요.';
+  }
+
+  async function startCampingFromDish({ status, memberId, member, members, settings, dishChoice }) {
+    const pending = await loadPendingStart(memberId);
+    if (!pending) return '먼저 [캠핑 시작]을 보내 주세요.';
+    const partnerId = pending.partnerId || null;
+    const partner = partnerId ? { id: partnerId, member: members[partnerId] } : null;
+    await clearPendingStart(memberId);
+    return startCamping({
+      status,
+      memberId,
+      member,
+      partnerId,
+      partner: partner?.member || null,
+      settings,
+      dishChoice,
+    });
   }
 
   async function continueCamping({ memberId, settings }) {
