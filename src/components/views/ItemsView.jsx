@@ -489,7 +489,7 @@ const categories = CATEGORIES.map(cat => {
                 <div key={i} className="relative">
                   <button
                     onClick={() => handleItemClick(item)}
-                    className={`w-full h-32 flex items-start gap-4 rounded-lg p-4 border-2 transition-all text-left ${pocketColor} ${
+                    className={`relative w-full h-32 overflow-hidden flex items-start gap-4 rounded-lg p-4 border-2 transition-all text-left ${pocketColor} ${
                       details.canUse ? 'cursor-pointer hover:shadow-lg hover:scale-[1.02]' : 'cursor-default'
                     }`}
                   >
@@ -502,7 +502,7 @@ const categories = CATEGORIES.map(cat => {
                       />
                     </div>
                     
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 pr-12">
                       <div className="flex items-center gap-2 mb-1">
                         <div className="font-bold text-base text-gray-800 truncate">{details.name}</div>
                         <span className={`text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0 ${badge.color}`}>
@@ -527,11 +527,10 @@ const categories = CATEGORIES.map(cat => {
                             </div>
                           )}
                         </div>
-                        
-                        <div className="text-2xl font-bold text-indigo-600">
-                          {isSuperAdmin ? '∞' : `×${item.count}`}
-                        </div>
                       </div>
+                    </div>
+                    <div className="absolute bottom-3 right-4 text-2xl font-bold leading-none text-indigo-600">
+                      {isSuperAdmin ? '∞' : `×${item.count}`}
                     </div>
                   </button>
                   
