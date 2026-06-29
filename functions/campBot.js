@@ -247,12 +247,13 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
     return null;
   };
 
-  const addInventoryItem = (inventory = [], item) => {
+  const addInventoryItem = (inventory = [], item, count = 1) => {
     if (!item) return inventory;
     const itemId = item.itemId || item.id;
     const idx = inventory.findIndex(e => String(e.itemId || e.id) === String(itemId));
-    if (idx >= 0) return inventory.map((e, i) => i === idx ? { ...e, count: Number(e.count || 0) + 1 } : e);
-    return [...inventory, { itemId, name: item.name || item.nameKo || item.nameEn || String(itemId), count: 1, imageUrl: item.imageUrl || item.spriteUrl || '' }];
+    const amount = Math.max(1, Number(count) || 1);
+    if (idx >= 0) return inventory.map((e, i) => i === idx ? { ...e, count: Number(e.count || 0) + amount } : e);
+    return [...inventory, { itemId, name: item.name || item.nameKo || item.nameEn || String(itemId), count: amount, imageUrl: item.imageUrl || item.spriteUrl || '' }];
   };
 
   const loadCustomItems = async () => {
@@ -354,8 +355,12 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
     if (!snap.exists()) throw new Error('Member not found');
     const memberData = snap.val();
     const participantKeys = (session.entryPokemon || []).map(pokemonKey).filter(Boolean);
-    const friendshipBonus = rollRange(stageSettings.friendshipMin, stageSettings.friendshipMax, stageSettings.friendshipBonus);
-    const expBonus = rollRange(stageSettings.expMin, stageSettings.expMax, stageSettings.expBonus);
+    const friendshipBonus = success
+      ? rollRange(stageSettings.friendshipMin, stageSettings.friendshipMax, stageSettings.friendshipBonus)
+      : rollRange(settings.failFriendshipMin, settings.failFriendshipMax, 0);
+    const expBonus = success
+      ? rollRange(stageSettings.expMin, stageSettings.expMax, stageSettings.expBonus)
+      : rollRange(settings.failExpMin, settings.failExpMax, 0);
     const friendshipResult = applyFriendship(memberData, participantKeys, friendshipBonus);
 
     const entryIdSet = new Set((session.entryPokemon || []).flatMap(e => [e.uniqueId, e.pokemonId]).filter(Boolean));
@@ -367,8 +372,14 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
     const highFriendship = memberEntryPokemon.some(p => Number(p.friendship || 0) >= settings.minFriendshipForBonus);
 
     let inventory = memberData.inventory || [];
-    const dishItem = await findCampingDishItem(session.campingDishType || session.campingDish?.type, session.currentStage);
+    const dishItem = success
+      ? await findCampingDishItem(session.campingDishType || session.campingDish?.type, session.currentStage)
+      : null;
     inventory = addInventoryItem(inventory, dishItem);
+    const failRewards = !success && Array.isArray(settings.failRewards) ? settings.failRewards : [];
+    for (const reward of failRewards) {
+      inventory = addInventoryItem(inventory, reward, reward.count || 1);
+    }
     let bonusItem = null;
     if (success && highFriendship) {
       bonusItem = rollBonusItem(settings, session.currentStage);
@@ -397,11 +408,15 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
     if (egg) updates.egg = egg;
 
     await memberRef.update(updates);
+    const finishedStatus = success ? 'applied' : 'failed';
     await db.ref(`gameData/campingSessions/${sessionKey}`).update({
-      status: 'applied', appliedAt: new Date().toISOString(), success,
-      reward: { stage: session.currentStage, friendshipBonus, expBonus, dishItem: dishItem || null, bonusItem: bonusItem || null, egg: egg || null },
+      status: finishedStatus,
+      appliedAt: success ? new Date().toISOString() : null,
+      failedAt: success ? null : new Date().toISOString(),
+      success,
+      reward: { stage: session.currentStage, friendshipBonus, expBonus, dishItem: dishItem || null, bonusItem: bonusItem || null, failRewards, egg: egg || null },
     });
-    return { stageSettings, friendshipBonus, expBonus, dishItem, bonusItem, egg };
+    return { stageSettings, friendshipBonus, expBonus, dishItem, bonusItem, failRewards, egg };
   };
 
   const finishSession = async ({ sessionKey, session, settings, success, prefixLines = [] }) => {
@@ -432,12 +447,13 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
     }
     const lines = [
       ...prefixLines.filter(Boolean),
-      success ? `캠핑 완료! 단계 ${session.currentStage}` : `캠핑 종료! 단계 ${session.currentStage} 보상을 지급합니다.`,
+      success ? `캠핑 완료! 단계 ${session.currentStage}` : `캠핑 실패! 단계 ${session.currentStage} 실패 보상을 지급합니다.`,
       `친밀도 +${rewards.friendshipBonus}`, `경험치 +${rewards.expBonus}`,
     ];
     if (rewards.dishItem) lines.push(`떡볶이 아이템: ${rewards.dishItem.name || rewards.dishItem.nameEn}`);
     if (rewards.bonusItem) lines.push(`보너스 아이템: ${rewards.bonusItem.name}`);
-    if (rewards.egg) lines.push('어라? 포켓몬의 알이 있다!');
+    if (rewards.failRewards?.length) lines.push(`실패 보상: ${rewards.failRewards.map(item => `${item.name || item.nameKo || item.nameEn || item.itemId} x${item.count || 1}`).join(', ')}`);
+    if (rewards.egg) lines.push('알을 발견했어요!');
     return lines.join('\n');
   };
 
