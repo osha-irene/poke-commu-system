@@ -54,12 +54,28 @@ const normalizeItemKeys = item =>
     .map(value => String(value || '').trim().toLowerCase())
     .filter(Boolean);
 
+const normalizeRange = (minValue, maxValue, fallback = 0) => {
+  const min = Math.max(0, Number(minValue ?? fallback) || 0);
+  const max = Math.max(0, Number(maxValue ?? minValue ?? fallback) || 0);
+  return min <= max ? { min, max } : { min: max, max: min };
+};
+
 const normalizeStage = (stage, index) => ({
-  stage: Number(stage?.stage ?? index + 1),
-  friendshipBonus: Math.max(0, Number(stage?.friendshipBonus ?? 0) || 0),
-  expBonus: Math.max(0, Number(stage?.expBonus ?? 0) || 0),
-  successRate: toProbability(stage?.successRate, 1),
-  message: String(stage?.message || DEFAULT_CAMPING_SETTINGS.stages[index]?.message || ''),
+  ...(() => {
+    const friendship = normalizeRange(stage?.friendshipMin, stage?.friendshipMax, stage?.friendshipBonus ?? 0);
+    const exp = normalizeRange(stage?.expMin, stage?.expMax, stage?.expBonus ?? 0);
+    return {
+      stage: Number(stage?.stage ?? index + 1),
+      friendshipMin: friendship.min,
+      friendshipMax: friendship.max,
+      friendshipBonus: friendship.min,
+      expMin: exp.min,
+      expMax: exp.max,
+      expBonus: exp.min,
+      successRate: toProbability(stage?.successRate, 1),
+      message: String(stage?.message || DEFAULT_CAMPING_SETTINGS.stages[index]?.message || ''),
+    };
+  })(),
 });
 
 const normalizeSettings = (raw = {}) => {
@@ -147,6 +163,12 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
     const s = getStageSettings(settings, stage);
     const chance = clamp(s.successRate + (isDuo ? settings.duoSuccessBonus : 0), 0, 1);
     return { success: Math.random() < chance, stageSettings: s };
+  };
+
+  const rollRange = (minValue, maxValue, fallback = 0) => {
+    const { min, max } = normalizeRange(minValue, maxValue, fallback);
+    if (min >= max) return min;
+    return Math.floor(Math.random() * (max - min + 1)) + min;
   };
 
   const getMasterPokemon = p => pokemonData.find(d => Number(d.number) === Number(p?.number));
@@ -332,7 +354,8 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
     if (!snap.exists()) throw new Error('Member not found');
     const memberData = snap.val();
     const participantKeys = (session.entryPokemon || []).map(pokemonKey).filter(Boolean);
-    const { friendshipBonus = 0, expBonus = 0 } = stageSettings;
+    const friendshipBonus = rollRange(stageSettings.friendshipMin, stageSettings.friendshipMax, stageSettings.friendshipBonus);
+    const expBonus = rollRange(stageSettings.expMin, stageSettings.expMax, stageSettings.expBonus);
     const friendshipResult = applyFriendship(memberData, participantKeys, friendshipBonus);
 
     const entryIdSet = new Set((session.entryPokemon || []).flatMap(e => [e.uniqueId, e.pokemonId]).filter(Boolean));
