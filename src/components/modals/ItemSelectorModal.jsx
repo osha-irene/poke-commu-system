@@ -191,6 +191,7 @@ export default function ItemSelectorModal({
               {filteredItems.map(item => {
                 const ItemIcon = getItemIcon(item);
                 const effectBadges = getItemEffectBadges(item);
+                const imageUrl = item.spriteUrl || item.imageUrl;
                 const isSelected = multiSelect 
                   ? localSelectedItems.includes(item.id)
                   : false;
@@ -216,9 +217,9 @@ export default function ItemSelectorModal({
 
                     {/* 아이템 이미지 */}
                     <div className="aspect-square bg-gray-50 p-4 flex items-center justify-center">
-                      {item.imageUrl ? (
+                      {imageUrl ? (
                         <img
-                          src={item.imageUrl}
+                          src={imageUrl}
                           alt={item.name}
                           className={item.isCustom ? 'custom-item-image-64' : 'max-w-full max-h-full object-contain'}
                           style={{ imageRendering: 'pixelated', transform: item.isCustom ? 'none' : 'scale(2)' }}
@@ -228,7 +229,7 @@ export default function ItemSelectorModal({
                           }}
                         />
                       ) : null}
-                      <div style={{ display: item.imageUrl ? 'none' : 'flex' }} className="w-full h-full items-center justify-center">
+                      <div style={{ display: imageUrl ? 'none' : 'flex' }} className="w-full h-full items-center justify-center">
                         <ItemIcon size={48} className="text-gray-300" />
                       </div>
                     </div>

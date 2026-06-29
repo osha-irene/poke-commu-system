@@ -120,8 +120,7 @@ function ProfileSettings({ trainer }) {  // ← props로 trainer 받기
             <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
               <li>마스토돈 계정을 위 형식으로 입력하세요</li>
               <li>연결하기 버튼을 클릭하세요</li>
-              <li>게임에서 캠핑을 시작하세요</li>
-              <li>마스토돈에서 봇을 멘션하세요</li>
+              <li>마스토돈에서 봇을 멘션해 캠핑을 진행하세요</li>
             </ol>
           </div>
         </div>

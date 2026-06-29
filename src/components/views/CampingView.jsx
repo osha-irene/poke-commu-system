@@ -1,5 +1,5 @@
 import React from 'react';
-import { Gift, Star, Tent } from 'lucide-react';
+import { Gift, Star } from 'lucide-react';
 import useMediaQuery from '../../hooks/useMediaQuery';
 
 function toTs(val) {
@@ -20,25 +20,31 @@ function formatDateKey(val) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function isDone(s) { return ['applied', 'completed', 'failed'].includes(s.status); }
+function isDone(s) {
+  return ['applied', 'completed', 'failed'].includes(s.status);
+}
+
 function isSuccess(s) {
-  if (s.status === 'applied')   return s.success !== false;
+  if (s.status === 'applied') return s.success !== false;
   if (s.status === 'completed') return s.cookingSuccess !== false;
   return false;
 }
+
 function getReward(s) {
   if (s.reward) return s.reward;
-  if (s.cookingResult?.stageData) return {
-    friendshipBonus: s.cookingResult.stageData.friendshipBonus,
-    expBonus: s.cookingResult.stageData.expBonus,
-  };
+  if (s.cookingResult?.stageData) {
+    return {
+      friendshipBonus: s.cookingResult.stageData.friendshipBonus,
+      expBonus: s.cookingResult.stageData.expBonus,
+    };
+  }
   return null;
 }
 
 export default function CampingView({ trainer, campingSessions = [] }) {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const mine = campingSessions
-    .filter(s => s.memberId === trainer?.id)
+    .filter((s) => s.memberId === trainer?.id)
     .sort((a, b) => toTs(b.createdAt) - toTs(a.createdAt));
 
   const groups = mine.reduce((acc, s) => {
@@ -50,14 +56,19 @@ export default function CampingView({ trainer, campingSessions = [] }) {
 
   return (
     <div style={{ maxWidth: 680, margin: '0 auto', padding: isMobile ? '14px 14px 24px' : '36px 20px' }}>
-      {/* 캠핑 횟수 pill — 우상단 */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
-        <span style={{
-          fontSize: 12, fontWeight: 700,
-          color: '#fff',
-          background: '#4a9a08',
-          borderRadius: 20, padding: '4px 12px',
-        }}>총 캠핑 횟수 {mine.length}회</span>
+        <span
+          style={{
+            fontSize: 12,
+            fontWeight: 700,
+            color: '#fff',
+            background: '#4a9a08',
+            borderRadius: 20,
+            padding: '4px 12px',
+          }}
+        >
+          총 캠핑 횟수 {mine.length}회
+        </span>
       </div>
 
       {Object.keys(groups).length === 0 ? (
@@ -68,24 +79,29 @@ export default function CampingView({ trainer, campingSessions = [] }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
           {Object.entries(groups).map(([key, { label, sessions }]) => (
             <div key={key}>
-              {/* 날짜 헤더 */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                <div style={{
-                  fontSize: 11, fontWeight: 700, color: '#3a6010',
-                  background: 'rgba(255,255,255,0.80)',
-                  backdropFilter: 'blur(4px)',
-                  borderRadius: 20, padding: '3px 12px',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
-                  whiteSpace: 'nowrap',
-                }}>{label}</div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: '#3a6010',
+                    background: 'rgba(255,255,255,0.80)',
+                    backdropFilter: 'blur(4px)',
+                    borderRadius: 20,
+                    padding: '3px 12px',
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {label}
+                </div>
                 <div style={{ flex: 1, height: 1, background: 'rgba(74,154,8,0.15)' }} />
               </div>
 
-              {/* 카드 목록 */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {sessions.map(s => {
+                {sessions.map((s) => {
                   const done = isDone(s);
-                  const ok   = done && isSuccess(s);
+                  const ok = done && isSuccess(s);
                   const reward = ok ? getReward(s) : null;
 
                   const borderColor = ok ? '#b8e090' : done ? '#f5c6c6' : '#f0d890';
@@ -93,58 +109,82 @@ export default function CampingView({ trainer, campingSessions = [] }) {
                   const dot = ok ? '✓' : done ? '✗' : '…';
 
                   return (
-                    <div key={s.firebaseKey} style={{
-                      display: 'flex', alignItems: 'center', gap: 14,
-                      background: '#fff',
-                      borderLeft: `3px solid ${borderColor}`,
-                      borderRadius: '0 10px 10px 0',
-                      padding: '12px 16px',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                    }}>
-                      {/* 상태 도트 */}
-                      <div style={{
-                        width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
-                        background: ok ? '#eaf6d8' : done ? '#fde8e8' : '#fff9e0',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 11, fontWeight: 900, color: accentColor,
-                      }}>{dot}</div>
+                    <div
+                      key={s.firebaseKey}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 14,
+                        background: '#fff',
+                        borderLeft: `3px solid ${borderColor}`,
+                        borderRadius: '0 10px 10px 0',
+                        padding: '12px 16px',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: '50%',
+                          flexShrink: 0,
+                          background: ok ? '#eaf6d8' : done ? '#fde8e8' : '#fff9e0',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 11,
+                          fontWeight: 900,
+                          color: accentColor,
+                        }}
+                      >
+                        {dot}
+                      </div>
 
-                      {/* 본문 */}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ fontSize: 13, fontWeight: 700, color: accentColor }}>
                             {ok ? '성공' : done ? '실패' : '진행 중'}
                           </span>
-                          <span style={{
-                            fontSize: 11, color: '#aaa',
-                            background: '#f5f5f5', borderRadius: 6, padding: '1px 7px',
-                          }}>{s.currentStage ?? 0}단계</span>
+                          <span
+                            style={{
+                              fontSize: 11,
+                              color: '#aaa',
+                              background: '#f5f5f5',
+                              borderRadius: 6,
+                              padding: '1px 7px',
+                            }}
+                          >
+                            {s.currentStage ?? 0}단계
+                          </span>
                           {s.isDuo && s.partnerName && (
                             <span style={{ fontSize: 11, color: '#9b6fcf' }}>👥 {s.partnerName}</span>
                           )}
                         </div>
 
                         {reward && (
-                          <div style={{
-                            marginTop: 5, display: 'flex', flexWrap: 'wrap', gap: '3px 12px',
-                            fontSize: 12, color: '#5a7a40',
-                          }}>
+                          <div
+                            style={{
+                              marginTop: 5,
+                              display: 'flex',
+                              flexWrap: 'wrap',
+                              gap: '3px 12px',
+                              fontSize: 12,
+                              color: '#5a7a40',
+                            }}
+                          >
                             {reward.friendshipBonus > 0 && (
                               <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                                 <Star size={10} />친밀도 +{reward.friendshipBonus}
                               </span>
                             )}
-                            {reward.expBonus > 0 && (
-                              <span>경험치 +{reward.expBonus}</span>
-                            )}
+                            {reward.expBonus > 0 && <span>경험치 +{reward.expBonus}</span>}
                             {reward.bonusItem && (
                               <span style={{ color: '#b07800', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3 }}>
-                                <Gift size={10} />{reward.bonusItem.name}
+                                <Gift size={10} />
+                                {reward.bonusItem.name}
                               </span>
                             )}
-                            {reward.egg && (
-                              <span style={{ color: '#7c3aed', fontWeight: 600 }}>🥚 알 획득</span>
-                            )}
+                            {reward.egg && <span style={{ color: '#7c3aed', fontWeight: 600 }}>🥚 알 획득</span>}
                           </div>
                         )}
                       </div>

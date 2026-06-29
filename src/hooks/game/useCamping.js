@@ -3,6 +3,37 @@ import { ref, get, set, push, update, onValue } from 'firebase/database';
 import { database } from '../../firebase';
 import * as campingHelper from '../../utils/campingHelper';
 
+const normalizePercent = (value, fallback = 0) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return fallback;
+  return numeric <= 1 ? numeric * 100 : numeric;
+};
+
+const makeConfiguredCookingResult = (stage, isDuo, settings = {}) => {
+  const fallback = campingHelper.generateCookingResult(stage, isDuo);
+  const configuredStage = settings.stages?.[stage - 1] || settings.stageRewards?.[stage - 1] || settings.cookingStages?.[stage - 1];
+  if (!configuredStage) return fallback;
+
+  const baseRate = normalizePercent(configuredStage.successRate, fallback?.successRate ?? 0);
+  const duoBonus = isDuo ? normalizePercent(settings.duoSuccessBonus, 0) : 0;
+  const successRate = Math.min(100, baseRate + duoBonus);
+  const friendshipBonus = Number(configuredStage.friendshipBonus ?? configuredStage.friendshipMin ?? 0);
+  const expBonus = Number(configuredStage.expBonus ?? configuredStage.expMin ?? 0);
+
+  return {
+    success: Math.random() * 100 < successRate,
+    stage,
+    stageData: {
+      ...configuredStage,
+      stage,
+      friendshipBonus,
+      expBonus,
+    },
+    successRate: Math.round(successRate),
+    isDuo,
+  };
+};
+
 export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, allItems) => {
   const [campingSessions, setCampingSessions] = useState([]);
   const [userCampingData, setUserCampingData] = useState(null);
@@ -160,7 +191,10 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
       }
 
       const session = snapshot.val();
-      const stageData = success ? campingHelper.generateCookingResult(session.currentStage, session.isDuo) : null;
+      const configRef = ref(database, 'gameData/campingSettings');
+      const configSnap = await get(configRef);
+      const campingSettings = configSnap.exists() ? configSnap.val() : {};
+      const stageData = success ? makeConfiguredCookingResult(session.currentStage, session.isDuo, campingSettings) : null;
 
       await update(sessionRef, {
         cookingResult: stageData,

@@ -1422,7 +1422,7 @@ export default function App() {
     acceptEvolution,
     cancelEvolution,
     increaseEffort,
-	camping,
+    camping,
     titles,
     updateMemberTitle,
     updateSelfTitle,
@@ -1991,18 +1991,12 @@ return (
           {currentTab === 'items' && <ItemsView />}
           {currentTab === 'shop' && <ShopView />}
           {currentTab === 'cooking' && <CookingView />}
-		  {currentTab === 'camping' && (
-			  <CampingView
-				trainer={currentUser}
-				campingSessions={camping.campingSessions}
-				userCampingData={camping.userCampingData}
-				isLoading={camping.isLoading}
-				onStartCamping={camping.startCamping}
-				canCampToday={camping.canCampToday}
-				isCampingDay={camping.isCampingDay}
-				members={members}
-			  />
-			)}
+          {currentTab === 'camping' && (
+            <CampingView
+              trainer={currentUser}
+              campingSessions={camping.campingSessions}
+            />
+          )}
 					  
           {currentTab === 'profile' && (
             <div style={{ padding: '16px 16px 80px' }}>
@@ -2116,18 +2110,10 @@ return (
 		  {currentTab === 'items' && <ItemsView />}
 		  {currentTab === 'shop' && <ShopView />}
 		  {currentTab === 'cooking' && <CookingView />}
-		  
-		  {/* ???ш린??罹좏븨 ??異붽?! */}
 		  {currentTab === 'camping' && (
 			<CampingView
 			  trainer={currentUser}
 			  campingSessions={camping.campingSessions}
-			  userCampingData={camping.userCampingData}
-			  isLoading={camping.isLoading}
-			  onStartCamping={camping.startCamping}
-			  canCampToday={camping.canCampToday}
-			  isCampingDay={camping.isCampingDay}
-			  members={members}
 			/>
 		  )}
 		  

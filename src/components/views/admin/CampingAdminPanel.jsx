@@ -126,7 +126,7 @@ function BonusItemChancePanel({ bonusItems, onUpdate, onOpenPicker, label, hint,
         <div className="flex flex-wrap gap-2">
           {bonusItems.map(b => (
             <div key={b.itemId} className="flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 pl-2 pr-1 py-1">
-              {b.imageUrl && <img src={b.imageUrl} alt={b.name} className="w-6 h-6 object-contain shrink-0" />}
+              {(b.imageUrl || b.spriteUrl) && <img src={b.imageUrl || b.spriteUrl} alt={b.name} className="w-6 h-6 object-contain shrink-0" />}
               <span className="text-sm font-medium text-amber-900">{b.name}</span>
               <input
                 type="number" min={0} max={100} value={b.chance ?? 10}
@@ -188,7 +188,7 @@ function FailRewardPanel({ failRewards, onUpdate, onOpenPicker, friendshipMin, f
         <div className="flex flex-wrap gap-2">
           {failRewards.map(r => (
             <div key={r.itemId} className="flex items-center gap-1 rounded-full border border-red-200 bg-white pl-2 pr-1 py-1">
-              {r.spriteUrl && <img src={r.spriteUrl} alt={r.name} className="w-6 h-6 object-contain shrink-0" />}
+              {(r.spriteUrl || r.imageUrl) && <img src={r.spriteUrl || r.imageUrl} alt={r.name} className="w-6 h-6 object-contain shrink-0" />}
               <span className="text-sm font-medium text-red-900">{r.name}</span>
               <span className="text-sm text-red-400 mx-1">×</span>
               <input
@@ -230,7 +230,7 @@ function StageItemPoolPanel({ bonusItems, onUpdate, onOpenPicker, minPick, maxPi
         : <div className="flex flex-wrap gap-1.5">
             {bonusItems.map(b => (
               <div key={b.itemId} className="flex items-center gap-1 rounded-full border border-sky-200 bg-white pl-1.5 pr-2 py-1">
-                {b.imageUrl && <img src={b.imageUrl} alt={b.name} className="w-5 h-5 object-contain shrink-0" />}
+                {(b.imageUrl || b.spriteUrl) && <img src={b.imageUrl || b.spriteUrl} alt={b.name} className="w-5 h-5 object-contain shrink-0" />}
                 <span className="text-xs font-medium text-sky-900">{b.name}</span>
                 <button onClick={() => removeItem(b.itemId)} className="text-sky-400 hover:text-red-500 ml-1"><X size={11} /></button>
               </div>
