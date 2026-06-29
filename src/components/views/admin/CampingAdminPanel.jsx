@@ -324,7 +324,7 @@ function CampingDishRewardPanel({ allItems = [] }) {
 }
 
 function SessionCard({ session, onDelete }) {
-  const isFinished = ['completed', 'applied', 'failed'].includes(session.status);
+  const isFinished = ['completed', 'applied', 'failed', 'applying'].includes(session.status);
   const reward = session.reward;
   return (
     <div className="rounded border border-lime-200 bg-white p-4">
@@ -394,8 +394,8 @@ export default function CampingAdminPanel({
   }, [systemSettings.campingSettings]);
 
   const groupedSessions = useMemo(() => ({
-    active:   campingSessions.filter(s => !['completed', 'applied', 'failed'].includes(s.status)),
-    finished: campingSessions.filter(s => ['completed', 'applied', 'failed'].includes(s.status)),
+    active:   campingSessions.filter(s => !['completed', 'applied', 'failed', 'applying'].includes(s.status)),
+    finished: campingSessions.filter(s => ['completed', 'applied', 'failed', 'applying'].includes(s.status)),
   }), [campingSessions]);
 
   const updateDraft = (key, value) => setDraft(prev => ({ ...prev, [key]: value }));

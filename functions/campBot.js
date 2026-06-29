@@ -38,6 +38,10 @@ const CAMPING_DISH_STAGE_SUFFIXES = {
   5: 'yyn',
 };
 
+const TERMINAL_CAMPING_STATUSES = ['completed', 'applied', 'failed', 'applying'];
+const isTerminalCampingStatus = status =>
+  TERMINAL_CAMPING_STATUSES.includes(String(status || '').toLowerCase());
+
 const getCampingDishChoice = content => {
   const normalized = String(content || '').toLowerCase();
   return CAMPING_DISH_CHOICES.find(choice =>
@@ -289,7 +293,7 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
     const snap = await db.ref('gameData/campingSessions').once('value');
     const sessions = snap.val() || {};
     const active = Object.entries(sessions)
-      .filter(([, s]) => s.memberId === memberId && !['completed', 'applied', 'failed'].includes(s.status))
+      .filter(([, s]) => s.memberId === memberId && !isTerminalCampingStatus(s.status))
       .sort((a, b) => String(b[1].createdAt || '').localeCompare(String(a[1].createdAt || '')));
     if (!active.length) return null;
     return { sessionKey: active[0][0], session: active[0][1] };
@@ -378,7 +382,31 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
   };
 
   const finishSession = async ({ sessionKey, session, settings, success }) => {
-    const rewards = await applyRewards({ sessionKey, session, settings, success });
+    const sessionRef = db.ref(`gameData/campingSessions/${sessionKey}`);
+    await sessionRef.update({
+      status: 'applying',
+      success,
+      finishedAt: new Date().toISOString(),
+      lastUpdatedAt: new Date().toISOString(),
+    });
+
+    let rewards;
+    try {
+      rewards = await applyRewards({ sessionKey, session, settings, success });
+    } catch (error) {
+      console.error('camping finish reward error:', error);
+      await sessionRef.update({
+        status: 'failed',
+        success,
+        failedAt: new Date().toISOString(),
+        lastUpdatedAt: new Date().toISOString(),
+        rewardError: error?.message || String(error),
+      });
+      return [
+        success ? `캠핑 완료 처리 중 오류가 발생했어요. 세션은 종료했습니다.` : `캠핑 종료 처리 중 오류가 발생했어요. 세션은 종료했습니다.`,
+        '관리자에게 보상 지급 상태를 확인해 달라고 알려 주세요.',
+      ].join('\n');
+    }
     const lines = [
       success ? `캠핑 완료! 단계 ${session.currentStage}` : `캠핑 종료! 단계 ${session.currentStage} 보상을 지급합니다.`,
       `친밀도 +${rewards.friendshipBonus}`, `경험치 +${rewards.expBonus}`,

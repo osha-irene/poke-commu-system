@@ -21,7 +21,7 @@ function formatDateKey(val) {
 }
 
 function isDone(s) {
-  return ['applied', 'completed', 'failed'].includes(s.status);
+  return ['applied', 'completed', 'failed', 'applying'].includes(s.status);
 }
 
 function isSuccess(s) {
