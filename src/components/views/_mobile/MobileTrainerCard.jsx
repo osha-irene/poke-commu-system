@@ -3,6 +3,7 @@ import { Link } from 'lucide-react';
 import { getDatabase, ref, get } from 'firebase/database';
 import { getPokemonLocalIconUrl } from '../../../utils/pokemonIconUtils';
 import CachedImage from '../../common/CachedImage';
+import { MASTODON_HOST } from '../../../config/mastodonDomain';
 
 function VerticalBarcode({ text, width = 20, height = 100 }) {
   const bits = [1, 0, 1];
@@ -161,7 +162,7 @@ export default function MobileTrainerCard({ trainer, titles = [] }) {
           <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
             <Link size={11} style={{ color: '#a78bfa', flexShrink: 0 }} />
             <span style={{ fontSize: 11, color: '#888', letterSpacing: '0.04em' }}>
-              @{mastodonAccount}@POKETODON.MONSTER
+              @{mastodonAccount}@{MASTODON_HOST.toUpperCase()}
             </span>
           </div>
         )}

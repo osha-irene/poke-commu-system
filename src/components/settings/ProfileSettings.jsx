@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { User, Link } from 'lucide-react';
 import { getDatabase, ref, get, set } from 'firebase/database';
+import { MASTODON_HOST } from '../../config/mastodonDomain';
 
 function ProfileSettings({ trainer }) {  // ← props로 trainer 받기
   const [mastodonAccount, setMastodonAccount] = useState('');
@@ -36,17 +37,19 @@ function ProfileSettings({ trainer }) {  // ← props로 trainer 받기
       return;
     }
 
-    // 형식 검증: @username@instance.domain
-    if (!mastodonAccount.match(/@[\w]+@[\w.]+/)) {
-      setMessage('올바른 형식이 아니에요! 예: @username@poketodon.monster');
+    const accountMatch = mastodonAccount.trim().match(/^@?([\w]+)(?:@[\w.-]+)?$/);
+    if (!accountMatch) {
+      setMessage(`올바른 형식이 아니에요! 예: @username@${MASTODON_HOST}`);
       return;
     }
+    const normalizedAccount = `@${accountMatch[1]}@${MASTODON_HOST}`;
 
     setLoading(true);
     try {
       const db = getDatabase();
       const accountRef = ref(db, `members/${trainer.id}/mastodonAccount`);
-      await set(accountRef, mastodonAccount);
+      await set(accountRef, normalizedAccount);
+      setMastodonAccount(normalizedAccount);
       
       setMessage('✅ 마스토돈 계정이 연결되었어요!');
     } catch (error) {
@@ -84,7 +87,7 @@ function ProfileSettings({ trainer }) {  // ← props로 trainer 받기
                 </label>
                 <input
                   type="text"
-                  placeholder="@username@poketodon.monster"
+                  placeholder={`@username@${MASTODON_HOST}`}
                   value={mastodonAccount}
                   onChange={(e) => setMastodonAccount(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"

@@ -196,8 +196,13 @@ export default function EncounterModal({
               baseCatchRate = 0.20;
             }
 
+            const boostedCatchRate = baseCatchRate > 0 && baseCatchRate <= 1
+              ? Math.round(baseCatchRate * 255 * 3)
+              : baseCatchRate * 3;
             const catchChance = calculateCaptureChance(selectedBall, pokemon, {
-              catchRate: baseCatchRate,
+              catchRate: boostedCatchRate,
+              maxHp: 100,
+              currentHp: 1,
               isNight,
               isCave,
               isWaterside,
@@ -211,6 +216,8 @@ export default function EncounterModal({
             // 디버깅 로그
             console.log('[포획 시도]', pokemon.name);
             console.log('  - 기본 포획률:', pokemon.catchRate);
+            console.log('  - 적용 포획률(체력 1 기준, 3배):', boostedCatchRate);
+            console.log('  - 기준 체력:', '1%');
             console.log('  - 볼 배율:', selectedBall.multiplier);
             console.log('  - 원작식 최종 포획 확률:', catchChance);
             console.log('  - 랜덤 값:', randomValue);

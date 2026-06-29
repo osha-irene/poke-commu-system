@@ -34,7 +34,11 @@ const getPokemonData = () => {
 const legacyConfig = (() => { try { return functions.config().mastodon || {}; } catch (_) { return {}; } })();
 
 // ── 인스턴스 URL (공통) ──────────────────────────────────────────
-const INSTANCE_URL = process.env.MASTODON_INSTANCE_URL || legacyConfig.url || 'https://poketodon.monster';
+const isLocalRuntime = process.env.FUNCTIONS_EMULATOR === 'true' || process.env.NODE_ENV === 'development';
+const DEFAULT_INSTANCE_URL = isLocalRuntime
+  ? 'https://poketodon.monster'
+  : 'https://originb-pokemon.world';
+const INSTANCE_URL = process.env.MASTODON_INSTANCE_URL || legacyConfig.url || DEFAULT_INSTANCE_URL;
 
 // ── 봇 컨텍스트 생성 ────────────────────────────────────────────
 const FALLBACK_TOKEN = process.env.MASTODON_TOKEN || legacyConfig.token || '';
