@@ -514,6 +514,8 @@ export default function useGameState() {
     // 관리자 기능 - 아이템 관리
     addItemToSelf: adminItems.addItemToSelf,
     giveItemToMember: adminItems.giveItemToMember,
+    deleteItemFromMember: adminItems.deleteItemFromMember,
+    adjustMemberItemCount: adminItems.adjustMemberItemCount,
     updateCustomItem: async (itemId, updatedFields) => {
       const ok = await adminItems.updateCustomItem(itemId, updatedFields);
       if (ok) setAllItems(prev => prev.map(i => i.id === itemId ? { ...i, ...updatedFields } : i));

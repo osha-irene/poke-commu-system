@@ -30,6 +30,7 @@ const CATEGORIES = [
   { id: 'machines', name: '기술머신', icon: '💿', color: 'bg-blue-100 text-blue-700' },
   { id: 'held-items', name: '도구', icon: '🎒', color: 'bg-orange-100 text-orange-700' },
   { id: 'evolution', name: '진화', icon: '✨', color: 'bg-yellow-100 text-yellow-700' },
+  { id: 'ingredients', name: '식재료', icon: '🥕', color: 'bg-lime-100 text-lime-700' },
   { id: 'misc', name: '기타', icon: '📦', color: 'bg-gray-100 text-gray-700' },
 ];
 

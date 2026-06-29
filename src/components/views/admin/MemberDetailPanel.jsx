@@ -18,6 +18,8 @@ function MemberDetailPanel({ member, onClose }) {
     setMembers,
     updateCurrentUser,
     giveItemToMember,
+    deleteItemFromMember,
+    adjustMemberItemCount,
     givePokemonToMember,
     transferMemberPokemon,
     editMemberPokemon,
@@ -226,6 +228,8 @@ function MemberDetailPanel({ member, onClose }) {
               member={member}
               allItems={allItems}
               onGiveItem={giveItemToMember}
+              onDeleteItem={deleteItemFromMember}
+              onAdjustItemCount={adjustMemberItemCount}
             />
           )}
         </div>

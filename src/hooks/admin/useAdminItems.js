@@ -203,9 +203,49 @@ export const useAdminItems = (
     }
   };
 
+  // ========== 회원 아이템 삭제 ==========
+  const deleteItemFromMember = async (memberId, itemName) => {
+    if (!canManageItems()) return;
+    const member = members[memberId];
+    if (!member) return;
+    const newInventory = (member.inventory || []).filter(i => i.name !== itemName);
+    const updatedMember = { ...member, inventory: newInventory };
+    try {
+      const { id, email, ...dataToSave } = updatedMember;
+      const cleanData = JSON.parse(JSON.stringify(dataToSave, (k, v) => v === undefined ? null : v));
+      await set(ref(database, `members/${memberId}`), cleanData);
+      setMembers(prev => ({ ...prev, [memberId]: updatedMember }));
+      if (memberId === currentUser?.id) updateCurrentUser({ inventory: newInventory });
+    } catch (error) {
+      alert('아이템 삭제 중 오류가 발생했습니다!');
+    }
+  };
+
+  // ========== 회원 아이템 갯수 조정 ==========
+  const adjustMemberItemCount = async (memberId, itemName, newCount) => {
+    if (!canManageItems()) return;
+    const member = members[memberId];
+    if (!member) return;
+    const newInventory = newCount <= 0
+      ? (member.inventory || []).filter(i => i.name !== itemName)
+      : (member.inventory || []).map(i => i.name === itemName ? { ...i, count: newCount } : i);
+    const updatedMember = { ...member, inventory: newInventory };
+    try {
+      const { id, email, ...dataToSave } = updatedMember;
+      const cleanData = JSON.parse(JSON.stringify(dataToSave, (k, v) => v === undefined ? null : v));
+      await set(ref(database, `members/${memberId}`), cleanData);
+      setMembers(prev => ({ ...prev, [memberId]: updatedMember }));
+      if (memberId === currentUser?.id) updateCurrentUser({ inventory: newInventory });
+    } catch (error) {
+      alert('아이템 수정 중 오류가 발생했습니다!');
+    }
+  };
+
   return {
     addItemToSelf,
     giveItemToMember,
+    deleteItemFromMember,
+    adjustMemberItemCount,
     createCustomItem,
     updateCustomItem,
     deleteCustomItem,

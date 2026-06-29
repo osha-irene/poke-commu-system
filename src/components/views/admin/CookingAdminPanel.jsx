@@ -1,6 +1,98 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Save, FileText, BarChart3, Gift, Package, Star, TrendingUp, ChefHat, Layers, Edit2, X } from 'lucide-react';
+import { Plus, Trash2, Save, FileText, BarChart3, Gift, Package, Star, TrendingUp, ChefHat, Layers, Edit2, X, Image, Search } from 'lucide-react';
 import ItemSelectorModal from '../../modals/ItemSelectorModal';
+
+// public 폴더 이미지 목록
+const FOOD_IMAGES = [
+  'galar-tbk.png','jam-toast.png','jam.png','potato-fried.png','potato-sandwich.png',
+  'potato-soup.png','soysauce.png','strawberry-jelly.png','strawberry-macaron.png',
+  'strawberry_cake.png','tofu.png','고추장.png','과일 초콜릿.png','과일청.png',
+  '궁중떡볶이.png','김치.png','꼬리훈제 미역국.png','꼬리훈제 젤리.png','꿀 토스트.png',
+  '냉떡볶이.png','당근 케이크.png','당근 쿠키.png','당근.png','대포무노 먹물.png',
+  '된장.png','된장찌개.png','두리안 치즈 피자.png','두리안.png','딸바 떡볶이.png',
+  '떡.png','떡꼬치.png','떡볶이.png','럭키의 알말이.png','로제떡볶이.png',
+  '망한 음식.png','망한 음식2.png','매쉬드 포테이토.png','먹물떡볶이.png','미역.png',
+  '민트.png','민트초코떡볶이.png','밀가루.png','밀크티.png','버섯 채소 볶음.png',
+  '버섯젤리.png','베리 마카롱.png','베리 케이크.png','보틀 케이크.png','복슝열매 빙수.png',
+  '부추.png','부추파전.png','불대문자떡볶이.png','브렉퍼스트.png','빵.png',
+  '샐러드.png','샐러드떡볶이.png','설탕.png','설탕딸기.png','소금.png',
+  '식용얼음.png','아몬드 가루.png','아이스크림.png','아이스티.png','알로라떡볶이.png',
+  '알로라피자.png','알리고.png','알수없는무언가.png','애플파이.png','에그 베이컨 토스트.png',
+  '에그마요.png','에그타르트.png','에그후라이.png','오렌지 주스.png','오렌지.png',
+  '오렌지젤리.png','오믈렛.png','옥수수.png','옥수수구이.png','옹심이.png',
+  '젤라틴.png','차.png','차우더.png','초코 마카롱.png','초코 토스트.png',
+  '초코딸기.png','초코빵.png','초코칩 쿠키.png','초콜릿.png','초콜릿_딸기.png',
+  '치즈 케이크.png','치즈떡볶이.png','치즈케이크 빙수.png','카레라이스.png','카프레제.png',
+  '커피 아이스크림.png','커피.png','커피빙수.png','콩고기 스테이크.png','콩고기 핫도그.png',
+  '콩고기.png','콩볶음.png','쿠키.png','쿠키_딸기잼.png','크림떡볶이.png',
+  '크림치즈 토스트.png','토마토 설탕절임.png','토마토 파스타.png','토스트.png',
+  '파인애플젤리.png','팔데아식 떡볶이 샌드위치.png','팝콘.png','팬케이크.png',
+  '푸딩.png','피자.png','해물떡볶이.png','홍차 스프레드.png','홍차.png',
+].map(f => ({ src: `/img/items/foods/${f}`, name: f.replace('.png', '') }));
+
+const INGREDIENT_IMAGES = [
+  'apple.png','avocado.png','bacon.png','baguette.png','banana.png','basil.png',
+  'bitterherbamystica.png','boiledegg.png','bread.png','brittlebones.png','butter.png',
+  'cheese.png','cherrytomatoes.png','chilisauce.png','chorizo.png','coconutmilk.png',
+  'creamcheese.png','cucumber.png','currypowder.png','egg.png','fancyapple.png',
+  'freshcream.png','friedfillet.png','friedfood.png','fruitbunch.png','gigantamix.png',
+  'greenbellpepper.png','ham.png','hamburger.png','herbedsausage.png','horseradish.png',
+  'instantnoodles.png','jam.png','ketchup.png','kiwi.png','klawfstick.png',
+  'largeleek.png','lettuce.png','marmalade.png','mayonnaise.png','mixedmushrooms.png',
+  'moomoocheese.png','mustard.png','noodles.png','oliveoil.png','onion.png',
+  'packagedcurry.png','packofpotatoes.png','pasta.png','peanutbutter.png','pepper.png',
+  'pickle.png','pineapple.png','potatosalad.png','potatotortilla.png','precookedburger.png',
+  'prosciutto.png','pungentroot.png','redbellpepper.png','redonion.png','rice.png',
+  'saladmix.png','salt.png','saltyherbamystica.png','sausages.png','smokedfillet.png',
+  'sourherbamystica.png','spicemix.png','spicyherbamystica.png','strawberry.png',
+  'sweetherbamystica.png','tinofbeans.png','tofu.png','tomato.png','vinegar.png',
+  'wasabi.png','watercress.png','whippedcream.png','yellowbellpepper.png','yogurt.png',
+].map(f => ({ src: `/img/ingredient-sprites/${f}`, name: f.replace('.png', '') }));
+
+function PublicImagePicker({ onSelect, onClose }) {
+  const [tab, setTab] = useState('food');
+  const [search, setSearch] = useState('');
+  const images = tab === 'food' ? FOOD_IMAGES : INGREDIENT_IMAGES;
+  const filtered = search.trim()
+    ? images.filter(img => img.name.toLowerCase().includes(search.toLowerCase()))
+    : images;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4" onClick={onClose}>
+      <div className="bg-white rounded-xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b">
+          <h3 className="font-bold text-gray-800 flex items-center gap-2"><Image size={18} /> 이미지 선택</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 p-1 rounded"><X size={18} /></button>
+        </div>
+        <div className="flex gap-2 px-5 pt-3">
+          {[['food','요리 결과물'],['ingredient','식재료']].map(([id, label]) => (
+            <button key={id} onClick={() => setTab(id)}
+              className={`px-4 py-1.5 rounded-full text-sm font-semibold transition ${tab === id ? 'bg-lime-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+              {label}
+            </button>
+          ))}
+          <div className="ml-auto flex items-center gap-1 border border-gray-300 rounded-lg px-2 py-1">
+            <Search size={13} className="text-gray-400" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="검색..." className="text-sm outline-none w-28" />
+          </div>
+        </div>
+        <div className="overflow-y-auto flex-1 p-4">
+          <div className="grid grid-cols-6 gap-2">
+            {filtered.map(img => (
+              <button key={img.src} onClick={() => { onSelect(img.src); onClose(); }}
+                className="flex flex-col items-center gap-1 p-2 rounded-lg border border-gray-200 hover:border-lime-400 hover:bg-lime-50 transition group">
+                <img src={img.src} alt={img.name} className="w-10 h-10 object-contain" style={{ imageRendering: 'pixelated' }}
+                  onError={e => { e.target.src = '/pokeball.png'; }} />
+                <span className="text-[9px] text-gray-500 text-center leading-tight line-clamp-2 w-full">{img.name}</span>
+              </button>
+            ))}
+            {filtered.length === 0 && <p className="col-span-6 text-center text-gray-400 py-8 text-sm">검색 결과 없음</p>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const Card = ({ children, className = '' }) => (
   <div className={`bg-white rounded-lg shadow ${className}`}>{children}</div>
@@ -97,6 +189,7 @@ const recipeSupports = (recipe, type) => {
 export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDeleteRecipe, onCreateCustomItem, onUpdateCustomItem, allItems = [], recipes = [] }) {
   const [recipeType, setRecipeType] = useState('fixed');
   const [enabledRecipeTypes, setEnabledRecipeTypes] = useState({ fixed: true, stat: false });
+  const [showImagePicker, setShowImagePicker] = useState(false);
   const [ingredients, setIngredients] = useState(emptyIngredients);
   const [resultItem, setResultItem] = useState(emptyResultItem);
   const [requiredStats, setRequiredStats] = useState(emptyRequiredStats);
@@ -507,13 +600,28 @@ export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDe
                   rows="4"
                   placeholder="효과 설명 *"
                 />
-                <input
-                  type="text"
-                  value={resultItem.spriteUrl}
-                  onChange={(event) => setResultItem({ ...resultItem, spriteUrl: event.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2"
-                  placeholder="이미지 URL"
-                />
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={resultItem.spriteUrl}
+                    onChange={(event) => setResultItem({ ...resultItem, spriteUrl: event.target.value })}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="이미지 URL 또는 선택"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowImagePicker(true)}
+                    className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-1 text-sm text-gray-600 shrink-0"
+                    title="public 이미지에서 선택"
+                  >
+                    <Image size={15} /> 선택
+                  </button>
+                </div>
+                {resultItem.spriteUrl && (
+                  <div className="mb-2">
+                    <img src={resultItem.spriteUrl} alt="preview" className="w-12 h-12 object-contain border rounded" style={{ imageRendering: 'pixelated' }} onError={e => { e.target.style.display = 'none'; }} />
+                  </div>
+                )}
 
                 <div className="mb-2">
                   <label className="block text-xs text-gray-600 mb-1">친밀도 증가</label>
@@ -784,6 +892,13 @@ export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDe
         multiSelect={false}
         pockets={['ingredients', 'berries', 'medicine', 'vitamins']}
       />
+
+      {showImagePicker && (
+        <PublicImagePicker
+          onSelect={(src) => setResultItem(prev => ({ ...prev, spriteUrl: src }))}
+          onClose={() => setShowImagePicker(false)}
+        />
+      )}
     </div>
   );
 }

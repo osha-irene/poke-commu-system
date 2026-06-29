@@ -1,14 +1,17 @@
 // src/components/views/admin/member/MemberItemTab.jsx
 import React, { useState } from 'react';
+import { Trash2, Minus, Plus } from 'lucide-react';
 import { getButtonClass } from '../../../../styles/theme';
 import { getItemPocket, CATEGORIES, getItemIcon, getItemColor, filterItemsByPocket } from '../../../../utils/itemUtils';
 
-function MemberItemTab({ member, allItems, onGiveItem }) {
+function MemberItemTab({ member, allItems, onGiveItem, onDeleteItem, onAdjustItemCount }) {
   const [itemMode, setItemMode] = useState('view');
   const [selectedItem, setSelectedItem] = useState(null);
   const [itemCount, setItemCount] = useState(1);
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [editingItem, setEditingItem] = useState(null);
+  const [editCount, setEditCount] = useState(1);
   
   // ✅ allItems 안전 처리
   const safeAllItems = Array.isArray(allItems) ? allItems : [];
@@ -74,30 +77,73 @@ function MemberItemTab({ member, allItems, onGiveItem }) {
                 .filter(item => item && item.name)
                 .map((item, idx) => {
                   const ItemIcon = getItemIcon(item);
-                  
+                  const isEditing = editingItem === (item.itemId || item.name);
+
                   return (
-                    <div key={item.itemId || idx} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 flex items-center justify-center relative">
-                          {item.imageUrl || item.spriteUrl ? (
-                            <img 
-                              src={item.imageUrl || item.spriteUrl} 
-                              alt={item.name || 'Item'} 
-                              className="w-10 h-10" 
-                              style={{ imageRendering: 'pixelated' }}
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                                e.target.nextSibling.style.display = 'flex';
-                              }}
-                            />
-                          ) : null}
-                          <div style={{ display: (item.imageUrl || item.spriteUrl) ? 'none' : 'flex' }} className="w-full h-full items-center justify-center absolute inset-0">
-                            <ItemIcon size={24} className="text-gray-400" />
+                    <div key={item.itemId || idx} className="bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 flex items-center justify-center relative">
+                            {item.imageUrl || item.spriteUrl ? (
+                              <img
+                                src={item.imageUrl || item.spriteUrl}
+                                alt={item.name || 'Item'}
+                                className="w-10 h-10"
+                                style={{ imageRendering: 'pixelated' }}
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                  e.target.nextSibling.style.display = 'flex';
+                                }}
+                              />
+                            ) : null}
+                            <div style={{ display: (item.imageUrl || item.spriteUrl) ? 'none' : 'flex' }} className="w-full h-full items-center justify-center absolute inset-0">
+                              <ItemIcon size={24} className="text-gray-400" />
+                            </div>
                           </div>
+                          <span className="font-semibold text-gray-800">{item.name}</span>
                         </div>
-                        <span className="font-semibold text-gray-800">{item.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-lg text-gray-700">{item.count || 0}개</span>
+                          <button
+                            onClick={() => { setEditingItem(item.itemId || item.name); setEditCount(item.count || 1); }}
+                            className="p-1.5 rounded bg-indigo-100 text-indigo-600 hover:bg-indigo-200 transition-colors"
+                            title="갯수 조정"
+                          >
+                            <Minus size={14} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`${item.name}을(를) 삭제하시겠습니까?`)) {
+                                onDeleteItem?.(member.id, item.name);
+                              }
+                            }}
+                            className="p-1.5 rounded bg-red-100 text-red-500 hover:bg-red-200 transition-colors"
+                            title="삭제"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </div>
-                      <span className="font-bold text-lg text-gray-700">{item.count || 0}개</span>
+                      {isEditing && (
+                        <div className="mt-2 flex items-center gap-2 pl-13">
+                          <button onClick={() => setEditCount(c => Math.max(1, c - 1))} className="w-7 h-7 flex items-center justify-center rounded bg-gray-200 hover:bg-gray-300"><Minus size={12} /></button>
+                          <input
+                            type="number"
+                            value={editCount}
+                            onChange={e => setEditCount(Math.max(1, parseInt(e.target.value) || 1))}
+                            min="1"
+                            className="w-20 border border-gray-300 rounded px-2 py-1 text-center text-sm"
+                          />
+                          <button onClick={() => setEditCount(c => c + 1)} className="w-7 h-7 flex items-center justify-center rounded bg-gray-200 hover:bg-gray-300"><Plus size={12} /></button>
+                          <button
+                            onClick={() => { onAdjustItemCount?.(member.id, item.name, editCount); setEditingItem(null); }}
+                            className="px-3 py-1 rounded bg-indigo-500 text-white text-sm font-semibold hover:bg-indigo-600"
+                          >
+                            저장
+                          </button>
+                          <button onClick={() => setEditingItem(null)} className="px-3 py-1 rounded bg-gray-200 text-gray-600 text-sm hover:bg-gray-300">취소</button>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

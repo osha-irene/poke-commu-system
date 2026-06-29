@@ -201,7 +201,7 @@ export default function MobileItemsView() {
             </span>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 8, overflow: 'hidden' }}>
             {filteredItems.map((item, i) => {
               const details = getItemDetails(item);
               const pocketName = POCKET_LABELS[details.pocket] || '기타';
@@ -210,7 +210,7 @@ export default function MobileItemsView() {
                 <button
                   key={i}
                   onClick={() => handleItemClick(item)}
-                  style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '11px 11px', background: isSelected ? 'rgba(205,230,170,0.95)' : P.card, border: `1.5px solid ${isSelected ? 'rgba(80,150,20,0.7)' : P.border}`, borderRadius: 14, cursor: 'pointer', textAlign: 'left', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', width: '100%' }}
+                  style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '11px 11px', background: isSelected ? 'rgba(205,230,170,0.95)' : P.card, border: `1.5px solid ${isSelected ? 'rgba(80,150,20,0.7)' : P.border}`, borderRadius: 14, cursor: 'pointer', textAlign: 'left', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', width: '100%', minWidth: 0, boxSizing: 'border-box', overflow: 'hidden' }}
                 >
                   {/* 상단: 이미지 + 이름 + 개수 */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChefHat, Book, Plus, Minus, Sparkles, X, Utensils, Package, Soup, BookOpen, HelpCircle } from 'lucide-react';
+import { ChefHat, Book, Plus, Minus, Sparkles, X, Utensils, Package, Soup, BookOpen, HelpCircle, UtensilsCrossed } from 'lucide-react';
 import recipesData from '../../data/recipes.json';
 
 import { useGame } from '../../contexts/GameContext';
@@ -285,7 +285,7 @@ export default function CookingView() {
             <ChefHat size={48} className="text-lime-700" />
             <div>
               <h1 className="text-3xl font-bold mb-2 text-green-950">요리</h1>
-              <p className="text-green-800">재료 조합에 맞는 레시피를 먼저 찾고, 없으면 재료 스탯으로 자동 판정합니다.</p>
+              <p className="text-green-800">재료를 조합해 요리를 만들어보세요!</p>
             </div>
           </div>
           <button
@@ -379,6 +379,86 @@ export default function CookingView() {
 
 function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
   const { allItems = [] } = useGame();
+  const [activeTab, setActiveTab] = useState('요리');
+  const isMobile = useMediaQuery('(max-width: 768px)');
+
+  const recipeArr = Array.isArray(recipes) ? recipes : Object.values(recipes);
+  const discoveredArr = Array.isArray(discoveredRecipes) ? discoveredRecipes : Object.values(discoveredRecipes || {});
+
+  const tabRecipes = recipeArr.filter(r => {
+    const cat = r.category || '요리';
+    return cat === activeTab;
+  });
+
+  const tabs = ['요리', '오란다'];
+
+  const renderRecipeCard = (recipe) => {
+    const isDiscovered = discoveredArr.includes(recipe.id);
+    return (
+      <div key={recipe.id} className={`border-2 rounded-lg overflow-hidden ${isDiscovered ? 'border-orange-300 bg-orange-50' : 'border-gray-300 bg-gray-50'}`}>
+        {isDiscovered ? (
+          <>
+            <div className="px-3 py-2 border-b border-orange-200 flex items-center justify-between" style={{background:'rgba(40,80,30,0.85)'}}>
+              <h3 className="text-base font-bold text-white">{recipe.name}</h3>
+            </div>
+            <div className="flex items-center justify-center gap-4 p-3">
+              <div className="flex-shrink-0 mx-3 flex flex-col items-center gap-1">
+                <div className="relative group">
+                  <div
+                    className="item-sprite w-14 h-14 bg-white rounded-lg border-2 border-orange-300 cursor-default"
+                    style={{
+                      backgroundImage: `url(${getItemImageUrl(recipe.result, allItems)})`,
+                      backgroundSize: 'contain', backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'center', imageRendering: 'pixelated'
+                    }}
+                  />
+                  {recipe.description && (
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50 w-max max-w-[180px]">
+                      <div className="bg-gray-800 text-white text-xs rounded-lg px-3 py-2 leading-relaxed text-center shadow-lg">
+                        {recipe.description}
+                      </div>
+                      <div className="w-2 h-2 bg-gray-800 rotate-45 mx-auto -mt-1" />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                {recipeSupports(recipe, 'fixed') && recipe.ingredients && (
+                  <div className="flex items-center flex-wrap gap-1">
+                    {(Array.isArray(recipe.ingredients) ? recipe.ingredients : Object.values(recipe.ingredients || {})).map((ing, i) => {
+                      const ingName = stripCountSuffix(ing.name || '');
+                      const matched = allItems.find(a => stripCountSuffix(a.name || '') === ingName);
+                      const enriched = matched ? { ...ing, name: ingName, spriteUrl: matched.spriteUrl, imageUrl: matched.imageUrl } : { ...ing, name: ingName };
+                      return (
+                        <React.Fragment key={i}>
+                          {i > 0 && <span className="text-sm font-bold text-gray-400">+</span>}
+                          <div className="flex flex-col items-center gap-0.5">
+                            <div className="w-8 h-8 bg-white rounded-md border border-orange-200 flex items-center justify-center overflow-hidden">
+                              <CookingItemImage item={enriched} allItems={[]} size={32} />
+                            </div>
+                            <span className="text-xs text-gray-500 whitespace-nowrap">{ingName} {ing.count}개</span>
+                          </div>
+                        </React.Fragment>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-3 text-gray-500 flex flex-col items-center justify-center gap-1.5">
+            <div className="flex items-center justify-center gap-2">
+              <HelpCircle size={20} />
+              <p className="text-sm font-bold text-gray-700">{recipe.name}</p>
+            </div>
+            <p className="text-xs font-semibold text-gray-400">미발견 레시피</p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
@@ -393,7 +473,7 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
             <Book size={32} className="text-lime-700" />
             <div>
               <h2 className="text-2xl font-bold">레시피 북</h2>
-              <p className="text-green-800 text-sm">발견한 레시피: {discoveredRecipes.length}개</p>
+              <p className="text-green-800 text-sm">발견한 레시피: {discoveredArr.length}개</p>
             </div>
           </div>
           <button onClick={onClose} className="text-green-950 hover:bg-lime-100/70 p-2 rounded-lg transition-colors">
@@ -401,98 +481,32 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
           </button>
         </div>
 
-        <div className="p-6 grid grid-cols-2 gap-4">
-          {recipes.length === 0 ? (
+        {/* 카테고리 탭 */}
+        <div className="flex border-b border-gray-200 px-6 pt-4">
+          {tabs.map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-6 py-2 font-bold text-sm transition-all border-b-2 ${
+                activeTab === tab
+                  ? 'border-lime-500 text-lime-700'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        <div className={`p-6 grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
+          {tabRecipes.length === 0 ? (
             <div className="col-span-2 text-center py-12 text-gray-400">
               <BookOpen size={56} className="mx-auto mb-4" />
               <p className="font-semibold">등록된 레시피가 없습니다!</p>
               <p className="text-sm mt-2">관리자가 레시피를 등록하면 여기에 표시됩니다.</p>
             </div>
           ) : (
-            (Array.isArray(recipes) ? recipes : Object.values(recipes)).map((recipe) => {
-              const discoveredArr = Array.isArray(discoveredRecipes) ? discoveredRecipes : Object.values(discoveredRecipes || {});
-              const isDiscovered = discoveredArr.includes(recipe.id);
-              return (
-                <div key={recipe.id} className={`border-2 rounded-lg overflow-hidden ${isDiscovered ? 'border-orange-300 bg-orange-50' : 'border-gray-300 bg-gray-50'}`}>
-                  {isDiscovered ? (
-                    <>
-                      <div className="px-3 py-2 border-b border-orange-200 flex items-center justify-between" style={{background:'rgba(40,80,30,0.85)'}}>
-                        <h3 className="text-base font-bold text-white">{recipe.name}</h3>
-                        {recipeSupports(recipe, 'fixed') && (
-                          <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-orange-400 text-white">고정</span>
-                        )}
-                      </div>
-                      <div className="flex items-center justify-center gap-4 p-3">
-                      {/* 결과 아이템 이미지 */}
-                      <div className="flex-shrink-0 mx-3 flex flex-col items-center gap-1">
-                        <div className="relative group">
-                          <div
-                            className="item-sprite w-14 h-14 bg-white rounded-lg border-2 border-orange-300 cursor-default"
-                            style={{
-                              backgroundImage: `url(${getItemImageUrl(recipe.result, allItems)})`,
-                              backgroundSize: 'contain', backgroundRepeat: 'no-repeat',
-                              backgroundPosition: 'center', imageRendering: 'pixelated'
-                            }}
-                          />
-                          {recipe.description && (
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50 w-max max-w-[180px]">
-                              <div className="bg-gray-800 text-white text-xs rounded-lg px-3 py-2 leading-relaxed text-center shadow-lg">
-                                {recipe.description}
-                              </div>
-                              <div className="w-2 h-2 bg-gray-800 rotate-45 mx-auto -mt-1" />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-
-                        {/* 재료 아이템 이미지 + 연산 표시 */}
-                        {recipeSupports(recipe, 'fixed') && recipe.ingredients && (
-                          <div className="flex items-center flex-wrap gap-1">
-                            {(Array.isArray(recipe.ingredients) ? recipe.ingredients : Object.values(recipe.ingredients || {})).map((ing, i) => {
-                              const ingName = stripCountSuffix(ing.name || '');
-                              const matched = allItems.find(a => stripCountSuffix(a.name || '') === ingName);
-                              const enriched = matched ? { ...ing, name: ingName, spriteUrl: matched.spriteUrl, imageUrl: matched.imageUrl } : { ...ing, name: ingName };
-                              return (
-                              <React.Fragment key={i}>
-                                {i > 0 && <span className="text-sm font-bold text-gray-400">+</span>}
-                                <div className="flex flex-col items-center gap-0.5">
-                                  <div className="w-8 h-8 bg-white rounded-md border border-orange-200 flex items-center justify-center overflow-hidden">
-                                    <CookingItemImage item={enriched} allItems={[]} size={32} />
-                                  </div>
-                                  <span className="text-xs text-gray-500 whitespace-nowrap">{ingName} {ing.count}개</span>
-                                </div>
-                              </React.Fragment>
-                              );
-                            })}
-                          </div>
-                        )}
-
-                        {recipeSupports(recipe, 'stat') && recipe.requiredStats && (
-                          <div className="flex flex-wrap gap-1.5 mt-1">
-                            {Object.entries(recipe.requiredStats).filter(([_, v]) => v > 0).map(([stat, value]) => (
-                              <span key={stat} className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-xs font-semibold">
-                                {stat}: {value}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    </>
-                  ) : (
-                    <div className="text-center py-3 text-gray-500 flex flex-col items-center justify-center gap-1.5">
-                      <div className="flex items-center justify-center gap-2">
-                        <HelpCircle size={20} />
-                        <p className="text-sm font-bold text-gray-700">{recipe.name}</p>
-                      </div>
-                      <p className="text-xs font-semibold text-gray-400">미발견 레시피</p>
-                    </div>
-                  )}
-                </div>
-              );
-            })
+            tabRecipes.map(renderRecipeCard)
           )}
         </div>
       </div>
