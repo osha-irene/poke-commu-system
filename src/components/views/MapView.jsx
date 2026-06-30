@@ -68,6 +68,7 @@ export default function MapView({
   const [selectedArea, setSelectedArea] = useState(null);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [viewport, setViewport] = useState(DEFAULT_VIEWPORT);
+  const [tvPhase, setTvPhase] = useState(0); // 0: 검은화면, 1: 애니메이션, 2: 종료
   const [visitedTownIds, setVisitedTownIds] = useState(() => {
     try {
       return new Set(JSON.parse(localStorage.getItem('mapVisitedTownIds') || '[]'));
@@ -80,6 +81,12 @@ export default function MapView({
     get(ref(database, 'gameData/config/mapViewport')).then(snap => {
       if (snap.exists()) setViewport(snap.val());
     });
+  }, []);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setTvPhase(1), 60);
+    const t2 = setTimeout(() => setTvPhase(2), 550); // 확장 시작 타이밍에 콘텐츠 팝인
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   const towns = useMemo(() => {
@@ -790,8 +797,30 @@ export default function MapView({
           style={{ zIndex: 2, left: SCREEN.left, top: SCREEN.top, right: SCREEN.right, bottom: SCREEN.bottom, cursor: isDragging ? 'grabbing' : 'grab' }}
         >
 
-          {/* 맵 배경 */}
-          <div className="absolute inset-0" style={getViewportBgStyle(viewport)} />
+          {/* 항상 깔려있는 검은 배경 */}
+          <div style={{ position: 'absolute', inset: 0, background: '#000' }} />
+
+          {/* 레트로 TV 켜짐 효과 — 항상 최상위 */}
+          {tvPhase === 0 && (
+            <div style={{ position: 'absolute', inset: 0, zIndex: 100, background: '#000', pointerEvents: 'none' }} />
+          )}
+          {tvPhase === 1 && (
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 100,
+              animation: 'retroTvOn 0.9s ease-out forwards',
+              transformOrigin: 'center',
+              pointerEvents: 'none',
+            }} />
+          )}
+
+          {/* 맵 콘텐츠 래퍼 — TV reveal */}
+          <div className="absolute inset-0" style={{
+            transformOrigin: 'center',
+            opacity: tvPhase < 2 ? 0 : 1,
+            animation: tvPhase === 2 ? 'retroTvReveal 0.18s ease-out both' : undefined,
+          }}>
+            {/* 맵 배경 */}
+            <div className="absolute inset-0" style={getViewportBgStyle(viewport)} />
 
           {/* 방향 화살표 */}
           {screenView === 'map' && <>
@@ -906,6 +935,7 @@ export default function MapView({
 
           {false && screenView === 'areas' && <TownAreasPanel />}
           {screenView === 'detail' && <DeviceMobileDetailPanel />}
+          </div>{/* 맵 콘텐츠 래퍼 끝 */}
         </div>
 
         <img src={deviceTop} className="absolute inset-0 w-full h-full pointer-events-none select-none" style={{ zIndex: 3 }} alt="" />

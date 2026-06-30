@@ -820,6 +820,19 @@
   to   { opacity: 1; transform: scale(1); }
 }
 
+@keyframes retroTvOn {
+  0%   { transform: scaleY(1);     background: #000; opacity: 1; }
+  38%  { transform: scaleY(0.006); background: #fff; opacity: 1; }
+  54%  { transform: scaleY(0.006); background: #fff; opacity: 1; }
+  68%  { transform: scaleY(1.02);  background: #fff; opacity: 0; }
+  100% { transform: scaleY(1);     opacity: 0; }
+}
+
+@keyframes retroTvReveal {
+  0%   { opacity: 0; transform: scaleY(0.01); }
+  100% { opacity: 1; transform: scaleY(1); }
+}
+
 @keyframes shopSkipNudge {
   0%, 49% { transform: translateY(-0.5px); }
   50%, 100% { transform: translateY(0.5px); }
