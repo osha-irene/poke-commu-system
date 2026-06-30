@@ -5,7 +5,7 @@ import { database } from '../../../firebase';
 import { MapPin } from 'lucide-react';
 import RegionManagementPanel from './regions/RegionManagementPanel';
 
-export default function RegionExplorePanel({ 
+export default function RegionExplorePanel({
   regions = [],
   setRegions,
   allItems = [],
@@ -14,8 +14,9 @@ export default function RegionExplorePanel({
   onAddRegion,
   onDeleteRegion,
   onCreateTown,
-  onUpdateTown,  
-  onDeleteTown  
+  onUpdateTown,
+  onDeleteTown,
+  onOpenRegionEdit,
 }) {
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [editMode, setEditMode] = useState(null);
@@ -156,6 +157,7 @@ export default function RegionExplorePanel({
         onUpdateTown={onUpdateTown}
         onDeleteTown={onDeleteTown}
         setEditMode={setEditMode}
+        onOpenRegionEdit={onOpenRegionEdit}
       />
     </div>
   );

@@ -194,6 +194,7 @@ export const useRegionExplore = (
       isCave: region.isCave === true,
       isWaterside: region.isWaterside === true,
       isSafari,
+      background: region.background || null,
       minLevel,
       maxLevel,
       pendingDailyExploreExhaustedExp: isDailyExploreExhausted ? DAILY_EXPLORE_EXHAUSTED_EXP : 0,

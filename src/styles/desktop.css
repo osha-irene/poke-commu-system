@@ -1,5 +1,10 @@
 /* desktop fixed artboard overrides */
 
+.top-sheet-trigger { pointer-events: auto; }
+.top-sheet-trigger:hover { z-index: 65 !important; }
+.top-sheet-trigger:hover .top-sheet-content { opacity: 1 !important; }
+
+
 @media (min-width: 901px) {
   .site-header,
   .main-layout {

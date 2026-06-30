@@ -841,6 +841,7 @@ export default function AdminView() {
           onUpdateTown={updateTown}
           onDeleteTown={deleteTown}
           setRegions={setRegions}
+          onOpenRegionEdit={(region) => setEditingRegion(region)}
         />
       )}
 
@@ -1285,8 +1286,8 @@ export default function AdminView() {
           region={editingRegion}
           allPokemon={gamePokedex}
           onClose={() => setEditingRegion(null)}
-          onSave={(id, ids, rates, encounterRate, minLevel, maxLevel) => {
-            updateRegionPokemon?.(id, ids, rates, encounterRate, minLevel, maxLevel);
+          onSave={(id, ids, rates, encounterRate, minLevel, maxLevel, background) => {
+            updateRegionPokemon?.(id, ids, rates, encounterRate, minLevel, maxLevel, background);
             setEditingRegion(null);
             alert('저장 완료!');
           }}

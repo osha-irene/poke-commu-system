@@ -35,7 +35,8 @@ export default function RegionManagementPanel({
   onCreateTown,
   onUpdateTown,
   onDeleteTown,
-  setEditMode
+  setEditMode,
+  onOpenRegionEdit,
 }) {
   const [expandedGroups, setExpandedGroups] = useState({});
   const [showAddModal, setShowAddModal] = useState(false);
@@ -987,6 +988,17 @@ export default function RegionManagementPanel({
                     <Gift size={20} />
                     탐험보상 설정
                   </button>
+
+                  {onOpenRegionEdit && selectedRegion && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenRegionEdit(selectedRegion)}
+                      className="flex-1 py-3 rounded-lg font-bold transition-colors flex items-center justify-center gap-2 bg-purple-100 text-purple-700 hover:bg-purple-200"
+                    >
+                      <Edit2 size={20} />
+                      인카운터 배경
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1217,6 +1229,25 @@ export default function RegionManagementPanel({
                 </div>
               </div>
 
+            </div>
+
+            {/* 동굴/물가/사파리 체크박스 */}
+            <div className="flex gap-6 mt-4">
+              {[
+                { key: 'isCave', label: '동굴' },
+                { key: 'isWaterside', label: '물가' },
+                { key: 'isSafari', label: '사파리' },
+              ].map(({ key, label }) => (
+                <label key={key} className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={placeForm[key] === true}
+                    onChange={(e) => setPlaceForm({ ...placeForm, [key]: e.target.checked })}
+                    className="w-4 h-4 accent-lime-600"
+                  />
+                  <span className="text-sm font-semibold text-gray-700">{label}</span>
+                </label>
+              ))}
             </div>
 
             <div className="flex gap-3 mt-6">

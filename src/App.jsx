@@ -2094,6 +2094,8 @@ return (
 			  allPokemonMaster={allPokemonMaster}
 			  pokedexData={effectivePokedexData}
 			  caughtPokemon={caughtPokemon.filter(p => p !== null)}
+			  dailyWalks={trainer?.dailyWalks ?? 0}
+			  maxDailyWalks={trainer?.maxDailyWalks ?? 0}
 			/>
 		  )}
 		  
@@ -2167,6 +2169,7 @@ return (
           isCave={encounterPokemon.isCave === true}
           isWaterside={encounterPokemon.isWaterside === true}
           isSafari={encounterPokemon.isSafari === true}
+          encounterBackground={encounterPokemon.background || null}
         />
       )}
 

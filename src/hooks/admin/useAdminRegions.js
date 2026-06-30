@@ -57,7 +57,7 @@ export const useAdminRegions = (
   };
 
   // ========== 吏???ъ폆紐??낅뜲?댄듃 ==========
-  const updateRegionPokemon = async (regionId, updatedData, legacyRates, legacyEncounterRate, legacyMinLevel, legacyMaxLevel) => {
+  const updateRegionPokemon = async (regionId, updatedData, legacyRates, legacyEncounterRate, legacyMinLevel, legacyMaxLevel, background) => {
     if (!currentUser?.isAdmin) return;
 
     const existingRegion = regions.find(region => region.id === regionId) || {};
@@ -68,7 +68,8 @@ export const useAdminRegions = (
           pokemonRates: legacyRates || {},
           encounterRate: legacyEncounterRate,
           minLevel: legacyMinLevel,
-          maxLevel: legacyMaxLevel
+          maxLevel: legacyMaxLevel,
+          background: background !== undefined ? background : existingRegion.background,
         }
       : {
           ...existingRegion,
@@ -104,7 +105,8 @@ export const useAdminRegions = (
       isWaterside: normalizedData.isWaterside === true,
       isSafari: normalizedData.isSafari === true,
       places: Array.isArray(normalizedData.places) ? normalizedData.places : [],
-      pokemonFormConfig: normalizedData.pokemonFormConfig !== undefined ? normalizedData.pokemonFormConfig : {}
+      pokemonFormConfig: normalizedData.pokemonFormConfig !== undefined ? normalizedData.pokemonFormConfig : {},
+      ...(normalizedData.background ? { background: normalizedData.background } : {}),
     };
     
     const updatedRegions = (Array.isArray(regions) ? regions : []).map(region => 
