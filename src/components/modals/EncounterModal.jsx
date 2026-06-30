@@ -12,7 +12,7 @@ import encounterBallImg from '../../assets/map/encounter-ball.png';
 import encounterChooseImg from '../../assets/map/encounter-choose.png';
 import encounterRunImg from '../../assets/map/encounter-run.png';
 import encounterPokemonImg from '../../assets/map/encounter-pokemon.png';
-import { getEncounterBackground } from '../../utils/encounterBackground';
+import { getEncounterBackground, isNoBaseBackground } from '../../utils/encounterBackground';
 import { getEncounterBgBase } from '../../utils/encounterBgBase';
 
 const getBaseName = (name) => name?.replace(/\s*\(.*?\)\s*/g, '').trim() || name;
@@ -41,7 +41,7 @@ export default function EncounterModal({
   encounterBackground = null,
 }) {
   const bgImage = useMemo(() => getEncounterBackground(encounterBackground), [encounterBackground]);
-  const bgBase = useMemo(() => getEncounterBgBase(encounterBackground), [encounterBackground]);
+  const bgBase = useMemo(() => isNoBaseBackground(encounterBackground) ? null : getEncounterBgBase(encounterBackground), [encounterBackground]);
   const [selectedBall, setSelectedBall] = useState(null);
   const [catching, setCatching] = useState(false);
   const [result, setResult] = useState(null);
