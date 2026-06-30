@@ -269,11 +269,27 @@ export default function MapView({
   const fMed  = { fontFamily: 'GmarketSans, sans-serif', fontWeight: 500, color: BROWN };
 
   // 첫 번째 지역이 오른쪽에 오도록
+  // 4글자 초과 시 줄바꿈 (마지막 줄이 1글자가 되면 한 글자 앞에서 나눔)
+  const wrapPillText = (text) => {
+    const MAX = 4;
+    if (text.length <= MAX) return [text];
+    const lines = [];
+    let str = text;
+    while (str.length > MAX) {
+      const leftover = str.slice(MAX).length;
+      const cut = leftover === 1 ? MAX - 1 : MAX;
+      lines.push(str.slice(0, cut));
+      str = str.slice(cut);
+    }
+    lines.push(str);
+    return lines;
+  };
+
   // transform 미사용 — pillPop 애니메이션이 transform: scale(1)로 끝나면서 translateY를 덮어쓰는 문제 방지
   const regionPillPositions = [
     { top: 'calc(50% - 20px)', right: -125 },      // 0: 오른쪽 (첫 번째)
-    { top: -44,   left: 'calc(50% - 45px)' },      // 1: 위
-    { bottom: -44, left: 'calc(50% - 45px)' },     // 2: 아래
+    { top: -44,   left: 'calc(50% - 50px)' },      // 1: 위 (5px 왼쪽 이동)
+    { bottom: -44, left: 'calc(50% - 50px)' },     // 2: 아래 (5px 왼쪽 이동)
     { top: 'calc(50% - 20px)', left: -125 },       // 3: 왼쪽
   ];
 
@@ -904,15 +920,17 @@ export default function MapView({
                         lineHeight: '20px',
                         fontSynthesis: 'none',
                         letterSpacing: 0,
-                        whiteSpace: 'nowrap',
+                        whiteSpace: 'normal',
                         textAlign: 'center',
                         cursor: 'pointer',
                         zIndex: 12,
                         animation: `pillPop 0.18s ease-out both`,
                       }}
                     >
-                      <span style={{ position: 'relative', top: index === 0 ? 3 : 5, display: 'inline-block', transform: 'scaleX(0.9)', transformOrigin: 'center' }}>
-                        {region.name}
+                      <span style={{ position: 'relative', top: index === 0 ? 1 : 3, display: 'inline-block', transform: 'scaleX(0.9)', transformOrigin: 'center' }}>
+                        {wrapPillText(region.name).map((line, li, arr) => (
+                          <span key={li} style={{ display: 'block' }}>{line}</span>
+                        ))}
                       </span>
                     </button>
                   ))}
