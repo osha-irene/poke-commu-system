@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight, Footprints, MapPin, Trees, Mountain, Waves } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import mapBg from '../../assets/map/map.png';
@@ -110,7 +110,7 @@ export default function MapView({
         });
       }
     });
-    return Array.from(townMap.values()).filter(t => t.groupVisible !== false);
+    return Array.from(townMap.values());
   }, [regions]);
 
   useEffect(() => {
@@ -200,6 +200,39 @@ export default function MapView({
     }
   };
 
+  const animateTownToCenter = useCallback((town) => {
+    const vp = viewportRef.current;
+    const screenRect = screenRef.current?.getBoundingClientRect();
+    let centerXFrac = 0.5;
+    let centerYFrac = 0.5;
+    if (screenRect) {
+      const upRect    = arrowBtnRefs.up.current?.getBoundingClientRect();
+      const downRect  = arrowBtnRefs.down.current?.getBoundingClientRect();
+      const leftRect  = arrowBtnRefs.left.current?.getBoundingClientRect();
+      const rightRect = arrowBtnRefs.right.current?.getBoundingClientRect();
+      const areaTop    = upRect    ? upRect.bottom    - screenRect.top  : 0;
+      const areaBottom = downRect  ? downRect.top     - screenRect.top  : screenRect.height;
+      const areaLeft   = leftRect  ? leftRect.right   - screenRect.left : 0;
+      const areaRight  = rightRect ? rightRect.left   - screenRect.left : screenRect.width;
+      centerXFrac = (areaLeft + areaRight) / 2 / screenRect.width;
+      centerYFrac = ((areaTop + areaBottom) / 2 + 45) / screenRect.height;
+    }
+    const targetX = Math.max(0, Math.min(100 - vp.w, town.x - vp.w * centerXFrac));
+    const targetY = Math.max(0, Math.min(100 - vp.h, town.y - vp.h * centerYFrac));
+    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    const startX = vp.x, startY = vp.y;
+    const startTime = performance.now();
+    const duration = 220;
+    const ease = t => 1 - Math.pow(1 - t, 3);
+    const frame = (now) => {
+      const t = Math.min(1, (now - startTime) / duration);
+      const e = ease(t);
+      setViewport(v => ({ ...v, x: startX + (targetX - startX) * e, y: startY + (targetY - startY) * e }));
+      if (t < 1) animFrameRef.current = requestAnimationFrame(frame);
+    };
+    animFrameRef.current = requestAnimationFrame(frame);
+  }, []);
+
   const handlePinClick = (townId) => {
     setSelectedTownId(townId);
     setOpenTownRegionsId(townId);
@@ -208,12 +241,12 @@ export default function MapView({
       next.add(townId);
       try {
         localStorage.setItem('mapVisitedTownIds', JSON.stringify(Array.from(next)));
-      } catch {
-        // Ignore storage failures; the in-memory marker still updates.
-      }
+      } catch {}
       return next;
     });
     setScreenView('map');
+    const town = towns.find(t => t.groupId === townId);
+    if (town) animateTownToCenter(town);
   };
 
   const getDisplayPokemon = (area, place) => {
@@ -242,6 +275,39 @@ export default function MapView({
   const viewportRef = useRef(viewport);
   useEffect(() => { viewportRef.current = viewport; }, [viewport]);
   const animFrameRef = useRef(null);
+  const dragRef = useRef(null); // { startX, startY, startVpX, startVpY }
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleMapMouseDown = useCallback((e) => {
+    if (e.button !== 0) return;
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      startVpX: viewportRef.current.x,
+      startVpY: viewportRef.current.y,
+    };
+    setIsDragging(false);
+  }, []);
+
+  const handleMapMouseMove = useCallback((e) => {
+    if (!dragRef.current) return;
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
+    if (!isDragging && Math.hypot(dx, dy) < 4) return;
+    setIsDragging(true);
+    const rect = screenRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const mapDx = (dx / rect.width)  * viewportRef.current.w;
+    const mapDy = (dy / rect.height) * viewportRef.current.h;
+    const newX = Math.max(0, Math.min(100 - viewportRef.current.w, dragRef.current.startVpX - mapDx));
+    const newY = Math.max(0, Math.min(100 - viewportRef.current.h, dragRef.current.startVpY - mapDy));
+    setViewport(v => ({ ...v, x: newX, y: newY }));
+  }, [isDragging]);
+
+  const handleMapMouseUp = useCallback(() => {
+    dragRef.current = null;
+    setTimeout(() => setIsDragging(false), 0);
+  }, []);
   const clickAudioRef = useRef(null);
   useEffect(() => {
     const basePath = window.location.pathname.includes('/poke-commu-system') ? '/poke-commu-system' : '';
@@ -260,8 +326,9 @@ export default function MapView({
 
   const navigateToDirection = (dir) => {
     if (towns.length === 0) return;
-    const cx = viewport.x + viewport.w / 2;
-    const cy = viewport.y + viewport.h / 2;
+    const selectedTown = towns.find(t => t.groupId === selectedTownId);
+    const cx = selectedTown ? selectedTown.x : viewport.x + viewport.w / 2;
+    const cy = selectedTown ? selectedTown.y : viewport.y + viewport.h / 2;
 
     // 방향별로 해당 방향에 있는 마을 필터 후 가장 가까운 것
     const candidates = towns.filter(t => {
@@ -283,41 +350,7 @@ export default function MapView({
       return dist < bestDist ? t : best;
     });
 
-    // 화살표들 사이의 중심점을 기준으로 마을 위치 계산
-    let centerXFrac = 0.5;
-    let centerYFrac = 0.5;
-    const screenRect = screenRef.current?.getBoundingClientRect();
-    if (screenRect) {
-      const upRect    = arrowBtnRefs.up.current?.getBoundingClientRect();
-      const downRect  = arrowBtnRefs.down.current?.getBoundingClientRect();
-      const leftRect  = arrowBtnRefs.left.current?.getBoundingClientRect();
-      const rightRect = arrowBtnRefs.right.current?.getBoundingClientRect();
-      const areaTop    = upRect    ? upRect.bottom    - screenRect.top  : 0;
-      const areaBottom = downRect  ? downRect.top     - screenRect.top  : screenRect.height;
-      const areaLeft   = leftRect  ? leftRect.right   - screenRect.left : 0;
-      const areaRight  = rightRect ? rightRect.left   - screenRect.left : screenRect.width;
-      centerXFrac = (areaLeft + areaRight) / 2 / screenRect.width;
-      centerYFrac = ((areaTop + areaBottom) / 2 + 45) / screenRect.height;
-    }
-
-    const targetX = Math.max(0, Math.min(100 - viewport.w, nearest.x - viewport.w * centerXFrac));
-    const targetY = Math.max(0, Math.min(100 - viewport.h, nearest.y - viewport.h * centerYFrac));
-
-    // rAF 보간으로 배경·핀 동시 이동
-    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-    const startX = viewportRef.current.x;
-    const startY = viewportRef.current.y;
-    const startTime = performance.now();
-    const duration = 220;
-    const ease = t => 1 - Math.pow(1 - t, 3); // ease-out cubic
-    const frame = (now) => {
-      const t = Math.min(1, (now - startTime) / duration);
-      const e = ease(t);
-      setViewport(v => ({ ...v, x: startX + (targetX - startX) * e, y: startY + (targetY - startY) * e }));
-      if (t < 1) animFrameRef.current = requestAnimationFrame(frame);
-    };
-    animFrameRef.current = requestAnimationFrame(frame);
-
+    animateTownToCenter(nearest);
     setSelectedTownId(nearest.groupId);
     setOpenTownRegionsId(null);
     playClickSound();
@@ -326,8 +359,9 @@ export default function MapView({
   const arrowImgs = { up: arrowTopImg, down: arrowBottomImg, left: arrowLeftImg, right: arrowRightImg };
 
   const arrowHasTowns = useMemo(() => {
-    const cx = viewport.x + viewport.w / 2;
-    const cy = viewport.y + viewport.h / 2;
+    const selectedTown = towns.find(t => t.groupId === selectedTownId);
+    const cx = selectedTown ? selectedTown.x : viewport.x + viewport.w / 2;
+    const cy = selectedTown ? selectedTown.y : viewport.y + viewport.h / 2;
     const has = (dir) => towns.some(t => {
       const dx = t.x - cx, dy = t.y - cy;
       if (dir === 'right') return dx > 1;
@@ -748,8 +782,12 @@ export default function MapView({
         <div
           ref={screenRef}
           className="absolute overflow-hidden"
-          onClick={() => setOpenTownRegionsId(null)}
-          style={{ zIndex: 2, left: SCREEN.left, top: SCREEN.top, right: SCREEN.right, bottom: SCREEN.bottom }}
+          onClick={() => { if (!isDragging) setOpenTownRegionsId(null); }}
+          onMouseDown={handleMapMouseDown}
+          onMouseMove={handleMapMouseMove}
+          onMouseUp={handleMapMouseUp}
+          onMouseLeave={handleMapMouseUp}
+          style={{ zIndex: 2, left: SCREEN.left, top: SCREEN.top, right: SCREEN.right, bottom: SCREEN.bottom, cursor: isDragging ? 'grabbing' : 'grab' }}
         >
 
           {/* 맵 배경 */}
@@ -768,6 +806,7 @@ export default function MapView({
           {screenView !== 'detail' && towns.map(town => {
             const coords = toViewportCoords(town.x, town.y, viewport);
             if (coords.x < -8 || coords.x > 108 || coords.y < -8 || coords.y > 108) return null;
+            const isHidden = town.groupVisible === false;
             const isActive = town.groupId === selectedTownId;
             const isNewTown = !visitedTownIds.has(town.groupId);
             const townRegions = regions
@@ -777,19 +816,21 @@ export default function MapView({
             return (
               <div key={town.groupId} onClick={(event) => {
                 event.stopPropagation();
+                if (isHidden || isDragging) return;
                 playClickSound();
                 handlePinClick(town.groupId);
               }}
-                role="button"
-                tabIndex={0}
+                role={isHidden ? undefined : 'button'}
+                tabIndex={isHidden ? -1 : 0}
                 onKeyDown={(event) => {
+                  if (isHidden) return;
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.stopPropagation();
                     handlePinClick(town.groupId);
                   }
                 }}
                 className="absolute flex flex-col items-center gap-0.5 hover:scale-110 transition-transform"
-                style={{ left: `${coords.x}%`, top: `${coords.y}%`, transform: 'translate(-50%, -100%)', zIndex: 10, opacity: isActive ? 1 : 0.85 }}>
+                style={{ left: `${coords.x}%`, top: `${coords.y}%`, transform: 'translate(-50%, -100%)', zIndex: 10, opacity: isActive ? 1 : 0.85, cursor: isHidden ? 'default' : 'pointer', width: 'max-content' }}>
                 <div className="relative flex items-center justify-center" style={{ height: 77, width: 'auto' }}>
                   <img src={mapNameImg} alt="" style={{ height: 77, width: 'auto', display: 'block', filter: `${isActive ? `drop-shadow(0 0 3px ${town.color}) ` : ''}drop-shadow(5px 5px 1px rgba(43, 16, 2, 0.55))` }} />
                   <span className="absolute inset-0 flex items-center justify-center whitespace-nowrap" style={{ fontFamily: "'GmarketSans', sans-serif", fontWeight: 700, fontSize: 24, lineHeight: 1, color: '#373a33', imageRendering: 'auto', letterSpacing: 0, fontSynthesis: 'none' }}>
@@ -822,7 +863,6 @@ export default function MapView({
                       style={{
                         position: 'absolute',
                         ...regionPillPositions[index],
-                        minHeight: 40,
                         padding: '5px 16px',
                         boxSizing: 'border-box',
                         border: 'none',

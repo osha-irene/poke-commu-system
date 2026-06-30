@@ -642,7 +642,7 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
             ref={recipeGridRef}
             onScroll={updateRecipeScrollbar}
             className={`p-6 grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}
-            style={{ overflowY: 'scroll', height: '100%', scrollbarWidth: 'none', boxSizing: 'border-box' }}
+            style={{ position: 'absolute', inset: 0, overflowY: 'scroll', scrollbarWidth: 'none', boxSizing: 'border-box', alignContent: 'start' }}
           >
             {tabRecipes.length === 0 ? (
               <div className="col-span-2 text-center py-12 text-gray-400">
