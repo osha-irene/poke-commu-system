@@ -3,6 +3,7 @@ import { ChevronDown, ChevronLeft, ChevronRight, Footprints, MapPin, Trees, Moun
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import mapBg from '../../assets/map/map.png';
 import deviceTop from '../../assets/map/device-top.png';
+import deviceTitle from '../../assets/map/device-title.png';
 import deviceBottom from '../../assets/map/device-bottom.png';
 import mapNameImg from '../../assets/map/map-name.png';
 import searchGoImg from '../../assets/map/search-go.png';
@@ -957,6 +958,7 @@ export default function MapView({
         </div>
 
         <img src={deviceTop} className="absolute inset-0 w-full h-full pointer-events-none select-none" style={{ zIndex: 3 }} alt="" />
+        <img src={deviceTitle} className="absolute pointer-events-none select-none" style={{ zIndex: 4, top: 0, left: '50%', transform: 'translateX(-50%)' }} alt="" />
       </div>
     </div>
   );
