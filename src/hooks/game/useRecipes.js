@@ -211,14 +211,11 @@ export const useRecipes = (currentUser, updateCurrentUser) => {
       ].slice(0, 10)
     });
     
-    // 레시피 발견 처리
-    const isNewRecipe = discoverRecipe(recipe.id);
-    
-    if (isNewRecipe) {
-      alert(`🎉 새로운 레시피를 발견했습니다!\n\n"${recipe.name}"이(가) 레시피 도감에 등록되었습니다.`);
-    } else {
-      alert(`✅ ${resultItem.name}을(를) 만들었습니다!`);
+    // 실패 아이템이 아닐 때만 레시피 발견 처리
+    if (!recipe.id?.startsWith('fail_')) {
+      discoverRecipe(recipe.id);
     }
+    alert(`✅ ${resultItem.name}을(를) 만들었습니다!`);
     
     return true;
   };

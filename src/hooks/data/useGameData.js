@@ -195,6 +195,7 @@ export const useGameData = (allPokemonData) => {
           campingSettings: savedSystemSettings.campingSettings || {},
           ...(savedSystemSettings.conditionMax != null && { conditionMax: Number(savedSystemSettings.conditionMax) }),
           ...(savedSystemSettings.pokedexActiveTowns != null && { pokedexActiveTowns: savedSystemSettings.pokedexActiveTowns }),
+          ...(savedSystemSettings.hiddenMenus != null && { hiddenMenus: savedSystemSettings.hiddenMenus }),
         };
         await set(systemSettingsRef, normalizedSystemSettings);
         setSystemSettings(normalizedSystemSettings);

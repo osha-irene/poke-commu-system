@@ -150,11 +150,10 @@ export default function CookingView() {
   };
 
   const FAIL_ITEMS = [
-    { name: 'thingX', label: '의문의 덩어리X' },
-    { name: 'muk-like-thing', label: '악취 나는 무언가' },
-    { name: 'Trubbish-like-thing', label: '깨진 쓰레기 봉투' },
+    { nameEn: 'thingX' },
+    { nameEn: 'muk-like-thing' },
+    { nameEn: 'Trubbish-like-thing' },
   ];
-  const [cookFailPopup, setCookFailPopup] = useState(null);
 
   const handleCook = () => {
     if (selectedIngredients.length === 0) { alert('재료를 선택해주세요!'); return; }
@@ -166,11 +165,10 @@ export default function CookingView() {
       const fail = FAIL_ITEMS[Math.floor(Math.random() * FAIL_ITEMS.length)];
       const failRecipe = {
         id: `fail_${Date.now()}`,
-        name: fail.name,
-        result: { name: fail.name, pocket: 'items', effect: '요리 실패의 산물...', canSell: false },
+        name: fail.nameEn,
+        result: { name: fail.nameEn, nameEn: fail.nameEn, pocket: 'items', effect: '요리 실패의 산물...', canSell: false },
       };
       onCook(failRecipe, selectedIngredients);
-      setCookFailPopup(fail.label);
     }
     setSelectedIngredients([]);
   };
@@ -293,30 +291,6 @@ export default function CookingView() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 p-6">
-      {cookFailPopup && createPortal(
-        <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}
-          onClick={() => setCookFailPopup(null)}
-        >
-          <div
-            style={{ background: '#fff', borderRadius: 16, padding: '36px 40px', maxWidth: 360, textAlign: 'center', boxShadow: '0 8px 32px rgba(0,0,0,0.25)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ fontSize: 48 }}>🗑️</div>
-            <p style={{ fontSize: 18, fontWeight: 800, color: '#1a2e10', lineHeight: 1.6 }}>
-              요리를 실패했다!<br />
-              <span style={{ color: '#b45309' }}>…{cookFailPopup}을(를) 만들고 말았다!</span>
-            </p>
-            <button
-              onClick={() => setCookFailPopup(null)}
-              style={{ marginTop: 4, padding: '10px 28px', background: '#4a7a08', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 15, cursor: 'pointer' }}
-            >
-              확인
-            </button>
-          </div>
-        </div>,
-        document.body
-      )}
       {/* 헤더 */}
       <div className="rounded-lg border-2 border-lime-300 bg-white/55 p-6 shadow-sm">
         <div className="flex items-center justify-between">
