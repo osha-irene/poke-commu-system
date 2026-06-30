@@ -125,8 +125,26 @@ const notifyBot = createNotifyBot({
 // ── 공통 처리 헬퍼 ───────────────────────────────────────────────
 const statusFromWebhookBody = body => {
   if (!body) return null;
+  // 직접 status 객체 래핑
   if (body.status) return body.status;
+  // Pleroma/일부 구현체 형식
   if (body.event === 'status.created' && body.object) return body.object;
+  // Mastodon streaming/push 형식: payload가 JSON 문자열
+  if (body.event && typeof body.payload === 'string') {
+    try {
+      const parsed = JSON.parse(body.payload);
+      // notification 이벤트: {type: 'mention', status: {...}}
+      if (parsed.status) return parsed.status;
+      // 직접 status가 payload인 경우
+      if (parsed.id && parsed.content) return parsed;
+    } catch (_) {}
+  }
+  // payload가 이미 객체인 경우
+  if (body.event && body.payload && typeof body.payload === 'object') {
+    if (body.payload.status) return body.payload.status;
+    if (body.payload.id && body.payload.content) return body.payload;
+  }
+  // 바디 자체가 status인 경우
   return body.id && body.content ? body : null;
 };
 
@@ -206,7 +224,21 @@ const processTradeStatus = async (status, source = 'webhook') => {
 
   const response = await getTradeBot().handle({ status, content, members, author, authorAccount });
   await markProcessed(db, key, { source, command: tradeCommand, account: authorAccount });
-  if (response) await tradeCtx.replyToStatus(status, response);
+  if (response) {
+    const posted = await tradeCtx.replyToStatus(status, response);
+    // 봇 답글 ID를 trade 레코드에 저장 → 스레드 식별에 사용
+    if (posted?.id) {
+      const snap = await db.ref('gameData/tradeRequests').once('value');
+      const trades = snap.val() || {};
+      const now = Date.now();
+      const match = Object.entries(trades).find(([, t]) =>
+        ['pending', 'accepted'].includes(t.status) &&
+        (t.requesterId === author.id || t.targetId === author.id) &&
+        now - Number(t.createdAt || 0) <= 24 * 60 * 60 * 1000
+      );
+      if (match) await db.ref(`gameData/tradeRequests/${match[0]}/lastBotStatusId`).set(posted.id);
+    }
+  }
   return { processed: true, command: tradeCommand };
 };
 
@@ -306,8 +338,12 @@ exports.checkCampMentions = functions.region(region.region).runWith(scheduleOpts
 exports.tradeWebhook = functions.region(region.region).runWith(webhookOpts).https.onRequest(async (req, res) => {
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   try {
+    console.log('[tradeWebhook] body:', JSON.stringify(req.body).slice(0, 1000));
     const status = statusFromWebhookBody(req.body);
-    if (!status) { res.status(200).json({ ignored: true }); return; }
+    if (!status) {
+      console.log('[tradeWebhook] ignored: could not parse status from body');
+      res.status(200).json({ ignored: true }); return;
+    }
     res.status(200).json(await processTradeStatus(status, 'webhook'));
   } catch (e) { console.error('tradeWebhook error:', e); res.status(500).json({ error: e.message }); }
 });

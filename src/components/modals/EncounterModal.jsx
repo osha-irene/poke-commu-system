@@ -429,7 +429,7 @@ export default function EncounterModal({
                 inset: 0,
                 display: 'flex',
                 flexDirection: 'column',
-                padding: '20px',
+                padding: '30px',
                 overflow: 'hidden',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -444,7 +444,7 @@ export default function EncounterModal({
                   </button>
                 </div>
 
-                <div style={{ flex: 1, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
+                <div style={{ overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', alignContent: 'start', gap: 6 }}>
                   {pokeballs.length === 0 ? (
                     <div style={{ gridColumn: '1 / -1', textAlign: 'center', paddingTop: 16, color: '#888', fontSize: 14 }}>
                       사용 가능한 볼이 없습니다!

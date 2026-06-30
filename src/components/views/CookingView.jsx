@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { ChefHat, Book, Plus, Minus, Sparkles, X, Utensils, Package, Soup, BookOpen, HelpCircle, UtensilsCrossed } from 'lucide-react';
 import recipesData from '../../data/recipes.json';
 
@@ -377,16 +378,70 @@ export default function CookingView() {
   );
 }
 
+function PortalTooltip({ text, children }) {
+  const [pos, setPos] = useState(null);
+  const ref = useRef(null);
+
+  const handleMouseEnter = useCallback(() => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    setPos({ x: rect.left + rect.width / 2, y: rect.top });
+  }, []);
+
+  const handleMouseLeave = useCallback(() => setPos(null), []);
+
+  return (
+    <div ref={ref} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} style={{ position: 'relative', display: 'inline-block' }}>
+      {children}
+      {pos && text && createPortal(
+        <div style={{
+          position: 'fixed',
+          left: pos.x,
+          top: pos.y - 8,
+          transform: 'translate(-50%, -100%)',
+          zIndex: 9999,
+          pointerEvents: 'none',
+          background: '#1f2937',
+          color: '#fff',
+          fontSize: 12,
+          borderRadius: 8,
+          padding: '8px 12px',
+          maxWidth: 200,
+          textAlign: 'center',
+          lineHeight: 1.5,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'keep-all',
+        }}>
+          {text}
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 0,
+            height: 0,
+            borderLeft: '6px solid transparent',
+            borderRight: '6px solid transparent',
+            borderTop: '6px solid #1f2937',
+          }} />
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+}
+
 function ResultItemImage({ imageUrl }) {
   const [failed, setFailed] = useState(false);
   return (
-    <div className="w-14 h-14 bg-white rounded-lg border-2 border-orange-300 flex items-center justify-center overflow-hidden">
+    <div style={{ width: 64, height: 64, padding: 4, background: '#fff', borderRadius: 8, border: '2px solid #fdba74', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
       {!failed && imageUrl ? (
         <img
           src={imageUrl}
           alt=""
           onError={() => setFailed(true)}
-          style={{ width: 48, height: 48, objectFit: 'contain', imageRendering: 'pixelated' }}
+          style={{ width: '100%', height: '100%', objectFit: 'contain', imageRendering: 'pixelated' }}
         />
       ) : (
         <Package size={28} style={{ color: '#ccc' }} />
@@ -424,17 +479,9 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
             </div>
             <div className="flex items-center justify-center gap-4 p-3">
               <div className="flex-shrink-0 mx-3 flex flex-col items-center gap-1">
-                <div className="relative group">
+                <PortalTooltip text={recipe.description}>
                   <ResultItemImage imageUrl={getItemImageUrl(recipe.result, allItems)} />
-                  {recipe.description && (
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50 w-max max-w-[180px]" style={{ pointerEvents: 'none' }}>
-                      <div className="bg-gray-800 text-white text-xs rounded-lg px-3 py-2 leading-relaxed text-center shadow-lg">
-                        {recipe.description}
-                      </div>
-                      <div className="w-2 h-2 bg-gray-800 rotate-45 mx-auto -mt-1" />
-                    </div>
-                  )}
-                </div>
+                </PortalTooltip>
               </div>
               <div className="flex-1 min-w-0">
                 {recipeSupports(recipe, 'fixed') && recipe.ingredients && (
@@ -461,8 +508,8 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
             </div>
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center gap-1.5 min-h-[80px] py-3">
-            <div className="flex items-center justify-center gap-1.5">
+          <div style={{ minHeight: 80, padding: '16px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <HelpCircle size={16} className="text-gray-400 flex-shrink-0" />
               <p className="text-sm font-bold text-gray-700">{recipe.name}</p>
             </div>
@@ -479,7 +526,7 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-scroll"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sticky top-0 border-b-2 border-lime-300 bg-white/95 text-green-950 p-6 flex items-center justify-between z-10">
@@ -512,7 +559,7 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
           ))}
         </div>
 
-        <div className={`p-6 grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
+        <div className={`p-6 grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`} style={{ alignItems: 'start' }}>
           {tabRecipes.length === 0 ? (
             <div className="col-span-2 text-center py-12 text-gray-400">
               <BookOpen size={56} className="mx-auto mb-4" />

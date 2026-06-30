@@ -2029,6 +2029,7 @@ return (
             currentTab={currentTab}
             setCurrentTab={setCurrentTab}
             isAdmin={isAdmin}
+            hiddenMenus={systemSettings?.hiddenMenus || []}
             trainer={trainer}
             onLogout={handleLogout}
             soundEnabled={soundEnabled}

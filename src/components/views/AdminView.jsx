@@ -1192,10 +1192,54 @@ export default function AdminView() {
               </div>
             </div>
             </section>
+
+            {/* 메뉴 접근 관리 */}
+            <section className="rounded-lg border border-lime-200 bg-white/40 p-5">
+              <h4 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
+                <Settings size={18} strokeWidth={2.5} /> 메뉴 접근 관리
+              </h4>
+              <p className="text-sm text-gray-500 mb-4">일반 멤버에게 표시할 메뉴를 설정합니다. 비활성화하면 관리자에게만 보입니다.</p>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: 'pokedex', label: '도감' },
+                  { id: 'map', label: '지도/포켓몬' },
+                  { id: 'camping', label: '캠핑' },
+                  { id: 'cooking', label: '요리' },
+                  { id: 'shop', label: '상점' },
+                  { id: 'pokemon', label: '엔트리' },
+                  { id: 'items', label: '가방' },
+                  { id: 'qna', label: 'Q&A' },
+                ].map(({ id, label }) => {
+                  const hidden = systemSettings?.hiddenMenus?.includes(id);
+                  return (
+                    <button
+                      key={id}
+                      onClick={async () => {
+                        const current = systemSettings?.hiddenMenus || [];
+                        const next = hidden
+                          ? current.filter(m => m !== id)
+                          : [...current, id];
+                        await updateSystemSettings?.({ ...systemSettings, hiddenMenus: next });
+                      }}
+                      className={`flex items-center justify-between px-4 py-2.5 rounded-lg border-2 font-semibold text-sm transition-all ${
+                        hidden
+                          ? 'border-gray-300 bg-gray-100 text-gray-400'
+                          : 'border-lime-300 bg-lime-50 text-lime-800'
+                      }`}
+                    >
+                      <span>{label}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${hidden ? 'bg-gray-200 text-gray-500' : 'bg-lime-200 text-lime-700'}`}>
+                        {hidden ? '숨김' : '표시'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
           </Card>
         </>
       )}
-		
+
 		{adminTab === 'camping' && (
 		  <CampingAdminPanel
 			campingSessions={camping?.campingSessions || []}

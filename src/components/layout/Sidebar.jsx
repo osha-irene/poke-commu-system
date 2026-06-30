@@ -34,7 +34,12 @@ const adminTabs = [
 
 const IconImage = ({ src }) => <img src={src} alt="" aria-hidden="true" />;
 
-export default function Sidebar({ currentTab, setCurrentTab, isAdmin }) {
+export default function Sidebar({ currentTab, setCurrentTab, isAdmin, hiddenMenus = [] }) {
+  const visible = (id) => isAdmin || !hiddenMenus.includes(id);
+
+  const visibleTrainerTabs = trainerTabs.filter(item => visible(item.id));
+  const visibleAdventureTabs = adventureTabs.filter(item => visible(item.id));
+
   const isTrainerActive = currentTab === 'profile' || trainerTabs.some((item) => item.id === currentTab);
   const isAdventureActive = adventureTabs.some((item) => item.id === currentTab);
   const isAdminToolActive = adminTabs.some((item) => item.id === currentTab);
@@ -56,7 +61,7 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin }) {
             </button>
 
             <div className="trainer-nav__submenu" aria-label="트레이너 카드 하위 메뉴">
-              {trainerTabs.map((item) => (
+              {visibleTrainerTabs.map((item) => (
                 <button
                   key={item.id}
                   type="button"
@@ -70,14 +75,16 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin }) {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setCurrentTab('pokedex')}
-            className={`brush-nav-button trainer-nav__button ${currentTab === 'pokedex' ? 'is-active' : ''}`}
-            aria-label="도감"
-          >
-            <IconImage src={dexIcon} />
-          </button>
+          {visible('pokedex') && (
+            <button
+              type="button"
+              onClick={() => setCurrentTab('pokedex')}
+              className={`brush-nav-button trainer-nav__button ${currentTab === 'pokedex' ? 'is-active' : ''}`}
+              aria-label="도감"
+            >
+              <IconImage src={dexIcon} />
+            </button>
+          )}
 
           <div className="trainer-nav__group">
             <button
@@ -90,7 +97,7 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin }) {
             </button>
 
             <div className="trainer-nav__submenu" aria-label="모험 하위 메뉴">
-              {adventureTabs.map((item) => (
+              {visibleAdventureTabs.map((item) => (
                 <button
                   key={item.id}
                   type="button"
@@ -104,26 +111,30 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin }) {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setCurrentTab('shop')}
-            className={`brush-nav-button trainer-nav__button ${currentTab === 'shop' ? 'is-active' : ''}`}
-            aria-label="상점"
-          >
-            <IconImage src={shopIcon} />
-          </button>
+          {visible('shop') && (
+            <button
+              type="button"
+              onClick={() => setCurrentTab('shop')}
+              className={`brush-nav-button trainer-nav__button ${currentTab === 'shop' ? 'is-active' : ''}`}
+              aria-label="상점"
+            >
+              <IconImage src={shopIcon} />
+            </button>
+          )}
         </div>
 
 <div className="trainer-nav__bottom">
   <div className="trainer-nav__social" aria-label="커뮤니티 링크">
-    <button
-      type="button"
-      onClick={() => setCurrentTab('qna')}
-      className={`trainer-nav__social-button ${currentTab === 'qna' ? 'is-active' : ''}`}
-      aria-label="Q&A"
-    >
-      <IconImage src={qnaIcon} />
-    </button>
+    {visible('qna') && (
+      <button
+        type="button"
+        onClick={() => setCurrentTab('qna')}
+        className={`trainer-nav__social-button ${currentTab === 'qna' ? 'is-active' : ''}`}
+        aria-label="Q&A"
+      >
+        <IconImage src={qnaIcon} />
+      </button>
+    )}
     <a href="https://x.com/Poke_OriginB" target="_blank" rel="noopener noreferrer" className="trainer-nav__social-button" aria-label="Twitter">
           <IconImage src={twitterIcon} />
         </a>
