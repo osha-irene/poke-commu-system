@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight, Footprints, MapPin, Trees, Mountain, Waves } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import mapBg from '../../assets/map/map.png';
@@ -6,6 +6,10 @@ import deviceTop from '../../assets/map/device-top.png';
 import deviceBottom from '../../assets/map/device-bottom.png';
 import mapNameImg from '../../assets/map/map-name.png';
 import searchGoImg from '../../assets/map/search-go.png';
+import arrowTopImg from '../../assets/map/arrow_top.png';
+import arrowBottomImg from '../../assets/map/arrow_bottom.png';
+import arrowLeftImg from '../../assets/map/arrow_left.png';
+import arrowRightImg from '../../assets/map/arrow_right.png';
 import { ref, get } from 'firebase/database';
 import { database } from '../../firebase';
 
@@ -223,12 +227,125 @@ export default function MapView({
   const BROWN_MUTED = 'rgba(61,26,8,0.55)';
   const fBold = { fontFamily: 'GmarketSans, sans-serif', fontWeight: 700, color: BROWN };
   const fMed  = { fontFamily: 'GmarketSans, sans-serif', fontWeight: 500, color: BROWN };
+
+  // 첫 번째 지역이 오른쪽에 오도록
+  // transform 미사용 — pillPop 애니메이션이 transform: scale(1)로 끝나면서 translateY를 덮어쓰는 문제 방지
   const regionPillPositions = [
-    { top: -44, left: '50%', transform: 'translateX(-50%)' },
-    { top: '50%', right: -140, transform: 'translateY(-50%)' },
-    { bottom: -44, left: '50%', transform: 'translateX(-50%)' },
-    { top: '50%', left: -140, transform: 'translateY(-50%)' },
+    { top: 'calc(50% - 20px)', right: -140 },      // 0: 오른쪽 (첫 번째)
+    { top: -44,   left: 'calc(50% - 45px)' },      // 1: 위
+    { bottom: -44, left: 'calc(50% - 45px)' },     // 2: 아래
+    { top: 'calc(50% - 20px)', left: -140 },       // 3: 왼쪽
   ];
+
+  const screenRef = useRef(null);
+  const arrowBtnRefs = { up: useRef(null), down: useRef(null), left: useRef(null), right: useRef(null) };
+  const viewportRef = useRef(viewport);
+  useEffect(() => { viewportRef.current = viewport; }, [viewport]);
+  const animFrameRef = useRef(null);
+  const clickAudioRef = useRef(null);
+  useEffect(() => {
+    const basePath = window.location.pathname.includes('/poke-commu-system') ? '/poke-commu-system' : '';
+    const audio = new Audio(`${basePath}/sound/A-button.mp3`);
+    audio.preload = 'auto';
+    audio.volume = 0.5;
+    clickAudioRef.current = audio;
+  }, []);
+
+  const playClickSound = () => {
+    const audio = clickAudioRef.current;
+    if (!audio) return;
+    audio.currentTime = 0.2;
+    audio.play().catch(() => {});
+  };
+
+  const navigateToDirection = (dir) => {
+    if (towns.length === 0) return;
+    const cx = viewport.x + viewport.w / 2;
+    const cy = viewport.y + viewport.h / 2;
+
+    // 방향별로 해당 방향에 있는 마을 필터 후 가장 가까운 것
+    const candidates = towns.filter(t => {
+      const dx = t.x - cx;
+      const dy = t.y - cy;
+      if (dir === 'right') return dx > 1;
+      if (dir === 'left')  return dx < -1;
+      if (dir === 'down')  return dy > 1;
+      if (dir === 'up')    return dy < -1;
+      return false;
+    });
+
+    if (candidates.length === 0) return;
+
+    // 해당 방향 축 기준 가장 가까운 마을
+    const nearest = candidates.reduce((best, t) => {
+      const dist = Math.hypot(t.x - cx, t.y - cy);
+      const bestDist = Math.hypot(best.x - cx, best.y - cy);
+      return dist < bestDist ? t : best;
+    });
+
+    // 화살표들 사이의 중심점을 기준으로 마을 위치 계산
+    let centerXFrac = 0.5;
+    let centerYFrac = 0.5;
+    const screenRect = screenRef.current?.getBoundingClientRect();
+    if (screenRect) {
+      const upRect    = arrowBtnRefs.up.current?.getBoundingClientRect();
+      const downRect  = arrowBtnRefs.down.current?.getBoundingClientRect();
+      const leftRect  = arrowBtnRefs.left.current?.getBoundingClientRect();
+      const rightRect = arrowBtnRefs.right.current?.getBoundingClientRect();
+      const areaTop    = upRect    ? upRect.bottom    - screenRect.top  : 0;
+      const areaBottom = downRect  ? downRect.top     - screenRect.top  : screenRect.height;
+      const areaLeft   = leftRect  ? leftRect.right   - screenRect.left : 0;
+      const areaRight  = rightRect ? rightRect.left   - screenRect.left : screenRect.width;
+      centerXFrac = (areaLeft + areaRight) / 2 / screenRect.width;
+      centerYFrac = ((areaTop + areaBottom) / 2 + 45) / screenRect.height;
+    }
+
+    const targetX = Math.max(0, Math.min(100 - viewport.w, nearest.x - viewport.w * centerXFrac));
+    const targetY = Math.max(0, Math.min(100 - viewport.h, nearest.y - viewport.h * centerYFrac));
+
+    // rAF 보간으로 배경·핀 동시 이동
+    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    const startX = viewportRef.current.x;
+    const startY = viewportRef.current.y;
+    const startTime = performance.now();
+    const duration = 220;
+    const ease = t => 1 - Math.pow(1 - t, 3); // ease-out cubic
+    const frame = (now) => {
+      const t = Math.min(1, (now - startTime) / duration);
+      const e = ease(t);
+      setViewport(v => ({ ...v, x: startX + (targetX - startX) * e, y: startY + (targetY - startY) * e }));
+      if (t < 1) animFrameRef.current = requestAnimationFrame(frame);
+    };
+    animFrameRef.current = requestAnimationFrame(frame);
+
+    setSelectedTownId(nearest.groupId);
+    setOpenTownRegionsId(null);
+    playClickSound();
+  };
+
+  const arrowImgs = { up: arrowTopImg, down: arrowBottomImg, left: arrowLeftImg, right: arrowRightImg };
+
+  const ArrowBtn = ({ dir }) => (
+    <button
+      ref={arrowBtnRefs[dir]}
+      type="button"
+      onClick={(e) => { e.stopPropagation(); navigateToDirection(dir); }}
+      style={{
+        position: 'absolute',
+        ...(dir === 'up'    && { top: 6,    left: '50%', transform: 'translateX(-50%)' }),
+        ...(dir === 'down'  && { bottom: 31, left: '50%', transform: 'translateX(-50%)' }),
+        ...(dir === 'left'  && { left: 6,   top: '50%',  transform: 'translateY(-50%)' }),
+        ...(dir === 'right' && { right: 6,  top: '50%',  transform: 'translateY(-50%)' }),
+        zIndex: 20,
+        background: 'none',
+        border: 'none',
+        padding: 0,
+        cursor: 'pointer',
+      }}
+    >
+      <img src={arrowImgs[dir]} alt={dir} style={{ display: 'block', imageRendering: 'auto', transform: 'scale(0.9)', transformOrigin: 'center' }} />
+    </button>
+  );
 
   /* ── 스크린 내 영역 목록 패널 ── */
   const AreasPanel = () => {
@@ -613,6 +730,7 @@ export default function MapView({
 
         {/* 스크린 영역 */}
         <div
+          ref={screenRef}
           className="absolute overflow-hidden"
           onClick={() => setOpenTownRegionsId(null)}
           style={{ zIndex: 2, left: SCREEN.left, top: SCREEN.top, right: SCREEN.right, bottom: SCREEN.bottom }}
@@ -620,6 +738,14 @@ export default function MapView({
 
           {/* 맵 배경 */}
           <div className="absolute inset-0" style={getViewportBgStyle(viewport)} />
+
+          {/* 방향 화살표 */}
+          {screenView === 'map' && <>
+            <ArrowBtn dir="up" />
+            <ArrowBtn dir="down" />
+            <ArrowBtn dir="left" />
+            <ArrowBtn dir="right" />
+          </>}
 
           {/* 네비게이션 — 상단 */}
           {/* 마을 핀 */}
@@ -631,12 +757,11 @@ export default function MapView({
             const townRegions = regions
               .filter(region => region.groupId === town.groupId && !region.isTownMeta && region.groupVisible !== false)
               .slice(0, 4);
-            const visibleTownRegions = townRegions.length > 0
-              ? Array.from({ length: 4 }, (_, index) => townRegions[index] || townRegions[index % townRegions.length])
-              : [];
+            const visibleTownRegions = townRegions;
             return (
               <div key={town.groupId} onClick={(event) => {
                 event.stopPropagation();
+                playClickSound();
                 handlePinClick(town.groupId);
               }}
                 role="button"
@@ -675,6 +800,7 @@ export default function MapView({
                       type="button"
                       onClick={(event) => {
                         event.stopPropagation();
+                        playClickSound();
                         handleSelectArea(region);
                       }}
                       style={{
@@ -683,7 +809,7 @@ export default function MapView({
                         minWidth: 60,
                         maxWidth: 120,
                         minHeight: 40,
-                        padding: '5px 16px',
+                        padding: '5px 6px',
                         boxSizing: 'border-box',
                         border: 'none',
                         borderRadius: 999,
@@ -700,6 +826,7 @@ export default function MapView({
                         textOverflow: 'ellipsis',
                         cursor: 'pointer',
                         zIndex: 12,
+                        animation: `pillPop 0.18s ease-out both`,
                       }}
                     >
                       <span style={{ position: 'relative', top: index === 0 ? 1 : 3, display: 'inline-block', transform: 'scaleX(0.9)', transformOrigin: 'center' }}>
