@@ -16,6 +16,7 @@ import CookingAdminPanel from './admin/CookingAdminPanel';
 import LevelRestrictionPanel from './admin/LevelRestrictionPanel';
 import CampingAdminPanel from './admin/CampingAdminPanel';
 import ScheduleAdminPanel from './admin/ScheduleAdminPanel';
+import MapEditorPanel from './admin/MapEditorPanel';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
@@ -315,7 +316,10 @@ export default function AdminView() {
   } = gameContext;
 
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const [adminTab, setAdminTab] = useState('members');
+  const [adminTab, setAdminTab] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('admin-tab') || 'members';
+  });
   const [showCustomItemManage, setShowCustomItemManage] = useState(false);
   const [maxWalks, setMaxWalks] = useState(trainer?.maxDailyWalks || 5);
   const [maxNonPartnerPokemon, setMaxNonPartnerPokemon] = useState(systemSettings.maxNonPartnerPokemon || 18);
@@ -584,6 +588,7 @@ export default function AdminView() {
     { id: 'members',  label: '멤버',  icon: Users },
     { id: 'npc',      label: 'NPC',   icon: Bot },
     { id: 'regions',  label: '지역',  icon: Map },
+    { id: 'map-editor', label: '지도 편집', icon: Map },
     { id: 'pokedex',  label: '도감',  icon: BookOpen },
     { id: 'shop',     label: '상점',  icon: ShoppingBag },
     { id: 'cooking',  label: '요리',  icon: UtensilsCrossed },
@@ -836,6 +841,14 @@ export default function AdminView() {
           onUpdateTown={updateTown}
           onDeleteTown={deleteTown}
           setRegions={setRegions}
+        />
+      )}
+
+      {/* 지도 편집 탭 */}
+      {adminTab === 'map-editor' && (
+        <MapEditorPanel
+          regions={regions}
+          onUpdateTown={updateTown}
         />
       )}
 

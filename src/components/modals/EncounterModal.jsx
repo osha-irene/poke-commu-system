@@ -7,6 +7,8 @@ import {
   Wind,
   CheckCircle2,
 } from 'lucide-react';
+import encounterContextImg from '../../assets/map/encounter-context.png';
+import encounterBallImg from '../../assets/map/encounter-ball.png';
 
 export default function EncounterModal({
   pokemon,
@@ -298,9 +300,9 @@ export default function EncounterModal({
         onClick={(e) => e.stopPropagation()}
       >
         {!result && !catching && (
-          <div className="bg-white rounded-lg overflow-hidden border-4 border-gray-800">
-            {/* 상단 배틀 필드 */}
-            <div className="relative bg-white p-6 border-b-4 border-gray-800">
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {/* 상단 배틀 필드 — encounter-context와 이어짐 */}
+            <div className="relative bg-white p-6">
               <div className="flex justify-end mb-6">
                 <div className="text-center relative">
                   <div className="bg-white rounded-lg px-4 py-1 mb-3 border-2 border-gray-800 inline-block">
@@ -372,59 +374,39 @@ export default function EncounterModal({
                 text-shadow: 0 0 10px #ffff00, 0 0 20px #ffd700;
               }
 
-              .sparkle-1 {
-                top: 45%;
-                left: 5%;
-                animation-delay: 0s;
-              }
-
-              .sparkle-2 {
-                top: 55%;
-                right: 10%;
-                animation-delay: 0.4s;
-              }
-
-              .sparkle-3 {
-                bottom: 10%;
-                left: 15%;
-                animation-delay: 0.8s;
-              }
-
-              .sparkle-4 {
-                bottom: 5%;
-                right: 5%;
-                animation-delay: 1.2s;
-              }
-
-              .sparkle-5 {
-                top: 65%;
-                left: -5%;
-                animation-delay: 0.6s;
-              }
-
-              .sparkle-6 {
-                top: 70%;
-                right: 0%;
-                animation-delay: 1s;
-              }
+              .sparkle-1 { top: 45%; left: 5%; animation-delay: 0s; }
+              .sparkle-2 { top: 55%; right: 10%; animation-delay: 0.4s; }
+              .sparkle-3 { bottom: 10%; left: 15%; animation-delay: 0.8s; }
+              .sparkle-4 { bottom: 5%; right: 5%; animation-delay: 1.2s; }
+              .sparkle-5 { top: 65%; left: -5%; animation-delay: 0.6s; }
+              .sparkle-6 { top: 70%; right: 0%; animation-delay: 1s; }
             `}</style>
 
-            {/* 하단 UI */}
-            <div className="bg-gray-100 p-4">
-              <div className="bg-white rounded-lg border-4 border-gray-800 p-4 mb-4">
-                {/* 메시지 표시 (줄바꿈 지원) */}
+            {/* encounter-context — 상단과 바로 이어짐, 이미지가 너비 결정 */}
+            <div style={{ position: 'relative' }}>
+              <img
+                src={encounterContextImg}
+                alt=""
+                style={{ width: '100%', display: 'block' }}
+              />
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                padding: '0 30px',
+              }}>
                 {message ? (
-                  <div className="text-xl font-bold text-gray-800">
-                    {message.split('\n').map((line, i) => (
-                      <p key={i}>{line}</p>
-                    ))}
+                  <div className="font-bold text-gray-800" style={{ fontSize: 18, lineHeight: 1.4 }}>
+                    {message.split('\n').map((line, i) => <p key={i}>{line}</p>)}
                   </div>
                 ) : (
-                  <p className="text-xl font-bold text-gray-800">
+                  <p className="font-bold text-gray-800" style={{ fontSize: 18 }}>
                     야생의 {pokemon.name}이(가) 나타났다!
                   </p>
                 )}
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-gray-600 mt-1" style={{ fontSize: 13 }}>
                   <PokemonPreviewInfo pokemon={pokemon} />
                   {escapeAttempts > 0 && (
                     <span className="ml-2 text-orange-600 font-semibold">
@@ -433,22 +415,38 @@ export default function EncounterModal({
                   )}
                 </p>
               </div>
+            </div>
 
-              <div className="bg-white rounded-lg border-4 border-gray-800 p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-bold text-lg">볼을 선택하세요</span>
+            {/* encounter-ball — 분리, 아래에 독립 배치 */}
+            <div style={{ marginTop: 12, position: 'relative' }}>
+              <img
+                src={encounterBallImg}
+                alt=""
+                style={{ width: '100%', display: 'block' }}
+              />
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                padding: '20px',
+                overflow: 'hidden',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <span className="font-bold" style={{ fontSize: 16 }}>볼을 선택하세요</span>
                   <button
                     onClick={handleCloseClick}
-                    className="flex items-center gap-1 text-gray-500 hover:text-gray-700 font-bold text-base"
+                    className="flex items-center gap-1 text-gray-500 hover:text-gray-700 font-bold"
+                    style={{ fontSize: 14 }}
                   >
-                    <Footprints size={16} />
+                    <Footprints size={15} />
                     도망치기
                   </button>
                 </div>
 
-                <div className="grid grid-cols-5 gap-2 max-h-48 overflow-y-auto pr-1">
+                <div style={{ flex: 1, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
                   {pokeballs.length === 0 ? (
-                    <div className="col-span-5 text-center py-8 text-gray-500">
+                    <div style={{ gridColumn: '1 / -1', textAlign: 'center', paddingTop: 16, color: '#888', fontSize: 14 }}>
                       사용 가능한 볼이 없습니다!
                     </div>
                   ) : (
@@ -495,9 +493,10 @@ export default function EncounterModal({
                 {selectedBall && (
                   <button
                     onClick={handleCatch}
-                    className="w-full mt-4 flex items-center justify-center gap-2 bg-green-500 text-white py-3 rounded-lg font-bold text-xl hover:bg-green-600 border-4 border-green-700 transition-all hover:scale-105"
+                    className="w-full flex items-center justify-center gap-2 bg-green-500 text-white rounded-lg font-bold hover:bg-green-600 border-4 border-green-700 transition-all hover:scale-105"
+                    style={{ marginTop: 8, padding: '10px 0', fontSize: 18 }}
                   >
-                    <Zap size={20} />
+                    <Zap size={18} />
                     {selectedBall.name}을(를) 던진다!
                   </button>
                 )}

@@ -178,6 +178,22 @@ img[style*="pixelated"],
   height: 100vh;
   max-height: 100vh;
 }
+.main-shell:has(.map-view-root) {
+  overflow: hidden;
+  height: 100vh;
+  max-height: 100vh;
+}
+html:has(.map-view-root),
+body:has(.map-view-root) {
+  overflow: hidden;
+  height: 100vh;
+}
+.main-layout:has(.map-view-root) {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-bottom: 0;
+  overflow: hidden;
+}
 .main-shell:has(.npc-page) {
   height: 100vh;
   max-height: 100vh;
@@ -869,6 +885,11 @@ body.rmv-detail-open .site-header {
 .content-stage:has(.mbr-page) {
   padding: 0;
   overflow: visible;
+}
+.content-stage:has(.map-view-root) {
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
 }
 .main-layout:has(.mbr-page) {
   min-height: 0;

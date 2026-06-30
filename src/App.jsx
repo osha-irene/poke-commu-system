@@ -2079,7 +2079,7 @@ return (
       {currentTab === 'system' && <CommunityPlaceholder type="system" trainer={trainer} />}
 
 		  {currentTab === 'map' && (
-			<MobileMapView
+			<MapView
 			  regions={regions}
 			  onRegionClick={handleRegionClick}
 			  gamePokedex={gamePokedex}

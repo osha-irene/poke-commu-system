@@ -189,7 +189,8 @@
     { "name": "카레파우더",     "stats": { "elegance": 20, "intelligence": 15 } },
     { "name": "와사비소스",     "stats": { "elegance": 30 } },
     { "name": "물냉이",         "stats": { "elegance": 10, "intelligence": 10 } },
-    { "name": "바질",           "stats": { "elegance": 10, "intelligence": 15 } }
+    { "name": "바질",           "stats": { "elegance": 10, "intelligence": 15 } },
+    { "name": "달콤한꿀",       "stats": { "cuteness": 20, "beauty": 10 } }
   ],
   "statBasedRecipes": [
     {

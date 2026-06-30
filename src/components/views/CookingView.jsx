@@ -6,7 +6,7 @@ import { useGame } from '../../contexts/GameContext';
 import { getItemPocket, ITEM_POCKETS } from '../../utils/itemUtils';
 import useMediaQuery from '../../hooks/useMediaQuery';
 
-const DEFAULT_ITEM_IMAGE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
+const DEFAULT_ITEM_IMAGE = '/pokeball.png';
 
 function stripCountSuffix(name = '') {
   return String(name).replace(/\s*\d+\s*개\s*$/, '').trim();
@@ -377,6 +377,24 @@ export default function CookingView() {
   );
 }
 
+function ResultItemImage({ imageUrl }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <div className="w-14 h-14 bg-white rounded-lg border-2 border-orange-300 flex items-center justify-center overflow-hidden">
+      {!failed && imageUrl ? (
+        <img
+          src={imageUrl}
+          alt=""
+          onError={() => setFailed(true)}
+          style={{ width: 48, height: 48, objectFit: 'contain', imageRendering: 'pixelated' }}
+        />
+      ) : (
+        <Package size={28} style={{ color: '#ccc' }} />
+      )}
+    </div>
+  );
+}
+
 function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
   const { allItems = [] } = useGame();
   const [activeTab, setActiveTab] = useState('요리');
@@ -385,17 +403,20 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
   const recipeArr = Array.isArray(recipes) ? recipes : Object.values(recipes);
   const discoveredArr = Array.isArray(discoveredRecipes) ? discoveredRecipes : Object.values(discoveredRecipes || {});
 
-  const tabRecipes = recipeArr.filter(r => {
-    const cat = r.category || '요리';
-    return cat === activeTab;
-  });
+  const getRecipeCategory = (r) => {
+    if (r.category && r.category !== '요리') return r.category;
+    if (r.name?.includes('오란다')) return '오란다';
+    return r.category || '요리';
+  };
+
+  const tabRecipes = recipeArr.filter(r => getRecipeCategory(r) === activeTab);
 
   const tabs = ['요리', '오란다'];
 
   const renderRecipeCard = (recipe) => {
     const isDiscovered = discoveredArr.includes(recipe.id);
     return (
-      <div key={recipe.id} className={`border-2 rounded-lg overflow-hidden ${isDiscovered ? 'border-orange-300 bg-orange-50' : 'border-gray-300 bg-gray-50'}`}>
+      <div key={recipe.id} className={`border-2 rounded-lg ${isDiscovered ? 'border-orange-300 bg-orange-50' : 'border-gray-300 bg-gray-50'}`}>
         {isDiscovered ? (
           <>
             <div className="px-3 py-2 border-b border-orange-200 flex items-center justify-between" style={{background:'rgba(40,80,30,0.85)'}}>
@@ -404,16 +425,9 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
             <div className="flex items-center justify-center gap-4 p-3">
               <div className="flex-shrink-0 mx-3 flex flex-col items-center gap-1">
                 <div className="relative group">
-                  <div
-                    className="item-sprite w-14 h-14 bg-white rounded-lg border-2 border-orange-300 cursor-default"
-                    style={{
-                      backgroundImage: `url(${getItemImageUrl(recipe.result, allItems)})`,
-                      backgroundSize: 'contain', backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'center', imageRendering: 'pixelated'
-                    }}
-                  />
+                  <ResultItemImage imageUrl={getItemImageUrl(recipe.result, allItems)} />
                   {recipe.description && (
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50 w-max max-w-[180px]">
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50 w-max max-w-[180px]" style={{ pointerEvents: 'none' }}>
                       <div className="bg-gray-800 text-white text-xs rounded-lg px-3 py-2 leading-relaxed text-center shadow-lg">
                         {recipe.description}
                       </div>
@@ -447,9 +461,9 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
             </div>
           </>
         ) : (
-          <div className="text-center py-3 text-gray-500 flex flex-col items-center justify-center gap-1.5">
-            <div className="flex items-center justify-center gap-2">
-              <HelpCircle size={20} />
+          <div className="flex flex-col items-center justify-center gap-1.5 min-h-[80px] py-3">
+            <div className="flex items-center justify-center gap-1.5">
+              <HelpCircle size={16} className="text-gray-400 flex-shrink-0" />
               <p className="text-sm font-bold text-gray-700">{recipe.name}</p>
             </div>
             <p className="text-xs font-semibold text-gray-400">미발견 레시피</p>
