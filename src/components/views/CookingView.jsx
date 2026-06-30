@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ChefHat, Book, Plus, Minus, Sparkles, X, Utensils, Package, Soup, BookOpen, HelpCircle, UtensilsCrossed } from 'lucide-react';
 import recipesData from '../../data/recipes.json';
@@ -149,16 +149,30 @@ export default function CookingView() {
     );
   };
 
+  const FAIL_ITEMS = [
+    { name: 'thingX', label: '의문의 덩어리X' },
+    { name: 'muk-like-thing', label: '악취 나는 무언가' },
+    { name: 'Trubbish-like-thing', label: '깨진 쓰레기 봉투' },
+  ];
+  const [cookFailPopup, setCookFailPopup] = useState(null);
+
   const handleCook = () => {
     if (selectedIngredients.length === 0) { alert('재료를 선택해주세요!'); return; }
     let matchedRecipe = matchFixedRecipe();
     if (!matchedRecipe) matchedRecipe = matchStatRecipe();
     if (matchedRecipe) {
       onCook(matchedRecipe, selectedIngredients);
-      setSelectedIngredients([]);
     } else {
-      alert('❌ 레시피가 맞지 않습니다!\n다른 재료 조합을 시도해보세요.');
+      const fail = FAIL_ITEMS[Math.floor(Math.random() * FAIL_ITEMS.length)];
+      const failRecipe = {
+        id: `fail_${Date.now()}`,
+        name: fail.name,
+        result: { name: fail.name, pocket: 'items', effect: '요리 실패의 산물...', canSell: false },
+      };
+      onCook(failRecipe, selectedIngredients);
+      setCookFailPopup(fail.label);
     }
+    setSelectedIngredients([]);
   };
 
   if (isMobile) {
@@ -279,6 +293,30 @@ export default function CookingView() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 p-6">
+      {cookFailPopup && createPortal(
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}
+          onClick={() => setCookFailPopup(null)}
+        >
+          <div
+            style={{ background: '#fff', borderRadius: 16, padding: '36px 40px', maxWidth: 360, textAlign: 'center', boxShadow: '0 8px 32px rgba(0,0,0,0.25)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontSize: 48 }}>🗑️</div>
+            <p style={{ fontSize: 18, fontWeight: 800, color: '#1a2e10', lineHeight: 1.6 }}>
+              요리를 실패했다!<br />
+              <span style={{ color: '#b45309' }}>…{cookFailPopup}을(를) 만들고 말았다!</span>
+            </p>
+            <button
+              onClick={() => setCookFailPopup(null)}
+              style={{ marginTop: 4, padding: '10px 28px', background: '#4a7a08', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 15, cursor: 'pointer' }}
+            >
+              확인
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
       {/* 헤더 */}
       <div className="rounded-lg border-2 border-lime-300 bg-white/55 p-6 shadow-sm">
         <div className="flex items-center justify-between">
@@ -454,6 +492,45 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
   const { allItems = [] } = useGame();
   const [activeTab, setActiveTab] = useState('요리');
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const recipeGridRef = useRef(null);
+  const [recipeScrollbar, setRecipeScrollbar] = useState({ visible: false, height: 0, top: 0 });
+
+  const updateRecipeScrollbar = useCallback(() => {
+    const el = recipeGridRef.current;
+    if (!el) return;
+    const maxScroll = el.scrollHeight - el.clientHeight;
+    if (maxScroll <= 1) { setRecipeScrollbar({ visible: false, height: 0, top: 0 }); return; }
+    const trackHeight = Math.max(el.clientHeight - 16, 0);
+    const thumbHeight = Math.max(36, Math.round((el.clientHeight / el.scrollHeight) * trackHeight));
+    const thumbTravel = Math.max(trackHeight - thumbHeight, 1);
+    const thumbTop = 8 + Math.round((el.scrollTop / maxScroll) * thumbTravel);
+    setRecipeScrollbar({ visible: true, height: thumbHeight, top: thumbTop });
+  }, []);
+
+  const handleRecipeScrollbarMouseDown = useCallback((e) => {
+    const el = recipeGridRef.current;
+    if (!el || !recipeScrollbar.visible) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const startY = e.clientY;
+    const startScrollTop = el.scrollTop;
+    const maxScroll = el.scrollHeight - el.clientHeight;
+    const trackHeight = Math.max(el.clientHeight - 16, 0);
+    const thumbTravel = Math.max(trackHeight - recipeScrollbar.height, 1);
+    const handleMove = (mv) => { el.scrollTop = startScrollTop + ((mv.clientY - startY) / thumbTravel) * maxScroll; updateRecipeScrollbar(); };
+    const handleUp = () => { document.removeEventListener('mousemove', handleMove); document.removeEventListener('mouseup', handleUp); };
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', handleUp);
+  }, [recipeScrollbar, updateRecipeScrollbar]);
+
+  useEffect(() => {
+    updateRecipeScrollbar();
+    const el = recipeGridRef.current;
+    if (!el) return;
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateRecipeScrollbar) : null;
+    ro?.observe(el);
+    return () => ro?.disconnect();
+  }, [updateRecipeScrollbar, activeTab]);
 
   const recipeArr = Array.isArray(recipes) ? recipes : Object.values(recipes);
   const discoveredArr = Array.isArray(discoveredRecipes) ? discoveredRecipes : Object.values(discoveredRecipes || {});
@@ -471,7 +548,7 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
   const renderRecipeCard = (recipe) => {
     const isDiscovered = discoveredArr.includes(recipe.id);
     return (
-      <div key={recipe.id} className={`border-2 rounded-lg ${isDiscovered ? 'border-orange-300 bg-orange-50' : 'border-gray-300 bg-gray-50'}`}>
+      <div key={recipe.id} className={`border-2 rounded-lg ${isDiscovered ? 'border-orange-300 bg-orange-50' : 'border-gray-300 bg-gray-50'}`} style={{ display: 'flex', flexDirection: 'column' }}>
         {isDiscovered ? (
           <>
             <div className="px-3 py-2 border-b border-orange-200 flex items-center justify-between" style={{background:'rgba(40,80,30,0.85)'}}>
@@ -494,8 +571,8 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
                         <React.Fragment key={i}>
                           {i > 0 && <span className="text-sm font-bold text-gray-400">+</span>}
                           <div className="flex flex-col items-center gap-0.5">
-                            <div className="w-8 h-8 bg-white rounded-md border border-orange-200 flex items-center justify-center overflow-hidden">
-                              <CookingItemImage item={enriched} allItems={[]} size={32} />
+                            <div style={{ width: 32, height: 32, padding: 2, background: '#fff', borderRadius: 6, border: '1px solid #fcd9a0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxSizing: 'border-box' }}>
+                              <CookingItemImage item={enriched} allItems={[]} size={28} />
                             </div>
                             <span className="text-xs text-gray-500 whitespace-nowrap">{ingName} {ing.count}개</span>
                           </div>
@@ -508,7 +585,7 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
             </div>
           </>
         ) : (
-          <div style={{ minHeight: 80, padding: '16px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+          <div style={{ flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <HelpCircle size={16} className="text-gray-400 flex-shrink-0" />
               <p className="text-sm font-bold text-gray-700">{recipe.name}</p>
@@ -526,7 +603,8 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-scroll"
+        className="bg-white rounded-lg w-full max-w-4xl flex flex-col"
+        style={{ maxHeight: '90vh' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sticky top-0 border-b-2 border-lime-300 bg-white/95 text-green-950 p-6 flex items-center justify-between z-10">
@@ -559,15 +637,38 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
           ))}
         </div>
 
-        <div className={`p-6 grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`} style={{ alignItems: 'start' }}>
-          {tabRecipes.length === 0 ? (
-            <div className="col-span-2 text-center py-12 text-gray-400">
-              <BookOpen size={56} className="mx-auto mb-4" />
-              <p className="font-semibold">등록된 레시피가 없습니다!</p>
-              <p className="text-sm mt-2">관리자가 레시피를 등록하면 여기에 표시됩니다.</p>
+        <div style={{ position: 'relative', flex: '1 1 auto', minHeight: 0 }}>
+          <div
+            ref={recipeGridRef}
+            onScroll={updateRecipeScrollbar}
+            className={`p-6 grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}
+            style={{ overflowY: 'scroll', height: '100%', scrollbarWidth: 'none', boxSizing: 'border-box' }}
+          >
+            {tabRecipes.length === 0 ? (
+              <div className="col-span-2 text-center py-12 text-gray-400">
+                <BookOpen size={56} className="mx-auto mb-4" />
+                <p className="font-semibold">등록된 레시피가 없습니다!</p>
+                <p className="text-sm mt-2">관리자가 레시피를 등록하면 여기에 표시됩니다.</p>
+              </div>
+            ) : (
+              tabRecipes.map(renderRecipeCard)
+            )}
+          </div>
+          {recipeScrollbar.visible && (
+            <div style={{ position: 'absolute', top: 0, right: 4, bottom: 0, width: 8, zIndex: 5, pointerEvents: 'auto' }}>
+              <div
+                onMouseDown={handleRecipeScrollbarMouseDown}
+                style={{
+                  position: 'absolute',
+                  width: 6,
+                  borderRadius: 999,
+                  background: 'rgba(41, 88, 30, 0.55)',
+                  cursor: 'grab',
+                  height: recipeScrollbar.height,
+                  transform: `translateY(${recipeScrollbar.top}px)`,
+                }}
+              />
             </div>
-          ) : (
-            tabRecipes.map(renderRecipeCard)
           )}
         </div>
       </div>

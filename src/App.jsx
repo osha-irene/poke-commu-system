@@ -2027,9 +2027,16 @@ return (
           <div className={`main-layout ${currentTab === 'home' ? 'main-layout--home' : ''} ${!isMobile && currentTab === 'shop' ? 'main-layout--shop' : ''} ${isTopMenuPage ? 'main-layout--world' : ''}`}>
           <Sidebar
             currentTab={currentTab}
-            setCurrentTab={setCurrentTab}
+            setCurrentTab={(tab) => {
+              if (!isAdmin && (systemSettings?.hiddenMenus || []).includes(tab)) {
+                setAccessModalImg(getRandomAccessModalImg());
+                setShowAccessModal(true);
+              } else {
+                setCurrentTab(tab);
+              }
+            }}
             isAdmin={isAdmin}
-            hiddenMenus={systemSettings?.hiddenMenus || []}
+            hiddenMenus={[]}
             trainer={trainer}
             onLogout={handleLogout}
             soundEnabled={soundEnabled}
