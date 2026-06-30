@@ -269,9 +269,9 @@ export default function MapView({
   const fMed  = { fontFamily: 'GmarketSans, sans-serif', fontWeight: 500, color: BROWN };
 
   // 첫 번째 지역이 오른쪽에 오도록
-  // 4글자 초과 시 줄바꿈 (마지막 줄이 1글자가 되면 한 글자 앞에서 나눔)
+  // 5글자 초과 시 줄바꿈 (마지막 줄이 1글자가 되면 한 글자 앞에서 나눔)
   const wrapPillText = (text) => {
-    const MAX = 4;
+    const MAX = 5;
     if (text.length <= MAX) return [text];
     const lines = [];
     let str = text;
