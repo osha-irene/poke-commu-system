@@ -288,8 +288,8 @@ export default function MapView({
   // transform 미사용 — pillPop 애니메이션이 transform: scale(1)로 끝나면서 translateY를 덮어쓰는 문제 방지
   const regionPillPositions = [
     { top: 'calc(50% - 20px)', right: -125 },      // 0: 오른쪽 (첫 번째)
-    { top: -44,   left: 'calc(50% - 50px)' },      // 1: 위 (5px 왼쪽 이동)
-    { bottom: -44, left: 'calc(50% - 50px)' },     // 2: 아래 (5px 왼쪽 이동)
+    { top: -44,    left: 0, right: 0, marginLeft: 'auto', marginRight: 'auto', width: 'fit-content' },   // 1: 위 (라벨 기준 중앙)
+    { bottom: -44, left: 0, right: 0, marginLeft: 'auto', marginRight: 'auto', width: 'fit-content' }, // 2: 아래 (라벨 기준 중앙)
     { top: 'calc(50% - 20px)', left: -125 },       // 3: 왼쪽
   ];
 
