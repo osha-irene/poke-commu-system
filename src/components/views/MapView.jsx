@@ -822,8 +822,6 @@ export default function MapView({
                       style={{
                         position: 'absolute',
                         ...regionPillPositions[index],
-                        minWidth: 68,
-                        maxWidth: 128,
                         minHeight: 40,
                         padding: '5px 16px',
                         boxSizing: 'border-box',
@@ -838,8 +836,7 @@ export default function MapView({
                         fontSynthesis: 'none',
                         letterSpacing: 0,
                         whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
+                        textAlign: 'center',
                         cursor: 'pointer',
                         zIndex: 12,
                         animation: `pillPop 0.18s ease-out both`,
