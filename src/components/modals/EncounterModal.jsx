@@ -227,11 +227,6 @@ export default function EncounterModal({
             console.log('  - 랜덤 값:', randomValue);
             console.log('  - 결과:', success ? '성공' : '실패');
 
-            // 볼 소모는 항상 발생
-            if (onApplyLoot) {
-              onApplyLoot({ money: 0, items: [], ingredients: [], berries: [] }, selectedBall);
-            }
-
             if (success) {
               setResult('success');
               setCatching(false);
@@ -239,10 +234,15 @@ export default function EncounterModal({
               setTimeout(async () => {
                 alert(`${pokemon.name}을(를) 잡았습니다!`);
 
-                await onCatchSuccess(pokemon, selectedBall);
+                // 성공 시 볼 소모 + 포켓몬 추가를 onCatchSuccess 내에서 한 번에 처리
+                await onCatchSuccess(pokemon, selectedBall, true);
                 onClose();
               }, 2500);
             } else {
+              // 포획 실패 시 볼 소모
+              if (onApplyLoot) {
+                onApplyLoot({ money: 0, items: [], ingredients: [], berries: [] }, selectedBall);
+              }
               // 포획 실패
               setEscapeAttempts(prev => prev + 1);
               const pokemonEscapes = checkIfPokemonEscapes();

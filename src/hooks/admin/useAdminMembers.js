@@ -1277,20 +1277,26 @@ export const useAdminMembers = (
   // ========== 회원 금액 업데이트 ==========
   const updateMemberMoney = async (memberId, amount) => {
     if (!currentUser?.isAdmin) return;
-    
+
     const member = members[memberId];
     if (!member) return;
-    
+
     const updatedMember = {
       ...member,
       money: Math.max(0, amount)
     };
-    
+
+    // 자기 자신의 금액을 수정할 때는 updateCurrentUser를 통해 currentUser 상태도 동기화
+    if (memberId === currentUser.id) {
+      await updateCurrentUser({ money: Math.max(0, amount) });
+      return;
+    }
+
     try {
       const { id, ...dataToSave } = updatedMember;
       const memberRef = ref(database, `members/${memberId}`);
       await set(memberRef, dataToSave);
-      
+
       setMembers(prev => ({
         ...prev,
         [memberId]: updatedMember

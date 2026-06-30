@@ -313,19 +313,21 @@ export default function useGameState() {
   };
 
   // 포켓몬 잡기
-  const handleCatchSuccess = async (pokemon, ballUsed) => {
+  // consumeBall=true 일 때: 볼 소모 + 포켓몬 추가를 한 번의 updateCurrentUser로 처리 (stale closure 방지)
+  const handleCatchSuccess = async (pokemon, ballUsed, consumeBall = false) => {
     const result = await pokemonCatchHook.handleCatchSuccess(
       pokemon,
       ballUsed,
       pokemon.regionName,
-      regions
+      regions,
+      consumeBall
     );
 
     // 사파리 구역 일일 보상: 포획 시 사파리볼 조용히 지급
     if (result && pokemon.pendingSafariBallReward > 0) {
       const safariBall = allItems.find(item => item.nameEn === 'safari-ball' || item.name === '사파리볼');
       if (safariBall) {
-        const inv = currentUser.inventory || [];
+        const inv = (result.updatedInventory || currentUser.inventory || []);
         const idx = inv.findIndex(i => i.id === safariBall.id || i.nameEn === safariBall.nameEn);
         let newInv;
         if (idx >= 0) {

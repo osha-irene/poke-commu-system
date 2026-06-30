@@ -24,7 +24,7 @@ export const usePokemonCatch = (
   const { recordFirstCatch } = usePokedex;
 
   // 포켓몬 잡기
-  const handleCatchSuccess = async (pokemon, ballUsed, regionName, regions) => {
+  const handleCatchSuccess = async (pokemon, ballUsed, regionName, regions, consumeBall = false) => {
     if (!currentUser) return;
     
     console.log('🎯 포획 시도:', pokemon);
@@ -160,10 +160,23 @@ export const usePokemonCatch = (
     }
     
     console.log('🎉 포켓몬 잡기 완료!');
-    
+
     const exhaustedExp = Number(pokemon.pendingDailyExploreExhaustedExp) || 0;
+
+    // consumeBall=true 이면 볼 소모도 같은 updateCurrentUser 호출에서 처리 (stale closure 방지)
+    let updatedInventory = null;
+    if (consumeBall && !currentUser.isSuperAdmin) {
+      const inv = Array.isArray(currentUser.inventory) ? [...currentUser.inventory] : [];
+      updatedInventory = inv.map(item =>
+        (item.itemId === ballUsed?.id || item.name === ballUsed?.name)
+          ? { ...item, count: Math.max(0, (Number(item.count) || 0) - 1) }
+          : item
+      );
+    }
+
     await updateCurrentUser({
       caughtPokemon: updatedCaughtPokemon,
+      ...(updatedInventory !== null ? { inventory: updatedInventory } : {}),
       ...(exhaustedExp > 0 && Number(currentUser.dailyWalks) > 0
         ? { trainerExp: (Number(currentUser.trainerExp) || 0) + exhaustedExp }
         : {})
@@ -179,8 +192,8 @@ export const usePokemonCatch = (
       : isFirstFormCatch;
     const isFirstCatch = isFirstFormCatch || isFirstOriginalCatch;
     const pokemonNumber = originalNumber;
-    
-    return { isFirstCatch, pokemonNumber, pokemonTemplate };
+
+    return { isFirstCatch, pokemonNumber, pokemonTemplate, updatedInventory };
   };
 
   return {
