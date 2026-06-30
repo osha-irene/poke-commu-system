@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import encounterContextImg from '../../assets/map/encounter-context.png';
 import encounterBallImg from '../../assets/map/encounter-ball.png';
+import encounterChooseImg from '../../assets/map/encounter-choose.png';
+import encounterRunImg from '../../assets/map/encounter-run.png';
 
 export default function EncounterModal({
   pokemon,
@@ -296,13 +298,13 @@ export default function EncounterModal({
       className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
     >
       <div
-        className="w-full max-w-2xl mx-4 max-h-[95vh] overflow-y-auto"
+        className="w-full max-w-2xl mx-4"
         onClick={(e) => e.stopPropagation()}
       >
         {!result && !catching && (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {/* 상단 배틀 필드 — encounter-context와 이어짐 */}
-            <div className="relative bg-white p-6">
+            <div className="relative bg-white p-6" style={{ transform: 'scale(1.05)', transformOrigin: 'top center', marginBottom: '3%' }}>
               <div className="flex justify-end mb-6">
                 <div className="text-center relative">
                   <div className="bg-white rounded-lg px-4 py-1 mb-3 border-2 border-gray-800 inline-block">
@@ -387,7 +389,7 @@ export default function EncounterModal({
               <img
                 src={encounterContextImg}
                 alt=""
-                style={{ width: '100%', display: 'block' }}
+                style={{ width: '100%', display: 'block', transform: 'scale(1.1)', transformOrigin: 'center' }}
               />
               <div style={{
                 position: 'absolute',
@@ -422,29 +424,22 @@ export default function EncounterModal({
               <img
                 src={encounterBallImg}
                 alt=""
-                style={{ width: '100%', display: 'block' }}
+                style={{ width: '100%', display: 'block', transform: 'scale(1.1)', transformOrigin: 'center' }}
               />
               <div style={{
                 position: 'absolute',
-                inset: 0,
+                top: 0,
+                left: 0,
+                right: 0,
                 display: 'flex',
                 flexDirection: 'column',
-                padding: '30px',
-                overflow: 'hidden',
+                padding: '20px 30px 30px 22px',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <span className="font-bold" style={{ fontSize: 16 }}>볼을 선택하세요</span>
-                  <button
-                    onClick={handleCloseClick}
-                    className="flex items-center gap-1 text-gray-500 hover:text-gray-700 font-bold"
-                    style={{ fontSize: 14 }}
-                  >
-                    <Footprints size={15} />
-                    도망치기
-                  </button>
+                <div style={{ marginBottom: 10 }}>
+                  <img src={encounterChooseImg} alt="볼을 선택하세요" style={{ height: 35, width: 'auto', display: 'block' }} />
                 </div>
 
-                <div style={{ overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', alignContent: 'start', gap: 6 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', alignContent: 'start', gap: 6 }}>
                   {pokeballs.length === 0 ? (
                     <div style={{ gridColumn: '1 / -1', textAlign: 'center', paddingTop: 16, color: '#888', fontSize: 14 }}>
                       사용 가능한 볼이 없습니다!
@@ -460,13 +455,14 @@ export default function EncounterModal({
                           key={i}
                           onClick={(e) => !disabled && handleBallSelect(e, ball)}
                           disabled={disabled}
-                          className={`relative flex flex-col items-center gap-1 bg-white rounded-lg p-2 border-2 transition-all ${
+                          className={`relative flex flex-col items-center gap-1 rounded-lg p-2 border-2 transition-all ${
                             disabled
                               ? 'opacity-30 cursor-not-allowed border-gray-300'
                               : selectedBall?.name === ball.name
                                 ? 'border-yellow-400 shadow-lg ring-2 ring-yellow-300'
                                 : 'border-gray-300 hover:border-gray-400 hover:shadow-md'
                           }`}
+                          style={{ background: '#ffffff' }}
                         >
                           <div className="absolute top-1 right-1 bg-gray-800 text-white px-1 py-0 rounded text-sm font-bold leading-tight">
                             {count}
@@ -490,16 +486,21 @@ export default function EncounterModal({
                   )}
                 </div>
 
-                {selectedBall && (
-                  <button
-                    onClick={handleCatch}
-                    className="w-full flex items-center justify-center gap-2 bg-green-500 text-white rounded-lg font-bold hover:bg-green-600 border-4 border-green-700 transition-all hover:scale-105"
-                    style={{ marginTop: 8, padding: '10px 0', fontSize: 18 }}
-                  >
-                    <Zap size={18} />
-                    {selectedBall.name}을(를) 던진다!
+                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', gap: 8, marginTop: 8, paddingBottom: 4, paddingRight: 4 }}>
+                  {selectedBall && (
+                    <button
+                      onClick={handleCatch}
+                      className="flex items-center justify-center gap-2 bg-green-500 text-white rounded-lg font-bold hover:bg-green-600 border-4 border-green-700 transition-all hover:scale-105"
+                      style={{ flex: 1, padding: '10px 0', fontSize: 18 }}
+                    >
+                      <Zap size={18} />
+                      {selectedBall.name}을(를) 던진다!
+                    </button>
+                  )}
+                  <button onClick={handleCloseClick} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0 }}>
+                    <img src={encounterRunImg} alt="도망치기" style={{ height: 40, width: 'auto', display: 'block' }} />
                   </button>
-                )}
+                </div>
               </div>
             </div>
           </div>

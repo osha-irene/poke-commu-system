@@ -604,7 +604,7 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
     >
       <div
         className="bg-white rounded-lg w-full max-w-4xl flex flex-col"
-        style={{ maxHeight: '90vh' }}
+        style={{ maxHeight: '90vh', minHeight: '70vh' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sticky top-0 border-b-2 border-lime-300 bg-white/95 text-green-950 p-6 flex items-center justify-between z-10">
