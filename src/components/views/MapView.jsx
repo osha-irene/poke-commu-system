@@ -231,10 +231,10 @@ export default function MapView({
   // 첫 번째 지역이 오른쪽에 오도록
   // transform 미사용 — pillPop 애니메이션이 transform: scale(1)로 끝나면서 translateY를 덮어쓰는 문제 방지
   const regionPillPositions = [
-    { top: 'calc(50% - 20px)', right: -140 },      // 0: 오른쪽 (첫 번째)
+    { top: 'calc(50% - 20px)', right: -125 },      // 0: 오른쪽 (첫 번째)
     { top: -44,   left: 'calc(50% - 45px)' },      // 1: 위
     { bottom: -44, left: 'calc(50% - 45px)' },     // 2: 아래
-    { top: 'calc(50% - 20px)', left: -140 },       // 3: 왼쪽
+    { top: 'calc(50% - 20px)', left: -125 },       // 3: 왼쪽
   ];
 
   const screenRef = useRef(null);
@@ -325,6 +325,20 @@ export default function MapView({
 
   const arrowImgs = { up: arrowTopImg, down: arrowBottomImg, left: arrowLeftImg, right: arrowRightImg };
 
+  const arrowHasTowns = useMemo(() => {
+    const cx = viewport.x + viewport.w / 2;
+    const cy = viewport.y + viewport.h / 2;
+    const has = (dir) => towns.some(t => {
+      const dx = t.x - cx, dy = t.y - cy;
+      if (dir === 'right') return dx > 1;
+      if (dir === 'left')  return dx < -1;
+      if (dir === 'down')  return dy > 1;
+      if (dir === 'up')    return dy < -1;
+      return false;
+    });
+    return { up: has('up'), down: has('down'), left: has('left'), right: has('right') };
+  }, [towns, viewport]);
+
   const ArrowBtn = ({ dir }) => (
     <button
       ref={arrowBtnRefs[dir]}
@@ -341,6 +355,8 @@ export default function MapView({
         border: 'none',
         padding: 0,
         cursor: 'pointer',
+        opacity: arrowHasTowns[dir] ? 1 : 0.3,
+        transition: 'opacity 0.2s',
       }}
     >
       <img src={arrowImgs[dir]} alt={dir} style={{ display: 'block', imageRendering: 'auto', transform: 'scale(0.9)', transformOrigin: 'center' }} />
@@ -806,10 +822,10 @@ export default function MapView({
                       style={{
                         position: 'absolute',
                         ...regionPillPositions[index],
-                        minWidth: 60,
-                        maxWidth: 120,
+                        minWidth: 68,
+                        maxWidth: 128,
                         minHeight: 40,
-                        padding: '5px 6px',
+                        padding: '5px 16px',
                         boxSizing: 'border-box',
                         border: 'none',
                         borderRadius: 999,
@@ -829,7 +845,7 @@ export default function MapView({
                         animation: `pillPop 0.18s ease-out both`,
                       }}
                     >
-                      <span style={{ position: 'relative', top: index === 0 ? 1 : 3, display: 'inline-block', transform: 'scaleX(0.9)', transformOrigin: 'center' }}>
+                      <span style={{ position: 'relative', top: index === 0 ? 3 : 5, display: 'inline-block', transform: 'scaleX(0.9)', transformOrigin: 'center' }}>
                         {region.name}
                       </span>
                     </button>
