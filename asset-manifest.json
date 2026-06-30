@@ -1,10 +1,14 @@
 {
   "files": {
-    "main.css": "/static/css/main.775d9fb1.css",
-    "main.js": "/static/js/main.150a2c02.js",
+    "main.css": "/static/css/main.62f18a9e.css",
+    "main.js": "/static/js/main.ceaf4f03.js",
     "static/js/623.69c45dc4.chunk.js": "/static/js/623.69c45dc4.chunk.js",
     "static/media/forest-bg.png": "/static/media/forest-bg.ed51a4032d3a6a7016d2.png",
+    "static/media/map.png": "/static/media/map.a93920750eb1513e2792.png",
     "static/media/forest-bg (2).png": "/static/media/forest-bg (2).023aaebd6df83a1d1128.png",
+    "static/media/GmarketSansTTFBold.ttf": "/static/media/GmarketSansTTFBold.69428064ef8eee25be33.ttf",
+    "static/media/GmarketSansTTFMedium.ttf": "/static/media/GmarketSansTTFMedium.d4bac6b182bed73c9375.ttf",
+    "static/media/GmarketSansTTFLight.ttf": "/static/media/GmarketSansTTFLight.efaa8f19ead1555b1c39.ttf",
     "static/media/YeojuCeramic.ttf": "/static/media/YeojuCeramic.95ed01e4fba0f8c0a443.ttf",
     "static/media/main_deco_paper.png": "/static/media/main_deco_paper.f65efe6456e423dc929f.png",
     "static/media/doctor_wpen.png": "/static/media/doctor_wpen.d1d9dd1e8d1cdb4271a9.png",
@@ -19,6 +23,7 @@
     "static/media/badge2.png": "/static/media/badge2.e461e795fa5431fd609a.png",
     "static/media/badge5.png": "/static/media/badge5.cc7a611fdda026df198d.png",
     "static/media/badge6.png": "/static/media/badge6.6a7230c58a6c95f197f5.png",
+    "static/media/device-top.png": "/static/media/device-top.33437cbe24c506cd4219.png",
     "static/media/badge3.png": "/static/media/badge3.c3f5217b637d2c2f4b39.png",
     "static/media/ribbon-cute.png": "/static/media/ribbon-cute.4e2ef5763ecdfffe6b1d.png",
     "static/media/ribbon-beauty.png": "/static/media/ribbon-beauty.3f1d36552d183a97702a.png",
@@ -42,19 +47,19 @@
     "static/media/cooking.png": "/static/media/cooking.c5bbbe31a1818476e016.png",
     "static/media/ribbon-silhouette.png": "/static/media/ribbon-silhouette.426736a7440d7c1def0f.png",
     "static/media/admin.png": "/static/media/admin.094df088c494cd04ad4c.png",
-    "static/media/map.png": "/static/media/map.a93920750eb1513e2792.png",
     "static/media/entry.png": "/static/media/entry.8d7a88f338ce8a9c4795.png",
     "static/media/bag.png": "/static/media/bag.1a11c2f1fe8c7374a447.png",
+    "static/media/encounter-ball.png": "/static/media/encounter-ball.79abce4261aeed16e3e4.png",
     "static/media/context2.png": "/static/media/context2.a3c6c0a747ca66a59ab4.png",
     "static/media/pokeball.png": "/static/media/pokeball.0ce8227d4210c4d60ed5.png",
     "index.html": "/index.html",
     "static/media/pokemon-icon.svg": "/static/media/pokemon-icon.d36b6f0655c180980d5acb3287a88011.svg",
-    "main.775d9fb1.css.map": "/static/css/main.775d9fb1.css.map",
-    "main.150a2c02.js.map": "/static/js/main.150a2c02.js.map",
+    "main.62f18a9e.css.map": "/static/css/main.62f18a9e.css.map",
+    "main.ceaf4f03.js.map": "/static/js/main.ceaf4f03.js.map",
     "623.69c45dc4.chunk.js.map": "/static/js/623.69c45dc4.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.775d9fb1.css",
-    "static/js/main.150a2c02.js"
+    "static/css/main.62f18a9e.css",
+    "static/js/main.ceaf4f03.js"
   ]
 }
