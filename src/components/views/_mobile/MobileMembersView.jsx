@@ -619,7 +619,7 @@ const TABS = [
   { key: 'main', label: 'MAIN' },
   { key: 'profile', label: 'PROFILE' },
   { key: 'entry', label: 'ENTRY' },
-  { key: 'achievement', label: 'BADGE' },
+  // { key: 'achievement', label: 'BADGE' }, // 임시 숨김
   { key: 'relation', label: 'RELATIONS' },
 ];
 

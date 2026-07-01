@@ -38,7 +38,7 @@ import { PokemonProvider } from './contexts/PokemonContext';
 import { GameProvider } from './contexts/GameContext';
 import BattleView from './components/views/BattleView';
 import MaintenanceScreen from './components/layout/MaintenanceScreen';
-import { mainNewsButton, doctorWpenImage, pokemonIcon, logoText, logoCompass, forestBg, mainNpcPanel, loginMemberImg, loginTitle, loginBag, loginEntry, loginReport, loginLogout, loginIcon1, loginIcon2, loginIcon3, loginIcon4 } from './assets/images';
+import { mainNewsButton, doctorWpenImage, pokemonIcon, logoText, logoCompass, forestBg, forestBgBlurred, mainNpcPanel, loginMemberImg, loginTitle, loginBag, loginEntry, loginReport, loginLogout, loginIcon1, loginIcon2, loginIcon3, loginIcon4 } from './assets/images';
 import { getTitleById } from './data/titles';
 import { User, Lock, LogOut, Music, X, Play, Pause, SkipBack, SkipForward, Volume2, Package, Gift, ChefHat, Sparkles } from 'lucide-react';
 import { DAILY_ATTENDANCE_EXP, getKoreaDateKey } from './utils/experience';
@@ -1202,6 +1202,94 @@ function MobilePublicHomeDashboard({ members = {}, scheduleEvents = [], onLogin 
   );
 }
 
+function DesktopLoginGate({ onLogin, banner }) {
+  const [loginUserId, setLoginUserId] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!onLogin) return;
+    await onLogin(loginUserId, loginPassword);
+  };
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0,
+      overflow: 'hidden',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+    }}>
+      {/* 미리 블러 처리해둔 배경 이미지 (런타임 blur 없이 바로 렌더링해 로딩/렌더 성능 확보) */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: `url(${forestBgBlurred})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }} />
+
+      {/* 어두운 오버레이 */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundColor: 'rgba(10, 20, 10, 0.55)',
+      }} />
+
+      <img src={logoCompass} alt="" style={{
+        position: 'absolute',
+        width: 360, height: 360,
+        top: 'calc(50% - 84px)', left: '50%',
+        transform: 'translate(-50%, -62%)',
+        mixBlendMode: 'overlay',
+        pointerEvents: 'none',
+      }} />
+
+      <img src={logoText} alt="사이트명" style={{
+        position: 'absolute',
+        width: 490,
+        top: 'calc(52.8% - 70px)', left: '49.4%',
+        transform: 'translate(-50%, -90%)',
+        objectFit: 'contain',
+        pointerEvents: 'none',
+      }} />
+
+      {/* 하단 로그인 폼 */}
+      <form onSubmit={handleSubmit} className="desktop-login-gate-form" style={{
+        position: 'absolute',
+        top: 'calc(50% - 79px)', left: '50%',
+        transform: 'translate(-50%, 90%)',
+        width: 280,
+        display: 'grid',
+        gap: 12,
+      }}>
+        <label className="desktop-login-gate-field">
+          <User size={16} aria-hidden="true" />
+          <input
+            type="text"
+            value={loginUserId}
+            onChange={(event) => setLoginUserId(event.target.value)}
+            autoComplete="username"
+            placeholder="아이디"
+            required
+          />
+        </label>
+        <label className="desktop-login-gate-field">
+          <Lock size={16} aria-hidden="true" />
+          <input
+            type="password"
+            value={loginPassword}
+            onChange={(event) => setLoginPassword(event.target.value)}
+            autoComplete="current-password"
+            placeholder="비밀번호"
+            required
+          />
+        </label>
+        <button type="submit">LOGIN</button>
+      </form>
+
+      {banner}
+    </div>
+  );
+}
+
 function ForcePasswordChangeModal({ onChangePassword }) {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -1741,20 +1829,7 @@ export default function App() {
     return <LoadingOverlay />;
   }
 
-      const handlePublicNavigation = (nextTab) => {
-      if (!['home', 'notice', 'world', 'system'].includes(nextTab)) {
-        // 허용되지 않은 탭이면 모달 오픈
-        setAccessModalImg(getRandomAccessModalImg());
-        setShowAccessModal(true);
-      } else {
-        // 허용된 탭('home', 'notice', 'world', 'system')이면 실제로 탭 전환!
-        setCurrentTab(nextTab);
-      }
-    };
-
 if (!currentUser || !currentUser.id) {
-    // ✅ 1. 비로그인 유저의 탭 이동 제어 함수 (이동 로직 추가)
-
     const MaintenanceCountdownBanner = maintenanceCountdown > 0 ? (
       // ... (기존 유지보수 배너 스타일 코드 그대로 유지) ...
       <div style={{
@@ -1822,48 +1897,15 @@ if (!currentUser || !currentUser.id) {
     }
 
     return (
-      <>
-      <PlaylistWidget />
-      <div className={`main-shell ${currentTab === 'home' ? 'main-shell--home' : ''} ${!isMobile && currentTab === 'shop' ? 'main-shell--shop' : ''}`}>
-        <SakuraEffect />
-        {/* ✅ 3. 현재 탭 상태(currentTab)를 고정이 아닌 state 기반으로 매핑 */}
-        <Header currentTab={currentTab} setCurrentTab={handlePublicNavigation} />
-        <div className={`main-layout ${currentTab === 'home' ? 'main-layout--home' : ''} ${!isMobile && currentTab === 'shop' ? 'main-layout--shop' : ''} ${isTopMenuPage ? 'main-layout--world' : ''}`}>
-          <Sidebar
-            currentTab={currentTab}
-            setCurrentTab={handlePublicNavigation}
-            isAdmin={false}
-          />
-          {hasContentSurface && <span className={`content-stage__surface${currentTab === 'qna' ? ' content-stage__surface--light' : ''}`} aria-hidden="true" />}
-          <main className={`content-stage ${currentTab === 'home' ? 'content-stage--home' : 'content-stage--view'} ${!isMobile && currentTab === 'shop' ? 'content-stage--shop' : ''} ${isFeaturePage ? 'content-stage--feature' : ''} ${isTopMenuPage ? 'content-stage--world' : ''}`}>
-            {/* ✅ 4. 비로그인 유저라도 허용된 탭에 따라 화면을 다르게 보여주도록 스위칭 처리 */}
-            {currentTab === 'home' && <div key="home" className="tab-view-enter-home"><HomeDashboard showLogin onLogin={handleLogin} members={members} /></div>}
-            {currentTab === 'notice' && <CommunityPlaceholder type="notice" trainer={trainer} />}
-            {currentTab === 'world' && <CommunityPlaceholder type="world" trainer={trainer} />}
-            {currentTab === 'system' && <CommunityPlaceholder type="system" trainer={trainer} />}
-          </main>
-        </div>
-      </div>
-      {showAccessModal && (
-        <div className="access-modal-overlay">
-          <div className="access-modal-popover" onClick={(e) => e.stopPropagation()}>
-            <img
-              src={accessModalImg}
-              alt="접근 불가"
-              className="access-modal-img"
-            />
-            <button
-              type="button"
-              className="access-modal-hitbox"
-              aria-label="팝업 닫기"
-              onClick={() => setShowAccessModal(false)}
-            />
-          </div>
-        </div>
-      )}
-      {isLoadingOverlayVisible && <LoadingOverlay overlay fading={isLoadingOverlayFading} />}
-      {MaintenanceCountdownBanner}
-      </>
+      <DesktopLoginGate
+        onLogin={handleLogin}
+        banner={(
+          <>
+            {isLoadingOverlayVisible && <LoadingOverlay overlay fading={isLoadingOverlayFading} />}
+            {MaintenanceCountdownBanner}
+          </>
+        )}
+      />
     );
   }
 
@@ -2021,7 +2063,7 @@ return (
           {currentTab === 'battle' && isAdmin && <BattleView />}
         </MobileLayout>
       ) : (
-        <div className={`main-shell ${currentTab === 'home' ? 'main-shell--home' : ''} ${!isMobile && currentTab === 'shop' ? 'main-shell--shop' : ''}`}>
+        <div className={`main-shell app-shell-enter ${currentTab === 'home' ? 'main-shell--home' : ''} ${!isMobile && currentTab === 'shop' ? 'main-shell--shop' : ''}`}>
           <SakuraEffect />
           <Header currentTab={currentTab} setCurrentTab={setCurrentTab} />
 

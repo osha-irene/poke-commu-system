@@ -248,6 +248,7 @@ export default function MobilePokemonView() {
               allMoves={allMoves}
               pokemonLearnsets={pokemonLearnsets}
               systemSettings={systemSettings}
+              mobile
             />
           </div>
         </div>

@@ -173,6 +173,19 @@ img[style*="pixelated"],
   flex-direction: column;
   overflow-x: hidden;
 }
+.app-shell-enter {
+  animation: app-shell-fade-in 0.2s ease-out;
+}
+@keyframes app-shell-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 .main-shell:has(.mbr-page) {
   overflow: visible;
   height: 100vh;
@@ -2022,6 +2035,60 @@ img.emoji {
 .home-login-panel button:hover {
   background: rgba(55, 80, 44, 0.86);
 }
+
+.desktop-login-gate-field {
+  position: relative;
+  display: block;
+}
+
+.desktop-login-gate-field svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(47, 74, 36, 0.65);
+  pointer-events: none;
+}
+
+.desktop-login-gate-form input {
+  width: 100%;
+  height: 44px;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  padding: 0 14px 0 40px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #26351f;
+  font: 600 14px/1.2 'SUITE', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  outline: none;
+}
+
+.desktop-login-gate-form input::placeholder {
+  color: rgba(47, 74, 36, 0.45);
+}
+
+.desktop-login-gate-form input:focus {
+  border-color: #6f8f25;
+  background: #fff;
+}
+
+.desktop-login-gate-form button {
+  width: 100%;
+  height: 44px;
+  border: 1px solid rgba(30, 50, 18, 0.5);
+  border-radius: 8px;
+  background: #2e4e2e;
+  color: #fff;
+  font: 700 13px/1 Georgia, 'Times New Roman', serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.desktop-login-gate-form button:hover {
+  background: #164420;
+}
+
 .home-session-panel {
   position: fixed;
   top: var(--session-panel-top);

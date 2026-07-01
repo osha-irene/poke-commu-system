@@ -1,7 +1,8 @@
 // src/components/views/pokemon/PokemonDetailPanel.jsx
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { 
+import {
+  ArrowUp,
   ArrowUpCircle,
   ArrowDownCircle,
   Heart,
@@ -14,7 +15,8 @@ import {
   RefreshCw,
   Sword,
   Info,
-  FileText
+  FileText,
+  Menu
 } from 'lucide-react';
 import { 
   RadarChart, 
@@ -129,17 +131,19 @@ export default function PokemonDetailPanel({
   allPokemonMaster = [],
   getPokemonFormCandidates,
   onChangeForm,
-  systemSettings = {}
+  systemSettings = {},
+  mobile = false
 }) {
   // State
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [nickname, setNickname] = useState(pokemon.nickname || getBaseName(pokemon));
   const [showMoveSelectModal, setShowMoveSelectModal] = useState(false);
-  const [showLevelUpMoveModal, setShowLevelUpMoveModal] = useState(false); 
+  const [showLevelUpMoveModal, setShowLevelUpMoveModal] = useState(false);
   const [levelUpData, setLevelUpData] = useState(null);
   const [expInput, setExpInput] = useState('');
   const [showExpPanel, setShowExpPanel] = useState(false);
   const [showFormPanel, setShowFormPanel] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   
   // 툴팁용 state 추가
   const [hoveredCondition, setHoveredCondition] = useState(null);
@@ -381,6 +385,7 @@ const ballImage = getBallImage();
     setExpInput('');
     setShowExpPanel(false);
     setShowFormPanel(false);
+    setShowMobileMenu(false);
   }, [pokemon.uniqueId, pokemon.nickname, pokemon.name]);
 
   useEffect(() => {
@@ -468,8 +473,82 @@ const ballImage = getBallImage();
     const formName = form.name || form.nameEn;
     if (!window.confirm(`${pokemon.nickname || pokemon.name}을(를) ${formName} 폼으로 변경하시겠습니까?`)) return;
     const changed = onChangeForm(pokemon.uniqueId, form.id || form.nameEn || form.name);
-    if (changed) setShowFormPanel(false);
+    if (changed) {
+      setShowFormPanel(false);
+      setShowMobileMenu(false);
+    }
   };
+
+  const renderExpAllocationBody = () => (
+    <>
+      <div className="mt-2 flex items-center gap-2">
+        <input
+          type="number"
+          min="1"
+          max={trainerExp}
+          value={expInput}
+          onChange={(event) => {
+            const value = event.target.value;
+            if (value === '') {
+              setExpInput('');
+              return;
+            }
+            setExpInput(String(Math.max(0, Math.floor(Number(value) || 0))));
+          }}
+          className="h-9 w-24 rounded-lg border border-[#a7c86f] bg-[#f8fbef] px-2 text-sm font-bold text-[#2f4a24] focus:border-[#7fa438] focus:outline-none"
+          placeholder="EXP"
+        />
+        <button
+          type="button"
+          onClick={() => {
+            if (!canAllocateExp) return;
+            onUseCandy(pokemon.uniqueId, openLevelUpMoveQueue, selectedExpAmount);
+            setExpInput('');
+            setShowExpPanel(false);
+            setShowMobileMenu(false);
+          }}
+          disabled={!canAllocateExp}
+          className={`h-9 rounded-lg px-3 text-xs font-bold transition-colors ${
+            canAllocateExp
+              ? 'bg-[#6f8f25] text-white hover:bg-[#4f741f]'
+              : 'bg-[#dbeabf] text-[#7f9360] cursor-not-allowed'
+          }`}
+        >
+          배분
+        </button>
+      </div>
+      <div className="mt-2 space-y-0.5 text-xs font-semibold text-[#9a6b00]">
+        <div>나의 남은 경험치: {trainerExp - (selectedExpAmount || 0) < 0 ? 0 : trainerExp - (selectedExpAmount || 0)} <span className="text-[#b0b0b0] font-normal">(보유 {trainerExp})</span></div>
+        <div>다음 레벨업까지 필요 경험치: {expToNextLevel ?? '-'}</div>
+      </div>
+    </>
+  );
+
+  const renderFormListBody = () => (
+    <div className="mt-2 space-y-2">
+      {availableForms.map((form) => (
+        <button
+          key={form.id || form.nameEn || form.name}
+          type="button"
+          onClick={() => handleChangeForm(form)}
+          className="flex w-full items-center gap-3 rounded-lg border border-[#c8dda4] bg-[#f8fbef] px-3 py-2 text-left transition-colors hover:bg-[#eef7df]"
+        >
+          <FormIconSprite
+            form={form}
+            size={36}
+            fallbackUrl={form.iconUrl || form.spriteUrl || form.imageUrl || getPokemonSpriteUrl(form.originalNumber || form.number)}
+            className="h-9 w-9"
+          />
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-bold text-[#26351f]">{getBaseName(form)}</span>
+            <span className="block truncate text-xs text-[#6f8150]">
+              {form.type}{form.type2 ? ` / ${form.type2}` : ''}
+            </span>
+          </span>
+        </button>
+      ))}
+    </div>
+  );
 
   const handleEvolve = () => {
     if (!manualEvolve) return;
@@ -562,146 +641,167 @@ const ballImage = getBallImage();
               {/* 아이콘 버튼 그룹 */}
               <div className="flex items-center gap-2">
                 {!pokemon.isPartner && (
-                  <>
+                  mobile ? (
                     <div className="relative">
                       <button
                         type="button"
-                        onClick={() => setShowExpPanel((value) => !value)}
-                        className="rounded-lg transition-colors hover:bg-yellow-50"
-                        style={{ width: 36, height: 36, padding: 0, overflow: 'hidden', '--serebii-item-image-size': '22px' }}
-                        title={levelExpTitle}
+                        onClick={() => setShowMobileMenu((value) => !value)}
+                        className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="메뉴"
                       >
-                        <img
-                          src="https://www.serebii.net/itemdex/sprites/sv/exp.candyxl.png"
-                          alt="경험사탕 XL"
-                          width={22}
-                          height={22}
-                          style={{ width: 22, height: 22, margin: '5px 3px 1px 3px', imageRendering: 'pixelated', display: 'block' }}
-                        />
+                        <Menu size={20} />
                       </button>
 
-                      {showExpPanel && (
-                        <div className="pokemon-detail-exp-popover">
-                          <div className="flex items-center justify-between gap-3">
-                            <strong>경험치 배분</strong>
+                      {showMobileMenu && (
+                        <div className="pokemon-detail-exp-popover right-0 left-auto w-64 p-0 overflow-hidden">
+                          <div className="flex items-center justify-between gap-3 px-3 py-2 border-b border-[#dfe9c8]">
+                            <strong>메뉴</strong>
                             <button
                               type="button"
-                              onClick={() => setShowExpPanel(false)}
+                              onClick={() => setShowMobileMenu(false)}
                               className="text-[#789252] hover:text-[#2f4a24]"
                             >
                               <X size={14} />
                             </button>
                           </div>
-                          <div className="mt-2 flex items-center gap-2">
-                            <input
-                              type="number"
-                              min="1"
-                              max={trainerExp}
-                              value={expInput}
-                              onChange={(event) => {
-                                const value = event.target.value;
-                                if (value === '') {
-                                  setExpInput('');
-                                  return;
-                                }
-                                setExpInput(String(Math.max(0, Math.floor(Number(value) || 0))));
-                              }}
-                              className="h-9 w-24 rounded-lg border border-[#a7c86f] bg-[#f8fbef] px-2 text-sm font-bold text-[#2f4a24] focus:border-[#7fa438] focus:outline-none"
-                              placeholder="EXP"
-                            />
+
+                          <div className="border-b border-[#eef3e0]">
                             <button
                               type="button"
-                              onClick={() => {
-                                if (!canAllocateExp) return;
-                                onUseCandy(pokemon.uniqueId, openLevelUpMoveQueue, selectedExpAmount);
-                                setExpInput('');
-                                setShowExpPanel(false);
-                              }}
-                              disabled={!canAllocateExp}
-                              className={`h-9 rounded-lg px-3 text-xs font-bold transition-colors ${
-                                canAllocateExp
-                                  ? 'bg-[#6f8f25] text-white hover:bg-[#4f741f]'
-                                  : 'bg-[#dbeabf] text-[#7f9360] cursor-not-allowed'
-                              }`}
+                              onClick={() => setShowExpPanel((value) => !value)}
+                              className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-semibold text-[#2f4a24] hover:bg-[#f2f8e6]"
+                              title={levelExpTitle}
                             >
-                              배분
+                              <ArrowUp size={18} />
+                              레벨업
                             </button>
+                            {showExpPanel && (
+                              <div className="px-3 pb-3">
+                                {renderExpAllocationBody()}
+                              </div>
+                            )}
                           </div>
-                          <div className="mt-2 space-y-0.5 text-xs font-semibold text-[#9a6b00]">
-                            <div>나의 남은 경험치: {trainerExp - (selectedExpAmount || 0) < 0 ? 0 : trainerExp - (selectedExpAmount || 0)} <span className="text-[#b0b0b0] font-normal">(보유 {trainerExp})</span></div>
-                            <div>다음 레벨업까지 필요 경험치: {expToNextLevel ?? '-'}</div>
-                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => { onMove(); setShowMobileMenu(false); }}
+                            className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-semibold text-[#2f4a24] hover:bg-[#f2f8e6] border-b border-[#eef3e0]"
+                          >
+                            {isInParty ? <ArrowDownCircle size={18} /> : <ArrowUpCircle size={18} />}
+                            {isInParty ? '박스로 이동' : '엔트리로 이동'}
+                          </button>
+
+                          {canChangeForm && (
+                            <div className="border-b border-[#eef3e0]">
+                              <button
+                                type="button"
+                                onClick={() => setShowFormPanel((value) => !value)}
+                                className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-semibold text-[#2f4a24] hover:bg-[#f2f8e6]"
+                              >
+                                <RefreshCw size={18} />
+                                폼체인지
+                              </button>
+                              {showFormPanel && (
+                                <div className="px-3 pb-3">
+                                  {renderFormListBody()}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => { onRelease(); setShowMobileMenu(false); }}
+                            className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-semibold text-[#6f8f25] hover:bg-[#f2f8e6]"
+                          >
+                            <Trees size={18} />
+                            방생
+                          </button>
                         </div>
                       )}
                     </div>
-
-                    <button
-                      onClick={onMove}
-                      className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                      title={isInParty ? '박스로 이동' : '엔트리로 이동'}
-                    >
-                      {isInParty ? <ArrowDownCircle size={20} /> : <ArrowUpCircle size={20} />}
-                    </button>
-
-                    {canChangeForm && (
+                  ) : (
+                    <>
                       <div className="relative">
                         <button
                           type="button"
-                          onClick={() => setShowFormPanel((value) => !value)}
-                          className="p-2 text-teal-700 hover:bg-teal-50 rounded-lg transition-colors"
-                          title="폼체인지"
+                          onClick={() => setShowExpPanel((value) => !value)}
+                          className="rounded-lg transition-colors hover:bg-yellow-50"
+                          style={{ width: 36, height: 36, padding: 0, overflow: 'hidden', '--serebii-item-image-size': '22px' }}
+                          title={levelExpTitle}
                         >
-                          <RefreshCw size={20} />
+                          <img
+                            src="https://www.serebii.net/itemdex/sprites/sv/exp.candyxl.png"
+                            alt="경험사탕 XL"
+                            width={22}
+                            height={22}
+                            style={{ width: 22, height: 22, margin: '5px 3px 1px 3px', imageRendering: 'pixelated', display: 'block' }}
+                          />
                         </button>
 
-                        {showFormPanel && (
-                          <div className="pokemon-detail-exp-popover right-0 left-auto w-60">
+                        {showExpPanel && (
+                          <div className="pokemon-detail-exp-popover">
                             <div className="flex items-center justify-between gap-3">
-                              <strong>폼체인지</strong>
+                              <strong>경험치 배분</strong>
                               <button
                                 type="button"
-                                onClick={() => setShowFormPanel(false)}
+                                onClick={() => setShowExpPanel(false)}
                                 className="text-[#789252] hover:text-[#2f4a24]"
                               >
                                 <X size={14} />
                               </button>
                             </div>
-                            <div className="mt-3 space-y-2">
-                              {availableForms.map((form) => (
-                                <button
-                                  key={form.id || form.nameEn || form.name}
-                                  type="button"
-                                  onClick={() => handleChangeForm(form)}
-                                  className="flex w-full items-center gap-3 rounded-lg border border-[#c8dda4] bg-[#f8fbef] px-3 py-2 text-left transition-colors hover:bg-[#eef7df]"
-                                >
-                                  <FormIconSprite
-                                    form={form}
-                                    size={36}
-                                    fallbackUrl={form.iconUrl || form.spriteUrl || form.imageUrl || getPokemonSpriteUrl(form.originalNumber || form.number)}
-                                    className="h-9 w-9"
-                                  />
-                                  <span className="min-w-0">
-                                    <span className="block truncate text-sm font-bold text-[#26351f]">{getBaseName(form)}</span>
-                                    <span className="block truncate text-xs text-[#6f8150]">
-                                      {form.type}{form.type2 ? ` / ${form.type2}` : ''}
-                                    </span>
-                                  </span>
-                                </button>
-                              ))}
-                            </div>
+                            {renderExpAllocationBody()}
                           </div>
                         )}
                       </div>
-                    )}
 
-                    <button
-                      onClick={onRelease}
-                      className="p-2 rounded-lg transition-colors text-[#6f8f25] hover:bg-[#eef7df]"
-                      title="포켓몬 방생"
-                    >
-                      <Trees size={20} />
-                    </button>
-                  </>
+                      <button
+                        onClick={onMove}
+                        className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        title={isInParty ? '박스로 이동' : '엔트리로 이동'}
+                      >
+                        {isInParty ? <ArrowDownCircle size={20} /> : <ArrowUpCircle size={20} />}
+                      </button>
+
+                      {canChangeForm && (
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => setShowFormPanel((value) => !value)}
+                            className="p-2 text-teal-700 hover:bg-teal-50 rounded-lg transition-colors"
+                            title="폼체인지"
+                          >
+                            <RefreshCw size={20} />
+                          </button>
+
+                          {showFormPanel && (
+                            <div className="pokemon-detail-exp-popover right-0 left-auto w-60">
+                              <div className="flex items-center justify-between gap-3">
+                                <strong>폼체인지</strong>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowFormPanel(false)}
+                                  className="text-[#789252] hover:text-[#2f4a24]"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+                              {renderFormListBody()}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <button
+                        onClick={onRelease}
+                        className="p-2 rounded-lg transition-colors text-[#6f8f25] hover:bg-[#eef7df]"
+                        title="포켓몬 방생"
+                      >
+                        <Trees size={20} />
+                      </button>
+                    </>
+                  )
                 )}
               </div>
             </div>

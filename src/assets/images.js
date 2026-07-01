@@ -4,6 +4,7 @@ export { default as pokemonIcon } from './pokemon-icon.svg';
 export { default as logoText } from './logo_text.png';
 export { default as logoCompass } from './logo_compass.png';
 export { default as forestBg } from './forest-bg.png';
+export { default as forestBgBlurred } from './forest-bg-blurred.jpg';
 export { default as mainNpcPanel } from './main_npc.png';
 export { default as loginMemberImg } from './login/member-img.png';
 export { default as loginTitle } from './login/title.png';

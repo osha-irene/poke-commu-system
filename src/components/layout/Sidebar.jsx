@@ -139,9 +139,10 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin, hiddenMenu
           <IconImage src={twitterIcon} />
         </a>
 
-    <button type="button" className="trainer-nav__social-button" aria-label="Mastodon">
+
+      <a href="https://originb-pokemon.world/" target="_blank" rel="noopener noreferrer" className="trainer-nav__social-button" aria-label="Mastodon">
           <IconImage src={mastodonIcon} />
-        </button>
+        </a>
       </div>
      </div>
   </nav>

@@ -491,7 +491,7 @@ const TABS = [
   { id: 'main', label: '메인', Icon: User },
   { id: 'text', label: '설정', Icon: Text },
   { id: 'entry', label: '엔트리', iconSrc: '/img/pokeball.png' },
-  { id: 'extra', label: '추가', Icon: Award },
+  // { id: 'extra', label: '추가', Icon: Award }, // 임시 숨김 (뱃지 탭)
   { id: 'relation', label: '관계', Icon: Users },
 ];
 
