@@ -149,11 +149,13 @@ export default function CookingView() {
     );
   };
 
-  const FAIL_ITEMS = [
-    { name: '정체불명의 덩어리', nameEn: 'unknown-lump', spriteUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/88.png' },
-    { name: '찐득한 슬러지', nameEn: 'sticky-sludge', spriteUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/89.png' },
-    { name: '쓰레기 더미', nameEn: 'trash-pile', spriteUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/568.png' },
-  ];
+  const FAIL_ITEM_NAMES_EN = ['thingX', 'muk-like-thing', 'Trubbish-like-thing'];
+
+  const getEulReul = (name = '') => {
+    const code = String(name).charCodeAt(String(name).length - 1);
+    if (Number.isNaN(code) || code < 0xAC00 || code > 0xD7A3) return '을';
+    return (code - 0xAC00) % 28 === 0 ? '를' : '을';
+  };
 
   const handleCook = () => {
     if (selectedIngredients.length === 0) { alert('재료를 선택해주세요!'); return; }
@@ -162,13 +164,24 @@ export default function CookingView() {
     if (matchedRecipe) {
       onCook(matchedRecipe, selectedIngredients);
     } else {
-      const fail = FAIL_ITEMS[Math.floor(Math.random() * FAIL_ITEMS.length)];
+      const failNameEn = FAIL_ITEM_NAMES_EN[Math.floor(Math.random() * FAIL_ITEM_NAMES_EN.length)];
+      // 관리자가 gameData/customItems에 nameEn 기준으로 미리 등록해 둔 실패 아이템을 그대로 사용
+      const failItem = allItems.find((i) => i.nameEn === failNameEn);
+      const displayName = failItem?.name || failNameEn;
       const failRecipe = {
         id: `fail_${Date.now()}`,
-        name: fail.name,
-        result: { name: fail.name, nameEn: fail.nameEn, pocket: 'items', effect: '요리 실패의 산물...', canSell: false, spriteUrl: fail.spriteUrl },
+        name: displayName,
+        result: {
+          name: displayName,
+          nameEn: failNameEn,
+          pocket: failItem?.pocket || 'misc',
+          effect: failItem?.effect || '요리 실패의 산물...',
+          canSell: failItem?.canSell ?? false,
+          spriteUrl: failItem?.spriteUrl || failItem?.imageUrl,
+        },
       };
       onCook(failRecipe, selectedIngredients);
+      alert(`요리에 실패했다! ${displayName}${getEulReul(displayName)} 만들었다.`);
     }
     setSelectedIngredients([]);
   };
