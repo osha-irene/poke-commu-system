@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.838cb0c2.css",
-    "main.js": "/static/js/main.baf6f679.js",
+    "main.css": "/static/css/main.dd14bcc2.css",
+    "main.js": "/static/js/main.f72fcaf9.js",
     "static/js/623.69c45dc4.chunk.js": "/static/js/623.69c45dc4.chunk.js",
     "static/media/forest-bg.png": "/static/media/forest-bg.ed51a4032d3a6a7016d2.png",
     "static/media/map.png": "/static/media/map.a93920750eb1513e2792.png",
@@ -19,6 +19,7 @@
     "static/media/main_deco_leaves (2).png": "/static/media/main_deco_leaves (2).1d65fa47529c541e03ac.png",
     "static/media/logo_text.png": "/static/media/logo_text.fdb1298f93a712fc16a5.png",
     "static/media/rubbing.mp3": "/static/media/rubbing.b846dd12125a470dd965.mp3",
+    "static/media/forest-bg-blurred.jpg": "/static/media/forest-bg-blurred.97f48d40be7379db6d3e.jpg",
     "static/media/badge4.png": "/static/media/badge4.49ba69cde289aa29c7e6.png",
     "static/media/badge2.png": "/static/media/badge2.e461e795fa5431fd609a.png",
     "static/media/badge5.png": "/static/media/badge5.cc7a611fdda026df198d.png",
@@ -73,12 +74,12 @@
     "static/media/Whirl Islands cave_arnie.png": "/static/media/Whirl Islands cave_arnie.66120ee2033224a9cc5d.png",
     "index.html": "/index.html",
     "static/media/pokemon-icon.svg": "/static/media/pokemon-icon.d36b6f0655c180980d5acb3287a88011.svg",
-    "main.838cb0c2.css.map": "/static/css/main.838cb0c2.css.map",
-    "main.baf6f679.js.map": "/static/js/main.baf6f679.js.map",
+    "main.dd14bcc2.css.map": "/static/css/main.dd14bcc2.css.map",
+    "main.f72fcaf9.js.map": "/static/js/main.f72fcaf9.js.map",
     "623.69c45dc4.chunk.js.map": "/static/js/623.69c45dc4.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.838cb0c2.css",
-    "static/js/main.baf6f679.js"
+    "static/css/main.dd14bcc2.css",
+    "static/js/main.f72fcaf9.js"
   ]
 }
