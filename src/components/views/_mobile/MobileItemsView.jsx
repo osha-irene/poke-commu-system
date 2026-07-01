@@ -108,7 +108,9 @@ export default function MobileItemsView() {
     const details = selectedItem ? getItemDetails(selectedItem) : null;
     if (details?.specialEffect === 'trainerExp') {
       if (onUseItem && selectedItem) {
-        onUseItem(selectedItem, null);
+        // resolveItemData의 name/nameEn 기반 매칭이 다른 아이템으로 오매칭되는 경우가 있어,
+        // 화면에서 이미 정확히 찾아낸 specialEffect/boostAmount를 직접 실어 보냄
+        onUseItem({ ...selectedItem, specialEffect: 'trainerExp', boostAmount: details.boostAmount }, null);
         closeAll();
       }
       return;
