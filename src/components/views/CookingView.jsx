@@ -151,12 +151,6 @@ export default function CookingView() {
 
   const FAIL_ITEM_NAMES_EN = ['thingX', 'muk-like-thing', 'Trubbish-like-thing'];
 
-  const getEulReul = (name = '') => {
-    const code = String(name).charCodeAt(String(name).length - 1);
-    if (Number.isNaN(code) || code < 0xAC00 || code > 0xD7A3) return '을';
-    return (code - 0xAC00) % 28 === 0 ? '를' : '을';
-  };
-
   const handleCook = () => {
     if (selectedIngredients.length === 0) { alert('재료를 선택해주세요!'); return; }
     let matchedRecipe = matchFixedRecipe();
@@ -166,22 +160,21 @@ export default function CookingView() {
     } else {
       const failNameEn = FAIL_ITEM_NAMES_EN[Math.floor(Math.random() * FAIL_ITEM_NAMES_EN.length)];
       // 관리자가 gameData/customItems에 nameEn 기준으로 미리 등록해 둔 실패 아이템을 그대로 사용
-      const failItem = allItems.find((i) => i.nameEn === failNameEn);
-      const displayName = failItem?.name || failNameEn;
+      // (등록 시 앞뒤 공백/대소문자가 섞여도 매칭되도록 trim + lowercase 비교)
+      const normalize = (v) => String(v || '').trim().toLowerCase();
+      const failItem = allItems.find((i) => normalize(i.nameEn) === normalize(failNameEn));
+      if (!failItem) {
+        alert(`요리 실패 아이템(${failNameEn})이 아직 등록되어 있지 않습니다. 관리자에게 문의해주세요.`);
+        setSelectedIngredients([]);
+        return;
+      }
       const failRecipe = {
         id: `fail_${Date.now()}`,
-        name: displayName,
-        result: {
-          name: displayName,
-          nameEn: failNameEn,
-          pocket: failItem?.pocket || 'misc',
-          effect: failItem?.effect || '요리 실패의 산물...',
-          canSell: failItem?.canSell ?? false,
-          spriteUrl: failItem?.spriteUrl || failItem?.imageUrl,
-        },
+        name: failItem.name,
+        result: failItem,
       };
       onCook(failRecipe, selectedIngredients);
-      alert(`요리에 실패했다! ${displayName}${getEulReul(displayName)} 만들었다.`);
+      alert('요리에 실패했다!');
     }
     setSelectedIngredients([]);
   };
