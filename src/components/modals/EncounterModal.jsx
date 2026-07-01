@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import encounterContextImg from '../../assets/map/encounter-context.png';
 import encounterBallImg from '../../assets/map/encounter-ball.png';
+import encounterBallWatermarkImg from '../../assets/map/encounter-ball-watermark.png';
 import encounterChooseImg from '../../assets/map/encounter-choose.png';
 import encounterRunImg from '../../assets/map/encounter-run.png';
 import encounterPokemonImg from '../../assets/map/encounter-pokemon.png';
@@ -588,16 +589,28 @@ export default function EncounterModal({
               <button onClick={handleCloseClick} style={{ position: 'absolute', top: 15, right: 8, zIndex: 30, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
                 <img src={encounterRunImg} alt="도망치기" style={{ height: 40, width: 'auto', display: 'block' }} />
               </button>
-              <img
-                src={encounterBallImg}
-                alt=""
-                style={{ width: '100%', display: 'block', transform: 'scale(1.1)', transformOrigin: 'center' }}
-              />
+              {/* encounter-ball 9-slice 배경 — 모서리(28px)는 고정, 테두리는 콘텐츠 높이에 맞춰 늘어남.
+                  중앙은 fill 없이 흰 배경 + 워터마크를 원래 비율 그대로(고정 크기) 얹어서 찌그러짐 없이 표시 */}
               <div style={{
                 position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
+                inset: 0,
+                transform: 'scale(1.1)',
+                transformOrigin: 'center',
+                borderStyle: 'solid',
+                borderWidth: 20,
+                borderImageSource: `url(${encounterBallImg})`,
+                borderImageSlice: 28,
+                borderImageRepeat: 'stretch',
+                backgroundColor: '#ffffff',
+                backgroundImage: `url(${encounterBallWatermarkImg})`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+                backgroundSize: '150px 150px',
+                backgroundClip: 'padding-box',
+                pointerEvents: 'none',
+              }} />
+              <div style={{
+                position: 'relative',
                 display: 'flex',
                 flexDirection: 'column',
                 padding: '20px 30px 30px 22px',
@@ -705,9 +718,9 @@ export default function EncounterModal({
               {selectedBall && (
                 <div onClick={(e) => e.stopPropagation()} style={{
                   position: 'absolute',
-                  bottom: 'calc(-5% + 16px)',
-                  left: 'calc(-5% + 14px)',
-                  right: 'calc(-5% + 14px)',
+                  bottom: -16,
+                  left: -14,
+                  right: -14,
                   padding: '24px 20px 20px',
                   background: 'linear-gradient(to top, rgba(255,255,255,0.95) 60%, transparent 100%)',
                   borderRadius: '0 0 8px 8px',

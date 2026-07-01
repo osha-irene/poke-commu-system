@@ -812,7 +812,7 @@ export default function MapView({
   return (
     <div
       className="map-view-root w-full flex items-start justify-center"
-      style={{ marginTop: -50, overflow: 'hidden', paddingBottom: '10%' }}
+      style={{ marginTop: -58, overflow: 'hidden', paddingBottom: '10%' }}
     >
       <div
         className="relative w-full"

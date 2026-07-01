@@ -26,6 +26,7 @@ export default function MobileLayout({
   soundEnabled,
   toggleSound,
   onLogout,
+  hideBottomNav = false,
   children
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -162,7 +163,8 @@ export default function MobileLayout({
         {children}
       </main>
 
-      {/* ── 하단 네비 (아이콘만) ── */}
+      {/* ── 하단 네비 (아이콘만) — 인카운터 모달이 떠 있을 때는 렌더링 자체를 생략 (mobile.css의 z-index:10000 !important가 모달을 뚫고 나오는 걸 막기 위함) ── */}
+      {!hideBottomNav && (
       <nav className={`mobile-bottom-nav ${isBottomNavHidden ? 'is-hidden' : ''}`} style={{
         display: 'flex', justifyContent: 'space-around', alignItems: 'center',
         padding: '8px 4px',
@@ -201,6 +203,7 @@ export default function MobileLayout({
           );
         })}
       </nav>
+      )}
 
       {/* ── 드로어 ── */}
       {menuOpen && (

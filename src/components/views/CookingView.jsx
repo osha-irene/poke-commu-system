@@ -150,9 +150,9 @@ export default function CookingView() {
   };
 
   const FAIL_ITEMS = [
-    { nameEn: 'thingX' },
-    { nameEn: 'muk-like-thing' },
-    { nameEn: 'Trubbish-like-thing' },
+    { name: '정체불명의 덩어리', nameEn: 'unknown-lump', spriteUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/88.png' },
+    { name: '찐득한 슬러지', nameEn: 'sticky-sludge', spriteUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/89.png' },
+    { name: '쓰레기 더미', nameEn: 'trash-pile', spriteUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/568.png' },
   ];
 
   const handleCook = () => {
@@ -165,8 +165,8 @@ export default function CookingView() {
       const fail = FAIL_ITEMS[Math.floor(Math.random() * FAIL_ITEMS.length)];
       const failRecipe = {
         id: `fail_${Date.now()}`,
-        name: fail.nameEn,
-        result: { name: fail.nameEn, nameEn: fail.nameEn, pocket: 'items', effect: '요리 실패의 산물...', canSell: false },
+        name: fail.name,
+        result: { name: fail.name, nameEn: fail.nameEn, pocket: 'items', effect: '요리 실패의 산물...', canSell: false, spriteUrl: fail.spriteUrl },
       };
       onCook(failRecipe, selectedIngredients);
     }

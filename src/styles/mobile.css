@@ -1165,7 +1165,9 @@ button:active {
   .main-shell,
   .main-layout,
   .content-stage {
-    overflow-x: hidden !important;
+    /* hidden + overflow-y:visible 조합은 스펙상 overflow-y가 auto로 강제 변환되어
+       #root 등에 원치 않는 자체 스크롤바가 생길 수 있음. clip은 그 변환을 유발하지 않음 */
+    overflow-x: clip !important;
   }
 
   body,
@@ -1228,14 +1230,18 @@ button:active {
 @media (min-width: 769px) {
   html {
     overflow-x: hidden !important;
-    overflow-y: auto !important;
+    /* auto면 지도 페이지처럼 세로 스크롤이 필요 없는 페이지에서 스크롤바 트랙이 사라져
+       .site-header/.main-layout의 중앙 정렬 기준폭이 다른 페이지보다 넓어져 보임(좌우로 어긋남).
+       scroll로 고정해 모든 페이지에서 항상 같은 폭을 기준으로 정렬되게 함 */
+    overflow-y: scroll !important;
     scrollbar-gutter: stable !important;
     scrollbar-width: thin !important;
   }
 
   body,
   #root {
-    overflow-x: hidden !important;
+    /* clip 사용 이유는 위 html 규칙 근처 주석과 동일 (hidden이면 overflow-y:visible이 auto로 강제 변환됨) */
+    overflow-x: clip !important;
     overflow-y: visible !important;
   }
 

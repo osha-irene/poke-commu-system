@@ -1947,6 +1947,7 @@ return (
           soundEnabled={soundEnabled}
           toggleSound={() => setSoundEnabled(!soundEnabled)}
           onLogout={handleLogout}
+          hideBottomNav={!!encounterPokemon}
         >
           {currentTab === 'home' && (
             <MobileHomeDashboard

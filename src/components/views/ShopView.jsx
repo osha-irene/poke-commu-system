@@ -122,15 +122,13 @@ export default function ShopView() {
 
     // 랜덤박스 구매
     if (selectedItem.type === 'randombox') {
-      if (trainer.money < selectedItem.price) { alert('돈이 부족합니다!'); return; }
+      const totalPrice = (selectedItem.price || 0) * quantity;
+      if (trainer.money < totalPrice) { alert('돈이 부족합니다!'); return; }
       const items = Array.isArray(selectedItem.items) ? selectedItem.items : [];
       if (items.length === 0) { alert('이 랜덤박스에는 아이템이 없습니다!'); return; }
-      if (!window.confirm(`${selectedItem.name}을(를) ${selectedItem.price?.toLocaleString()}원에 구매하시겠습니까?`)) return;
-      const totalWeight = items.reduce((s, i) => s + (i.weight || 1), 0);
-      let r = Math.random() * totalWeight;
-      const picked = items.find(i => { r -= (i.weight || 1); return r <= 0; }) || items[0];
-      const result = { itemId: picked.itemId, name: picked.name, count: picked.count || 1 };
-      buyRandomBox(selectedItem, result);
+      if (!window.confirm(`${selectedItem.name}을(를) ${totalPrice.toLocaleString()}원에 ${quantity}개 구매하시겠습니까?`)) return;
+      const result = purchaseDesktopRandomBox(selectedItem, quantity);
+      if (result?.success) alert(result.message);
       setSelectedItem(null);
       setQuantity(1);
       return;
@@ -201,47 +199,6 @@ export default function ShopView() {
       setSelectedItem(null);
       setQuantity(1);
     }
-  };
-
-  const buyRandomBox = (box, result) => {
-    if (!trainer) return false;
-    
-    const newMoney = trainer.money - box.price;
-    
-    const existingItem = trainer.inventory.find(
-      i => i.itemId === result.itemId || i.name === result.name
-    );
-    
-    const itemData = allItems.find(i => i.id === result.itemId);
-    
-    const newInventory = existingItem
-      ? trainer.inventory.map(i =>
-          (i.itemId === result.itemId || i.name === result.name)
-            ? { ...i, count: i.count + result.count }
-            : i
-        )
-      : [
-          ...trainer.inventory,
-          {
-            itemId: result.itemId,
-            name: result.name,
-            nameEn: itemData?.nameEn,
-            count: result.count,
-            imageUrl: itemData?.spriteUrl || itemData?.imageUrl,
-            cost: itemData?.cost || 0,
-            sellPrice: itemData?.sellPrice || 0,
-            category: itemData?.category,
-            pocket: itemData?.pocket
-          }
-        ];
-    
-    updateCurrentUser({
-      money: newMoney,
-      inventory: newInventory
-    });
-    
-    alert(`${box.name}에서 ${result.name} x${result.count} 획득`);
-    return true;
   };
 
   const renderItemCard = (shopItem) => {
@@ -1295,7 +1252,7 @@ export default function ShopView() {
                       return (
                         <button
                           key={box.id}
-                          onClick={() => { setSelectedItem({ ...box, type: 'randombox' }); setQuantity(1); }}
+                          onClick={() => { setSelectedItem({ ...box, type: 'randombox', stock: 99 }); setQuantity(1); }}
                           style={{ flex: 1, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 12, border: `2px solid ${isSelected ? '#5828a0' : 'rgba(100,50,180,0.28)'}`, background: isSelected ? 'rgba(244,238,255,0.99)' : 'rgba(250,246,255,0.97)', cursor: 'pointer', textAlign: 'left', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', width: '100%' }}
                         >
                           <FontAwesomeIcon icon={faGift} style={{ color: '#7840c0', fontSize: 22, flexShrink: 0 }} />
