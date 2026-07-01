@@ -105,6 +105,14 @@ export default function MobileItemsView() {
   const closeAction = () => { setActionMode(null); setQuantity(1); setSelectedPokemon(null); };
 
   const handleUse = () => {
+    const details = selectedItem ? getItemDetails(selectedItem) : null;
+    if (details?.specialEffect === 'trainerExp') {
+      if (onUseItem && selectedItem) {
+        onUseItem(selectedItem, null);
+        closeAll();
+      }
+      return;
+    }
     if (!selectedPokemon) { alert('포켓몬을 선택해주세요!'); return; }
     if (onUseItem && selectedItem) {
       onUseItem(selectedItem, selectedPokemon);
@@ -292,9 +300,17 @@ export default function MobileItemsView() {
           <div style={{ position: 'fixed', inset: 0, zIndex: 250 }} onClick={closeAction} />
           <div className="item-sheet" style={{ position: 'fixed', bottom: isNavHidden ? 0 : 64, left: 0, right: 0, zIndex: 300, maxHeight: '55vh', display: 'flex', flexDirection: 'column', background: 'rgba(248,254,240,1)', borderTop: `1px solid rgba(90,160,30,0.2)`, borderRadius: '16px 16px 0 0', transition: 'bottom 0.28s ease' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: `1px solid ${P.border}`, flexShrink: 0 }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: P.text }}>사용할 포켓몬 선택</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: P.text }}>
+                {selectedDetails.specialEffect === 'trainerExp' ? '아이템 사용' : '사용할 포켓몬 선택'}
+              </span>
               <button onClick={closeAction} style={{ background: 'none', border: 'none', cursor: 'pointer', color: P.muted, padding: 4 }}><X size={20} /></button>
             </div>
+            {selectedDetails.specialEffect === 'trainerExp' ? (
+              <div style={{ padding: 20, textAlign: 'center', color: P.text, fontSize: 13, lineHeight: 1.6 }}>
+                이 아이템을 사용하면 포켓몬이 아닌<br />
+                <span style={{ color: '#7020c0', fontWeight: 700 }}>회원님 본인의 경험치</span>가 오릅니다.
+              </div>
+            ) : (
             <div style={{ overflowY: 'auto', padding: 12, scrollbarWidth: 'none', flex: 1 }}>
               {allPokemonForItem.filter(p => p && p !== 'null' && p.uniqueId).length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '24px 0', color: P.muted, fontSize: 13 }}>보유한 포켓몬이 없습니다</div>
@@ -316,9 +332,10 @@ export default function MobileItemsView() {
                 </div>
               )}
             </div>
+            )}
             <div style={{ padding: '10px 16px', borderTop: `1px solid ${P.border}`, display: 'flex', gap: 8, flexShrink: 0 }}>
               <button onClick={closeAction} style={{ flex: 1, padding: '11px', borderRadius: 10, border: `1px solid ${P.border}`, background: 'rgba(245,245,245,0.9)', color: P.muted, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>취소</button>
-              <button onClick={handleUse} disabled={!selectedPokemon} style={{ flex: 1, padding: '11px', borderRadius: 10, border: 'none', fontSize: 14, fontWeight: 800, cursor: selectedPokemon ? 'pointer' : 'not-allowed', color: '#fff', background: selectedPokemon ? '#7020c0' : '#ccc' }}>사용하기</button>
+              <button onClick={handleUse} disabled={selectedDetails.specialEffect !== 'trainerExp' && !selectedPokemon} style={{ flex: 1, padding: '11px', borderRadius: 10, border: 'none', fontSize: 14, fontWeight: 800, cursor: (selectedDetails.specialEffect === 'trainerExp' || selectedPokemon) ? 'pointer' : 'not-allowed', color: '#fff', background: (selectedDetails.specialEffect === 'trainerExp' || selectedPokemon) ? '#7020c0' : '#ccc' }}>사용하기</button>
             </div>
           </div>
         </>

@@ -188,7 +188,6 @@ export const useRecipes = (currentUser, updateCurrentUser) => {
         friendshipBoost: resultItem.friendshipBoost || 0,
         conditionBoost: resultItem.conditionBoost || {},
         canSell: true,
-        canUse: true,
         isCooked: true
       });
     }
@@ -211,11 +210,11 @@ export const useRecipes = (currentUser, updateCurrentUser) => {
       ].slice(0, 10)
     });
     
-    // 실패 아이템이 아닐 때만 레시피 발견 처리
+    // 실패 아이템이 아닐 때만 레시피 발견 처리 + 완성 알림 (실패 알림은 호출부에서 따로 처리)
     if (!recipe.id?.startsWith('fail_')) {
       discoverRecipe(recipe.id);
+      alert(`✅ ${resultItem.name}을(를) 만들었습니다!`);
     }
-    alert(`✅ ${resultItem.name}을(를) 만들었습니다!`);
     
     return true;
   };

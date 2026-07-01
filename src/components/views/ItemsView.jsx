@@ -284,12 +284,24 @@ const categories = CATEGORIES.map(cat => {
   };
 
   const handleUse = () => {
+    const details = getItemDetails(selectedItem);
+
+    // 멤버(트레이너) 본인 대상 효과: 포켓몬 선택 없이 바로 사용
+    if (details.specialEffect === 'trainerExp') {
+      if (onUseItem && selectedItem) {
+        onUseItem(selectedItem, null);
+        closeModal();
+      } else {
+        alert('아이템 사용 기능이 연결되지 않았습니다.');
+      }
+      return;
+    }
+
     if (!selectedPokemon) {
       alert('포켓몬을 선택해주세요!');
       return;
     }
 
-    const details = getItemDetails(selectedItem);
     const itemNameEn = getItemNameEn(selectedItem);
     const isFormItem = isFormChangeItem(selectedItem);
 
@@ -610,6 +622,30 @@ const categories = CATEGORIES.map(cat => {
                           p && p !== 'null' && p.uniqueId &&
                           eligibleNumbers.includes(Number(p.originalNumber || p.number))
                         );
+
+                        // 멤버(트레이너) 본인 대상 효과: 포켓몬 선택 없이 바로 확인만
+                        if (details.specialEffect === 'trainerExp') {
+                          return (
+                            <>
+                              <p className="text-gray-700 mb-4 text-center">
+                                이 아이템을 사용하면 포켓몬이 아닌<br />
+                                <span className="text-purple-700 font-semibold">회원님 본인의 경험치</span>가 오릅니다.
+                              </p>
+                              <div className="flex gap-2">
+                                <button onClick={closeModal} className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+                                  취소
+                                </button>
+                                <button
+                                  onClick={handleUse}
+                                  className="flex-1 bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+                                >
+                                  <Sparkles size={18} />
+                                  사용하기
+                                </button>
+                              </div>
+                            </>
+                          );
+                        }
 
                         // 꿀: 포켓몬 선택됐으면 확인 UI
                         if (isNectar && selectedPokemon) {

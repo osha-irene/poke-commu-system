@@ -174,7 +174,10 @@ export default function CookingView() {
         result: failItem,
       };
       onCook(failRecipe, selectedIngredients);
-      alert('요리에 실패했다!');
+      const lastCode = failItem.name.charCodeAt(failItem.name.length - 1);
+      const hasBatchim = lastCode >= 0xAC00 && lastCode <= 0xD7A3 && (lastCode - 0xAC00) % 28 !== 0;
+      const iGa = hasBatchim ? '이' : '가';
+      alert(`요리에 실패했다… ${failItem.name}${iGa} 만들어졌다….`);
     }
     setSelectedIngredients([]);
   };

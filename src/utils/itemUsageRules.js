@@ -138,7 +138,11 @@ const canUseBoostItemOnPokemon = (pokemon, item, itemData, systemSettings = {}) 
     return Object.keys(conditionBoost).some(stat => Number(conditionBoost[stat]) > 0 && Number(condition[stat] || 0) < condMax);
   }
 
-  if (src.isCustom && (src.specialEffect === 'iv' || hasBoost(ivBoost))) return false;
+  if (src.isCustom) {
+    const hasFriendshipRoom = Number(friendshipBoost) > 0 && Number(pokemon.friendship || 0) < 255;
+    const hasAnyEffect = hasFriendshipRoom || hasBoost(ivBoost) || Boolean(src.specialEffect);
+    if (!hasAnyEffect) return false;
+  }
 
   return true;
 };

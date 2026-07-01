@@ -108,7 +108,7 @@ export function CustomItemModal({ editItem = null, onSubmit, onClose }) {
       ? 'effortEdit'
       : itemData.specialEffect === 'iv' ? null : itemData.specialEffect;
 
-    if (!isFixedSpecialEffect && (itemData.specialEffect === 'conditionSelect' || itemData.specialEffect === 'evSelect')) {
+    if (!isFixedSpecialEffect && (itemData.specialEffect === 'conditionSelect' || itemData.specialEffect === 'evSelect' || itemData.specialEffect === 'trainerExp')) {
       if (!itemData.boostAmount || itemData.boostAmount <= 0) { alert('상승량을 입력해주세요!'); return; }
       finalConditionBoost = {};
       finalEvBoost = {};
@@ -273,6 +273,7 @@ export function CustomItemModal({ editItem = null, onSubmit, onClose }) {
                   <option value="friendship">친밀도 상승</option>
                   <option value="condition">컨디션 상승 (전체 입력)</option>
                   <option value="conditionSelect">컨디션 상승 (항목 선택)</option>
+                  <option value="trainerExp">멤버(트레이너) 경험치 상승</option>
                 </select>
               </>
             )}
@@ -362,6 +363,29 @@ export function CustomItemModal({ editItem = null, onSubmit, onClose }) {
                 </p>
               )}
               <p className="text-xs text-purple-600 mt-1">💡 현재 노력치에 추가됩니다 (최대 252, 총합 510)</p>
+            </div>
+          )}
+
+          {/* 멤버(트레이너) 경험치 */}
+          {itemData.specialEffect === 'trainerExp' && (
+            <div className="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
+              <h4 className="font-bold text-blue-800 mb-3">🌟 멤버 경험치 상승량</h4>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">상승량 (N)</label>
+                <input
+                  type="number" min="1"
+                  value={itemData.boostAmount}
+                  onChange={e => set({ boostAmount: Math.max(1, parseInt(e.target.value) || 0) })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  placeholder="예: 100"
+                />
+              </div>
+              {itemData.boostAmount > 0 && (
+                <p className="text-xs text-blue-700 mt-2 font-semibold">
+                  → 사용 시 대상 포켓몬이 아닌 사용한 멤버 본인의 경험치가 +{itemData.boostAmount} 상승
+                </p>
+              )}
+              <p className="text-xs text-blue-600 mt-1">💡 포켓몬이 아닌 멤버(트레이너)의 경험치에 추가됩니다</p>
             </div>
           )}
 

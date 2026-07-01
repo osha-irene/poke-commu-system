@@ -45,7 +45,7 @@ export const useItemEffects = (
   useEffect(() => { systemSettingsRef.current = systemSettings; }, [systemSettings]);
 
   const useItemOnPokemon = async (item, pokemon, selectedFormNameEn = null) => {
-    if (!currentUser || !pokemon) return;
+    if (!currentUser || !item) return;
 
     const itemKey = item?.itemId || item?.id || item?.name || 'unknown-item';
     const pokemonKey = pokemon?.uniqueId || pokemon?.id || pokemon?.name || 'unknown-pokemon';
@@ -120,6 +120,32 @@ export const useItemEffects = (
       }
       updateCurrentUser(updates);
     };
+
+    // itemData(마스터)가 있으면 마스터 데이터만, 없을 때만 item 데이터 사용
+    // itemData(allItems 원본)에 호출자가 넘긴 item의 override(conditionBoost/evBoost/specialEffect 등)를 병합
+    const src = itemData ? { ...itemData, ...Object.fromEntries(
+      ['conditionBoost', 'evBoost', 'ivBoost', 'specialEffect', 'boostAmount', 'friendshipBoost', 'effortOverride']
+        .filter(k => item[k] !== undefined)
+        .map(k => [k, item[k]])
+    ) } : item;
+    if (src.isCustom && src.specialEffect === 'iv') {
+      src.specialEffect = null;
+    }
+
+    // 멤버(트레이너) 본인 경험치 상승 — 대상 포켓몬 없이도 바로 사용 가능
+    if (src.specialEffect === 'trainerExp') {
+      const boost = Math.max(0, Number(src.boostAmount) || 0);
+      if (boost <= 0) {
+        alert('이 아이템은 상승량이 설정되어 있지 않습니다!');
+        return;
+      }
+      updateCurrentUser({ trainerExp: (Number(currentUser.trainerExp) || 0) + boost });
+      alert(`${item.name}을(를) 사용해서 경험치를 ${boost} 얻었습니다!`);
+      consumeItem(item);
+      return;
+    }
+
+    if (!pokemon) return;
 
     // 기술머신 (TM) 사용 처리
     if (itemData?.isTM) {
@@ -216,17 +242,6 @@ export const useItemEffects = (
       hp: 'HP', attack: '공격', defense: '방어', specialAttack: '특공', specialDefense: '특방', speed: '스피드',
       elegance: '근사함', beauty: '아름다움', cuteness: '귀여움', intelligence: '슬기로움', strength: '강인함',
     };
-
-    // itemData(마스터)가 있으면 마스터 데이터만, 없을 때만 item 데이터 사용
-    // itemData(allItems 원본)에 호출자가 넘긴 item의 override(conditionBoost/evBoost/specialEffect 등)를 병합
-    const src = itemData ? { ...itemData, ...Object.fromEntries(
-      ['conditionBoost', 'evBoost', 'ivBoost', 'specialEffect', 'boostAmount', 'friendshipBoost', 'effortOverride']
-        .filter(k => item[k] !== undefined)
-        .map(k => [k, item[k]])
-    ) } : item;
-    if (src.isCustom && src.specialEffect === 'iv') {
-      src.specialEffect = null;
-    }
 
     if (src.specialEffect === 'effortEdit' && src.effortOverride) {
       const nextEffort = {
