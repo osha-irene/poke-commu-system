@@ -75,8 +75,14 @@ export const useItemEffects = (
       src_will_be: itemData ? 'itemData' : 'item',
     });
 
-    const consumeItem = (item) => {
-      if (currentUser.isSuperAdmin) return;
+    // extraUpdates: 아이템 소모와 같은 updateCurrentUser 호출에 함께 실어보낼 추가 필드
+    // (updateCurrentUser를 연속으로 두 번 호출하면 뒤 호출이 스테일한 currentUser 기준으로 병합되어
+    //  앞 호출의 변경분을 덮어써버리는 문제가 있어, 한 번의 호출로 합쳐서 보냄)
+    const consumeItem = (item, extraUpdates = {}) => {
+      if (currentUser.isSuperAdmin) {
+        if (Object.keys(extraUpdates).length > 0) updateCurrentUser(extraUpdates);
+        return;
+      }
 
       const targetItemData = resolveItemData(allItems, item);
       const matchesItem = (inventoryItem) => {
@@ -107,7 +113,7 @@ export const useItemEffects = (
           return i;
         })
         .filter(i => i.count > 0);
-      updateCurrentUser({ inventory: newInventory });
+      updateCurrentUser({ inventory: newInventory, ...extraUpdates });
     };
 
     const updatePokemonInUser = (updatedPokemon) => {
@@ -139,9 +145,8 @@ export const useItemEffects = (
         alert('이 아이템은 상승량이 설정되어 있지 않습니다!');
         return;
       }
-      updateCurrentUser({ trainerExp: (Number(currentUser.trainerExp) || 0) + boost });
+      consumeItem(item, { trainerExp: (Number(currentUser.trainerExp) || 0) + boost });
       alert(`${item.name}을(를) 사용해서 경험치를 ${boost} 얻었습니다!`);
-      consumeItem(item);
       return;
     }
 
