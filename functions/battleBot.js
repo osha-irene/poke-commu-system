@@ -1,4 +1,5 @@
 const FORMAT_ID = 'gen9customgame';
+const BATTLE_CHOICE_TIMEOUT_MS = 10 * 60 * 1000;
 let pokemonSim = null;
 let customBattleDataRegistered = false;
 let movesDataCache = null;
@@ -318,6 +319,8 @@ const moveChoiceTokenFromText = (content) => {
   if (!bracket) return null;
   const bracketMoveNumber = bracket.match(/^기술\s*([1-4])$/i);
   if (bracketMoveNumber) return { kind: 'index', value: Number(bracketMoveNumber[1]) - 1 };
+  const bareMoveNumber = bracket.match(/^([1-4])번?$/i);
+  if (bareMoveNumber) return { kind: 'index', value: Number(bareMoveNumber[1]) - 1 };
 
   const cleaned = bracket.replace(/^기술\s*/i, '').trim();
   if (!cleaned) return null;
@@ -352,12 +355,21 @@ const isExplicitMoveText = (content) => {
   return /^기술\s+\S/i.test(bracket); // [기술 리프스톰] 형태만
 };
 
+const isKnownMoveText = (content) => {
+  const text = extractBracketText(content)
+    .replace(/^기술\s*/i, '')
+    .trim();
+  if (!text) return false;
+  ensureBattleDataMaps();
+  return moveIdMap.has(normalizeId(text));
+};
+
 const isBattleMoveLikeText = (content) => {
   const text = extractBracketText(content);
   if (!text) return false;
   if (/^(캠핑|계속|만족|교환|배틀\s*(신청|수락|거절|도움말|help)|기권)/i.test(text)) return false;
   if (/^(포켓몬|엔트리|선택)\s*[1-6]$/i.test(text)) return false;
-  return isExplicitMoveText(content);
+  return isExplicitMoveText(content) || isKnownMoveText(content);
 };
 
 const getBattleCommand = (content) => {
@@ -895,6 +907,36 @@ const withBattleMentions = (session, message) => {
   return mentions ? `${mentions}\n${message}` : message;
 };
 
+const timeoutResultForSession = (session) => {
+  const pendingChoices = session?.pendingChoices || {};
+  const p1Chose = Boolean(pendingChoices.p1);
+  const p2Chose = Boolean(pendingChoices.p2);
+
+  if (!p1Chose && !p2Chose) {
+    return {
+      winner: '',
+      result: 'draw',
+      message: '10분 동안 양쪽 모두 기술을 선택하지 않아 배틀이 무승부로 종료되었습니다.',
+    };
+  }
+
+  if (!p1Chose) {
+    return {
+      winner: session.player2Name || '',
+      loser: session.player1Name || '',
+      result: 'timeout',
+      message: `${session.player1Name || '1P'}이(가) 10분 동안 기술을 선택하지 않아 패배했습니다. ${session.player2Name || '2P'} 승리!`,
+    };
+  }
+
+  return {
+    winner: session.player1Name || '',
+    loser: session.player2Name || '',
+    result: 'timeout',
+    message: `${session.player2Name || '2P'}이(가) 10분 동안 기술을 선택하지 않아 패배했습니다. ${session.player1Name || '1P'} 승리!`,
+  };
+};
+
 const normalizeDisplayName = (value = '') => String(value || '').trim().toLowerCase().replace(/\s+/g, '');
 
 const formatPokemonName = (pokemon) => {
@@ -1023,6 +1065,63 @@ const createBattleBot = ({
       .sort((a, b) => String(b[1].updatedAt || b[1].createdAt || '').localeCompare(String(a[1].updatedAt || a[1].createdAt || '')));
     if (!active.length) return null;
     return { sessionKey: active[0][0], session: active[0][1] };
+  };
+
+  const findFinishedBattle = async (memberId) => {
+    const snapshot = await db.ref('gameData/battleSessions').once('value');
+    const sessions = snapshot.val() || {};
+    const finished = Object.entries(sessions)
+      .filter(([, session]) =>
+        ['completed', 'forfeited'].includes(session.status) &&
+        (session.player1Id === memberId || session.player2Id === memberId)
+      )
+      .sort((a, b) => String(b[1].completedAt || b[1].updatedAt || b[1].createdAt || '').localeCompare(String(a[1].completedAt || a[1].updatedAt || a[1].createdAt || '')));
+    if (!finished.length) return null;
+    return { sessionKey: finished[0][0], session: finished[0][1] };
+  };
+
+  const closeTimedOutBattles = async (now = Date.now()) => {
+    const snapshot = await db.ref('gameData/battleSessions').once('value');
+    const sessions = snapshot.val() || {};
+    const closed = [];
+
+    for (const [sessionKey, session] of Object.entries(sessions)) {
+      if (session.status !== 'active') continue;
+      const lastUpdated = Date.parse(session.updatedAt || session.startedAt || session.createdAt || '');
+      if (!Number.isFinite(lastUpdated) || now - lastUpdated < BATTLE_CHOICE_TIMEOUT_MS) continue;
+
+      const timeoutResult = timeoutResultForSession(session);
+      const completedAt = new Date(now).toISOString();
+      const updates = {
+        status: 'completed',
+        result: timeoutResult.result,
+        winner: timeoutResult.winner || '',
+        loser: timeoutResult.loser || '',
+        pendingChoices: {},
+        completedAt,
+        timeoutAt: completedAt,
+        updatedAt: completedAt,
+      };
+
+      const ref = db.ref(`gameData/battleSessions/${sessionKey}`);
+      const result = await ref.transaction((current) => {
+        if (!current || current.status !== 'active') return;
+        const currentUpdated = Date.parse(current.updatedAt || current.startedAt || current.createdAt || '');
+        if (!Number.isFinite(currentUpdated) || now - currentUpdated < BATTLE_CHOICE_TIMEOUT_MS) return;
+        return { ...current, ...updates };
+      });
+
+      if (result.committed) {
+        closed.push({
+          sessionKey,
+          session: { ...session, ...updates },
+          message: withBattleMentions(session, timeoutResult.message),
+          lastBotStatusId: session.lastBotStatusId || null,
+        });
+      }
+    }
+
+    return closed;
   };
 
   const createChallenge = async ({ status, members, author, authorAccount }) => {
@@ -1191,7 +1290,14 @@ const createBattleBot = ({
 
   const chooseMove = async ({ author, content }) => {
     const active = await findActiveBattle(author.id);
-    if (!active) return '진행 중인 배틀이 없어요. [배틀 신청]으로 먼저 시작해 주세요.';
+    if (!active) {
+      const finished = await findFinishedBattle(author.id);
+      if (finished) {
+        const winner = finished.session.winner ? ` ${finished.session.winner} 승리!` : '';
+        return withBattleMentions(finished.session, `배틀이 이미 종료되었습니다.${winner}`);
+      }
+      return '진행 중인 배틀이 없어요. [배틀 신청]으로 먼저 시작해 주세요.';
+    }
 
     const { sessionKey, session } = active;
     const side = session.player1Id === author.id ? 'p1' : 'p2';
@@ -1303,6 +1409,7 @@ const createBattleBot = ({
     getCommand: getBattleCommand,
     handle,
     findSessionByMember,
+    closeTimedOutBattles,
   };
 };
 

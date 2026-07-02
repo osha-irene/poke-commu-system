@@ -1260,6 +1260,12 @@ export const useAdminMembers = (
       trainerExp: Math.max(0, amount)
     };
 
+    // 자기 자신의 경험치를 수정할 때는 currentUser 상태도 함께 동기화
+    if (memberId === currentUser.id) {
+      await updateCurrentUser({ trainerExp: Math.max(0, amount) });
+      return;
+    }
+
     try {
       const { id, ...dataToSave } = updatedMember;
       const memberRef = ref(database, `members/${memberId}`);

@@ -316,6 +316,26 @@ const pollMentions = async (ctx, processStatus, lastIdKey) => {
   return { count: notifications.length };
 };
 
+const closeTimedOutBattleSessions = async () => {
+  const closed = await getBattleBot().closeTimedOutBattles?.();
+  if (!closed?.length) return { count: 0 };
+
+  for (const entry of closed) {
+    try {
+      const posted = entry.lastBotStatusId
+        ? await battleCtx.replyToStatusId(entry.lastBotStatusId, entry.message, 'public')
+        : await battleCtx.makeMastodonRequest('/api/v1/statuses', 'POST', { status: entry.message, visibility: 'public' });
+      if (posted?.id && entry.sessionKey) {
+        await db.ref(`gameData/battleSessions/${entry.sessionKey}/lastBotStatusId`).set(posted.id);
+      }
+    } catch (e) {
+      console.error(`Battle timeout notification failed [${entry.sessionKey}]:`, e);
+    }
+  }
+
+  return { count: closed.length };
+};
+
 // ── Firebase Functions 내보내기 ──────────────────────────────────
 const region = { region: 'asia-northeast3' };
 const webhookOpts = { timeoutSeconds: 60, memory: '256MB' };
@@ -362,7 +382,13 @@ exports.battleWebhook = functions.region(region.region).runWith(webhookOpts).htt
 });
 exports.checkBattleMentions = functions.region(region.region).runWith(scheduleOpts)
   .pubsub.schedule('every 1 minutes').timeZone('Asia/Seoul')
-  .onRun(async () => { try { return await pollMentions(battleCtx, processBattleStatus, 'lastBattleNotificationId'); } catch (e) { console.error(e); return null; } });
+  .onRun(async () => {
+    try {
+      const mentions = await pollMentions(battleCtx, processBattleStatus, 'lastBattleNotificationId');
+      const timeouts = await closeTimedOutBattleSessions();
+      return { mentions, timeouts };
+    } catch (e) { console.error(e); return null; }
+  });
 
 // 알림 봇 — HTTP 트리거로 외부에서 호출 (관리자용)
 exports.sendNotify = functions.region(region.region).runWith(webhookOpts).https.onRequest(async (req, res) => {

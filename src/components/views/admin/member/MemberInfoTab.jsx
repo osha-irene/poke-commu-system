@@ -27,6 +27,13 @@ function MemberInfoTab({
   const [ribbonTypes, setRibbonTypes] = useState(() => member.ribbonTypes || Array(8).fill(null));
 
   useEffect(() => {
+    setMoneyInput(Number(member.money) || 0);
+    setExpInput(Number(member.trainerExp) || 0);
+    setEditWalkCount(Number(member.dailyWalks) || 0);
+    setEditMaxWalkCount(Number(member.maxDailyWalks) || 5);
+  }, [member.id, member.money, member.trainerExp, member.dailyWalks, member.maxDailyWalks]);
+
+  useEffect(() => {
     setBadgePieces(member.badgePieces || Array(8).fill(false));
     setRibbonPieces(member.ribbonPieces || Array(8).fill(false));
     setRibbonTypes(member.ribbonTypes || Array(8).fill(null));
