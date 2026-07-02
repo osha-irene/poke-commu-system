@@ -26,6 +26,9 @@ export default function MobileLayout({
   soundEnabled,
   toggleSound,
   onLogout,
+  onClaimAttendance,
+  attendanceClaimed = false,
+  isClaimingAttendance = false,
   hideBottomNav = false,
   children
 }) {
@@ -235,16 +238,40 @@ export default function MobileLayout({
                   <Coins size={13} />
                   {trainer.money?.toLocaleString()}원
                 </p>
-                {/* 탐험 횟수 */}
-                <div style={{
-                  marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 5,
-                  background: P.accentBg, border: `1px solid ${P.border}`,
-                  borderRadius: 20, padding: '4px 10px',
-                }}>
-                  <Footprints size={13} style={{ color: P.accent }} />
-                  <span style={{ fontSize: 12, fontWeight: 700, color: P.accent }}>
-                    탐험 {trainer.dailyWalks}/{trainer.maxDailyWalks}
-                  </span>
+                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  {/* 탐험 횟수 */}
+                  <div style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    background: P.accentBg, border: `1px solid ${P.border}`,
+                    borderRadius: 20, padding: '4px 10px',
+                  }}>
+                    <Footprints size={13} style={{ color: P.accent }} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: P.accent }}>
+                      탐험 {trainer.dailyWalks}/{trainer.maxDailyWalks}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onClaimAttendance}
+                    disabled={!onClaimAttendance || attendanceClaimed || isClaimingAttendance}
+                    aria-label="레포트 작성"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: `1px solid ${P.border}`,
+                      borderRadius: 20,
+                      padding: '4px 10px',
+                      background: attendanceClaimed ? 'rgba(120,140,100,0.12)' : 'rgba(255,255,255,0.82)',
+                      color: attendanceClaimed ? P.inactive : P.accent,
+                      fontSize: 12,
+                      fontWeight: 800,
+                      cursor: (!onClaimAttendance || attendanceClaimed || isClaimingAttendance) ? 'default' : 'pointer',
+                      opacity: (!onClaimAttendance || attendanceClaimed || isClaimingAttendance) ? 0.62 : 1,
+                    }}
+                  >
+                    {isClaimingAttendance ? '작성 중' : '레포트'}
+                  </button>
                 </div>
               </div>
               <button
