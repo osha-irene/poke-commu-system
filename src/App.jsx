@@ -1844,58 +1844,6 @@ if (!currentUser || !currentUser.id) {
       </div>
     ) : null;
 
-    if (isMobile) {
-      return (
-        <div style={{
-          position: 'fixed', inset: 0,
-          backgroundImage: `url(${forestBg})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}>
-          <div style={{
-            position: 'absolute', inset: 0,
-            backgroundColor: 'rgba(10,20,10,0.55)',
-            backdropFilter: 'blur(6px)',
-            WebkitBackdropFilter: 'blur(6px)',
-          }} />
-          <img src={logoCompass} alt="" style={{
-            position: 'absolute',
-            width: 320, height: 320,
-            top: 'calc(50% - 20px)', left: '50%',
-            transform: 'translate(-50%, -62%)',
-            mixBlendMode: 'overlay',
-            pointerEvents: 'none',
-          }} />
-          <img src={logoText} alt="" style={{
-            position: 'absolute',
-            width: 340,
-            top: 'calc(52.8% - 20px)', left: '49.4%',
-            transform: 'translate(-50%, -90%)',
-            objectFit: 'contain',
-            pointerEvents: 'none',
-          }} />
-          <div style={{
-            position: 'absolute',
-            top: '50%', left: '50%',
-            transform: 'translate(-50%, 110%)',
-            textAlign: 'center',
-          }}>
-            <p style={{
-              color: 'rgba(255,255,255,0.88)',
-              fontSize: 18,
-              lineHeight: 1.9,
-              letterSpacing: '0.05em',
-              margin: 0,
-            }}>
-              PC 환경에서 이용해주세요.<br />
-              모바일은 지원하지 않습니다.
-            </p>
-          </div>
-          {isLoadingOverlayVisible && <LoadingOverlay overlay fading={isLoadingOverlayFading} />}
-        </div>
-      );
-    }
-
     return (
       <DesktopLoginGate
         onLogin={handleLogin}

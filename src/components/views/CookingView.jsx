@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ChefHat, Book, Plus, Minus, Sparkles, X, Utensils, Package, Soup, BookOpen, HelpCircle, UtensilsCrossed } from 'lucide-react';
+import { ChefHat, Book, Plus, Minus, Sparkles, X, Utensils, Package, Soup, BookOpen, HelpCircle } from 'lucide-react';
 import recipesData from '../../data/recipes.json';
 
 import { useGame } from '../../contexts/GameContext';
@@ -149,20 +149,69 @@ export default function CookingView() {
     );
   };
 
-  const FAIL_ITEM_NAMES_EN = ['thingX', 'muk-like-thing', 'Trubbish-like-thing'];
+  const FAIL_ITEMS = [
+    {
+      id: 'fail_thingX',
+      name: '물체X',
+      nameEn: 'thingX',
+      pocket: 'misc',
+      category: 'misc',
+      effect: '이것은... 무어라 불러야 좋을까. 일단 물체라고 하자.',
+      spriteUrl: 'img/items/foods/messed3.png',
+      canSell: true,
+      sellPrice: 10,
+      isFailureItem: true,
+    },
+    {
+      id: 'fail_muk_like_thing',
+      name: '요리...?',
+      nameEn: 'muk-like-thing',
+      pocket: 'misc',
+      category: 'misc',
+      effect: '질뻐기를 떠오르게 하는 요리. 어쩐지 해독제가 필요해질 것 같다.',
+      spriteUrl: 'img/items/foods/messed1.png',
+      canSell: true,
+      sellPrice: 10,
+      isFailureItem: true,
+    },
+    {
+      id: 'fail_trubbish_like_thing',
+      name: '음식...?',
+      nameEn: 'Trubbish-like-thing',
+      pocket: 'misc',
+      category: 'misc',
+      effect: '깨봉이를 떠오르게 하는 음식. 어쩐지 해독제가 필요해질 것 같다.',
+      spriteUrl: 'img/items/foods/messed2.png',
+      canSell: true,
+      sellPrice: 10,
+      isFailureItem: true,
+    },
+  ];
 
-  const handleCook = () => {
+  const normalizeItemKey = (value) => String(value || '').trim().toLowerCase();
+
+  const itemMatchesKey = (item, key) => {
+    const target = normalizeItemKey(key);
+    return [item.id, item.itemId, item.nameEn, item.name]
+      .some((value) => normalizeItemKey(value) === target);
+  };
+
+  const findFailItem = (nameEn) => (
+    allItems.find((item) => itemMatchesKey(item, nameEn)) ||
+    FAIL_ITEMS.find((item) => itemMatchesKey(item, nameEn))
+  );
+
+  const handleCook = async () => {
     if (selectedIngredients.length === 0) { alert('재료를 선택해주세요!'); return; }
     let matchedRecipe = matchFixedRecipe();
     if (!matchedRecipe) matchedRecipe = matchStatRecipe();
     if (matchedRecipe) {
-      onCook(matchedRecipe, selectedIngredients);
+      await onCook(matchedRecipe, selectedIngredients);
     } else {
-      const failNameEn = FAIL_ITEM_NAMES_EN[Math.floor(Math.random() * FAIL_ITEM_NAMES_EN.length)];
-      // 관리자가 gameData/customItems에 nameEn 기준으로 미리 등록해 둔 실패 아이템을 그대로 사용
-      // (등록 시 앞뒤 공백/대소문자가 섞여도 매칭되도록 trim + lowercase 비교)
-      const normalize = (v) => String(v || '').trim().toLowerCase();
-      const failItem = allItems.find((i) => normalize(i.nameEn) === normalize(failNameEn));
+      const failNames = FAIL_ITEMS.map((item) => item.nameEn);
+      const failNameEn = failNames[Math.floor(Math.random() * failNames.length)];
+      // Prefer admin-registered failure items, then fall back to the built-in definitions.
+      const failItem = findFailItem(failNameEn);
       if (!failItem) {
         alert(`요리 실패 아이템(${failNameEn})이 아직 등록되어 있지 않습니다. 관리자에게 문의해주세요.`);
         setSelectedIngredients([]);
@@ -173,11 +222,11 @@ export default function CookingView() {
         name: failItem.name,
         result: failItem,
       };
-      onCook(failRecipe, selectedIngredients);
-      const lastCode = failItem.name.charCodeAt(failItem.name.length - 1);
-      const hasBatchim = lastCode >= 0xAC00 && lastCode <= 0xD7A3 && (lastCode - 0xAC00) % 28 !== 0;
-      const iGa = hasBatchim ? '이' : '가';
-      alert(`요리에 실패했다… ${failItem.name}${iGa} 만들어졌다….`);
+      const result = await onCook(failRecipe, selectedIngredients);
+      if (result?.success) {
+        const trainerName = result.trainerName || '트레이너';
+        alert(`${trainerName}가 요리에 실패했다! ${failItem.name}가 만들어졌다...!`);
+      }
     }
     setSelectedIngredients([]);
   };

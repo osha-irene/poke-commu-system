@@ -140,7 +140,7 @@ export const useRecipes = (currentUser, updateCurrentUser) => {
   };
 
   // 요리하기
-  const cookRecipe = (recipe, usedIngredients) => {
+  const cookRecipe = async (recipe, usedIngredients) => {
     if (!currentUser) return false;
     
     console.log('🍳 요리 시작:', recipe.name);
@@ -193,16 +193,21 @@ export const useRecipes = (currentUser, updateCurrentUser) => {
     }
     
     const cookedAt = Date.now();
+    const isFailure = recipe.id?.startsWith('fail_');
+    const isFirstDiscovery = !isFailure ? await discoverRecipe(recipe.id) : false;
     const cookingHistoryEntry = {
       id: `cooked_${cookedAt}`,
       itemName: resultItem.name,
       imageUrl: resultItem.spriteUrl || '/images/items/default.png',
       recipeId: recipe.id,
       recipeName: recipe.name,
-      cookedAt
+      cookedAt,
+      success: !isFailure,
+      isFailure,
+      isFirstDiscovery
     };
 
-    updateCurrentUser({
+    await updateCurrentUser({
       inventory: newInventory,
       cookingHistory: [
         cookingHistoryEntry,
@@ -211,12 +216,14 @@ export const useRecipes = (currentUser, updateCurrentUser) => {
     });
     
     // 실패 아이템이 아닐 때만 레시피 발견 처리 + 완성 알림 (실패 알림은 호출부에서 따로 처리)
-    if (!recipe.id?.startsWith('fail_')) {
-      discoverRecipe(recipe.id);
-      alert(`✅ ${resultItem.name}을(를) 만들었습니다!`);
+    if (!isFailure) {
+      const trainerName = currentUser.name || currentUser.nickname || '트레이너';
+      alert(isFirstDiscovery
+        ? `${trainerName}가 처음으로 ${resultItem.name}을(를) 만들었다!`
+        : `${resultItem.name}을(를) 만들었습니다!`);
     }
     
-    return true;
+    return { success: true, isFailure, isFirstDiscovery, itemName: resultItem.name, trainerName: currentUser.name || currentUser.nickname || '트레이너' };
   };
 
   // 재료 스탯 업데이트 (추후 구현)

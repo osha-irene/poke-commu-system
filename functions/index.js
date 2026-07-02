@@ -452,7 +452,12 @@ exports.onCookingHistory = functions
     const trainerName = member.name || member.nickname || '트레이너';
     const itemName = latest.itemName || latest.recipeName || '요리';
 
-    const message = `🍳 ${trainerName}가 ${itemName}을(를) 만들었다!`;
+    const isFailure = latest.isFailure === true || latest.success === false || String(latest.recipeId || '').startsWith('fail_');
+    const message = isFailure
+      ? `🍳 ${trainerName}가 요리에 실패했다! ${itemName}가 만들어졌다...!`
+      : latest.isFirstDiscovery
+        ? `🍳 ${trainerName}가 처음으로 ${itemName}을(를) 만들었다!`
+        : `🍳 ${trainerName}가 ${itemName}을(를) 만들었다!`;
 
     try {
       await notifyBot.broadcast(message, 'public');
