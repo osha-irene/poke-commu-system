@@ -36,10 +36,10 @@ function VerticalBarcode({ text, width = 20, height = 100 }) {
 }
 
 export default function MobileTrainerCard({ trainer, titles = [] }) {
-  const trainerId = trainer?.id
+  const trainerId = trainer?.trainerId || (trainer?.id
     ? String(trainer.id.split('').reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) & 0xFFFFFF, 0))
         .padStart(6, '0').slice(-6)
-    : '000000';
+    : '000000');
 
   const partner = trainer?.partnerPokemon || null;
   const partnerIcon = partner ? getPokemonLocalIconUrl(partner) : null;

@@ -50,9 +50,9 @@ export default function ProfileView({ trainer, caughtPokemon, items, titles = []
   const [mastodonInput, setMastodonInput] = useState('');
 
   const todayWalksUsed = trainer.maxDailyWalks - trainer.dailyWalks;
-  const trainerId = trainer.id
+  const trainerId = trainer.trainerId || (trainer.id
     ? String(trainer.id.split('').reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) & 0xFFFFFF, 0)).padStart(6, '0').slice(-6)
-    : '000000';
+    : '000000');
   const partnerPokemon = trainer.partnerPokemon || null;
   const partnerIcon = partnerPokemon ? getPokemonLocalIconUrl(partnerPokemon) : null;
   const currentTitle = trainer.title && trainer.title !== 'none'

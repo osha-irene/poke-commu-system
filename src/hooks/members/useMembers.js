@@ -51,7 +51,7 @@ export const useMembers = (allPokemonData) => {
                 return withNormalizedIVs(fillMissingBaseStats({
                   ...pokemon,
                   nameEn: pokemon.nameEn || template.nameEn,
-                  abilityEn: pokemon.abilityEn || getAbilityEnglishName(pokemon.ability) || template.abilitiesEn?.[0] || null
+                  abilityEn: getAbilityEnglishName(pokemon.ability) || pokemon.abilityEn || template.abilitiesEn?.[0] || null
                 }, template), DEFAULT_IVS);
               }
 
@@ -105,7 +105,15 @@ export const useMembers = (allPokemonData) => {
               updated[userId] = {
                 ...member,
                 id: userId,
-                caughtPokemon: normalizePokemonArray(member.caughtPokemon),
+                caughtPokemon: normalizePokemonArray(member.caughtPokemon)?.map(pokemon => {
+                  if (!pokemon) return pokemon;
+                  const template = findPokemonTemplate(pokemon, allPokemonData);
+                  if (!template) return pokemon;
+                  return {
+                    ...pokemon,
+                    abilityEn: getAbilityEnglishName(pokemon.ability) || pokemon.abilityEn || template.abilitiesEn?.[0] || null
+                  };
+                }),
               };
             });
             return JSON.stringify(prev) === JSON.stringify(updated) ? prev : updated;

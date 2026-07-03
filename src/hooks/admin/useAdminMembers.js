@@ -307,12 +307,13 @@ export const useAdminMembers = (
   };
   
   // ========== 회원 추가 ==========
-  const addMember = async (id, password, name) => {
+  const addMember = async (id, password, name, trainerId = '') => {
     if (!currentUser?.isAdmin) return false;
 
     const loginId = String(id || '').trim();
     const memberPassword = String(password || '');
     const memberName = String(name || '').trim();
+    const requestedTrainerId = String(trainerId || '').trim();
     const isTemporaryPassword = memberPassword === '0000';
     const authPassword = isTemporaryPassword ? '000000' : memberPassword;
 
@@ -329,6 +330,26 @@ export const useAdminMembers = (
       alert('이미 사용 중인 아이디입니다.');
       return false;
     }
+
+    const existingTrainerIds = new Set(
+      Object.values(members || {})
+        .map(member => String(member?.trainerId || '').trim())
+        .filter(Boolean)
+    );
+    if (requestedTrainerId && existingTrainerIds.has(requestedTrainerId)) {
+      alert('이미 사용 중인 트레이너 ID입니다.');
+      return false;
+    }
+
+    const generateTrainerId = () => {
+      for (let i = 0; i < 100; i += 1) {
+        const candidate = String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
+        if (!existingTrainerIds.has(candidate)) return candidate;
+      }
+      return String(Date.now()).slice(-6);
+    };
+
+    const finalTrainerId = requestedTrainerId || generateTrainerId();
     
     const getInitialInventory = () => {
       const findItem = (searchTerms) => {
@@ -352,6 +373,7 @@ export const useAdminMembers = (
       loginId,
       password: isTemporaryPassword ? '0000' : null,
       name: memberName,
+      trainerId: finalTrainerId,
       email: `${loginId}@pokemon.com`,
       forcePasswordChange: isTemporaryPassword,
       isAdmin: false,
@@ -421,20 +443,24 @@ export const useAdminMembers = (
     const member = members[memberId];
     if (!member) return;
     
+    const nextIsAdmin = !member.isAdmin;
     const updatedMember = {
       ...member,
-      isAdmin: !member.isAdmin
+      isAdmin: nextIsAdmin
     };
     
     try {
-      const { id, ...dataToSave } = updatedMember;
       const memberRef = ref(database, `members/${memberId}`);
-      await set(memberRef, dataToSave);
+      await update(memberRef, { isAdmin: nextIsAdmin });
       
       setMembers(prev => ({
         ...prev,
         [memberId]: updatedMember
       }));
+
+      if (memberId === currentUser?.id) {
+        updateCurrentUser({ isAdmin: nextIsAdmin });
+      }
       
       console.log('✅ 관리자 권한 토글:', member.name, updatedMember.isAdmin);
     } catch (error) {
@@ -452,20 +478,24 @@ export const useAdminMembers = (
     const member = members[memberId];
     if (!member) return;
     
+    const nextCanManageItems = !member.canManageItems;
     const updatedMember = {
       ...member,
-      canManageItems: !member.canManageItems
+      canManageItems: nextCanManageItems
     };
     
     try {
-      const { id, ...dataToSave } = updatedMember;
       const memberRef = ref(database, `members/${memberId}`);
-      await set(memberRef, dataToSave);
+      await update(memberRef, { canManageItems: nextCanManageItems });
       
       setMembers(prev => ({
         ...prev,
         [memberId]: updatedMember
       }));
+
+      if (memberId === currentUser?.id) {
+        updateCurrentUser({ canManageItems: nextCanManageItems });
+      }
       
       console.log('✅ 아이템 관리 권한 토글:', member.name, updatedMember.canManageItems);
     } catch (error) {
