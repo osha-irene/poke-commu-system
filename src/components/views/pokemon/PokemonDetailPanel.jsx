@@ -1072,6 +1072,14 @@ const ballImage = getBallImage();
                     <div>{getSizeDescription(pokemon.sizeRank, pokemon.formVariant)}{pokemon.favoriteFlavor ? ` ${pokemon.favoriteFlavor}을 좋아한다.` : ''}</div>
                   </div>
                 )}
+                {pokemon.isPartner && (pokemon.sizeRank || pokemon.favoriteFlavor) && (
+                  <div className="text-base text-gray-500 leading-relaxed italic mb-2">
+                    <div>
+                      {pokemon.sizeRank ? getSizeDescription(pokemon.sizeRank, pokemon.formVariant) : ''}
+                      {pokemon.favoriteFlavor ? `${pokemon.sizeRank ? ' ' : ''}${pokemon.favoriteFlavor}을 좋아한다.` : ''}
+                    </div>
+                  </div>
+                )}
                 {isEditingMemo ? (
                   <div className="mt-1">
                     <textarea

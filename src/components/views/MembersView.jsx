@@ -1009,13 +1009,40 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     );
     return <p key={j} style={{ margin: 0, marginBottom: '0.7em', textIndent: '0.5em' }}>{renderMarkedText(line, markRgb) || ' '}</p>;
   };
+  const renderPartnerMarkedText = (text) => {
+    const parts = String(text || '').split(/(\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*|\|[^|]+\|)/g);
+    if (parts.length === 1) return text || null;
+    return parts.map((part, index) => {
+      if (/^\*\*\*[^*]+\*\*\*$/.test(part)) {
+        return <strong key={index} style={{ color: partnerTextColor, textDecoration: 'underline', textUnderlineOffset: 3 }}>{part.slice(3, -3)}</strong>;
+      }
+      if (/^\*\*[^*]+\*\*$/.test(part)) return <strong key={index}>{part.slice(2, -2)}</strong>;
+      if (/^\*[^*]+\*$/.test(part)) return <em key={index}>{part.slice(1, -1)}</em>;
+      if (/^\|[^|]+\|$/.test(part)) {
+        return <mark key={index} style={{ background: 'rgba(255,255,255,0.22)', color: 'inherit', borderRadius: 3, padding: '1px 4px', fontWeight: 600 }}>{part.slice(1, -1)}</mark>;
+      }
+      return part;
+    });
+  };
   const renderPartnerMemoText = (text) => (
-    String(text || '').split('\n').map((line, index) => (
-      <React.Fragment key={index}>
-        {index > 0 && <br />}
-        {renderMarkedText(line, selectedAccentRgb) || ' '}
-      </React.Fragment>
-    ))
+    String(text || '').split('\n').map((line, index) => {
+      if (line.startsWith('#')) {
+        return (
+          <div key={index} style={{ display: 'block', background: 'rgba(255,255,255,0.16)', borderRadius: 4, padding: '4px 9px', margin: index === 0 ? '0 0 0.65em' : '1em 0 0.65em', fontWeight: 700 }}>
+            {renderPartnerMarkedText(line.slice(1).trim()) || ' '}
+          </div>
+        );
+      }
+      if (/^[-*]\s+/.test(line)) {
+        return (
+          <div key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, marginBottom: '0.55em' }}>
+            <span style={{ color: partnerTextColor, fontWeight: 800, flexShrink: 0, lineHeight: 1.65 }}>•</span>
+            <span>{renderPartnerMarkedText(line.replace(/^[-*]\s+/, '').trim()) || ' '}</span>
+          </div>
+        );
+      }
+      return <p key={index} style={{ margin: 0, marginBottom: '0.65em' }}>{renderPartnerMarkedText(line) || ' '}</p>;
+    })
   );
 
   const handleImgLoad = () => {
@@ -1751,7 +1778,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
         <div
           key="main"
           className="rmv-tab-content flex flex-col justify-start gap-3"
-          style={{ position: 'absolute', top: '16.5rem', left: '57%', width: 280, overflowX: 'visible', paddingBottom: 24, boxSizing: 'border-box', zIndex: 10 }}
+          style={{ position: 'absolute', top: '16.5rem', left: '57%', width: 280, overflowX: 'visible', paddingBottom: 24, boxSizing: 'border-box', zIndex: MEMBER_DETAIL_UI_Z_INDEX }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 28 }}>
             {(() => {
@@ -1817,11 +1844,12 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                   zIndex: 6,
                   background: `rgba(${selectedAccentRgb}, ${savedPartnerText ? 1 : 0.45})`,
                   borderRadius: 8,
-                  padding: '10px 12px',
+                  padding: '12px 14px 14px',
                   marginTop: 2,
                   minHeight: 36,
-                  maxHeight: 'calc(100vh - 25rem - 20px)',
+                  maxHeight: 'calc(100vh - 22rem)',
                   overflowY: 'auto',
+                  boxSizing: 'border-box',
                   cursor: partnerEditing ? 'text' : (canEdit ? 'pointer' : 'default'),
                   transition: 'background 0.3s',
                 }}
@@ -1867,6 +1895,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                       fontWeight: 500,
                       lineHeight: 1.65,
                       fontFamily: 'inherit',
+                      minHeight: 128,
                     }}
                   />
                 ) : savedPartnerText ? (
@@ -1878,6 +1907,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                       lineHeight: 1.65,
                       whiteSpace: 'pre-wrap',
                       wordBreak: 'keep-all',
+                      paddingBottom: 2,
                     }}
                   >
                     {renderPartnerMemoText(savedPartnerText)}
@@ -1926,7 +1956,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                 <div onClick={() => canEdit && setNoteEditing(true)}
                   style={{ minHeight: 48, fontSize: 15, color: note ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.6, cursor: canEdit ? 'text' : 'default', padding: '4px 2px', position: 'relative', zIndex: 1 }}>
                   {note
-                    ? note.split('\n').map((line, i) => <p key={i} style={{ margin: 0, marginBottom: '1.4em', textIndent: '0.5em' }}>{line || ' '}</p>)
+                    ? note.split('\n').map((line, i) => <p key={i} style={{ margin: 0, marginBottom: '1.4em', textIndent: '0.5em' }}>{renderMarkedText(line, selectedAccentRgb) || ' '}</p>)
                     : (canEdit ? '클릭해서 메모 추가...' : '')}
                 </div>
               )}
@@ -1972,7 +2002,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
           key="entry"
           className="rmv-tab-content flex flex-col justify-start gap-3"
           onAnimationEnd={e => { e.currentTarget.style.animation = 'none'; }}
-          style={{ position: 'absolute', top: '13rem', left: '55%', width: 320, overflow: 'visible', paddingBottom: 24, paddingRight: 6, boxSizing: 'border-box' }}
+          style={{ position: 'absolute', top: '13rem', left: '55%', width: 320, overflow: 'visible', paddingBottom: 24, paddingRight: 6, boxSizing: 'border-box', zIndex: MEMBER_DETAIL_UI_Z_INDEX }}
         >
           <style>{`
             @keyframes rmv-card-flip-in { from { transform: rotateY(-90deg) scaleX(0.8); opacity: 0; } to { transform: rotateY(0deg) scaleX(1); opacity: 1; } }
@@ -2286,7 +2316,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
 
     {/* 말풍선 — 메인 탭에서만 표시 */}
       {tab === 'main' && member.bio && (
-        <div className="rmv-bio-slide" style={{ position: 'absolute', top: '6rem', right: 'calc(43% - 290px)', width: 'calc(43vw * 1/2)', zIndex: 1 }}>
+        <div className="rmv-bio-slide" style={{ position: 'absolute', top: '6rem', right: 'calc(43% - 290px)', width: 'calc(43vw * 1/2)', zIndex: MEMBER_DETAIL_UI_Z_INDEX }}>
           <span style={{
             position: 'absolute',
             top: 30, left: 10,
