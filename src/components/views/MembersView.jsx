@@ -594,6 +594,9 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   const opaqueBottomRatioRef = useRef(1);
   const prevMemberIdRef = useRef(null);
   const noteRef = useRef(null);
+  const noteScrollRef = useRef(null);
+  const partnerMemoRef = useRef(null);
+  const bioMemoRef = useRef(null);
   const charTransitionTimerRef = useRef(null);
   const charReturnTimerRef = useRef(null);
   const [imgLoaded, setImgLoaded] = useState(() => !!imgCache[fullImg]);
@@ -650,6 +653,9 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   const [partnerImgHeight, setPartnerImgHeight] = useState(128);
   const [partnerText, setPartnerText] = useState(() => member.partnerText || '');
   const [savedPartnerText, setSavedPartnerText] = useState(() => member.partnerText || '');
+  const [noteMaxHeight, setNoteMaxHeight] = useState(null);
+  const [partnerMemoMaxHeight, setPartnerMemoMaxHeight] = useState(null);
+  const [bioMemoMaxHeight, setBioMemoMaxHeight] = useState(null);
   const [relations, setRelations] = useState(() => Array.isArray(member.relations) ? member.relations : []);
   const [relationEditIdx, setRelationEditIdx] = useState(null);
   const [relationDraft, setRelationDraft] = useState({ charName: '', intro: '', memo: '' });
@@ -1115,6 +1121,28 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     el.style.height = 'auto';
     el.style.height = el.scrollHeight + 'px';
   }, [note, noteEditing]);
+
+  useLayoutEffect(() => {
+    const getAvailableHeight = (element, bottomGap) => {
+      if (!element || typeof window === 'undefined') return null;
+      const rect = element.getBoundingClientRect();
+      return Math.max(80, Math.floor(window.innerHeight - rect.top - bottomGap));
+    };
+
+    const updateMemoHeights = () => {
+      setNoteMaxHeight(getAvailableHeight(noteScrollRef.current, 15));
+      setPartnerMemoMaxHeight(getAvailableHeight(partnerMemoRef.current, 10));
+      setBioMemoMaxHeight(getAvailableHeight(bioMemoRef.current, 15));
+    };
+
+    updateMemoHeights();
+    const frame = window.requestAnimationFrame(updateMemoHeights);
+    window.addEventListener('resize', updateMemoHeights);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('resize', updateMemoHeights);
+    };
+  }, [tab, note, noteEditing, partnerTextOpen, partnerEditing, savedPartnerText, member.bio, member.id]);
 
   useEffect(() => {
     setCharImageOffset(0);
@@ -1840,6 +1868,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               >
               <div style={{ overflow: 'hidden' }}>
               <div
+                ref={partnerMemoRef}
                 className={partnerTextOpen ? 'rmv-partner-text-in' : ''}
                 onClick={() => { if (!partnerEditing && canEdit) setPartnerEditing(true); }}
                 onWheel={e => e.stopPropagation()}
@@ -1851,7 +1880,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                   padding: 0,
                   marginTop: 2,
                   minHeight: 36,
-                  maxHeight: 'clamp(120px, calc(100vh - 31rem - 10px), 320px)',
+                  maxHeight: partnerMemoMaxHeight ? `${partnerMemoMaxHeight}px` : 'calc(100dvh - 10px)',
                   overflowY: 'auto',
                   overscrollBehavior: 'contain',
                   scrollPaddingBlock: 20,
@@ -1939,8 +1968,9 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               ) : null;
             })()}
             <div
+              ref={noteScrollRef}
               onWheel={e => e.stopPropagation()}
-              style={{ maxHeight: 'calc(100vh - 26rem)', overflowY: 'auto', overflowX: 'hidden', paddingRight: 2, paddingBottom: 48 }}
+              style={{ maxHeight: noteMaxHeight ? `${noteMaxHeight}px` : 'calc(100dvh - 15px)', overflowY: 'auto', overflowX: 'hidden', paddingRight: 2, paddingBottom: 15, boxSizing: 'border-box', overscrollBehavior: 'contain', scrollPaddingBottom: 15 }}
             >
               {noteEditing ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -1963,7 +1993,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                 </div>
               ) : (
                 <div onClick={() => canEdit && setNoteEditing(true)}
-                  style={{ minHeight: 48, fontSize: 15, color: note ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.6, cursor: canEdit ? 'text' : 'default', padding: '4px 2px', position: 'relative', zIndex: 1 }}>
+                  style={{ minHeight: 48, fontSize: 15, color: note ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.6, cursor: canEdit ? 'text' : 'default', padding: '4px 2px 15px', position: 'relative', zIndex: 1, boxSizing: 'border-box' }}>
                   {note
                     ? note.split('\n').map((line, i) => <p key={i} style={{ margin: 0, marginBottom: '1.4em', textIndent: '0.5em' }}>{renderMarkedText(line, selectedAccentRgb) || ' '}</p>)
                     : (canEdit ? '클릭해서 메모 추가...' : '')}
@@ -2326,32 +2356,44 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     {/* 말풍선 — 메인 탭에서만 표시 */}
       {tab === 'main' && member.bio && (
         <div
+          ref={bioMemoRef}
           className="rmv-bio-slide"
           style={{
             position: 'absolute',
             top: '6rem',
             right: 'calc(43% - 290px)',
             width: 'calc(43vw * 1/2)',
-            maxHeight: 'calc(100vh - 6rem - 15px)',
-            paddingBottom: 15,
-            overflowY: 'auto',
-            overscrollBehavior: 'contain',
+            maxHeight: bioMemoMaxHeight ? `${bioMemoMaxHeight}px` : 'calc(100dvh - 6rem - 15px)',
+            overflow: 'visible',
             boxSizing: 'border-box',
             zIndex: shouldShowRightGradient ? MEMBER_DETAIL_UI_Z_INDEX : 1,
           }}
         >
           <span style={{
             position: 'absolute',
-            top: 30, left: 10,
-            fontSize: 80, fontWeight: 700, lineHeight: 1,
-            fontFamily: 'Georgia, serif',
+            top: 80, left: 10,
+            fontSize: 120, fontWeight: 700, lineHeight: 1,
+            fontFamily: 'GmarketSans, sans-serif',
             color: `rgb(${accentRgb})`,
             transform: 'translateY(-70%)',
             zIndex: 3,
             WebkitTextStroke: '7px white',
             paintOrder: 'stroke fill',
           }}>{'“'}</span>
-          <div style={{ filter: `drop-shadow(-9px 12px 0px rgba(${accentRgb},0.7))` }}>
+          <div
+            style={{
+              filter: `drop-shadow(-9px 12px 0px rgba(${accentRgb},0.7))`,
+              maxHeight: bioMemoMaxHeight ? `${bioMemoMaxHeight}px` : 'calc(100dvh - 6rem - 15px)',
+              width: 'calc(100% + 22px)',
+              marginLeft: -22,
+              overflowY: 'auto',
+              overscrollBehavior: 'contain',
+              scrollPaddingBottom: 15,
+              paddingLeft: 22,
+              paddingBottom: 23,
+              boxSizing: 'border-box',
+            }}
+          >
             <div style={{
               position: 'relative',
               background: 'white',
