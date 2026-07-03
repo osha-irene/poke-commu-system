@@ -3206,7 +3206,7 @@
     },
     {
       "id": 268,
-      "name": "Lingering Aroma",
+      "name": "가시지않는향기",
       "nameEn": "lingering-aroma",
       "effect": "Contact with the Pokémon changes the attacker’s Ability to Lingering Aroma.",
       "shortEffect": "Contact changes the attacker's Ability to Lingering Aroma.",
@@ -3218,7 +3218,7 @@
     },
     {
       "id": 269,
-      "name": "Seed Sower",
+      "name": "넘치는씨",
       "nameEn": "seed-sower",
       "effect": "Turns the ground into Grassy Terrain when the Pokémon is hit by an attack.",
       "shortEffect": "Turns the ground into Grassy Terrain when the Pokémon is hit by an attack.",
@@ -3230,7 +3230,7 @@
     },
     {
       "id": 270,
-      "name": "Thermal Exchange",
+      "name": "열교환",
       "nameEn": "thermal-exchange",
       "effect": "Boosts the Attack stat when the Pokémon is hit by a Fire-type move. The Pokémon also cannot be burned.",
       "shortEffect": "Raises Attack when hit by a Fire-type move. Cannot be burned.",
@@ -3242,7 +3242,7 @@
     },
     {
       "id": 271,
-      "name": "Anger Shell",
+      "name": "분노의껍질",
       "nameEn": "anger-shell",
       "effect": "When an attack causes its HP to drop to half or less, the Pokémon gets angry. This lowers its Defense and Sp. Def stats but boosts its Attack, Sp. Atk, and Speed stats.",
       "shortEffect": "When the Pokémon's HP drops below half, Anger Shell lowers its Defense and Special Defense but its Attack, Special Attack and Speed are raised.",
@@ -3254,7 +3254,7 @@
     },
     {
       "id": 272,
-      "name": "Purifying Salt",
+      "name": "정화의소금",
       "nameEn": "purifying-salt",
       "effect": "The Pokémon’s pure salt protects it from status conditions and halves the damage taken from Ghost-type moves.",
       "shortEffect": "Protects from status conditions and halves damage from Ghost-type moves.",
@@ -3266,7 +3266,7 @@
     },
     {
       "id": 273,
-      "name": "Well-Baked Body",
+      "name": "노릇노릇바디",
       "nameEn": "well-baked-body",
       "effect": "The Pokémon takes no damage when hit by Fire-type moves. Instead, its Defense stat is sharply boosted.",
       "shortEffect": "Immune to Fire-type moves, and Defense is sharply boosted.",
@@ -3278,7 +3278,7 @@
     },
     {
       "id": 274,
-      "name": "Wind Rider",
+      "name": "바람타기",
       "nameEn": "wind-rider",
       "effect": "Boosts the Pokémon’s Attack stat if Tailwind takes effect or if the Pokémon is hit by a wind move. The Pokémon also takes no damage from wind moves.",
       "shortEffect": "Gives immunity to wind moves, and causes the Pokémon's Attack to increase by one stage when hit by one.",
@@ -3290,7 +3290,7 @@
     },
     {
       "id": 275,
-      "name": "Guard Dog",
+      "name": "파수견",
       "nameEn": "guard-dog",
       "effect": "Boosts the Pokémon’s Attack stat if intimidated. Moves and items that would force the Pokémon to switch out also fail to work.",
       "shortEffect": "Boosts Attack if intimidated, and prevents being forced to switch out.",
@@ -3302,7 +3302,7 @@
     },
     {
       "id": 276,
-      "name": "Rocky Payload",
+      "name": "바위나르기",
       "nameEn": "rocky-payload",
       "effect": "Increases the power of Rock-type moves used by this Pokémon by 50%.",
       "shortEffect": "Powers up Rock-type moves.",
@@ -3314,7 +3314,7 @@
     },
     {
       "id": 277,
-      "name": "Wind Power",
+      "name": "풍력발전",
       "nameEn": "wind-power",
       "effect": "The Pokémon becomes charged when it is hit by a wind move, boosting the power of the next Electric-type move the Pokémon uses.",
       "shortEffect": "When hit by a wind move, the power of the next Electric-type move it uses is doubled.",
@@ -3326,7 +3326,7 @@
     },
     {
       "id": 278,
-      "name": "Zero to Hero",
+      "name": "마이티체인지",
       "nameEn": "zero-to-hero",
       "effect": "The Pokémon transforms into its Hero Form when it switches out.",
       "shortEffect": "Transforms into its Hero Form when switching out.",
@@ -3338,7 +3338,7 @@
     },
     {
       "id": 279,
-      "name": "Commander",
+      "name": "사령탑",
       "nameEn": "commander",
       "effect": "When the Pokémon enters a battle, it goes inside the mouth of an ally Dondozo if one is on the field. The Pokémon then issues commands from there.",
       "shortEffect": "Goes inside the mouth of an ally Dondozo if one is on the field.",
@@ -3350,7 +3350,7 @@
     },
     {
       "id": 280,
-      "name": "Electromorphosis",
+      "name": "전기로바꾸기",
       "nameEn": "electromorphosis",
       "effect": "The Pokémon becomes charged when it takes damage, boosting the power of the next Electric-type move the Pokémon uses.",
       "shortEffect": "When hit by an attack, the power of the next Electric-type move it uses is doubled.",
@@ -3362,7 +3362,7 @@
     },
     {
       "id": 281,
-      "name": "Protosynthesis",
+      "name": "고대활성",
       "nameEn": "protosynthesis",
       "effect": "Boosts the Pokémon’s most proficient stat in harsh sunlight or if the Pokémon is holding Booster Energy.",
       "shortEffect": "Raises highest stat in harsh sunlight, or if holding Booster Energy.",
@@ -3374,7 +3374,7 @@
     },
     {
       "id": 282,
-      "name": "Quark Drive",
+      "name": "쿼크차지",
       "nameEn": "quark-drive",
       "effect": "Boosts the Pokémon’s most proficient stat on Electric Terrain or if the Pokémon is holding Booster Energy.",
       "shortEffect": "Raises highest stat on Electric Terrain, or if holding Booster Energy.",
@@ -3386,7 +3386,7 @@
     },
     {
       "id": 283,
-      "name": "Good as Gold",
+      "name": "황금몸",
       "nameEn": "good-as-gold",
       "effect": "A body of pure, solid gold gives the Pokémon full immunity to other Pokémon’s status moves.",
       "shortEffect": "Gives immunity to status moves.",
@@ -3398,7 +3398,7 @@
     },
     {
       "id": 284,
-      "name": "Vessel of Ruin",
+      "name": "재앙의그릇",
       "nameEn": "vessel-of-ruin",
       "effect": "The power of the Pokémon’s ruinous vessel lowers the Sp. Atk stats of all Pokémon except itself.",
       "shortEffect": "Lowers Special Attack of all Pokémon except itself.",
@@ -3410,7 +3410,7 @@
     },
     {
       "id": 285,
-      "name": "Sword of Ruin",
+      "name": "재앙의검",
       "nameEn": "sword-of-ruin",
       "effect": "The power of the Pokémon’s ruinous sword lowers the Defense stats of all Pokémon except itself.",
       "shortEffect": "Lowers Defense of all Pokémon except itself.",
@@ -3422,7 +3422,7 @@
     },
     {
       "id": 286,
-      "name": "Tablets of Ruin",
+      "name": "재앙의목간",
       "nameEn": "tablets-of-ruin",
       "effect": "The power of the Pokémon’s ruinous wooden tablets lowers the Attack stats of all Pokémon except itself.",
       "shortEffect": "Lowers Attack of all Pokémon except itself.",
@@ -3434,7 +3434,7 @@
     },
     {
       "id": 287,
-      "name": "Beads of Ruin",
+      "name": "재앙의구슬",
       "nameEn": "beads-of-ruin",
       "effect": "The power of the Pokémon’s ruinous beads lowers the Sp. Def stats of all Pokémon except itself.",
       "shortEffect": "Lowers Special Defense of all Pokémon except itself.",
@@ -3446,7 +3446,7 @@
     },
     {
       "id": 288,
-      "name": "Orichalcum Pulse",
+      "name": "진홍빛고동",
       "nameEn": "orichalcum-pulse",
       "effect": "Turns the sunlight harsh when the Pokémon enters a battle. The ancient pulse thrumming through the Pokémon also boosts its Attack stat in harsh sunlight.",
       "shortEffect": "Turns the sunlight harsh when entering battle, and boosts Attack while active.",
@@ -3458,7 +3458,7 @@
     },
     {
       "id": 289,
-      "name": "Hadron Engine",
+      "name": "하드론엔진",
       "nameEn": "hadron-engine",
       "effect": "Turns the ground into Electric Terrain when the Pokémon enters a battle. The futuristic engine within the Pokémon also boosts its Sp. Atk stat on Electric Terrain.",
       "shortEffect": "Creates an Electric Terrain when entering battle, and boosts Special Attack while active.",
@@ -3470,7 +3470,7 @@
     },
     {
       "id": 290,
-      "name": "Opportunist",
+      "name": "편승",
       "nameEn": "opportunist",
       "effect": "If an opponent’s stat is boosted, the Pokémon seizes the opportunity to boost the same stat for itself.",
       "shortEffect": "Copies stat boosts by the opponent.",
@@ -3482,7 +3482,7 @@
     },
     {
       "id": 291,
-      "name": "Cud Chew",
+      "name": "되새김질",
       "nameEn": "cud-chew",
       "effect": "When the Pokémon eats a Berry, it will regurgitate that Berry at the end of the next turn and eat it one more time.",
       "shortEffect": "Causes the Pokémon to reuse an already consumed Berry at the end of the next turn.",
@@ -3494,7 +3494,7 @@
     },
     {
       "id": 292,
-      "name": "Sharpness",
+      "name": "예리함",
       "nameEn": "sharpness",
       "effect": "Increases the power of all 'slicing' moves by 50%.",
       "shortEffect": "Powers up slicing moves.",
@@ -3506,7 +3506,7 @@
     },
     {
       "id": 293,
-      "name": "Supreme Overlord",
+      "name": "총대장",
       "nameEn": "supreme-overlord",
       "effect": "When the Pokémon enters a battle, its Attack and Sp. Atk stats are slightly boosted for each of the allies in its party that have already been defeated.",
       "shortEffect": "Attack and Special Attack are boosted for each party Pokémon that has been defeated.",
@@ -3518,7 +3518,7 @@
     },
     {
       "id": 294,
-      "name": "Costar",
+      "name": "협연",
       "nameEn": "costar",
       "effect": "When the Pokémon enters a battle, it copies an ally’s stat changes.",
       "shortEffect": "Copies ally's stat changes on entering battle.",
@@ -3530,7 +3530,7 @@
     },
     {
       "id": 295,
-      "name": "Toxic Debris",
+      "name": "독치장",
       "nameEn": "toxic-debris",
       "effect": "Scatters poison spikes at the feet of the opposing team when the Pokémon takes damage from physical moves.",
       "shortEffect": "Scatters poison spikes at the feet of the opposing team when the Pokémon takes damage from physical moves.",
@@ -3542,7 +3542,7 @@
     },
     {
       "id": 296,
-      "name": "Armor Tail",
+      "name": "테일아머",
       "nameEn": "armor-tail",
       "effect": "The mysterious tail covering the Pokémon’s head makes opponents unable to use priority moves against the Pokémon or its allies.",
       "shortEffect": "Prevents the opponent from using any moves that have priority, such as Quick Attack.",
@@ -3554,7 +3554,7 @@
     },
     {
       "id": 297,
-      "name": "Earth Eater",
+      "name": "흙먹기",
       "nameEn": "earth-eater",
       "effect": "If hit by a Ground-type move, the Pokémon has its HP restored instead of taking damage.",
       "shortEffect": "Restores HP when hit by a Ground-type move.",
@@ -3566,7 +3566,7 @@
     },
     {
       "id": 298,
-      "name": "Mycelium Might",
+      "name": "균사의힘",
       "nameEn": "mycelium-might",
       "effect": "The Pokémon will always act more slowly when using status moves, but these moves will be unimpeded by the Ability of the target.",
       "shortEffect": "Status moves go last, but are not affected by the opponent's ability.",

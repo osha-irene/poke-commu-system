@@ -46,6 +46,27 @@ function Field({ label, children }) {
 
 const inputCls = "w-full px-2.5 py-1.5 border border-gray-200 rounded-md text-base focus:outline-none focus:ring-1 focus:ring-indigo-400";
 
+const normalizeAbilityValue = (value) => String(value || '').trim().toLowerCase();
+
+function buildAbilityOptions(pokemonTemplate, currentAbility) {
+  const hiddenAbility = pokemonTemplate?.hiddenAbilityEn || '';
+  const hiddenAbilityKey = normalizeAbilityValue(hiddenAbility);
+  const seen = new Set();
+  const options = [];
+
+  const addOption = (value) => {
+    const key = normalizeAbilityValue(value);
+    if (!key || key === hiddenAbilityKey || seen.has(key)) return;
+    seen.add(key);
+    options.push(value);
+  };
+
+  (pokemonTemplate?.abilitiesEn || []).forEach(addOption);
+  addOption(currentAbility);
+
+  return options;
+}
+
 export default function MemberPokemonEditMode({
   pokemon,
   pokemonTemplate,
@@ -65,11 +86,8 @@ export default function MemberPokemonEditMode({
   const isGenderless = genderOptions.length === 1 && genderOptions[0] === 'none';
   const genderValue = genderOptions.includes(editData.gender) ? editData.gender : 'random';
 
-  const abilityOptions = Array.from(new Set([
-    ...(pokemonTemplate?.abilitiesEn || []),
-    ...(editData.ability ? [editData.ability] : []),
-  ]));
   const hiddenAbility = pokemonTemplate?.hiddenAbilityEn || '';
+  const abilityOptions = buildAbilityOptions(pokemonTemplate, editData.ability);
 
   const displayName = getPokemonDisplayParts(pokemon).name;
   const spriteUrl = editData.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`;

@@ -9,6 +9,27 @@ import { getPokemonGenderOptions } from '../../../../utils/pokemonGender';
 import { getGenderedSpriteUrl } from '../../../../utils/pokemonImageUtils';
 import { getAbilityKoreanName } from '../../../../utils/abilityUtils';
 
+const normalizeAbilityValue = (value) => String(value || '').trim().toLowerCase();
+
+function buildAbilityOptions(pokemon, currentAbility) {
+  const hiddenAbility = pokemon?.hiddenAbilityEn || '';
+  const hiddenAbilityKey = normalizeAbilityValue(hiddenAbility);
+  const seen = new Set();
+  const options = [];
+
+  const addOption = (value) => {
+    const key = normalizeAbilityValue(value);
+    if (!key || key === hiddenAbilityKey || seen.has(key)) return;
+    seen.add(key);
+    options.push(value);
+  };
+
+  (pokemon?.abilitiesEn || []).forEach(addOption);
+  addOption(currentAbility);
+
+  return options;
+}
+
 export default function MemberPokemonGiveMode({
   allPokemonMaster,
   giveData,
@@ -22,6 +43,7 @@ export default function MemberPokemonGiveMode({
   const genderOptions = getPokemonGenderOptions(giveData.selectedPokemon);
   const isGenderless = genderOptions.length === 1 && genderOptions[0] === 'none';
   const genderValue = genderOptions.includes(giveData.gender) ? giveData.gender : 'random';
+  const abilityOptions = buildAbilityOptions(giveData.selectedPokemon, giveData.ability);
 
 
   return (
@@ -220,8 +242,8 @@ export default function MemberPokemonGiveMode({
                   className="w-full px-3 py-2 border rounded text-sm"
                 >
                   <option value="">기본 특성 (랜덤)</option>
-                  {giveData.selectedPokemon?.abilitiesEn?.map((ab, idx) => (
-                    <option key={idx} value={ab}>{getAbilityKoreanName(ab) || ab}</option>
+                  {abilityOptions.map((ab) => (
+                    <option key={ab} value={ab}>{getAbilityKoreanName(ab) || ab}</option>
                   ))}
                   {giveData.selectedPokemon?.hiddenAbilityEn && (
                     <option value={giveData.selectedPokemon.hiddenAbilityEn}>
