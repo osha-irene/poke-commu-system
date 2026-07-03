@@ -9,6 +9,7 @@ function MemberInfoTab({
   onToggleNPC,
   onToggleHidden,
   onUpdateNpcSettings,
+  onUpdateTrainerId,
   onUpdateMoney,
   onUpdateTrainerExp,
   onUpdateWalkCount,
@@ -22,6 +23,7 @@ function MemberInfoTab({
   const [expInput, setExpInput] = useState(member.trainerExp || 0);
   const [editWalkCount, setEditWalkCount] = useState(member.dailyWalks);
   const [editMaxWalkCount, setEditMaxWalkCount] = useState(member.maxDailyWalks);
+  const [trainerIdInput, setTrainerIdInput] = useState(member.trainerId || '');
   const [npcOrderInput, setNpcOrderInput] = useState(member.npcOrder || '');
   const [badgePieces, setBadgePieces] = useState(() => member.badgePieces || Array(8).fill(false));
   const [ribbonPieces, setRibbonPieces] = useState(() => member.ribbonPieces || Array(8).fill(false));
@@ -32,7 +34,8 @@ function MemberInfoTab({
     setExpInput(Number(member.trainerExp) || 0);
     setEditWalkCount(Number(member.dailyWalks) || 0);
     setEditMaxWalkCount(Number(member.maxDailyWalks) || 5);
-  }, [member.id, member.money, member.trainerExp, member.dailyWalks, member.maxDailyWalks]);
+    setTrainerIdInput(member.trainerId || '');
+  }, [member.id, member.money, member.trainerExp, member.dailyWalks, member.maxDailyWalks, member.trainerId]);
 
   useEffect(() => {
     setBadgePieces(member.badgePieces || Array(8).fill(false));
@@ -60,6 +63,28 @@ function MemberInfoTab({
           <h3 className="font-bold text-base mb-2">📋 기본 정보</h3>
           <div className="space-y-1.5 text-sm">
             <div><span className="text-gray-500">회원 ID:</span><span className="ml-2 font-medium">{member.id}</span></div>
+            <div className="pt-2">
+              <span className="text-gray-500 block mb-1">트레이너 ID:</span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={trainerIdInput}
+                  onChange={(e) => setTrainerIdInput(e.target.value)}
+                  placeholder="트레이너 ID"
+                  className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const success = await onUpdateTrainerId?.(member.id, trainerIdInput);
+                    if (success) alert('트레이너 ID가 변경되었습니다.');
+                  }}
+                  className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors text-sm font-semibold"
+                >
+                  저장
+                </button>
+              </div>
+            </div>
             <div><span className="text-gray-500">이름:</span><span className="ml-2 font-medium">{member.name}</span></div>
             <div><span className="text-gray-500">포켓몬 수:</span><span className="ml-2 font-medium">{(member.caughtPokemon || []).filter(p => p !== null && p !== undefined).length}마리</span></div>
             {trainer.isAdmin && (

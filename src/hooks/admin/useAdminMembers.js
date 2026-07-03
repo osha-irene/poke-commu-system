@@ -311,13 +311,12 @@ export const useAdminMembers = (
   };
   
   // ========== 회원 추가 ==========
-  const addMember = async (id, password, name, trainerId = '') => {
+  const addMember = async (id, password, name) => {
     if (!currentUser?.isAdmin) return false;
 
     const loginId = String(id || '').trim();
     const memberPassword = String(password || '');
     const memberName = String(name || '').trim();
-    const requestedTrainerId = String(trainerId || '').trim();
     const isTemporaryPassword = memberPassword === '0000';
     const authPassword = isTemporaryPassword ? '000000' : memberPassword;
 
@@ -340,11 +339,6 @@ export const useAdminMembers = (
         .map(member => String(member?.trainerId || '').trim())
         .filter(Boolean)
     );
-    if (requestedTrainerId && existingTrainerIds.has(requestedTrainerId)) {
-      alert('이미 사용 중인 트레이너 ID입니다.');
-      return false;
-    }
-
     const generateTrainerId = () => {
       for (let i = 0; i < 100; i += 1) {
         const candidate = String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
@@ -353,7 +347,7 @@ export const useAdminMembers = (
       return String(Date.now()).slice(-6);
     };
 
-    const finalTrainerId = requestedTrainerId || generateTrainerId();
+    const finalTrainerId = generateTrainerId();
     
     const getInitialInventory = () => {
       const findItem = (searchTerms) => {
@@ -1553,6 +1547,43 @@ export const useAdminMembers = (
     }
   };
 
+  const updateMemberTrainerId = async (memberId, trainerId) => {
+    if (!currentUser?.isAdmin) return false;
+
+    const member = members[memberId];
+    if (!member) return false;
+
+    const nextTrainerId = String(trainerId || '').trim();
+    if (!nextTrainerId) {
+      alert('트레이너 ID를 입력해주세요.');
+      return false;
+    }
+
+    const duplicateMember = Object.entries(members || {}).find(([id, data]) => (
+      id !== memberId && String(data?.trainerId || '').trim() === nextTrainerId
+    ));
+    if (duplicateMember) {
+      alert('이미 사용 중인 트레이너 ID입니다.');
+      return false;
+    }
+
+    try {
+      await update(ref(database, `members/${memberId}`), { trainerId: nextTrainerId });
+      setMembers(prev => ({
+        ...prev,
+        [memberId]: { ...prev[memberId], trainerId: nextTrainerId }
+      }));
+      if (currentUser?.id === memberId) {
+        updateCurrentUser({ trainerId: nextTrainerId });
+      }
+      return true;
+    } catch (error) {
+      console.error('트레이너 ID 업데이트 실패:', error);
+      alert(`트레이너 ID 업데이트에 실패했습니다.\n${error.message || error}`);
+      return false;
+    }
+  };
+
   return {
     addMember,
     toggleAdminStatus,
@@ -1560,6 +1591,7 @@ export const useAdminMembers = (
     toggleMemberHidden,
     toggleMemberNPC,
     updateMemberNpcSettings,
+    updateMemberTrainerId,
     updateMaxDailyWalks,
     resetMemberWalkCount,
     resetAllWalkCounts,

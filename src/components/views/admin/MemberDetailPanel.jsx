@@ -32,6 +32,7 @@ function MemberDetailPanel({ member, onClose }) {
     toggleMemberNPC,
     toggleMemberHidden,
     updateMemberNpcSettings,
+    updateMemberTrainerId,
     updateMemberMoney,
     updateMemberTrainerExp,
     grantMemberTitle,
@@ -182,6 +183,7 @@ function MemberDetailPanel({ member, onClose }) {
               onToggleNPC={toggleMemberNPC}
               onToggleHidden={toggleMemberHidden}
               onUpdateNpcSettings={updateMemberNpcSettings}
+              onUpdateTrainerId={updateMemberTrainerId}
               onUpdateMoney={updateMemberMoney}
               onUpdateTrainerExp={updateMemberTrainerExp}
               onUpdateWalkCount={handleUpdateWalkCount}

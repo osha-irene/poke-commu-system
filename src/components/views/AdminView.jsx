@@ -329,7 +329,6 @@ export default function AdminView() {
   const [newMemberId, setNewMemberId] = useState('');
   const [newMemberPassword, setNewMemberPassword] = useState('');
   const [newMemberName, setNewMemberName] = useState('');
-  const [newMemberTrainerId, setNewMemberTrainerId] = useState('');
   const [escapeMode, setEscapeMode] = useState(systemSettings.escapeMode || 'none');
   const [playlistTitle, setPlaylistTitle] = useState('Playlist');
   const [playlistInput, setPlaylistInput] = useState('');
@@ -430,13 +429,12 @@ export default function AdminView() {
       return;
     }
 
-    const success = await addMember?.(newMemberId, newMemberPassword, newMemberName, newMemberTrainerId);
+    const success = await addMember?.(newMemberId, newMemberPassword, newMemberName);
     if (success) {
       alert(`${newMemberName}님이 추가되었습니다!`);
       setNewMemberId('');
       setNewMemberPassword('');
       setNewMemberName('');
-      setNewMemberTrainerId('');
     }
   };
 
@@ -696,13 +694,6 @@ export default function AdminView() {
                 placeholder="이름"
                 value={newMemberName}
                 onChange={(e) => setNewMemberName(e.target.value)}
-                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:border-indigo-500 focus:outline-none"
-              />
-              <input
-                type="text"
-                placeholder="트레이너 ID (미기입 시 랜덤)"
-                value={newMemberTrainerId}
-                onChange={(e) => setNewMemberTrainerId(e.target.value)}
                 className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:border-indigo-500 focus:outline-none"
               />
               <Button variant="primary" onClick={handleAddMember}>
