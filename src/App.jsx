@@ -1795,7 +1795,16 @@ return (
             />
           )}
 
-          {currentTab === 'members' && <div key="members"><MobileMembersView members={members} titles={titles} /></div>}
+          {currentTab === 'members' && (
+            <div key="members">
+              <MobileMembersView
+                members={members}
+                titles={titles}
+                initialMemberId={initialMemberId}
+                onClearInitialMember={() => setInitialMemberId(null)}
+              />
+            </div>
+          )}
           {currentTab === 'npcs' && <div key="npcs"><NpcView members={members} isLoading={isMembersLoading} isAdmin={isAdmin} npcOnly /></div>}
           {currentTab === 'pokemon' && <PokemonView />}
           {currentTab === 'items' && <ItemsView />}

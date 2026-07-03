@@ -121,20 +121,31 @@ const getPartner = m =>
 const ACCENT = '#5a9a30';
 
 const renderInline = (text) => {
-  const parts = text.split(/(\|[^|]+\|)/g);
-  if (parts.length === 1) return text || null;
-  return parts.map((part, k) =>
-    /^\|[^|]+\|$/.test(part)
-      ? <mark key={k} style={{ background: 'rgba(90,154,48,0.18)', color: 'inherit', borderRadius: 3, padding: '1px 4px', fontWeight: 600 }}>{part.slice(1, -1)}</mark>
-      : part
-  );
+  const source = String(text || '');
+  const parts = source.split(/(\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*\s][^*]*\*|\|[^|]+\|)/g);
+  if (parts.length === 1) return source || null;
+  return parts.map((part, k) => {
+    if (/^\*\*\*[^*]+\*\*\*$/.test(part)) {
+      return <strong key={k} style={{ color: ACCENT, textDecoration: 'underline', textUnderlineOffset: 3 }}>{part.slice(3, -3)}</strong>;
+    }
+    if (/^\*\*[^*]+\*\*$/.test(part)) {
+      return <strong key={k}>{part.slice(2, -2)}</strong>;
+    }
+    if (/^\*[^*\s][^*]*\*$/.test(part)) {
+      return <em key={k}>{part.slice(1, -1)}</em>;
+    }
+    if (/^\|[^|]+\|$/.test(part)) {
+      return <mark key={k} style={{ background: 'rgba(90,154,48,0.18)', color: 'inherit', borderRadius: 3, padding: '1px 4px', fontWeight: 600 }}>{part.slice(1, -1)}</mark>;
+    }
+    return part;
+  });
 };
 
 const renderTextLine = (line, j) => {
-  if (line.startsWith('*')) return (
+  if (/^[-*]\s+/.test(line)) return (
     <div key={j} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: '0.65em' }}>
       <span style={{ color: ACCENT, fontWeight: 700, flexShrink: 0, lineHeight: 1.85 }}>•</span>
-      <span style={{ lineHeight: 1.85 }}>{renderInline(line.slice(1).trim()) || ' '}</span>
+      <span style={{ lineHeight: 1.85 }}>{renderInline(line.replace(/^[-*]\s+/, '').trim()) || ' '}</span>
     </div>
   );
   return <p key={j} style={{ margin: 0, marginBottom: '0.65em', textIndent: '0.5em' }}>{renderInline(line) || ' '}</p>;
@@ -235,7 +246,7 @@ function MainTab({ member, title, partner }) {
           <span style={{
             fontSize: '0.88rem', color: '#444', fontWeight: 600,
             lineHeight: 1.5, textAlign: 'right', maxWidth: '72%',
-          }}>{member.bio}</span>
+          }}>{renderInline(member.bio)}</span>
         </div>
       )}
 
@@ -342,8 +353,8 @@ function MainTab({ member, title, partner }) {
             <span style={{ fontSize: '0.58rem', color: '#8aaa78', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>Partner</span>
             <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#1a2e10', whiteSpace: 'nowrap' }}>{getPokemonName(partner)}</span>
           </div>
-          <div style={{ fontSize: '0.9rem', color: '#666', lineHeight: 1.85, whiteSpace: 'pre-wrap' }}>
-            {member.partnerText}
+          <div style={{ fontSize: '0.9rem', color: '#666', lineHeight: 1.85 }}>
+            {member.partnerText.split('\n').map(renderTextLine)}
           </div>
         </>
       )}
@@ -707,13 +718,29 @@ function MemberDetail({ member, titles, onBack }) {
 }
 
 /* ── 메인 ── */
-export default function MobileMembersView({ members = {}, titles = [] }) {
+export default function MobileMembersView({ members = {}, titles = [], initialMemberId = null, onClearInitialMember }) {
   const [selected, setSelected] = useState(null);
   const [revealedId, setRevealedId] = useState(null);
   const revealTimer = useRef(null);
   const list = getMemberList(members);
 
   useEffect(() => () => clearTimeout(revealTimer.current), []);
+
+  useEffect(() => {
+    const memberId = initialMemberId || (() => {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('member');
+    })();
+    if (!memberId || list.length === 0) return;
+
+    const target = list.find(m => String(m.id) === String(memberId));
+    if (target) {
+      setSelected(target);
+      setRevealedId(null);
+      onClearInitialMember?.();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialMemberId, list.length]);
 
   const handleCardTap = (m) => {
     if (revealedId === m.id) {
@@ -727,9 +754,19 @@ export default function MobileMembersView({ members = {}, titles = [] }) {
     }
   };
 
+  const handleDetailBack = () => {
+    setSelected(null);
+
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('member')) {
+      url.searchParams.delete('member');
+      window.history.pushState({ tab: 'members' }, '', url.toString());
+    }
+  };
+
   if (selected) {
     const m = members[selected.id] || selected;
-    return <MemberDetail member={m} titles={titles} onBack={() => setSelected(null)} />;
+    return <MemberDetail member={m} titles={titles} onBack={handleDetailBack} />;
   }
 
   return (

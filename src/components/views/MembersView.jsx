@@ -515,6 +515,12 @@ function hslToRgb(h, s, l) {
 }
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+const ACHROMATIC_SATURATION_THRESHOLD = 0.08;
+
+function toAchromaticAccent(lightness, minLightness, maxLightness) {
+  const value = Math.round(clamp(lightness, minLightness, maxLightness) * 255);
+  return [value, value, value];
+}
 
 function extractDominantColor(imgEl) {
   try {
@@ -527,6 +533,7 @@ function extractDominantColor(imgEl) {
     ctx.drawImage(imgEl, 0, 0, size, size);
     const data = ctx.getImageData(0, 0, size, size).data;
     let r = 0, g = 0, b = 0, totalWeight = 0;
+    let gray = 0, grayWeight = 0;
     for (let i = 0; i < data.length; i += 4) {
       const alpha = data[i + 3];
       if (alpha < 128) continue;
@@ -540,14 +547,30 @@ function extractDominantColor(imgEl) {
       const lightness = (max + min) / 510;
       const [, saturation] = rgbToHsl(pr, pg, pb);
 
-      if (chroma < 24 || saturation < 0.22) continue;
       if (lightness < 0.12 || lightness > 0.88) continue;
 
       const weight = saturation * clamp(1 - Math.abs(lightness - 0.5) * 1.15, 0.35, 1);
+      if (chroma < 24 || saturation < 0.22) {
+        const grayValue = (pr + pg + pb) / 3;
+        const neutralWeight = clamp(1 - Math.abs(lightness - 0.5) * 1.15, 0.35, 1);
+        gray += grayValue * neutralWeight;
+        grayWeight += neutralWeight;
+        continue;
+      }
+
       r += pr * weight; g += pg * weight; b += pb * weight; totalWeight += weight;
     }
-    if (totalWeight < 6) return null;
+    if (totalWeight < 6) {
+      if (grayWeight >= 6) {
+        const grayValue = Math.round(gray / grayWeight);
+        return [grayValue, grayValue, grayValue];
+      }
+      return null;
+    }
     const [h, s, l] = rgbToHsl(Math.round(r/totalWeight), Math.round(g/totalWeight), Math.round(b/totalWeight));
+    if (s < ACHROMATIC_SATURATION_THRESHOLD) {
+      return toAchromaticAccent(l, 0.32, 0.60);
+    }
     const boostedSaturation = clamp(Math.max(s, 0.62) + 0.08, 0, 0.70);
     const correctedLightness = l > 0.62 ? 0.60 : clamp(l, 0.32, 0.48);
     return hslToRgb(h, boostedSaturation, correctedLightness);
@@ -585,12 +608,18 @@ function getOpaqueBottomRatio(imgEl) {
 function getSelectedAccentColor(color) {
   if (!color) return [102, 143, 221];
   const [h, s, l] = rgbToHsl(color[0], color[1], color[2]);
+  if (s < ACHROMATIC_SATURATION_THRESHOLD) {
+    return toAchromaticAccent(l + 0.08, 0.46, 0.58);
+  }
   return hslToRgb(h, clamp(s + 0.07, 0.50, 0.62), clamp(l + 0.08, 0.46, 0.58));
 }
 
 function getQuoteAccentColor(color) {
   if (!color) return [28, 55, 112];
   const [h, s, l] = rgbToHsl(color[0], color[1], color[2]);
+  if (s < ACHROMATIC_SATURATION_THRESHOLD) {
+    return toAchromaticAccent(l - 0.26, 0.14, 0.26);
+  }
   return hslToRgb(h, clamp(s + 0.06, 0.62, 0.92), clamp(l - 0.26, 0.14, 0.26));
 }
 
@@ -1160,7 +1189,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     };
 
     const updateMemoHeights = () => {
-      const nextNoteMaxHeight = getAvailableHeight(noteScrollRef.current, 15);
+      const nextNoteMaxHeight = getAvailableHeight(noteScrollRef.current, 10);
       setNoteMaxHeight(prev => nextNoteMaxHeight == null ? prev : Math.max(prev || 0, nextNoteMaxHeight));
       setPartnerMemoMaxHeight(getAvailableHeight(partnerMemoRef.current, 10));
       setBioMemoMaxHeight(getAvailableHeight(bioMemoRef.current, 15));
@@ -2032,7 +2061,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             <div
               ref={noteScrollRef}
               onWheel={e => e.stopPropagation()}
-              style={{ maxHeight: noteMaxHeight ? `${noteMaxHeight}px` : 'calc(100dvh - 15px)', overflowY: 'auto', overflowX: 'hidden', paddingRight: 2, paddingBottom: 15, boxSizing: 'border-box', overscrollBehavior: 'contain', scrollPaddingBottom: 15 }}
+              style={{ maxHeight: noteMaxHeight ? `${noteMaxHeight}px` : 'calc(100dvh - 10px)', overflowY: 'auto', overflowX: 'hidden', paddingRight: 2, paddingBottom: 6, boxSizing: 'border-box', overscrollBehavior: 'contain', scrollPaddingBottom: 6 }}
             >
               {noteEditing ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -2055,9 +2084,16 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                 </div>
               ) : (
                 <div onClick={() => canEdit && setNoteEditing(true)}
-                  style={{ minHeight: 48, fontSize: 15, color: note ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.6, cursor: canEdit ? 'text' : 'default', padding: '4px 2px 15px', position: 'relative', zIndex: 1, boxSizing: 'border-box' }}>
+                  style={{ minHeight: 48, fontSize: 15, color: note ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.6, cursor: canEdit ? 'text' : 'default', padding: '4px 2px 6px', position: 'relative', zIndex: 1, boxSizing: 'border-box' }}>
                   {note
-                    ? note.split('\n').map((line, i) => <p key={i} style={{ margin: 0, marginBottom: '1.4em', textIndent: '0.5em' }}>{renderMarkedText(line, selectedAccentRgb) || ' '}</p>)
+                    ? (() => {
+                        const lines = note.split('\n');
+                        return lines.map((line, i) => (
+                          <p key={i} style={{ margin: 0, marginBottom: i === lines.length - 1 ? 0 : '1.4em', textIndent: '0.5em' }}>
+                            {renderMarkedText(line, selectedAccentRgb) || ' '}
+                          </p>
+                        ));
+                      })()
                     : (canEdit ? '클릭해서 메모 추가...' : '')}
                 </div>
               )}
