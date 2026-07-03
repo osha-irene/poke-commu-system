@@ -24,6 +24,10 @@ export const useAdminMembers = (
   allPokemonMaster,
   systemSettings = {}
 ) => {
+  const currentMember = currentUser?.id ? members?.[currentUser.id] : null;
+  const hasAdminPermission = Boolean(currentUser?.isAdmin || currentUser?.isSuperAdmin || currentMember?.isAdmin || currentMember?.isSuperAdmin);
+  const hasSuperAdminPermission = Boolean(currentUser?.isSuperAdmin || currentMember?.isSuperAdmin);
+
   const isEmptyPokemonSlot = (pokemon) => (
     pokemon === null || pokemon === undefined || pokemon === 'null'
   );
@@ -435,13 +439,14 @@ export const useAdminMembers = (
 
   // ========== 관리자 권한 토글 ==========
   const toggleAdminStatus = async (memberId) => {
-    if (!currentUser?.isSuperAdmin) {
+    if (!hasSuperAdminPermission) {
       console.error('❌ 슈퍼 관리자 권한 필요');
-      return;
+      alert('슈퍼 관리자 권한이 필요합니다.');
+      return false;
     }
     
     const member = members[memberId];
-    if (!member) return;
+    if (!member) return false;
     
     const nextIsAdmin = !member.isAdmin;
     const updatedMember = {
@@ -463,20 +468,24 @@ export const useAdminMembers = (
       }
       
       console.log('✅ 관리자 권한 토글:', member.name, updatedMember.isAdmin);
+      return true;
     } catch (error) {
       console.error('❌ 권한 업데이트 실패:', error);
+      alert(`관리자 권한 업데이트에 실패했습니다.\n${error.message || error}`);
+      return false;
     }
   };
 
   // ========== 아이템 관리 권한 토글 ==========
   const toggleItemManagement = async (memberId) => {
-    if (!currentUser?.isAdmin) {
+    if (!hasAdminPermission) {
       console.error('❌ 관리자 권한 필요');
-      return;
+      alert('관리자 권한이 필요합니다.');
+      return false;
     }
     
     const member = members[memberId];
-    if (!member) return;
+    if (!member) return false;
     
     const nextCanManageItems = !member.canManageItems;
     const updatedMember = {
@@ -498,8 +507,11 @@ export const useAdminMembers = (
       }
       
       console.log('✅ 아이템 관리 권한 토글:', member.name, updatedMember.canManageItems);
+      return true;
     } catch (error) {
       console.error('❌ 권한 업데이트 실패:', error);
+      alert(`아이템 관리 권한 업데이트에 실패했습니다.\n${error.message || error}`);
+      return false;
     }
   };
 
