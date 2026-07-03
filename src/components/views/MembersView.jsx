@@ -1851,7 +1851,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                   padding: 0,
                   marginTop: 2,
                   minHeight: 36,
-                  maxHeight: 'clamp(120px, calc(100vh - 31rem), 320px)',
+                  maxHeight: 'clamp(120px, calc(100vh - 31rem - 10px), 320px)',
                   overflowY: 'auto',
                   overscrollBehavior: 'contain',
                   scrollPaddingBlock: 20,
@@ -2325,7 +2325,21 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
 
     {/* 말풍선 — 메인 탭에서만 표시 */}
       {tab === 'main' && member.bio && (
-        <div className="rmv-bio-slide" style={{ position: 'absolute', top: '6rem', right: 'calc(43% - 290px)', width: 'calc(43vw * 1/2)', zIndex: shouldShowRightGradient ? MEMBER_DETAIL_UI_Z_INDEX : 1 }}>
+        <div
+          className="rmv-bio-slide"
+          style={{
+            position: 'absolute',
+            top: '6rem',
+            right: 'calc(43% - 290px)',
+            width: 'calc(43vw * 1/2)',
+            maxHeight: 'calc(100vh - 6rem - 15px)',
+            paddingBottom: 15,
+            overflowY: 'auto',
+            overscrollBehavior: 'contain',
+            boxSizing: 'border-box',
+            zIndex: shouldShowRightGradient ? MEMBER_DETAIL_UI_Z_INDEX : 1,
+          }}
+        >
           <span style={{
             position: 'absolute',
             top: 30, left: 10,
