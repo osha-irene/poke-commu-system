@@ -1492,7 +1492,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             top: 0,
             bottom: 0,
             left: '22%',
-            right: 0,
+            right: tab === 'main' ? 100 : 0,
             overflow: 'hidden',
             zIndex: MEMBER_DETAIL_UI_Z_INDEX - 1,
             background: 'linear-gradient(to right, transparent 0%, rgba(255,255,255,0.85) 12%, rgba(255,255,255,0.97) 28%, rgba(255,255,255,0.97) 100%)',
