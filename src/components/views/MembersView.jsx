@@ -1788,7 +1788,6 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                       element.focus({ preventScroll: true });
                     }}
                     rows={4}
-                    maxLength={1000}
                     placeholder="파트너에 대한 설명을 입력하세요."
                     disabled={partnerTextSaving}
                     style={{
@@ -2417,7 +2416,7 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
       </div>
 
       {/* 상세 — fixed 오버레이, site-header가 z-60으로 nav 항상 클릭 가능 */}
-      {selected && (
+      {selected && createPortal(
         <div
           className="rmv-overlay"
           style={{
@@ -2442,11 +2441,12 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
             currentUserId={currentUserId}
             isAdmin={isAdmin}
           />
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 뒤로가기 — 오버레이 밖, z-55로 항상 위에 */}
-      {selected && (
+      {selected && createPortal(
         <button
           onClick={closeMember}
           className="text-white hover:-translate-x-3 hover:text-gray-200"
@@ -2460,7 +2460,8 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
           }}
         >
           <ChevronLeft className="w-14 h-14" strokeWidth={1.5} />
-        </button>
+        </button>,
+        document.body
       )}
     </div>
   );
