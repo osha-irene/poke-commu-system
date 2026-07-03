@@ -190,7 +190,7 @@ const getOfficialArtwork = p => {
     const m = p.sprite.match(/\/pokemon\/(\d+)\.png/);
     if (m) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${m[1]}.png`;
   }
-  const id = p?.dexId || p?.nationalDex || p?.pokemonId || p?.id;
+  const id = p?.number || p?.originalNumber || p?.speciesNumber || p?.speciesOriginalNumber || p?.dexId || p?.nationalDex || p?.pokemonId || p?.id;
   if (id) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
   return getPokemonImg(p);
 };
@@ -200,12 +200,13 @@ const getPokemonDbSprite = p => {
   return getOfficialArtwork(p);
 };
 const getPokemonName = p => p?.nickname || p?.nameKo || p?.name || '포켓몬';
+const isOfficialArtworkUrl = url => String(url || '').includes('/other/official-artwork/');
 const getPokeApiSprite = p => {
   if (p?.sprite) {
     const m = p.sprite.match(/\/pokemon\/(\d+)\.png/);
     if (m) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-ix/scarlet-violet/${m[1]}.png`;
   }
-  const id = p?.dexId || p?.nationalDex || p?.pokemonId || p?.id;
+  const id = p?.number || p?.originalNumber || p?.speciesNumber || p?.speciesOriginalNumber || p?.dexId || p?.nationalDex || p?.pokemonId || p?.id;
   if (id) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-ix/scarlet-violet/${id}.png`;
   return null;
 };
@@ -362,7 +363,8 @@ function MemberCard({ member, titles, onClick }) {
   };
 
   const partner = member?.partnerPokemon ?? null;
-  const partnerIcon = partner ? (getPokemonLocalIconUrl(partner) || partner?.iconUrl || partner?.sprite || '') : null;
+  const partnerIconFallback = partner ? getOfficialArtwork(partner) : null;
+  const partnerIcon = partner ? (getPokemonLocalIconUrl(partner) || partner?.iconUrl || partner?.sprite || partnerIconFallback || '') : null;
 
   return (
     <div
@@ -416,7 +418,17 @@ function MemberCard({ member, titles, onClick }) {
           background: 'rgba(255,255,255,0.9)',
           pointerEvents: 'none', userSelect: 'none',
         }}>
-          <img src={partnerIcon} alt="" draggable={false} style={{
+          <img
+            src={partnerIcon}
+            alt=""
+            draggable={false}
+            onError={e => {
+              if (partnerIconFallback && e.currentTarget.dataset.fallbackApplied !== '1') {
+                e.currentTarget.dataset.fallbackApplied = '1';
+                e.currentTarget.src = partnerIconFallback;
+              }
+            }}
+            style={{
             width: 72, height: 72,
             maxWidth: 'none',
             imageRendering: 'pixelated',
@@ -651,6 +663,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   const [flippedEntryIndex, setFlippedEntryIndex] = useState(null);
   const [partnerTopOffset, setPartnerTopOffset] = useState(0.0);
   const [partnerImgHeight, setPartnerImgHeight] = useState(128);
+  const [partnerImageUsesArtwork, setPartnerImageUsesArtwork] = useState(false);
   const [partnerText, setPartnerText] = useState(() => member.partnerText || '');
   const [savedPartnerText, setSavedPartnerText] = useState(() => member.partnerText || '');
   const [noteMaxHeight, setNoteMaxHeight] = useState(null);
@@ -946,6 +959,11 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
 
   const party = getParty(member);
   const partner = party.find(p => p?.isPartner) || member.partnerPokemon || party[0] || null;
+  const partnerSpriteUrl = partner ? getPokeApiSprite(partner) : null;
+  const partnerOfficialArtworkUrl = partner ? getOfficialArtwork(partner) : null;
+  const partnerDisplayUrl = partnerSpriteUrl || partnerOfficialArtworkUrl || (partner ? getPokemonDbSprite(partner) : '');
+  const partnerUsesArtwork = isOfficialArtworkUrl(partnerDisplayUrl);
+  const effectivePartnerUsesArtwork = partnerUsesArtwork || partnerImageUsesArtwork;
 
   const accentRgb = accent ? `${accent[0]},${accent[1]},${accent[2]}` : '80,120,200';
   const selectedAccent = getSelectedAccentColor(accent);
@@ -1070,7 +1088,8 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
 
   useEffect(() => {
     if (!partner) return;
-    const url = getPokeApiSprite(partner);
+    setPartnerImageUsesArtwork(partnerUsesArtwork);
+    const url = getPokeApiSprite(partner) || getOfficialArtwork(partner);
     if (!url) return;
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -1088,15 +1107,26 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             if (data[(y * img.naturalWidth + x) * 4 + 3] > 10) { topRow = y; break outer; }
           }
         }
-        const scale = Math.min(160 / img.naturalWidth, 160 / img.naturalHeight, 1);
+        const usesArtwork = isOfficialArtworkUrl(img.src);
+        const maxSize = usesArtwork ? 107 : 160;
+        const scale = Math.min(maxSize / img.naturalWidth, maxSize / img.naturalHeight, 1);
         const renderedHeight = img.naturalHeight * scale;
+        setPartnerImageUsesArtwork(usesArtwork);
         setPartnerTopOffset(topRow / img.naturalHeight);
         setPartnerImgHeight(renderedHeight);
       } catch { setPartnerTopOffset(0); }
     };
-    img.onerror = () => setPartnerTopOffset(0);
+    img.onerror = () => {
+      const fallback = getOfficialArtwork(partner);
+      if (fallback && img.src !== fallback) {
+        setPartnerImageUsesArtwork(true);
+        img.src = fallback;
+        return;
+      }
+      setPartnerTopOffset(0);
+    };
     img.src = url;
-  }, [partner?.sprite, partner?.dexId, partner?.nationalDex, partner?.id]);
+  }, [partner?.sprite, partner?.number, partner?.originalNumber, partner?.speciesNumber, partner?.speciesOriginalNumber, partner?.dexId, partner?.nationalDex, partner?.id, partnerUsesArtwork]);
 
   useEffect(() => {
     const memberChanged = prevMemberIdRef.current !== member.id;
@@ -1130,7 +1160,8 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     };
 
     const updateMemoHeights = () => {
-      setNoteMaxHeight(getAvailableHeight(noteScrollRef.current, 15));
+      const nextNoteMaxHeight = getAvailableHeight(noteScrollRef.current, 15);
+      setNoteMaxHeight(prev => nextNoteMaxHeight == null ? prev : Math.max(prev || 0, nextNoteMaxHeight));
       setPartnerMemoMaxHeight(getAvailableHeight(partnerMemoRef.current, 10));
       setBioMemoMaxHeight(getAvailableHeight(bioMemoRef.current, 15));
     };
@@ -1153,6 +1184,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     setPartnerText(nextText);
     setSavedPartnerText(nextText);
     setPartnerTextOpen(false);
+    setNoteMaxHeight(null);
   }, [member.id]);
 
   useEffect(() => {
@@ -1840,12 +1872,42 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                   </span>
                 </button>
                 <img
-                  src={getPokeApiSprite(partner) || getPokemonDbSprite(partner)}
+                  src={partnerDisplayUrl}
                   alt={getPokemonName(partner)}
+                  onError={e => {
+                    const fallback = partnerOfficialArtworkUrl || getPokemonDbSprite(partner);
+                    if (fallback && e.currentTarget.dataset.fallbackApplied !== '1') {
+                      e.currentTarget.dataset.fallbackApplied = '1';
+                      const usesArtworkFallback = isOfficialArtworkUrl(fallback);
+                      setPartnerImageUsesArtwork(usesArtworkFallback);
+                      e.currentTarget.src = fallback;
+                      if (usesArtworkFallback) {
+                        e.currentTarget.style.width = '107px';
+                        e.currentTarget.style.height = '107px';
+                        e.currentTarget.style.maxHeight = '107px';
+                        e.currentTarget.style.maxWidth = '107px';
+                        e.currentTarget.style.imageRendering = 'auto';
+                        e.currentTarget.style.objectFit = 'contain';
+                        e.currentTarget.style.right = '0';
+                      }
+                    }
+                  }}
                   onClick={() => { setPartnerTextOpen(open => !open); setPartnerEditing(false); }}
                   onMouseEnter={() => setPartnerHovered(true)}
                   onMouseLeave={() => setPartnerHovered(false)}
-                  style={{ position: 'absolute', bottom: '0', right: '-2rem', width: 'auto', height: 'auto', maxHeight: 160, maxWidth: 160, zIndex: 5, cursor: 'pointer' }}
+                  style={{
+                    position: 'absolute',
+                    bottom: '0',
+                    right: effectivePartnerUsesArtwork ? 0 : '-2rem',
+                    width: effectivePartnerUsesArtwork ? 107 : 'auto',
+                    height: effectivePartnerUsesArtwork ? 107 : 'auto',
+                    maxHeight: effectivePartnerUsesArtwork ? 107 : 160,
+                    maxWidth: effectivePartnerUsesArtwork ? 107 : 160,
+                    objectFit: effectivePartnerUsesArtwork ? 'contain' : 'initial',
+                    imageRendering: effectivePartnerUsesArtwork ? 'auto' : 'pixelated',
+                    zIndex: 5,
+                    cursor: 'pointer',
+                  }}
                 />
                 {partnerHovered && (() => {
                   const imgH = partnerImgHeight;
@@ -2615,9 +2677,15 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
             zIndex: 55,
             opacity: showDetail ? 1 : 0,
             pointerEvents: showDetail ? 'auto' : 'none',
+            transition: 'opacity 0.28s ease, color 0.18s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1)',
+            willChange: 'transform, opacity',
           }}
         >
-          <ChevronLeft className="w-14 h-14" strokeWidth={1.5} />
+          <ChevronLeft
+            className="w-14 h-14"
+            strokeWidth={1.5}
+            style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.18))' }}
+          />
         </button>,
         document.body
       )}
