@@ -953,6 +953,8 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   ) > 165 ? '#151515' : '#fff';
   const rightGradientTabs = getRightGradientTabs(member);
   const shouldShowRightGradient = Boolean(rightGradientTabs[tab]);
+  const gradientAwareContentZIndex = shouldShowRightGradient ? MEMBER_DETAIL_UI_Z_INDEX : 10;
+  const gradientAwareTitleZIndex = shouldShowRightGradient ? MEMBER_DETAIL_UI_Z_INDEX : 0;
   const textEditFieldStyle = {
     display: 'block',
     width: '100%',
@@ -1024,26 +1026,28 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
       return part;
     });
   };
-  const renderPartnerMemoText = (text) => (
-    String(text || '').split('\n').map((line, index) => {
+  const renderPartnerMemoText = (text) => {
+    const lines = String(text || '').split('\n');
+    return lines.map((line, index) => {
+      const isLast = index === lines.length - 1;
       if (line.startsWith('#')) {
         return (
-          <div key={index} style={{ display: 'block', background: 'rgba(255,255,255,0.16)', borderRadius: 4, padding: '4px 9px', margin: index === 0 ? '0 0 0.65em' : '1em 0 0.65em', fontWeight: 700 }}>
+          <div key={index} style={{ display: 'block', background: 'rgba(255,255,255,0.16)', borderRadius: 4, padding: '4px 9px', margin: `${index === 0 ? 0 : '1em'} 0 ${isLast ? 0 : '0.65em'}`, fontWeight: 700 }}>
             {renderPartnerMarkedText(line.slice(1).trim()) || ' '}
           </div>
         );
       }
       if (/^[-*]\s+/.test(line)) {
         return (
-          <div key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, marginBottom: '0.55em' }}>
+          <div key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, marginBottom: isLast ? 0 : '0.55em' }}>
             <span style={{ color: partnerTextColor, fontWeight: 800, flexShrink: 0, lineHeight: 1.65 }}>•</span>
             <span>{renderPartnerMarkedText(line.replace(/^[-*]\s+/, '').trim()) || ' '}</span>
           </div>
         );
       }
-      return <p key={index} style={{ margin: 0, marginBottom: '0.65em' }}>{renderPartnerMarkedText(line) || ' '}</p>;
-    })
-  );
+      return <p key={index} style={{ margin: 0, marginBottom: isLast ? 0 : '0.65em' }}>{renderPartnerMarkedText(line) || ' '}</p>;
+    });
+  };
 
   const handleImgLoad = () => {
     setImgLoaded(true);
@@ -1778,7 +1782,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
         <div
           key="main"
           className="rmv-tab-content flex flex-col justify-start gap-3"
-          style={{ position: 'absolute', top: '16.5rem', left: '57%', width: 280, overflowX: 'visible', paddingBottom: 24, boxSizing: 'border-box', zIndex: MEMBER_DETAIL_UI_Z_INDEX }}
+          style={{ position: 'absolute', top: '16.5rem', left: '57%', width: 280, overflowX: 'visible', paddingBottom: 24, boxSizing: 'border-box', zIndex: gradientAwareContentZIndex }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 28 }}>
             {(() => {
@@ -1844,11 +1848,13 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                   zIndex: 6,
                   background: `rgba(${selectedAccentRgb}, ${savedPartnerText ? 1 : 0.45})`,
                   borderRadius: 8,
-                  padding: '12px 14px 14px',
+                  padding: 0,
                   marginTop: 2,
                   minHeight: 36,
-                  maxHeight: 'calc(100vh - 22rem)',
+                  maxHeight: 'clamp(120px, calc(100vh - 31rem), 320px)',
                   overflowY: 'auto',
+                  overscrollBehavior: 'contain',
+                  scrollPaddingBlock: 20,
                   boxSizing: 'border-box',
                   cursor: partnerEditing ? 'text' : (canEdit ? 'pointer' : 'default'),
                   transition: 'background 0.3s',
@@ -1889,8 +1895,10 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                     disabled={partnerTextSaving}
                     style={{
                       ...partnerEditFieldStyle,
+                      display: 'block',
                       color: partnerTextColor,
                       caretColor: partnerTextColor,
+                      padding: '20px 14px',
                       fontSize: 14,
                       fontWeight: 500,
                       lineHeight: 1.65,
@@ -1907,13 +1915,14 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                       lineHeight: 1.65,
                       whiteSpace: 'pre-wrap',
                       wordBreak: 'keep-all',
-                      paddingBottom: 2,
+                      padding: '20px 14px',
+                      boxSizing: 'border-box',
                     }}
                   >
                     {renderPartnerMemoText(savedPartnerText)}
                   </div>
                 ) : (
-                  <div style={{ color: `rgba(255,255,255,0.5)`, fontSize: 13, fontWeight: 500 }}>
+                  <div style={{ color: `rgba(255,255,255,0.5)`, fontSize: 13, fontWeight: 500, padding: '20px 14px', boxSizing: 'border-box' }}>
                     클릭해서 설명 추가...
                   </div>
                 )}
@@ -1975,7 +1984,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             top: '2rem',
             left: '37%',
             right: 0,
-            zIndex: 0,
+            zIndex: gradientAwareTitleZIndex,
             pointerEvents: 'none',
             overflowX: 'hidden',
             overflowY: 'visible',
@@ -2002,7 +2011,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
           key="entry"
           className="rmv-tab-content flex flex-col justify-start gap-3"
           onAnimationEnd={e => { e.currentTarget.style.animation = 'none'; }}
-          style={{ position: 'absolute', top: '13rem', left: '55%', width: 320, overflow: 'visible', paddingBottom: 24, paddingRight: 6, boxSizing: 'border-box', zIndex: MEMBER_DETAIL_UI_Z_INDEX }}
+          style={{ position: 'absolute', top: '13rem', left: '55%', width: 320, overflow: 'visible', paddingBottom: 24, paddingRight: 6, boxSizing: 'border-box', zIndex: gradientAwareContentZIndex }}
         >
           <style>{`
             @keyframes rmv-card-flip-in { from { transform: rotateY(-90deg) scaleX(0.8); opacity: 0; } to { transform: rotateY(0deg) scaleX(1); opacity: 1; } }
@@ -2164,7 +2173,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               </button>
             )}
             {/* 배경 텍스트 — achievements 탭과 동일한 방식 */}
-            <div style={{ position: 'absolute', top: '2rem', left: 0, right: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: '2rem', left: 0, right: 0, zIndex: gradientAwareTitleZIndex, pointerEvents: 'none', overflow: 'hidden' }}>
               <div className="rmv-achievements-text">
                 <div style={{ fontFamily: "'SUITE', sans-serif", fontSize: 145, fontWeight: 300, lineHeight: 1, letterSpacing: '-0.09em', color: `rgb(${accentRgb})`, opacity: 0.58, transform: 'scaleX(1.1)', transformOrigin: 'right center', whiteSpace: 'nowrap', textAlign: 'right', marginRight: '-5%' }}>
                   RELATIONS
@@ -2316,7 +2325,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
 
     {/* 말풍선 — 메인 탭에서만 표시 */}
       {tab === 'main' && member.bio && (
-        <div className="rmv-bio-slide" style={{ position: 'absolute', top: '6rem', right: 'calc(43% - 290px)', width: 'calc(43vw * 1/2)', zIndex: MEMBER_DETAIL_UI_Z_INDEX }}>
+        <div className="rmv-bio-slide" style={{ position: 'absolute', top: '6rem', right: 'calc(43% - 290px)', width: 'calc(43vw * 1/2)', zIndex: shouldShowRightGradient ? MEMBER_DETAIL_UI_Z_INDEX : 1 }}>
           <span style={{
             position: 'absolute',
             top: 30, left: 10,
