@@ -458,7 +458,7 @@ const DEFAULT_RIGHT_GRADIENT_TABS = {
   main: false,
   text: true,
   entry: false,
-  relation: true,
+  relation: false,
 };
 
 function getRightGradientTabs(member) {
