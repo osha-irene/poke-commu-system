@@ -1254,22 +1254,22 @@ export const useAdminMembers = (
 
     const member = members[memberId];
     if (!member) return;
+    const nextTrainerExp = Math.max(0, Number(amount) || 0);
 
     const updatedMember = {
       ...member,
-      trainerExp: Math.max(0, amount)
+      trainerExp: nextTrainerExp
     };
 
     // 자기 자신의 경험치를 수정할 때는 currentUser 상태도 함께 동기화
     if (memberId === currentUser.id) {
-      await updateCurrentUser({ trainerExp: Math.max(0, amount) });
+      await updateCurrentUser({ trainerExp: nextTrainerExp });
       return;
     }
 
     try {
-      const { id, ...dataToSave } = updatedMember;
       const memberRef = ref(database, `members/${memberId}`);
-      await set(memberRef, dataToSave);
+      await update(memberRef, { trainerExp: nextTrainerExp });
 
       setMembers(prev => ({
         ...prev,
@@ -1286,22 +1286,22 @@ export const useAdminMembers = (
 
     const member = members[memberId];
     if (!member) return;
+    const nextMoney = Math.max(0, Number(amount) || 0);
 
     const updatedMember = {
       ...member,
-      money: Math.max(0, amount)
+      money: nextMoney
     };
 
     // 자기 자신의 금액을 수정할 때는 updateCurrentUser를 통해 currentUser 상태도 동기화
     if (memberId === currentUser.id) {
-      await updateCurrentUser({ money: Math.max(0, amount) });
+      await updateCurrentUser({ money: nextMoney });
       return;
     }
 
     try {
-      const { id, ...dataToSave } = updatedMember;
       const memberRef = ref(database, `members/${memberId}`);
-      await set(memberRef, dataToSave);
+      await update(memberRef, { money: nextMoney });
 
       setMembers(prev => ({
         ...prev,
@@ -1322,7 +1322,6 @@ export const useAdminMembers = (
     const updatedMember = { ...member, title: titleId === 'none' ? null : titleId };
 
     try {
-      const { id, ...dataToSave } = updatedMember;
       const memberRef = ref(database, `members/${memberId}`);
       await update(memberRef, { title: updatedMember.title ?? null });
 
