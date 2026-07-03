@@ -24,7 +24,9 @@ const getSizeColor = (rank) => {
     'XXXS': 'text-purple-700 font-extrabold',
     'XXS': 'text-purple-600 font-bold',
     'XS': 'text-blue-600',
+    'S': 'text-sky-600',
     'M': 'text-gray-600',
+    'L': 'text-amber-600',
     'XL': 'text-orange-600',
     'XXL': 'text-red-600 font-bold',
     'XXXL': 'text-red-700 font-extrabold'

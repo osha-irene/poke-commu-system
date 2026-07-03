@@ -158,6 +158,8 @@ const getMemberList = (members) =>
 const getParty = m => (m?.caughtPokemon || []).filter(Boolean).slice(0, 6);
 const getFaceImg = m => m?.profileImageThumb || m?.profileImage || m?.profileImageFull || m?.profileImageUrl || '';
 const getFullImg     = m => m?.profileImageFull || m?.profileImage || m?.profileImageUrl || '';
+const MEMBER_CHARACTER_Z_INDEX = 46;
+const MEMBER_DETAIL_UI_Z_INDEX = 57;
 
 const getPokemonImg = p => p?.sprite || p?.spriteUrl || p?.imageUrl || p?.iconUrl || '';
 const getBallImageUrl = (p, allItems) => {
@@ -234,7 +236,9 @@ const SIZE_DESC = {
   XXXS: '믿기 어려울 만큼 작은 크기인 것 같다.',
   XXS:  '매우 작은 크기인 것 같다.',
   XS:   '조금 작은 크기인 것 같다.',
+  S:    '살짝 작은 크기인 것 같다.',
   M:    '중간 정도의 크기인 것 같다.',
+  L:    '살짝 큰 크기인 것 같다.',
   XL:   '조금 큰 크기인 것 같다.',
   XXL:  '매우 큰 크기인 것 같다.',
   XXXL: '믿기 어려울 만큼 큰 크기인 것 같다.',
@@ -1135,7 +1139,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             display: 'flex', alignItems: 'center', justifyContent: 'flex-start',
             paddingLeft: '0%',
             marginLeft: '-13%',
-            zIndex: 15, pointerEvents: 'none',
+            zIndex: MEMBER_CHARACTER_Z_INDEX, pointerEvents: 'none',
           }}>
             <div style={{
               position: 'relative',
@@ -1182,7 +1186,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                 width: '100vw',
                 overflow: 'hidden',
                 boxSizing: 'border-box',
-                zIndex: 15,
+                zIndex: MEMBER_CHARACTER_Z_INDEX,
                 pointerEvents: 'none',
               }}
             >
@@ -1231,7 +1235,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                 maxWidth: 'none',
                 objectFit: 'contain',
                 objectPosition: 'top center',
-                zIndex: 15,
+                zIndex: MEMBER_CHARACTER_Z_INDEX,
                 filter: 'url(#paper-cut-outline) drop-shadow(0px 4px 3px rgba(20, 34, 3, 0.3))',
                 pointerEvents: 'none',
                 opacity: imgLoaded ? 1 : 0,
@@ -1262,7 +1266,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
         background: 'rgba(255,255,255)',
         borderRadius: 999,
         boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
-        zIndex: 20,
+        zIndex: MEMBER_DETAIL_UI_Z_INDEX,
       }}>
         {TABS.map(({ id, label, Icon, iconSrc }, i) => (
           <button
@@ -1316,10 +1320,10 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
         const renderTextLine = (line, j) => renderDetailTextLine(line, j, selectedAccentRgb);
         return (
           <>
-            <div className="rmv-text-bg-reveal" style={{ position: 'fixed', top: 0, bottom: 0, left: '22%', right: 0, overflow: 'hidden', zIndex: 16, background: 'linear-gradient(to right, transparent 0%, rgba(255,255,255,0.85) 12%, rgba(255,255,255,0.97) 28%, rgba(255,255,255,0.97) 100%)', pointerEvents: 'none' }} />
+            <div className="rmv-text-bg-reveal" style={{ position: 'fixed', top: 0, bottom: 0, left: '22%', right: 0, overflow: 'hidden', zIndex: MEMBER_DETAIL_UI_Z_INDEX - 1, background: 'linear-gradient(to right, transparent 0%, rgba(255,255,255,0.85) 12%, rgba(255,255,255,0.97) 28%, rgba(255,255,255,0.97) 100%)', pointerEvents: 'none' }} />
             <div
               className="rmv-text-scroll"
-              style={{ position: 'absolute', top: 0, left: '30%', right: 0, bottom: 0, overflowY: 'auto', overflowX: 'hidden', zIndex: 17, '--rmv-accent-base': selectedAccentRgb }}
+              style={{ position: 'absolute', top: 0, left: '30%', right: 0, bottom: 0, overflowY: 'auto', overflowX: 'hidden', zIndex: MEMBER_DETAIL_UI_Z_INDEX, '--rmv-accent-base': selectedAccentRgb }}
             >
               <div className="rmv-text-tab-in flex flex-col justify-start gap-3"
                 style={{ paddingTop: 42, paddingBottom: 40, paddingLeft: 32, paddingRight: 60, boxSizing: 'border-box', minWidth: 'calc((100vw - 53vw) * 0.65)' }}>
@@ -2062,7 +2066,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                 onClick={() => { setRelationEditIdx('new'); setRelationDraft({ charName: '', intro: '', memo: '' }); }}
                 onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.15)'}
                 onMouseLeave={e => e.currentTarget.style.filter = ''}
-                style={{ position: 'absolute', top: 195, right: 28, width: 36, height: 36, borderRadius: '50%', border: 'none', background: `rgb(${selectedAccentRgb})`, color: kwTextColor, fontSize: 22, fontWeight: 300, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 20, transition: 'filter 0.15s ease' }}
+                style={{ position: 'absolute', top: 195, right: 28, width: 36, height: 36, borderRadius: '50%', border: 'none', background: `rgb(${selectedAccentRgb})`, color: kwTextColor, fontSize: 22, fontWeight: 300, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: MEMBER_DETAIL_UI_Z_INDEX, transition: 'filter 0.15s ease' }}
               >
                 +
               </button>
@@ -2076,7 +2080,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               </div>
             </div>
             <div
-              style={{ position: 'fixed', top: 185, left: '40%', right: 0, bottom: 0, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', overscrollBehavior: 'contain', zIndex: 17, display: 'flex', flexDirection: 'column' }}
+              style={{ position: 'fixed', top: 185, left: '40%', right: 0, bottom: 0, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', overscrollBehavior: 'contain', zIndex: MEMBER_DETAIL_UI_Z_INDEX, display: 'flex', flexDirection: 'column' }}
             >
               <div style={{ paddingTop: 42, paddingBottom: 40, paddingLeft: 32, paddingRight: 72, boxSizing: 'border-box', flex: '0 0 auto', minHeight: '100%' }}>
                 {/* 관계 목록 */}

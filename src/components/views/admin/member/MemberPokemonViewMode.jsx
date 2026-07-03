@@ -35,6 +35,28 @@ export default function MemberPokemonViewMode({
     ));
   };
 
+  const getMasterData = (pokemon) => {
+    const formVariant = String(pokemon?.formVariant || '').toLowerCase();
+    const regionalForm = String(pokemon?.regionalForm || '').toLowerCase();
+    const pokemonId = Number(pokemon?.pokemonId || pokemon?.id);
+    const number = Number(pokemon?.number);
+    const originalNumber = Number(pokemon?.originalNumber || pokemon?.number);
+
+    return allPokemonMaster.find(template => (
+      formVariant && String(template.formVariant || '').toLowerCase() === formVariant
+    )) || allPokemonMaster.find(template => (
+      regionalForm &&
+      String(template.regionalForm || '').toLowerCase() === regionalForm &&
+      Number(template.originalNumber || template.number) === originalNumber
+    )) || allPokemonMaster.find(template => (
+      pokemonId && Number(template.id) === pokemonId
+    )) || allPokemonMaster.find(template => (
+      number && Number(template.number) === number
+    )) || allPokemonMaster.find(template => (
+      originalNumber && Number(template.originalNumber || template.number) === originalNumber
+    ));
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -59,7 +81,7 @@ export default function MemberPokemonViewMode({
         <div className="grid grid-cols-2 gap-3">
           {memberPokemon.map((pokemon, index) => {
             const displayName = getOwnedPokemonDisplayParts(pokemon);
-            const masterData = allPokemonMaster.find(p => p.number === pokemon.number || p.number === pokemon.originalNumber);
+            const masterData = getMasterData(pokemon);
             const spriteUrl = getGenderedSpriteUrl(pokemon, masterData) || pokemon.spriteUrl || pokemon.sprite || '';
             return (
             <div key={pokemon.uniqueId || index} className="bg-white rounded-lg border p-3">

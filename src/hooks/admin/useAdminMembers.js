@@ -253,7 +253,7 @@ export const useAdminMembers = (
       pokemonId: pokemonTemplate.id,
       name: getPokemonDisplayParts(pokemonTemplate).name || pokemonTemplate.name,
       nameEn: pokemonTemplate.nameEn,
-      number: pokemonTemplate.originalNumber || pokemonTemplate.number,
+      number: pokemonTemplate.number,
       originalNumber: pokemonTemplate.originalNumber || pokemonTemplate.number,
       regionalForm: pokemonTemplate.regionalForm || null,
       formVariant: pokemonTemplate.formVariant || null,
@@ -288,7 +288,7 @@ export const useAdminMembers = (
         trainer2: egg.parent2TrainerName || null,
       },
       sizeRank: (() => {
-        const ranks = ['XXXS','XXS','XS','M','M','M','M','XL','XXL','XXXL'];
+        const ranks = ['XXXS','XXS','XS','S','M','M','M','L','XL','XXL','XXXL'];
         return ranks[Math.floor(Math.random() * ranks.length)];
       })(),
       ...(inheritedNature ? { nature: inheritedNature } : {}),
@@ -694,8 +694,9 @@ export const useAdminMembers = (
       name: getPokemonDisplayParts(pokemonTemplate).name || pokemonTemplate.name,
       nameEn: pokemonTemplate.nameEn,
       nickname,
-      number: pokemonTemplate.originalNumber || pokemonTemplate.number,
+      number: pokemonTemplate.number,
       originalNumber: pokemonTemplate.originalNumber || pokemonTemplate.number,
+      regionalForm: pokemonTemplate.regionalForm || null,
       formVariant: pokemonTemplate.formVariant || null,
       type: pokemonTemplate.type,
       type2: pokemonTemplate.type2 || null,

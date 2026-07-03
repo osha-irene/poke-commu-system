@@ -47,6 +47,12 @@ const getPokemonSpriteUrl = (number) =>
 
 
 const getSizeDescription = (rank, formVariant) => {
+  const addedSizeDesc = {
+    S: '살짝 작은 크기인 것 같다.',
+    L: '살짝 큰 크기인 것 같다.',
+  };
+  if (addedSizeDesc[rank]) return addedSizeDesc[rank];
+
   const sizeDesc = {
     'XXXS': '믿기 어려울 만큼 작은 크기인 것 같다.',
     'XXS': '매우 작은 크기인 것 같다.',

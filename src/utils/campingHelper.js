@@ -249,7 +249,7 @@ export function hatchEgg(egg, allPokemonMaster, allMoves, movesData) {
     height: pokemonData.height || 10,
     weight: pokemonData.weight || 100,
     sizeRank: (() => {
-      const ranks = ['XXXS', 'XXS', 'XS', 'M', 'M', 'M', 'M', 'XL', 'XXL', 'XXXL'];
+      const ranks = ['XXXS', 'XXS', 'XS', 'S', 'M', 'M', 'M', 'L', 'XL', 'XXL', 'XXXL'];
       return ranks[Math.floor(Math.random() * ranks.length)];
     })(),
     ability: pokemonData.abilities?.[0] || '없음',

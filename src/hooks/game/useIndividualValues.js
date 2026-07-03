@@ -33,8 +33,12 @@ export const useIndividualValues = () => {
       sizeRank = 'XXS';       // 최소 (0.75~0.85) - 희귀
     } else if (avgVariation < 0.95) {
       sizeRank = 'XS';        // 소형 (0.85~0.95)
+    } else if (avgVariation < 1.0) {
+      sizeRank = 'S';
     } else if (avgVariation <= 1.05) {
       sizeRank = 'M';         // 보통 (0.95~1.05) - 가장 흔함
+    } else if (avgVariation <= 1.1) {
+      sizeRank = 'L';
     } else if (avgVariation <= 1.15) {
       sizeRank = 'XL';        // 대형 (1.05~1.15)
     } else if (avgVariation <= 1.25) {

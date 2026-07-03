@@ -43,6 +43,10 @@ export const generatePokemonGender = (pokemon = {}) => {
 };
 
 export const normalizePokemonGender = (gender, pokemon = {}) => {
+  if (gender === 'none') {
+    return 'none';
+  }
+
   const options = getPokemonGenderOptions(pokemon);
 
   if (options.includes(gender)) {

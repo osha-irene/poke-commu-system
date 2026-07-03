@@ -43,16 +43,20 @@ const usePokemonManagement = (
     const currentTemplate = getPokemonTemplate(pokemon);
     const baseNumber = currentTemplate?.originalNumber || pokemon?.originalNumber || currentTemplate?.number || pokemon?.number;
     const baseSpeciesEn = currentTemplate?.baseSpeciesEn || pokemon?.baseSpeciesEn || currentTemplate?.nameEn || pokemon?.nameEn;
+    const numericBaseNumber = Number(baseNumber);
+    const currentNumber = Number(currentTemplate?.number || pokemon?.number);
 
     return (allPokemonMaster || [])
       .filter((template) => {
         if (!template || template.isMega) return false;
 
-        const sameNumber = baseNumber && (
-          template.number === baseNumber ||
-          template.originalNumber === baseNumber ||
-          template.number === currentTemplate?.number ||
-          template.originalNumber === currentTemplate?.number
+        const templateNumber = Number(template.number);
+        const templateOriginalNumber = Number(template.originalNumber || template.number);
+        const sameNumber = Number.isFinite(numericBaseNumber) && (
+          templateNumber === numericBaseNumber ||
+          templateOriginalNumber === numericBaseNumber ||
+          templateNumber === currentNumber ||
+          templateOriginalNumber === currentNumber
         );
         const sameBaseSpecies = baseSpeciesEn && (
           template.baseSpeciesEn === baseSpeciesEn ||
@@ -64,10 +68,11 @@ const usePokemonManagement = (
           template.regionalForm ||
           template.isRegionalForm ||
           template.baseSpeciesEn ||
-          template.displayNumber
+          template.displayNumber ||
+          templateOriginalNumber !== templateNumber
         );
 
-        return (sameNumber || sameBaseSpecies) && isFormLike;
+        return (sameNumber || sameBaseSpecies) && (isFormLike || templateNumber === numericBaseNumber);
       })
       .filter((template, index, list) => (
         index === list.findIndex(item => (

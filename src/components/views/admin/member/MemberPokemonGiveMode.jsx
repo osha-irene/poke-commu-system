@@ -42,7 +42,7 @@ export default function MemberPokemonGiveMode({
 }) {
   const genderOptions = getPokemonGenderOptions(giveData.selectedPokemon);
   const isGenderless = genderOptions.length === 1 && genderOptions[0] === 'none';
-  const genderValue = genderOptions.includes(giveData.gender) ? giveData.gender : 'random';
+  const genderValue = giveData.gender === 'none' || genderOptions.includes(giveData.gender) ? giveData.gender : 'random';
   const abilityOptions = buildAbilityOptions(giveData.selectedPokemon, giveData.ability);
 
 
@@ -226,7 +226,7 @@ export default function MemberPokemonGiveMode({
                   {!isGenderless && <option value="random">랜덤</option>}
                   {genderOptions.includes('male') && <option value="male">♂ 수컷</option>}
                   {genderOptions.includes('female') && <option value="female">♀ 암컷</option>}
-                  {isGenderless && <option value="none">무성</option>}
+                  <option value="none">무성</option>
                 </select>
               </div>
 
@@ -258,7 +258,7 @@ export default function MemberPokemonGiveMode({
               <div>
                 <label className="block text-sm font-semibold mb-2">체구 등급</label>
                 <div className="flex gap-2">
-                  {['XXXS', 'XXS', 'XS', 'M', 'XL', 'XXL', 'XXXL'].map(size => (
+                  {['XXXS', 'XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map(size => (
                     <button
                       key={size}
                       type="button"

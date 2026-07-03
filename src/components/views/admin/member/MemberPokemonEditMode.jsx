@@ -25,7 +25,7 @@ const CONDITION_FIELDS = [
   { key: 'strength', label: '강인함' },
 ];
 
-const SIZE_RANKS = ['XXXS', 'XXS', 'XS', 'M', 'XL', 'XXL', 'XXXL'];
+const SIZE_RANKS = ['XXXS', 'XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 
 function SectionHeader({ children }) {
   return (

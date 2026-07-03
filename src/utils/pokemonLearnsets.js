@@ -5,13 +5,21 @@ export const getPokemonLearnsetKeys = (pokemonOrNumber) => {
     return [String(pokemonOrNumber)];
   }
 
-  return [
-    pokemonOrNumber.originalNumber,
-    pokemonOrNumber.number,
-    pokemonOrNumber.pokemonId
-  ]
-    .filter((value) => value !== null && value !== undefined && value !== '')
-    .map(String);
+  const keys = [];
+  const addKey = (value) => {
+    if (value === null || value === undefined || value === '') return;
+    const key = String(value);
+    if (!keys.includes(key)) keys.push(key);
+  };
+
+  addKey(pokemonOrNumber.number);
+  addKey(pokemonOrNumber.pokemonId);
+  addKey(pokemonOrNumber.id);
+  addKey(pokemonOrNumber.formVariant);
+  addKey(pokemonOrNumber.nameEn);
+  addKey(pokemonOrNumber.originalNumber);
+
+  return keys;
 };
 
 export const getPokemonLearnset = (pokemonLearnsets = {}, pokemonOrNumber) => {
