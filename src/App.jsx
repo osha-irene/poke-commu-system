@@ -1740,7 +1740,14 @@ return (
       {isMobile ? (
         <MobileLayout
           currentTab={currentTab}
-          setCurrentTab={setCurrentTab}
+          setCurrentTab={(tab) => {
+            if (!isAdmin && (systemSettings?.hiddenMenus || []).includes(tab)) {
+              setAccessModalImg(getRandomAccessModalImg());
+              setShowAccessModal(true);
+            } else {
+              setCurrentTab(tab);
+            }
+          }}
           trainer={trainer}
           isAdmin={isAdmin}
           soundEnabled={soundEnabled}

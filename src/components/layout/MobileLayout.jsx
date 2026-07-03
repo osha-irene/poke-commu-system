@@ -104,7 +104,10 @@ export default function MobileLayout({
     }] : []),
   ];
 
-  const handleMenuClick = (tabId) => { setCurrentTab(tabId); setMenuOpen(false); };
+  const handleMenuClick = (tabId) => {
+    setCurrentTab(tabId);
+    setMenuOpen(false);
+  };
 
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);

@@ -5,6 +5,7 @@ import npcBg from '../../assets/members/npcbg.png';
 import { TYPE_COLORS } from '../../constants/pokemon';
 import { getTypeColor } from '../../styles/theme';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
+import { getAbilityKoreanName } from '../../utils/abilityUtils';
 import CachedImage from '../common/CachedImage';
 
 const npcBadgeImages = require.context('../../assets/members/badge', false, /\.png$/);
@@ -167,7 +168,11 @@ const getPokemonTypes = pokemon => {
   return Array.from(new Set(rawTypes.map(type => String(type).trim()).filter(Boolean)));
 };
 
-const getPokemonAbility = pokemon => pokemon?.ability || pokemon?.abilityKo || pokemon?.abilityName || '';
+const getPokemonAbility = pokemon => {
+  const stored = pokemon?.ability || pokemon?.abilityKo || pokemon?.abilityName || '';
+  const koFromEn = pokemon?.abilityEn ? getAbilityKoreanName(pokemon.abilityEn) : null;
+  return koFromEn || stored;
+};
 
 function PkDetailCard({ pokemon, large, isPartner = false }) {
   const types = getPokemonTypes(pokemon);
