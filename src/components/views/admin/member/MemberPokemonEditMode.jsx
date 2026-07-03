@@ -273,18 +273,29 @@ export default function MemberPokemonEditMode({
               </Field>
             )}
 
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={editData.isShiny}
-                onChange={e => setEditData(p => ({ ...p, isShiny: e.target.checked }))}
-                className="accent-yellow-500"
-              />
-              <span className="text-base font-semibold text-gray-700 flex items-center gap-1">
-                <Sparkles size={13} className="text-yellow-500" />
-                이로치
-              </span>
-            </label>
+            <div className="flex flex-wrap items-center gap-4">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={editData.isShiny}
+                  onChange={e => setEditData(p => ({ ...p, isShiny: e.target.checked }))}
+                  className="accent-yellow-500"
+                />
+                <span className="text-base font-semibold text-gray-700 flex items-center gap-1">
+                  <Sparkles size={13} className="text-yellow-500" />
+                  이로치
+                </span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={editData.isPartner || false}
+                  onChange={e => setEditData(p => ({ ...p, isPartner: e.target.checked }))}
+                  className="accent-pink-500"
+                />
+                <span className="text-base font-semibold text-gray-700">파트너</span>
+              </label>
+            </div>
 
             <Field label="체구">
               <div className="flex flex-wrap gap-1">
