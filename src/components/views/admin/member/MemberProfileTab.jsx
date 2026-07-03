@@ -4,6 +4,29 @@ import { Upload, Trash2, X } from 'lucide-react';
 import { getDatabase, ref, update } from 'firebase/database';
 import CachedImage from '../../../common/CachedImage';
 
+const RIGHT_GRADIENT_TAB_OPTIONS = [
+  { key: 'main', label: '메인' },
+  { key: 'text', label: '설정' },
+  { key: 'entry', label: '엔트리' },
+  { key: 'relation', label: '관계' },
+];
+const DEFAULT_RIGHT_GRADIENT_TABS = {
+  main: false,
+  text: true,
+  entry: false,
+  relation: true,
+};
+
+function getInitialRightGradientTabs(member) {
+  if (member?.rightGradientEnabled === false) {
+    return Object.fromEntries(RIGHT_GRADIENT_TAB_OPTIONS.map(({ key }) => [key, false]));
+  }
+  return {
+    ...DEFAULT_RIGHT_GRADIENT_TABS,
+    ...(member?.rightGradientTabs || {}),
+  };
+}
+
 function ImageUploadSlot({ label, description, currentUrl, onUpload, onDelete, uploading }) {
   const inputRef = useRef(null);
 
@@ -138,6 +161,7 @@ function MemberProfileTab({ member, titles = [], onGrantTitle, onRevokeTitle, on
   const [charImageWidth, setCharImageWidth] = useState(member.charImageWidth ?? '');
   const [charImageScrollEnabled, setCharImageScrollEnabled] = useState(Boolean(member.charImageScrollEnabled));
   const [accentColor, setAccentColor] = useState(member.accentColor || '');
+  const [rightGradientTabs, setRightGradientTabs] = useState(() => getInitialRightGradientTabs(member));
   const [saving, setSaving] = useState(false);
 
   const assignedTitles = member.assignedTitles || [];
@@ -179,6 +203,8 @@ function MemberProfileTab({ member, titles = [], onGrantTitle, onRevokeTitle, on
       if (charImageWidth.trim()) updates.charImageWidth = charImageWidth.trim(); else updates.charImageWidth = null;
       updates.charImageScrollEnabled = charImageScrollEnabled;
       updates.accentColor = accentColor || null;
+      updates.rightGradientTabs = rightGradientTabs;
+      updates.rightGradientEnabled = Object.values(rightGradientTabs).some(Boolean);
       await update(ref(db, `members/${member.id}`), updates);
     } finally {
       setSaving(false);
@@ -272,6 +298,23 @@ function MemberProfileTab({ member, titles = [], onGrantTitle, onRevokeTitle, on
               )}
             </div>
             <p className="text-xs text-gray-400 mt-1.5">비워두면 이미지에서 자동 추출.</p>
+            <div className="mt-3">
+              <p className="text-xs font-semibold text-gray-600 mb-2">멤버뷰 우측 그라데이션 표시 탭</p>
+              <div className="grid grid-cols-2 gap-2">
+                {RIGHT_GRADIENT_TAB_OPTIONS.map(({ key, label }) => (
+                  <label key={key} className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(rightGradientTabs[key])}
+                      onChange={e => canEdit && setRightGradientTabs(prev => ({ ...prev, [key]: e.target.checked }))}
+                      disabled={!canEdit}
+                      className="w-4 h-4 accent-indigo-600 disabled:cursor-not-allowed"
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 

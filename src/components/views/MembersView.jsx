@@ -454,6 +454,22 @@ const TABS = [
   // { id: 'extra', label: '추가', Icon: Award }, // 임시 숨김 (뱃지 탭)
   { id: 'relation', label: '관계', Icon: Users },
 ];
+const DEFAULT_RIGHT_GRADIENT_TABS = {
+  main: false,
+  text: true,
+  entry: false,
+  relation: true,
+};
+
+function getRightGradientTabs(member) {
+  if (member?.rightGradientEnabled === false) {
+    return Object.fromEntries(Object.keys(DEFAULT_RIGHT_GRADIENT_TABS).map(key => [key, false]));
+  }
+  return {
+    ...DEFAULT_RIGHT_GRADIENT_TABS,
+    ...(member?.rightGradientTabs || {}),
+  };
+}
 
 function rgbToHsl(r, g, b) {
   r /= 255; g /= 255; b /= 255;
@@ -935,6 +951,35 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     0.587 * selectedAccent[1] +
     0.114 * selectedAccent[2]
   ) > 165 ? '#151515' : '#fff';
+  const rightGradientTabs = getRightGradientTabs(member);
+  const shouldShowRightGradient = Boolean(rightGradientTabs[tab]);
+  const textEditFieldStyle = {
+    display: 'block',
+    width: '100%',
+    resize: 'none',
+    border: `1px solid rgba(${selectedAccentRgb}, 0.24)`,
+    outline: 'none',
+    background: 'rgba(255,255,255,0.86)',
+    borderRadius: 8,
+    padding: '10px 14px',
+    boxSizing: 'border-box',
+    boxShadow: `inset 0 1px 2px rgba(0,0,0,0.06), 0 0 0 2px rgba(${selectedAccentRgb}, 0.06)`,
+    fontFamily: 'inherit',
+    overflow: 'hidden',
+    minHeight: 48,
+  };
+  const partnerEditFieldStyle = {
+    width: '100%',
+    border: '1px solid rgba(255,255,255,0.42)',
+    outline: 0,
+    padding: '10px 12px',
+    boxSizing: 'border-box',
+    resize: 'none',
+    overflow: 'hidden',
+    background: 'rgba(255,255,255,0.16)',
+    borderRadius: 8,
+    boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.12)',
+  };
   const renderMarkedText = (text, markRgb = selectedAccentRgb) => {
     const parts = text.split(/(\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*|\|[^|]+\|)/g);
     if (parts.length === 1) return text || null;
@@ -964,6 +1009,14 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     );
     return <p key={j} style={{ margin: 0, marginBottom: '0.7em', textIndent: '0.5em' }}>{renderMarkedText(line, markRgb) || ' '}</p>;
   };
+  const renderPartnerMemoText = (text) => (
+    String(text || '').split('\n').map((line, index) => (
+      <React.Fragment key={index}>
+        {index > 0 && <br />}
+        {renderMarkedText(line, selectedAccentRgb) || ' '}
+      </React.Fragment>
+    ))
+  );
 
   const handleImgLoad = () => {
     setImgLoaded(true);
@@ -1311,6 +1364,23 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
       </div>
 
 
+      {shouldShowRightGradient && (
+        <div
+          className="rmv-text-bg-reveal"
+          style={{
+            position: 'fixed',
+            top: 0,
+            bottom: 0,
+            left: '22%',
+            right: 0,
+            overflow: 'hidden',
+            zIndex: MEMBER_DETAIL_UI_Z_INDEX - 1,
+            background: 'linear-gradient(to right, transparent 0%, rgba(255,255,255,0.85) 12%, rgba(255,255,255,0.97) 28%, rgba(255,255,255,0.97) 100%)',
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+
 
       {/* 설정 탭 — 스크롤 컨테이너 (오버레이에 붙음) */}
       {tab === 'text' && (() => {
@@ -1320,7 +1390,6 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
         const renderTextLine = (line, j) => renderDetailTextLine(line, j, selectedAccentRgb);
         return (
           <>
-            <div className="rmv-text-bg-reveal" style={{ position: 'fixed', top: 0, bottom: 0, left: '22%', right: 0, overflow: 'hidden', zIndex: MEMBER_DETAIL_UI_Z_INDEX - 1, background: 'linear-gradient(to right, transparent 0%, rgba(255,255,255,0.85) 12%, rgba(255,255,255,0.97) 28%, rgba(255,255,255,0.97) 100%)', pointerEvents: 'none' }} />
             <div
               className="rmv-text-scroll"
               style={{ position: 'absolute', top: 0, left: '30%', right: 0, bottom: 0, overflowY: 'auto', overflowX: 'hidden', zIndex: MEMBER_DETAIL_UI_Z_INDEX, '--rmv-accent-base': selectedAccentRgb }}
@@ -1341,7 +1410,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                             value={keywordTexts[i]}
                             ref={el => { if (el && !el.dataset.initialized) { el.dataset.initialized = '1'; el.style.height = 'auto'; requestAnimationFrame(() => { el.style.height = el.scrollHeight + 'px'; }); el.focus({ preventScroll: true }); } }}
                             onChange={e => { setKeywordTexts(prev => { const n = [...prev]; n[i] = e.target.value; return n; }); const el = e.target; const sc = el.closest('.rmv-text-scroll'); const sv = sc?.scrollTop; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; if (sc != null && sv != null) sc.scrollTop = sv; }}
-                            style={{ display: 'block', width: '100%', resize: 'none', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.6)', borderRadius: 8, padding: '10px 14px', fontSize: 15, color: '#333', lineHeight: 1.75, fontFamily: 'inherit', overflow: 'hidden', minHeight: 48 }}
+                            style={{ ...textEditFieldStyle, fontSize: 15, color: '#333', lineHeight: 1.75 }}
                           />
                           <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
                             <button onClick={() => saveKeywordText(i)} disabled={kwSaving}
@@ -1375,7 +1444,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                         value={etcText}
                         ref={el => { if (el && !el.dataset.initialized) { el.dataset.initialized = '1'; el.style.height = 'auto'; requestAnimationFrame(() => { el.style.height = el.scrollHeight + 'px'; }); el.focus({ preventScroll: true }); } }}
                         onChange={e => { setEtcText(e.target.value); const el = e.target; const sc = el.closest('.rmv-text-scroll'); const sv = sc?.scrollTop; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; if (sc != null && sv != null) sc.scrollTop = sv; }}
-                        style={{ display: 'block', width: '100%', resize: 'none', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.6)', borderRadius: 8, padding: '10px 14px', fontSize: 15, color: '#333', lineHeight: 1.75, fontFamily: 'inherit', overflow: 'hidden', minHeight: 48 }}
+                        style={{ ...textEditFieldStyle, fontSize: 15, color: '#333', lineHeight: 1.75 }}
                       />
                       <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
                         <button onClick={saveEtcText} disabled={etcSaving}
@@ -1791,13 +1860,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                     placeholder="파트너에 대한 설명을 입력하세요."
                     disabled={partnerTextSaving}
                     style={{
-                      width: '100%',
-                      border: 0,
-                      outline: 0,
-                      padding: 0,
-                      resize: 'none',
-                      overflow: 'hidden',
-                      background: 'transparent',
+                      ...partnerEditFieldStyle,
                       color: partnerTextColor,
                       caretColor: partnerTextColor,
                       fontSize: 14,
@@ -1817,7 +1880,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                       wordBreak: 'keep-all',
                     }}
                   >
-                    {savedPartnerText}
+                    {renderPartnerMemoText(savedPartnerText)}
                   </div>
                 ) : (
                   <div style={{ color: `rgba(255,255,255,0.5)`, fontSize: 13, fontWeight: 500 }}>
@@ -1846,7 +1909,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                     ref={el => { noteRef.current = el; if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; el.focus({ preventScroll: true }); } }}
                     value={note}
                     onChange={e => { setNote(e.target.value); if (noteRef.current) { noteRef.current.style.height = 'auto'; noteRef.current.style.height = noteRef.current.scrollHeight + 'px'; } }}
-                    style={{ width: '100%', resize: 'none', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(6px)', borderRadius: 10, padding: '10px 12px', fontSize: 15, color: '#333', lineHeight: 1.6, fontFamily: 'inherit', zIndex: 5, overflow: 'hidden', minHeight: 48, display: 'block' }}
+                    style={{ ...textEditFieldStyle, backdropFilter: 'blur(6px)', borderRadius: 10, padding: '10px 12px', fontSize: 15, color: '#333', lineHeight: 1.6, zIndex: 5 }}
                   />
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button onClick={saveNote} disabled={noteSaving}
@@ -2094,20 +2157,20 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                           onChange={e => setRelationDraft(d => ({ ...d, charName: e.target.value }))}
                           placeholder="캐릭터 이름"
                           autoFocus
-                          style={{ display: 'block', width: '100%', marginBottom: 8, padding: '6px 10px', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.7)', borderRadius: 7, fontSize: 15, fontWeight: 700, fontFamily: 'inherit' }}
+                          style={{ display: 'block', width: '100%', marginBottom: 8, padding: '7px 10px', border: `1px solid rgba(${selectedAccentRgb}, 0.22)`, outline: 'none', background: 'rgba(255,255,255,0.86)', borderRadius: 7, boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)', fontSize: 15, fontWeight: 700, fontFamily: 'inherit' }}
                         />
                         <input
                           value={relationDraft.intro}
                           onChange={e => setRelationDraft(d => ({ ...d, intro: e.target.value }))}
                           placeholder="한줄소개"
-                          style={{ display: 'block', width: '100%', marginBottom: 8, padding: '6px 10px', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.7)', borderRadius: 7, fontSize: 13, fontFamily: 'inherit' }}
+                          style={{ display: 'block', width: '100%', marginBottom: 8, padding: '7px 10px', border: `1px solid rgba(${selectedAccentRgb}, 0.22)`, outline: 'none', background: 'rgba(255,255,255,0.86)', borderRadius: 7, boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)', fontSize: 13, fontFamily: 'inherit' }}
                         />
                         <textarea
                           value={relationDraft.memo}
                           onChange={e => setRelationDraft(d => ({ ...d, memo: e.target.value }))}
                           placeholder="메모"
                           rows={3}
-                          style={{ display: 'block', width: '100%', resize: 'none', padding: '6px 10px', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.7)', borderRadius: 7, fontSize: 14, fontFamily: 'inherit', lineHeight: 1.65 }}
+                          style={{ display: 'block', width: '100%', resize: 'none', padding: '8px 10px', border: `1px solid rgba(${selectedAccentRgb}, 0.22)`, outline: 'none', background: 'rgba(255,255,255,0.86)', borderRadius: 7, boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)', fontSize: 14, fontFamily: 'inherit', lineHeight: 1.65 }}
                         />
                         <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
                           <button
@@ -2177,20 +2240,20 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                       onChange={e => setRelationDraft(d => ({ ...d, charName: e.target.value }))}
                       placeholder="캐릭터 이름"
                       autoFocus
-                      style={{ display: 'block', width: '100%', marginBottom: 8, padding: '6px 10px', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.7)', borderRadius: 7, fontSize: 15, fontWeight: 700, fontFamily: 'inherit' }}
+                      style={{ display: 'block', width: '100%', marginBottom: 8, padding: '7px 10px', border: `1px solid rgba(${selectedAccentRgb}, 0.22)`, outline: 'none', background: 'rgba(255,255,255,0.86)', borderRadius: 7, boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)', fontSize: 15, fontWeight: 700, fontFamily: 'inherit' }}
                     />
                     <input
                       value={relationDraft.intro}
                       onChange={e => setRelationDraft(d => ({ ...d, intro: e.target.value }))}
                       placeholder="한줄소개"
-                      style={{ display: 'block', width: '100%', marginBottom: 8, padding: '6px 10px', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.7)', borderRadius: 7, fontSize: 13, fontFamily: 'inherit' }}
+                      style={{ display: 'block', width: '100%', marginBottom: 8, padding: '7px 10px', border: `1px solid rgba(${selectedAccentRgb}, 0.22)`, outline: 'none', background: 'rgba(255,255,255,0.86)', borderRadius: 7, boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)', fontSize: 13, fontFamily: 'inherit' }}
                     />
                     <textarea
                       value={relationDraft.memo}
                       onChange={e => setRelationDraft(d => ({ ...d, memo: e.target.value }))}
                       placeholder="메모"
                       rows={3}
-                      style={{ display: 'block', width: '100%', resize: 'none', padding: '6px 10px', border: 'none', outline: 'none', background: 'rgba(255,255,255,0.7)', borderRadius: 7, fontSize: 14, fontFamily: 'inherit', lineHeight: 1.65 }}
+                      style={{ display: 'block', width: '100%', resize: 'none', padding: '8px 10px', border: `1px solid rgba(${selectedAccentRgb}, 0.22)`, outline: 'none', background: 'rgba(255,255,255,0.86)', borderRadius: 7, boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)', fontSize: 14, fontFamily: 'inherit', lineHeight: 1.65 }}
                     />
                     <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
                       <button
