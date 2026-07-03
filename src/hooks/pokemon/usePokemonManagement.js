@@ -4,6 +4,7 @@ import { ref, get, update } from 'firebase/database';
 import { database } from '../../firebase';
 import { getPokemonLearnset } from '../../utils/pokemonLearnsets';
 import { getRequiredExpForLevel } from '../../utils/experience';
+import { getAbilityEnglishName } from '../../utils/abilityUtils';
 import itemsData from '../../data/items.json';
 
 const getItemList = (items) => {
@@ -89,8 +90,8 @@ const usePokemonManagement = (
     type2: template.type2 || null,
     abilities: template.abilities || pokemon.abilities,
     abilitiesEn: template.abilitiesEn || pokemon.abilitiesEn,
-    ability: template.abilities?.[0] || pokemon.ability,
-    abilityEn: template.abilitiesEn?.[0] || pokemon.abilityEn,
+    ability: pokemon.ability || template.abilities?.[0],
+    abilityEn: getAbilityEnglishName(pokemon.ability) || pokemon.abilityEn || template.abilitiesEn?.[0],
     hiddenAbility: template.hiddenAbility ?? pokemon.hiddenAbility,
     hiddenAbilityEn: template.hiddenAbilityEn ?? pokemon.hiddenAbilityEn,
     baseHp: template.baseHp ?? pokemon.baseHp,

@@ -642,6 +642,7 @@ export const useAdminMembers = (
     const finalAbility = ability || (pokemonTemplate.abilities && pokemonTemplate.abilities.length > 0 ? 
       pokemonTemplate.abilities[0] : '없음');
     const finalAbilityEn = getAbilityEnglishName(finalAbility) || pokemonTemplate.abilitiesEn?.[0] || null;
+    const isHiddenAbility = Boolean(pokemonTemplate.hiddenAbilityEn && finalAbilityEn === pokemonTemplate.hiddenAbilityEn);
     
     const baseHeight = pokemonTemplate.height || 10;
     const baseWeight = pokemonTemplate.weight || 100;
@@ -677,7 +678,7 @@ export const useAdminMembers = (
       gender: finalGender,
       ability: finalAbility,
       abilityEn: finalAbilityEn,
-      isHiddenAbility: false,
+      isHiddenAbility,
       height: parseFloat(finalHeight.toFixed(1)),
       weight: parseFloat(finalWeight.toFixed(1)),
       sizeRank,

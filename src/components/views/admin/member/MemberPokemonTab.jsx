@@ -12,6 +12,7 @@ import { getPokemonGenderOptions } from '../../../../utils/pokemonGender';
 import { getPokemonDisplayParts } from '../../../../utils/pokemonDisplayName';
 import evolutionsData from '../../../../data/evolutions.json';
 import { getBaseStatPatch } from '../../../../utils/pokemonBaseStats';
+import { getAbilityEnglishName } from '../../../../utils/abilityUtils';
 
 const emptyEffort = { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 };
 const emptyCondition = { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 };
@@ -242,6 +243,7 @@ function MemberPokemonTab({
     if (!selectedPokemon) return;
     const pokemonTemplate = getPokemonTemplate(selectedPokemon);
     const finalAbility = editData.ability || pokemonTemplate?.abilitiesEn?.[0] || selectedPokemon.abilityEn || selectedPokemon.ability || '';
+    const finalAbilityEn = getAbilityEnglishName(finalAbility) || finalAbility || '';
 
     let finalSpriteUrl = editData.spriteUrl;
     if (editData.isShiny !== selectedPokemon.isShiny) {
@@ -263,7 +265,8 @@ function MemberPokemonTab({
       isShiny: editData.isShiny,
       heldItem: editData.heldItem,
       ability: finalAbility,
-      isHiddenAbility: Boolean(pokemonTemplate?.hiddenAbilityEn && finalAbility === pokemonTemplate.hiddenAbilityEn),
+      abilityEn: finalAbilityEn,
+      isHiddenAbility: Boolean(pokemonTemplate?.hiddenAbilityEn && finalAbilityEn === pokemonTemplate.hiddenAbilityEn),
       friendship: editData.friendship,
        gender: editData.gender, 
     sizeRank: editData.sizeRank,  
