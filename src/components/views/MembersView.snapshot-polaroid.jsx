@@ -37,7 +37,6 @@ const getMemberList = (members) =>
     });
 
 const getParty = m => (m?.caughtPokemon || []).filter(Boolean).slice(0, 6);
-const getPartner = m => { const p = getParty(m); return p.find(x => x.isPartner) || p[0] || null; };
 const getFaceImg = m => m?.profileImageThumb || m?.profileImage || m?.profileImageFull || m?.profileImageUrl || '';
 const getFullImg     = m => m?.profileImageFull || m?.profileImage || m?.profileImageUrl || '';
 
@@ -205,36 +204,6 @@ function CatchphraseDisplay({ value, color }) {
 }
 
 /* ── 포켓몬 슬롯 ── */
-function PartySlot({ pokemon, large }) {
-  if (!pokemon) return (
-    <div className={`rounded-xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center ${large ? 'w-20 h-20' : 'w-20 h-20'}`}>
-      <span className="text-gray-300 text-xs">—</span>
-    </div>
-  );
-  const icon = getPokemonLocalIconUrl(pokemon);
-  const types = (Array.isArray(pokemon.types) ? pokemon.types : [pokemon.type]).filter(Boolean);
-  return (
-    <div className={`rounded-xl bg-white border-2 border-gray-100 shadow-sm flex flex-col items-center justify-center gap-1 p-1 ${large ? 'w-20 h-20' : 'w-14 h-14'}`}
-      title={getPokemonName(pokemon)}>
-      {icon ? (
-        <div style={{
-          width: (large ? 48 : 36) / 2,
-          height: large ? 48 : 36,
-          backgroundImage: `url(${icon})`,
-          backgroundRepeat: 'no-repeat',
-          backgroundSize: `auto ${large ? 48 : 36}px`,
-          backgroundPosition: 'left center',
-          imageRendering: 'pixelated',
-          flexShrink: 0,
-        }} />
-      ) : (
-        <div className="w-8 h-8 rounded-full bg-gray-200" />
-      )}
-      {large && <span className="text-xs text-gray-500 truncate w-full text-center">{getPokemonName(pokemon)}</span>}
-    </div>
-  );
-}
-
 /* ── 멤버 목록 카드 ── */
 function MemberCard({ member, titles, onClick }) {
   const faceImg = getFaceImg(member);
@@ -566,7 +535,6 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
 
   const party = getParty(member);
   const partner = party.find(p => p?.isPartner) || member.partnerPokemon || party[0] || null;
-  const entry = party.filter(p => p !== partner);
 
   const accentRgb = accent ? `${accent[0]},${accent[1]},${accent[2]}` : '80,120,200';
   const selectedAccent = getSelectedAccentColor(accent);
@@ -1328,7 +1296,7 @@ function MemberDetail({ member, titles, onBack, onTabChange }) {
 /* ── 메인 ── */
 export default function MembersView({ members = {}, isLoading, currentUserId, titles = [], onSwitchTab }) {
   const [selected, setSelected] = useState(null);
-  const [transitioning, setTransitioning] = useState(false);
+  const [, setTransitioning] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [activeTab, setActiveTab] = useState('main');

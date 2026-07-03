@@ -2,7 +2,7 @@
 // theme.js 에 있던 헬퍼 함수들 — 색상 토큰을 받아 값을 반환합니다
 // 컴포넌트에서 직접 import해서 사용
 
-import { POKEMON_TYPES, ITEM_CATEGORIES, BRAND, BUTTON, CARD, BADGE, INPUT } from './index';
+import { POKEMON_TYPES, ITEM_CATEGORIES, BUTTON, CARD, BADGE, INPUT } from './index';
 
 // ===== 포켓몬 타입 색상 =====
 export const getTypeColor = (typeKr) => {

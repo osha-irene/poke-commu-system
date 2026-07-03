@@ -5,15 +5,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus } from 'lucide-react';
 
-const DAYS = [
-  { id: 'monday', name: '월요일' },
-  { id: 'tuesday', name: '화요일' },
-  { id: 'wednesday', name: '수요일' },
-  { id: 'thursday', name: '목요일' },
-  { id: 'friday', name: '금요일' },
-  { id: 'saturday', name: '토요일' },
-  { id: 'sunday', name: '일요일' }
-];
 
 export default function AddItemSettingsModal({ 
   show, 
@@ -21,7 +12,6 @@ export default function AddItemSettingsModal({
   onClose, 
   onAdd
 }) {
-  const [itemType] = useState('permanent');
   const [price, setPrice] = useState(0);
   const [stock, setStock] = useState(99);
 

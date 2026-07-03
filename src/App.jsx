@@ -38,9 +38,9 @@ import { PokemonProvider } from './contexts/PokemonContext';
 import { GameProvider } from './contexts/GameContext';
 import BattleView from './components/views/BattleView';
 import MaintenanceScreen from './components/layout/MaintenanceScreen';
-import { mainNewsButton, doctorWpenImage, pokemonIcon, logoText, logoCompass, forestBg, forestBgBlurred, mainNpcPanel, loginMemberImg, loginTitle, loginBag, loginEntry, loginReport, loginLogout, loginIcon1, loginIcon2, loginIcon3, loginIcon4 } from './assets/images';
+import { mainNewsButton, doctorWpenImage, logoText, logoCompass, forestBgBlurred, mainNpcPanel, loginMemberImg, loginTitle, loginBag, loginEntry, loginReport, loginLogout, loginIcon1, loginIcon2, loginIcon3, loginIcon4 } from './assets/images';
 import { getTitleById } from './data/titles';
-import { User, Lock, LogOut, Music, X, Play, Pause, SkipBack, SkipForward, Volume2, Package, Gift, ChefHat, Sparkles } from 'lucide-react';
+import { User, Lock, Music, X, Play, Pause, SkipBack, SkipForward, Volume2, ChefHat, Sparkles } from 'lucide-react';
 import { DAILY_ATTENDANCE_EXP, getKoreaDateKey } from './utils/experience';
 import { getPokemonLocalIconUrl } from './utils/pokemonIconUtils';
 import CachedImage from './components/common/CachedImage';
@@ -404,13 +404,6 @@ function toDateKey(y, m, d) {
   return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }
 
-function isColorLight(hex) {
-  const c = hex.replace('#', '');
-  const r = parseInt(c.slice(0, 2), 16);
-  const g = parseInt(c.slice(2, 4), 16);
-  const b = parseInt(c.slice(4, 6), 16);
-  return (r * 299 + g * 587 + b * 114) / 1000 > 128;
-}
 
 function darkenHex(hex, amount = 40) {
   const c = hex.replace('#', '');
@@ -1094,113 +1087,7 @@ function MobileHomeDashboard({
   );
 }
 
-function MobileScrollIndicator() {
-  const [indicator, setIndicator] = useState({
-    canScroll: false,
-    isVisible: false,
-    top: 0,
-    height: 48
-  });
 
-  useEffect(() => {
-    let frameId = 0;
-    let hideTimer = 0;
-
-    const updateIndicator = (show = false) => {
-      window.cancelAnimationFrame(frameId);
-      frameId = window.requestAnimationFrame(() => {
-        const doc = document.documentElement;
-        const scrollableHeight = Math.max(0, doc.scrollHeight - window.innerHeight);
-        const canScroll = scrollableHeight > 2;
-
-        if (!canScroll) {
-          setIndicator({ canScroll: false, isVisible: false, top: 0, height: 48 });
-          return;
-        }
-
-        const trackInset = 14;
-        const trackHeight = Math.max(1, window.innerHeight - trackInset * 2);
-        const thumbHeight = Math.max(42, Math.min(trackHeight, (window.innerHeight / doc.scrollHeight) * trackHeight));
-        const maxTravel = Math.max(0, trackHeight - thumbHeight);
-        const progress = Math.min(1, Math.max(0, window.scrollY / scrollableHeight));
-
-        setIndicator({
-          canScroll: true,
-          isVisible: show,
-          top: trackInset + progress * maxTravel,
-          height: thumbHeight
-        });
-      });
-    };
-
-    const revealIndicator = () => {
-      updateIndicator(true);
-      window.clearTimeout(hideTimer);
-      hideTimer = window.setTimeout(() => updateIndicator(false), 850);
-    };
-
-    updateIndicator(false);
-    window.addEventListener('scroll', revealIndicator, { passive: true });
-    window.addEventListener('resize', revealIndicator);
-
-    return () => {
-      window.cancelAnimationFrame(frameId);
-      window.clearTimeout(hideTimer);
-      window.removeEventListener('scroll', revealIndicator);
-      window.removeEventListener('resize', revealIndicator);
-    };
-  }, []);
-
-  if (!indicator.canScroll) return null;
-
-  return (
-    <div className={`mobile-scroll-indicator ${indicator.isVisible ? 'is-visible' : ''}`} aria-hidden="true">
-      <span style={{ height: `${indicator.height}px`, transform: `translateY(${indicator.top}px)` }} />
-    </div>
-  );
-}
-
-function MobilePublicHomeDashboard({ members = {}, scheduleEvents = [], onLogin }) {
-  const [loginUserId, setLoginUserId] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    await onLogin?.(loginUserId, loginPassword);
-  };
-
-  return (
-    <div className="mobile-public-home">
-      <MobileHomeDashboard members={members} scheduleEvents={scheduleEvents} />
-
-      <form className="mobile-home-login" onSubmit={handleSubmit}>
-        <label>
-          <User size={17} />
-          <input
-            type="text"
-            value={loginUserId}
-            onChange={(event) => setLoginUserId(event.target.value)}
-            autoComplete="username"
-            placeholder="아이디"
-            required
-          />
-        </label>
-        <label>
-          <Lock size={17} />
-          <input
-            type="password"
-            value={loginPassword}
-            onChange={(event) => setLoginPassword(event.target.value)}
-            autoComplete="current-password"
-            placeholder="비밀번호"
-            required
-          />
-        </label>
-        <button type="submit">LOGIN</button>
-      </form>
-    </div>
-  );
-}
 
 function DesktopLoginGate({ onLogin, banner }) {
   const [loginUserId, setLoginUserId] = useState('');
@@ -1498,7 +1385,6 @@ export default function App() {
     pokemonLearnsets,
     maintenanceMode,
     maintenanceScheduledAt,
-    scheduleMaintenanceMode,
     cancelScheduledMaintenance,
     systemSettings,
     applyLoot,
@@ -1512,22 +1398,11 @@ export default function App() {
     increaseEffort,
     camping,
     titles,
-    updateMemberTitle,
     updateSelfTitle,
   } = gameState;
   const isFeaturePage = currentTab !== 'home';
   const isMembersPage = currentTab === 'members';
   const isTopMenuPage = ['notice', 'world', 'system', 'qna'].includes(currentTab);
-  const prevTabRef = React.useRef(currentTab);
-  const tabDirection = React.useMemo(() => {
-    const TAB_ORDER = ['members', 'npcs'];
-    const prev = prevTabRef.current;
-    const prevIdx = TAB_ORDER.indexOf(prev);
-    const currIdx = TAB_ORDER.indexOf(currentTab);
-    prevTabRef.current = currentTab;
-    if (prevIdx === -1 || currIdx === -1) return 'forward';
-    return currIdx > prevIdx ? 'forward' : 'reverse';
-  }, [currentTab]);
   const hasContentSurface = isFeaturePage && !isMembersPage && currentTab !== 'profile' && currentTab !== 'npcs' && currentTab !== 'map' && (isMobile || currentTab !== 'shop');
   const isCoreLoading = isAuthLoading || isMembersLoading;
   const [isInitialPageReady, setIsInitialPageReady] = useState(false);
@@ -1567,7 +1442,7 @@ export default function App() {
   const [showAccessModal, setShowAccessModal] = useState(false);
   const getRandomAccessModalImg = () =>
     Math.random() < 0.5 ? '/pre-popup1.png' : '/pre-popup2.png';
-  const [accessModalImg, setAccessModalImg] = useState(getRandomAccessModalImg);
+  const [setAccessModalImg] = useState(getRandomAccessModalImg);
   const todayAttendanceKey = getKoreaDateKey();
   const attendanceClaimed = currentUser?.lastAttendanceDate === todayAttendanceKey;
 

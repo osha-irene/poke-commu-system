@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import {
   getAllMembers,
-  saveMember,
   saveGameConfig,
   saveShopData,
   createPost,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Heart, Egg } from 'lucide-react';
-import { getTypeColor, POKEBALL_LIST } from '../../../styles/theme';
+import { POKEBALL_LIST } from '../../../styles/theme';
 import { getPokemonLocalIconUrl } from '../../../utils/pokemonIconUtils';
 import { getPokemonDisplayParts } from '../../../utils/pokemonDisplayName';
 
@@ -137,8 +137,6 @@ export function PartnerSlot({
   );
   const displayNumber = pokedexEntry?.newNumber || pokemon.originalNumber || pokemon.number;
 
-  const typeColors = getTypeColor(pokemon.type);
-  const type2Colors = pokemon.type2 ? getTypeColor(pokemon.type2) : null;
   
   const imageUrl = getLocalIconUrl(pokemon, allPokemonMaster);
   const ballImage = getBallImageUrl(pokemon, allItems);  // ⭐ 함수 호출
@@ -314,8 +312,6 @@ export default function PartySlot({
   const displayNumber = pokedexEntry?.newNumber || pokemon.originalNumber || pokemon.number;
 
 
-  const typeColors = getTypeColor(pokemon.type);
-  const type2Colors = pokemon.type2 ? getTypeColor(pokemon.type2) : null;
   
   const imageUrl = getLocalIconUrl(pokemon, allPokemonMaster);
   const ballImage = getBallImageUrl(pokemon, allItems);  // ⭐ 함수 호출

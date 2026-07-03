@@ -1,7 +1,7 @@
 // src/components/layout/MobileLayout.jsx
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  X, Map, Users, Bot, BookOpen, Smile, Package,
+  X, Map, Users, BookOpen, Smile, Package,
   ShoppingBag, ChefHat, User, MessageSquare, Settings,
   LogOut, Footprints, Coins, Tent, Home, Sword, ChevronRight
 } from 'lucide-react';
@@ -59,22 +59,6 @@ export default function MobileLayout({
     lastScrollYRef.current = window.scrollY;
   }, [currentTab]);
 
-  const titleMap = {
-    home:    { label: '메인',     icon: Home },
-    map:     { label: '지도',     icon: Map },
-    members: { label: '멤버',     icon: Users },
-    npcs:    { label: 'NPC',      icon: Bot },
-    pokedex: { label: '도감',     icon: BookOpen },
-    pokemon: { label: '포켓몬',   icon: Smile },
-    items:   { label: '아이템',   icon: Package },
-    shop:    { label: '상점',     icon: ShoppingBag },
-    camping: { label: '캠핑',     icon: Tent },
-    cooking: { label: '요리',     icon: ChefHat },
-    profile: { label: '트레이너', icon: User },
-    qna:     { label: 'Q&A',      icon: MessageSquare },
-    admin:   { label: '관리자',   icon: Settings },
-    battle:  { label: '배틀',     icon: Sword },
-  };
 
   const bottomNavItems = [
     { id: 'pokemon', icon: null, pokeball: true },

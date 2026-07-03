@@ -29,11 +29,10 @@ export default function LearnMoveModal({
   onSkip,
   onCancel
 }) {
-  const [selectedNewMove, setSelectedNewMove] = useState(learnableMoves[0]);
+  const [selectedNewMove] = useState(learnableMoves[0]);
   const [selectedOldMove, setSelectedOldMove] = useState(null);
 
   const isFull = currentMoves.length >= 4;
-  const hasSpace = currentMoves.length < 4;
 
   // 첫 번째 배울 기술 (한글 변환)
   const newMove = selectedNewMove ? {

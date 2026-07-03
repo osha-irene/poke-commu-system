@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { ChevronDown, ChevronLeft, ChevronRight, Footprints, MapPin, Trees, Mountain, Waves } from 'lucide-react';
+import { ChevronDown, ChevronRight, Footprints, MapPin, Trees, Mountain, Waves } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import mapBg from '../../assets/map/map.png';
 import pokeballImg from '../../assets/map/pokeball.png';
@@ -44,11 +44,6 @@ const toDexNumber = (value) => {
   return Number.isFinite(number) ? number : null;
 };
 
-const getTooltipSpeciesKey = (pokemon = {}) => {
-  const speciesNumber = pokemon.originalNumber || pokemon.displayNumber || pokemon.number;
-  const formGroup = pokemon.regionalForm ? `regional:${pokemon.regionalForm}` : 'base';
-  return `${speciesNumber || pokemon.baseSpecies || pokemon.name || pokemon.id}:${formGroup}`;
-};
 
 // device-map.png 흰색 픽셀 영역 (1322×908 기준, PowerShell로 측정)
 // x=206~1115, y=153~808 → 909×655 px
@@ -170,21 +165,6 @@ export default function MapView({
     ));
   };
 
-  const getPlacePokemonList = (place = {}) => {
-    const pokemonIds = Array.isArray(place.pokemons) ? place.pokemons : [];
-    const pokemonBySpecies = new Map();
-    pokemonIds.forEach(pokemonId => {
-      const pokemon = allPokemonMaster.find(c =>
-        String(c.number) === String(pokemonId) ||
-        String(c.originalNumber) === String(pokemonId) ||
-        c.id === pokemonId
-      );
-      if (!pokemon) { pokemonBySpecies.set(`unknown:${pokemonId}`, '??'); return; }
-      const key = getTooltipSpeciesKey(pokemon);
-      if (!pokemonBySpecies.has(key)) pokemonBySpecies.set(key, isPokemonUnlocked(pokemon) ? pokemon.name : '??');
-    });
-    return Array.from(pokemonBySpecies.values());
-  };
 
   const handleSelectArea = (area) => {
     const places = Array.isArray(area.places) ? area.places.filter(p => p?.name) : [];
@@ -270,10 +250,7 @@ export default function MapView({
     return pool.filter(p => ids.includes(p.id) || ids.includes(p.number));
   };
 
-  const BROWN = '#3d1a08';
   const BROWN_MUTED = 'rgba(61,26,8,0.55)';
-  const fBold = { fontFamily: 'GmarketSans, sans-serif', fontWeight: 700, color: BROWN };
-  const fMed  = { fontFamily: 'GmarketSans, sans-serif', fontWeight: 500, color: BROWN };
 
   // 첫 번째 지역이 오른쪽에 오도록
   // 5글자 초과 시 줄바꿈 (마지막 줄이 1글자가 되면 한 글자 앞에서 나눔)
@@ -428,44 +405,6 @@ export default function MapView({
   );
 
   /* ── 스크린 내 영역 목록 패널 ── */
-  const AreasPanel = () => {
-    const areas = selectedTownRegions;
-    const accentColor = selectedTown?.color || '#4a9a08';
-    return (
-      <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ background: 'rgba(0,0,0,0.42)', zIndex: 20, padding: 14 }}>
-        <div className="flex items-center gap-2 px-3 py-2 shrink-0" style={{ width: '88%', maxWidth: 520, minHeight: 56, marginBottom: 8, background: 'rgba(255,255,255,0.94)', border: '1px solid rgba(120,180,60,0.22)', borderRadius: 16, backdropFilter: 'blur(12px)' }}>
-          <button onClick={() => setScreenView('map')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: BROWN_MUTED, padding: 4 }}>
-            <ChevronLeft size={16} />
-          </button>
-          <span style={{ ...fBold, fontSize: 13, flex: 1, textAlign: 'center' }}>{selectedTown?.groupName}</span>
-          <div className="w-6" />
-        </div>
-        <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-1.5">
-          {areas.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-xs" style={fMed}>탐험 가능한 구역이 없습니다</div>
-          ) : areas.map(area => {
-            const places = Array.isArray(area.places) ? area.places.filter(p => p?.name) : [];
-            return (
-              <button key={area.id} onClick={() => handleSelectArea(area)}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left hover:opacity-80 active:scale-95 transition-all"
-                style={{ background: 'rgba(255,255,255,0.7)', border: `1px solid rgba(61,26,8,0.12)` }}>
-                {area.isCave ? <Mountain size={13} style={{ color: BROWN_MUTED, flexShrink: 0 }} />
-                  : area.isWaterside ? <Waves size={13} style={{ color: BROWN_MUTED, flexShrink: 0 }} />
-                  : <Trees size={13} style={{ color: BROWN_MUTED, flexShrink: 0 }} />}
-                <span style={{ ...fBold, fontSize: 12, flex: 1 }}>{area.name}</span>
-                {places.length > 0 && (
-                  <span style={{ ...fMed, fontSize: 10, background: accentColor + '22', color: accentColor, padding: '1px 6px', borderRadius: 6 }}>
-                    {places.length}곳
-                  </span>
-                )}
-                <ChevronRight size={12} style={{ color: BROWN_MUTED }} />
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
 
   const TownAreasPanel = () => {
     const areas = selectedTownRegions;
@@ -551,101 +490,6 @@ export default function MapView({
   };
 
   /* ── 스크린 내 상세 뷰 ── */
-  const DetailPanel = () => {
-    if (!selectedArea) return null;
-    const places = Array.isArray(selectedArea.places) ? selectedArea.places.filter(p => p?.name) : [];
-    const accentColor = selectedArea.color || selectedTown?.color || '#4a9a08';
-    const areaPokemon = getDisplayPokemon(selectedArea, selectedPlace);
-    const activeLevel = selectedPlace
-      ? { min: selectedPlace.minLevel ?? selectedArea.minLevel ?? 1, max: selectedPlace.maxLevel ?? selectedArea.maxLevel ?? 20 }
-      : { min: selectedArea.minLevel ?? 1, max: selectedArea.maxLevel ?? 20 };
-    const activeRate = selectedPlace ? (selectedPlace.encounterRate ?? selectedArea.encounterRate) : selectedArea.encounterRate;
-
-    return (
-      <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ background: 'rgba(0,0,0,0.42)', zIndex: 20, padding: 14 }}>
-        <div className="flex items-center gap-2 px-3 py-2 shrink-0" style={{ width: '88%', maxWidth: 520, minHeight: 56, marginBottom: 8, background: 'rgba(255,255,255,0.94)', border: '1px solid rgba(120,180,60,0.22)', borderRadius: 16, backdropFilter: 'blur(12px)' }}>
-          <button onClick={() => setScreenView('areas')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: BROWN_MUTED, padding: 4 }}>
-            <ChevronLeft size={16} />
-          </button>
-          <div style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ ...fBold, fontSize: 13 }}>{selectedArea.name}</div>
-            <div style={{ ...fMed, fontSize: 10, color: BROWN_MUTED }}>{selectedTown?.groupName}</div>
-          </div>
-          <div className="flex flex-col items-end gap-0.5">
-            <span style={{ ...fBold, fontSize: 0, background: accentColor + '22', color: accentColor, padding: '1px 8px', borderRadius: 20 }}>
-              <span style={{ fontSize: 10 }}>Lv.{activeLevel.min}-{activeLevel.max}</span>
-              Lv.{activeLevel.min}–{activeLevel.max}
-            </span>
-            {activeRate !== undefined && (
-              <span style={{ ...fMed, fontSize: 10, color: BROWN_MUTED }}>{activeRate < 1 ? Math.round(activeRate * 100) : activeRate}%</span>
-            )}
-          </div>
-        </div>
-        <div className="overflow-y-auto flex flex-col gap-2" style={{ width: '88%', maxWidth: 520, maxHeight: 'calc(100% - 72px)', padding: '14px 14px 0' }}>
-          {places.length > 0 && (
-            <div className="flex flex-col gap-1">
-              {places.map(place => {
-                const active = selectedPlace?.id === place.id;
-                return (
-                  <button key={place.id} onClick={() => setSelectedPlace(place)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all"
-                    style={{ background: active ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)', border: `1.5px solid ${active ? accentColor : 'rgba(61,26,8,0.12)'}` }}>
-                    {place.isCave ? <Mountain size={12} style={{ color: active ? accentColor : BROWN_MUTED }} />
-                      : place.isWaterside ? <Waves size={12} style={{ color: active ? accentColor : BROWN_MUTED }} />
-                      : <Trees size={12} style={{ color: active ? accentColor : BROWN_MUTED }} />}
-                    <span style={{ ...fBold, fontSize: 12, flex: 1 }}>{place.name}</span>
-                    <span style={{ ...fMed, fontSize: 0, color: BROWN_MUTED }}>
-                      <span style={{ fontSize: 10 }}>Lv.{place.minLevel ?? selectedArea.minLevel ?? 1}-{place.maxLevel ?? selectedArea.maxLevel ?? 20}</span>
-                      Lv.{place.minLevel ?? selectedArea.minLevel ?? 1}–{place.maxLevel ?? selectedArea.maxLevel ?? 20}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-          <button onClick={handleExplore}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl"
-            style={{ ...fBold, fontSize: 0, background: accentColor, color: '#fff', border: 'none', cursor: 'pointer' }}>
-            <Footprints size={14} />
-            <span style={{ fontSize: 12 }}>{selectedPlace ? `${selectedPlace.name} 탐험하기` : '탐험하기'}</span>
-            {selectedPlace ? `${selectedPlace.name} 탐험하기` : '탐험하기'}
-          </button>
-          <div style={{ ...fBold, fontSize: 0, color: BROWN_MUTED, marginTop: 4 }}>
-            <span style={{ fontSize: 10 }}>등장 포켓몬 <span style={{ color: accentColor }}>{areaPokemon.length}</span></span>
-            등장 포켓몬 <span style={{ color: accentColor }}>{areaPokemon.length}</span>
-          </div>
-          {areaPokemon.length === 0 && (
-            <div style={{ ...fMed, fontSize: 11, color: 'rgba(255,255,255,0.65)', textAlign: 'center', padding: '16px 0' }}>등록된 포켓몬이 없습니다</div>
-          )}
-          {areaPokemon.length === 0 ? false && (
-            <div style={{ ...fMed, fontSize: 11, color: BROWN_MUTED, textAlign: 'center', padding: '16px 0' }}>등록된 포켓몬이 없습니다</div>
-          ) : (
-            <div className="grid grid-cols-4 gap-1">
-              {areaPokemon.map(p => {
-                const caught = caughtNumbers.has(Number(p.number));
-                const known = caught || isPokemonUnlocked(p);
-                const iconUrl = known ? getPokemonLocalIconUrl({ ...p, nameEn: p.nameEn || p.name || 'UNKNOWN' }) : null;
-                return (
-                  <div key={p.id || p.number} className="flex flex-col items-center gap-1 rounded-lg py-2 px-1"
-                    style={{ position: 'relative', backgroundColor: 'rgba(255,255,255,0.95)', overflow: 'hidden' }}>
-                    {caught && <img src={pokeballImg} alt="" style={{ position: 'absolute', width: '55%', top: '50%', left: '50%', transform: 'translate(-50%, -53%)', opacity: 0.9, zIndex: 0 }} />}
-                    <div className="w-8 h-8 flex items-center justify-center" style={{ position: 'relative', zIndex: 1 }}>
-                      {iconUrl ? (
-                        <div style={{ width: 32, height: 32, backgroundImage: `url(${iconUrl})`, backgroundSize: '64px 32px', backgroundPosition: 'left center', backgroundRepeat: 'no-repeat', imageRendering: 'pixelated' }} />
-                      ) : <span style={{ color: BROWN_MUTED, fontSize: 18 }}>?</span>}
-                    </div>
-                    <span style={{ ...fMed, fontSize: 9, textAlign: 'center', lineHeight: 1.3, color: known ? BROWN : BROWN_MUTED, fontFamily: "'Mona12 Text KR','Mona12',monospace", position: 'relative', zIndex: 1 }}>
-                      {known ? p.name : '???'}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
 
   const DeviceMobileDetailPanel = () => {
     const scrollRef = React.useRef(null);

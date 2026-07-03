@@ -7,7 +7,7 @@ import MemberPokemonEditMode from './MemberPokemonEditMode';
 import MemberPokemonGiveMode from './MemberPokemonGiveMode';
 import MemberPokemonTransferMode from './MemberPokemonTransferMode';
 import { getLearnsetTmMoves, getPokemonLearnset } from '../../../../utils/pokemonLearnsets';
-import { DEFAULT_IVS, generateRandomIVs, normalizeIVs } from '../../../../utils/pokemonIndividualValues';
+import { DEFAULT_IVS, normalizeIVs } from '../../../../utils/pokemonIndividualValues';
 import { getPokemonGenderOptions } from '../../../../utils/pokemonGender';
 import { getPokemonDisplayParts } from '../../../../utils/pokemonDisplayName';
 import evolutionsData from '../../../../data/evolutions.json';

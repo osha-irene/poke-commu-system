@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ballsImage from '../../assets/shop/balls.png';
 import cramorantImage from '../../assets/shop/cramorant.png';
 import contextImage from '../../assets/shop/context.png';
-import contextCompleteImage from '../../assets/shop/context2.png';
 import skipImage from '../../assets/shop/skip.png';
 import buyImage from '../../assets/shop/buy.png';
 import buy2Image from '../../assets/shop/buy2.png';
@@ -15,12 +14,11 @@ import apricornImage from '../../assets/shop/apricorn.png';
 import apricornActiveImage from '../../assets/shop/apricorn2.png';
 import randomImage from '../../assets/shop/random.png';
 import randomActiveImage from '../../assets/shop/random2.png';
-import { ShoppingCart, Coins, CircleDot, X } from 'lucide-react';
+import { Coins, X } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCalendarDays, faStore, faGift, faStar, faBoxOpen } from '@fortawesome/free-solid-svg-icons';
+import { faCalendarDays, faStore, faGift, faBoxOpen } from '@fortawesome/free-solid-svg-icons';
 import { useGame } from '../../contexts/GameContext';
 import { getItemPocket, POCKET_LABELS } from '../../utils/itemUtils';
-import RandomBoxShop from './RandomBoxShop';
 import useMediaQuery from '../../hooks/useMediaQuery';
 
 const P = {
@@ -201,118 +199,6 @@ export default function ShopView() {
     }
   };
 
-  const renderItemCard = (shopItem) => {
-    const item = getItemDetails(shopItem);
-    if (!item) return null;
-    
-    const isSelected = selectedItem?.itemId === shopItem.itemId;
-    
-    let isSoldOut = false;
-    let remainingStock = shopItem.stock;
-
-    if (shopItem.type === 'daily' || shopItem.type === 'permanent') {
-      isSoldOut = shopItem.stock !== 99 && shopItem.stock <= 0;
-      remainingStock = shopItem.stock;
-    }
-
-    const typeStyles = {
-      rare: {
-        label: '한정',
-        labelBg: 'bg-purple-600',
-        border: 'border-purple-300',
-        bg: 'bg-purple-50',
-        icon: faStar
-      },
-      daily: {
-        label: `${todayNameKo} 한정`,
-        labelBg: 'bg-blue-600',
-        border: 'border-blue-300',
-        bg: 'bg-blue-50',
-        icon: faCalendarDays
-      },
-      permanent: {
-        label: '상시 판매',
-        labelBg: 'bg-green-600',
-        border: 'border-green-300',
-        bg: 'bg-green-50',
-        icon: faBoxOpen
-      }
-    };
-    
-    const style = typeStyles[shopItem.type];
-    const Icon = style.icon;
-    
-    return (
-      <button
-        key={`${shopItem.itemId}-${shopItem.type}`}
-        onClick={() => {
-          if (isSoldOut) return;
-          setSelectedItem({
-            ...item,
-            type: shopItem.type
-          });
-          setQuantity(1);
-        }}
-        disabled={isSoldOut}
-        className={`relative border-2 rounded-lg overflow-hidden transition-all ${
-          isSoldOut 
-            ? 'opacity-50 cursor-not-allowed grayscale border-gray-300 bg-gray-100'
-            : isSelected
-              ? 'border-yellow-400 shadow-lg scale-105 bg-white'
-              : 'border-gray-200 hover:border-gray-300 hover:shadow-md hover:scale-102 bg-white'
-        }`}
-      >
-        {isSoldOut && (
-          <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center z-20">
-            <div className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg transform rotate-12 shadow-xl">
-              {shopItem.type === 'daily' ? '이번 주 품절' : '품절'}
-            </div>
-          </div>
-        )}
-        
-        <div className={`absolute top-0 left-0 ${style.labelBg} text-white text-xs px-3 py-1 font-bold flex items-center gap-1 rounded-br-lg z-10`}>
-          <FontAwesomeIcon icon={Icon} style={{ fontSize: 12 }} />
-          <span>{style.label}</span>
-        </div>
-        
-        <div className={`${style.bg} p-4 pt-8`}>
-          <div className="flex items-start gap-3 mb-3">
-            <div className="w-16 h-16 flex items-center justify-center flex-shrink-0 bg-white rounded-lg">
-              <img 
-                src={item.spriteUrl} 
-                alt={item.name}
-                className="max-w-full max-h-full"
-                style={{ imageRendering: 'pixelated', transform: 'scale(2)' }}
-              />
-            </div>
-            <div className="flex-1 text-left">
-              <div className="font-bold text-sm text-gray-800 mb-1">{item.name}</div>
-              <div className="text-xs text-gray-600 line-clamp-2">{item.effect?.replace(/\n/g, ' ')}</div>
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between pt-3 border-t-2 border-gray-200">
-            <div className="flex items-center gap-1 text-yellow-600 font-bold">
-              <Coins size={16} />
-              {shopItem.price.toLocaleString()}원
-            </div>
-            <div className={`text-xs font-semibold ${
-              isSoldOut ? 'text-red-600' : 'text-gray-600'
-            }`}>
-              {shopItem.stock === 99 
-                ? '무제한' 
-                : isSoldOut 
-                  ? (shopItem.type === 'daily' ? '이번 주 품절' : '품절')
-                  : shopItem.type === 'daily'
-                    ? `이번 주 ${remainingStock}/${shopItem.stock}개`
-                    : `${shopItem.stock}개`
-              }
-            </div>
-          </div>
-        </div>
-      </button>
-    );
-  };
 
   const sceneMessage = '당신을 빤히 바라보고 있다. 당신에게 흥미가 있는 듯 하다.';
   const listButtonMessage = '입에서 무언가 뱉어낼 듯하다.';

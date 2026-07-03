@@ -252,11 +252,6 @@ export default function PokemonSettingsPanel({
   }, [availableFormIds, formWeights, encounterRate]);
 
   // ── 지역 모드: 확률 계산 (가중치 없음, 균등) ──
-  const regionProbabilities = useMemo(() => {
-    const enc = Number(encounterRate || 0);
-    const n = selectedPokemon.length;
-    return selectedPokemon.map(id => ({ id, actualProb: n > 0 ? enc / n : 0 }));
-  }, [selectedPokemon, encounterRate]);
 
   // ─── 지역 모드 핸들러 ───────────────────────────────────────────────────
   const toggleRegionPokemon = (pokemon) => {
@@ -327,12 +322,6 @@ export default function PokemonSettingsPanel({
           allowNationalPokedex: false,
           places: Array.isArray(region.places)
             ? region.places.map(place => {
-                const placeBaseIds = new Set(
-                  (place.pokemons || []).map(fid => {
-                    const p = allPokemonMaster.find(q => q.number === fid);
-                    return p?.originalNumber && p.originalNumber !== fid ? p.originalNumber : fid;
-                  })
-                );
                 return {
                   ...place,
                   pokemons: (place.pokemons || []).filter(fid => {

@@ -1,6 +1,6 @@
 
 // src/components/ui/Input.jsx
-import { getInputClass } from '../../styles/theme';
+import { COMPONENT_STYLES } from '../../styles/theme';
 
 export function Input({ 
   type = 'text',

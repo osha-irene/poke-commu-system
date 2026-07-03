@@ -258,7 +258,6 @@ export default function MobileMapView({
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {towns.map(town => {
           const isOpen      = expandedTown === town.groupId;
-          const rgb         = hexToRgb(town.color);
           const accentColor = town.color || P.accent;
 
           return (

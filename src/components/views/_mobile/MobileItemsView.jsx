@@ -1,8 +1,8 @@
 // src/components/views/_mobile/MobileItemsView.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Sparkles, ShoppingCart, Trash2, Search, Package } from 'lucide-react';
+import { X, Sparkles, ShoppingCart, Trash2, Search } from 'lucide-react';
 import { useGame } from '../../../contexts/GameContext';
-import { getItemPocket, canUseItem, CATEGORIES, getItemIcon, POCKET_LABELS } from '../../../utils/itemUtils';
+import { getItemPocket, canUseItem, CATEGORIES, POCKET_LABELS } from '../../../utils/itemUtils';
 import { isSoyYYNItem } from '../../../utils/specialItemUtils';
 
 const P = {

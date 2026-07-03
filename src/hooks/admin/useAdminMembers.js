@@ -1465,14 +1465,17 @@ export const useAdminMembers = (
     const member = members[memberId];
     if (!member) return;
 
-    const updatedMember = { ...member, hidden: !member.hidden };
+    const nextHidden = !member.hidden;
+    const updatedMember = { ...member, hidden: nextHidden };
 
     try {
-      const { id, ...dataToSave } = updatedMember;
       const memberRef = ref(database, `members/${memberId}`);
-      await set(memberRef, dataToSave);
+      await update(memberRef, { hidden: nextHidden });
 
       setMembers(prev => ({ ...prev, [memberId]: updatedMember }));
+      if (currentUser?.id === memberId) {
+        updateCurrentUser?.({ hidden: nextHidden });
+      }
       console.log('✅ 멤버 숨김 토글:', member.name, updatedMember.hidden);
     } catch (error) {
       console.error('❌ 멤버 숨김 처리 실패:', error);

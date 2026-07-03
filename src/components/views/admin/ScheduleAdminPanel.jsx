@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Sketch from '@uiw/react-color-sketch';
-import { ref, get, set, onValue } from 'firebase/database';
+import { ref, set, onValue } from 'firebase/database';
 import { database } from '../../../firebase';
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토'];

@@ -291,7 +291,6 @@ function translateFaint(parts) {
 function translateSwitch(parts) {
   const player = extractPlayerNum(parts[1]);
   const pokemon = extractPokemonName(parts[1]);
-  const species = parts[2] || '';
   
   return `${player} ${pokemon} 등장!`;
 }

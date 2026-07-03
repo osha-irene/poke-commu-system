@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { useGame } from '../../contexts/GameContext';
 import { ref as dbRef, get, set } from 'firebase/database';
 import { database } from '../../firebase';
-import { User, ChevronRight, Pencil, Image, X, Users, Map, BookOpen, ShoppingBag, UtensilsCrossed, Tent, Calendar, Settings, AlertTriangle, Medal, Wrench, CheckCircle, Info, Trash2, Zap, Wind, Ban, AlertCircle, Bot } from 'lucide-react';
+import { User, ChevronRight, Pencil, Image, X, Users, Map, BookOpen, ShoppingBag, UtensilsCrossed, Tent, Calendar, Settings, AlertTriangle, Medal, Wrench, Info, Trash2, Zap, Wind, Ban, Bot } from 'lucide-react';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import RegionEditModal from '../modals/RegionEditModal';
 import PokedexAdminPanel from './admin/PokedexAdminPanel';

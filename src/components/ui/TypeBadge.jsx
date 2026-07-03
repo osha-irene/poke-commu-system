@@ -1,6 +1,6 @@
 
 // src/components/ui/TypeBadge.jsx
-import { getTypeBadgeClass } from '../../styles/theme';
+import { getTypeColor } from '../../styles/theme';
 
 export function TypeBadge({ type, size = 'sm' }) {
   const colors = getTypeColor(type);

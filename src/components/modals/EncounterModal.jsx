@@ -1,8 +1,6 @@
 ﻿import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import PokemonPreviewInfo from '../views/pokemon/PokemonPreviewInfo';
 import { calculateBallMultiplier, calculateCaptureChance } from '../../utils/catchMechanics';
 import {
-  Footprints,
   Zap,
   Wind,
   CheckCircle2,

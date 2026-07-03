@@ -7,7 +7,6 @@ import {
 import { POKEBALL_LIST } from '../../../../styles/theme';
 import { getPokemonGenderOptions } from '../../../../utils/pokemonGender';
 import { getGenderedSpriteUrl } from '../../../../utils/pokemonImageUtils';
-import { getPokemonDisplayParts } from '../../../../utils/pokemonDisplayName';
 import { getAbilityKoreanName } from '../../../../utils/abilityUtils';
 
 export default function MemberPokemonGiveMode({
@@ -24,16 +23,6 @@ export default function MemberPokemonGiveMode({
   const isGenderless = genderOptions.length === 1 && genderOptions[0] === 'none';
   const genderValue = genderOptions.includes(giveData.gender) ? giveData.gender : 'random';
 
-  const handleSelectPokemon = (pokemon) => {
-    const nextGenderOptions = getPokemonGenderOptions(pokemon);
-    setGiveData(prev => ({
-      ...prev,
-      selectedPokemon: pokemon,
-      nickname: getPokemonDisplayParts(pokemon).name || pokemon.name,
-      selectedMoves: [],
-      gender: nextGenderOptions.length === 1 && nextGenderOptions[0] === 'none' ? 'none' : 'random',
-    }));
-  };
 
   return (
     <div className="bg-white rounded-lg border p-4 space-y-4">

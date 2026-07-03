@@ -42,37 +42,9 @@ const getPokemonSpriteUrl = (number) =>
   `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`;
 
 // ⭐ 여기에 헬퍼 함수들 추가
-const getGenderIcon = (gender) => {
-  if (gender === 'male') return '♂';
-  if (gender === 'female') return '♀';
-  return null;
-};
 
-const getGenderColor = (gender) => {
-  if (gender === 'male') return 'text-blue-600';
-  if (gender === 'female') return 'text-pink-600';
-  return 'text-gray-400';
-};
 
-const getSizeColor = (rank) => {
-  const colors = {
-    'XXXS': 'text-purple-700 font-extrabold',
-    'XXS': 'text-purple-600 font-bold',
-    'XS': 'text-blue-600',
-    'M': 'text-gray-600',
-    'XL': 'text-orange-600',
-    'XXL': 'text-red-600 font-bold',
-    'XXXL': 'text-red-700 font-extrabold'
-  };
-  return colors[rank] || 'text-gray-600';
-};
 
-const getSizeRarity = (rank) => {
-  if (rank === 'XXXS' || rank === 'XXXL') return '✨ 극희귀';
-  if (rank === 'XXS' || rank === 'XXL') return '⭐ 희귀';
-  if (rank === 'XS' || rank === 'XL') return '🔹 레어';
-  return '일반';
-};
 
 const getSizeDescription = (rank, formVariant) => {
   const sizeDesc = {

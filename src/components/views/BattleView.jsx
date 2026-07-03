@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { get, ref, set, update, query, orderByChild, limitToLast } from 'firebase/database';
+import { get, ref, set } from 'firebase/database';
 import { getAuth } from 'firebase/auth';
 import { database } from '../../firebase';
 import { useGame } from '../../contexts/GameContext';
@@ -586,7 +586,7 @@ const BattleLogArchiveModal = ({ logs, onClose, onDelete, loading }) => {
 };
 
 export function BattleView() {
-  const { systemSettings, checkEvolutionOnLevelUp } = useGame();
+  const { checkEvolutionOnLevelUp } = useGame();
   const [battleItemsEnabled, setBattleItemsEnabled] = useState(false);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [loadingPokemon, setLoadingPokemon] = useState({ player1: false, player2: false });
@@ -603,7 +603,6 @@ export function BattleView() {
   const [showBattleLogArchive, setShowBattleLogArchive] = useState(false);
   const [logsLoading, setLogsLoading] = useState(false);
   // 배틀 중 소모된 아이템 추적 (uid → { itemId → count })
-  const [consumedItems, setConsumedItems] = useState({});
 
   useEffect(() => {
     const loadMembers = async () => {

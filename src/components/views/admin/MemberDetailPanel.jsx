@@ -30,10 +30,10 @@ function MemberDetailPanel({ member, onClose }) {
     resetMemberWalkCount,
     toggleAdminStatus,
     toggleMemberNPC,
+    toggleMemberHidden,
     updateMemberNpcSettings,
     updateMemberMoney,
     updateMemberTrainerExp,
-    updateMemberTitle,
     grantMemberTitle,
     revokeMemberTitle,
     uploadMemberImage,
@@ -180,6 +180,7 @@ function MemberDetailPanel({ member, onClose }) {
               onResetWalk={handleResetWalk}
               onToggleAdmin={handleToggleAdmin}
               onToggleNPC={toggleMemberNPC}
+              onToggleHidden={toggleMemberHidden}
               onUpdateNpcSettings={updateMemberNpcSettings}
               onUpdateMoney={updateMemberMoney}
               onUpdateTrainerExp={updateMemberTrainerExp}

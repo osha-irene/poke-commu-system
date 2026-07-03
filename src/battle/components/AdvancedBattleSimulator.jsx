@@ -326,7 +326,6 @@ export function AdvancedBattleSimulator({
     onBattleFinished,
   ]);
 
-  const hasPendingChoice = Boolean(battleState.pendingChoices?.player1 || battleState.pendingChoices?.player2);
   const bothPlayersChosen = Boolean(battleState.pendingChoices?.player1 && battleState.pendingChoices?.player2);
 
   if (battleState.phase === 'team_selection') {

@@ -1,13 +1,12 @@
 ﻿import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronLeft, Award, User, Text, Users } from 'lucide-react';
+import { ChevronLeft, User, Text, Users } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import { getOwnedPokemonSpriteUrl } from '../../utils/pokemonImageUtils';
 import { TYPE_COLORS } from '../../constants/pokemon';
 import { POKEBALL_LIST } from '../../styles/theme';
 import { translateMoveName } from '../../battle/utils/move-translations';
 import movesData from '../../data/moves.json';
-import abilitiesData from '../../data/abilities.json';
 import { getAbilityKoreanName } from '../../utils/abilityUtils';
 import CachedImage from '../common/CachedImage';
 import { preloadDecodedImage } from '../../utils/imageCache';
@@ -41,7 +40,6 @@ const BADGE_CLEANLINESS_MAX = 5;
 const BADGE_CLEANLINESS_PERIOD_MS = 3 * 24 * 60 * 60 * 1000;
 const BADGE_SPARKLE_DURATION_MS = 24 * 60 * 60 * 1000;
 const BADGE_SCRUB_STEP_MS = 2000;
-const BADGE_SCRUB_DURATION_MS = BADGE_SCRUB_STEP_MS * (BADGE_CLEANLINESS_MAX - BADGE_CLEANLINESS_MIN);
 const BADGE_DIRT_OPACITY = {
   1: 0,
   2: 0.08,
@@ -158,7 +156,6 @@ const getMemberList = (members) =>
     });
 
 const getParty = m => (m?.caughtPokemon || []).filter(Boolean).slice(0, 6);
-const getPartner = m => { const p = getParty(m); return p.find(x => x.isPartner) || p[0] || null; };
 const getFaceImg = m => m?.profileImageThumb || m?.profileImage || m?.profileImageFull || m?.profileImageUrl || '';
 const getFullImg     = m => m?.profileImageFull || m?.profileImage || m?.profileImageUrl || '';
 
@@ -233,8 +230,6 @@ const MOVE_TYPE_COLORS = {
   fairy: { bg: '#EE99AC', text: '#fff' },
 };
 
-const abilityList = Array.isArray(abilitiesData) ? abilitiesData : (abilitiesData.abilities || []);
-
 const SIZE_DESC = {
   XXXS: '믿기 어려울 만큼 작은 크기인 것 같다.',
   XXS:  '매우 작은 크기인 것 같다.',
@@ -269,15 +264,6 @@ const getPokemonOriginLines = (p) => {
   }
   return lines;
 };
-const getAbilityDesc = (abilityName) => {
-  if (!abilityName) return null;
-  const n = abilityName.trim().toLowerCase();
-  const found = abilityList.find(a =>
-    a.name?.toLowerCase() === n || a.nameEn?.toLowerCase() === n
-  );
-  return found?.flavorTextKo || found?.shortEffectKo || found?.effectKo || null;
-};
-
 const moveList = Array.isArray(movesData) ? movesData : (movesData.moves || []);
 const moveTypeByKey = new Map(
   moveList.flatMap(move =>
@@ -361,36 +347,6 @@ function CatchphraseDisplay({ value, color }) {
 }
 
 /* ── 포켓몬 슬롯 ── */
-function PartySlot({ pokemon, large }) {
-  if (!pokemon) return (
-    <div className={`rounded-xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center ${large ? 'w-20 h-20' : 'w-20 h-20'}`}>
-      <span className="text-gray-300 text-xs">—</span>
-    </div>
-  );
-  const icon = getPokemonLocalIconUrl(pokemon);
-  const types = (Array.isArray(pokemon.types) ? pokemon.types : [pokemon.type]).filter(Boolean);
-  return (
-    <div className={`rounded-xl bg-white border-2 border-gray-100 shadow-sm flex flex-col items-center justify-center gap-1 p-1 ${large ? 'w-20 h-20' : 'w-14 h-14'}`}
-      title={getPokemonName(pokemon)}>
-      {icon ? (
-        <div style={{
-          width: (large ? 48 : 36) / 2,
-          height: large ? 48 : 36,
-          backgroundImage: `url(${icon})`,
-          backgroundRepeat: 'no-repeat',
-          backgroundSize: `auto ${large ? 48 : 36}px`,
-          backgroundPosition: 'left center',
-          imageRendering: 'pixelated',
-          flexShrink: 0,
-        }} />
-      ) : (
-        <div className="w-8 h-8 rounded-full bg-gray-200" />
-      )}
-      {large && <span className="text-xs text-gray-500 truncate w-full text-center">{getPokemonName(pokemon)}</span>}
-    </div>
-  );
-}
-
 /* ── 멤버 목록 카드 ── */
 function MemberCard({ member, titles, onClick }) {
   const faceImg = getFaceImg(member);
@@ -684,7 +640,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   const [badgeCleanlinessLevels, setBadgeCleanlinessLevels] = useState(() => getCurrentBadgeCleanlinessLevels(member));
   const [badgeCleanedAtLevels, setBadgeCleanedAtLevels] = useState(() => normalizeBadgeCleanedAtArray(member.badgeCleanedAtLevels, member.badgeCleanedAt));
   const [badgeSparkleNow, setBadgeSparkleNow] = useState(() => Date.now());
-  const [badgeScrubPreview, setBadgeScrubPreview] = useState({ index: null, progress: 0 });
+  const [, setBadgeScrubPreview] = useState({ index: null, progress: 0 });
   const [hoveredRibbon, setHoveredRibbon] = useState(null);
   const badgePrevAngleRef = useRef(null);
   const badgeScrubProgressRef = useRef(Array(8).fill(0));
@@ -704,7 +660,6 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   const badgeMouseDownRef = useRef(false);
   const [badgeSparkle, setBadgeSparkle] = useState({ index: null, key: 0 });
   const badgePieces = member.badgePieces || Array(8).fill(false);
-  const ribbonPieces = member.ribbonPieces || Array(8).fill(false);
   const ribbonTypes  = member.ribbonTypes  || Array(8).fill(null);
   const canCleanBadge = String(member.id || '') === String(currentUserId || '');
 
@@ -965,7 +920,6 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
 
   const party = getParty(member);
   const partner = party.find(p => p?.isPartner) || member.partnerPokemon || party[0] || null;
-  const entry = party.filter(p => p !== partner);
 
   const accentRgb = accent ? `${accent[0]},${accent[1]},${accent[2]}` : '80,120,200';
   const selectedAccent = getSelectedAccentColor(accent);
@@ -1965,7 +1919,6 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               const baseName = p.nameKo || p.name || '';
               const nickname = p.nickname && p.nickname !== baseName ? p.nickname : null;
               const isFlipped = flippedEntryIndex === i;
-              const abilityDesc = getAbilityDesc(p.ability);
               const cardBg = hoveredEntryIndex === i && !isFlipped
                 ? `rgb(${Math.round(255*0.9+(accent?.[0]??80)*0.1)},${Math.round(255*0.9+(accent?.[1]??120)*0.1)},${Math.round(255*0.9+(accent?.[2]??200)*0.1)})`
                 : `rgba(${accentRgb}, 0.10)`;

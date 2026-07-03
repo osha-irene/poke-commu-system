@@ -1,11 +1,7 @@
-﻿import React, { useEffect, useState } from 'react';
+﻿import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
-import { ChevronLeft, ChevronRight, Image, Lock, MessageSquare, Pencil, Plus, PlusCircle, Search, Send, Trash2, X } from 'lucide-react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
+import { ChevronLeft, ChevronRight, Image, Lock, MessageSquare, Pencil, Plus, Search, Send, Trash2, X } from 'lucide-react';
 
-const inputClass =
-  'w-full rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none transition focus:border-gray-400 focus:ring-2 focus:ring-gray-100';
 
 const CATEGORIES = ['질문', '정산', '휴식'];
 

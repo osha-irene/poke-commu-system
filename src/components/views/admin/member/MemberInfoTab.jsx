@@ -7,6 +7,7 @@ function MemberInfoTab({
   onResetWalk,
   onToggleAdmin,
   onToggleNPC,
+  onToggleHidden,
   onUpdateNpcSettings,
   onUpdateMoney,
   onUpdateTrainerExp,
@@ -62,7 +63,7 @@ function MemberInfoTab({
             <div><span className="text-gray-500">이름:</span><span className="ml-2 font-medium">{member.name}</span></div>
             <div><span className="text-gray-500">포켓몬 수:</span><span className="ml-2 font-medium">{(member.caughtPokemon || []).filter(p => p !== null && p !== undefined).length}마리</span></div>
             {trainer.isAdmin && (
-              <div className="pt-1">
+              <div className="pt-1 space-y-1.5">
                 <label className="flex items-center gap-2 cursor-pointer select-none">
                   <input
                     type="checkbox"
@@ -71,6 +72,15 @@ function MemberInfoTab({
                     className="w-4 h-4 rounded accent-indigo-600"
                   />
                   <span className="text-gray-700 font-medium">NPC 캐릭터</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={!!member.hidden}
+                    onChange={() => onToggleHidden?.(member.id)}
+                    className="w-4 h-4 rounded accent-red-600"
+                  />
+                  <span className="text-gray-700 font-medium">목록에서 숨김</span>
                 </label>
               </div>
             )}
@@ -144,7 +154,6 @@ function MemberInfoTab({
               <div key={col} className="space-y-2">
                 {[0,1,2,3].map(row => {
                   const i = col * 4 + row;
-                  const checked = ribbonPieces[i];
                   return (
                     <div key={i} className="flex items-center gap-1.5">
                       <span className={`w-7 h-7 rounded-lg border-2 font-bold text-xs flex-shrink-0 flex items-center justify-center ${ribbonTypes[i] ? 'bg-pink-400 border-pink-500 text-white' : 'bg-white border-gray-200 text-gray-400'}`}>

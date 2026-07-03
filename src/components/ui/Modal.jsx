@@ -1,7 +1,6 @@
 
 // src/components/ui/Modal.jsx
 import { X } from 'lucide-react';
-import { Button } from './Button';
 
 export function Modal({ 
   isOpen, 

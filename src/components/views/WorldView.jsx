@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useMemo, useRef, useState, useEffect, useCallback } from 'react';
+import React, { useLayoutEffect, useMemo, useRef, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import boardContent from '../../data/worldContent';
 
@@ -539,7 +539,6 @@ export default function BoardView({
         <button
           className="board__top-btn"
           onClick={() => {
-            const firstId = parsedBoard.sections[0]?.id || '';
             clickScrollLockRef.current = '__top__';
             window.clearTimeout(clickScrollTimerRef.current);
             setExpandedSectionId('');
@@ -559,7 +558,6 @@ export default function BoardView({
         <div className="board__content">
           {parsedBoard.sections.map((section) => {
                   const bodyBlocks = section.blocks.filter((b) => b.type !== 'credit');
-                  const creditBlocks = [];
 
             return (
               <article key={section.id} id={section.id} className={`board__section${section.centered ? ' board__section--centered' : ''}`}>

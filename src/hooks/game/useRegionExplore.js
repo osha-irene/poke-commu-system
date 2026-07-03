@@ -33,38 +33,6 @@ export const useRegionExplore = (
     return parsed > 1 ? parsed / 100 : parsed;
   };
 
-  const addInventoryItem = (inventory = [], itemData, count) => {
-    if (!itemData || count <= 0) return inventory;
-
-    const nextInventory = Array.isArray(inventory) ? [...inventory] : [];
-    const existingIndex = nextInventory.findIndex((item) => (
-      item.itemId === itemData.id ||
-      item.name === itemData.name ||
-      item.nameEn === itemData.nameEn
-    ));
-
-    if (existingIndex !== -1) {
-      nextInventory[existingIndex] = {
-        ...nextInventory[existingIndex],
-        count: (Number(nextInventory[existingIndex].count) || 0) + count
-      };
-      return nextInventory;
-    }
-
-    return [
-      ...nextInventory,
-      {
-        itemId: itemData.id,
-        name: itemData.name,
-        nameEn: itemData.nameEn,
-        count,
-        imageUrl: itemData.spriteUrl || itemData.imageUrl,
-        category: itemData.category,
-        onUse: itemData.onUse || null
-      }
-    ];
-  };
-
   // 지역 탐험
   const handleRegionClick = async (region, setEncounterPokemon, allItems) => {
     if (!currentUser) return;

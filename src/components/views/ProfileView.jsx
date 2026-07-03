@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, Pencil, Check } from 'lucide-react';
 import { getDatabase, ref, get, set } from 'firebase/database';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
-import titleBg from '../../assets/login/title.png';
 import CachedImage from '../common/CachedImage';
 import {
   formatMastodonAccount,
