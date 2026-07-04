@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import { ChevronDown, ChevronRight, Footprints, MapPin, Trees, Mountain, Waves } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import mapBg from '../../assets/map/map.png';
@@ -19,6 +19,26 @@ import { ref, get } from 'firebase/database';
 import { database } from '../../firebase';
 
 const DEFAULT_VIEWPORT = { x: 0, y: 0, w: 100, h: 100 };
+const SCREEN_RATIO = 909 / 655;
+const TOWN_LABEL_CENTER_Y_OFFSET = 0.075;
+
+const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+
+function lockedH(width, containerRect) {
+  if (!containerRect) return width / SCREEN_RATIO;
+  return width * containerRect.width / (SCREEN_RATIO * containerRect.height);
+}
+
+function getCenteredViewport(town, viewport) {
+  const width = Number(viewport.w) || DEFAULT_VIEWPORT.w;
+  const height = Number(viewport.h) || DEFAULT_VIEWPORT.h;
+
+  return {
+    ...viewport,
+    x: clamp((Number(town.x) || 50) - width / 2, 0, 100 - width),
+    y: clamp((Number(town.y) || 50) - height * (0.5 + TOWN_LABEL_CENTER_Y_OFFSET), 0, 100 - height),
+  };
+}
 
 function getViewportBgStyle(vp) {
   const { x, y, w, h } = vp;
@@ -84,7 +104,11 @@ export default function MapView({
 
   useEffect(() => {
     get(ref(database, 'gameData/config/mapViewport')).then(snap => {
-      if (snap.exists()) setViewport(snap.val());
+      if (!snap.exists()) return;
+      const saved = snap.val();
+      const screenRect = screenRef.current?.getBoundingClientRect() ?? null;
+      const height = lockedH(Number(saved.w) || DEFAULT_VIEWPORT.w, screenRect);
+      setViewport({ ...saved, h: height });
     }).finally(() => {
       setMapViewportLoaded(true);
     });
@@ -136,6 +160,8 @@ export default function MapView({
   const navigableTowns = useMemo(() => (
     towns.filter(town => town.groupVisible !== false)
   ), [towns]);
+
+  const arrowTowns = towns;
 
   const defaultTownId = useMemo(() => (
     (navigableTowns.find(town => town.isDefaultTown) || navigableTowns[0])?.groupId || null
@@ -256,16 +282,16 @@ export default function MapView({
     animFrameRef.current = requestAnimationFrame(frame);
   }, []);
 
-  useEffect(() => {
-    if (!mapViewportLoaded || !defaultTownId) return;
+  useLayoutEffect(() => {
+    if (!mapViewportLoaded || tvPhase < 2 || !defaultTownId) return;
     if (lastCenteredDefaultTownIdRef.current === defaultTownId) return;
 
     const defaultTown = navigableTowns.find(town => town.groupId === defaultTownId);
     if (!defaultTown) return;
 
     lastCenteredDefaultTownIdRef.current = defaultTownId;
-    animateTownToCenter(defaultTown);
-  }, [animateTownToCenter, defaultTownId, mapViewportLoaded, navigableTowns]);
+    setViewport(currentViewport => getCenteredViewport(defaultTown, currentViewport));
+  }, [defaultTownId, mapViewportLoaded, navigableTowns, tvPhase]);
 
   const handlePinClick = (townId) => {
     setSelectedTownId(townId);
@@ -372,13 +398,13 @@ export default function MapView({
   };
 
   const navigateToDirection = (dir) => {
-    if (navigableTowns.length === 0) return;
-    const selectedTown = navigableTowns.find(t => t.groupId === selectedTownId);
+    if (arrowTowns.length === 0) return;
+    const selectedTown = arrowTowns.find(t => t.groupId === selectedTownId);
     const cx = selectedTown ? selectedTown.x : viewport.x + viewport.w / 2;
     const cy = selectedTown ? selectedTown.y : viewport.y + viewport.h / 2;
 
     // 방향별로 해당 방향에 있는 마을 필터 후 가장 가까운 것
-    const candidates = navigableTowns.filter(t => {
+    const candidates = arrowTowns.filter(t => {
       const dx = t.x - cx;
       const dy = t.y - cy;
       if (dir === 'right') return dx > 1;
@@ -406,10 +432,10 @@ export default function MapView({
   const arrowImgs = { up: arrowTopImg, down: arrowBottomImg, left: arrowLeftImg, right: arrowRightImg };
 
   const arrowHasTowns = useMemo(() => {
-    const selectedTown = navigableTowns.find(t => t.groupId === selectedTownId);
+    const selectedTown = arrowTowns.find(t => t.groupId === selectedTownId);
     const cx = selectedTown ? selectedTown.x : viewport.x + viewport.w / 2;
     const cy = selectedTown ? selectedTown.y : viewport.y + viewport.h / 2;
-    const has = (dir) => navigableTowns.some(t => {
+    const has = (dir) => arrowTowns.some(t => {
       const dx = t.x - cx, dy = t.y - cy;
       if (dir === 'right') return dx > 1;
       if (dir === 'left')  return dx < -1;
@@ -418,7 +444,7 @@ export default function MapView({
       return false;
     });
     return { up: has('up'), down: has('down'), left: has('left'), right: has('right') };
-  }, [navigableTowns, viewport, selectedTownId]);
+  }, [arrowTowns, viewport, selectedTownId]);
 
   const ArrowBtn = ({ dir }) => (
     <button
