@@ -131,7 +131,7 @@ export default function ShopView() {
   );
 
   const handleCramorantBeakClick = () => {
-    if (trainer?.cramorantBeakClaimed && !trainer?.isSuperAdmin) return;
+    if (trainer?.cramorantBeakClaimed) return;
     const potionItem = allItems.find(i => i.id === 17 || i.name === '상처약');
     const inventory = Array.isArray(trainer?.inventory) ? trainer.inventory : [];
     const existingItem = inventory.find(i => i.itemId === 17 || i.name === '상처약');
@@ -1894,7 +1894,7 @@ export default function ShopView() {
           src={cramorantImage}
           alt="상점의 윽우지"
         />
-        {(trainer?.isSuperAdmin || !trainer?.cramorantBeakClaimed) && (
+        {!trainer?.cramorantBeakClaimed && (
           <button
             type="button"
             className="shop-scene__cramorant-beak-hit"

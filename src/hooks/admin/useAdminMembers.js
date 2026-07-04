@@ -5,7 +5,8 @@ import { initializeApp, deleteApp } from 'firebase/app';
 import { createUserWithEmailAndPassword, getAuth, signOut } from 'firebase/auth';
 import { ref, set, update } from 'firebase/database';
 import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { auth, database, storage } from '../../firebase';
+import { httpsCallable } from 'firebase/functions';
+import { auth, database, storage, functions } from '../../firebase';
 import { POKEBALL_LIST } from '../../styles/theme';
 import { getBaseStatPatch } from '../../utils/pokemonBaseStats';
 import { getAbilityEnglishName } from '../../utils/abilityUtils';
@@ -1449,6 +1450,39 @@ export const useAdminMembers = (
     }
   };
 
+  // ========== 비밀번호 강제 재설정 (본인 인증 없이) ==========
+  const resetMemberPassword = async (memberId, newPassword) => {
+    if (!currentUser?.isAdmin && !currentUser?.isSuperAdmin) return false;
+
+    const member = members[memberId];
+    if (!member) {
+      alert('대상 회원을 찾을 수 없습니다.');
+      return false;
+    }
+
+    try {
+      const call = httpsCallable(functions, 'adminResetPassword');
+      await call({ targetUid: memberId, newPassword });
+
+      const isTemporaryPassword = newPassword === '0000';
+      setMembers(prev => ({
+        ...prev,
+        [memberId]: {
+          ...prev[memberId],
+          password: isTemporaryPassword ? '0000' : null,
+          forcePasswordChange: isTemporaryPassword,
+        }
+      }));
+
+      alert(`${member.name}님의 비밀번호를 재설정했습니다.`);
+      return true;
+    } catch (error) {
+      console.error('❌ 비밀번호 재설정 실패:', error);
+      alert(error?.message || '비밀번호 재설정 중 오류가 발생했습니다.');
+      return false;
+    }
+  };
+
   // ========== 게임 데이터 리셋 ==========
   const resetGameData = async () => {
     if (!currentUser?.isSuperAdmin) return;
@@ -1608,6 +1642,7 @@ export const useAdminMembers = (
     grantMemberTitle,
     revokeMemberTitle,
     deleteMember,
+    resetMemberPassword,
     resetGameData,
     uploadMemberImage,
     deleteMemberImage,

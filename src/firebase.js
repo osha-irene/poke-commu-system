@@ -4,6 +4,7 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getDatabase } from 'firebase/database'; // ⭐ 추가
 import { getStorage } from 'firebase/storage';
+import { getFunctions } from 'firebase/functions';
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -23,6 +24,7 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const database = getDatabase(app); // ⭐ Realtime Database 추가
 export const storage = getStorage(app);
+export const functions = getFunctions(app, 'asia-northeast3');
 
 // 현재 환경 확인 (개발 중에만 표시)
 if (process.env.NODE_ENV === 'development') {

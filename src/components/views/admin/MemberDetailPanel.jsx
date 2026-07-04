@@ -27,6 +27,7 @@ function MemberDetailPanel({ member, onClose }) {
     deleteMemberPokemon,
     hatchMemberEgg,
     deleteMember,
+    resetMemberPassword,
     resetMemberWalkCount,
     toggleAdminStatus,
     toggleMemberNPC,
@@ -137,6 +138,16 @@ function MemberDetailPanel({ member, onClose }) {
     }
   };
 
+  const handleResetPassword = async (memberId, memberName) => {
+    const input = window.prompt(`${memberName}님의 새 비밀번호를 입력하세요 (6자 이상, 임시 비밀번호는 0000 입력):`, '0000');
+    if (input === null) return;
+    if (!input || (input.length < 6 && input !== '0000')) {
+      alert('비밀번호는 6자 이상이어야 합니다. 임시 비밀번호는 0000을 사용할 수 있습니다.');
+      return;
+    }
+    await resetMemberPassword?.(memberId, input);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col">
@@ -189,6 +200,7 @@ function MemberDetailPanel({ member, onClose }) {
               onUpdateWalkCount={handleUpdateWalkCount}
               onUpdateMaxWalkCount={handleUpdateMaxWalkCount}
               onDeleteMember={handleDeleteMember}
+              onResetPassword={handleResetPassword}
               onUpdateBadgePieces={handleUpdateBadgePieces}
               onUpdateRibbonPieces={handleUpdateRibbonPieces}
               onUpdateRibbonTypes={handleUpdateRibbonTypes}

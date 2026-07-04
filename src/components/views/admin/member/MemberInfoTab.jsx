@@ -15,6 +15,7 @@ function MemberInfoTab({
   onUpdateWalkCount,
   onUpdateMaxWalkCount,
   onDeleteMember,
+  onResetPassword,
   onUpdateBadgePieces,
   onUpdateRibbonPieces,
   onUpdateRibbonTypes,
@@ -281,6 +282,10 @@ function MemberInfoTab({
           <h3 className="font-bold text-base">관리 기능</h3>
           <button onClick={() => onResetWalk(member.id, member.name)}
             className="w-full bg-green-100 text-green-700 py-2.5 rounded-lg hover:bg-green-200 font-semibold text-sm">탐험 횟수 리셋</button>
+          {(trainer.isAdmin || trainer.isSuperAdmin) && (
+            <button onClick={() => onResetPassword?.(member.id, member.name)}
+              className="w-full bg-amber-100 text-amber-700 py-2.5 rounded-lg hover:bg-amber-200 font-semibold text-sm">비밀번호 재설정</button>
+          )}
           {trainer.isSuperAdmin && member.id !== 'admin' && (
             <button onClick={() => onToggleAdmin(member.id, member.name)}
               className={`w-full py-2.5 rounded-lg font-semibold text-sm ${member.isAdmin ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}>
