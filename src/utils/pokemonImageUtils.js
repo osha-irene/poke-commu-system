@@ -32,10 +32,13 @@ export const getPokemonArtworkUrl = (number) => {
 
 const FEMALE_SPRITE_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female';
 const FEMALE_SHINY_SPRITE_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/female';
+const GEN_IX_SV_SPRITE_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-ix/scarlet-violet';
 
 const FORM_SPRITE_NUMBERS = {
   'wooper-paldea': 10253,
   'paldea:194': 10253,
+  'sneasel-hisui': 10235,
+  'hisui:215': 10235,
 };
 
 const getFormSpriteNumber = (pokemon = {}) => {
@@ -103,12 +106,14 @@ export const getOwnedPokemonSpriteUrl = (pokemon, pokemonData = pokemon) => {
 
     const shinyNumber = formSpriteNumber || pokemon.number || pokemon.originalNumber || pokemon.dexId || pokemon.pokemonId;
     if (shinyNumber) {
-      return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${shinyNumber}.png`;
+      return formSpriteNumber
+        ? `${GEN_IX_SV_SPRITE_BASE}/shiny/${shinyNumber}.png`
+        : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${shinyNumber}.png`;
     }
   }
 
   if (formSpriteNumber) {
-    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${formSpriteNumber}.png`;
+    return `${GEN_IX_SV_SPRITE_BASE}/${formSpriteNumber}.png`;
   }
 
   if (pokemon.spriteUrl) return pokemon.spriteUrl;
