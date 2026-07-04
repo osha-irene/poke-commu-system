@@ -210,9 +210,30 @@ const isGalarianFarfetchd = p => {
     (joined.includes('galar') || joined.includes('가라르'))
   );
 };
+const isLillipup = p => {
+  const values = [
+    p?.nameEn,
+    p?.name,
+    p?.species,
+    p?.formName,
+    p?.formVariant,
+  ].filter(Boolean).map(v => String(v).toLowerCase());
+  const joined = values.join(' ');
+
+  return joined.includes('lillipup') || joined.includes('요테리');
+};
+const isPokemonDbSpriteException = p => isGalarianFarfetchd(p) || isLillipup(p);
+const getPokemonDbExceptionTopOffset = p => {
+  if (isGalarianFarfetchd(p)) return 0.22;
+  if (isLillipup(p)) return 0.28;
+  return 0;
+};
 const getPokemonDbSprite = p => {
   if (isGalarianFarfetchd(p)) {
     return 'https://img.pokemondb.net/sprites/sword-shield/normal/farfetchd-galarian.png';
+  }
+  if (isLillipup(p)) {
+    return 'https://img.pokemondb.net/sprites/sword-shield/normal/lillipup.png';
   }
   const name = p?.nameEn || p?.name;
   if (name) return `https://img.pokemondb.net/sprites/scarlet-violet/normal/${name.toLowerCase().replace(/\s+/g, '-')}.png`;
@@ -486,7 +507,7 @@ const TABS = [
   { id: 'relation', label: '관계', Icon: Users },
 ];
 const DEFAULT_RIGHT_GRADIENT_TABS = {
-  main: false,
+  main: true,
   text: true,
   entry: false,
   relation: false,
@@ -1009,8 +1030,9 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   const partner = party.find(p => p?.isPartner) || member.partnerPokemon || party[0] || null;
   const partnerSpriteUrl = partner ? getPokeApiSprite(partner) : null;
   const partnerDbSpriteUrl = partner ? getPokemonDbSprite(partner) : null;
+  const partnerUsesDbException = partner ? isPokemonDbSpriteException(partner) : false;
   const partnerOfficialArtworkUrl = partner ? getOfficialArtwork(partner) : null;
-  const partnerDisplayUrl = partnerSpriteUrl || partnerDbSpriteUrl || partnerOfficialArtworkUrl || '';
+  const partnerDisplayUrl = (partnerUsesDbException ? partnerDbSpriteUrl : partnerSpriteUrl) || partnerDbSpriteUrl || partnerOfficialArtworkUrl || '';
   const partnerUsesArtwork = isOfficialArtworkUrl(partnerDisplayUrl);
   const effectivePartnerUsesArtwork = partnerUsesArtwork || partnerImageUsesArtwork;
 
@@ -1026,6 +1048,17 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   ) > 165 ? '#151515' : '#fff';
   const rightGradientTabs = getRightGradientTabs(member);
   const shouldShowRightGradient = Boolean(rightGradientTabs[tab]);
+  const rightGradientLayerStyle = tab === 'main'
+    ? {
+        left: '33%',
+        right: 0,
+        background: 'linear-gradient(to right, transparent 0%, rgba(255,255,255,0.70) 18%, rgba(255,255,255,0.88) 56%, rgba(255,255,255,0.98) 100%)',
+      }
+    : {
+        left: '22%',
+        right: 0,
+        background: 'linear-gradient(to right, transparent 0%, rgba(255,255,255,0.85) 12%, rgba(255,255,255,0.97) 28%, rgba(255,255,255,0.97) 100%)',
+      };
   const gradientAwareContentZIndex = shouldShowRightGradient ? MEMBER_DETAIL_UI_Z_INDEX : 10;
   const gradientAwareTitleZIndex = shouldShowRightGradient ? MEMBER_DETAIL_UI_Z_INDEX : 0;
   const textEditFieldStyle = {
@@ -1138,7 +1171,8 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   useEffect(() => {
     if (!partner) return;
     setPartnerImageUsesArtwork(partnerUsesArtwork);
-    const url = getPokeApiSprite(partner) || getOfficialArtwork(partner);
+    const dbSprite = getPokemonDbSprite(partner);
+    const url = (isPokemonDbSpriteException(partner) ? dbSprite : getPokeApiSprite(partner)) || dbSprite || getOfficialArtwork(partner);
     if (!url) return;
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -1163,7 +1197,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
         setPartnerImageUsesArtwork(usesArtwork);
         setPartnerTopOffset(topRow / img.naturalHeight);
         setPartnerImgHeight(renderedHeight);
-      } catch { setPartnerTopOffset(0); }
+      } catch { setPartnerTopOffset(getPokemonDbExceptionTopOffset(partner)); }
     };
     img.onerror = () => {
       const fallback = getPokemonDbSprite(partner) || getOfficialArtwork(partner);
@@ -1175,7 +1209,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
       setPartnerTopOffset(0);
     };
     img.src = url;
-  }, [partner?.sprite, partner?.number, partner?.originalNumber, partner?.speciesNumber, partner?.speciesOriginalNumber, partner?.dexId, partner?.nationalDex, partner?.id, partnerUsesArtwork]);
+  }, [partner?.sprite, partner?.number, partner?.originalNumber, partner?.speciesNumber, partner?.speciesOriginalNumber, partner?.dexId, partner?.nationalDex, partner?.id, partner?.nameEn, partner?.name, partner?.species, partner?.formName, partner?.formVariant, partner?.regionalForm, partnerUsesArtwork]);
 
   useEffect(() => {
     const memberChanged = prevMemberIdRef.current !== member.id;
@@ -1511,11 +1545,9 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             position: 'fixed',
             top: 0,
             bottom: 0,
-            left: '26%',
-            right: tab === 'main' ? 100 : 0,
+            ...rightGradientLayerStyle,
             overflow: 'hidden',
             zIndex: MEMBER_DETAIL_UI_Z_INDEX - 1,
-            background: 'linear-gradient(to right, transparent 0%, rgba(255,255,255,0.85) 12%, rgba(255,255,255,0.97) 28%, rgba(255,255,255,0.97) 100%)',
             pointerEvents: 'none',
           }}
         />

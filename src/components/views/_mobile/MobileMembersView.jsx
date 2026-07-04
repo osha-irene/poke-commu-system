@@ -95,9 +95,25 @@ const isGalarianFarfetchd = p => {
   );
 };
 
+const isLillipup = p => {
+  const values = [
+    p?.nameEn,
+    p?.name,
+    p?.species,
+    p?.formName,
+    p?.formVariant,
+  ].filter(Boolean).map(v => String(v).toLowerCase());
+  const joined = values.join(' ');
+
+  return joined.includes('lillipup') || joined.includes('요테리');
+};
+
 const getPokemonDbSprite = p => {
   if (isGalarianFarfetchd(p)) {
     return 'https://img.pokemondb.net/sprites/sword-shield/normal/farfetchd-galarian.png';
+  }
+  if (isLillipup(p)) {
+    return 'https://img.pokemondb.net/sprites/sword-shield/normal/lillipup.png';
   }
   const name = p?.nameEn || p?.name;
   if (name) return `https://img.pokemondb.net/sprites/scarlet-violet/normal/${name.toLowerCase().replace(/\s+/g, '-')}.png`;
