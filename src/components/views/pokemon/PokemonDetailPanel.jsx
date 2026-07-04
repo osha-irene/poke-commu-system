@@ -138,6 +138,35 @@ export default function PokemonDetailPanel({
     const number = Number(value);
     return Number.isFinite(number) ? number : null;
   };
+  const findPokemonTemplateByNumber = (number) => {
+    const targetNumber = toPokemonNumber(number);
+    return (
+      allPokemonMaster.find(p => toPokemonNumber(p.number) === targetNumber) ||
+      allPokemonMaster.find(p => toPokemonNumber(p.id) === targetNumber) ||
+      allPokemonMaster.find(p => !p.regionalForm && toPokemonNumber(p.originalNumber) === targetNumber) ||
+      allPokemonMaster.find(p => toPokemonNumber(p.originalNumber) === targetNumber)
+    );
+  };
+  const findPokemonTemplateForOwned = (ownedPokemon) => {
+    if (!ownedPokemon) return null;
+    const formVariant = String(ownedPokemon.formVariant || '').toLowerCase();
+    const nameEn = String(ownedPokemon.nameEn || '').toLowerCase();
+    const regionalForm = String(ownedPokemon.regionalForm || '').toLowerCase();
+    const originalNumberValue = toPokemonNumber(ownedPokemon.originalNumber || ownedPokemon.number);
+
+    return (
+      allPokemonMaster.find(p => formVariant && String(p.formVariant || '').toLowerCase() === formVariant) ||
+      allPokemonMaster.find(p => (
+        regionalForm &&
+        String(p.regionalForm || '').toLowerCase() === regionalForm &&
+        toPokemonNumber(p.originalNumber || p.number) === originalNumberValue
+      )) ||
+      allPokemonMaster.find(p => nameEn && String(p.nameEn || '').toLowerCase() === nameEn) ||
+      allPokemonMaster.find(p => toPokemonNumber(p.number) === toPokemonNumber(ownedPokemon.number)) ||
+      allPokemonMaster.find(p => toPokemonNumber(p.id) === toPokemonNumber(ownedPokemon.pokemonId || ownedPokemon.id)) ||
+      allPokemonMaster.find(p => !p.regionalForm && toPokemonNumber(p.originalNumber || p.number) === originalNumberValue)
+    );
+  };
   const trainerExp = Number(currentUser?.trainerExp) || 0;
   const requiredLevelExp = getRequiredExpForLevel(pokemon.level);
   const expToNextLevel = requiredLevelExp === null
@@ -266,7 +295,7 @@ const isHoldingEverstone = pokemon.heldItem?.toLowerCase() === 'everstone' ||
   });
   const displayNumber = pokedexEntry?.newNumber || pokemon.originalNumber || pokemon.number;
   const originalNumber = pokedexEntry?.originalNumber || pokemon.number;
-  const masterData = allPokemonMaster.find(p => p.number === pokemon.number || p.number === pokemon.originalNumber);
+  const masterData = findPokemonTemplateForOwned(pokemon);
   // 우선순위: 암컷 스프라이트 > 커스텀(폼체인지) > masterData 기본 > 생성 URL
   const effectiveSpriteUrl = getGenderedSpriteUrl(pokemon, masterData) || pokemon.spriteUrl || masterData?.spriteUrl || getPokemonSpriteUrl(originalNumber);
 
@@ -333,11 +362,7 @@ const ballImage = getBallImage();
   // 진화 후 포켓몬 정보 가져오기
   const getEvolvedPokemon = () => {
     if (!canEvolve || !allPokemonMaster) return null;
-    const targetNumber = toPokemonNumber(canEvolve.to);
-    return allPokemonMaster.find((p) =>
-      toPokemonNumber(p.number) === targetNumber ||
-      toPokemonNumber(p.originalNumber) === targetNumber
-    );
+    return findPokemonTemplateByNumber(canEvolve.to);
   };
 
   const evolvedPokemon = getEvolvedPokemon();

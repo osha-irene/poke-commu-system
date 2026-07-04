@@ -299,20 +299,40 @@ function MemberPokemonTab({
   // 어드민 강제 진화
   const getEvolutionCandidates = (pokemon) => {
     if (!pokemon) return [];
+    const isRegionalOrForm = Boolean(pokemon.regionalForm || pokemon.formVariant);
+    const originalNumber = Number(pokemon.originalNumber);
+    const formNumbers = [pokemon.number, pokemon.pokemonId, pokemon.id]
+      .map(v => Number(v))
+      .filter(n => Number.isFinite(n) && n > 0 && n !== originalNumber);
+    const sourceNumbers = isRegionalOrForm && formNumbers.length > 0
+      ? formNumbers
+      : isRegionalOrForm
+        ? [pokemon.number, pokemon.pokemonId, pokemon.id]
+        : [pokemon.number, pokemon.originalNumber, pokemon.pokemonId];
     const candidates = new Set(
-      [pokemon.number, pokemon.originalNumber, pokemon.pokemonId]
+      sourceNumbers
         .map(v => Number(v))
         .filter(n => Number.isFinite(n) && n > 0)
     );
-    return evolutionsData.evolutions.filter(evo => candidates.has(Number(evo.from)));
+    const seenTargets = new Set();
+    return evolutionsData.evolutions
+      .filter(evo => candidates.has(Number(evo.from)))
+      .filter(evo => {
+        const key = `${evo.to}-${evo.toName || ''}`;
+        if (seenTargets.has(key)) return false;
+        seenTargets.add(key);
+        return true;
+      });
   };
 
   const handleAdminEvolve = (evolutionEntry) => {
     if (!selectedPokemon || !evolutionEntry) return;
-    const evolvedTemplate = allPokemonMaster.find(p =>
-      Number(p.number) === Number(evolutionEntry.to) ||
-      Number(p.originalNumber) === Number(evolutionEntry.to)
-    );
+    const targetNumber = Number(evolutionEntry.to);
+    const evolvedTemplate =
+      allPokemonMaster.find(p => Number(p.number) === targetNumber) ||
+      allPokemonMaster.find(p => Number(p.id) === targetNumber) ||
+      allPokemonMaster.find(p => !p.regionalForm && Number(p.originalNumber) === targetNumber) ||
+      allPokemonMaster.find(p => Number(p.originalNumber) === targetNumber);
     if (!evolvedTemplate) {
       alert('진화 대상 포켓몬 데이터를 찾을 수 없습니다.');
       return;

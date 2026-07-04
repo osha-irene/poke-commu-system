@@ -27,21 +27,36 @@ const FORM_ICON_ALIASES = {
   'TYPE-NULL': 'TYPENULL',
 };
 
+const REGIONAL_ICON_SUFFIXES = {
+  alola: 'ALOLA',
+  galar: 'GALAR',
+  hisui: 'HISUI',
+  paldea: 'PALDEA',
+};
+
+const normalizeIconName = value => String(value || '')
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .replace(/[.'?]/g, '')
+  .replace(/\s+/g, '-')
+  .toUpperCase();
+
 export function toPokemonIconFileName(pokemon = {}, options = {}) {
-  const rawName = pokemon.nameEn || pokemon.nameEnglish || pokemon.speciesNameEn || pokemon.formVariant || pokemon.species || pokemon.name || '';
+  const rawName = pokemon.formVariant || pokemon.nameEn || pokemon.nameEnglish || pokemon.speciesNameEn || pokemon.species || pokemon.name || '';
   if (!rawName) return '';
 
-  const canonicalName = rawName
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[.'?]/g, '')
-    .replace(/\s+/g, '-')
-    .toUpperCase();
+  const canonicalName = normalizeIconName(rawName);
 
   const aliasName = FORM_ICON_ALIASES[canonicalName];
   if (options.aliasesOnly && !aliasName) return '';
 
-  const baseName = aliasName || canonicalName;
+  let baseName = aliasName || canonicalName;
+
+  const regionalForm = String(pokemon.regionalForm || '').toLowerCase();
+  const regionalSuffix = REGIONAL_ICON_SUFFIXES[regionalForm];
+  if (regionalSuffix && !baseName.includes(`-${regionalSuffix}`)) {
+    baseName = `${baseName}-${regionalSuffix}`;
+  }
 
   // 암수 아이콘이 따로 있는 포켓몬은 성별 suffix 추가
   if (GENDER_ICON_SET.has(baseName)) {

@@ -18,9 +18,24 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
 
   const getPokemonNumberCandidates = (pokemon = {}) => {
     const currentNumber = toPokemonNumber(pokemon.number);
+    const pokemonId = toPokemonNumber(pokemon.pokemonId || pokemon.id);
+    const originalNumber = toPokemonNumber(pokemon.originalNumber);
+    const isRegionalOrForm = Boolean(pokemon.regionalForm || pokemon.formVariant);
+
+    if (isRegionalOrForm) {
+      const formNumbers = [currentNumber, pokemonId]
+        .filter((number) => number !== null && number !== originalNumber);
+      if (formNumbers.length > 0) {
+        return formNumbers.filter((number, index, numbers) => numbers.indexOf(number) === index);
+      }
+
+      return [currentNumber, pokemonId]
+        .filter((number, index, numbers) => number !== null && numbers.indexOf(number) === index);
+    }
+
     if (currentNumber !== null) return [currentNumber];
 
-    return [pokemon.originalNumber, pokemon.pokemonId]
+    return [pokemon.originalNumber, pokemonId]
       .map(toPokemonNumber)
       .filter((number, index, numbers) => number !== null && numbers.indexOf(number) === index);
   };
@@ -34,16 +49,24 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
 
   const findAllEvolutionsForPokemon = (pokemon) => {
     const candidates = getPokemonNumberCandidates(pokemon);
-    return evolutionsData.evolutions.filter((evo) =>
-      candidates.includes(toPokemonNumber(evo.from))
-    );
+    const seenTargets = new Set();
+    return evolutionsData.evolutions
+      .filter((evo) => candidates.includes(toPokemonNumber(evo.from)))
+      .filter((evo) => {
+        const key = `${evo.to}-${evo.toName || ''}`;
+        if (seenTargets.has(key)) return false;
+        seenTargets.add(key);
+        return true;
+      });
   };
 
   const findPokemonTemplateByNumber = (number) => {
     const targetNumber = toPokemonNumber(number);
-    return allPokemonMaster.find((pokemon) =>
-      toPokemonNumber(pokemon.number) === targetNumber ||
-      toPokemonNumber(pokemon.originalNumber) === targetNumber
+    return (
+      allPokemonMaster.find((pokemon) => toPokemonNumber(pokemon.number) === targetNumber) ||
+      allPokemonMaster.find((pokemon) => toPokemonNumber(pokemon.id) === targetNumber) ||
+      allPokemonMaster.find((pokemon) => !pokemon.regionalForm && toPokemonNumber(pokemon.originalNumber) === targetNumber) ||
+      allPokemonMaster.find((pokemon) => toPokemonNumber(pokemon.originalNumber) === targetNumber)
     );
   };
 
@@ -314,6 +337,12 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
           pokemonId: evolvedTemplate.number,
           name: getBaseName(evolvedTemplate),
           nameEn: evolvedTemplate.nameEn,
+          species: evolvedTemplate.species || evolvedTemplate.nameEn,
+          regionalForm: evolvedTemplate.regionalForm || null,
+          formVariant: evolvedTemplate.formVariant || null,
+          isRegionalForm: Boolean(evolvedTemplate.isRegionalForm),
+          baseSpecies: evolvedTemplate.baseSpecies || null,
+          baseSpeciesEn: evolvedTemplate.baseSpeciesEn || null,
           type: evolvedTemplate.type,
           type2: evolvedTemplate.type2 || null,
           ...getBaseStatPatch(evolvedTemplate),

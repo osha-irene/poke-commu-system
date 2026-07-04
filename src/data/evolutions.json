@@ -1185,16 +1185,6 @@
       }
     },
     {
-      "from": 194,
-      "to": 980,
-      "fromName": "wooper",
-      "toName": "clodsire",
-      "condition": {
-        "type": "level",
-        "level": 20
-      }
-    },
-    {
       "from": 198,
       "to": 430,
       "fromName": "murkrow",

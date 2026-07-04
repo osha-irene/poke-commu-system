@@ -4,6 +4,16 @@ import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
 
 const getBaseName = (pokemon) => getPokemonDisplayParts(pokemon).name;
 
+const findPokemonTemplateByNumber = (allPokemonMaster = [], number) => {
+  const targetNumber = Number(number);
+  return (
+    allPokemonMaster.find(p => Number(p.number) === targetNumber) ||
+    allPokemonMaster.find(p => Number(p.id) === targetNumber) ||
+    allPokemonMaster.find(p => !p.regionalForm && Number(p.originalNumber) === targetNumber) ||
+    allPokemonMaster.find(p => Number(p.originalNumber) === targetNumber)
+  );
+};
+
 export default function EvolutionModal({ 
   pokemon, 
   evolution, 
@@ -13,7 +23,7 @@ export default function EvolutionModal({
 }) {
   if (!pokemon || !evolution) return null;
 
-  const evolvedPokemon = allPokemonMaster.find(p => p.number === evolution.to);
+  const evolvedPokemon = findPokemonTemplateByNumber(allPokemonMaster, evolution.to);
   
   if (!evolvedPokemon) return null;
 

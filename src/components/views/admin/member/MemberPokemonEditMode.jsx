@@ -115,15 +115,17 @@ export default function MemberPokemonEditMode({
         {/* 우: 진화 루트 */}
         <div className="flex items-center gap-2 ml-auto">
           {evolutionCandidates.length > 0 && evolutionCandidates.map((evo) => {
-            const toTemplate = allPokemonMaster.find(p =>
-              Number(p.number) === Number(evo.to) ||
-              Number(p.originalNumber) === Number(evo.to)
-            );
+            const targetNumber = Number(evo.to);
+            const toTemplate =
+              allPokemonMaster.find(p => Number(p.number) === targetNumber) ||
+              allPokemonMaster.find(p => Number(p.id) === targetNumber) ||
+              allPokemonMaster.find(p => !p.regionalForm && Number(p.originalNumber) === targetNumber) ||
+              allPokemonMaster.find(p => Number(p.originalNumber) === targetNumber);
             const toName = toTemplate ? getPokemonDisplayParts(toTemplate).name : evo.toName;
             const toSprite = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${evo.to}.png`;
             return (
               <button
-                key={evo.to}
+                key={`${evo.from}-${evo.to}-${evo.toName || ''}`}
                 type="button"
                 onClick={() => onAdminEvolve(evo)}
                 title={`→ ${toName}으로 진화 (조건 무시)`}

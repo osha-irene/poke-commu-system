@@ -46,12 +46,19 @@ export const isRareCandyItem = (item = {}, itemData = null) => {
   return names.includes('이상한사탕') || names.includes('rarecandy');
 };
 
-const getPokemonNumbers = (pokemon = {}) => [
-  pokemon.number,
-  pokemon.originalNumber,
-  pokemon.pokemonId,
-  pokemon.nationalNo
-].map(value => Number(value)).filter(Number.isFinite);
+const getPokemonNumbers = (pokemon = {}) => {
+  const originalNumber = Number(pokemon.originalNumber);
+  const formNumbers = [pokemon.number, pokemon.pokemonId, pokemon.id]
+    .map(value => Number(value))
+    .filter(number => Number.isFinite(number) && number !== originalNumber);
+  const sourceNumbers = pokemon.regionalForm || pokemon.formVariant
+    ? (formNumbers.length > 0 ? formNumbers : [pokemon.number, pokemon.pokemonId, pokemon.id])
+    : [pokemon.number, pokemon.originalNumber, pokemon.pokemonId, pokemon.nationalNo];
+
+  return sourceNumbers
+    .map(value => Number(value))
+    .filter((number, index, numbers) => Number.isFinite(number) && numbers.indexOf(number) === index);
+};
 
 export const findItemEvolution = (pokemon, item, itemData = null) => {
   const pokemonNumbers = new Set(getPokemonNumbers(pokemon));

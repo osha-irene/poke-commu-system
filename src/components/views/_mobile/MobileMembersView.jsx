@@ -703,26 +703,75 @@ function MemberDetail({ member, titles, onBack }) {
     setTimeout(onBack, 500);
   };
 
-  const touchStartRef = useRef({ x: 0, y: 0 });
+  const changeTab = (nextKey) => {
+    if (nextKey === activeTab) return;
+    setActiveTab(nextKey);
+  };
+
+  const renderTabContent = (key) => {
+    switch (key) {
+      case 'main': return <MainTab member={member} title={title} partner={partner} />;
+      case 'profile': return <ProfileTab member={member} />;
+      case 'entry': return <EntryTab party={party} allItems={allItems} />;
+      case 'achievement': return <AchievementsTab member={member} />;
+      case 'relation': return <RelationsTab member={member} allMembers={allMembers} />;
+      default: return null;
+    }
+  };
+
+  const trackRef = useRef(null);
+  const containerRef = useRef(null);
+  const dragRef = useRef({ startX: 0, startY: 0, dragging: false, dx: 0 });
+
+  const activeIdx = TABS.findIndex(tab => tab.key === activeTab);
+  const panelPercent = 100 / TABS.length;
+
+  const setTrackTransform = (extraPx, withTransition) => {
+    if (!trackRef.current) return;
+    trackRef.current.style.transition = withTransition ? 'transform 0.3s ease-out' : 'none';
+    trackRef.current.style.transform = `translateX(calc(-${activeIdx * panelPercent}% + ${extraPx}px))`;
+  };
 
   const handleTouchStart = (e) => {
     const t = e.touches[0];
-    touchStartRef.current = { x: t.clientX, y: t.clientY };
+    dragRef.current = { startX: t.clientX, startY: t.clientY, dragging: false, dx: 0 };
+  };
+
+  const handleTouchMove = (e) => {
+    const t = e.touches[0];
+    const dx = t.clientX - dragRef.current.startX;
+    const dy = t.clientY - dragRef.current.startY;
+
+    if (!dragRef.current.dragging) {
+      if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy)) return;
+      dragRef.current.dragging = true;
+    }
+
+    let followDx = dx;
+    if (activeIdx === 0 && dx > 0) followDx = dx * 0.35;
+    if (activeIdx === TABS.length - 1 && dx < 0) followDx = dx * 0.35;
+    dragRef.current.dx = followDx;
+    setTrackTransform(followDx, false);
   };
 
   const handleTouchEnd = (e) => {
-    const t = e.changedTouches[0];
-    const dx = t.clientX - touchStartRef.current.x;
-    const dy = t.clientY - touchStartRef.current.y;
-    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    const { dragging, dx } = dragRef.current;
+    if (!dragging) return;
 
-    const idx = TABS.findIndex(tab => tab.key === activeTab);
-    if (idx === -1) return;
-    if (dx < 0 && idx < TABS.length - 1) {
-      setActiveTab(TABS[idx + 1].key);
-    } else if (dx > 0 && idx > 0) {
-      setActiveTab(TABS[idx - 1].key);
+    const containerWidth = containerRef.current?.offsetWidth || 0;
+    const threshold = containerWidth ? containerWidth / 2 : 60;
+    if (dx <= -threshold && activeIdx < TABS.length - 1) {
+      e.stopPropagation();
+      setTrackTransform(0, true);
+      changeTab(TABS[activeIdx + 1].key);
+    } else if (dx >= threshold && activeIdx > 0) {
+      e.stopPropagation();
+      setTrackTransform(0, true);
+      changeTab(TABS[activeIdx - 1].key);
+    } else {
+      setTrackTransform(0, true);
     }
+    dragRef.current = { startX: 0, startY: 0, dragging: false, dx: 0 };
   };
 
   return (
@@ -765,7 +814,7 @@ function MemberDetail({ member, titles, onBack }) {
         {TABS.map(({ key, label }) => (
           <button
             key={key}
-            onClick={() => setActiveTab(key)}
+            onClick={() => changeTab(key)}
             style={{
               flexShrink: 0, padding: '13px 12px 10px',
               fontSize: '0.6rem', fontWeight: 800, letterSpacing: '0.08em',
@@ -781,17 +830,29 @@ function MemberDetail({ member, titles, onBack }) {
         ))}
       </div>
 
-      {/* 콘텐츠 */}
+      {/* 콘텐츠 — 모든 탭이 옆으로 연결된 필름스트립처럼 슬라이드, 손가락을 따라 이동 */}
       <div
-        style={{ padding: '18px 20px 100px' }}
+        ref={containerRef}
+        style={{ overflowX: 'hidden' }}
         onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {activeTab === 'main' && <MainTab member={member} title={title} partner={partner} />}
-        {activeTab === 'profile' && <ProfileTab member={member} />}
-        {activeTab === 'entry' && <EntryTab party={party} allItems={allItems} />}
-        {activeTab === 'achievement' && <AchievementsTab member={member} />}
-        {activeTab === 'relation' && <RelationsTab member={member} allMembers={allMembers} />}
+        <div
+          ref={trackRef}
+          style={{
+            display: 'flex',
+            width: `${TABS.length * 100}%`,
+            transform: `translateX(-${activeIdx * panelPercent}%)`,
+            transition: 'transform 0.3s ease-out',
+          }}
+        >
+          {TABS.map(({ key }) => (
+            <div key={key} style={{ width: `${100 / TABS.length}%`, flexShrink: 0, padding: '18px 20px 100px', boxSizing: 'border-box' }}>
+              {renderTabContent(key)}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

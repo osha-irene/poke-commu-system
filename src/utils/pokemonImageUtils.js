@@ -33,6 +33,27 @@ export const getPokemonArtworkUrl = (number) => {
 const FEMALE_SPRITE_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female';
 const FEMALE_SHINY_SPRITE_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/female';
 
+const FORM_SPRITE_NUMBERS = {
+  'wooper-paldea': 10253,
+  'paldea:194': 10253,
+};
+
+const getFormSpriteNumber = (pokemon = {}) => {
+  const formKeys = [
+    pokemon.formVariant,
+    pokemon.nameEn,
+    pokemon.species,
+  ].filter(Boolean).map(value => String(value).toLowerCase());
+
+  for (const key of formKeys) {
+    if (FORM_SPRITE_NUMBERS[key]) return FORM_SPRITE_NUMBERS[key];
+  }
+
+  const regionalForm = String(pokemon.regionalForm || '').toLowerCase();
+  const baseNumber = Number(pokemon.originalNumber || pokemon.number || pokemon.dexId || pokemon.pokemonId || pokemon.id);
+  return FORM_SPRITE_NUMBERS[`${regionalForm}:${baseNumber}`] || null;
+};
+
 /**
  * 성별을 고려한 스프라이트 URL 반환
  * hasGenderDiff: true인 포켓몬만 female URL 적용, 없으면 기본 spriteUrl로 fallback
@@ -66,14 +87,20 @@ export const getOwnedPokemonSpriteUrl = (pokemon, pokemonData = pokemon) => {
   const genderedSprite = getGenderedSpriteUrl(pokemon, pokemonData);
   if (genderedSprite) return genderedSprite;
 
+  const formSpriteNumber = getFormSpriteNumber(pokemon);
+
   if (pokemon.isShiny) {
     if (pokemon.shinySprite) return pokemon.shinySprite;
     if (pokemon.shinySpriteUrl) return pokemon.shinySpriteUrl;
 
-    const shinyNumber = pokemon.number || pokemon.originalNumber || pokemon.dexId || pokemon.pokemonId;
+    const shinyNumber = formSpriteNumber || pokemon.number || pokemon.originalNumber || pokemon.dexId || pokemon.pokemonId;
     if (shinyNumber) {
       return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${shinyNumber}.png`;
     }
+  }
+
+  if (formSpriteNumber) {
+    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${formSpriteNumber}.png`;
   }
 
   if (pokemon.spriteUrl) return pokemon.spriteUrl;
