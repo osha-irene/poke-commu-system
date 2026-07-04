@@ -1249,7 +1249,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     const updateMemoHeights = () => {
       const nextNoteMaxHeight = getAvailableHeight(noteScrollRef.current, 10);
       setNoteMaxHeight(prev => nextNoteMaxHeight == null ? prev : Math.max(prev || 0, nextNoteMaxHeight));
-      setPartnerMemoMaxHeight(getAvailableHeight(partnerMemoRef.current, 10));
+      setPartnerMemoMaxHeight(getAvailableHeight(partnerMemoRef.current, 20));
       setBioMemoMaxHeight(getAvailableHeight(bioMemoRef.current, 15));
     };
 
@@ -2012,7 +2012,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             )}
             {partner && (
               <div
-                style={{ display: 'grid', gridTemplateRows: partnerTextOpen ? '1fr' : '0fr', transition: 'grid-template-rows 0.38s cubic-bezier(0.16,1,0.3,1)' }}
+                style={{ display: 'grid', gridTemplateRows: partnerTextOpen ? '1fr' : '0fr', marginTop: partnerTextOpen ? 5 : 0, marginBottom: partnerTextOpen ? 10 : 0, transition: 'grid-template-rows 0.38s cubic-bezier(0.16,1,0.3,1), margin-top 0.38s cubic-bezier(0.16,1,0.3,1), margin-bottom 0.38s cubic-bezier(0.16,1,0.3,1)' }}
               >
               <div style={{ overflow: 'hidden' }}>
               <div
