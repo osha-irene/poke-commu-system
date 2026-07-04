@@ -798,11 +798,11 @@ function HomeDashboard({
               <div className="home-session-panel__bottom">
                 <div
                   role="button"
-                  tabIndex={attendanceClaimed || isClaimingAttendance || attendanceLocked ? -1 : 0}
-                  onClick={!attendanceClaimed && !isClaimingAttendance && !attendanceLocked ? onClaimAttendance : undefined}
-                  className={`home-session-panel__report${attendanceClaimed || isClaimingAttendance || attendanceLocked ? ' is-disabled' : ''}`}
+                  tabIndex={attendanceClaimed || isClaimingAttendance ? -1 : 0}
+                  onClick={!attendanceClaimed && !isClaimingAttendance ? onClaimAttendance : undefined}
+                  className={`home-session-panel__report${attendanceClaimed || isClaimingAttendance ? ' is-disabled' : ''}`}
                   aria-label="\uB808\uD3EC\uD2B8 \uC791\uC131"
-                  aria-disabled={attendanceClaimed || isClaimingAttendance || attendanceLocked}
+                  aria-disabled={attendanceClaimed || isClaimingAttendance}
                 >
                   <img src={loginReport} alt="\uB808\uD3EC\uD2B8 \uC791\uC131" />
                 </div>
