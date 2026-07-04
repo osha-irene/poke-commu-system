@@ -40,13 +40,27 @@ export default function MobileMapView({
   const towns = (() => {
     const map = new Map();
     regions.forEach(r => {
-      if (!r.groupId || !r.groupName || r.isTownMeta || r.groupVisible === false) return;
+      if (!r.groupId || !r.groupName || r.isTownMeta) return;
       if (!map.has(r.groupId)) {
-        map.set(r.groupId, { groupId: r.groupId, groupName: r.groupName, color: r.color, areas: [] });
+        map.set(r.groupId, {
+          groupId: r.groupId,
+          groupName: r.groupName,
+          color: r.color,
+          visible: r.groupVisible !== false,
+          isDefaultTown: r.isDefaultTown || false,
+          townOrder: Number.isFinite(Number(r.townOrder)) ? Number(r.townOrder) : map.size,
+          areas: []
+        });
       }
-      map.get(r.groupId).areas.push(r);
+      if (!r.isTownMeta && r.groupVisible !== false) {
+        map.get(r.groupId).areas.push(r);
+      }
     });
-    return Array.from(map.values());
+    const orderedTowns = Array.from(map.values()).sort((a, b) => a.townOrder - b.townOrder);
+    const defaultTownIndex = orderedTowns.findIndex(town => town.isDefaultTown);
+    const boundaryIndex = defaultTownIndex >= 0 ? defaultTownIndex : 0;
+
+    return orderedTowns.filter((town, index) => town.visible || index < boundaryIndex);
   })();
 
   const caughtNumbers = new Set(caughtPokemon.flatMap(p => p ? [String(p.number), String(p.originalNumber)] : []));
@@ -73,7 +87,7 @@ export default function MobileMapView({
 
   const handleSelectArea = (area) => {
     setSelectedArea(area);
-    const places = Array.isArray(area.places) ? area.places : [];
+    const places = Array.isArray(area.places) ? area.places.filter(p => p?.name && p.visible !== false) : [];
     setSelectedPlace(places.length > 0 ? places[0] : null);
   };
 
@@ -99,7 +113,7 @@ export default function MobileMapView({
 
   /* ── 지역 상세 패널 ── */
   if (selectedArea) {
-    const places      = Array.isArray(selectedArea.places) ? selectedArea.places : [];
+    const places      = Array.isArray(selectedArea.places) ? selectedArea.places.filter(p => p?.name && p.visible !== false) : [];
     const areaPokemon = getDisplayPokemon(selectedArea, selectedPlace);
     const accentColor = selectedArea.color || P.accent;
     const activeLevel = selectedPlace
@@ -258,20 +272,27 @@ export default function MobileMapView({
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {towns.map(town => {
           const isOpen      = expandedTown === town.groupId;
+          const isHidden    = town.visible === false;
           const accentColor = town.color || P.accent;
 
           return (
             <div key={town.groupId} style={{ borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 5px rgba(0,0,0,0.10)' }}>
               <button
-                onClick={() => setExpandedTown(isOpen ? null : town.groupId)}
+                onClick={() => {
+                  if (isHidden) return;
+                  setExpandedTown(isOpen ? null : town.groupId);
+                }}
+                disabled={isHidden}
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                   padding: '11px 14px',
-                  background: isOpen ? '#1e4a08' : 'rgba(255,255,255,0.95)',
+                  background: isHidden ? 'rgba(255,255,255,0.60)' : (isOpen ? '#1e4a08' : 'rgba(255,255,255,0.95)'),
                   border: `1.5px solid ${isOpen ? '#1e4a08' : 'rgba(0,0,0,0.12)'}`,
                   borderBottom: isOpen ? 'none' : undefined,
                   borderRadius: isOpen ? '12px 12px 0 0' : 12,
-                  cursor: 'pointer', textAlign: 'left',
+                  cursor: isHidden ? 'default' : 'pointer',
+                  opacity: isHidden ? 0.58 : 1,
+                  textAlign: 'left',
                   ...TAP,
                 }}
               >
@@ -291,7 +312,7 @@ export default function MobileMapView({
                   borderRadius: '0 0 12px 12px',
                 }}>
                   {town.areas.map((area, i) => {
-                    const places = Array.isArray(area.places) ? area.places : [];
+                    const places = Array.isArray(area.places) ? area.places.filter(p => p?.name && p.visible !== false) : [];
                     return (
                       <button
                         key={area.id || area.name}

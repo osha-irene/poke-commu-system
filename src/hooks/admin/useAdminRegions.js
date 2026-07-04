@@ -148,6 +148,7 @@ export const useAdminRegions = (
       y: townData.y,
       color: townData.color,
       isDefaultTown: townData.isDefaultTown,
+      townOrder: townData.townOrder ?? updatedRegions.filter(region => region.isTownMeta).length,
       groupVisible: true,
       isTownMeta: true,
       pokemons: [],
@@ -170,9 +171,13 @@ export const useAdminRegions = (
       const currentTowns = townsSnapshot.exists() ? townsSnapshot.val() : [];
       
       const townList = Array.isArray(currentTowns) ? currentTowns : [];
+      const nextTownData = {
+        ...townData,
+        townOrder: townData.townOrder ?? townMetaRegion.townOrder
+      };
       const newTowns = [
         ...townList.filter(town => town.groupId !== townData.groupId),
-        townData
+        nextTownData
       ];
       await set(townsRef, newTowns);
       
@@ -200,6 +205,7 @@ export const useAdminRegions = (
           y: townData.y,
           color: townData.color,
           isDefaultTown: townData.isDefaultTown,
+          townOrder: townData.townOrder !== undefined ? townData.townOrder : region.townOrder,
           groupVisible: townData.visible !== undefined ? townData.visible : region.groupVisible
         };
       }

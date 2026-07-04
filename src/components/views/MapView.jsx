@@ -70,6 +70,9 @@ export default function MapView({
   const [selectedArea, setSelectedArea] = useState(null);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [viewport, setViewport] = useState(DEFAULT_VIEWPORT);
+  const [mapViewportLoaded, setMapViewportLoaded] = useState(false);
+  const lastDefaultTownIdRef = useRef(null);
+  const lastCenteredDefaultTownIdRef = useRef(null);
   const [tvPhase, setTvPhase] = useState(0); // 0: 검은화면, 1: 애니메이션, 2: 종료
   const [visitedTownIds, setVisitedTownIds] = useState(() => {
     try {
@@ -82,6 +85,8 @@ export default function MapView({
   useEffect(() => {
     get(ref(database, 'gameData/config/mapViewport')).then(snap => {
       if (snap.exists()) setViewport(snap.val());
+    }).finally(() => {
+      setMapViewportLoaded(true);
     });
   }, []);
 
@@ -100,6 +105,7 @@ export default function MapView({
           groupName: r.groupName || r.groupId,
           isDefaultTown: r.isDefaultTown || false,
           groupVisible: r.groupVisible,
+          townOrder: Number.isFinite(Number(r.townOrder)) ? Number(r.townOrder) : townMap.size,
           color: r.color || '#10b981',
           x: r.x ?? 50,
           y: r.y ?? 50,
@@ -113,22 +119,45 @@ export default function MapView({
           groupName: r.groupName,
           isDefaultTown: r.isDefaultTown || false,
           groupVisible: r.groupVisible,
+          townOrder: Number.isFinite(Number(r.townOrder)) ? Number(r.townOrder) : townMap.size,
           color: r.color || '#10b981',
           x: r.x ?? 50,
           y: r.y ?? 50,
         });
       }
     });
-    return Array.from(townMap.values());
+    const orderedTowns = Array.from(townMap.values()).sort((a, b) => a.townOrder - b.townOrder);
+    const defaultTownIndex = orderedTowns.findIndex(town => town.isDefaultTown);
+    const boundaryIndex = defaultTownIndex >= 0 ? defaultTownIndex : 0;
+
+    return orderedTowns.filter((town, index) => town.groupVisible !== false || index < boundaryIndex);
   }, [regions]);
 
+  const navigableTowns = useMemo(() => (
+    towns.filter(town => town.groupVisible !== false)
+  ), [towns]);
+
+  const defaultTownId = useMemo(() => (
+    (navigableTowns.find(town => town.isDefaultTown) || navigableTowns[0])?.groupId || null
+  ), [navigableTowns]);
+
   useEffect(() => {
-    if (towns.length === 0) return;
+    if (!defaultTownId) return;
+    const previousDefaultTownId = lastDefaultTownIdRef.current;
+    lastDefaultTownIdRef.current = defaultTownId;
+
     setSelectedTownId(prev => {
-      if (prev) return prev;
-      return (towns.find(t => t.isDefaultTown) || towns[0]).groupId;
+      if (
+        prev &&
+        previousDefaultTownId === defaultTownId &&
+        navigableTowns.some(town => town.groupId === prev)
+      ) {
+        return prev;
+      }
+
+      return defaultTownId;
     });
-  }, [towns]);
+  }, [defaultTownId, navigableTowns]);
 
   const selectedTown = towns.find(t => t.groupId === selectedTownId) || null;
 
@@ -167,7 +196,7 @@ export default function MapView({
 
 
   const handleSelectArea = (area) => {
-    const places = Array.isArray(area.places) ? area.places.filter(p => p?.name) : [];
+    const places = Array.isArray(area.places) ? area.places.filter(p => p?.name && p.visible !== false) : [];
     setSelectedArea(area);
     setSelectedPlace(places.length > 0 ? places[0] : null);
     setScreenView('detail');
@@ -226,6 +255,17 @@ export default function MapView({
     };
     animFrameRef.current = requestAnimationFrame(frame);
   }, []);
+
+  useEffect(() => {
+    if (!mapViewportLoaded || !defaultTownId) return;
+    if (lastCenteredDefaultTownIdRef.current === defaultTownId) return;
+
+    const defaultTown = navigableTowns.find(town => town.groupId === defaultTownId);
+    if (!defaultTown) return;
+
+    lastCenteredDefaultTownIdRef.current = defaultTownId;
+    animateTownToCenter(defaultTown);
+  }, [animateTownToCenter, defaultTownId, mapViewportLoaded, navigableTowns]);
 
   const handlePinClick = (townId) => {
     setSelectedTownId(townId);
@@ -332,13 +372,13 @@ export default function MapView({
   };
 
   const navigateToDirection = (dir) => {
-    if (towns.length === 0) return;
-    const selectedTown = towns.find(t => t.groupId === selectedTownId);
+    if (navigableTowns.length === 0) return;
+    const selectedTown = navigableTowns.find(t => t.groupId === selectedTownId);
     const cx = selectedTown ? selectedTown.x : viewport.x + viewport.w / 2;
     const cy = selectedTown ? selectedTown.y : viewport.y + viewport.h / 2;
 
     // 방향별로 해당 방향에 있는 마을 필터 후 가장 가까운 것
-    const candidates = towns.filter(t => {
+    const candidates = navigableTowns.filter(t => {
       const dx = t.x - cx;
       const dy = t.y - cy;
       if (dir === 'right') return dx > 1;
@@ -366,10 +406,10 @@ export default function MapView({
   const arrowImgs = { up: arrowTopImg, down: arrowBottomImg, left: arrowLeftImg, right: arrowRightImg };
 
   const arrowHasTowns = useMemo(() => {
-    const selectedTown = towns.find(t => t.groupId === selectedTownId);
+    const selectedTown = navigableTowns.find(t => t.groupId === selectedTownId);
     const cx = selectedTown ? selectedTown.x : viewport.x + viewport.w / 2;
     const cy = selectedTown ? selectedTown.y : viewport.y + viewport.h / 2;
-    const has = (dir) => towns.some(t => {
+    const has = (dir) => navigableTowns.some(t => {
       const dx = t.x - cx, dy = t.y - cy;
       if (dir === 'right') return dx > 1;
       if (dir === 'left')  return dx < -1;
@@ -378,7 +418,7 @@ export default function MapView({
       return false;
     });
     return { up: has('up'), down: has('down'), left: has('left'), right: has('right') };
-  }, [towns, viewport]);
+  }, [navigableTowns, viewport, selectedTownId]);
 
   const ArrowBtn = ({ dir }) => (
     <button
@@ -451,7 +491,7 @@ export default function MapView({
                 탐험 가능한 구역이 없습니다
               </div>
             ) : areas.map((area, index) => {
-              const places = Array.isArray(area.places) ? area.places.filter(p => p?.name) : [];
+              const places = Array.isArray(area.places) ? area.places.filter(p => p?.name && p.visible !== false) : [];
 
               return (
                 <button
@@ -498,7 +538,7 @@ export default function MapView({
       if (scrollRef.current) setHeaderVisible(scrollRef.current.scrollTop < 50);
     };
     if (!selectedArea) return null;
-    const places = Array.isArray(selectedArea.places) ? selectedArea.places.filter(p => p?.name) : [];
+    const places = Array.isArray(selectedArea.places) ? selectedArea.places.filter(p => p?.name && p.visible !== false) : [];
     const accentColor = selectedArea.color || selectedTown?.color || '#4a9a08';
     const areaPokemon = getDisplayPokemon(selectedArea, selectedPlace);
     const activeLevel = selectedPlace

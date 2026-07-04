@@ -79,7 +79,8 @@ export default function RegionManagementPanel({
     maxLevel: 20,
     isCave: false,
     isWaterside: false,
-    isSafari: false
+    isSafari: false,
+    visible: true
   });
 
   const selectedRegionPlaces = Array.isArray(selectedRegion?.places) ? selectedRegion.places : [];
@@ -104,6 +105,7 @@ export default function RegionManagementPanel({
       isCave: false,
       isWaterside: false,
       isSafari: false,
+      visible: true,
       ...overrides
     };
 
@@ -156,7 +158,8 @@ export default function RegionManagementPanel({
       maxLevel: parseInt(placeForm.maxLevel, 10) || 1,
       isCave: placeForm.isCave,
       isWaterside: placeForm.isWaterside,
-      isSafari: placeForm.isSafari
+      isSafari: placeForm.isSafari,
+      visible: placeForm.visible !== false
     });
 
     const nextPlaces = editingPlace
@@ -167,7 +170,7 @@ export default function RegionManagementPanel({
     setSelectedPlaceId(nextPlace.id);
     setShowPlaceModal(false);
     setEditingPlace(null);
-    setPlaceForm({ name: '', encounterRate: 90, minLevel: 5, maxLevel: 20, isCave: false, isWaterside: false, isSafari: false });
+    setPlaceForm({ name: '', encounterRate: 90, minLevel: 5, maxLevel: 20, isCave: false, isWaterside: false, isSafari: false, visible: true });
   };
 
   const openCreatePlaceModal = (targetRegion = selectedRegion) => {
@@ -185,7 +188,8 @@ export default function RegionManagementPanel({
       maxLevel: targetRegion?.maxLevel || 20,
       isCave: targetRegion?.isCave === true,
       isWaterside: targetRegion?.isWaterside === true,
-      isSafari: targetRegion?.isSafari === true
+      isSafari: targetRegion?.isSafari === true,
+      visible: true
     });
     setShowPlaceModal(true);
   };
@@ -199,7 +203,8 @@ export default function RegionManagementPanel({
       maxLevel: place.maxLevel || selectedRegion?.maxLevel || 20,
       isCave: place.isCave === true,
       isWaterside: place.isWaterside === true,
-      isSafari: place.isSafari === true
+      isSafari: place.isSafari === true,
+      visible: place.visible !== false
     });
     setShowPlaceModal(true);
   };
@@ -213,6 +218,16 @@ export default function RegionManagementPanel({
     if (selectedPlaceId === place.id) {
       setSelectedPlaceId(nextPlaces[0]?.id || null);
     }
+  };
+
+  const handleTogglePlaceVisibility = async (place) => {
+    if (!selectedRegion) return;
+
+    const nextPlaces = selectedRegionPlaces.map((item) => (
+      item.id === place.id ? { ...item, visible: item.visible === false } : item
+    ));
+
+    await updateSelectedRegionPlaces(nextPlaces);
   };
 
   const handleUpdateSelectedPlacePokemon = async (_placeTargetId, updatedPlaceData) => {
@@ -336,7 +351,37 @@ export default function RegionManagementPanel({
     });
   };
 
-  const townGroups = towns.map((town) => ({
+  const sortedTowns = towns
+    .map((town, index) => ({
+      ...town,
+      townOrder: Number.isFinite(Number(town.townOrder)) ? Number(town.townOrder) : index
+    }))
+    .sort((a, b) => a.townOrder - b.townOrder);
+
+  const getInsertedTownOrder = (orderedTowns, fromIndex, toIndex) => {
+    const movingTown = orderedTowns[fromIndex];
+    const remainingTowns = orderedTowns.filter((_, index) => index !== fromIndex);
+    const beforeTown = remainingTowns[toIndex - 1] || null;
+    const afterTown = remainingTowns[toIndex] || null;
+
+    if (beforeTown && afterTown) return (beforeTown.townOrder + afterTown.townOrder) / 2;
+    if (afterTown) return afterTown.townOrder - 1;
+    if (beforeTown) return beforeTown.townOrder + 1;
+    return movingTown?.townOrder ?? 0;
+  };
+
+  const handleMoveTown = (town, direction) => {
+    const currentIndex = sortedTowns.findIndex((item) => item.groupId === town.groupId);
+    const nextIndex = currentIndex + direction;
+    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= sortedTowns.length) return;
+
+    onUpdateTown?.(town.groupId, {
+      ...town,
+      townOrder: getInsertedTownOrder(sortedTowns, currentIndex, nextIndex)
+    });
+  };
+
+  const townGroups = sortedTowns.map((town) => ({
     town,
     regions: regions.filter((region) => !region.isTownMeta && region.groupId === town.groupId)
   }));
@@ -504,6 +549,7 @@ export default function RegionManagementPanel({
               {places.length > 0 && (
                 places.map((place) => {
                   const isActivePlace = detailSection === 'places' && selectedPlace?.id === place.id;
+                  const isHiddenPlace = place.visible === false;
 
                   return (
                   <div
@@ -512,7 +558,7 @@ export default function RegionManagementPanel({
                       isActivePlace
                         ? 'border border-lime-500 bg-lime-100 text-lime-950 shadow-sm'
                         : 'border border-lime-200 bg-white text-lime-900 hover:bg-lime-50'
-                    }`}
+                    } ${isHiddenPlace ? 'opacity-60' : ''}`}
                   >
                     <button
                       type="button"
@@ -528,6 +574,22 @@ export default function RegionManagementPanel({
                       <span className="shrink-0 text-xs opacity-70">
                         {(place.pokemons || []).length}종
                       </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleTogglePlaceVisibility(place);
+                      }}
+                      className={`shrink-0 rounded p-1 ${
+                        isHiddenPlace
+                          ? 'text-gray-500 hover:bg-gray-100'
+                          : 'text-lime-800 hover:bg-lime-200'
+                      }`}
+                      title={isHiddenPlace ? '지도에서 숨김' : '지도에 표시'}
+                      aria-label={isHiddenPlace ? '지도에서 숨김' : '지도에 표시'}
+                    >
+                      {isHiddenPlace ? <EyeOff size={13} /> : <Eye size={13} />}
                     </button>
                     <button
                       type="button"
@@ -666,7 +728,7 @@ export default function RegionManagementPanel({
             </div>
 
             <div className="divide-y divide-gray-200 max-h-[600px] overflow-y-auto">
-              {townGroups.map(({ town, regions: townRegions }) => {
+              {townGroups.map(({ town, regions: townRegions }, townIndex) => {
                 const isExpanded = expandedGroups[town.groupId] === true;
 
                 return (
@@ -725,6 +787,34 @@ export default function RegionManagementPanel({
                           </button>
                         </div>
                         <div className="flex shrink-0 items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleMoveTown(town, -1)}
+                            disabled={townIndex === 0}
+                            className={`rounded p-1 transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
+                              isExpanded
+                                ? 'text-lime-100 hover:bg-white/10'
+                                : 'text-lime-800 hover:bg-lime-100'
+                            }`}
+                            title="마을 순서 위로"
+                            aria-label="마을 순서 위로"
+                          >
+                            <ChevronUp size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleMoveTown(town, 1)}
+                            disabled={townIndex === townGroups.length - 1}
+                            className={`rounded p-1 transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
+                              isExpanded
+                                ? 'text-lime-100 hover:bg-white/10'
+                                : 'text-lime-800 hover:bg-lime-100'
+                            }`}
+                            title="마을 순서 아래로"
+                            aria-label="마을 순서 아래로"
+                          >
+                            <ChevronDown size={14} />
+                          </button>
                           <button
                             type="button"
                             onClick={() => openCreateRegionModal(town)}
@@ -913,6 +1003,7 @@ export default function RegionManagementPanel({
                       {selectedRegionPlaces.map((place) => {
                         const isActive = selectedPlace?.id === place.id;
                         const hasLootConfig = place.lootConfig && Object.keys(place.lootConfig).length > 0;
+                        const isHiddenPlace = place.visible === false;
 
                         return (
                           <div
@@ -921,7 +1012,7 @@ export default function RegionManagementPanel({
                               isActive
                                 ? 'border-lime-700 bg-white text-lime-950 shadow-sm'
                                 : 'border-lime-200 bg-lime-100 text-lime-900'
-                            }`}
+                            } ${isHiddenPlace ? 'opacity-60' : ''}`}
                           >
                             <button
                               type="button"
@@ -933,6 +1024,19 @@ export default function RegionManagementPanel({
                                 {(place.pokemons || []).length}종 / {place.encounterRate ?? 0}%
                               </span>
                               {hasLootConfig && <Gift size={13} className="text-emerald-700" />}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleTogglePlaceVisibility(place)}
+                              className={`rounded p-1 ${
+                                isHiddenPlace
+                                  ? 'text-gray-500 hover:bg-gray-100'
+                                  : 'text-lime-800 hover:bg-lime-200'
+                              }`}
+                              title={isHiddenPlace ? '지도에서 숨김' : '지도에 표시'}
+                              aria-label={isHiddenPlace ? '지도에서 숨김' : '지도에 표시'}
+                            >
+                              {isHiddenPlace ? <EyeOff size={13} /> : <Eye size={13} />}
                             </button>
                             <button
                               type="button"
@@ -1248,6 +1352,20 @@ export default function RegionManagementPanel({
                   <span className="text-sm font-semibold text-gray-700">{label}</span>
                 </label>
               ))}
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={placeForm.visible !== false}
+                  onChange={(e) => setPlaceForm({ ...placeForm, visible: e.target.checked })}
+                  className="w-4 h-4 accent-lime-600"
+                />
+                {placeForm.visible === false ? (
+                  <EyeOff size={15} className="text-gray-500" />
+                ) : (
+                  <Eye size={15} className="text-lime-700" />
+                )}
+                <span className="text-sm font-semibold text-gray-700">지도 표시</span>
+              </label>
             </div>
 
             <div className="flex gap-3 mt-6">

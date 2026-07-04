@@ -42,11 +42,16 @@ const getTownRowsFromRegions = (nextRegions = []) => {
       y: region.y,
       color: region.color,
       isDefaultTown: region.isDefaultTown || false,
-      visible: region.groupVisible !== false
+      visible: region.groupVisible !== false,
+      townOrder: Number.isFinite(Number(region.townOrder)) ? Number(region.townOrder) : townMap.size
     });
   });
 
-  return Array.from(townMap.values());
+  return Array.from(townMap.values()).sort((a, b) => {
+    const orderA = Number.isFinite(Number(a.townOrder)) ? Number(a.townOrder) : 0;
+    const orderB = Number.isFinite(Number(b.townOrder)) ? Number(b.townOrder) : 0;
+    return orderA - orderB;
+  });
 };
 
 export const useGameData = (allPokemonData) => {

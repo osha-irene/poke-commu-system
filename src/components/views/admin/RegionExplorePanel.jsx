@@ -78,7 +78,8 @@ export default function RegionExplorePanel({
             x: region.x,
             y: region.y,
             color: region.color,
-            isDefaultTown: region.isDefaultTown || false
+            isDefaultTown: region.isDefaultTown || false,
+            townOrder: Number.isFinite(Number(region.townOrder)) ? Number(region.townOrder) : townMap.size
           });
         }
         if (!region.isTownMeta) {
@@ -86,7 +87,11 @@ export default function RegionExplorePanel({
         }
       }
     });
-    return Array.from(townMap.values());
+    return Array.from(townMap.values()).sort((a, b) => {
+      const orderA = Number.isFinite(Number(a.townOrder)) ? Number(a.townOrder) : 0;
+      const orderB = Number.isFinite(Number(b.townOrder)) ? Number(b.townOrder) : 0;
+      return orderA - orderB;
+    });
   }, [regions]);
 
   const handleToggleTownVisibility = async (groupId) => {
