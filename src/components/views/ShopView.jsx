@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import ballsImage from '../../assets/shop/balls.png';
 import cramorantImage from '../../assets/shop/cramorant.png';
 import contextImage from '../../assets/shop/context.png';
@@ -52,6 +52,23 @@ const getDailyGachaBalls = (balls) => {
 };
 
 const DEFAULT_GACHA_PRICE = 1000;
+const SHOP_UPDATE_DOT_STYLE = {
+  position: 'absolute',
+  top: 8,
+  right: 8,
+  width: 8,
+  height: 8,
+  borderRadius: '50%',
+  background: '#ef5e5e',
+  pointerEvents: 'none',
+};
+
+const getShopUpdateStorageKey = (trainer) => {
+  const trainerId = trainer?.id || trainer?.uid || trainer?.username || trainer?.name || 'guest';
+  return `shopSeenCategorySignatures:${trainerId}`;
+};
+
+const normalizeSignatureValue = (value) => JSON.stringify(value ?? null);
 
 export default function ShopView() {
   const {
@@ -95,7 +112,55 @@ export default function ShopView() {
       pocket: getItemPocket(item || shopItem)
     };
   };
-  
+
+  const getOwnedItemCount = (item) => {
+    if (!item) return 0;
+    const inventory = Array.isArray(trainer?.inventory) ? trainer.inventory : [];
+    return inventory.reduce((total, inventoryItem) => {
+      const sameItem = (
+        inventoryItem.itemId === item.id ||
+        inventoryItem.itemId === item.itemId ||
+        inventoryItem.name === item.name
+      );
+      return sameItem ? total + (Number(inventoryItem.count) || 0) : total;
+    }, 0);
+  };
+
+  const renderOwnedCountMeta = (item) => (
+    <span>보유 {getOwnedItemCount(item).toLocaleString()}개</span>
+  );
+
+  const handleCramorantBeakClick = () => {
+    if (trainer?.cramorantBeakClaimed && !trainer?.isSuperAdmin) return;
+    const potionItem = allItems.find(i => i.id === 17 || i.name === '상처약');
+    const inventory = Array.isArray(trainer?.inventory) ? trainer.inventory : [];
+    const existingItem = inventory.find(i => i.itemId === 17 || i.name === '상처약');
+    const newInventory = existingItem
+      ? inventory.map(i => (
+          (i.itemId === 17 || i.name === '상처약') ? { ...i, count: (i.count || 0) + 1 } : i
+        ))
+      : [
+          ...inventory,
+          {
+            itemId: 17,
+            name: '상처약',
+            nameEn: potionItem?.nameEn,
+            count: 1,
+            imageUrl: potionItem?.spriteUrl || potionItem?.imageUrl,
+            cost: potionItem?.cost || 0,
+            sellPrice: potionItem?.sellPrice || 0,
+            category: potionItem?.category,
+            pocket: getItemPocket(potionItem),
+          },
+        ];
+    updateCurrentUser({ inventory: newInventory, cramorantBeakClaimed: true });
+    beakQueueRef.current = [
+      '윽우지가 목에 걸려 있던 상처약을 뱉었다!',
+      '…상처약을 1개 얻었다!',
+    ];
+    setBeakMsg('윽우지의 부리를 실수로 건드렸다!');
+  };
+
   const POCKET_ORDER = ['pokeballs','medicine','vitamins','berries','evolution','held-items','machines','battle-items','key-items','ingredients','misc'];
 
   const getSortedItems = (items) => {
@@ -226,6 +291,88 @@ export default function ShopView() {
     .filter(({ item }) => Boolean(item));
   const hasDesktopGacha = Boolean(shopData.gachaBall?.enabled && desktopGachaBallsAll.length >= 2);
   const desktopRandomBoxes = (shopData.randomBoxes || []).filter((box) => box.enabled);
+  const shopUpdateStorageKey = useMemo(() => getShopUpdateStorageKey(trainer), [trainer]);
+  const [seenCategorySignatures, setSeenCategorySignatures] = useState({});
+  const shopCategorySignatures = useMemo(() => {
+    const specialItem = shopData.rareItemConfig?.enabled && shopData.rareDailyItem?.itemId
+      ? {
+          itemId: shopData.rareDailyItem.itemId,
+          price: shopData.rareDailyItem.price ?? 0,
+          lastRefresh: shopData.rareDailyItem.lastRefresh || null,
+        }
+      : null;
+    const dailyItems = (shopData.dailyItems?.[todayName] || [])
+      .filter((item) => item?.itemId)
+      .map((item) => ({
+        itemId: item.itemId,
+        price: item.price ?? 0,
+      }));
+    const apricornItems = hasDesktopGacha
+      ? {
+          price: shopData.gachaBall?.price ?? DEFAULT_GACHA_PRICE,
+          balls: desktopGachaBalls.map((ball) => ({
+            itemId: ball.itemId,
+            price: ball.price ?? 0,
+          })),
+        }
+      : null;
+    const randomBoxes = desktopRandomBoxes.map((box) => ({
+      id: box.id,
+      name: box.name || '',
+      price: box.price ?? 0,
+      items: (Array.isArray(box.items) ? box.items : []).map((item) => ({
+        itemId: item.itemId,
+        weight: item.weight ?? 0,
+        minCount: item.minCount ?? 1,
+        maxCount: item.maxCount ?? 1,
+      })),
+    }));
+
+    return {
+      special: specialItem ? normalizeSignatureValue(specialItem) : '',
+      daily: dailyItems.length > 0 ? normalizeSignatureValue({ day: todayName, items: dailyItems }) : '',
+      apricorn: apricornItems ? normalizeSignatureValue(apricornItems) : '',
+      random: randomBoxes.length > 0 ? normalizeSignatureValue(randomBoxes) : '',
+    };
+  }, [
+    desktopGachaBalls,
+    desktopRandomBoxes,
+    hasDesktopGacha,
+    shopData.dailyItems,
+    shopData.gachaBall?.price,
+    shopData.rareDailyItem,
+    shopData.rareItemConfig?.enabled,
+    todayName
+  ]);
+
+  useEffect(() => {
+    try {
+      setSeenCategorySignatures(JSON.parse(localStorage.getItem(shopUpdateStorageKey) || '{}'));
+    } catch {
+      setSeenCategorySignatures({});
+    }
+  }, [shopUpdateStorageKey]);
+
+  const markShopCategorySeen = useCallback((kind) => {
+    const signature = shopCategorySignatures[kind];
+    if (!signature) return;
+
+    setSeenCategorySignatures((prev) => {
+      const next = { ...prev, [kind]: signature };
+      try {
+        localStorage.setItem(shopUpdateStorageKey, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }, [shopCategorySignatures, shopUpdateStorageKey]);
+
+  const hasShopCategoryUpdate = useCallback((kind) => (
+    Boolean(shopCategorySignatures[kind] && seenCategorySignatures[kind] !== shopCategorySignatures[kind])
+  ), [seenCategorySignatures, shopCategorySignatures]);
+
+  const renderShopUpdateDot = (kind) => (
+    hasShopCategoryUpdate(kind) ? <span aria-hidden="true" style={SHOP_UPDATE_DOT_STYLE} /> : null
+  );
 
   // intro 메시지 타이핑
   useEffect(() => {
@@ -339,6 +486,10 @@ export default function ShopView() {
     return () => document.removeEventListener('mousedown', handler);
   }, [showBuy2]);
   const [purchaseMsg, setPurchaseMsg] = useState('');
+  const [beakMsg, setBeakMsg] = useState('');
+  const beakQueueRef = useRef([]);
+  const beakWordRef = useRef(null);
+  const [beakWordBox, setBeakWordBox] = useState(null);
   const [shopTextLength, setShopTextLength] = useState(0);
   const [listMessage, setListMessage] = useState('');
   const [activeListButton, setActiveListButton] = useState(null);
@@ -659,6 +810,7 @@ export default function ShopView() {
   };
 
   const handleListButtonClick = (kind) => {
+    markShopCategorySeen(kind);
     setPressedListButton(kind);
     setShopListMode('permanent');
     setRandomBoxIntroActive(false);
@@ -703,6 +855,7 @@ export default function ShopView() {
   };
 
   const handleShopListModeClick = (mode) => {
+    markShopCategorySeen(mode);
     setPressedListButton(mode);
     setShopListMode(mode);
     setGachaContextStep(0);
@@ -755,6 +908,16 @@ export default function ShopView() {
     }
 
     setPressedListButton(null);
+
+    if (beakMsg) {
+      if (!isShopTextComplete) {
+        setShopTextLength(shopText.length);
+        return;
+      }
+      const next = beakQueueRef.current.shift();
+      setBeakMsg(next || '');
+      return;
+    }
 
     if (purchaseMsg) {
       if (!isShopTextComplete) {
@@ -858,7 +1021,9 @@ export default function ShopView() {
     handleAdvance('mouse');
   };
 
-  const shopText = purchaseMsg
+  const shopText = beakMsg
+    ? beakMsg
+    : purchaseMsg
     ? purchaseMsg
     : buyConfirming && selectedShopItem
       ? selectedShopItem.type === 'gachaball'
@@ -879,7 +1044,7 @@ export default function ShopView() {
   );
   const displayedShopTextLength = previousShopTextRef.current === shopText ? shopTextLength : 0;
   const isShopTextComplete = displayedShopTextLength >= shopText.length;
-  const isThrownShopText = Boolean(thrownItem && !purchaseMsg && !buyConfirming);
+  const isThrownShopText = Boolean(thrownItem && !purchaseMsg && !buyConfirming && !beakMsg);
   const isGachaContextActive = Boolean(
     phase === 'shop'
     && selectedShopItem?.type === 'gachaball'
@@ -940,7 +1105,76 @@ export default function ShopView() {
           </span>
           <span className="shop-scene__item-tooltip-meta">
             <span>{Number(thrownShopItem?.price || 0).toLocaleString()}원</span>
-            <span>{thrownShopItem?.stock === 99 ? '무제한' : `${thrownShopItem?.stock ?? 1}개`}</span>
+            <span>
+              {thrownShopItem?.stock === 99 ? '무제한' : `${thrownShopItem?.stock ?? 1}개`}
+              {' / '}
+              보유 {getOwnedItemCount(thrownItem).toLocaleString()}개
+            </span>
+          </span>
+        </span>
+      </span>
+    );
+  };
+
+  const renderBeakText = () => {
+    const wordIndex = beakMsg ? shopText.indexOf('상처약') : -1;
+    if (wordIndex === -1) {
+      return <span>{shopText.slice(0, displayedShopTextLength)}</span>;
+    }
+
+    const word = '상처약';
+    const prefixLength = wordIndex;
+    const wordEnd = prefixLength + word.length;
+
+    return (
+      <>
+        <span>{shopText.slice(0, Math.min(displayedShopTextLength, prefixLength))}</span>
+        {displayedShopTextLength > prefixLength && (
+          <span className="shop-scene__thrown-item-name" ref={beakWordRef}>
+            {word.slice(0, Math.min(displayedShopTextLength - prefixLength, word.length))}
+          </span>
+        )}
+        {displayedShopTextLength > wordEnd && (
+          <span>{shopText.slice(wordEnd, displayedShopTextLength)}</span>
+        )}
+      </>
+    );
+  };
+
+  const renderBeakItemHover = () => {
+    const wordIndex = beakMsg ? shopText.indexOf('상처약') : -1;
+    if (wordIndex === -1 || !isShopTextComplete || !beakWordBox) return null;
+
+    const potionItem = allItems.find(i => i.id === 17 || i.name === '상처약');
+
+    return (
+      <span
+        className="shop-scene__item-hover-proxy"
+        style={{
+          left: beakWordBox.left,
+          top: beakWordBox.top,
+          width: beakWordBox.width,
+          height: beakWordBox.height,
+        }}
+        aria-label="상처약"
+      >
+        <span className="shop-scene__item-hover-proxy-text" aria-hidden="true">상처약</span>
+        <span className="shop-scene__item-tooltip" role="tooltip">
+          <span className="shop-scene__item-tooltip-icon">
+            <img
+              src={potionItem?.spriteUrl || potionItem?.imageUrl}
+              alt=""
+              aria-hidden="true"
+            />
+          </span>
+          <span className="shop-scene__item-tooltip-body">
+            <span className="shop-scene__item-tooltip-name">상처약</span>
+            <span className="shop-scene__item-tooltip-desc">
+              {potionItem?.effect || potionItem?.description || '상세 설명이 없습니다.'}
+            </span>
+          </span>
+          <span className="shop-scene__item-tooltip-meta">
+            <span>보유 {getOwnedItemCount(potionItem).toLocaleString()}개</span>
           </span>
         </span>
       </span>
@@ -968,6 +1202,19 @@ export default function ShopView() {
     }, 35);
     return () => window.clearInterval(timer);
   }, [shopText]);
+
+  useEffect(() => {
+    if (!beakMsg || !isShopTextComplete || !shopText.includes('상처약')) {
+      setBeakWordBox(null);
+      return;
+    }
+    const el = beakWordRef.current;
+    if (!el) {
+      setBeakWordBox(null);
+      return;
+    }
+    setBeakWordBox({ left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight });
+  }, [beakMsg, isShopTextComplete, shopText]);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -1287,6 +1534,7 @@ export default function ShopView() {
       className="shop-scene"
       aria-label="상점"
       onClick={(e) => {
+        if (beakMsg) { handleSceneAdvanceClick(); return; }
         if (purchaseMsg) { handleSceneAdvanceClick(); return; }
         if (phase === 'intro' || phase === 'asking') { handleSceneAdvanceClick(); return; }
         if (phase === 'shop' && showBuy2) { setBuyConfirming(false); setShowBuy2(false); setQuantity(1); return; }
@@ -1294,7 +1542,7 @@ export default function ShopView() {
         if (isListInteractionActive) { handleSceneAdvanceClick(); return; }
         if (phase === 'shop' && shopText && !isShopTextComplete) { setShopTextLength(shopText.length); }
       }}
-      style={(phase === 'intro' || phase === 'asking' || showBuy2 || purchaseMsg || isGachaContextActive || (phase === 'shop' && shopText && !isShopTextComplete)) ? { cursor: 'pointer' } : undefined}
+      style={(beakMsg || phase === 'intro' || phase === 'asking' || showBuy2 || purchaseMsg || isGachaContextActive || (phase === 'shop' && shopText && !isShopTextComplete)) ? { cursor: 'pointer' } : undefined}
     >
       <div className="shop-scene__dialogue">
         <img
@@ -1308,12 +1556,23 @@ export default function ShopView() {
           src={contextImage}
           alt=""
           aria-hidden="true"
-          onClick={phase !== 'shop' ? (e) => { e.stopPropagation(); handleSceneAdvanceClick(); } : showBuy2 ? (e) => { e.stopPropagation(); setBuyConfirming(false); setShowBuy2(false); setQuantity(1); } : (purchaseMsg || isListInteractionActive || isGachaContextActive) ? (e) => { e.stopPropagation(); handleSceneAdvanceClick(); } : undefined}
-          style={(phase !== 'shop' || showBuy2 || purchaseMsg || isGachaContextActive) ? { cursor: 'pointer', pointerEvents: 'auto' } : undefined}
+          onClick={beakMsg ? (e) => { e.stopPropagation(); handleSceneAdvanceClick(); } : phase !== 'shop' ? (e) => { e.stopPropagation(); handleSceneAdvanceClick(); } : showBuy2 ? (e) => { e.stopPropagation(); setBuyConfirming(false); setShowBuy2(false); setQuantity(1); } : (purchaseMsg || isListInteractionActive || isGachaContextActive) ? (e) => { e.stopPropagation(); handleSceneAdvanceClick(); } : undefined}
+          style={(beakMsg || phase !== 'shop' || showBuy2 || purchaseMsg || isGachaContextActive) ? { cursor: 'pointer', pointerEvents: 'auto' } : undefined}
         />
 
+        {/* 윽우지 부리 이스터에그 메시지 */}
+        {beakMsg && (
+          <div className="shop-scene__text-box" onClick={(e) => { e.stopPropagation(); handleSceneAdvanceClick(); }} style={{ cursor: 'pointer' }}>
+            {renderBeakText()}
+            {renderBeakItemHover()}
+            {isShopTextComplete && (
+              <img className="shop-scene__skip" src={skipImage} alt="" aria-hidden="true" />
+            )}
+          </div>
+        )}
+
         {/* intro: 기본 메시지 타이핑 */}
-        {phase === 'intro' && (
+        {!beakMsg && phase === 'intro' && (
           <div className="shop-scene__text-box" onClick={(e) => { e.stopPropagation(); handleSceneAdvanceClick(); }} style={{ cursor: 'pointer' }}>
             <span>{sceneMessage.slice(0, visibleLength)}</span>
             {isMessageComplete && (
@@ -1329,27 +1588,39 @@ export default function ShopView() {
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); handleListButtonClick('special'); }}
+                  style={{ position: 'relative' }}
                 >
                   <img src={listButtonImageState === 'special' ? specialActiveImage : specialImage} alt="특별 아이템" />
+                  {renderShopUpdateDot('special')}
                 </button>
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); handleListButtonClick('daily'); }}
+                  style={{ position: 'relative' }}
                 >
                   <img src={listButtonImageState === 'daily' ? dailyLimitedActiveImage : dailyLimitedImage} alt="기간 한정 아이템" />
+                  {renderShopUpdateDot('daily')}
                 </button>
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); handleShopListModeClick('apricorn'); }}
+                  style={{ position: 'relative' }}
                 >
                   <img src={listButtonImageState === 'apricorn' ? apricornActiveImage : apricornImage} alt="규토리볼" />
+                  {renderShopUpdateDot('apricorn')}
                 </button>
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); handleShopListModeClick('random'); }}
+                  style={{ position: 'relative' }}
                 >
                   <img src={listButtonImageState === 'random' ? randomActiveImage : randomImage} alt="랜덤" />
+                  {renderShopUpdateDot('random')}
                 </button>
+                <div className="shop-scene__money-badge" aria-label="현재 소지금">
+                  <Coins size={25} aria-hidden="true" />
+                  <span>{(trainer?.money || 0).toLocaleString()}원</span>
+                </div>
               </div>
             <div
               ref={permanentListRef}
@@ -1375,6 +1646,9 @@ export default function ShopView() {
                       <span className="shop-scene__shop-item-divider" aria-hidden="true" />
                       <span className="shop-scene__shop-item-desc">
                         {ballItem.item.effect || ballItem.item.description || '규토리로 만든 특별한 볼이다.'}
+                      </span>
+                      <span className="shop-scene__shop-item-meta">
+                        {renderOwnedCountMeta(ballItem.item)}
                       </span>
                     </span>
                   </button>
@@ -1447,6 +1721,8 @@ export default function ShopView() {
                       <span className="shop-scene__shop-item-meta">
                         {Number(shopItem.price || 0).toLocaleString()}원
                         {shopItem.stock !== 99 && shopItem.stock != null ? ` / ${shopItem.stock}개 제한` : ''}
+                        {' / '}
+                        {renderOwnedCountMeta(shopItem.item)}
                       </span>
                     </span>
                   </button>
@@ -1471,7 +1747,7 @@ export default function ShopView() {
         )}
 
         {/* asking: 텍스트 타이핑 */}
-        {phase === 'asking' && !listMessage && (
+        {!beakMsg && phase === 'asking' && !listMessage && (
           <div className="shop-scene__text-box" onClick={(e) => { e.stopPropagation(); handleSceneAdvanceClick(); }} style={{ cursor: 'pointer' }}>
             <span>{askingMessage.slice(0, askingLength)}</span>
             {isAskingComplete && (
@@ -1481,7 +1757,7 @@ export default function ShopView() {
         )}
 
         {/* shop: 아이템 설명 / 구매확인 / 구매완료 텍스트 */}
-        {(listMessage || (phase === 'shop' && selectedShopItem)) && (
+        {!beakMsg && (listMessage || (phase === 'shop' && selectedShopItem)) && (
           <div className="shop-scene__text-box" onClick={(e) => { e.stopPropagation(); handleSceneAdvanceClick(); }}>
             {renderShopText()}
             {renderThrownItemHover()}
@@ -1505,8 +1781,8 @@ export default function ShopView() {
       {phase === 'shop' && selectedShopItem && !purchaseMsg && (!thrownShopItem || isShopTextComplete || showBuy2) && (selectedShopItem.type !== 'gachaball' || showBuy2 || (gachaContextStep >= 1 && isShopTextComplete)) && (
         <div style={{
           position: 'absolute',
-          right: '39%',
-          bottom: 'calc(6% + 40px)',
+          right: 'calc(39% + 150px)',
+          bottom: 'calc(6% + 50px)',
           zIndex: 40,
           pointerEvents: 'auto',
         }}>
@@ -1612,11 +1888,25 @@ export default function ShopView() {
         </div>
       )}
 
-      <img
-        className="shop-scene__cramorant"
-        src={cramorantImage}
-        alt="상점의 윽우지"
-      />
+      <div className="shop-scene__cramorant-wrap">
+        <img
+          className="shop-scene__cramorant"
+          src={cramorantImage}
+          alt="상점의 윽우지"
+        />
+        {(trainer?.isSuperAdmin || !trainer?.cramorantBeakClaimed) && (
+          <button
+            type="button"
+            className="shop-scene__cramorant-beak-hit"
+            onClick={(e) => { e.stopPropagation(); handleCramorantBeakClick(); }}
+            aria-label="윽우지 부리"
+            style={{
+              WebkitMaskImage: `url(${cramorantImage})`,
+              maskImage: `url(${cramorantImage})`,
+            }}
+          />
+        )}
+      </div>
     </section>
   );
 }
