@@ -126,7 +126,7 @@ const renderInline = (text) => {
   if (parts.length === 1) return source || null;
   return parts.map((part, k) => {
     if (/^\*\*\*[^*]+\*\*\*$/.test(part)) {
-      return <strong key={k} style={{ color: ACCENT, textDecoration: 'underline', textUnderlineOffset: 3 }}>{part.slice(3, -3)}</strong>;
+      return <strong key={k} style={{ color: ACCENT }}>{part.slice(3, -3)}</strong>;
     }
     if (/^\*\*[^*]+\*\*$/.test(part)) {
       return <strong key={k}>{part.slice(2, -2)}</strong>;
@@ -142,6 +142,24 @@ const renderInline = (text) => {
 };
 
 const renderTextLine = (line, j) => {
+  if (/^#{1,6}\s+/.test(line)) {
+    const level = Math.min(line.match(/^#+/)?.[0].length || 1, 3);
+    const fontSize = level === 1 ? '1.02rem' : level === 2 ? '0.96rem' : '0.9rem';
+    return (
+      <div
+        key={j}
+        style={{
+          margin: j === 0 ? '0 0 0.65em' : '1.2em 0 0.65em',
+          color: ACCENT,
+          fontSize,
+          fontWeight: 800,
+          lineHeight: 1.45,
+        }}
+      >
+        {renderInline(line.replace(/^#{1,6}\s+/, '').trim()) || ' '}
+      </div>
+    );
+  }
   if (/^[-*]\s+/.test(line)) return (
     <div key={j} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: '0.65em' }}>
       <span style={{ color: ACCENT, fontWeight: 700, flexShrink: 0, lineHeight: 1.85 }}>•</span>
@@ -735,6 +753,14 @@ export default function MobileMembersView({ members = {}, titles = [], initialMe
 
     const target = list.find(m => String(m.id) === String(memberId));
     if (target) {
+      const url = new URL(window.location.href);
+      const state = window.history.state || {};
+      if (!state.memberListReady && url.searchParams.get('member')) {
+        const detailUrl = url.toString();
+        url.searchParams.delete('member');
+        window.history.replaceState({ tab: 'members' }, '', url.toString());
+        window.history.pushState({ tab: 'members', member: target.id, memberListReady: true }, '', detailUrl);
+      }
       setSelected(target);
       setRevealedId(null);
       onClearInitialMember?.();
@@ -742,10 +768,36 @@ export default function MobileMembersView({ members = {}, titles = [], initialMe
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialMemberId, list.length]);
 
+  useEffect(() => {
+    const onPopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const memberId = params.get('member');
+
+      if (!memberId) {
+        setSelected(null);
+        setRevealedId(null);
+        return;
+      }
+
+      const target = list.find(m => String(m.id) === String(memberId));
+      if (target) {
+        setSelected(target);
+        setRevealedId(null);
+      }
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [list]);
+
   const handleCardTap = (m) => {
     if (revealedId === m.id) {
       clearTimeout(revealTimer.current);
       setRevealedId(null);
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', 'members');
+      url.searchParams.set('member', m.id);
+      window.history.pushState({ tab: 'members', member: m.id, memberListReady: true }, '', url.toString());
       setSelected(m);
     } else {
       clearTimeout(revealTimer.current);
@@ -755,13 +807,12 @@ export default function MobileMembersView({ members = {}, titles = [], initialMe
   };
 
   const handleDetailBack = () => {
-    setSelected(null);
-
     const url = new URL(window.location.href);
     if (url.searchParams.get('member')) {
-      url.searchParams.delete('member');
-      window.history.pushState({ tab: 'members' }, '', url.toString());
+      window.history.back();
+      return;
     }
+    setSelected(null);
   };
 
   if (selected) {
