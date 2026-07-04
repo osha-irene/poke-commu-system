@@ -115,7 +115,11 @@ const getPokemonDbSprite = p => {
   if (isLillipup(p)) {
     return 'https://img.pokemondb.net/sprites/sword-shield/normal/lillipup.png';
   }
-  const name = p?.nameEn || p?.name;
+  const name = p?.formVariant || (
+    p?.regionalForm && p?.nameEn && !String(p.nameEn).toLowerCase().includes(`-${String(p.regionalForm).toLowerCase()}`)
+      ? `${p.nameEn}-${p.regionalForm}`
+      : (p?.nameEn || p?.name)
+  );
   if (name) return `https://img.pokemondb.net/sprites/scarlet-violet/normal/${name.toLowerCase().replace(/\s+/g, '-')}.png`;
   return null;
 };

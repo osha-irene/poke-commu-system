@@ -4,6 +4,7 @@ import { X, Sparkles, ShoppingCart, Trash2, Search } from 'lucide-react';
 import { useGame } from '../../../contexts/GameContext';
 import { getItemPocket, canUseItem, CATEGORIES, POCKET_LABELS } from '../../../utils/itemUtils';
 import { isSoyYYNItem } from '../../../utils/specialItemUtils';
+import { getOwnedPokemonSpriteUrl } from '../../../utils/pokemonImageUtils';
 
 const P = {
   card:     'rgba(255,255,255,0.90)',
@@ -324,7 +325,7 @@ export default function MobileItemsView() {
                       onClick={() => setSelectedPokemon(pokemon)}
                       style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, padding: '12px', borderRadius: 12, border: `2px solid ${selectedPokemon?.uniqueId === pokemon.uniqueId ? P.accent : P.border}`, background: selectedPokemon?.uniqueId === pokemon.uniqueId ? P.accentBg : P.card, cursor: 'pointer' }}
                     >
-                      <img src={pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`} alt={pokemon.name} style={{ width: 44, height: 44, imageRendering: 'pixelated', flexShrink: 0 }} />
+                      <img src={getOwnedPokemonSpriteUrl(pokemon)} alt={pokemon.name} style={{ width: 44, height: 44, imageRendering: 'pixelated', flexShrink: 0 }} />
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontSize: 12, fontWeight: 700, color: P.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pokemon.nickname || pokemon.name}</div>
                         <div style={{ fontSize: 11, color: P.muted }}>Lv.{pokemon.level}</div>

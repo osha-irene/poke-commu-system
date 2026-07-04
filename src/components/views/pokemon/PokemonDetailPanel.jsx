@@ -34,7 +34,7 @@ import FormIconSprite from './FormIconSprite';
 import { getRequiredExpForLevel } from '../../../utils/experience';
 import { getAbilityByName } from '../../../utils/abilityUtils';
 import { getPokemonDisplayParts } from '../../../utils/pokemonDisplayName';
-import { getGenderedSpriteUrl } from '../../../utils/pokemonImageUtils';
+import { getOwnedPokemonSpriteUrl } from '../../../utils/pokemonImageUtils';
 
 const getBaseName = (pokemon) => getPokemonDisplayParts(pokemon).name;
 
@@ -297,7 +297,7 @@ const isHoldingEverstone = pokemon.heldItem?.toLowerCase() === 'everstone' ||
   const originalNumber = pokedexEntry?.originalNumber || pokemon.number;
   const masterData = findPokemonTemplateForOwned(pokemon);
   // 우선순위: 암컷 스프라이트 > 커스텀(폼체인지) > masterData 기본 > 생성 URL
-  const effectiveSpriteUrl = getGenderedSpriteUrl(pokemon, masterData) || pokemon.spriteUrl || masterData?.spriteUrl || getPokemonSpriteUrl(originalNumber);
+  const effectiveSpriteUrl = getOwnedPokemonSpriteUrl(pokemon, masterData) || masterData?.spriteUrl || getPokemonSpriteUrl(originalNumber);
 
   // 아이템 데이터
   const heldItemData = pokemon.heldItem 

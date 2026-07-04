@@ -27,9 +27,16 @@ const getLocalIconUrl = (pokemon, allPokemonMaster) => {
   let englishName = pokemon.nameEn;
 
   if (!englishName && allPokemonMaster) {
-    const template = allPokemonMaster.find(p =>
-      p.number === pokemon.number || p.id === pokemon.pokemonId
-    );
+    const regionalForm = String(pokemon.regionalForm || '').toLowerCase();
+    const originalNumber = Number(pokemon.originalNumber || pokemon.number);
+    const template =
+      allPokemonMaster.find(p => p.id === pokemon.pokemonId) ||
+      allPokemonMaster.find(p => (
+        regionalForm &&
+        String(p.regionalForm || '').toLowerCase() === regionalForm &&
+        Number(p.originalNumber || p.number) === originalNumber
+      )) ||
+      allPokemonMaster.find(p => p.number === pokemon.number);
     englishName = template?.nameEn;
   }
 

@@ -39,6 +39,14 @@ const FORM_SPRITE_NUMBERS = {
 };
 
 const getFormSpriteNumber = (pokemon = {}) => {
+  const originalNumber = Number(pokemon.originalNumber);
+  const directFormNumber = [pokemon.number, pokemon.pokemonId, pokemon.id, pokemon.dexId]
+    .map(value => Number(value))
+    .find(number => Number.isFinite(number) && number > 0 && number !== originalNumber);
+  if (pokemon.regionalForm || pokemon.formVariant) {
+    if (directFormNumber) return directFormNumber;
+  }
+
   const formKeys = [
     pokemon.formVariant,
     pokemon.nameEn,
