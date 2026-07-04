@@ -78,7 +78,27 @@ const getMemberList = (members) =>
 const getFaceImg = m => m?.profileImageThumb || m?.profileImage || m?.profileImageFull || m?.profileImageUrl || '';
 const getPokemonName = p => p?.nickname || p?.nameKo || p?.name || '포켓몬';
 
+const isGalarianFarfetchd = p => {
+  const values = [
+    p?.nameEn,
+    p?.name,
+    p?.species,
+    p?.formName,
+    p?.formVariant,
+    p?.regionalForm,
+  ].filter(Boolean).map(v => String(v).toLowerCase());
+  const joined = values.join(' ');
+
+  return (
+    (joined.includes('farfetch') || joined.includes('파오리')) &&
+    (joined.includes('galar') || joined.includes('가라르'))
+  );
+};
+
 const getPokemonDbSprite = p => {
+  if (isGalarianFarfetchd(p)) {
+    return 'https://img.pokemondb.net/sprites/sword-shield/normal/farfetchd-galarian.png';
+  }
   const name = p?.nameEn || p?.name;
   if (name) return `https://img.pokemondb.net/sprites/scarlet-violet/normal/${name.toLowerCase().replace(/\s+/g, '-')}.png`;
   return null;

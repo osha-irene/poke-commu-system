@@ -194,7 +194,26 @@ const getOfficialArtwork = p => {
   if (id) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
   return getPokemonImg(p);
 };
+const isGalarianFarfetchd = p => {
+  const values = [
+    p?.nameEn,
+    p?.name,
+    p?.species,
+    p?.formName,
+    p?.formVariant,
+    p?.regionalForm,
+  ].filter(Boolean).map(v => String(v).toLowerCase());
+  const joined = values.join(' ');
+
+  return (
+    (joined.includes('farfetch') || joined.includes('파오리')) &&
+    (joined.includes('galar') || joined.includes('가라르'))
+  );
+};
 const getPokemonDbSprite = p => {
+  if (isGalarianFarfetchd(p)) {
+    return 'https://img.pokemondb.net/sprites/sword-shield/normal/farfetchd-galarian.png';
+  }
   const name = p?.nameEn || p?.name;
   if (name) return `https://img.pokemondb.net/sprites/scarlet-violet/normal/${name.toLowerCase().replace(/\s+/g, '-')}.png`;
   return getOfficialArtwork(p);
@@ -989,8 +1008,9 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   const party = getParty(member);
   const partner = party.find(p => p?.isPartner) || member.partnerPokemon || party[0] || null;
   const partnerSpriteUrl = partner ? getPokeApiSprite(partner) : null;
+  const partnerDbSpriteUrl = partner ? getPokemonDbSprite(partner) : null;
   const partnerOfficialArtworkUrl = partner ? getOfficialArtwork(partner) : null;
-  const partnerDisplayUrl = partnerSpriteUrl || partnerOfficialArtworkUrl || (partner ? getPokemonDbSprite(partner) : '');
+  const partnerDisplayUrl = partnerSpriteUrl || partnerDbSpriteUrl || partnerOfficialArtworkUrl || '';
   const partnerUsesArtwork = isOfficialArtworkUrl(partnerDisplayUrl);
   const effectivePartnerUsesArtwork = partnerUsesArtwork || partnerImageUsesArtwork;
 
@@ -1146,9 +1166,9 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
       } catch { setPartnerTopOffset(0); }
     };
     img.onerror = () => {
-      const fallback = getOfficialArtwork(partner);
+      const fallback = getPokemonDbSprite(partner) || getOfficialArtwork(partner);
       if (fallback && img.src !== fallback) {
-        setPartnerImageUsesArtwork(true);
+        setPartnerImageUsesArtwork(isOfficialArtworkUrl(fallback));
         img.src = fallback;
         return;
       }
@@ -1491,7 +1511,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             position: 'fixed',
             top: 0,
             bottom: 0,
-            left: '22%',
+            left: '26%',
             right: tab === 'main' ? 100 : 0,
             overflow: 'hidden',
             zIndex: MEMBER_DETAIL_UI_Z_INDEX - 1,
@@ -1904,7 +1924,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                   src={partnerDisplayUrl}
                   alt={getPokemonName(partner)}
                   onError={e => {
-                    const fallback = partnerOfficialArtworkUrl || getPokemonDbSprite(partner);
+                    const fallback = partnerDbSpriteUrl || partnerOfficialArtworkUrl;
                     if (fallback && e.currentTarget.dataset.fallbackApplied !== '1') {
                       e.currentTarget.dataset.fallbackApplied = '1';
                       const usesArtworkFallback = isOfficialArtworkUrl(fallback);
