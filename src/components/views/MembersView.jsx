@@ -1378,7 +1378,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               height: '62vh',
               marginTop: '-15%',
               filter: 'drop-shadow(4px 5px 1px rgba(0,0,0,0.32))',
-              transform: 'rotate(-8deg)',
+              transform: 'translate(-50px, 20px) rotate(-8deg)',
             }}>
               {/* 폴라로이드 프레임 — 아래 레이어 */}
               <img src={polaroidDetailWhite} alt="" draggable={false} style={{

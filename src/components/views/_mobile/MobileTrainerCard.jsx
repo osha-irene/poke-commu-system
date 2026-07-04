@@ -46,7 +46,7 @@ export default function MobileTrainerCard({ trainer, titles = [] }) {
   const currentTitle = trainer?.title && trainer.title !== 'none'
     ? titles.find(t => t.id === trainer?.title)?.label || ''
     : '';
-  const todayWalksUsed = (trainer?.maxDailyWalks || 0) - (trainer?.dailyWalks || 0);
+  const totalExploreCount = Number(trainer?.totalExploreCount) || 0;
 
   const [mastodonAccount, setMastodonAccount] = useState('');
   useEffect(() => {
@@ -150,7 +150,7 @@ export default function MobileTrainerCard({ trainer, titles = [] }) {
             <div>여행 시작 <strong style={{ color: '#333' }}>7월 5일</strong></div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <div>탐험 <strong style={{ color: '#333' }}>{todayWalksUsed}/{trainer?.maxDailyWalks || 0}회</strong></div>
+            <div>총 탐험 횟수 <strong style={{ color: '#333' }}>{totalExploreCount.toLocaleString()}회</strong></div>
             <div>경험치 <strong style={{ color: '#333' }}>{(trainer?.trainerExp || 0).toLocaleString()}</strong></div>
             <div>소지금 <strong style={{ color: '#b07030' }}>{(trainer?.money || 0).toLocaleString()}원</strong></div>
           </div>

@@ -69,10 +69,12 @@ export const useRegionExplore = (
         && currentUser.lastSafariBallRewardDate !== todayKey;
       const nextDailyWalks = currentUser.dailyWalks - 1;
       const isDailyExploreExhausted = nextDailyWalks === 0;
+      const nextTotalExploreCount = (Number(currentUser.totalExploreCount) || 0) + 1;
 
       // 탐험 횟수 차감 (사파리볼은 포획 시 지급)
       await updateCurrentUser({
         dailyWalks: nextDailyWalks,
+        totalExploreCount: nextTotalExploreCount,
         ...(isDailyExploreExhausted ? { trainerExp: (Number(currentUser.trainerExp) || 0) + DAILY_EXPLORE_EXHAUSTED_EXP } : {}),
         ...(canReceiveSafariBalls ? { lastSafariBallRewardDate: todayKey } : {})
       });
