@@ -824,8 +824,8 @@ export default function MapView({
                 }}
                 className="absolute flex flex-col items-center gap-0.5 hover:scale-110 transition-transform"
                 style={{ left: `${coords.x}%`, top: `${coords.y}%`, transform: 'translate(-50%, -100%)', zIndex: 10, opacity: isActive ? 1 : 0.85, cursor: isHidden ? 'default' : 'pointer', width: 'max-content' }}>
-                <div className="relative flex items-center justify-center" style={{ height: 77, width: 'auto' }}>
-                  <img src={mapNameImg} alt="" style={{ height: 77, width: 'auto', display: 'block', filter: `${isActive ? `drop-shadow(0 0 3px ${town.color}) ` : ''}drop-shadow(5px 5px 1px rgba(43, 16, 2, 0.55))` }} />
+                <div className="relative flex items-center justify-center" style={{ height: 77, width: 156.4 }}>
+                  <img src={mapNameImg} alt="" style={{ height: 77, width: 156.4, display: 'block', filter: `${isActive ? `drop-shadow(0 0 3px ${town.color}) ` : ''}drop-shadow(5px 5px 1px rgba(43, 16, 2, 0.55))` }} />
                   <span className="absolute inset-0 flex items-center justify-center whitespace-nowrap" style={{ fontFamily: "'GmarketSans', sans-serif", fontWeight: 700, fontSize: 24, lineHeight: 1, color: '#373a33', imageRendering: 'auto', letterSpacing: 0, fontSynthesis: 'none' }}>
                     <span style={{ position: 'relative', left: -2, top: 3 }}>
                       {town.groupName}

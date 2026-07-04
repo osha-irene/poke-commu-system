@@ -798,11 +798,11 @@ function HomeDashboard({
               <div className="home-session-panel__bottom">
                 <div
                   role="button"
-                  tabIndex={attendanceClaimed || isClaimingAttendance ? -1 : 0}
-                  onClick={!attendanceClaimed && !isClaimingAttendance ? onClaimAttendance : undefined}
-                  className={`home-session-panel__report${attendanceClaimed || isClaimingAttendance ? ' is-disabled' : ''}`}
+                  tabIndex={attendanceClaimed || isClaimingAttendance || attendanceLocked ? -1 : 0}
+                  onClick={!attendanceClaimed && !isClaimingAttendance && !attendanceLocked ? onClaimAttendance : undefined}
+                  className={`home-session-panel__report${attendanceClaimed || isClaimingAttendance || attendanceLocked ? ' is-disabled' : ''}`}
                   aria-label="\uB808\uD3EC\uD2B8 \uC791\uC131"
-                  aria-disabled={attendanceClaimed || isClaimingAttendance}
+                  aria-disabled={attendanceClaimed || isClaimingAttendance || attendanceLocked}
                 >
                   <img src={loginReport} alt="\uB808\uD3EC\uD2B8 \uC791\uC131" />
                 </div>
@@ -1445,6 +1445,7 @@ export default function App() {
   const [setAccessModalImg] = useState(getRandomAccessModalImg);
   const todayAttendanceKey = getKoreaDateKey();
   const attendanceClaimed = currentUser?.lastAttendanceDate === todayAttendanceKey;
+  const attendanceLocked = todayAttendanceKey < '2026-07-07';
 
   useEffect(() => {
     if (!showAccessModal) return undefined;
@@ -1467,6 +1468,10 @@ export default function App() {
     if (!currentUser?.id || isClaimingAttendance) return;
 
     const todayKey = getKoreaDateKey();
+    if (todayKey < '2026-07-07') {
+      alert('레포트 기능은 7일 00시부터 이용 가능합니다.');
+      return;
+    }
     if (currentUser.lastAttendanceDate === todayKey) {
       alert('오늘 출석 보상은 이미 받았습니다.');
       return;
@@ -1754,7 +1759,7 @@ return (
           toggleSound={() => setSoundEnabled(!soundEnabled)}
           onLogout={handleLogout}
           onClaimAttendance={handleClaimAttendance}
-          attendanceClaimed={attendanceClaimed}
+          attendanceClaimed={attendanceClaimed || attendanceLocked}
           isClaimingAttendance={isClaimingAttendance}
           hideBottomNav={!!encounterPokemon}
         >
@@ -1873,7 +1878,7 @@ return (
           onPokemonClick={() => setCurrentTab('pokemon')}
           onItemsClick={() => setCurrentTab('items')}
           onClaimAttendance={handleClaimAttendance}
-          attendanceClaimed={attendanceClaimed}
+          attendanceClaimed={attendanceClaimed || attendanceLocked}
           isClaimingAttendance={isClaimingAttendance}
           members={members}
           titles={titles || []}
