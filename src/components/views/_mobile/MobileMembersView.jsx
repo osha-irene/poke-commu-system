@@ -703,6 +703,28 @@ function MemberDetail({ member, titles, onBack }) {
     setTimeout(onBack, 500);
   };
 
+  const touchStartRef = useRef({ x: 0, y: 0 });
+
+  const handleTouchStart = (e) => {
+    const t = e.touches[0];
+    touchStartRef.current = { x: t.clientX, y: t.clientY };
+  };
+
+  const handleTouchEnd = (e) => {
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStartRef.current.x;
+    const dy = t.clientY - touchStartRef.current.y;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+
+    const idx = TABS.findIndex(tab => tab.key === activeTab);
+    if (idx === -1) return;
+    if (dx < 0 && idx < TABS.length - 1) {
+      setActiveTab(TABS[idx + 1].key);
+    } else if (dx > 0 && idx > 0) {
+      setActiveTab(TABS[idx - 1].key);
+    }
+  };
+
   return (
     <div className="mmv-detail-scroll" style={{
       position: 'fixed', inset: 0, zIndex: 400,
@@ -760,7 +782,11 @@ function MemberDetail({ member, titles, onBack }) {
       </div>
 
       {/* 콘텐츠 */}
-      <div style={{ padding: '18px 20px 100px' }}>
+      <div
+        style={{ padding: '18px 20px 100px' }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {activeTab === 'main' && <MainTab member={member} title={title} partner={partner} />}
         {activeTab === 'profile' && <ProfileTab member={member} />}
         {activeTab === 'entry' && <EntryTab party={party} allItems={allItems} />}

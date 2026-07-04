@@ -3,12 +3,11 @@ import ReactDOM from 'react-dom';
 import { ChevronLeft, ChevronRight, Image, Lock, MessageSquare, Pencil, Plus, Search, Send, Trash2, X } from 'lucide-react';
 
 
-const CATEGORIES = ['질문', '정산', '휴식'];
+const CATEGORIES = ['질문', '정산'];
 
 const CATEGORY_STYLE = {
   '질문': { bg: 'rgba(80,130,200,0.55)', text: 'rgba(220,238,255,1)' },
   '정산': { bg: 'rgba(195,150,40,0.55)',  text: 'rgba(255,240,180,1)' },
-  '휴식': { bg: 'rgba(80,170,110,0.55)', text: 'rgba(210,255,225,1)' },
 };
 
 export default function QnABoard({

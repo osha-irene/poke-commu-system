@@ -1445,7 +1445,7 @@ export default function App() {
   const [setAccessModalImg] = useState(getRandomAccessModalImg);
   const todayAttendanceKey = getKoreaDateKey();
   const attendanceClaimed = currentUser?.lastAttendanceDate === todayAttendanceKey;
-  const attendanceLocked = todayAttendanceKey < '2026-07-07';
+  const attendanceLocked = todayAttendanceKey < '2026-07-06';
 
   useEffect(() => {
     if (!showAccessModal) return undefined;
@@ -1468,8 +1468,8 @@ export default function App() {
     if (!currentUser?.id || isClaimingAttendance) return;
 
     const todayKey = getKoreaDateKey();
-    if (todayKey < '2026-07-07') {
-      alert('레포트 기능은 7일 00시부터 이용 가능합니다.');
+    if (todayKey < '2026-07-06') {
+      alert('레포트 기능은 6일 00시부터 이용 가능합니다.');
       return;
     }
     if (currentUser.lastAttendanceDate === todayKey) {
