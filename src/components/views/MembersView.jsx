@@ -2352,7 +2352,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                 onClick={() => { setRelationEditIdx('new'); setRelationDraft({ charName: '', intro: '', memo: '' }); }}
                 onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.15)'}
                 onMouseLeave={e => e.currentTarget.style.filter = ''}
-                style={{ position: 'absolute', top: 195, right: 28, width: 36, height: 36, borderRadius: '50%', border: 'none', background: `rgb(${selectedAccentRgb})`, color: kwTextColor, fontSize: 22, fontWeight: 300, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: MEMBER_DETAIL_UI_Z_INDEX, transition: 'filter 0.15s ease' }}
+                style={{ position: 'fixed', top: 195, right: 28, width: 36, height: 36, borderRadius: '50%', border: 'none', background: `rgb(${selectedAccentRgb})`, color: kwTextColor, fontSize: 22, fontWeight: 300, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: MEMBER_DETAIL_UI_Z_INDEX + 20, boxShadow: '0 4px 14px rgba(0,0,0,0.18)', transition: 'filter 0.15s ease' }}
               >
                 +
               </button>
