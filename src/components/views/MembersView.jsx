@@ -228,6 +228,10 @@ const getPokemonDbExceptionTopOffset = p => {
   if (isLillipup(p)) return 0.28;
   return 0;
 };
+const getPartnerTooltipOffset = p => {
+  if (isGalarianFarfetchd(p) || isLillipup(p)) return { x: 20, y: -60 };
+  return { x: 0, y: 0 };
+};
 const getPokemonDbSprite = p => {
   if (isGalarianFarfetchd(p)) {
     return 'https://img.pokemondb.net/sprites/sword-shield/normal/farfetchd-galarian.png';
@@ -1993,9 +1997,10 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                 {partnerHovered && (() => {
                   const imgH = partnerImgHeight;
                   const topPx = partnerTopOffset * imgH;
+                  const tooltipOffset = getPartnerTooltipOffset(partner);
                   const bottomFromContainerBottom = imgH - topPx + 7;
                   return (
-                    <div style={{ position: 'absolute', bottom: bottomFromContainerBottom, right: 18, zIndex: 10, pointerEvents: 'none' }}>
+                    <div style={{ position: 'absolute', bottom: bottomFromContainerBottom + tooltipOffset.y, right: 18 - tooltipOffset.x, zIndex: 10, pointerEvents: 'none' }}>
                       <div style={{ background: `rgb(${selectedAccentRgb})`, color: partnerTextColor, padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', whiteSpace: 'nowrap', boxShadow: '3px 3px 6px rgba(0,0,0,0.18)' }}>
                         CLICK!
                       </div>
