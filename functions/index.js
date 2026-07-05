@@ -148,19 +148,51 @@ const statusFromWebhookBody = body => {
   return body.id && body.content ? body : null;
 };
 
+const PROCESSING_STALE_MS = 10 * 60 * 1000;
+const FAILURE_RETRY_COOLDOWN_MS = 30 * 60 * 1000;
+const MAX_PROCESS_ATTEMPTS = 3;
+
 const markProcessed = (db, statusId, data) =>
-  db.ref(`mastodonBot/processedStatuses/${statusId}`).set({ processedAt: Date.now(), ...data });
+  db.ref(`mastodonBot/processedStatuses/${statusId}`).update({ status: 'done', processedAt: Date.now(), ...data });
+
+const markProcessingFailed = async (db, statusId, prefix, error, source) => {
+  if (!statusId || !prefix) return;
+  const ref = db.ref(`mastodonBot/processedStatuses/${statusId}_${prefix}`);
+  const snap = await ref.once('value');
+  const prev = snap.val() || {};
+  await ref.update({
+    status: 'failed',
+    failedAt: Date.now(),
+    attempts: Number(prev.attempts || 1),
+    source,
+    error: String(error?.message || error || 'unknown error').slice(0, 500),
+  });
+};
 
 const isAlreadyProcessed = async (db, statusId, prefix) => {
   const snap = await db.ref(`mastodonBot/processedStatuses/${statusId}_${prefix}`).once('value');
   if (!snap.exists()) return false;
   const val = snap.val() || {};
-  if (val.status === 'processing' && Date.now() - Number(val.processingStartedAt || 0) > 5 * 60 * 1000) return false;
+  const now = Date.now();
+  const attempts = Number(val.attempts || 0);
+  if (attempts >= MAX_PROCESS_ATTEMPTS && val.status !== 'done') return true;
+  if (val.status === 'failed') {
+    return now - Number(val.failedAt || 0) < FAILURE_RETRY_COOLDOWN_MS;
+  }
+  if (val.status === 'processing' && now - Number(val.processingStartedAt || 0) > PROCESSING_STALE_MS) return false;
   return true;
 };
 
-const startProcessing = (db, statusId, prefix) =>
-  db.ref(`mastodonBot/processedStatuses/${statusId}_${prefix}`).set({ status: 'processing', processingStartedAt: Date.now() });
+const startProcessing = async (db, statusId, prefix) => {
+  const ref = db.ref(`mastodonBot/processedStatuses/${statusId}_${prefix}`);
+  const snap = await ref.once('value');
+  const prev = snap.val() || {};
+  await ref.update({
+    status: 'processing',
+    processingStartedAt: Date.now(),
+    attempts: Number(prev.attempts || 0) + 1,
+  });
+};
 
 // ── 캠핑 봇 처리 ────────────────────────────────────────────────
 const processCampStatus = async (status, source = 'webhook') => {
@@ -304,16 +336,35 @@ const processBattleStatus = async (status, source = 'webhook') => {
 };
 
 // ── 폴링 헬퍼 ──────────────────────────────────────────────────
-const pollMentions = async (ctx, processStatus, lastIdKey) => {
+const pollMentions = async (ctx, processStatus, lastIdKey, prefix) => {
   const lastIdRef = db.ref(`mastodonBot/${lastIdKey}`);
   const lastIdSnap = await lastIdRef.once('value');
   const notifications = await ctx.getMentions(lastIdSnap.val());
   if (!notifications.length) return { count: 0 };
   for (const n of [...notifications].reverse()) {
-    try { await processStatus(n.status, 'schedule'); } catch (e) { console.error(`Poll error [${lastIdKey}]:`, e); }
+    try {
+      await processStatus(n.status, 'schedule');
+    } catch (e) {
+      await markProcessingFailed(db, n?.status?.id, prefix, e, 'schedule');
+      console.error(`Poll error [${lastIdKey}]:`, e);
+    }
   }
   await lastIdRef.set(notifications[0].id);
   return { count: notifications.length };
+};
+
+const handleBotWebhook = async (req, res, processStatus, prefix) => {
+  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+  let status = null;
+  try {
+    status = statusFromWebhookBody(req.body);
+    if (!status) { res.status(200).json({ ignored: true }); return; }
+    res.status(200).json(await processStatus(status, 'webhook'));
+  } catch (e) {
+    await markProcessingFailed(db, status?.id, prefix, e, 'webhook');
+    console.error(`${prefix}Webhook error:`, e);
+    res.status(200).json({ ok: false, accepted: true, retrySuppressed: true, error: e.message });
+  }
 };
 
 const closeTimedOutBattleSessions = async () => {
@@ -343,48 +394,29 @@ const scheduleOpts = { timeoutSeconds: 300, memory: '256MB' };
 
 // 캠핑 봇
 exports.campWebhook = functions.region(region.region).runWith(webhookOpts).https.onRequest(async (req, res) => {
-  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-  try {
-    const status = statusFromWebhookBody(req.body);
-    if (!status) { res.status(200).json({ ignored: true }); return; }
-    res.status(200).json(await processCampStatus(status, 'webhook'));
-  } catch (e) { console.error('campWebhook error:', e); res.status(500).json({ error: e.message }); }
+  await handleBotWebhook(req, res, processCampStatus, 'camp');
 });
 exports.checkCampMentions = functions.region(region.region).runWith(scheduleOpts)
   .pubsub.schedule('every 1 minutes').timeZone('Asia/Seoul')
-  .onRun(async () => { try { return await pollMentions(campCtx, processCampStatus, 'lastCampNotificationId'); } catch (e) { console.error(e); return null; } });
+  .onRun(async () => { try { return await pollMentions(campCtx, processCampStatus, 'lastCampNotificationId', 'camp'); } catch (e) { console.error(e); return null; } });
 
 // 교환 봇
 exports.tradeWebhook = functions.region(region.region).runWith(webhookOpts).https.onRequest(async (req, res) => {
-  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-  try {
-    console.log('[tradeWebhook] body:', JSON.stringify(req.body).slice(0, 1000));
-    const status = statusFromWebhookBody(req.body);
-    if (!status) {
-      console.log('[tradeWebhook] ignored: could not parse status from body');
-      res.status(200).json({ ignored: true }); return;
-    }
-    res.status(200).json(await processTradeStatus(status, 'webhook'));
-  } catch (e) { console.error('tradeWebhook error:', e); res.status(500).json({ error: e.message }); }
+  await handleBotWebhook(req, res, processTradeStatus, 'trade');
 });
 exports.checkTradeMentions = functions.region(region.region).runWith(scheduleOpts)
   .pubsub.schedule('every 1 minutes').timeZone('Asia/Seoul')
-  .onRun(async () => { try { return await pollMentions(tradeCtx, processTradeStatus, 'lastTradeNotificationId'); } catch (e) { console.error(e); return null; } });
+  .onRun(async () => { try { return await pollMentions(tradeCtx, processTradeStatus, 'lastTradeNotificationId', 'trade'); } catch (e) { console.error(e); return null; } });
 
 // 배틀 봇
 exports.battleWebhook = functions.region(region.region).runWith(webhookOpts).https.onRequest(async (req, res) => {
-  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-  try {
-    const status = statusFromWebhookBody(req.body);
-    if (!status) { res.status(200).json({ ignored: true }); return; }
-    res.status(200).json(await processBattleStatus(status, 'webhook'));
-  } catch (e) { console.error('battleWebhook error:', e); res.status(500).json({ error: e.message }); }
+  await handleBotWebhook(req, res, processBattleStatus, 'battle');
 });
 exports.checkBattleMentions = functions.region(region.region).runWith(scheduleOpts)
   .pubsub.schedule('every 1 minutes').timeZone('Asia/Seoul')
   .onRun(async () => {
     try {
-      const mentions = await pollMentions(battleCtx, processBattleStatus, 'lastBattleNotificationId');
+      const mentions = await pollMentions(battleCtx, processBattleStatus, 'lastBattleNotificationId', 'battle');
       const timeouts = await closeTimedOutBattleSessions();
       return { mentions, timeouts };
     } catch (e) { console.error(e); return null; }
@@ -504,15 +536,64 @@ exports.testNetwork = functions.region(region.region).https.onRequest(async (req
 // 하위 호환 — 기존 단일 웹훅 엔드포인트 유지 (캠핑+교환+배틀 모두 처리)
 exports.mastodonWebhook = functions.region(region.region).runWith(webhookOpts).https.onRequest(async (req, res) => {
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+  let status = null;
   try {
-    const status = statusFromWebhookBody(req.body);
+    status = statusFromWebhookBody(req.body);
     if (!status) { res.status(200).json({ ignored: true }); return; }
     const results = await Promise.allSettled([
       processCampStatus(status, 'webhook'),
       processTradeStatus(status, 'webhook'),
       processBattleStatus(status, 'webhook'),
     ]);
+    await Promise.all(results.map((result, index) => {
+      if (result.status !== 'rejected') return null;
+      const prefix = ['camp', 'trade', 'battle'][index];
+      return markProcessingFailed(db, status?.id, prefix, result.reason, 'webhook');
+    }));
     const processed = results.filter(r => r.status === 'fulfilled' && r.value?.processed);
     res.status(200).json({ processed: processed.length > 0, results: results.map(r => r.value || r.reason?.message) });
-  } catch (e) { console.error('mastodonWebhook error:', e); res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    await Promise.all(['camp', 'trade', 'battle'].map(prefix => markProcessingFailed(db, status?.id, prefix, e, 'webhook')));
+    console.error('mastodonWebhook error:', e);
+    res.status(200).json({ ok: false, accepted: true, retrySuppressed: true, error: e.message });
+  }
+});
+
+// 관리자 — 회원 비밀번호 강제 재설정 (본인 인증 없이, 관리자 권한으로 실행)
+exports.adminResetPassword = functions.region(region.region).runWith(webhookOpts).https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', '로그인이 필요합니다.');
+  }
+
+  const callerSnap = await db.ref(`members/${context.auth.uid}`).once('value');
+  const caller = callerSnap.val();
+  if (!caller || !(caller.isAdmin || caller.isSuperAdmin)) {
+    throw new functions.https.HttpsError('permission-denied', '관리자 권한이 필요합니다.');
+  }
+
+  const targetUid = String(data?.targetUid || '').trim();
+  const rawPassword = String(data?.newPassword || '');
+  if (!targetUid) {
+    throw new functions.https.HttpsError('invalid-argument', '대상 회원을 지정해주세요.');
+  }
+
+  const isTemporaryPassword = rawPassword === '0000';
+  const authPassword = isTemporaryPassword ? '000000' : rawPassword;
+  if (authPassword.length < 6) {
+    throw new functions.https.HttpsError('invalid-argument', '비밀번호는 6자 이상이어야 합니다. 임시 비밀번호는 0000을 사용할 수 있습니다.');
+  }
+
+  try {
+    await admin.auth().updateUser(targetUid, { password: authPassword });
+  } catch (e) {
+    console.error('adminResetPassword updateUser error:', e);
+    throw new functions.https.HttpsError('internal', '비밀번호 변경 중 오류가 발생했습니다.');
+  }
+
+  await db.ref(`members/${targetUid}`).update({
+    password: isTemporaryPassword ? '0000' : null,
+    forcePasswordChange: isTemporaryPassword,
+  });
+
+  return { success: true };
 });

@@ -123,6 +123,8 @@ const getPokemonDbSprite = p => {
   return getOwnedPokemonSpriteUrl(p) || getPokemonLocalIconUrl(p);
 };
 
+const getEntryPokemonSprite = p => getOwnedPokemonSpriteUrl(p) || getPokemonLocalIconUrl(p);
+
 const getBallUrl = (p, allItems = []) => {
   if (p?.caughtWithBall && allItems.length > 0) {
     const ballName = p.caughtWithBall.toLowerCase();
@@ -466,7 +468,6 @@ function EntryTab({ party, allItems = [] }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {party.map((p, i) => {
-        const sprite = getOwnedPokemonSpriteUrl(p) || getPokemonLocalIconUrl(p);
         const types = (Array.isArray(p?.types) ? p.types : [p?.type]).filter(Boolean);
         const ballUrl = getBallUrl(p, allItems);
         const baseName = p?.nameKo || p?.name || '';
@@ -486,11 +487,21 @@ function EntryTab({ party, allItems = [] }) {
               width: 'auto', height: 'auto', maxWidth: 36, maxHeight: 36,
               imageRendering: 'pixelated', opacity: 0.75, pointerEvents: 'none',
             }} />
-            <img
-              src={sprite}
-              alt={getPokemonName(p)}
-              style={{ maxWidth: 96, maxHeight: 96, width: 'auto', height: 'auto', flexShrink: 0, imageRendering: 'pixelated' }}
-              onError={e => { e.target.src = getPokemonLocalIconUrl(p); }}
+            <div
+              className="pokemon-bg-sprite"
+              aria-label={getPokemonName(p)}
+              role="img"
+              style={{
+                width: 96,
+                height: 96,
+                flexShrink: 0,
+                backgroundImage: `url(${getEntryPokemonSprite(p)})`,
+                backgroundSize: '80%',
+                backgroundPosition: 'center center',
+                backgroundRepeat: 'no-repeat',
+                position: 'relative',
+                imageRendering: 'pixelated',
+              }}
             />
             <div style={{ flex: 1, minWidth: 0, paddingTop: 2 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap', marginBottom: 4 }}>

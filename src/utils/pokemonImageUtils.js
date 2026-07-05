@@ -32,38 +32,6 @@ export const getPokemonArtworkUrl = (number) => {
 
 const FEMALE_SPRITE_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female';
 const FEMALE_SHINY_SPRITE_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/female';
-const GEN_IX_SV_SPRITE_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-ix/scarlet-violet';
-
-const FORM_SPRITE_NUMBERS = {
-  'wooper-paldea': 10253,
-  'paldea:194': 10253,
-  'sneasel-hisui': 10235,
-  'hisui:215': 10235,
-};
-
-const getFormSpriteNumber = (pokemon = {}) => {
-  const originalNumber = Number(pokemon.originalNumber);
-  const directFormNumber = [pokemon.number, pokemon.pokemonId, pokemon.id, pokemon.dexId]
-    .map(value => Number(value))
-    .find(number => Number.isFinite(number) && number > 0 && number !== originalNumber);
-  if (pokemon.regionalForm || pokemon.formVariant) {
-    if (directFormNumber) return directFormNumber;
-  }
-
-  const formKeys = [
-    pokemon.formVariant,
-    pokemon.nameEn,
-    pokemon.species,
-  ].filter(Boolean).map(value => String(value).toLowerCase());
-
-  for (const key of formKeys) {
-    if (FORM_SPRITE_NUMBERS[key]) return FORM_SPRITE_NUMBERS[key];
-  }
-
-  const regionalForm = String(pokemon.regionalForm || '').toLowerCase();
-  const baseNumber = Number(pokemon.originalNumber || pokemon.number || pokemon.dexId || pokemon.pokemonId || pokemon.id);
-  return FORM_SPRITE_NUMBERS[`${regionalForm}:${baseNumber}`] || null;
-};
 
 /**
  * 성별을 고려한 스프라이트 URL 반환
@@ -98,30 +66,19 @@ export const getOwnedPokemonSpriteUrl = (pokemon, pokemonData = pokemon) => {
   const genderedSprite = getGenderedSpriteUrl(pokemon, pokemonData);
   if (genderedSprite) return genderedSprite;
 
-  const formSpriteNumber = getFormSpriteNumber(pokemon);
+  const number = pokemon.number || pokemon.dexId || pokemon.pokemonId || pokemon.id || pokemon.originalNumber;
 
   if (pokemon.isShiny) {
     if (pokemon.shinySprite) return pokemon.shinySprite;
     if (pokemon.shinySpriteUrl) return pokemon.shinySpriteUrl;
 
-    const shinyNumber = formSpriteNumber || pokemon.number || pokemon.originalNumber || pokemon.dexId || pokemon.pokemonId;
-    if (shinyNumber) {
-      return formSpriteNumber
-        ? `${GEN_IX_SV_SPRITE_BASE}/shiny/${shinyNumber}.png`
-        : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${shinyNumber}.png`;
-    }
+    if (number) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${number}.png`;
   }
 
-  if (formSpriteNumber) {
-    return `${GEN_IX_SV_SPRITE_BASE}/${formSpriteNumber}.png`;
-  }
-
+  if (number) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`;
   if (pokemon.spriteUrl) return pokemon.spriteUrl;
   if (pokemon.sprite) return pokemon.sprite;
   if (pokemon.imageUrl) return pokemon.imageUrl;
 
-  const number = pokemon.number || pokemon.originalNumber || pokemon.dexId || pokemon.pokemonId || pokemon.id;
-  return number
-    ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`
-    : '';
+  return '';
 };

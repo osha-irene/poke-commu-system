@@ -2236,7 +2236,22 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                   }}>
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                       <img src={getBallImageUrl(p, allItems)} alt="" style={{ position: 'absolute', top: 6, left: 6, width: 32, height: 32, objectFit: 'contain', imageRendering: 'pixelated', opacity: 0.75, pointerEvents: 'none' }} />
-                      <img src={getEntryPokemonSprite(p)} alt={getPokemonName(p)} style={{ width: 96, height: 96, objectFit: 'contain', flexShrink: 0, imageRendering: 'auto' }} onError={e => { e.target.src = getPokemonLocalIconUrl(p); }} />
+                      <div
+                        className="pokemon-bg-sprite"
+                        aria-label={getPokemonName(p)}
+                        role="img"
+                        style={{
+                          width: 96,
+                          height: 96,
+                          flexShrink: 0,
+                          backgroundImage: `url(${getEntryPokemonSprite(p)})`,
+                          backgroundSize: '80%',
+                          backgroundPosition: 'center center',
+                          backgroundRepeat: 'no-repeat',
+                          position: 'relative',
+                          imageRendering: 'pixelated',
+                        }}
+                      />
                       <div style={{ flex: 1, minWidth: 0, alignSelf: 'stretch', paddingTop: 3 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
                           <span style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>{nickname || baseName}</span>
