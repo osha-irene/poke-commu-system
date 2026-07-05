@@ -772,7 +772,7 @@ export default function PokedexView({
           }}
         >
           <div
-            className="m-4 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg border border-[#b7d982] bg-[#f4f8e8] p-6 shadow-2xl"
+            className="m-4 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border border-[#b7d982] bg-[#f4f8e8] p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center">
