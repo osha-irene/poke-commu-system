@@ -66,14 +66,30 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
         
         // ⭐ 로그인 시 한 번만 데이터 로드 (실시간 리스너 제거)
         try {
-          const memberRef = ref(database, `members/${firebaseUser.uid}`);
-          const snapshot = await get(memberRef);
-          
+          const directMemberRef = ref(database, `members/${firebaseUser.uid}`);
+          let snapshot = await get(directMemberRef);
+          let memberId = firebaseUser.uid;
+
+          if (!snapshot.exists()) {
+            const membersSnapshot = await get(ref(database, 'members'));
+            const allMembers = membersSnapshot.val() || {};
+            const matchedEntry = Object.entries(allMembers).find(([, member]) => (
+              member?.authUid === firebaseUser.uid ||
+              (firebaseUser.email && member?.email === firebaseUser.email)
+            ));
+
+            if (matchedEntry) {
+              [memberId] = matchedEntry;
+              snapshot = { exists: () => true, val: () => matchedEntry[1] };
+            }
+          }
+
           if (snapshot.exists() && isSubscribed) {
             const memberData = snapshot.val();
             const paddedUser = {
               ...memberData,
-              id: firebaseUser.uid,
+              id: memberId,
+              authUid: firebaseUser.uid,
               email: firebaseUser.email,
               caughtPokemon: ensurePartyPadding(memberData.caughtPokemon || [], allPokemonMaster),
               partnerPokemon: withNormalizedIVs(memberData.partnerPokemon, DEFAULT_IVS)
@@ -85,8 +101,9 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
             
             setMembers(prev => ({
               ...prev,
-              [firebaseUser.uid]: paddedUser
+              [memberId]: paddedUser
             }));
+            localStorage.setItem('poke_currentUserId', memberId);
           }
         } catch (error) {
           console.error('❌ 데이터 로드 실패:', error);
@@ -158,7 +175,7 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
           error.code === 'auth/wrong-password') {
         alert('아이디 또는 비밀번호가 일치하지 않습니다.');
       } else {
-        alert('로그인 중 오류가 발생했습니다.');
+        alert(`로그인 중 오류가 발생했습니다.\n${error.code || ''}${error.message ? `\n${error.message}` : ''}`);
       }
       
       return false;

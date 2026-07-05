@@ -1478,7 +1478,10 @@ export const useAdminMembers = (
       return true;
     } catch (error) {
       console.error('❌ 비밀번호 재설정 실패:', error);
-      alert(error?.message || '비밀번호 재설정 중 오류가 발생했습니다.');
+      const detailMessage = error?.details?.message || error?.details?.code || error?.message;
+      alert(detailMessage && detailMessage !== 'internal'
+        ? detailMessage
+        : '비밀번호 재설정 중 오류가 발생했습니다. Firebase Auth 계정 연결 상태를 확인해주세요.');
       return false;
     }
   };

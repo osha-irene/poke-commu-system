@@ -583,14 +583,44 @@ exports.adminResetPassword = functions.region(region.region).runWith(webhookOpts
     throw new functions.https.HttpsError('invalid-argument', '비밀번호는 6자 이상이어야 합니다. 임시 비밀번호는 0000을 사용할 수 있습니다.');
   }
 
+  const targetSnap = await db.ref(`members/${targetUid}`).once('value');
+  const targetMember = targetSnap.val();
+  if (!targetMember) {
+    throw new functions.https.HttpsError('not-found', '대상 회원을 찾을 수 없습니다.');
+  }
+
+  let authUid = targetMember.authUid || targetUid;
   try {
-    await admin.auth().updateUser(targetUid, { password: authPassword });
+    try {
+      await admin.auth().getUser(authUid);
+    } catch (e) {
+      if (e?.code !== 'auth/user-not-found') throw e;
+      const email = targetMember.email || (targetMember.loginId ? `${targetMember.loginId}@pokemon.com` : '');
+      if (!email) {
+        throw new functions.https.HttpsError('not-found', '대상 회원의 로그인 이메일을 찾을 수 없습니다.');
+      }
+      const authUser = await admin.auth().getUserByEmail(email);
+      authUid = authUser.uid;
+    }
+
+    await admin.auth().updateUser(authUid, { password: authPassword });
   } catch (e) {
     console.error('adminResetPassword updateUser error:', e);
-    throw new functions.https.HttpsError('internal', '비밀번호 변경 중 오류가 발생했습니다.');
+    if (e instanceof functions.https.HttpsError) throw e;
+    if (e?.code === 'auth/user-not-found') {
+      throw new functions.https.HttpsError('not-found', 'Firebase Auth에서 대상 계정을 찾을 수 없습니다.');
+    }
+    if (e?.code === 'auth/invalid-password' || e?.code === 'auth/weak-password') {
+      throw new functions.https.HttpsError('invalid-argument', '비밀번호는 6자 이상이어야 합니다. 임시 비밀번호는 0000을 사용할 수 있습니다.');
+    }
+    throw new functions.https.HttpsError('unknown', '비밀번호 변경 중 오류가 발생했습니다.', {
+      code: e?.code || null,
+      message: e?.message || String(e),
+    });
   }
 
   await db.ref(`members/${targetUid}`).update({
+    authUid,
     password: isTemporaryPassword ? '0000' : null,
     forcePasswordChange: isTemporaryPassword,
   });
