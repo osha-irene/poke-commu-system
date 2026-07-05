@@ -142,22 +142,8 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
   const handleLogin = async (userId, password) => {
     try {
       const email = `${userId}@pokemon.com`;
-      let userCredential;
-
-      try {
-        userCredential = await signInWithEmailAndPassword(auth, email, password);
-      } catch (error) {
-        if (
-          password === '0000' &&
-          (error.code === 'auth/invalid-credential' ||
-            error.code === 'auth/user-not-found' ||
-            error.code === 'auth/wrong-password')
-        ) {
-          userCredential = await signInWithEmailAndPassword(auth, email, '000000');
-        } else {
-          throw error;
-        }
-      }
+      const authPassword = password === '0000' ? '000000' : password;
+      const userCredential = await signInWithEmailAndPassword(auth, email, authPassword);
 
       const firebaseUid = userCredential.user.uid;
       
@@ -174,6 +160,8 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
           error.code === 'auth/user-not-found' ||
           error.code === 'auth/wrong-password') {
         alert('아이디 또는 비밀번호가 일치하지 않습니다.');
+      } else if (error.code === 'auth/too-many-requests') {
+        alert('로그인 시도가 너무 많아 Firebase가 잠시 차단했습니다. 잠시 후 다시 시도해주세요.');
       } else {
         alert(`로그인 중 오류가 발생했습니다.\n${error.code || ''}${error.message ? `\n${error.message}` : ''}`);
       }
