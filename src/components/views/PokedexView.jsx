@@ -460,9 +460,6 @@ export default function PokedexView({
                     <span style={{ fontSize: 28, fontWeight: 900, color: 'rgba(120,160,80,0.35)' }}>?</span>
                   )}
                 </div>
-                <span style={{ fontSize: 9, fontWeight: 700, color: '#8aaa60', letterSpacing: '0.04em' }}>
-                  {pokemon.newNumber ? `No.${String(pokemon.newNumber).padStart(3, '0')}` : `No.${String(currentNumber).padStart(3, '0')}`}
-                </span>
                 <span style={{
                   fontSize: 10, fontWeight: 600,
                   color: isUnlocked ? '#2a3d1a' : 'rgba(80,110,50,0.65)',
@@ -511,9 +508,6 @@ export default function PokedexView({
               }}>✕</button>
 
               {/* 번호 + 이름 */}
-              <div style={{ fontSize: 10, color: '#8aaa60', fontWeight: 700, marginBottom: 1 }}>
-                No.{(selectedForm.newNumber || selectedForm.originalNumber || selectedForm.number).toString().padStart(3, '0')}
-              </div>
               <div style={{ fontSize: 19, fontWeight: 800, color: '#1a2e10', marginBottom: 12 }}>
                 {getPokemonDisplayParts(selectedForm).name}
               </div>
@@ -702,10 +696,6 @@ export default function PokedexView({
                       보유
                     </div>
                   )}
-
-                  <div className="mb-2 text-xs font-bold text-[#6f804f]">
-                    No.{(pokemon.newNumber || pokemon.number).toString().padStart(3, '0')}
-                  </div>
 
                   <div className={`flex w-full items-center justify-center bg-transparent ${isUnlocked ? 'mb-2 h-24' : 'h-36'}`}>
                     {isUnlocked ? (
