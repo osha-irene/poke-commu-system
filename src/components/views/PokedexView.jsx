@@ -776,27 +776,6 @@ export default function PokedexView({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center">
-              {/* 도감 번호 */}
-              <div className="mb-2 text-sm text-[#6f804f]">
-                {(() => {
-                  const displayNumber = selectedForm.originalNumber || selectedForm.number;
-                  const baseForm = selectedForm.originalNumber
-                    ? allPokedex.find(p => p.number === selectedForm.originalNumber && !p.originalNumber)
-                    : selectedForm;
-
-                  return (
-                    <>
-                      No.{displayNumber.toString().padStart(3, '0')}
-                      {baseForm?.newNumber && (
-                        <span className="ml-2 text-xs">
-                          (영운 도감 No.{baseForm.newNumber.toString().padStart(3, '0')})
-                        </span>
-                      )}
-                    </>
-                  );
-                })()}
-              </div>
-
               {/* 리전폼 */}
               {(() => {
                 // ?꾩옱 ?좏깮???ъ폆紐ъ씠 ?먯쥌?몄? 由ъ쟾?쇱씤吏 ?뺤씤
