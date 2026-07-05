@@ -880,7 +880,7 @@ export default function PokedexView({
                 )}
               </div>
 
-              <div className="mb-4 grid gap-3 md:grid-cols-2">
+              <div className="mb-4 flex flex-col gap-3">
               {/* 출현 지역 */}
               <div className="rounded border border-[#b7d982] bg-[#eef7df] p-3 text-left">
                 <div className="flex items-center justify-between mb-2">
