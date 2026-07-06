@@ -1,10 +1,10 @@
 // src/components/views/AdminView.jsx - 완전 수정 버전
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useGame } from '../../contexts/GameContext';
 import { ref as dbRef, get, set } from 'firebase/database';
 import { database } from '../../firebase';
-import { User, ChevronRight, Pencil, Image, X, Users, Map, BookOpen, ShoppingBag, UtensilsCrossed, Tent, Calendar, Settings, AlertTriangle, Medal, Wrench, Info, Trash2, Zap, Wind, Ban, Bot } from 'lucide-react';
+import { User, ChevronRight, X, Users, Map, BookOpen, ShoppingBag, UtensilsCrossed, Tent, Calendar, Settings, AlertTriangle, Medal, Wrench, Info, Trash2, Zap, Wind, Ban, Bot } from 'lucide-react';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import RegionEditModal from '../modals/RegionEditModal';
 import PokedexAdminPanel from './admin/PokedexAdminPanel';
@@ -116,30 +116,8 @@ function CustomItemManageModal({ items, onUpdate, onDelete, onClose }) {
   );
 }
 
-function TitleManagerPanel({ titles = [], onAdd, onDelete, onRename, onUploadIcon }) {
+function TitleManagerPanel({ titles = [] }) {
   const [open, setOpen] = useState(false);
-  const [newLabel, setNewLabel] = useState('');
-  const [uploading, setUploading] = useState({});
-  const [editingId, setEditingId] = useState(null);
-  const [editingLabel, setEditingLabel] = useState('');
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
-  const fileInputRefs = useRef({});
-
-  const handleAdd = async () => {
-    const trimmed = newLabel.trim();
-    if (!trimmed) return;
-    await onAdd?.(trimmed);
-    setNewLabel('');
-  };
-
-  const handleUpload = async (id, file) => {
-    setUploading(prev => ({ ...prev, [id]: true }));
-    try {
-      await onUploadIcon?.(id, file);
-    } finally {
-      setUploading(prev => ({ ...prev, [id]: false }));
-    }
-  };
 
   return (
     <div style={{ minWidth: 0 }}>
@@ -148,104 +126,40 @@ function TitleManagerPanel({ titles = [], onAdd, onDelete, onRename, onUploadIco
         onClick={() => setOpen(true)}
         className="text-sm font-semibold px-3 py-1.5 rounded-lg border border-indigo-300 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors"
       >
-        <span className="flex items-center gap-1.5"><Medal size={14} strokeWidth={2.5} /> 칭호 관리</span>
+        <span className="flex items-center gap-1.5"><Medal size={14} strokeWidth={2.5} /> 칭호 목록</span>
       </button>
       {open && createPortal(
         <div className="fixed inset-0 z-[200] flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 flex flex-col" style={{ maxHeight: '80vh' }}>
-            <div className="mb-4">
-              <h2 className="text-base font-bold flex items-center gap-1.5"><Medal size={16} strokeWidth={2.5} /> 칭호 관리</h2>
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-base font-bold flex items-center gap-1.5"><Medal size={16} strokeWidth={2.5} /> 칭호 목록</h2>
+                <p className="mt-1 text-xs text-gray-500">칭호 정의는 src/data/titles.json에서 관리합니다.</p>
+              </div>
+              <button type="button" onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <X size={18} />
+              </button>
             </div>
 
-            {/* 칭호 목록 */}
             <div className="flex-1 overflow-y-auto mb-4 min-h-0 divide-y divide-gray-100">
               {titles.length === 0 && (
                 <p className="text-xs text-gray-400 py-2">등록된 칭호가 없습니다.</p>
               )}
               {titles.map(t => (
                 <div key={t.id} className="flex items-center gap-2 py-2">
-                  {t.iconUrl && <img src={t.iconUrl} alt="" className="w-5 h-5 object-contain flex-shrink-0" />}
-                  {editingId === t.id ? (
-                    <input
-                      autoFocus
-                      type="text"
-                      value={editingLabel}
-                      onChange={e => setEditingLabel(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') { onRename?.(t.id, editingLabel); setEditingId(null); }
-                        if (e.key === 'Escape') setEditingId(null);
-                      }}
-                      className="flex-1 border border-indigo-400 rounded px-1.5 py-0.5 text-sm focus:outline-none"
-                    />
-                  ) : (
-                    <span className="flex-1 text-sm font-medium text-gray-800">{t.label}</span>
+                  {(t.iconUrl || t.icon) && (
+                    <img src={t.iconUrl || t.icon} alt="" className="w-5 h-5 object-contain flex-shrink-0" />
                   )}
-                  {editingId === t.id ? (
-                    <>
-                      <button type="button" onClick={() => { onRename?.(t.id, editingLabel); setEditingId(null); }}
-                        className="text-xs text-indigo-600 hover:text-indigo-800 px-1.5 py-0.5 border border-indigo-300 rounded hover:bg-indigo-50 transition-colors">저장</button>
-                      <button type="button" onClick={() => setEditingId(null)}
-                        className="text-xs text-indigo-400 hover:text-indigo-600 px-1.5 py-0.5 border border-indigo-200 rounded hover:bg-indigo-50 transition-colors">취소</button>
-                    </>
-                  ) : (
-                    <>
-                      <button type="button" title="수정" onClick={() => { setEditingId(t.id); setEditingLabel(t.label); }}
-                        className="text-indigo-400 hover:text-indigo-600 p-0.5 transition-colors"><Pencil size={13} strokeWidth={2} /></button>
-                      <label className="cursor-pointer">
-                        <input
-                          ref={el => fileInputRefs.current[t.id] = el}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={e => {
-                            const file = e.target.files?.[0];
-                            if (file) handleUpload(t.id, file);
-                            e.target.value = '';
-                          }}
-                        />
-                        <span title="아이콘" className="inline-flex items-center text-indigo-400 hover:text-indigo-600 p-0.5 transition-colors cursor-pointer">
-                          {uploading[t.id] ? <span className="text-xs text-indigo-300">...</span> : <Image size={13} strokeWidth={2} />}
-                        </span>
-                      </label>
-                      {confirmDeleteId === t.id ? (
-                        <>
-                          <button type="button"
-                            onClick={() => { onDelete?.(t.id); setConfirmDeleteId(null); }}
-                            className="text-xs text-white bg-indigo-500 hover:bg-indigo-600 px-1.5 py-0.5 rounded transition-colors">확인</button>
-                          <button type="button"
-                            onClick={() => setConfirmDeleteId(null)}
-                            className="text-xs text-indigo-400 hover:text-indigo-600 px-1.5 py-0.5 border border-indigo-200 rounded hover:bg-indigo-50 transition-colors">취소</button>
-                        </>
-                      ) : (
-                        <button type="button" title="삭제"
-                          onClick={() => setConfirmDeleteId(t.id)}
-                          className="text-indigo-300 hover:text-indigo-500 p-0.5 transition-colors"><X size={13} strokeWidth={2} /></button>
-                      )}
-                    </>
-                  )}
+                  <span className="flex-1 text-sm font-medium text-gray-800">{t.label}</span>
+                  <code className="text-[11px] text-gray-400 bg-gray-50 rounded px-1.5 py-0.5">{t.id}</code>
                 </div>
               ))}
             </div>
 
-            {/* 새 칭호 추가 */}
-            <div className="flex gap-2 pt-3 border-t border-gray-100">
-              <input
-                type="text"
-                placeholder="새 칭호 이름"
-                value={newLabel}
-                onChange={e => setNewLabel(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleAdd()}
-                className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
-              />
-              <button
-                type="button"
-                onClick={handleAdd}
-                className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors"
-              >
-                추가
-              </button>
-            </div>
+            <p className="pt-3 border-t border-gray-100 text-xs text-gray-500">
+              멤버별 보유/장착 상태만 Firebase에 저장됩니다.
+            </p>
           </div>
         </div>,
         document.body
@@ -309,10 +223,6 @@ export default function AdminView() {
     toggleMemberHidden,
 	camping,
     titles = [],
-    addTitle,
-    deleteTitle,
-    renameTitle,
-    uploadTitleIcon,
   } = gameContext;
 
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -662,13 +572,7 @@ export default function AdminView() {
               <User size={24} /> 멤버 관리
             </h3>
             {/* 칭호 관리 패널 - 우상단 */}
-            <TitleManagerPanel
-              titles={titles}
-              onAdd={addTitle}
-              onDelete={deleteTitle}
-              onRename={renameTitle}
-              onUploadIcon={uploadTitleIcon}
-            />
+            <TitleManagerPanel titles={titles} />
           </div>
 
           {/* 새 멤버 추가 */}

@@ -508,10 +508,6 @@ export default function useGameState() {
 
     // 관리자 기능 - 칭호 관리
     titles: adminTitles.titles,
-    addTitle: adminTitles.addTitle,
-    deleteTitle: adminTitles.deleteTitle,
-    renameTitle: adminTitles.renameTitle,
-    uploadTitleIcon: adminTitles.uploadTitleIcon,
 
     // 관리자 기능 - 아이템 관리
     addItemToSelf: adminItems.addItemToSelf,
