@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, Pencil, Check } from 'lucide-react';
 import { getDatabase, ref, get, set } from 'firebase/database';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
+import { getTitleDisplayStyle } from '../../utils/titleDisplay';
 import CachedImage from '../common/CachedImage';
 import {
   formatMastodonAccount,
@@ -130,7 +131,10 @@ export default function ProfileView({ trainer, caughtPokemon, items, titles = []
                  {/* 칭호 + 이름 + 파트너 아이콘 */}
             <div className="flex items-start justify-between gap-2">
               <div className="flex flex-col gap-1">
-                <span className="text-sl text-gray-400 font-medium tracking-wide h-6">
+                <span
+                  className="text-sl text-gray-400 font-medium tracking-wide h-6"
+                  style={getTitleDisplayStyle(currentTitle, { compactFontSize: '0.85rem' })}
+                >
                   {currentTitle}
                 </span>
                   <div className="flex items-center gap-2 flex-wrap">  

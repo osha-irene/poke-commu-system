@@ -43,6 +43,7 @@ import { getTitleById } from './data/titles';
 import { User, Lock, Music, X, Play, Pause, SkipBack, SkipForward, Volume2, ChefHat, Sparkles } from 'lucide-react';
 import { DAILY_ATTENDANCE_EXP, getKoreaDateKey } from './utils/experience';
 import { getPokemonLocalIconUrl } from './utils/pokemonIconUtils';
+import { getTitleDisplayStyle } from './utils/titleDisplay';
 import CachedImage from './components/common/CachedImage';
 
 const STATIC_TITLE_ICONS = { icon1: loginIcon1, icon2: loginIcon2, icon3: loginIcon3, icon4: loginIcon4 };
@@ -765,7 +766,12 @@ function HomeDashboard({
                           onClick={() => setTitleOpen(v => !v)}
                           aria-label="칭호 선택"
                         >
-                          {currentTitleLabel || ''}
+                          <span
+                            className="home-session-panel__title-text"
+                            style={getTitleDisplayStyle(currentTitleLabel, { compactFontSize: 12 })}
+                          >
+                            {currentTitleLabel || ''}
+                          </span>
                         </button>
                         {titleOpen && (
                           <div className="home-session-panel__title-dropdown">

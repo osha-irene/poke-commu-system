@@ -2496,6 +2496,7 @@ img.emoji {
 
 .home-profile-card__badge {
   width: max-content;
+  max-width: 100%;
   margin: 9px 0 0;
   padding: 5px 12px;
   border-radius: 999px;
@@ -2503,6 +2504,9 @@ img.emoji {
   color: white;
   font-size: 12px;
   font-weight: 900;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
 }
 
 .home-profile-card__stats {
@@ -2586,7 +2590,15 @@ img.emoji {
   cursor: pointer;
   padding: 0;
   outline: none;
+  overflow: hidden;
   -webkit-tap-highlight-color: transparent;
+}
+
+.home-session-panel__title-text {
+  display: block;
+  max-width: calc(100% - 20px);
+  line-height: 1;
+  text-align: center;
 }
 
 .home-session-panel__title-dropdown {

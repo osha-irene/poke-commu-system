@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'lucide-react';
 import { getDatabase, ref, get } from 'firebase/database';
 import { getPokemonLocalIconUrl } from '../../../utils/pokemonIconUtils';
+import { getTitleDisplayStyle } from '../../../utils/titleDisplay';
 import CachedImage from '../../common/CachedImage';
 import { formatMastodonAccount, getMastodonUsername } from '../../../config/mastodonDomain';
 
@@ -112,7 +113,14 @@ export default function MobileTrainerCard({ trainer, titles = [] }) {
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 8 }}>
           <div>
             {currentTitle && (
-              <div style={{ fontSize: 11, color: '#7a9a60', fontWeight: 600, letterSpacing: '0.05em', marginBottom: 2 }}>
+              <div style={{
+                fontSize: 11,
+                color: '#7a9a60',
+                fontWeight: 600,
+                letterSpacing: '0.05em',
+                marginBottom: 2,
+                ...getTitleDisplayStyle(currentTitle, { compactFontSize: 10 })
+              }}>
                 {currentTitle}
               </div>
             )}

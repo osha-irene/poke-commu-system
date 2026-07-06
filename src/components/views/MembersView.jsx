@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { ChevronLeft, User, Text, Users } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import { getOwnedPokemonSpriteUrl } from '../../utils/pokemonImageUtils';
+import { getTitleDisplayStyle } from '../../utils/titleDisplay';
 import { TYPE_COLORS } from '../../constants/pokemon';
 import { POKEBALL_LIST } from '../../styles/theme';
 import { translateMoveName } from '../../battle/utils/move-translations';
@@ -1935,7 +1936,15 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                 ? titles.find(t => t.id === member.title)?.label
                 : null;
               return (
-                <span style={{ fontSize: 14, fontWeight: 600, color: `rgb(${accentRgb})`, letterSpacing: '0.05em', lineHeight: 1, visibility: titleLabel ? 'visible' : 'hidden' }}>
+                <span style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: `rgb(${accentRgb})`,
+                  letterSpacing: '0.05em',
+                  lineHeight: 1,
+                  visibility: titleLabel ? 'visible' : 'hidden',
+                  ...getTitleDisplayStyle(titleLabel, { compactFontSize: 12 })
+                }}>
                   {titleLabel || ' '}
                 </span>
               );

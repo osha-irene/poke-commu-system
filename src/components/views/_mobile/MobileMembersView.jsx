@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../../utils/pokemonIconUtils';
 import { getOwnedPokemonSpriteUrl } from '../../../utils/pokemonImageUtils';
+import { getTitleDisplayStyle } from '../../../utils/titleDisplay';
 import { TYPE_COLORS, POKEBALL_LIST } from '../../../constants/pokemon';
 import { translateMoveName } from '../../../battle/utils/move-translations';
 import movesData from '../../../data/moves.json';
@@ -317,6 +318,8 @@ function MainTab({ member, title, partner }) {
             <div style={{
               fontSize: '0.72rem', color: '#aaa', fontWeight: 700,
               letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 4,
+              ...getTitleDisplayStyle(title, { compactFontSize: '0.64rem' }),
+              ...(title && Array.from(title).length > 10 ? { letterSpacing: '0.08em' } : {}),
             }}>{title}</div>
           )}
           <div style={{
