@@ -4,7 +4,7 @@ import { ChevronLeft, User, Text, Users } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import { getOwnedPokemonSpriteUrl } from '../../utils/pokemonImageUtils';
 import { getTitleDisplayStyle } from '../../utils/titleDisplay';
-import { TITLES, getTitleById } from '../../data/titles';
+import { getTitleById } from '../../data/titles';
 import { TYPE_COLORS } from '../../constants/pokemon';
 import { POKEBALL_LIST } from '../../styles/theme';
 import { translateMoveName } from '../../battle/utils/move-translations';
@@ -171,19 +171,6 @@ const getTitleIconUrl = (titleId, titles = []) => {
   if (!titleData) return null;
   const icon = titleData.iconUrl || titleData.icon || '';
   return STATIC_TITLE_ICONS[icon] || icon || null;
-};
-
-const getRandomTitleIconUrl = (member, titles = []) => {
-  const iconUrls = [...titles, ...TITLES]
-    .map(title => {
-      const icon = title?.iconUrl || title?.icon || '';
-      return STATIC_TITLE_ICONS[icon] || icon || null;
-    })
-    .filter(Boolean);
-  const uniqueIconUrls = [...new Set(iconUrls)];
-  if (uniqueIconUrls.length === 0) return null;
-  const seed = `${member?.id || member?.name || ''}:temporary-title-icon`;
-  return uniqueIconUrls[Math.floor(seededNumber(seed) * uniqueIconUrls.length)];
 };
 
 const seededNumber = (seed) => {
@@ -473,8 +460,8 @@ function MemberCard({ member, titles, onClick }) {
   const partner = member?.partnerPokemon ?? null;
   const partnerIconFallback = partner ? getOfficialArtwork(partner) : null;
   const partnerIcon = partner ? (getPokemonLocalIconUrl(partner) || partner?.iconUrl || partner?.sprite || partnerIconFallback || '') : null;
-  const titleIcon = getTitleIconUrl(member?.title, titles) || getRandomTitleIconUrl(member, titles);
-  const titleStickerStyle = titleIcon ? getTitleStickerStyle(member, member.title || 'temporary') : null;
+  const titleIcon = getTitleIconUrl(member?.title, titles);
+  const titleStickerStyle = titleIcon ? getTitleStickerStyle(member, member.title) : null;
 
   return (
     <div
