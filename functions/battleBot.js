@@ -561,7 +561,30 @@ const formatStat = stat => ({
   evasion: '회피율',
 })[stat] || stat;
 
-const formatHp = value => String(value || '').replace(' fnt', ' 기절');
+const formatHpPercent = (current, max, suffix = '') => {
+  const currentHp = Number(current);
+  const maxHp = Number(max);
+  if (!Number.isFinite(currentHp) || !Number.isFinite(maxHp) || maxHp <= 0) {
+    return String(current || '').replace(' fnt', ' 기절');
+  }
+  const rawPercent = (currentHp / maxHp) * 100;
+  const percent = currentHp > 0
+    ? Math.max(1, Math.min(100, Math.round(rawPercent)))
+    : 0;
+  return `${percent}%${suffix}`;
+};
+
+const formatHp = (value) => {
+  const text = String(value || '').trim();
+  const fainted = /\bfnt\b/i.test(text);
+  const hpMatch = text.match(/(\d+)\s*\/\s*(\d+)/);
+  if (hpMatch) return formatHpPercent(hpMatch[1], hpMatch[2], fainted ? ' 기절' : '');
+
+  const currentOnly = text.match(/^(\d+)(?:\s|$)/);
+  if (currentOnly && fainted) return `${Number(currentOnly[1]) > 0 ? currentOnly[1] : 0}% 기절`;
+
+  return text.replace(' fnt', ' 기절');
+};
 
 const protocolToMessage = (line) => {
   if (!line || !line.startsWith('|')) return null;
@@ -833,8 +856,8 @@ const activeSummary = (battle) => {
   };
   return [
     '',
-    `${battle.p1.name}: ${activeName(p1)} HP ${p1.hp}/${p1.maxhp}`,
-    `${battle.p2.name}: ${activeName(p2)} HP ${p2.hp}/${p2.maxhp}`,
+    `${battle.p1.name}: ${activeName(p1)} HP ${formatHpPercent(p1.hp, p1.maxhp)}`,
+    `${battle.p2.name}: ${activeName(p2)} HP ${formatHpPercent(p2.hp, p2.maxhp)}`,
   ].join('\n');
 };
 
