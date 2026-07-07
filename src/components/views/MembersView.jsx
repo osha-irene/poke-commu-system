@@ -173,6 +173,72 @@ const getTitleIconUrl = (titleId, titles = []) => {
   return STATIC_TITLE_ICONS[icon] || icon || null;
 };
 
+const getTitleLabel = (titleId, titles = []) => {
+  if (!titleId || titleId === 'none') return '';
+  const titleData = titles.find(t => t.id === titleId) || getTitleById(titleId);
+  return titleData?.label || '';
+};
+
+const getReadableTextColor = (r, g, b) => {
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.62 ? '#2b241e' : '#fff';
+};
+
+const getTitleTooltipColorFromImage = (img) => {
+  try {
+    const width = img.naturalWidth || img.width;
+    const height = img.naturalHeight || img.height;
+    if (!width || !height) return null;
+
+    const canvas = document.createElement('canvas');
+    const sampleSize = 48;
+    const scale = Math.min(1, sampleSize / Math.max(width, height));
+    canvas.width = Math.max(1, Math.round(width * scale));
+    canvas.height = Math.max(1, Math.round(height * scale));
+
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return null;
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    let r = 0;
+    let g = 0;
+    let b = 0;
+    let weightTotal = 0;
+
+    for (let i = 0; i < pixels.length; i += 4) {
+      const alpha = pixels[i + 3] / 255;
+      if (alpha < 0.4) continue;
+
+      const pr = pixels[i];
+      const pg = pixels[i + 1];
+      const pb = pixels[i + 2];
+      const max = Math.max(pr, pg, pb);
+      const min = Math.min(pr, pg, pb);
+      const saturation = max === 0 ? 0 : (max - min) / max;
+      const brightness = (pr + pg + pb) / 3;
+      if (brightness > 242 && saturation < 0.18) continue;
+
+      const weight = alpha * (0.45 + saturation);
+      r += pr * weight;
+      g += pg * weight;
+      b += pb * weight;
+      weightTotal += weight;
+    }
+
+    if (!weightTotal) return null;
+    const rr = Math.round(r / weightTotal);
+    const gg = Math.round(g / weightTotal);
+    const bb = Math.round(b / weightTotal);
+    return {
+      bg: `rgba(${rr}, ${gg}, ${bb}, 0.96)`,
+      text: getReadableTextColor(rr, gg, bb),
+    };
+  } catch {
+    return null;
+  }
+};
+
 const seededNumber = (seed) => {
   let hash = 2166136261;
   for (let i = 0; i < seed.length; i += 1) {
@@ -203,10 +269,11 @@ const getTitleStickerStyle = (member, titleId) => {
     width: size,
     height: size,
     zIndex: 12,
-    transform: `translate(-50%, -50%) rotate(${rotation.toFixed(1)}deg)`,
+    transform: 'translate(-50%, -50%)',
     transformOrigin: '50% 50%',
+    '--title-sticker-rotation': `${rotation.toFixed(1)}deg`,
     objectFit: 'contain',
-    pointerEvents: 'none',
+    pointerEvents: 'auto',
     userSelect: 'none',
     filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.18)) drop-shadow(0 0 2px rgba(255,255,255,0.95))',
   };
@@ -450,7 +517,11 @@ function CatchphraseDisplay({ value, color }) {
 /* ── 멤버 목록 카드 ── */
 function MemberCard({ member, titles, onClick }) {
   const faceImg = getFaceImg(member);
+  const titleIconRef = useRef(null);
   const [hovered, setHovered] = useState(false);
+  const [titleHovered, setTitleHovered] = useState(false);
+  const [titleTooltipPos, setTitleTooltipPos] = useState(null);
+  const [titleTooltipColor, setTitleTooltipColor] = useState({ bg: 'rgba(35, 32, 28, 0.94)', text: '#fff' });
 
   const preloadFullImg = () => {
     const full = getFullImg(member);
@@ -461,7 +532,32 @@ function MemberCard({ member, titles, onClick }) {
   const partnerIconFallback = partner ? getOfficialArtwork(partner) : null;
   const partnerIcon = partner ? (getPokemonLocalIconUrl(partner) || partner?.iconUrl || partner?.sprite || partnerIconFallback || '') : null;
   const titleIcon = getTitleIconUrl(member?.title, titles);
+  const titleLabel = titleIcon ? getTitleLabel(member?.title, titles) : '';
   const titleStickerStyle = titleIcon ? getTitleStickerStyle(member, member.title) : null;
+
+  useEffect(() => {
+    setTitleTooltipColor({ bg: 'rgba(35, 32, 28, 0.94)', text: '#fff' });
+  }, [titleIcon]);
+
+  const handleTitleIconLoad = (event) => {
+    const color = getTitleTooltipColorFromImage(event.currentTarget);
+    if (color) setTitleTooltipColor(color);
+  };
+
+  const showTitleTooltip = () => {
+    const rect = titleIconRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setTitleTooltipPos({
+      left: rect.left + rect.width / 2,
+      top: rect.top - 8,
+    });
+    setTitleHovered(true);
+  };
+
+  const hideTitleTooltip = () => {
+    setTitleHovered(false);
+    setTitleTooltipPos(null);
+  };
 
   return (
     <div
@@ -485,12 +581,52 @@ function MemberCard({ member, titles, onClick }) {
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill', pointerEvents: 'none', userSelect: 'none' }}
       />
       {titleIcon && (
-        <img
-          src={titleIcon}
-          alt=""
-          draggable={false}
-          style={titleStickerStyle}
-        />
+        <div
+          ref={titleIconRef}
+          style={{ ...titleStickerStyle, zIndex: titleHovered ? 80 : titleStickerStyle.zIndex }}
+          onMouseEnter={showTitleTooltip}
+          onMouseLeave={hideTitleTooltip}
+          aria-label={titleLabel}
+        >
+          <img
+            src={titleIcon}
+            alt={titleLabel}
+            draggable={false}
+            onLoad={handleTitleIconLoad}
+            style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', pointerEvents: 'none', transform: 'rotate(var(--title-sticker-rotation))' }}
+          />
+        </div>
+      )}
+      {titleHovered && titleLabel && titleTooltipPos && createPortal(
+        <div style={{
+          position: 'fixed',
+          left: titleTooltipPos.left,
+          top: titleTooltipPos.top,
+          transform: 'translate(-50%, -100%)',
+          padding: '6px 9px',
+          borderRadius: 9,
+          background: titleTooltipColor.bg,
+          color: titleTooltipColor.text,
+          fontSize: 12,
+          fontWeight: 700,
+          lineHeight: 1.2,
+          whiteSpace: 'nowrap',
+          boxShadow: '0 4px 10px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.42)',
+          pointerEvents: 'none',
+          zIndex: 9999,
+        }}>
+          {titleLabel}
+          <span style={{
+            position: 'absolute',
+            left: '50%',
+            bottom: -5,
+            width: 10,
+            height: 10,
+            background: titleTooltipColor.bg,
+            transform: 'translateX(-50%) rotate(45deg)',
+          }} />
+        </div>,
+        document.body
       )}
       {/* 멤버 사진 */}
       <div style={{ position: 'absolute', left: '9.6%', top: '14%', width: '80.7%', height: '77.1%', overflow: 'hidden' }}>
