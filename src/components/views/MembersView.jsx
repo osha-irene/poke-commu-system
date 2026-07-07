@@ -4,7 +4,7 @@ import { ChevronLeft, User, Text, Users } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import { getOwnedPokemonSpriteUrl } from '../../utils/pokemonImageUtils';
 import { getTitleDisplayStyle } from '../../utils/titleDisplay';
-import { getTitleById } from '../../data/titles';
+import { TITLES, getTitleById } from '../../data/titles';
 import { TYPE_COLORS } from '../../constants/pokemon';
 import { POKEBALL_LIST } from '../../styles/theme';
 import { translateMoveName } from '../../battle/utils/move-translations';
@@ -173,6 +173,19 @@ const getTitleIconUrl = (titleId, titles = []) => {
   return STATIC_TITLE_ICONS[icon] || icon || null;
 };
 
+const getRandomTitleIconUrl = (member, titles = []) => {
+  const iconUrls = [...titles, ...TITLES]
+    .map(title => {
+      const icon = title?.iconUrl || title?.icon || '';
+      return STATIC_TITLE_ICONS[icon] || icon || null;
+    })
+    .filter(Boolean);
+  const uniqueIconUrls = [...new Set(iconUrls)];
+  if (uniqueIconUrls.length === 0) return null;
+  const seed = `${member?.id || member?.name || ''}:temporary-title-icon`;
+  return uniqueIconUrls[Math.floor(seededNumber(seed) * uniqueIconUrls.length)];
+};
+
 const seededNumber = (seed) => {
   let hash = 2166136261;
   for (let i = 0; i < seed.length; i += 1) {
@@ -186,11 +199,11 @@ const getTitleStickerStyle = (member, titleId) => {
   const seed = `${member?.id || member?.name || ''}:${titleId || ''}`;
   const anchor = Math.floor(seededNumber(`${seed}:anchor`) * 5);
   const positions = [
-    { left: 18 + seededNumber(`${seed}:l0`) * 8, top: 13 + seededNumber(`${seed}:t0`) * 6 },
-    { left: 37 + seededNumber(`${seed}:l1`) * 22, top: 10 + seededNumber(`${seed}:t1`) * 6 },
-    { left: 15 + seededNumber(`${seed}:l2`) * 5, top: 28 + seededNumber(`${seed}:t2`) * 22 },
-    { left: 78 + seededNumber(`${seed}:l3`) * 4, top: 38 + seededNumber(`${seed}:t3`) * 16 },
-    { left: 24 + seededNumber(`${seed}:l4`) * 32, top: 12 + seededNumber(`${seed}:t4`) * 6 },
+    { left: 14 + seededNumber(`${seed}:l0`) * 8, top: 10 + seededNumber(`${seed}:t0`) * 6 },
+    { left: 34 + seededNumber(`${seed}:l1`) * 24, top: 8 + seededNumber(`${seed}:t1`) * 5 },
+    { left: 11 + seededNumber(`${seed}:l2`) * 5, top: 26 + seededNumber(`${seed}:t2`) * 24 },
+    { left: 82 + seededNumber(`${seed}:l3`) * 3, top: 39 + seededNumber(`${seed}:t3`) * 15 },
+    { left: 20 + seededNumber(`${seed}:l4`) * 36, top: 9 + seededNumber(`${seed}:t4`) * 5 },
   ];
   const selected = positions[anchor];
   const rotation = -18 + seededNumber(`${seed}:rotation`) * 36;
@@ -460,8 +473,8 @@ function MemberCard({ member, titles, onClick }) {
   const partner = member?.partnerPokemon ?? null;
   const partnerIconFallback = partner ? getOfficialArtwork(partner) : null;
   const partnerIcon = partner ? (getPokemonLocalIconUrl(partner) || partner?.iconUrl || partner?.sprite || partnerIconFallback || '') : null;
-  const titleIcon = getTitleIconUrl(member?.title, titles);
-  const titleStickerStyle = titleIcon ? getTitleStickerStyle(member, member.title) : null;
+  const titleIcon = getTitleIconUrl(member?.title, titles) || getRandomTitleIconUrl(member, titles);
+  const titleStickerStyle = titleIcon ? getTitleStickerStyle(member, member.title || 'temporary') : null;
 
   return (
     <div
