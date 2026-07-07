@@ -4,6 +4,7 @@ import { ChevronLeft, User, Text, Users } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import { getOwnedPokemonSpriteUrl } from '../../utils/pokemonImageUtils';
 import { getTitleDisplayStyle } from '../../utils/titleDisplay';
+import { TITLES, getTitleById } from '../../data/titles';
 import { TYPE_COLORS } from '../../constants/pokemon';
 import { POKEBALL_LIST } from '../../styles/theme';
 import { translateMoveName } from '../../battle/utils/move-translations';
@@ -12,6 +13,7 @@ import { getAbilityKoreanName } from '../../utils/abilityUtils';
 import CachedImage from '../common/CachedImage';
 import { preloadDecodedImage } from '../../utils/imageCache';
 import { useGame } from '../../contexts/GameContext';
+import { loginIcon1, loginIcon2, loginIcon3, loginIcon4 } from '../../assets/images';
 import polaroidListWhite from '../../assets/members/polaroid-list-white.png';
 import polaroidDetailWhite from '../../assets/members/polaroid-detail-white.png';
 import npcButtonImg from '../../assets/members/npc-button.png';
@@ -35,6 +37,7 @@ import chimeSound from '../../assets/sounds/chime.mp3';
 import rubbingSound from '../../assets/sounds/rubbing.mp3';
 
 const BADGE_IMGS = [badge1Img, badge2Img, badge3Img, badge4Img, badge5Img, badge6Img, badge7Img, badge8Img];
+const STATIC_TITLE_ICONS = { icon1: loginIcon1, icon2: loginIcon2, icon3: loginIcon3, icon4: loginIcon4 };
 const BADGE_CLEANLINESS_DEFAULT = 2;
 const BADGE_CLEANLINESS_MIN = 1;
 const BADGE_CLEANLINESS_MAX = 5;
@@ -161,6 +164,66 @@ const getFaceImg = m => m?.profileImageThumb || m?.profileImage || m?.profileIma
 const getFullImg     = m => m?.profileImageFull || m?.profileImage || m?.profileImageUrl || '';
 const MEMBER_CHARACTER_Z_INDEX = 46;
 const MEMBER_DETAIL_UI_Z_INDEX = 57;
+
+const getTitleIconUrl = (titleId, titles = []) => {
+  if (!titleId || titleId === 'none') return null;
+  const titleData = titles.find(t => t.id === titleId) || getTitleById(titleId);
+  if (!titleData) return null;
+  const icon = titleData.iconUrl || titleData.icon || '';
+  return STATIC_TITLE_ICONS[icon] || icon || null;
+};
+
+const getRandomTitleIconUrl = (member, titles = []) => {
+  const iconUrls = [...titles, ...TITLES]
+    .map(title => {
+      const icon = title?.iconUrl || title?.icon || '';
+      return STATIC_TITLE_ICONS[icon] || icon || null;
+    })
+    .filter(Boolean);
+  const uniqueIconUrls = [...new Set(iconUrls)];
+  if (uniqueIconUrls.length === 0) return null;
+  const seed = `${member?.id || member?.name || ''}:temporary-title-icon`;
+  return uniqueIconUrls[Math.floor(seededNumber(seed) * uniqueIconUrls.length)];
+};
+
+const seededNumber = (seed) => {
+  let hash = 2166136261;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash ^= seed.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0) / 4294967295;
+};
+
+const getTitleStickerStyle = (member, titleId) => {
+  const seed = `${member?.id || member?.name || ''}:${titleId || ''}`;
+  const anchor = Math.floor(seededNumber(`${seed}:anchor`) * 5);
+  const positions = [
+    { left: 18 + seededNumber(`${seed}:l0`) * 8, top: 13 + seededNumber(`${seed}:t0`) * 6 },
+    { left: 37 + seededNumber(`${seed}:l1`) * 22, top: 10 + seededNumber(`${seed}:t1`) * 6 },
+    { left: 15 + seededNumber(`${seed}:l2`) * 5, top: 28 + seededNumber(`${seed}:t2`) * 22 },
+    { left: 78 + seededNumber(`${seed}:l3`) * 4, top: 38 + seededNumber(`${seed}:t3`) * 16 },
+    { left: 24 + seededNumber(`${seed}:l4`) * 32, top: 12 + seededNumber(`${seed}:t4`) * 6 },
+  ];
+  const selected = positions[anchor];
+  const rotation = -18 + seededNumber(`${seed}:rotation`) * 36;
+  const size = 63 + seededNumber(`${seed}:size`) * 18;
+
+  return {
+    position: 'absolute',
+    left: `${selected.left}%`,
+    top: `${selected.top}%`,
+    width: size,
+    height: size,
+    zIndex: 12,
+    transform: `translate(-50%, -50%) rotate(${rotation.toFixed(1)}deg)`,
+    transformOrigin: '50% 50%',
+    objectFit: 'contain',
+    pointerEvents: 'none',
+    userSelect: 'none',
+    filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.18)) drop-shadow(0 0 2px rgba(255,255,255,0.95))',
+  };
+};
 
 const getPokemonImg = p => p?.sprite || p?.spriteUrl || p?.imageUrl || p?.iconUrl || '';
 const getBallImageUrl = (p, allItems) => {
@@ -410,6 +473,8 @@ function MemberCard({ member, titles, onClick }) {
   const partner = member?.partnerPokemon ?? null;
   const partnerIconFallback = partner ? getOfficialArtwork(partner) : null;
   const partnerIcon = partner ? (getPokemonLocalIconUrl(partner) || partner?.iconUrl || partner?.sprite || partnerIconFallback || '') : null;
+  const titleIcon = getTitleIconUrl(member?.title, titles) || getRandomTitleIconUrl(member, titles);
+  const titleStickerStyle = titleIcon ? getTitleStickerStyle(member, member.title || 'temporary') : null;
 
   return (
     <div
@@ -432,6 +497,14 @@ function MemberCard({ member, titles, onClick }) {
         draggable={false}
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill', pointerEvents: 'none', userSelect: 'none' }}
       />
+      {titleIcon && (
+        <img
+          src={titleIcon}
+          alt=""
+          draggable={false}
+          style={titleStickerStyle}
+        />
+      )}
       {/* 멤버 사진 */}
       <div style={{ position: 'absolute', left: '9.6%', top: '14%', width: '80.7%', height: '77.1%', overflow: 'hidden' }}>
         {faceImg ? (
