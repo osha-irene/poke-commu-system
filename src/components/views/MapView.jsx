@@ -190,7 +190,7 @@ export default function MapView({
   const selectedTownRegions = useMemo(() => {
     if (!selectedTownId) return [];
     return regions.filter(r =>
-      r.groupId === selectedTownId && !r.isTownMeta && r.groupVisible !== false
+      r.groupId === selectedTownId && !r.isTownMeta && r.groupVisible !== false && r.visible !== false
     );
   }, [regions, selectedTownId]);
 
@@ -803,7 +803,7 @@ export default function MapView({
             const isActive = town.groupId === selectedTownId;
             const isNewTown = !visitedTownIds.has(town.groupId);
             const townRegions = regions
-              .filter(region => region.groupId === town.groupId && !region.isTownMeta && region.groupVisible !== false)
+              .filter(region => region.groupId === town.groupId && !region.isTownMeta && region.groupVisible !== false && region.visible !== false)
               .slice(0, 4);
             const visibleTownRegions = townRegions;
             return (

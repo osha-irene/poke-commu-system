@@ -95,6 +95,7 @@ export const useAdminRegions = (
       groupName: normalizedData.groupName !== undefined ? normalizedData.groupName : null,
       areaName: normalizedData.areaName !== undefined ? normalizedData.areaName : null,
       groupVisible: normalizedData.groupVisible !== undefined ? normalizedData.groupVisible : true,
+      visible: normalizedData.visible !== undefined ? normalizedData.visible : true,
       isDefaultTown: normalizedData.isDefaultTown !== undefined ? normalizedData.isDefaultTown : false,
       name: normalizedData.name,
       description: normalizedData.description !== undefined ? normalizedData.description : '',

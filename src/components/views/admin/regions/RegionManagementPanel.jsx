@@ -70,7 +70,8 @@ export default function RegionManagementPanel({
     maxCatchRate: 1,
     isCave: false,
     isWaterside: false,
-    isSafari: false
+    isSafari: false,
+    visible: true
   });
   const [placeForm, setPlaceForm] = useState({
     name: '',
@@ -228,6 +229,13 @@ export default function RegionManagementPanel({
     ));
 
     await updateSelectedRegionPlaces(nextPlaces);
+  };
+
+  const handleToggleRegionVisibility = async (region) => {
+    await onUpdateRegion?.(region.id, {
+      ...region,
+      visible: region.visible === false
+    });
   };
 
   const handleUpdateSelectedPlacePokemon = async (_placeTargetId, updatedPlaceData) => {
@@ -450,6 +458,7 @@ export default function RegionManagementPanel({
       description: newRegionForm.description.trim(),
       groupName: selectedTown?.groupName || null,
       groupVisible: selectedTown ? selectedTown.visible : true,
+      visible: newRegionForm.visible !== false,
       pokemons: [],
       pokemonRates: {},
       shinyRate: 4096,
@@ -471,7 +480,8 @@ export default function RegionManagementPanel({
       maxCatchRate: 1,
       isCave: false,
       isWaterside: false,
-      isSafari: false
+      isSafari: false,
+      visible: true
     });
     alert('지역이 추가되었습니다.');
   };
@@ -487,6 +497,7 @@ export default function RegionManagementPanel({
     const isSelected = selectedRegion?.id === region.id;
     const hasLootConfig = region.lootConfig && Object.keys(region.lootConfig).length > 0;
     const places = Array.isArray(region.places) ? region.places : [];
+    const isHiddenRegion = region.visible === false;
     const pokemonCount = places.length > 0
       ? new Set(places.flatMap((place) => (Array.isArray(place.pokemons) ? place.pokemons : []))).size
       : 0;
@@ -503,7 +514,7 @@ export default function RegionManagementPanel({
           isSelected
             ? 'bg-lime-50 border-l-4 border-lime-700'
             : 'hover:bg-lime-50/70'
-        } ${draggingRegionId === region.id ? 'opacity-50' : ''}`}
+        } ${draggingRegionId === region.id || isHiddenRegion ? 'opacity-50' : ''}`}
       >
         <button
           type="button"
@@ -650,6 +661,7 @@ export default function RegionManagementPanel({
                 groupId: region.groupId || '',
                 x: region.x ?? 50,
                 y: region.y ?? 50,
+                visible: region.visible !== false,
                 _region: region,
               });
               setShowEditModal(true);
@@ -659,6 +671,22 @@ export default function RegionManagementPanel({
             aria-label="지역 수정"
           >
             <Edit2 size={14} />
+          </button>
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              handleToggleRegionVisibility(region);
+            }}
+            className={`rounded p-1.5 text-white transition-colors ${
+              isHiddenRegion
+                ? 'bg-gray-500 hover:bg-gray-600'
+                : 'bg-lime-700 hover:bg-lime-800'
+            }`}
+            title={isHiddenRegion ? '지도에서 숨김' : '지도에 표시'}
+            aria-label={isHiddenRegion ? '지도에서 숨김' : '지도에 표시'}
+          >
+            {isHiddenRegion ? <EyeOff size={14} /> : <Eye size={14} />}
           </button>
           <button
             type="button"
@@ -1510,6 +1538,21 @@ export default function RegionManagementPanel({
                   />
                 </div>
               </div>
+
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={newRegionForm.visible !== false}
+                  onChange={(event) => setNewRegionForm({ ...newRegionForm, visible: event.target.checked })}
+                  className="w-4 h-4 accent-indigo-600"
+                />
+                {newRegionForm.visible === false ? (
+                  <EyeOff size={15} className="text-gray-500" />
+                ) : (
+                  <Eye size={15} className="text-indigo-700" />
+                )}
+                <span className="text-sm font-semibold text-gray-700">지도에 표시</span>
+              </label>
             </div>
 
             <div className="flex gap-3 mt-6">
@@ -1639,6 +1682,21 @@ export default function RegionManagementPanel({
                   />
                 </div>
               </div>
+
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={editRegionForm.visible !== false}
+                  onChange={(event) => setEditRegionForm({ ...editRegionForm, visible: event.target.checked })}
+                  className="w-4 h-4 accent-indigo-600"
+                />
+                {editRegionForm.visible === false ? (
+                  <EyeOff size={15} className="text-gray-500" />
+                ) : (
+                  <Eye size={15} className="text-indigo-700" />
+                )}
+                <span className="text-sm font-semibold text-gray-700">지도에 표시</span>
+              </label>
             </div>
 
             <div className="flex gap-3 mt-6">
