@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
-import { ChevronDown, ChevronRight, Footprints, MapPin, Trees, Mountain, Waves } from 'lucide-react';
+import { Trees, Mountain, Waves } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import mapBg from '../../assets/map/map.png';
 import pokeballImg from '../../assets/map/pokeball.png';
@@ -25,7 +25,7 @@ const TOWN_LABEL_CENTER_Y_OFFSET = 0.075;
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
 function lockedH(width, containerRect) {
-  if (!containerRect) return width / SCREEN_RATIO;
+  if (!containerRect || !containerRect.width || !containerRect.height) return width / SCREEN_RATIO;
   return width * containerRect.width / (SCREEN_RATIO * containerRect.height);
 }
 
@@ -86,7 +86,7 @@ export default function MapView({
 }) {
   const [selectedTownId, setSelectedTownId] = useState(null);
   const [openTownRegionsId, setOpenTownRegionsId] = useState(null);
-  const [screenView, setScreenView] = useState('map'); // 'map' | 'areas' | 'detail'
+  const [screenView, setScreenView] = useState('map'); // 'map' | 'detail'
   const [selectedArea, setSelectedArea] = useState(null);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [viewport, setViewport] = useState(DEFAULT_VIEWPORT);
@@ -186,13 +186,6 @@ export default function MapView({
   }, [defaultTownId, navigableTowns]);
 
   const selectedTown = towns.find(t => t.groupId === selectedTownId) || null;
-
-  const selectedTownRegions = useMemo(() => {
-    if (!selectedTownId) return [];
-    return regions.filter(r =>
-      r.groupId === selectedTownId && !r.isTownMeta && r.groupVisible !== false && r.visible !== false
-    );
-  }, [regions, selectedTownId]);
 
   // Pokédex helpers
   const caughtNumbers = useMemo(() => new Set(
@@ -316,7 +309,6 @@ export default function MapView({
     return pool.filter(p => ids.includes(p.id) || ids.includes(p.number));
   };
 
-  const BROWN_MUTED = 'rgba(61,26,8,0.55)';
 
   // 첫 번째 지역이 오른쪽에 오도록
   // 5글자 초과 시 줄바꿈 (마지막 줄이 1글자가 되면 한 글자 앞에서 나눔)
@@ -469,91 +461,6 @@ export default function MapView({
       <img src={arrowImgs[dir]} alt={dir} style={{ display: 'block', imageRendering: 'auto', transform: 'scale(0.9)', transformOrigin: 'center' }} />
     </button>
   );
-
-  /* ── 스크린 내 영역 목록 패널 ── */
-
-  const TownAreasPanel = () => {
-    const areas = selectedTownRegions;
-    const accentColor = selectedTown?.color || '#4a9a08';
-
-    return (
-      <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(245,238,225,0.78)', zIndex: 20, padding: 14 }}>
-        <div style={{ width: '88%', maxWidth: 400, maxHeight: '100%', display: 'flex', flexDirection: 'column', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 5px rgba(0,0,0,0.10)' }}>
-          <button
-            onClick={() => setScreenView('map')}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              padding: '11px 14px',
-              background: '#1e4a08',
-              border: '1.5px solid #1e4a08',
-              borderBottom: 'none',
-              borderRadius: '12px 12px 0 0',
-              cursor: 'pointer',
-              textAlign: 'left',
-              WebkitTapHighlightColor: 'transparent',
-              outline: 'none',
-            }}
-          >
-            <MapPin size={16} style={{ color: '#a8d878', flexShrink: 0 }} />
-            <span style={{ flex: 1, fontSize: 14, fontWeight: 700, color: '#fff' }}>{selectedTown?.groupName}</span>
-            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginRight: 2 }}>{areas.length}</span>
-            <ChevronDown size={15} style={{ color: 'rgba(255,255,255,0.6)' }} />
-          </button>
-
-          <div style={{
-            flex: '1 1 auto',
-            minHeight: 0,
-            overflowY: 'auto',
-            background: 'rgba(255,255,255,0.95)',
-            border: `1.5px solid ${accentColor}`,
-            borderTop: '1px solid rgba(120,180,60,0.12)',
-            borderRadius: '0 0 12px 12px',
-          }}>
-            {areas.length === 0 ? (
-              <div style={{ padding: '24px 14px', textAlign: 'center', fontSize: 13, fontWeight: 600, color: BROWN_MUTED }}>
-                탐험 가능한 구역이 없습니다
-              </div>
-            ) : areas.map((area, index) => {
-              const places = Array.isArray(area.places) ? area.places.filter(p => p?.name && p.visible !== false) : [];
-
-              return (
-                <button
-                  key={area.id || area.name}
-                  onClick={() => handleSelectArea(area)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    padding: '10px 14px',
-                    background: 'transparent',
-                    border: 'none',
-                    borderTop: index > 0 ? '1px solid rgba(120,180,60,0.10)' : 'none',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    WebkitTapHighlightColor: 'transparent',
-                    outline: 'none',
-                  }}
-                >
-                  <div style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: accentColor, opacity: 0.6 }} />
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#1a2e10', flex: 1 }}>{area.name}</span>
-                  {places.length > 0 && (
-                    <span style={{ fontSize: 10, color: '#5a7a40', background: 'rgba(74,154,8,0.13)', borderRadius: 10, padding: '1px 6px', marginRight: 4 }}>
-                      {places.length}곳
-                    </span>
-                  )}
-                  <ChevronRight size={13} style={{ color: '#5a7a40' }} />
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   /* ── 스크린 내 상세 뷰 ── */
 
@@ -907,19 +814,6 @@ export default function MapView({
             );
           })}
 
-          {/* 하단 구역 보기 버튼 */}
-          {false && selectedTown && screenView === 'map' && selectedTownRegions.length > 0 && (
-            <div className="absolute bottom-0 left-0 right-0 flex items-center justify-end px-3 py-2"
-              style={{ zIndex: 25, background: 'linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%)' }}>
-              <button onClick={() => setScreenView('areas')}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full text-white text-xs font-bold"
-                style={{ background: selectedTown.color, boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
-                <Footprints size={12} />구역 보기
-              </button>
-            </div>
-          )}
-
-          {false && screenView === 'areas' && <TownAreasPanel />}
           {screenView === 'detail' && <DeviceMobileDetailPanel />}
           </div>{/* 맵 콘텐츠 래퍼 끝 */}
         </div>
