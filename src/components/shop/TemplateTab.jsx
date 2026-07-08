@@ -112,7 +112,7 @@ export default function TemplateTab({
               요일별 아이템 관리
             </h3>
             <p className="text-green-800">
-              매주 월요일 00:00에 요일별 아이템 재고가 자동 리셋됩니다
+              매주 월요일 00:00에 요일별 아이템 재고가 자동 리셋되며, 해당 요일에는 기본 상점 목록에 자동으로 추가됩니다
             </p>
           </div>
           <div className="flex gap-2">

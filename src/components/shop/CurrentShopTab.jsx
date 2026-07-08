@@ -80,8 +80,10 @@ export default function CurrentShopTab({
       );
     } else if (type === 'rare') {
       updatedShopData.rareDailyItem = { itemId: null, price: 0, lastRefresh: null };
+    } else if (type === 'period') {
+      updatedShopData.periodItem = { itemId: null, price: 0, stock: 0, lastRefresh: null };
     }
-    
+
     markDirty(updatedShopData);
   };
 
@@ -103,8 +105,13 @@ export default function CurrentShopTab({
         ...updatedShopData.rareDailyItem,
         [field]: nextValue
       };
+    } else if (type === 'period') {
+      updatedShopData.periodItem = {
+        ...updatedShopData.periodItem,
+        [field]: nextValue
+      };
     }
-    
+
     markDirty(updatedShopData);
   };
 
@@ -212,11 +219,13 @@ export default function CurrentShopTab({
             >
               <div className="absolute top-2 left-2 z-10">
                 <span className={`text-xs px-2 py-1 rounded ${style.labelBg} ${style.labelText} font-semibold`}>
-                  {shopItem.type === 'daily' 
-                    ? DAYS.find(d => d.id === shopItem.day)?.name 
-                    : shopItem.type === 'permanent' 
-                      ? '상시' 
-                      : '한정'}
+                  {shopItem.type === 'daily'
+                    ? DAYS.find(d => d.id === shopItem.day)?.name
+                    : shopItem.type === 'permanent'
+                      ? '상시'
+                      : shopItem.type === 'period'
+                        ? '기간한정'
+                        : '한정'}
                 </span>
               </div>
 

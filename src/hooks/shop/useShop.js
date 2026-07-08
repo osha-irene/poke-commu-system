@@ -98,6 +98,9 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
     rareDailyItem: null,
     rareItemPool: [],
     rareItemConfig: { enabled: false },
+    periodItem: null,
+    periodItemPool: [],
+    periodItemConfig: { enabled: false },
     gachaBall: { enabled: false, balls: [] },
     randomBoxes: getDefaultRandomBoxes(),
     refreshInterval: 86400000,
@@ -132,27 +135,55 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
         if (!loadedData.rareItemConfig) {
           loadedData.rareItemConfig = { enabled: false };
         }
-        
+        if (!loadedData.periodItemPool) {
+          loadedData.periodItemPool = [];
+        }
+        if (!loadedData.periodItemConfig) {
+          loadedData.periodItemConfig = { enabled: false };
+        }
+
         // ⭐ 희귀템 자동 추첨 체크
         const today = new Date().toISOString().split('T')[0];
         const needsRareItemRefresh = loadedData.rareDailyItem?.lastRefresh !== today;
-        
+
         if (needsRareItemRefresh && loadedData.rareItemPool && loadedData.rareItemPool.length > 0) {
           console.log('🎲 희귀템 자동 추첨 실행');
           const randomIndex = Math.floor(Math.random() * loadedData.rareItemPool.length);
           const selectedRareItem = loadedData.rareItemPool[randomIndex];
-          
+
           loadedData.rareDailyItem = {
             itemId: selectedRareItem.itemId,
             price: selectedRareItem.price,
             stock: 1,
             lastRefresh: today
           };
-          
+
           await set(shopRef, loadedData);
           console.log('✅ 오늘의 한정 아이템 추첨 완료:', allItems.find(i => i.id === selectedRareItem.itemId)?.name);
         }
-        
+
+        // ⭐ 기간한정 아이템 자동 추첨 체크 (주단위)
+        const needsPeriodItemRefresh = loadedData.periodItem?.lastRefresh !== currentWeek;
+
+        if (needsPeriodItemRefresh && loadedData.periodItemPool && loadedData.periodItemPool.length > 0) {
+          console.log('🎲 기간한정 아이템 자동 추첨 실행');
+          const randomIndex = Math.floor(Math.random() * loadedData.periodItemPool.length);
+          const selectedPeriodItem = loadedData.periodItemPool[randomIndex];
+
+          loadedData.periodItem = {
+            itemId: selectedPeriodItem.itemId,
+            price: selectedPeriodItem.price,
+            stock: selectedPeriodItem.stock ?? 10,
+            lastRefresh: currentWeek
+          };
+          loadedData.periodItemPool = loadedData.periodItemPool.filter(
+            (_, idx) => idx !== randomIndex
+          );
+
+          await set(shopRef, loadedData);
+          console.log('✅ 이번 주 기간한정 아이템 추첨 완료 (풀에서 제거됨):', allItems.find(i => i.id === selectedPeriodItem.itemId)?.name);
+        }
+
         const needsWeeklyReset = !loadedData.lastWeekReset || loadedData.lastWeekReset !== currentWeek;
         
         if (needsWeeklyReset) {
@@ -207,6 +238,9 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
             rareDailyItem: loadedData.rareDailyItem || null,
             rareItemPool: loadedData.rareItemPool || [],
             rareItemConfig: loadedData.rareItemConfig || { enabled: false },
+            periodItem: loadedData.periodItem || null,
+            periodItemPool: loadedData.periodItemPool || [],
+            periodItemConfig: loadedData.periodItemConfig || { enabled: false },
             gachaBall: loadedData.gachaBall || { enabled: false, balls: [] },
             randomBoxes: loadedData.randomBoxes || getDefaultRandomBoxes(),
             refreshInterval: loadedData.refreshInterval || 86400000,
@@ -237,6 +271,9 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
           rareDailyItem: null,
           rareItemPool: [],
           rareItemConfig: { enabled: false },
+          periodItem: null,
+          periodItemPool: [],
+          periodItemConfig: { enabled: false },
           gachaBall: { enabled: false, balls: [] },
           randomBoxes: getDefaultRandomBoxes(),
           refreshInterval: 86400000,
@@ -594,6 +631,15 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
             : i
         );
         needShopUpdate = true;
+
+      } else if (itemType === 'period' && updatedShopData.periodItem?.itemId === itemId) {
+        if (updatedShopData.periodItem.stock !== 99) {
+          updatedShopData.periodItem = {
+            ...updatedShopData.periodItem,
+            stock: Math.max(0, updatedShopData.periodItem.stock - quantity)
+          };
+          needShopUpdate = true;
+        }
       }
 
       if (needShopUpdate) {

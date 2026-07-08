@@ -327,9 +327,14 @@ export default function EncounterModal({
               setTimeout(async () => {
                 alert(`${pokemon.name}을(를) 잡았습니다!`);
 
-                // 성공 시 볼 소모 + 포켓몬 추가를 onCatchSuccess 내에서 한 번에 처리
-                await onCatchSuccess(pokemon, selectedBall, true);
-                onClose();
+                try {
+                  // 성공 시 볼 소모 + 포켓몬 추가를 onCatchSuccess 내에서 한 번에 처리
+                  await onCatchSuccess(pokemon, selectedBall, true);
+                } catch (error) {
+                  console.error('❌ 포획 처리 중 오류 발생 (화면은 계속 진행합니다):', error);
+                } finally {
+                  onClose();
+                }
               }, 2500);
             } else {
               // 포획 실패 시 볼 소모

@@ -1,11 +1,12 @@
 // src/components/views/admin/ShopAdminPanel.jsx
 import React, { useState } from 'react';
-import { Store, Star, CircleDot, RefreshCw, Gift, X } from 'lucide-react';
+import { Store, Star, CircleDot, RefreshCw, Gift, X, CalendarClock } from 'lucide-react';
 import ItemSelectorModal from '../../modals/ItemSelectorModal';
 import AddItemSettingsModal from '../../modals/AddItemSettingsModal';
 import CurrentShopTab from '../../shop/CurrentShopTab';
 import TemplateTab from '../../shop/TemplateTab';
 import RareItemPanel from '../../shop/RareItemPanel';
+import PeriodItemPanel from '../../shop/PeriodItemPanel';
 import GachaBallPanel from '../../shop/GachaBallPanel';
 import RandomBoxAdminPanel from './RandomBoxAdminPanel';
 
@@ -22,6 +23,7 @@ export default function ShopAdminPanel({
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [showRarePanel, setShowRarePanel] = useState(false);
+  const [showPeriodPanel, setShowPeriodPanel] = useState(false);
   const [showGachaPanel, setShowGachaPanel] = useState(false);
   const [showRandomBoxPanel, setShowRandomBoxPanel] = useState(false);
 
@@ -88,52 +90,60 @@ export default function ShopAdminPanel({
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <div className="flex gap-2 overflow-x-auto">
+        <div className="flex flex-wrap gap-1.5">
           <button
             onClick={() => setActiveTab('current')}
-            className={`px-6 py-3 rounded-lg font-bold whitespace-nowrap transition-colors flex items-center gap-2 ${
+            className={`px-3 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
               activeTab === 'current'
                 ? 'bg-indigo-600 text-white shadow-lg'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            <Store size={20} />
+            <Store size={16} />
             현재 상점 관리
           </button>
-          
+
           <button
             onClick={() => setActiveTab('template')}
-            className={`px-6 py-3 rounded-lg font-bold whitespace-nowrap transition-colors flex items-center gap-2 ${
+            className={`px-3 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
               activeTab === 'template'
                 ? 'bg-blue-600 text-white shadow-lg'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            <RefreshCw size={20} />
+            <RefreshCw size={16} />
             요일별 아이템
           </button>
-          
+
           <button
             onClick={() => setShowRarePanel(true)}
-            className="px-6 py-3 rounded-lg font-bold whitespace-nowrap transition-colors flex items-center gap-2 bg-purple-600 text-white hover:bg-purple-700"
+            className="px-3 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 bg-purple-600 text-white hover:bg-purple-700"
           >
-            <Star size={20} />
+            <Star size={16} />
             한정 아이템
           </button>
-          
+
+          <button
+            onClick={() => setShowPeriodPanel(true)}
+            className="px-3 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 bg-cyan-600 text-white hover:bg-cyan-700"
+          >
+            <CalendarClock size={16} />
+            기간한정 아이템
+          </button>
+
           <button
             onClick={() => setShowGachaPanel(true)}
-            className="px-6 py-3 rounded-lg font-bold whitespace-nowrap transition-colors flex items-center gap-2 bg-orange-600 text-white hover:bg-orange-700"
+            className="px-3 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 bg-orange-600 text-white hover:bg-orange-700"
           >
-            <CircleDot size={20} />
+            <CircleDot size={16} />
             규토리볼
           </button>
-          
+
           <button
             onClick={() => setShowRandomBoxPanel(true)}
-            className="px-6 py-3 rounded-lg font-bold whitespace-nowrap transition-colors flex items-center gap-2 border-2 border-lime-300 bg-white/55 text-green-950 hover:bg-lime-100/70"
+            className="px-3 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 border-2 border-lime-300 bg-white/55 text-green-950 hover:bg-lime-100/70"
           >
-            <Gift size={20} />
+            <Gift size={16} />
             랜덤박스
           </button>
         </div>
@@ -186,6 +196,26 @@ export default function ShopAdminPanel({
                 <X size={24} className="text-gray-600" />
               </button>
               <RareItemPanel
+                shopData={shopData}
+                allItems={allItems}
+                onUpdateShop={onUpdateShop}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPeriodPanel && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-7xl h-[90vh]">
+            <div className="relative h-full">
+              <button
+                onClick={() => setShowPeriodPanel(false)}
+                className="absolute top-4 right-4 z-50 p-2 bg-white hover:bg-gray-100 rounded-lg transition-colors shadow-lg"
+              >
+                <X size={24} className="text-gray-600" />
+              </button>
+              <PeriodItemPanel
                 shopData={shopData}
                 allItems={allItems}
                 onUpdateShop={onUpdateShop}

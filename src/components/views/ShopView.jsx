@@ -165,6 +165,8 @@ export default function ShopView() {
 
   const getSortedItems = (items) => {
     return [...items].sort((a, b) => {
+      const typeDiff = (a.type === 'daily' ? 0 : 1) - (b.type === 'daily' ? 0 : 1);
+      if (typeDiff !== 0) return typeDiff;
       const aItem = allItems.find(i => i.id === a.itemId);
       const bItem = allItems.find(i => i.id === b.itemId);
       const aPocket = getItemPocket(aItem || a);
@@ -276,7 +278,10 @@ export default function ShopView() {
   const previousShopTextRef = useRef('');
   const isMessageComplete = visibleLength >= sceneMessage.length;
   const isAskingComplete = askingLength >= askingMessage.length;
-  const scenePermanentItems = (shopData.permanentItems || [])
+  const scenePermanentItems = [
+    ...(shopData.dailyItems?.[todayName] || []).map((shopItem) => ({ ...shopItem, type: 'daily' })),
+    ...(shopData.permanentItems || []).map((shopItem) => ({ ...shopItem, type: 'permanent' })),
+  ]
     .map((shopItem) => ({
       ...shopItem,
       item: allItems.find((item) => item.id === shopItem.itemId)
@@ -301,12 +306,13 @@ export default function ShopView() {
           lastRefresh: shopData.rareDailyItem.lastRefresh || null,
         }
       : null;
-    const dailyItems = (shopData.dailyItems?.[todayName] || [])
-      .filter((item) => item?.itemId)
-      .map((item) => ({
-        itemId: item.itemId,
-        price: item.price ?? 0,
-      }));
+    const periodItemSignature = shopData.periodItem?.itemId
+      ? {
+          itemId: shopData.periodItem.itemId,
+          price: shopData.periodItem.price ?? 0,
+          lastRefresh: shopData.periodItem.lastRefresh || null,
+        }
+      : null;
     const apricornItems = hasDesktopGacha
       ? {
           price: shopData.gachaBall?.price ?? DEFAULT_GACHA_PRICE,
@@ -330,7 +336,7 @@ export default function ShopView() {
 
     return {
       special: specialItem ? normalizeSignatureValue(specialItem) : '',
-      daily: dailyItems.length > 0 ? normalizeSignatureValue({ day: todayName, items: dailyItems }) : '',
+      period: periodItemSignature ? normalizeSignatureValue(periodItemSignature) : '',
       apricorn: apricornItems ? normalizeSignatureValue(apricornItems) : '',
       random: randomBoxes.length > 0 ? normalizeSignatureValue(randomBoxes) : '',
     };
@@ -338,11 +344,10 @@ export default function ShopView() {
     desktopGachaBalls,
     desktopRandomBoxes,
     hasDesktopGacha,
-    shopData.dailyItems,
     shopData.gachaBall?.price,
     shopData.rareDailyItem,
     shopData.rareItemConfig?.enabled,
-    todayName
+    shopData.periodItem
   ]);
 
   useEffect(() => {
@@ -746,7 +751,7 @@ export default function ShopView() {
   const getListButtonShopItem = (kind) => {
     const rawShopItem = kind === 'special'
       ? shopData.rareDailyItem
-      : (shopData.dailyItems?.[todayName] || [])[0];
+      : shopData.periodItem;
     if (!rawShopItem?.itemId) return null;
 
     const item = getItemDetails(rawShopItem);
@@ -754,7 +759,7 @@ export default function ShopView() {
 
     return {
       ...rawShopItem,
-      type: kind === 'special' ? 'rare' : 'daily',
+      type: kind === 'special' ? 'rare' : 'period',
       price: rawShopItem.price ?? item.price ?? item.cost ?? 0,
       stock: rawShopItem.stock ?? (kind === 'special' ? 1 : 99),
       item
@@ -773,7 +778,7 @@ export default function ShopView() {
       let changed = false;
       const next = { ...prev };
 
-      for (const kind of ['special', 'daily']) {
+      for (const kind of ['special', 'period']) {
         if (next[kind] && !isListButtonSoldOut(kind)) {
           delete next[kind];
           changed = true;
@@ -782,7 +787,7 @@ export default function ShopView() {
 
       return changed ? next : prev;
     });
-  }, [shopData.rareDailyItem?.stock, shopData.dailyItems, todayName]);
+  }, [shopData.rareDailyItem?.stock, shopData.periodItem?.stock]);
 
   const throwListButtonItem = (kind) => {
     if (isListButtonClosed(kind)) {
@@ -1079,6 +1084,14 @@ export default function ShopView() {
     );
   };
 
+  const getPeriodItemExpiryLabel = () => {
+    const today = new Date();
+    const dayNum = today.getDay() || 7;
+    const sunday = new Date(today);
+    sunday.setDate(today.getDate() + (7 - dayNum));
+    return `${sunday.getMonth() + 1}/${sunday.getDate()}(일)까지`;
+  };
+
   const renderThrownItemHover = () => {
     if (!isThrownShopText || !isShopTextComplete) return null;
     return (
@@ -1087,9 +1100,12 @@ export default function ShopView() {
           {thrownItem.name}
         </span>
         <span className="shop-scene__item-tooltip" role="tooltip">
-          <span className={`shop-scene__item-tooltip-pill shop-scene__item-tooltip-pill--${activeListButton === 'special' ? 'special' : 'daily'}`}>
-            {activeListButton === 'special' ? '특별' : '한정'}
+          <span className={`shop-scene__item-tooltip-pill shop-scene__item-tooltip-pill--${activeListButton === 'special' ? 'special' : 'period'}`}>
+            {activeListButton === 'special' ? '특별' : '기간한정'}
           </span>
+          {activeListButton === 'period' && (
+            <span className="shop-scene__item-tooltip-expiry">{getPeriodItemExpiryLabel()}</span>
+          )}
           <span className="shop-scene__item-tooltip-icon">
             <img
               src={thrownItem.spriteUrl || thrownItem.imageUrl}
@@ -1230,10 +1246,19 @@ export default function ShopView() {
     };
     const rareData = getRareItem();
 
-    const todayDailyItems = getSortedItems(
-      (shopData.dailyItems?.[todayName] || []).map(i => ({ ...i, type: 'daily' }))
-    );
-    const permanentItems = getSortedItems((shopData.permanentItems || []).map(i => ({ ...i, type: 'permanent' })));
+    const getPeriodItem = () => {
+      if (!shopData.periodItemConfig?.enabled || !shopData.periodItem?.itemId) return null;
+      const item = getItemDetails(shopData.periodItem);
+      if (!item) return null;
+      const isSoldOut = shopData.periodItem.stock !== 99 && shopData.periodItem.stock <= 0;
+      return { item, isSoldOut };
+    };
+    const periodData = getPeriodItem();
+
+    const permanentItems = getSortedItems([
+      ...(shopData.permanentItems || []).map(i => ({ ...i, type: 'permanent' })),
+      ...(shopData.dailyItems?.[todayName] || []).map(i => ({ ...i, type: 'daily' })),
+    ]);
 
     return (
       <div style={{ paddingTop: 56, paddingBottom: 80, minHeight: '100%', color: P.text }}>
@@ -1279,51 +1304,39 @@ export default function ShopView() {
           </div>
         )}
 
-        {/* 한정판매 (오늘 요일 한정) */}
-        {todayDailyItems.length > 0 && (
+        {/* 기간한정 아이템 (주단위 로테이션) */}
+        {periodData && (
           <div style={{ margin: '0 12px 14px' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 8, background: P.daily, borderRadius: 6, padding: '4px 10px' }}>
               <FontAwesomeIcon icon={faCalendarDays} style={{ color: '#fff', fontSize: 11 }} />
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>{todayNameKo} 한정판매</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>기간한정 아이템</span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {todayDailyItems.map(shopItem => {
-                  const item = getItemDetails(shopItem);
-                  if (!item) return null;
-                  const isSoldOut = shopItem.stock !== 99 && shopItem.stock <= 0;
-                  const isSelected = selectedItem?.itemId === shopItem.itemId && selectedItem?.type === 'daily';
-                  return (
-                    <React.Fragment key={`daily-${shopItem.itemId}`}>
-                      <button
-                        onClick={() => { if (!isSoldOut) { setSelectedItem({ ...item, type: 'daily' }); setQuantity(1); } }}
-                        disabled={isSoldOut}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 12,
-                          padding: '11px 14px', borderRadius: 12,
-                          border: `1px solid ${isSelected ? P.borderSel : 'rgba(16,80,184,0.2)'}`,
-                          background: isSelected ? P.cardSel : P.dailyBg,
-                          cursor: isSoldOut ? 'not-allowed' : 'pointer',
-                          opacity: isSoldOut ? 0.45 : 1, textAlign: 'left',
-                        }}
-                      >
-                        <div style={{ width: 48, height: 48, background: 'rgba(255,255,255,0.75)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <img src={item.spriteUrl} alt={item.name} style={{ width: 36, height: 36, imageRendering: 'pixelated', objectFit: 'contain' }} />
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: P.text, marginBottom: 2 }}>{item.name}</div>
-                          <div style={{ fontSize: 11, color: P.muted, whiteSpace: 'normal', lineHeight: 1.4 }}>{item.effect?.replace(/\n/g, ' ')}</div>
-                        </div>
-                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 800, color: P.price }}>{shopItem.price?.toLocaleString()}원</div>
-                          <div style={{ fontSize: 10, color: isSoldOut ? 'rgba(220,80,80,0.9)' : P.muted }}>
-                            {shopItem.stock === 99 ? '무제한' : isSoldOut ? '품절' : `${shopItem.stock}개`}
-                          </div>
-                        </div>
-                      </button>
-                    </React.Fragment>
-                  );
-                })}
-            </div>
+            <button
+              onClick={() => { if (!periodData.isSoldOut) { setSelectedItem({ ...periodData.item, type: 'period', price: shopData.periodItem.price, stock: shopData.periodItem.stock }); setQuantity(1); } }}
+              disabled={periodData.isSoldOut}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                padding: '11px 14px', borderRadius: 12,
+                border: `1px solid ${selectedItem?.itemId === shopData.periodItem.itemId && selectedItem?.type === 'period' ? P.borderSel : 'rgba(16,80,184,0.2)'}`,
+                background: selectedItem?.itemId === shopData.periodItem.itemId && selectedItem?.type === 'period' ? P.cardSel : P.dailyBg,
+                cursor: periodData.isSoldOut ? 'not-allowed' : 'pointer',
+                opacity: periodData.isSoldOut ? 0.45 : 1, textAlign: 'left',
+              }}
+            >
+              <div style={{ width: 48, height: 48, background: 'rgba(255,255,255,0.75)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <img src={periodData.item.spriteUrl} alt={periodData.item.name} style={{ width: 36, height: 36, imageRendering: 'pixelated', objectFit: 'contain' }} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: P.text, marginBottom: 2 }}>{periodData.item.name}</div>
+                <div style={{ fontSize: 11, color: P.muted, whiteSpace: 'normal', lineHeight: 1.4 }}>{periodData.item.effect?.replace(/\n/g, ' ')}</div>
+              </div>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: P.price }}>{shopData.periodItem.price?.toLocaleString()}원</div>
+                <div style={{ fontSize: 10, color: periodData.isSoldOut ? 'rgba(220,80,80,0.9)' : P.muted }}>
+                  {shopData.periodItem.stock === 99 ? '무제한' : periodData.isSoldOut ? '품절' : `${shopData.periodItem.stock}개`}
+                </div>
+              </div>
+            </button>
           </div>
         )}
 
@@ -1421,7 +1434,7 @@ export default function ShopView() {
                   const showHeader = pocket !== lastPocket;
                   lastPocket = pocket;
                   const isSoldOut = shopItem.stock !== 99 && shopItem.stock <= 0;
-                  const isSelected = selectedItem?.itemId === shopItem.itemId && selectedItem?.type === 'permanent';
+                  const isSelected = selectedItem?.itemId === shopItem.itemId && selectedItem?.type === shopItem.type;
                   return (
                     <React.Fragment key={`perm-${shopItem.itemId}`}>
                       {showHeader && (
@@ -1432,9 +1445,10 @@ export default function ShopView() {
                         </div>
                       )}
                       <button
-                        onClick={() => { if (!isSoldOut) { setSelectedItem({ ...item, type: 'permanent' }); setQuantity(1); } }}
+                        onClick={() => { if (!isSoldOut) { setSelectedItem({ ...item, type: shopItem.type }); setQuantity(1); } }}
                         disabled={isSoldOut}
                         style={{
+                          position: 'relative',
                           display: 'flex', alignItems: 'center', gap: 12,
                           padding: '11px 14px', borderRadius: 12,
                           border: `1px solid ${isSelected ? P.borderSel : P.border}`,
@@ -1443,11 +1457,18 @@ export default function ShopView() {
                           opacity: isSoldOut ? 0.45 : 1, textAlign: 'left',
                         }}
                       >
+                        {shopItem.type === 'daily' && (
+                          <span style={{ position: 'absolute', top: 1, left: 1, fontSize: 6, fontWeight: 700, color: '#fff', background: 'rgba(14,70,170,0.7)', borderRadius: '0 0 6px 0', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>
+                            {todayNameKo?.[0]}
+                          </span>
+                        )}
                         <div style={{ width: 48, height: 48, background: 'rgba(255,255,255,0.75)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                           <img src={item.spriteUrl} alt={item.name} style={{ width: 36, height: 36, imageRendering: 'pixelated', objectFit: 'contain' }} />
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: P.text, marginBottom: 2 }}>{item.name}</div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: P.text, marginBottom: 2 }}>
+                            {item.name}
+                          </div>
                           <div style={{ fontSize: 11, color: P.muted, whiteSpace: 'normal', lineHeight: 1.4 }}>{item.effect?.replace(/\n/g, ' ')}</div>
                         </div>
                         <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -1595,11 +1616,11 @@ export default function ShopView() {
                 </button>
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); handleListButtonClick('daily'); }}
+                  onClick={(e) => { e.stopPropagation(); handleListButtonClick('period'); }}
                   style={{ position: 'relative' }}
                 >
-                  <img src={listButtonImageState === 'daily' ? dailyLimitedActiveImage : dailyLimitedImage} alt="기간 한정 아이템" />
-                  {renderShopUpdateDot('daily')}
+                  <img src={listButtonImageState === 'period' ? dailyLimitedActiveImage : dailyLimitedImage} alt="기간 한정 아이템" />
+                  {renderShopUpdateDot('period')}
                 </button>
                 <button
                   type="button"
@@ -1709,6 +1730,11 @@ export default function ShopView() {
                     onClick={(e) => { e.stopPropagation(); setPressedListButton(null); setGachaContextStep(0); setRandomBoxIntroActive(false); setPurchaseReturnMode(null); setSelectedShopItem(shopItem); setPhase('shop'); setShowBuy2(false); setBuyConfirming(false); setQuantity(1); setPurchaseMsg(''); setListMessage(''); setActiveListButton(null); setThrownItem(null); setThrownShopItem(null); }}
                     type="button"
                   >
+                    {shopItem.type === 'daily' && (
+                      <span className="shop-scene__shop-item-day-badge" aria-hidden="true">
+                        {todayNameKo?.[0]}
+                      </span>
+                    )}
                     <span className="shop-scene__shop-item-icon">
                       <img
                         src={shopItem.item.spriteUrl || shopItem.item.imageUrl}

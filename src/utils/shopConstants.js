@@ -22,10 +22,16 @@ export const TYPE_STYLES = {
     labelBg: 'bg-green-100',
     labelText: 'text-green-700'
   },
-  rare: { 
+  rare: {
     border: 'border-purple-300',
     bg: 'bg-purple-50',
     labelBg: 'bg-purple-100',
     labelText: 'text-purple-700'
+  },
+  period: {
+    border: 'border-cyan-300',
+    bg: 'bg-cyan-50',
+    labelBg: 'bg-cyan-100',
+    labelText: 'text-cyan-700'
   }
 };
