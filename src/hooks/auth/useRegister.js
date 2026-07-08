@@ -36,7 +36,7 @@ export function useRegister(setMembers) {
             itemId: 4,
             name: '몬스터볼',
             count: 15,
-            imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'
+            imageUrl: 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png'
           }
         ],
         createdAt: new Date().toISOString()

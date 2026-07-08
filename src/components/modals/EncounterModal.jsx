@@ -146,8 +146,8 @@ export default function EncounterModal({
 
   // 포켓몬 스프라이트 URL
   const pokemonSpriteUrl = pokemon.isShiny
-    ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${pokemon.number}.png`
-    : (pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`);
+    ? `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/${pokemon.number}.png`
+    : (pokemon.spriteUrl || `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pokemon.number}.png`);
 
   // 스프라이트 하단 투명 여백 측정 후 translateY 계산
   useEffect(() => {

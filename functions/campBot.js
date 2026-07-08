@@ -227,7 +227,7 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
       eggGroups: motherData.eggGroups || match.groups,
       hatchSteps, stepsRemaining: hatchSteps, hatchProgress: 0,
       receivedDate: new Date().toISOString(),
-      imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/egg.png',
+      imageUrl: 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/egg.png',
       parentMoves: [...(p1.moves || []), ...(p2.moves || [])].filter(Boolean),
       parentHeldItems: [p1.heldItem || null, p2.heldItem || null],
       parent1Number: p1.number || null, parent2Number: p2.number || null,

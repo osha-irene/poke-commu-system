@@ -51,7 +51,7 @@ async function fetchAllTypes() {
           nameEn: englishName?.name || typeData.name,
           nameKo: koreanName?.name || typeData.name,
           nameJa: japaneseName?.name || typeData.name,
-          imageUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/${typeData.name}.png`
+          imageUrl: `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/types/generation-viii/sword-shield/${typeData.name}.png`
         };
         
         types.push(type);

@@ -363,11 +363,11 @@ function MemberPokemonTab({
       iconUrl: (() => {
         const orig = evolvedTemplate.originalNumber;
         const n = (orig === 710 || orig === 711) ? orig : evolvedTemplate.number;
-        return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${n}.png`;
+        return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-viii/icons/${n}.png`;
       })(),
       spriteUrl: selectedPokemon.isShiny
-        ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${evolvedTemplate.number}.png`
-        : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${evolvedTemplate.number}.png`,
+        ? `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/${evolvedTemplate.number}.png`
+        : `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${evolvedTemplate.number}.png`,
       nickname: isCustomNickname ? currentNickname : null,
       evolutionCancelled: false,
       evolutionReady: false,

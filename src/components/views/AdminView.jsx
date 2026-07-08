@@ -314,14 +314,6 @@ export default function AdminView() {
   };
 
   useEffect(() => {
-    console.log('🔄 AdminView - members 변경됨:', Object.keys(members || {}).length);
-    if (selectedMemberId) {
-      console.log('📌 선택된 멤버 ID:', selectedMemberId);
-      console.log('📌 최신 멤버 정보:', members?.[selectedMemberId]);
-    }
-  }, [members, selectedMemberId]);
-
-  useEffect(() => {
     setMaxNonPartnerPokemon(systemSettings.maxNonPartnerPokemon || 18);
   }, [systemSettings.maxNonPartnerPokemon]);
 

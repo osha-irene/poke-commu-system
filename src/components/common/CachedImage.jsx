@@ -1,10 +1,13 @@
 import React, { forwardRef, useEffect, useState } from 'react';
-import { getCachedSrc, isImageCached, preloadImage } from '../../utils/imageCache';
+import { getCachedSrc, isImageCached, preloadImage, toReliableSpriteUrl } from '../../utils/imageCache';
 
 const CachedImage = forwardRef(function CachedImage(
-  { src: originalSrc, style, className = '', onLoad, onError, ...props },
+  { src: rawSrc, style, className = '', onLoad, onError, ...props },
   ref
 ) {
+  // DB에 예전 raw.githubusercontent.com URL이 남아있어도 여기서 한 번에 걸러서
+  // 항상 rate-limit 없는 jsdelivr 미러로 로드한다.
+  const originalSrc = toReliableSpriteUrl(rawSrc);
   const [src, setSrc] = useState(() => getCachedSrc(originalSrc));
   const [ready, setReady] = useState(() => isImageCached(originalSrc));
 

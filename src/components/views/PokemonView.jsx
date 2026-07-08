@@ -519,7 +519,7 @@ function DesktopPokemonView() {
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 flex-shrink-0 bg-white rounded-lg flex items-center justify-center">
                           <img 
-                            src={draggedPokemonData.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${draggedPokemonData.number}.png`}
+                            src={draggedPokemonData.spriteUrl || `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${draggedPokemonData.number}.png`}
                             alt={draggedPokemonData.name}
                             className="w-10 h-10 object-contain pokemon-sprite"
                           />
@@ -555,7 +555,7 @@ function DesktopPokemonView() {
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 flex-shrink-0 bg-white rounded-lg flex items-center justify-center">
                           <img 
-                            src={draggedPokemonData.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${draggedPokemonData.number}.png`}
+                            src={draggedPokemonData.spriteUrl || `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${draggedPokemonData.number}.png`}
                             alt={draggedPokemonData.name}
                             className="w-10 h-10 object-contain pokemon-sprite"
                           />
@@ -744,7 +744,7 @@ function DesktopPokemonView() {
                         <>
                           <div className="w-16 h-16 flex-shrink-0">
                             <img 
-                              src={pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`}
+                              src={pokemon.spriteUrl || `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pokemon.number}.png`}
                               alt={pokemon.name}
                               className="w-full h-full object-contain pokemon-sprite"
                             />

@@ -49,10 +49,10 @@ const getLocalIconUrl = (pokemon, allPokemonMaster) => {
   // 로컬 아이콘 없으면 Firebase 저장 URL → number 기반 PokeAPI 순으로 fallback
   const orig = pokemon.originalNumber;
   if (orig === 710 || orig === 711) {
-    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${orig}.png`;
+    return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-viii/icons/${orig}.png`;
   }
   if (pokemon.iconUrl) return pokemon.iconUrl;
-  if (pokemon.number) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemon.number}.png`;
+  if (pokemon.number) return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-viii/icons/${pokemon.number}.png`;
   return '';
 };
 
@@ -74,12 +74,12 @@ const getBallImageUrl = (pokemon, allItems = []) => {
       ball.name === pokemon.caughtWithBall ||
       ball.nameEn === pokemon.caughtWithBall.toLowerCase()
     );
-    if (ballInfo) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${ballInfo.nameEn}.png`;
+    if (ballInfo) return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/${ballInfo.nameEn}.png`;
   }
 
   if (pokemon.ballImageUrl) return pokemon.ballImageUrl;
 
-  return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
+  return 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png';
 };
 
 const STYLES = {

@@ -55,7 +55,7 @@ async function fixLeafeon() {
       baseDefense: pokemonData.stats.find(s => s.stat.name === 'defense').base_stat,
       baseSpeed: pokemonData.stats.find(s => s.stat.name === 'speed').base_stat,
       generation: speciesData.generation.name.replace('generation-', ''),
-      imageUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/470.png`
+      imageUrl: `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/470.png`
     };
     
     // 3. 해당 위치에 추가 (정렬 유지)

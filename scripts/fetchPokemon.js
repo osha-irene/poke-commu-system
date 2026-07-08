@@ -60,7 +60,7 @@ async function fetchAllPokemon() {
         baseAttack: attack,
         baseDefense: defense,
         baseSpeed: speed,
-        imageUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${i}.png`
+        imageUrl: `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/${i}.png`
       });
       
       console.log(`✅ #${String(i).padStart(3, '0')} ${koreanName} (${mainType})`);

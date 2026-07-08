@@ -667,7 +667,7 @@ const categories = CATEGORIES.map(cat => {
                               )}
                               <div className="flex flex-col items-center gap-3 py-4">
                                 <img
-                                  src={selectedPokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${selectedPokemon.number}.png`}
+                                  src={selectedPokemon.spriteUrl || `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${selectedPokemon.number}.png`}
                                   alt={selectedPokemon.name}
                                   className="w-20 h-20"
                                   style={{ imageRendering: 'pixelated' }}
@@ -707,7 +707,7 @@ const categories = CATEGORIES.map(cat => {
                                       className="item-use-pokemon-card flex flex-col items-center p-3 rounded-lg transition-all"
                                     >
                                       <img
-                                        src={pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`}
+                                        src={pokemon.spriteUrl || `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pokemon.number}.png`}
                                         alt={pokemon.name}
                                         className="w-16 h-16 mb-1"
                                         style={{ imageRendering: 'pixelated' }}
@@ -758,7 +758,7 @@ const categories = CATEGORIES.map(cat => {
                                       }`}
                                     >
                                       <img
-                                        src={form.spriteUrl || form.imageUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${form.number}.png`}
+                                        src={form.spriteUrl || form.imageUrl || `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${form.number}.png`}
                                         alt={form.name}
                                         className="w-14 h-14 mb-1"
                                         style={{ imageRendering: 'pixelated' }}
@@ -804,7 +804,7 @@ const categories = CATEGORIES.map(cat => {
                                       }`}
                                     >
                                       <img
-                                        src={pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`}
+                                        src={pokemon.spriteUrl || `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pokemon.number}.png`}
                                         alt={pokemon.name}
                                         className="w-16 h-16 mb-1"
                                         style={{ imageRendering: 'pixelated' }}
@@ -852,7 +852,7 @@ const categories = CATEGORIES.map(cat => {
                                         } ${!canUseTarget ? 'is-disabled' : ''}`}
                                       >
                                         <img
-                                          src={pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`}
+                                          src={pokemon.spriteUrl || `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pokemon.number}.png`}
                                           alt={pokemon.name}
                                           className="w-16 h-16 mb-1"
                                           style={{ imageRendering: 'pixelated' }}

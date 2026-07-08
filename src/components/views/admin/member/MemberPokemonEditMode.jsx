@@ -90,7 +90,7 @@ export default function MemberPokemonEditMode({
   const abilityOptions = buildAbilityOptions(pokemonTemplate, editData.ability);
 
   const displayName = getPokemonDisplayParts(pokemon).name;
-  const spriteUrl = editData.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`;
+  const spriteUrl = editData.spriteUrl || `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pokemon.number}.png`;
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -122,7 +122,7 @@ export default function MemberPokemonEditMode({
               allPokemonMaster.find(p => !p.regionalForm && Number(p.originalNumber) === targetNumber) ||
               allPokemonMaster.find(p => Number(p.originalNumber) === targetNumber);
             const toName = toTemplate ? getPokemonDisplayParts(toTemplate).name : evo.toName;
-            const toSprite = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${evo.to}.png`;
+            const toSprite = `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${evo.to}.png`;
             return (
               <button
                 key={`${evo.from}-${evo.to}-${evo.toName || ''}`}

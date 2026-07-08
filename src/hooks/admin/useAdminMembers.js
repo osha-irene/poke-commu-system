@@ -147,14 +147,14 @@ export const useAdminMembers = (
     if (!parentBalls.length) {
       return {
         caughtWithBall: egg?.caughtWithBall || '몬스터볼',
-        ballImageUrl: egg?.ballImageUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'
+        ballImageUrl: egg?.ballImageUrl || 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png'
       };
     }
 
     const ball = parentBalls[Math.floor(Math.random() * parentBalls.length)];
     return {
       caughtWithBall: ball.caughtWithBall || '몬스터볼',
-      ballImageUrl: ball.ballImageUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'
+      ballImageUrl: ball.ballImageUrl || 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png'
     };
   };
 
@@ -278,8 +278,8 @@ export const useAdminMembers = (
       condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
       effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
       imageUrl: pokemonTemplate.imageUrl,
-      iconUrl: (() => { const orig = pokemonTemplate.originalNumber; const n = (orig === 710 || orig === 711) ? orig : pokemonTemplate.number; return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${n}.png`; })(),
-      spriteUrl: pokemonTemplate.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`,
+      iconUrl: (() => { const orig = pokemonTemplate.originalNumber; const n = (orig === 710 || orig === 711) ? orig : pokemonTemplate.number; return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-viii/icons/${n}.png`; })(),
+      spriteUrl: pokemonTemplate.spriteUrl || `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pokemonTemplate.number}.png`,
       isFromEgg: true,
       hatchedAt: new Date().toISOString(),
       parents: {
@@ -364,7 +364,7 @@ export const useAdminMembers = (
       const pokeBall = findItem(['poke ball', 'pokeball', '몬스터볼']);
 
       return [
-        { itemId: pokeBall?.id || 4, name: '몬스터볼', count: 15, imageUrl: pokeBall?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png' },
+        { itemId: pokeBall?.id || 4, name: '몬스터볼', count: 15, imageUrl: pokeBall?.spriteUrl || 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png' },
       ];
     };
 
@@ -662,16 +662,16 @@ export const useAdminMembers = (
     }
 
     const ballImageUrl = customBallImage || 
-      (ballInfo ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${ballInfo.nameEn}.png` : 
-      'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png');
+      (ballInfo ? `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/${ballInfo.nameEn}.png` : 
+      'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png');
       
     const spriteUrl = isShiny && pokemonTemplate.shinySprite
       ? pokemonTemplate.shinySprite
-      : pokemonTemplate.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonTemplate.number}.png`;
+      : pokemonTemplate.spriteUrl || `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pokemonTemplate.number}.png`;
 
     const iconUrl = isShiny && pokemonTemplate.shinySprite
       ? pokemonTemplate.shinySprite
-      : (() => { const orig = pokemonTemplate.originalNumber; const n = (orig === 710 || orig === 711) ? orig : pokemonTemplate.number; return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${n}.png`; })();
+      : (() => { const orig = pokemonTemplate.originalNumber; const n = (orig === 710 || orig === 711) ? orig : pokemonTemplate.number; return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-viii/icons/${n}.png`; })();
 
     // 기본값 설정
     const finalGender = normalizePokemonGender(gender, pokemonTemplate);

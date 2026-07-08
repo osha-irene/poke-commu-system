@@ -142,9 +142,9 @@ const getBallUrl = (p, allItems = []) => {
     const info = POKEBALL_LIST.find(b =>
       b.name === p.caughtWithBall || b.name.toLowerCase() === s || b.nameEn === s.replace(/\s/g, '-')
     );
-    if (info) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${info.nameEn}.png`;
+    if (info) return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/${info.nameEn}.png`;
   }
-  return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
+  return 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png';
 };
 
 const getParty = m => {
@@ -583,19 +583,37 @@ function AchievementsTab({ member }) {
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 48 }}>
         <div style={{ position: 'relative', width: 270, height: 270 }}>
           {BADGE_IMGS.map((src, i) => (
-            <img
-              key={i}
-              src={src}
-              alt=""
-              style={{
-                position: 'absolute', inset: 0,
-                width: '100%', height: '100%',
-                objectFit: 'contain',
-                opacity: badgePieces[i] ? 1 : 0.13,
-                filter: badgePieces[i] ? 'none' : 'grayscale(1)',
-                transition: 'opacity 0.3s',
-              }}
-            />
+            badgePieces[i] ? (
+              <img
+                key={i}
+                src={src}
+                alt=""
+                style={{
+                  position: 'absolute', inset: 0,
+                  width: '100%', height: '100%',
+                  objectFit: 'contain',
+                  opacity: 1,
+                  transition: 'opacity 0.3s',
+                }}
+              />
+            ) : (
+              <div
+                key={i}
+                aria-hidden="true"
+                style={{
+                  position: 'absolute', inset: 0,
+                  background: '#c8c8c8',
+                  opacity: 0.72,
+                  pointerEvents: 'none',
+                  maskImage: `url(${src})`,
+                  WebkitMaskImage: `url(${src})`,
+                  maskSize: 'contain', WebkitMaskSize: 'contain',
+                  maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+                  maskPosition: 'center', WebkitMaskPosition: 'center',
+                  transition: 'opacity 0.3s',
+                }}
+              />
+            )
           ))}
           {/* 청결도 오물 오버레이 */}
           {BADGE_IMGS.map((src, i) => badgePieces[i] && (
@@ -701,7 +719,7 @@ const TABS = [
   { key: 'main', label: 'MAIN' },
   { key: 'profile', label: 'PROFILE' },
   { key: 'entry', label: 'ENTRY' },
-  // { key: 'achievement', label: 'BADGE' }, // 임시 숨김
+  { key: 'achievement', label: 'BADGE' },
   { key: 'relation', label: 'RELATIONS' },
 ];
 

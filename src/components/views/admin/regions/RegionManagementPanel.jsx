@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   MapPin,
   Settings,
@@ -359,12 +359,15 @@ export default function RegionManagementPanel({
     });
   };
 
-  const sortedTowns = towns
-    .map((town, index) => ({
-      ...town,
-      townOrder: Number.isFinite(Number(town.townOrder)) ? Number(town.townOrder) : index
-    }))
-    .sort((a, b) => a.townOrder - b.townOrder);
+  const sortedTowns = useMemo(
+    () => towns
+      .map((town, index) => ({
+        ...town,
+        townOrder: Number.isFinite(Number(town.townOrder)) ? Number(town.townOrder) : index
+      }))
+      .sort((a, b) => a.townOrder - b.townOrder),
+    [towns]
+  );
 
   const getInsertedTownOrder = (orderedTowns, fromIndex, toIndex) => {
     const movingTown = orderedTowns[fromIndex];
@@ -389,12 +392,27 @@ export default function RegionManagementPanel({
     });
   };
 
-  const townGroups = sortedTowns.map((town) => ({
-    town,
-    regions: regions.filter((region) => !region.isTownMeta && region.groupId === town.groupId)
-  }));
-
-  const ungroupedRegions = regions.filter((region) => !region.isTownMeta && !region.groupId);
+  const { townGroups, ungroupedRegions } = useMemo(() => {
+    const byGroup = new Map();
+    const ungrouped = [];
+    (regions || []).forEach((region) => {
+      if (region.isTownMeta) return;
+      if (!region.groupId) {
+        ungrouped.push(region);
+        return;
+      }
+      const grouped = byGroup.get(region.groupId) || [];
+      grouped.push(region);
+      byGroup.set(region.groupId, grouped);
+    });
+    return {
+      townGroups: sortedTowns.map((town) => ({
+        town,
+        regions: byGroup.get(town.groupId) || []
+      })),
+      ungroupedRegions: ungrouped
+    };
+  }, [regions, sortedTowns]);
 
   const handleRegionDragStart = (event, region) => {
     event.dataTransfer.effectAllowed = 'move';

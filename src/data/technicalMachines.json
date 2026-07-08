@@ -14,7 +14,7 @@
       "power": 90,
       "accuracy": 85,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -31,7 +31,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fairy.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fairy.png",
       "generation": 9
     },
     {
@@ -48,7 +48,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-dark.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-dark.png",
       "generation": 9
     },
     {
@@ -65,7 +65,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 30,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-psychic.png",
       "generation": 9
     },
     {
@@ -82,7 +82,7 @@
       "power": 20,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ground.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ground.png",
       "generation": 9
     },
     {
@@ -99,7 +99,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -116,7 +116,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -133,7 +133,7 @@
       "power": 65,
       "accuracy": 95,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fire.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fire.png",
       "generation": 9
     },
     {
@@ -150,7 +150,7 @@
       "power": 65,
       "accuracy": 95,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-electric.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-electric.png",
       "generation": 9
     },
     {
@@ -167,7 +167,7 @@
       "power": 65,
       "accuracy": 95,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ice.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ice.png",
       "generation": 9
     },
     {
@@ -184,7 +184,7 @@
       "power": 60,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-water.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-water.png",
       "generation": 9
     },
     {
@@ -201,7 +201,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fighting.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fighting.png",
       "generation": 9
     },
     {
@@ -218,7 +218,7 @@
       "power": 40,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-poison.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-poison.png",
       "generation": 9
     },
     {
@@ -235,7 +235,7 @@
       "power": 55,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-flying.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-flying.png",
       "generation": 9
     },
     {
@@ -252,7 +252,7 @@
       "power": 50,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-bug.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-bug.png",
       "generation": 9
     },
     {
@@ -269,7 +269,7 @@
       "power": 65,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-psychic.png",
       "generation": 9
     },
     {
@@ -286,7 +286,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ghost.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ghost.png",
       "generation": 9
     },
     {
@@ -303,7 +303,7 @@
       "power": 60,
       "accuracy": 100,
       "pp": 25,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-dark.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-dark.png",
       "generation": 9
     },
     {
@@ -320,7 +320,7 @@
       "power": 40,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fairy.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fairy.png",
       "generation": 9
     },
     {
@@ -337,7 +337,7 @@
       "power": 50,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-grass.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-grass.png",
       "generation": 9
     },
     {
@@ -354,7 +354,7 @@
       "power": 50,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-bug.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-bug.png",
       "generation": 9
     },
     {
@@ -371,7 +371,7 @@
       "power": 50,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-water.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-water.png",
       "generation": 9
     },
     {
@@ -388,7 +388,7 @@
       "power": 50,
       "accuracy": 90,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-electric.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-electric.png",
       "generation": 9
     },
     {
@@ -405,7 +405,7 @@
       "power": 35,
       "accuracy": 85,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fire.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fire.png",
       "generation": 9
     },
     {
@@ -422,7 +422,7 @@
       "power": 70,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -439,7 +439,7 @@
       "power": 50,
       "accuracy": 100,
       "pp": 25,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-poison.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-poison.png",
       "generation": 9
     },
     {
@@ -456,7 +456,7 @@
       "power": 60,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-flying.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-flying.png",
       "generation": 9
     },
     {
@@ -473,7 +473,7 @@
       "power": 60,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ground.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ground.png",
       "generation": 9
     },
     {
@@ -490,7 +490,7 @@
       "power": 65,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ghost.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ghost.png",
       "generation": 9
     },
     {
@@ -507,7 +507,7 @@
       "power": 55,
       "accuracy": 95,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-dark.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-dark.png",
       "generation": 9
     },
     {
@@ -524,7 +524,7 @@
       "power": 50,
       "accuracy": 95,
       "pp": 35,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-steel.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-steel.png",
       "generation": 9
     },
     {
@@ -541,7 +541,7 @@
       "power": 60,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -558,7 +558,7 @@
       "power": 60,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-grass.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-grass.png",
       "generation": 9
     },
     {
@@ -575,7 +575,7 @@
       "power": 55,
       "accuracy": 95,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ice.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ice.png",
       "generation": 9
     },
     {
@@ -592,7 +592,7 @@
       "power": 55,
       "accuracy": 95,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ground.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ground.png",
       "generation": 9
     },
     {
@@ -609,7 +609,7 @@
       "power": 60,
       "accuracy": 95,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-rock.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-rock.png",
       "generation": 9
     },
     {
@@ -626,7 +626,7 @@
       "power": 50,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fairy.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fairy.png",
       "generation": 9
     },
     {
@@ -643,7 +643,7 @@
       "power": 50,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fire.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fire.png",
       "generation": 9
     },
     {
@@ -660,7 +660,7 @@
       "power": 65,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fighting.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fighting.png",
       "generation": 9
     },
     {
@@ -677,7 +677,7 @@
       "power": 60,
       "accuracy": 95,
       "pp": 25,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-flying.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-flying.png",
       "generation": 9
     },
     {
@@ -694,7 +694,7 @@
       "power": 20,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-psychic.png",
       "generation": 9
     },
     {
@@ -711,7 +711,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ghost.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ghost.png",
       "generation": 9
     },
     {
@@ -728,7 +728,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-dark.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-dark.png",
       "generation": 9
     },
     {
@@ -745,7 +745,7 @@
       "power": 60,
       "accuracy": 90,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-dragon.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-dragon.png",
       "generation": 9
     },
     {
@@ -762,7 +762,7 @@
       "power": 65,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-poison.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-poison.png",
       "generation": 9
     },
     {
@@ -779,7 +779,7 @@
       "power": 60,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ice.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ice.png",
       "generation": 9
     },
     {
@@ -796,7 +796,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -813,7 +813,7 @@
       "power": 70,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-electric.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-electric.png",
       "generation": 9
     },
     {
@@ -830,7 +830,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fire.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fire.png",
       "generation": 9
     },
     {
@@ -847,7 +847,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-water.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-water.png",
       "generation": 9
     },
     {
@@ -864,7 +864,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-rock.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-rock.png",
       "generation": 9
     },
     {
@@ -881,7 +881,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ice.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ice.png",
       "generation": 9
     },
     {
@@ -898,7 +898,7 @@
       "power": 70,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-steel.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-steel.png",
       "generation": 9
     },
     {
@@ -915,7 +915,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-psychic.png",
       "generation": 9
     },
     {
@@ -932,7 +932,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ground.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ground.png",
       "generation": 9
     },
     {
@@ -949,7 +949,7 @@
       "power": 25,
       "accuracy": 100,
       "pp": 30,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-grass.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-grass.png",
       "generation": 9
     },
     {
@@ -966,7 +966,7 @@
       "power": 40,
       "accuracy": 100,
       "pp": 40,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -983,7 +983,7 @@
       "power": 75,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fighting.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fighting.png",
       "generation": 9
     },
     {
@@ -1000,7 +1000,7 @@
       "power": 80,
       "accuracy": 90,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-psychic.png",
       "generation": 9
     },
     {
@@ -1017,7 +1017,7 @@
       "power": 70,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-bug.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-bug.png",
       "generation": 9
     },
     {
@@ -1034,7 +1034,7 @@
       "power": 70,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ghost.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ghost.png",
       "generation": 9
     },
     {
@@ -1051,7 +1051,7 @@
       "power": 95,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-dark.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-dark.png",
       "generation": 9
     },
     {
@@ -1068,7 +1068,7 @@
       "power": 85,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-psychic.png",
       "generation": 9
     },
     {
@@ -1085,7 +1085,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fighting.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fighting.png",
       "generation": 9
     },
     {
@@ -1102,7 +1102,7 @@
       "power": 75,
       "accuracy": 95,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-flying.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-flying.png",
       "generation": 9
     },
     {
@@ -1119,7 +1119,7 @@
       "power": 85,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -1136,7 +1136,7 @@
       "power": 75,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fire.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fire.png",
       "generation": 9
     },
     {
@@ -1153,7 +1153,7 @@
       "power": 75,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-electric.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-electric.png",
       "generation": 9
     },
     {
@@ -1170,7 +1170,7 @@
       "power": 75,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ice.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ice.png",
       "generation": 9
     },
     {
@@ -1187,7 +1187,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -1204,7 +1204,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-grass.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-grass.png",
       "generation": 9
     },
     {
@@ -1221,7 +1221,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-electric.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-electric.png",
       "generation": 9
     },
     {
@@ -1238,7 +1238,7 @@
       "power": 75,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fighting.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fighting.png",
       "generation": 9
     },
     {
@@ -1255,7 +1255,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-psychic.png",
       "generation": 9
     },
     {
@@ -1272,7 +1272,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 30,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-psychic.png",
       "generation": 9
     },
     {
@@ -1289,7 +1289,7 @@
       "power": 25,
       "accuracy": 90,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-rock.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-rock.png",
       "generation": 9
     },
     {
@@ -1306,7 +1306,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-water.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-water.png",
       "generation": 9
     },
     {
@@ -1323,7 +1323,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-dragon.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-dragon.png",
       "generation": 9
     },
     {
@@ -1340,7 +1340,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fairy.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fairy.png",
       "generation": 9
     },
     {
@@ -1357,7 +1357,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -1374,7 +1374,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-grass.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-grass.png",
       "generation": 9
     },
     {
@@ -1391,7 +1391,7 @@
       "power": 0,
       "accuracy": 90,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-electric.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-electric.png",
       "generation": 9
     },
     {
@@ -1408,7 +1408,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-poison.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-poison.png",
       "generation": 9
     },
     {
@@ -1425,7 +1425,7 @@
       "power": 75,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ground.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ground.png",
       "generation": 9
     },
     {
@@ -1442,7 +1442,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-psychic.png",
       "generation": 9
     },
     {
@@ -1459,7 +1459,7 @@
       "power": 75,
       "accuracy": 90,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-rock.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-rock.png",
       "generation": 9
     },
     {
@@ -1476,7 +1476,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-dark.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-dark.png",
       "generation": 9
     },
     {
@@ -1493,7 +1493,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -1510,7 +1510,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fighting.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fighting.png",
       "generation": 9
     },
     {
@@ -1527,7 +1527,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ground.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ground.png",
       "generation": 9
     },
     {
@@ -1544,7 +1544,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-poison.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-poison.png",
       "generation": 9
     },
     {
@@ -1561,7 +1561,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-psychic.png",
       "generation": 9
     },
     {
@@ -1578,7 +1578,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-steel.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-steel.png",
       "generation": 9
     },
     {
@@ -1595,7 +1595,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-dark.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-dark.png",
       "generation": 9
     },
     {
@@ -1612,7 +1612,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-bug.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-bug.png",
       "generation": 9
     },
     {
@@ -1629,7 +1629,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-electric.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-electric.png",
       "generation": 9
     },
     {
@@ -1646,7 +1646,7 @@
       "power": 90,
       "accuracy": 95,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-flying.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-flying.png",
       "generation": 9
     },
     {
@@ -1663,7 +1663,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-psychic.png",
       "generation": 9
     },
     {
@@ -1680,7 +1680,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-steel.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-steel.png",
       "generation": 9
     },
     {
@@ -1697,7 +1697,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-dragon.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-dragon.png",
       "generation": 9
     },
     {
@@ -1714,7 +1714,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-rock.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-rock.png",
       "generation": 9
     },
     {
@@ -1731,7 +1731,7 @@
       "power": 120,
       "accuracy": 80,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-poison.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-poison.png",
       "generation": 9
     },
     {
@@ -1748,7 +1748,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -1765,7 +1765,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-steel.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-steel.png",
       "generation": 9
     },
     {
@@ -1782,7 +1782,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-bug.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-bug.png",
       "generation": 9
     },
     {
@@ -1799,7 +1799,7 @@
       "power": 80,
       "accuracy": 95,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ground.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ground.png",
       "generation": 9
     },
     {
@@ -1816,7 +1816,7 @@
       "power": 0,
       "accuracy": 85,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fire.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fire.png",
       "generation": 9
     },
     {
@@ -1833,7 +1833,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-dark.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-dark.png",
       "generation": 9
     },
     {
@@ -1850,7 +1850,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-psychic.png",
       "generation": 9
     },
     {
@@ -1867,7 +1867,7 @@
       "power": 85,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-water.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-water.png",
       "generation": 9
     },
     {
@@ -1884,7 +1884,7 @@
       "power": 75,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-grass.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-grass.png",
       "generation": 9
     },
     {
@@ -1901,7 +1901,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fighting.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fighting.png",
       "generation": 9
     },
     {
@@ -1918,7 +1918,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-flying.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-flying.png",
       "generation": 9
     },
     {
@@ -1935,7 +1935,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ghost.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ghost.png",
       "generation": 9
     },
     {
@@ -1952,7 +1952,7 @@
       "power": 85,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-dragon.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-dragon.png",
       "generation": 9
     },
     {
@@ -1969,7 +1969,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-rock.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-rock.png",
       "generation": 9
     },
     {
@@ -1986,7 +1986,7 @@
       "power": 90,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -2003,7 +2003,7 @@
       "power": 95,
       "accuracy": 90,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fire.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fire.png",
       "generation": 9
     },
     {
@@ -2020,7 +2020,7 @@
       "power": 90,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-grass.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-grass.png",
       "generation": 9
     },
     {
@@ -2037,7 +2037,7 @@
       "power": 90,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-psychic.png",
       "generation": 9
     },
     {
@@ -2054,7 +2054,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-steel.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-steel.png",
       "generation": 9
     },
     {
@@ -2071,7 +2071,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -2088,7 +2088,7 @@
       "power": 90,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-water.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-water.png",
       "generation": 9
     },
     {
@@ -2105,7 +2105,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ice.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ice.png",
       "generation": 9
     },
     {
@@ -2122,7 +2122,7 @@
       "power": 90,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fire.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fire.png",
       "generation": 9
     },
     {
@@ -2139,7 +2139,7 @@
       "power": 90,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-electric.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-electric.png",
       "generation": 9
     },
     {
@@ -2156,7 +2156,7 @@
       "power": 90,
       "accuracy": 90,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fairy.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fairy.png",
       "generation": 9
     },
     {
@@ -2173,7 +2173,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-psychic.png",
       "generation": 9
     },
     {
@@ -2190,7 +2190,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-psychic.png",
       "generation": 9
     },
     {
@@ -2207,7 +2207,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -2224,7 +2224,7 @@
       "power": 90,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-bug.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-bug.png",
       "generation": 9
     },
     {
@@ -2241,7 +2241,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 40,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -2258,7 +2258,7 @@
       "power": 90,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ground.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ground.png",
       "generation": 9
     },
     {
@@ -2275,7 +2275,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fighting.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fighting.png",
       "generation": 9
     },
     {
@@ -2292,7 +2292,7 @@
       "power": 90,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ice.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ice.png",
       "generation": 9
     },
     {
@@ -2309,7 +2309,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-electric.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-electric.png",
       "generation": 9
     },
     {
@@ -2326,7 +2326,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-grass.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-grass.png",
       "generation": 9
     },
     {
@@ -2343,7 +2343,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-psychic.png",
       "generation": 9
     },
     {
@@ -2360,7 +2360,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fairy.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fairy.png",
       "generation": 9
     },
     {
@@ -2377,7 +2377,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-dark.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-dark.png",
       "generation": 9
     },
     {
@@ -2394,7 +2394,7 @@
       "power": 110,
       "accuracy": 85,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fire.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fire.png",
       "generation": 9
     },
     {
@@ -2411,7 +2411,7 @@
       "power": 110,
       "accuracy": 80,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-water.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-water.png",
       "generation": 9
     },
     {
@@ -2428,7 +2428,7 @@
       "power": 110,
       "accuracy": 70,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ice.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ice.png",
       "generation": 9
     },
     {
@@ -2445,7 +2445,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fire.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fire.png",
       "generation": 9
     },
     {
@@ -2462,7 +2462,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-water.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-water.png",
       "generation": 9
     },
     {
@@ -2479,7 +2479,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-grass.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-grass.png",
       "generation": 9
     },
     {
@@ -2496,7 +2496,7 @@
       "power": 90,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-electric.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-electric.png",
       "generation": 9
     },
     {
@@ -2513,7 +2513,7 @@
       "power": 90,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-poison.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-poison.png",
       "generation": 9
     },
     {
@@ -2530,7 +2530,7 @@
       "power": 100,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ground.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ground.png",
       "generation": 9
     },
     {
@@ -2547,7 +2547,7 @@
       "power": 100,
       "accuracy": 80,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-rock.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-rock.png",
       "generation": 9
     },
     {
@@ -2564,7 +2564,7 @@
       "power": 90,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ghost.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ghost.png",
       "generation": 9
     },
     {
@@ -2581,7 +2581,7 @@
       "power": 150,
       "accuracy": 90,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -2598,7 +2598,7 @@
       "power": 150,
       "accuracy": 90,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fire.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fire.png",
       "generation": 9
     },
     {
@@ -2615,7 +2615,7 @@
       "power": 150,
       "accuracy": 90,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-water.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-water.png",
       "generation": 9
     },
     {
@@ -2632,7 +2632,7 @@
       "power": 150,
       "accuracy": 90,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-grass.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-grass.png",
       "generation": 9
     },
     {
@@ -2649,7 +2649,7 @@
       "power": 120,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-dragon.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-dragon.png",
       "generation": 9
     },
     {
@@ -2666,7 +2666,7 @@
       "power": 130,
       "accuracy": 90,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fire.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fire.png",
       "generation": 9
     },
     {
@@ -2683,7 +2683,7 @@
       "power": 120,
       "accuracy": 70,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fighting.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fighting.png",
       "generation": 9
     },
     {
@@ -2700,7 +2700,7 @@
       "power": 130,
       "accuracy": 90,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-grass.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-grass.png",
       "generation": 9
     },
     {
@@ -2717,7 +2717,7 @@
       "power": 110,
       "accuracy": 70,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-flying.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-flying.png",
       "generation": 9
     },
     {
@@ -2734,7 +2734,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-psychic.png",
       "generation": 9
     },
     {
@@ -2751,7 +2751,7 @@
       "power": 90,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-bug.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-bug.png",
       "generation": 9
     },
     {
@@ -2768,7 +2768,7 @@
       "power": 150,
       "accuracy": 90,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -2785,7 +2785,7 @@
       "power": 120,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-flying.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-flying.png",
       "generation": 9
     },
     {
@@ -2802,7 +2802,7 @@
       "power": 120,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fire.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fire.png",
       "generation": 9
     },
     {
@@ -2819,7 +2819,7 @@
       "power": 110,
       "accuracy": 70,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-electric.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-electric.png",
       "generation": 9
     },
     {
@@ -2836,7 +2836,7 @@
       "power": 120,
       "accuracy": 100,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fighting.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fighting.png",
       "generation": 9
     },
     {
@@ -2853,7 +2853,7 @@
       "power": 120,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-grass.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-grass.png",
       "generation": 9
     },
     {
@@ -2870,7 +2870,7 @@
       "power": 130,
       "accuracy": 90,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-dragon.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-dragon.png",
       "generation": 9
     },
     {
@@ -2887,7 +2887,7 @@
       "power": 140,
       "accuracy": 95,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-steel.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-steel.png",
       "generation": 9
     },
     {
@@ -2904,7 +2904,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -2921,7 +2921,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -2938,7 +2938,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-electric.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-electric.png",
       "generation": 9
     },
     {
@@ -2955,7 +2955,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 30,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ice.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ice.png",
       "generation": 9
     },
     {
@@ -2972,7 +2972,7 @@
       "power": 0,
       "accuracy": 90,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-poison.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-poison.png",
       "generation": 9
     },
     {
@@ -2989,7 +2989,7 @@
       "power": 35,
       "accuracy": 85,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ground.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ground.png",
       "generation": 9
     },
     {
@@ -3006,7 +3006,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ghost.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ghost.png",
       "generation": 9
     },
     {
@@ -3023,7 +3023,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-psychic.png",
       "generation": 9
     },
     {
@@ -3040,7 +3040,7 @@
       "power": 50,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-rock.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-rock.png",
       "generation": 9
     },
     {
@@ -3057,7 +3057,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-steel.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-steel.png",
       "generation": 9
     },
     {
@@ -3074,7 +3074,7 @@
       "power": 65,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-dark.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-dark.png",
       "generation": 9
     },
     {
@@ -3091,7 +3091,7 @@
       "power": 60,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-bug.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-bug.png",
       "generation": 9
     },
     {
@@ -3108,7 +3108,7 @@
       "power": 0,
       "accuracy": 90,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -3125,7 +3125,7 @@
       "power": 40,
       "accuracy": 100,
       "pp": 30,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fighting.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fighting.png",
       "generation": 9
     },
     {
@@ -3142,7 +3142,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-bug.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-bug.png",
       "generation": 9
     },
     {
@@ -3159,7 +3159,7 @@
       "power": 95,
       "accuracy": 95,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ground.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ground.png",
       "generation": 9
     },
     {
@@ -3176,7 +3176,7 @@
       "power": 25,
       "accuracy": 100,
       "pp": 30,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ice.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ice.png",
       "generation": 9
     },
     {
@@ -3193,7 +3193,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-water.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-water.png",
       "generation": 9
     },
     {
@@ -3210,7 +3210,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fire.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fire.png",
       "generation": 9
     },
     {
@@ -3227,7 +3227,7 @@
       "power": 125,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-grass.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-grass.png",
       "generation": 9
     },
     {
@@ -3244,7 +3244,7 @@
       "power": 90,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -3261,7 +3261,7 @@
       "power": 150,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fighting.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fighting.png",
       "generation": 9
     },
     {
@@ -3278,7 +3278,7 @@
       "power": 50,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -3295,7 +3295,7 @@
       "power": 55,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-grass.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-grass.png",
       "generation": 9
     },
     {
@@ -3312,7 +3312,7 @@
       "power": 70,
       "accuracy": 100,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fire.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fire.png",
       "generation": 9
     },
     {
@@ -3329,7 +3329,7 @@
       "power": 60,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-water.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-water.png",
       "generation": 9
     },
     {
@@ -3346,7 +3346,7 @@
       "power": 40,
       "accuracy": 90,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-flying.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-flying.png",
       "generation": 9
     },
     {
@@ -3363,7 +3363,7 @@
       "power": 110,
       "accuracy": 90,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ghost.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ghost.png",
       "generation": 9
     },
     {
@@ -3380,7 +3380,7 @@
       "power": 75,
       "accuracy": 100,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-dark.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-dark.png",
       "generation": 9
     },
     {
@@ -3397,7 +3397,7 @@
       "power": 25,
       "accuracy": 90,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-dragon.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-dragon.png",
       "generation": 9
     },
     {
@@ -3414,7 +3414,7 @@
       "power": 100,
       "accuracy": 100,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fairy.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fairy.png",
       "generation": 9
     },
     {
@@ -3431,7 +3431,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 20,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -3448,7 +3448,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -3465,7 +3465,7 @@
       "power": 120,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -3482,7 +3482,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 5,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-normal.png",
       "generation": 9
     },
     {
@@ -3499,7 +3499,7 @@
       "power": 90,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-grass.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-grass.png",
       "generation": 9
     },
     {
@@ -3516,7 +3516,7 @@
       "power": 75,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fire.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fire.png",
       "generation": 9
     },
     {
@@ -3533,7 +3533,7 @@
       "power": 35,
       "accuracy": 85,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-water.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-water.png",
       "generation": 9
     },
     {
@@ -3550,7 +3550,7 @@
       "power": 90,
       "accuracy": 85,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-water.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-water.png",
       "generation": 9
     },
     {
@@ -3567,7 +3567,7 @@
       "power": 100,
       "accuracy": 95,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-electric.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-electric.png",
       "generation": 9
     },
     {
@@ -3584,7 +3584,7 @@
       "power": 55,
       "accuracy": 95,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-electric.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-electric.png",
       "generation": 9
     },
     {
@@ -3601,7 +3601,7 @@
       "power": 20,
       "accuracy": 90,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ice.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ice.png",
       "generation": 9
     },
     {
@@ -3618,7 +3618,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fighting.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fighting.png",
       "generation": 9
     },
     {
@@ -3635,7 +3635,7 @@
       "power": 95,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-poison.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-poison.png",
       "generation": 9
     },
     {
@@ -3652,7 +3652,7 @@
       "power": 70,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ground.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ground.png",
       "generation": 9
     },
     {
@@ -3669,7 +3669,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-flying.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-flying.png",
       "generation": 9
     },
     {
@@ -3686,7 +3686,7 @@
       "power": 120,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-psychic.png",
       "generation": 9
     },
     {
@@ -3703,7 +3703,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-psychic.png",
       "generation": 9
     },
     {
@@ -3720,7 +3720,7 @@
       "power": 70,
       "accuracy": 90,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-bug.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-bug.png",
       "generation": 9
     },
     {
@@ -3737,7 +3737,7 @@
       "power": 120,
       "accuracy": 90,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-rock.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-rock.png",
       "generation": 9
     },
     {
@@ -3754,7 +3754,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-dark.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-dark.png",
       "generation": 9
     },
     {
@@ -3771,7 +3771,7 @@
       "power": 60,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-dragon.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-dragon.png",
       "generation": 9
     },
     {
@@ -3788,7 +3788,7 @@
       "power": 0,
       "accuracy": 85,
       "pp": 40,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-steel.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-steel.png",
       "generation": 9
     },
     {
@@ -3805,7 +3805,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ghost.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-ghost.png",
       "generation": 9
     },
     {
@@ -3822,7 +3822,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-steel.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-steel.png",
       "generation": 9
     },
     {
@@ -3839,7 +3839,7 @@
       "power": 0,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-dragon.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-dragon.png",
       "generation": 9
     },
     {
@@ -3856,7 +3856,7 @@
       "power": 80,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fairy.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fairy.png",
       "generation": 9
     },
     {
@@ -3873,7 +3873,7 @@
       "power": 75,
       "accuracy": 100,
       "pp": 10,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-psychic.png",
       "generation": 9
     },
     {
@@ -3890,7 +3890,7 @@
       "power": 65,
       "accuracy": 100,
       "pp": 15,
-      "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fighting.png",
+      "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/tm-fighting.png",
       "generation": 9
     }
   ],

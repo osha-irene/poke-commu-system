@@ -377,7 +377,7 @@ export default function PokedexView({
   };
 
   const getPokemonSpriteUrl = (pokemon) => (
-    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`
+    `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pokemon.number}.png`
   );
 
   if (isMobile) {

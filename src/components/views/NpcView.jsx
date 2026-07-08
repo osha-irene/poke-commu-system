@@ -9,7 +9,7 @@ import { getAbilityKoreanName } from '../../utils/abilityUtils';
 import CachedImage from '../common/CachedImage';
 
 const npcBadgeImages = require.context('../../assets/members/badge', false, /\.png$/);
-const PLACEHOLDER = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
+const PLACEHOLDER = 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png';
 
 /* ── 색 추출 유틸 ── */
 const clamp = (v, mn, mx) => Math.min(Math.max(v, mn), mx);

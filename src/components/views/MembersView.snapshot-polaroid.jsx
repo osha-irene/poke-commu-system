@@ -60,17 +60,17 @@ const getBallImageUrl = (p, allItems) => {
       b.nameEn === searchLower.replace(/\s/g, '-') ||
       b.name.toLowerCase() === searchLower
     );
-    if (ballInfo) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${ballInfo.nameEn}.png`;
+    if (ballInfo) return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/${ballInfo.nameEn}.png`;
   }
-  return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
+  return 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png';
 };
 const getOfficialArtwork = p => {
   if (p?.sprite) {
     const m = p.sprite.match(/\/pokemon\/(\d+)\.png/);
-    if (m) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${m[1]}.png`;
+    if (m) return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/${m[1]}.png`;
   }
   const id = p?.dexId || p?.nationalDex || p?.pokemonId || p?.id;
-  if (id) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+  if (id) return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/${id}.png`;
   return getPokemonImg(p);
 };
 const getPokemonDbSprite = p => {
@@ -82,10 +82,10 @@ const getPokemonName = p => p?.nickname || p?.nameKo || p?.name || '포켓몬';
 const getPokeApiSprite = p => {
   if (p?.sprite) {
     const m = p.sprite.match(/\/pokemon\/(\d+)\.png/);
-    if (m) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-ix/scarlet-violet/${m[1]}.png`;
+    if (m) return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-ix/scarlet-violet/${m[1]}.png`;
   }
   const id = p?.dexId || p?.nationalDex || p?.pokemonId || p?.id;
-  if (id) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-ix/scarlet-violet/${id}.png`;
+  if (id) return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-ix/scarlet-violet/${id}.png`;
   return null;
 };
 const getEntryPokemonSprite = p => getOwnedPokemonSpriteUrl(p) || getPokemonLocalIconUrl(p);

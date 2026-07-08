@@ -31,10 +31,10 @@ const getLocalIconUrl = (pokemon, allPokemonMaster) => {
 
   const orig = pokemon.originalNumber;
   if (orig === 710 || orig === 711) {
-    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${orig}.png`;
+    return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-viii/icons/${orig}.png`;
   }
   if (pokemon.iconUrl) return pokemon.iconUrl;
-  if (pokemon.number) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${pokemon.number}.png`;
+  if (pokemon.number) return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-viii/icons/${pokemon.number}.png`;
   return '';
 };
 

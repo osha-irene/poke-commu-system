@@ -62,7 +62,7 @@ async function fetchAllPokemon() {
           baseDefense: pokemonData.stats.find(s => s.stat.name === 'defense').base_stat,
           baseSpeed: pokemonData.stats.find(s => s.stat.name === 'speed').base_stat,
           generation: speciesData.generation.name.replace('generation-', ''),
-          imageUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonData.id}.png`
+          imageUrl: `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/${pokemonData.id}.png`
         };
         
         allPokemon.push(pokemon);

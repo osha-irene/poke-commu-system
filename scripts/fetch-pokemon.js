@@ -223,8 +223,8 @@ async function fetchPokemon(idOrName) {
     }
     
     // 이미지 URL
-    const imageUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`;
-    const shinySprite = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${number}.png`;
+    const imageUrl = `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${number}.png`;
+    const shinySprite = `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/${number}.png`;
     
     return {
       id: number,

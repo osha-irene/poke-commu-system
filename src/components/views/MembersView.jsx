@@ -1,6 +1,6 @@
-﻿import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+﻿import React, { useState, useRef, useEffect, useLayoutEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronLeft, User, Text, Users } from 'lucide-react';
+import { Award, ChevronLeft, User, Text, Users } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import { getOwnedPokemonSpriteUrl } from '../../utils/pokemonImageUtils';
 import { getTitleDisplayStyle } from '../../utils/titleDisplay';
@@ -11,14 +11,13 @@ import { translateMoveName } from '../../battle/utils/move-translations';
 import movesData from '../../data/moves.json';
 import { getAbilityKoreanName } from '../../utils/abilityUtils';
 import CachedImage from '../common/CachedImage';
-import { preloadDecodedImage } from '../../utils/imageCache';
 import { useGame } from '../../contexts/GameContext';
 import { loginIcon1, loginIcon2, loginIcon3, loginIcon4 } from '../../assets/images';
 import polaroidListWhite from '../../assets/members/polaroid-list-white.png';
 import polaroidDetailWhite from '../../assets/members/polaroid-detail-white.png';
 import npcButtonImg from '../../assets/members/npc-button.png';
 import topButtonImg from '../../assets/members/top-button.png';
-import memberBadgeImg from '../../assets/members/badge.png';
+import memberBadgeImg from '../../assets/members/badge/badge.png';
 import ribbonSilhouetteImg from '../../assets/members/ribbon/ribbon-silhouette.png';
 import ribbonCuteImg         from '../../assets/members/ribbon/ribbon-cute.png';
 import ribbonIntelligenceImg  from '../../assets/members/ribbon/ribbon-intelligence.png';
@@ -44,6 +43,7 @@ const BADGE_CLEANLINESS_MAX = 5;
 const BADGE_CLEANLINESS_PERIOD_MS = 3 * 24 * 60 * 60 * 1000;
 const BADGE_SPARKLE_DURATION_MS = 24 * 60 * 60 * 1000;
 const BADGE_SCRUB_STEP_MS = 2000;
+const BADGE_MASK_CANVAS_SIZE = 256;
 const BADGE_DIRT_OPACITY = {
   1: 0,
   2: 0.08,
@@ -136,7 +136,7 @@ const RIBBON_TYPE_IMGS = {
 const RIBBON_POSITIONS = [
   { left: '7%',  top: '8%'  }, { left: '50%', top: '8%'  }, { left: '93%', top: '8%'  },
   { left: '7%',  top: '37%' }, { left: '50%', top: '37%' }, { left: '93%', top: '37%' },
-  { left: '50%', top: '66%' }, { left: '93%', top: '66%' },
+  { left: '50%', top: '66%' }, { left: '93%', top: '68%' },
 ];
 
 const GenderMale = () => (
@@ -299,17 +299,17 @@ const getBallImageUrl = (p, allItems) => {
       b.nameEn === searchLower.replace(/\s/g, '-') ||
       b.name.toLowerCase() === searchLower
     );
-    if (ballInfo) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${ballInfo.nameEn}.png`;
+    if (ballInfo) return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/${ballInfo.nameEn}.png`;
   }
-  return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
+  return 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png';
 };
 const getOfficialArtwork = p => {
   if (p?.sprite) {
     const m = p.sprite.match(/\/pokemon\/(\d+)\.png/);
-    if (m) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${m[1]}.png`;
+    if (m) return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/${m[1]}.png`;
   }
   const id = p?.number || p?.originalNumber || p?.speciesNumber || p?.speciesOriginalNumber || p?.dexId || p?.nationalDex || p?.pokemonId || p?.id;
-  if (id) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+  if (id) return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/${id}.png`;
   return getPokemonImg(p);
 };
 const isGalarianFarfetchd = p => {
@@ -366,10 +366,10 @@ const isOfficialArtworkUrl = url => String(url || '').includes('/other/official-
 const getPokeApiSprite = p => {
   if (p?.sprite) {
     const m = p.sprite.match(/\/pokemon\/(\d+)\.png/);
-    if (m) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-ix/scarlet-violet/${m[1]}.png`;
+    if (m) return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-ix/scarlet-violet/${m[1]}.png`;
   }
   const id = p?.number || p?.originalNumber || p?.speciesNumber || p?.speciesOriginalNumber || p?.dexId || p?.nationalDex || p?.pokemonId || p?.id;
-  if (id) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-ix/scarlet-violet/${id}.png`;
+  if (id) return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-ix/scarlet-violet/${id}.png`;
   return null;
 };
 const getEntryPokemonSprite = p => getOwnedPokemonSpriteUrl(p) || getPokemonLocalIconUrl(p);
@@ -523,11 +523,6 @@ function MemberCard({ member, titles, onClick }) {
   const [titleTooltipPos, setTitleTooltipPos] = useState(null);
   const [titleTooltipColor, setTitleTooltipColor] = useState({ bg: 'rgba(35, 32, 28, 0.94)', text: '#fff' });
 
-  const preloadFullImg = () => {
-    const full = getFullImg(member);
-    if (full && full !== faceImg) preloadDecodedImage(full);
-  };
-
   const partner = member?.partnerPokemon ?? null;
   const partnerIconFallback = partner ? getOfficialArtwork(partner) : null;
   const partnerIcon = partner ? (getPokemonLocalIconUrl(partner) || partner?.iconUrl || partner?.sprite || partnerIconFallback || '') : null;
@@ -570,7 +565,7 @@ function MemberCard({ member, titles, onClick }) {
         transition: 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
       }}
       onClick={onClick}
-      onMouseEnter={() => { preloadFullImg(); setHovered(true); }}
+      onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       {/* 폴라로이드 프레임 */}
@@ -704,7 +699,7 @@ const TABS = [
   { id: 'main', label: '메인', Icon: User },
   { id: 'text', label: '설정', Icon: Text },
   { id: 'entry', label: '엔트리', iconSrc: '/img/pokeball.png' },
-  // { id: 'extra', label: '추가', Icon: Award }, // 임시 숨김 (뱃지 탭)
+  { id: 'extra', label: '추가', Icon: Award },
   { id: 'relation', label: '관계', Icon: Users },
 ];
 const DEFAULT_RIGHT_GRADIENT_TABS = {
@@ -865,6 +860,15 @@ function getQuoteAccentColor(color) {
 }
 
 const imgCache = {}; // url → accent color (모듈 레벨 캐시)
+const opaqueBottomRatioCache = {};
+const partnerImageMetricsCache = {};
+
+function scheduleIdleTask(callback) {
+  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+    return window.requestIdleCallback(callback, { timeout: 250 });
+  }
+  return window.setTimeout(callback, 0);
+}
 
 function MemberDetail({ member, members, titles, onBack, onTabChange, currentUserId, isAdmin }) {
   const { allItems = [] } = useGame();
@@ -945,13 +949,23 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   const [relationSaving, setRelationSaving] = useState(false);
   const [partnerTextSaving, setPartnerTextSaving] = useState(false);
   const [badgeRotation, setBadgeRotation] = useState(0);
-  const [badgeHovering, setBadgeHovering] = useState(false);
   const [badgeCleanlinessLevels, setBadgeCleanlinessLevels] = useState(() => getCurrentBadgeCleanlinessLevels(member));
   const [badgeCleanedAtLevels, setBadgeCleanedAtLevels] = useState(() => normalizeBadgeCleanedAtArray(member.badgeCleanedAtLevels, member.badgeCleanedAt));
   const [badgeSparkleNow, setBadgeSparkleNow] = useState(() => Date.now());
   const [, setBadgeScrubPreview] = useState({ index: null, progress: 0 });
   const [hoveredRibbon, setHoveredRibbon] = useState(null);
   const badgePrevAngleRef = useRef(null);
+  // mousemove는 화면 주사율보다 훨씬 자주 발생할 수 있어, 매번 setState하면 리렌더가
+  // 못 따라잡고 밀려서 오히려 더 끊겨 보인다. ref에 누적해두고 프레임당 최대 1번만 커밋한다.
+  const pendingBadgeRotationRef = useRef(0);
+  const badgeRotationFrameRef = useRef(null);
+  // 무게감 있는 회전을 위한 간단한 관성/마찰 물리: 실제 각속도(angular velocity)는
+  // 마우스가 만든 목표 각속도를 서서히(관성) 뒤쫓고, 입력이 끊기면 목표 각속도 자체가
+  // 서서히 0으로 감쇠(마찰)해 손을 떼도 잠깐 더 돌다가 멈춘다.
+  const badgeAngularVelocityRef = useRef(0);
+  const badgeTargetVelocityRef = useRef(0);
+  const badgeLastMoveTimeRef = useRef(null);
+  const badgeRotateContainerRef = useRef(null);
   const badgeScrubProgressRef = useRef(Array(8).fill(0));
   const badgePointerRef = useRef(null);
   const badgeLastScrubAtRef = useRef(0);
@@ -1359,13 +1373,24 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   const handleImgLoad = () => {
     setImgLoaded(true);
     if (manualAccent) return; // 수동 색상 설정 시 자동 추출 스킵
-    if (imgRef.current) {
-      opaqueBottomRatioRef.current = getOpaqueBottomRatio(imgRef.current);
-      const color = extractDominantColor(imgRef.current);
-      if (color) {
-        imgCache[fullImg] = color;
-        setAccent(color);
-      }
+    if (opaqueBottomRatioCache[fullImg]) {
+      opaqueBottomRatioRef.current = opaqueBottomRatioCache[fullImg];
+    }
+    if (imgCache[fullImg]) {
+      setAccent(imgCache[fullImg]);
+      return;
+    }
+    const imageElement = imgRef.current;
+    if (imageElement) {
+      scheduleIdleTask(() => {
+        opaqueBottomRatioRef.current = getOpaqueBottomRatio(imageElement);
+        opaqueBottomRatioCache[fullImg] = opaqueBottomRatioRef.current;
+        const color = extractDominantColor(imageElement);
+        if (color) {
+          imgCache[fullImg] = color;
+          setAccent(color);
+        }
+      });
     }
   };
 
@@ -1375,41 +1400,63 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     const dbSprite = getPokemonDbSprite(partner);
     const url = (isPokemonDbSpriteException(partner) ? dbSprite : getPokeApiSprite(partner)) || dbSprite || getOfficialArtwork(partner);
     if (!url) return;
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-        let topRow = img.naturalHeight;
-        outer: for (let y = 0; y < img.naturalHeight; y++) {
-          for (let x = 0; x < img.naturalWidth; x++) {
-            if (data[(y * img.naturalWidth + x) * 4 + 3] > 10) { topRow = y; break outer; }
+    const cachedMetrics = partnerImageMetricsCache[url];
+    if (cachedMetrics) {
+      setPartnerImageUsesArtwork(cachedMetrics.usesArtwork);
+      setPartnerTopOffset(cachedMetrics.topOffset);
+      setPartnerImgHeight(cachedMetrics.renderedHeight);
+      return;
+    }
+    let cancelled = false;
+    scheduleIdleTask(() => {
+      if (cancelled) return;
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        if (cancelled) return;
+        try {
+          const usesArtwork = isOfficialArtworkUrl(img.src);
+          const maxSize = usesArtwork ? 107 : 160;
+          const renderScale = Math.min(maxSize / img.naturalWidth, maxSize / img.naturalHeight, 1);
+          const renderedHeight = img.naturalHeight * renderScale;
+          const scanWidth = Math.min(96, img.naturalWidth || 96);
+          const scanHeight = Math.max(1, Math.round(scanWidth * img.naturalHeight / img.naturalWidth));
+          const canvas = document.createElement('canvas');
+          canvas.width = scanWidth;
+          canvas.height = scanHeight;
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          ctx.drawImage(img, 0, 0, scanWidth, scanHeight);
+          const data = ctx.getImageData(0, 0, scanWidth, scanHeight).data;
+          let topRow = scanHeight;
+          outer: for (let y = 0; y < scanHeight; y++) {
+            for (let x = 0; x < scanWidth; x++) {
+              if (data[(y * scanWidth + x) * 4 + 3] > 10) { topRow = y; break outer; }
+            }
           }
+          const metrics = {
+            usesArtwork,
+            topOffset: topRow / scanHeight,
+            renderedHeight,
+          };
+          partnerImageMetricsCache[url] = metrics;
+          setPartnerImageUsesArtwork(usesArtwork);
+          setPartnerTopOffset(metrics.topOffset);
+          setPartnerImgHeight(renderedHeight);
+        } catch { setPartnerTopOffset(getPokemonDbExceptionTopOffset(partner)); }
+      };
+      img.onerror = () => {
+        if (cancelled) return;
+        const fallback = getPokemonDbSprite(partner) || getOfficialArtwork(partner);
+        if (fallback && img.src !== fallback) {
+          setPartnerImageUsesArtwork(isOfficialArtworkUrl(fallback));
+          img.src = fallback;
+          return;
         }
-        const usesArtwork = isOfficialArtworkUrl(img.src);
-        const maxSize = usesArtwork ? 107 : 160;
-        const scale = Math.min(maxSize / img.naturalWidth, maxSize / img.naturalHeight, 1);
-        const renderedHeight = img.naturalHeight * scale;
-        setPartnerImageUsesArtwork(usesArtwork);
-        setPartnerTopOffset(topRow / img.naturalHeight);
-        setPartnerImgHeight(renderedHeight);
-      } catch { setPartnerTopOffset(getPokemonDbExceptionTopOffset(partner)); }
-    };
-    img.onerror = () => {
-      const fallback = getPokemonDbSprite(partner) || getOfficialArtwork(partner);
-      if (fallback && img.src !== fallback) {
-        setPartnerImageUsesArtwork(isOfficialArtworkUrl(fallback));
-        img.src = fallback;
-        return;
-      }
-      setPartnerTopOffset(0);
-    };
-    img.src = url;
+        setPartnerTopOffset(0);
+      };
+      img.src = url;
+    });
+    return () => { cancelled = true; };
   }, [partner?.sprite, partner?.number, partner?.originalNumber, partner?.speciesNumber, partner?.speciesOriginalNumber, partner?.dexId, partner?.nationalDex, partner?.id, partner?.nameEn, partner?.name, partner?.species, partner?.formName, partner?.formVariant, partner?.regionalForm, partnerUsesArtwork]);
 
   useEffect(() => {
@@ -1478,20 +1525,32 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   }, [member.id]);
 
   useEffect(() => {
+    if (tab !== 'extra') return;
+    if (badgeMaskRef.current?.length === BADGE_IMGS.length && badgeMaskRef.current.every(Boolean)) return;
     let cancelled = false;
     Promise.all(BADGE_IMGS.map(src => new Promise(resolve => {
       const image = new Image();
       image.onload = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = image.naturalWidth || image.width;
-          canvas.height = image.naturalHeight || image.height;
-          const ctx = canvas.getContext('2d', { willReadFrequently: true });
-          ctx.drawImage(image, 0, 0);
-          resolve({ ctx, width: canvas.width, height: canvas.height });
-        } catch {
-          resolve(null);
-        }
+        // 캐시된 이미지는 8개가 거의 동시에 onload를 쏘기 때문에, 캔버스 디코딩을
+        // idle 시점으로 흩어서 탭 전환 순간에 프레임이 한꺼번에 밀리지 않게 한다.
+        scheduleIdleTask(() => {
+          try {
+            const sourceWidth = image.naturalWidth || image.width;
+            const sourceHeight = image.naturalHeight || image.height;
+            const scale = Math.min(
+              BADGE_MASK_CANVAS_SIZE / Math.max(sourceWidth, sourceHeight),
+              1
+            );
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, Math.round(sourceWidth * scale));
+            canvas.height = Math.max(1, Math.round(sourceHeight * scale));
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+            resolve({ ctx, width: canvas.width, height: canvas.height });
+          } catch {
+            resolve(null);
+          }
+        });
       };
       image.onerror = () => resolve(null);
       image.src = src;
@@ -1499,6 +1558,10 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
       if (!cancelled) badgeMaskRef.current = masks;
     });
     return () => { cancelled = true; };
+  }, [tab]);
+
+  useEffect(() => () => {
+    if (badgeRotationFrameRef.current !== null) cancelAnimationFrame(badgeRotationFrameRef.current);
   }, []);
 
   useEffect(() => {
@@ -1511,9 +1574,10 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   }, [member.id, member.badgeCleanliness, member.badgeCleanedAt, member.badgeCleanlinessLevels, member.badgeCleanedAtLevels, tab]);
 
   useEffect(() => {
+    if (tab !== 'extra') return undefined;
     const timer = setInterval(() => setBadgeSparkleNow(Date.now()), 60 * 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [tab]);
 
   useEffect(() => () => {
     if (charTransitionTimerRef.current) clearTimeout(charTransitionTimerRef.current);
@@ -1857,22 +1921,82 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
           const level = badgeCleanlinessLevels[index] ?? BADGE_CLEANLINESS_DEFAULT;
           return BADGE_DIRT_OPACITY[level] ?? BADGE_DIRT_OPACITY[BADGE_CLEANLINESS_DEFAULT];
         };
+        // 무거운 팽이를 돌리는 느낌: 실제 각속도가 목표 각속도를 서서히(관성) 뒤쫓고,
+        // 목표 각속도는 새 입력이 없으면 서서히(마찰) 0으로 줄어든다 — 손을 떼도 관성으로
+        // 잠깐 더 돌다가 서서히 멎는다. TAU가 클수록 더 무겁게(둔하게) 반응한다.
+        const BADGE_FOLLOW_TAU_MS = 90;
+        const BADGE_FRICTION_TAU_MS = 260;
+        const BADGE_SETTLE_THRESHOLD = 0.0015;
+
+        // 매 프레임 setState로 MemberDetail 전체를 리렌더하면(바이오 텍스트, 배지 목록 등
+        // 무거운 트리) 60fps를 못 따라가 뚝뚝 끊겨 보인다. 회전은 React 리렌더 없이
+        // DOM에 직접 써서 컴포지터 수준으로 부드럽게 돌리고, state는 드물게만 동기화한다.
+        const BADGE_STATE_SYNC_INTERVAL_MS = 150;
+
+        const runBadgeRotationLoop = () => {
+          if (badgeRotationFrameRef.current !== null) return;
+          let lastFrameTime = performance.now();
+          let lastSyncTime = lastFrameTime;
+          const tick = (now) => {
+            const dt = Math.min(now - lastFrameTime, 48);
+            lastFrameTime = now;
+
+            badgeTargetVelocityRef.current *= Math.exp(-dt / BADGE_FRICTION_TAU_MS);
+            const follow = 1 - Math.exp(-dt / BADGE_FOLLOW_TAU_MS);
+            badgeAngularVelocityRef.current += (badgeTargetVelocityRef.current - badgeAngularVelocityRef.current) * follow;
+
+            pendingBadgeRotationRef.current += badgeAngularVelocityRef.current * dt;
+
+            const container = badgeRotateContainerRef.current;
+            if (container) {
+              const transformValue = `rotate(${pendingBadgeRotationRef.current}deg)`;
+              container.querySelectorAll('[data-badge-rotate]').forEach(el => { el.style.transform = transformValue; });
+            }
+
+            const settled = Math.abs(badgeAngularVelocityRef.current) < BADGE_SETTLE_THRESHOLD
+              && Math.abs(badgeTargetVelocityRef.current) < BADGE_SETTLE_THRESHOLD;
+
+            if (settled || now - lastSyncTime > BADGE_STATE_SYNC_INTERVAL_MS) {
+              lastSyncTime = now;
+              setBadgeRotation(pendingBadgeRotationRef.current);
+            }
+
+            if (settled) {
+              badgeAngularVelocityRef.current = 0;
+              badgeTargetVelocityRef.current = 0;
+              badgeRotationFrameRef.current = null;
+              return;
+            }
+            badgeRotationFrameRef.current = requestAnimationFrame(tick);
+          };
+          badgeRotationFrameRef.current = requestAnimationFrame(tick);
+        };
+
         const handleBadgeMove = (event) => {
           const rect = event.currentTarget.getBoundingClientRect();
           const x = event.clientX - (rect.left + rect.width / 2);
           const y = event.clientY - (rect.top + rect.height / 2);
           const angle = Math.atan2(y, x) * 180 / Math.PI;
+          const now = performance.now();
           if (badgePrevAngleRef.current !== null) {
             let delta = angle - badgePrevAngleRef.current;
             if (delta > 180) delta -= 360;
             if (delta < -180) delta += 360;
-            setBadgeRotation(prev => prev + delta * 0.3);
+            const dt = badgeLastMoveTimeRef.current !== null
+              ? Math.min(Math.max(now - badgeLastMoveTimeRef.current, 4), 80)
+              : 16;
+            badgeTargetVelocityRef.current = (delta * 0.3) / dt;
+            runBadgeRotationLoop();
           }
           badgePrevAngleRef.current = angle;
+          badgeLastMoveTimeRef.current = now;
           scrubBadgeCleanliness(event);
         };
+        // 회전이 자체 물리 루프(runBadgeRotationLoop)로 매 프레임 갱신되므로
+        // CSS 트랜지션을 걸면 서로 싸우면서 끊겨 보인다. 회전만은 항상 트랜지션 없이 즉시 반영한다.
+        const badgeRotationTransition = 'none';
         return (
-          <>
+          <div ref={badgeRotateContainerRef}>
           {/* 배경 텍스트 */}
           <div style={{
             position: 'absolute',
@@ -1902,14 +2026,14 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             </div>
           </div>
           {/* 회전하는 뱃지 실루엣 안에서만 배경 텍스트를 흐리게 처리 */}
-          <div className="rmv-tab-content" style={{
+          <div className="rmv-tab-content" data-badge-rotate style={{
             position: 'absolute',
             top: 'calc(8.5rem - 5px)', left: 'calc(39% + 3px)',
             width: 430, height: 430,
             zIndex: 5,
             pointerEvents: 'none',
             transform: `rotate(${badgeRotation}deg)`,
-            transition: badgeHovering ? 'transform 0.6s ease-out' : 'transform 0.75s cubic-bezier(0.22, 1, 0.36, 1)',
+            transition: badgeRotationTransition,
             willChange: 'transform',
             maskImage: `url(${memberBadgeImg})`,
             WebkitMaskImage: `url(${memberBadgeImg})`,
@@ -1955,7 +2079,6 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               if (badgeMouseDownRef.current) {
                 badgePointerRef.current = { x: event.clientX, y: event.clientY };
               }
-              setBadgeHovering(true);
             }}
             onMouseLeave={() => {
               badgeMouseDownRef.current = false;
@@ -1964,15 +2087,14 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               badgeLastScrubAtRef.current = 0;
               setBadgeScrubPreview({ index: null, progress: 0 });
               stopRubbingSound();
-              setBadgeHovering(false);
             }}
-            style={{ position: 'absolute', top: 'calc(8.5rem - 5px)', left: 'calc(39% + 3px)', width: 430, height: 430, display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', zIndex: 10 }}
+            style={{ position: 'absolute', top: 'calc(8.5rem - 5px)', left: 'calc(39% + 3px)', width: 430, height: 430, display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', zIndex: 10, isolation: 'isolate' }}
           >
             {/* accent 오버레이 — z=1 */}
-            <div style={{
+            <div data-badge-rotate style={{
               position: 'absolute', inset: 0, zIndex: 1,
               transform: `rotate(${badgeRotation}deg)`,
-              transition: badgeHovering ? 'transform 0.6s ease-out' : 'transform 0.75s cubic-bezier(0.22, 1, 0.36, 1)',
+              transition: badgeRotationTransition,
               willChange: 'transform',
             }}>
               <div style={{
@@ -1986,10 +2108,10 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               }} />
             </div>
             {/* 뱃지 조각 — z=3 */}
-            <div style={{
+            <div data-badge-rotate style={{
               position: 'absolute', inset: 0, zIndex: 3,
               transform: `rotate(${badgeRotation}deg)`,
-              transition: badgeHovering ? 'transform 0.6s ease-out' : 'transform 0.75s cubic-bezier(0.22, 1, 0.36, 1)',
+              transition: badgeRotationTransition,
               willChange: 'transform',
             }}>
               {BADGE_IMGS.map((src, i) => (
@@ -2003,13 +2125,13 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               ))}
             </div>
             {BADGE_IMGS.map((src, i) => badgePieces[i] && (
-              <div key={`dirt-${i}`} style={{
+              <div key={`dirt-${i}`} data-badge-rotate style={{
                 position: 'absolute',
                 inset: 0,
                 zIndex: 4,
                 pointerEvents: 'none',
                 transform: `rotate(${badgeRotation}deg)`,
-                transition: badgeHovering ? 'transform 0.6s ease-out' : 'transform 0.75s cubic-bezier(0.22, 1, 0.36, 1)',
+                transition: badgeRotationTransition,
                 opacity: getBadgeDirtOpacity(i),
                 background: 'linear-gradient(145deg, rgba(8,10,14,0.94) 0%, rgba(34,31,28,0.9) 52%, rgba(0,0,0,0.98) 100%)',
                 mixBlendMode: 'multiply',
@@ -2025,13 +2147,13 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               }} />
             ))}
             {sparklingBadgeIndexes.map(index => (
-              <div key={`${index}-${badgeCleanedAtLevels[index]}-${badgeSparkle.index === index ? badgeSparkle.key : 'active'}`} className="rmv-badge-sparkles" style={{
+              <div key={`${index}-${badgeCleanedAtLevels[index]}-${badgeSparkle.index === index ? badgeSparkle.key : 'active'}`} className="rmv-badge-sparkles" data-badge-rotate style={{
                 position: 'absolute',
                 inset: 0,
                 zIndex: 6,
                 pointerEvents: 'none',
                 transform: `rotate(${badgeRotation}deg)`,
-                transition: badgeHovering ? 'transform 0.6s ease-out' : 'transform 0.75s cubic-bezier(0.22, 1, 0.36, 1)',
+                transition: badgeRotationTransition,
                 maskImage: `url(${BADGE_IMGS[index]})`,
                 WebkitMaskImage: `url(${BADGE_IMGS[index]})`,
                 maskSize: 'contain',
@@ -2056,15 +2178,15 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
           {/* 리본 — 90° 회전 W 꼭짓점, 하단 고정 */}
           <div className="rmv-tab-content" style={{
             position: 'fixed',
-            bottom: -75,
-            left: 'calc(30% + 33% - 62px)',
-            width: 280,
-            height: 480,
+            bottom: -68,
+            left: 'calc(30% + 33% - 55px)',
+            width: 258,
+            height: 442,
             pointerEvents: 'none',
             zIndex: 8,
           }}>
             {RIBBON_POSITIONS.map((pos, i) => (
-              <div key={i} style={{ position: 'absolute', left: pos.left, top: pos.top, transform: 'translate(-50%, -50%)', width: 145, height: 145, isolation: 'isolate', pointerEvents: ribbonTypes[i] ? 'auto' : 'none' }}
+              <div key={i} style={{ position: 'absolute', left: pos.left, top: pos.top, transform: 'translate(-50%, -50%)', width: 132, height: 132, isolation: 'isolate', pointerEvents: ribbonTypes[i] ? 'auto' : 'none' }}
                 onMouseEnter={() => setHoveredRibbon(i)}
                 onMouseLeave={() => setHoveredRibbon(null)}
               >
@@ -2115,7 +2237,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               </div>
             ))}
           </div>
-          </>
+          </div>
         );
       })()}
 
@@ -2808,16 +2930,9 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
   const [selected, setSelected] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
   const [activeTab, setActiveTab] = useState('main');
-  const listRef = useRef(null);
+  const listScrollYRef = useRef(0);
 
-  const memberList = getMemberList(members);
-
-  useEffect(() => {
-    memberList.forEach(member => {
-      preloadDecodedImage(getFaceImg(member));
-      preloadDecodedImage(getFullImg(member));
-    });
-  }, [members]);
+  const memberList = useMemo(() => getMemberList(members), [members]);
 
   useEffect(() => {
     if (showDetail) {
@@ -2853,6 +2968,7 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
         setSelected(null);
         setShowDetail(false);
         setActiveTab('main');
+        requestAnimationFrame(() => window.scrollTo({ top: listScrollYRef.current, behavior: 'auto' }));
       }
     };
     window.addEventListener('popstate', onPop);
@@ -2860,8 +2976,7 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
   }, [showDetail]);
 
   const openMember = (member) => {
-    const full = getFullImg(member);
-    if (full) preloadDecodedImage(full);
+    listScrollYRef.current = window.scrollY || window.pageYOffset || 0;
     setSelected(member);
     setShowDetail(true);
 
@@ -2875,6 +2990,7 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
     setSelected(null);
     setShowDetail(false);
     setActiveTab('main');
+    requestAnimationFrame(() => window.scrollTo({ top: listScrollYRef.current, behavior: 'auto' }));
 
     const url = new URL(window.location.href);
     url.searchParams.delete('member');
@@ -2901,52 +3017,45 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
         </defs>
       </svg>
       {/* 목록 */}
-      <div
-        ref={listRef}
-        style={{
-          position: showDetail ? 'absolute' : 'relative',
-          top: 0, left: 0, right: 0,
-          transform: 'none',
-          opacity: showDetail ? 0 : 1,
-          pointerEvents: showDetail ? 'none' : 'auto',
-        }}
-      >
-        {onSwitchTab && (
-          <button
-            onClick={() => onSwitchTab('npcs')}
-            className="tab-switch-btn"
-            style={{ position: 'absolute', top: -51, left: 0, zIndex: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-          >
-            <img src={npcButtonImg} alt="NPC 보기" style={{ width: 198, height: 'auto', display: 'block' }} />
-          </button>
-        )}
-        {!showDetail && createPortal(
-          <button
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="tab-switch-btn"
-            style={{ position: 'fixed', bottom: 30, right: 'calc(max(0px, (100vw - 1548px) / 2) + 230px)', zIndex: 100, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-          >
-            <img src={topButtonImg} alt="맨 위로" style={{ width: 80, height: 'auto', display: 'block' }} />
-          </button>,
-          document.body
-        )}
-        <div className="member-list-enter" style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(5, 1fr)',
-          gap: '10px',
-          padding: '20px 20px 60px',
-          margin: '0 -40px',
-        }}>
-          {memberList.map(m => (
-            <MemberCard
-              key={m.id}
-              member={m}
-              titles={titles}
-              onClick={() => openMember(m)}
-            />
-          ))}
+      {!showDetail && (
+        <div>
+          {onSwitchTab && (
+            <button
+              onClick={() => onSwitchTab('npcs')}
+              className="tab-switch-btn"
+              style={{ position: 'absolute', top: -51, left: 0, zIndex: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+            >
+              <img src={npcButtonImg} alt="NPC 보기" style={{ width: 198, height: 'auto', display: 'block' }} />
+            </button>
+          )}
+          {createPortal(
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="tab-switch-btn"
+              style={{ position: 'fixed', bottom: 30, right: 'calc(max(0px, (100vw - 1548px) / 2) + 230px)', zIndex: 100, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+            >
+              <img src={topButtonImg} alt="맨 위로" style={{ width: 80, height: 'auto', display: 'block' }} />
+            </button>,
+            document.body
+          )}
+          <div className="member-list-enter" style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(5, 1fr)',
+            gap: '10px',
+            padding: '20px 20px 60px',
+            margin: '0 -40px',
+          }}>
+            {memberList.map(m => (
+              <MemberCard
+                key={m.id}
+                member={m}
+                titles={titles}
+                onClick={() => openMember(m)}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 상세 — fixed 오버레이, site-header가 z-60으로 nav 항상 클릭 가능 */}
       {selected && createPortal(
@@ -2962,7 +3071,6 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
             transform: 'translateX(0)',
             opacity: showDetail ? 1 : 0,
             pointerEvents: showDetail ? 'auto' : 'none',
-            backdropFilter: 'blur(6px)',
           }}
         >
           <MemberDetail

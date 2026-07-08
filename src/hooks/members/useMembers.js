@@ -148,7 +148,7 @@ async function createInitialMembersWithAuth() {
 
     const pokeBall = findItem(['poke ball', 'pokeball', '몬스터볼']);
     return [
-      { itemId: pokeBall?.id || 4, name: '몬스터볼', count: 15, imageUrl: pokeBall?.spriteUrl || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png' }
+      { itemId: pokeBall?.id || 4, name: '몬스터볼', count: 15, imageUrl: pokeBall?.spriteUrl || 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png' }
     ];
   };
 

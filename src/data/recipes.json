@@ -14,7 +14,7 @@
         "pocket": "berries",
         "effect": "포켓몬의 친밀도를 30 증가시킨다",
         "friendshipBoost": 30,
-        "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png"
+        "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png"
       }
     },
     {
@@ -37,7 +37,7 @@
           "intelligence": 10,
           "strength": 10
         },
-        "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/potion.png"
+        "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/potion.png"
       }
     }
   ],
@@ -208,7 +208,7 @@
         "conditionBoost": {
           "beauty": 25
         },
-        "spriteUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/berry.png"
+        "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/berry.png"
       }
     }
   ]

@@ -198,7 +198,7 @@ export function convertToBattleFormat(pokemon) {
       types: [pokemon.type, pokemon.type2].filter(Boolean),
       ability: pokemon.ability,
       isShiny: pokemon.isShiny || false,
-      sprite: pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`
+      sprite: pokemon.spriteUrl || `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pokemon.number}.png`
     },
     
     // @pkmn/sim 배틀용 정보

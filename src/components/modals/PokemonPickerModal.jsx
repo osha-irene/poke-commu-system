@@ -47,7 +47,7 @@ function getPokemonImageUrl(pokemon) {
   if (url) return url;
   const num = pokemon.originalNumber || pokemon.number;
   return num
-    ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${num}.png`
+    ? `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${num}.png`
     : '';
 }
 
@@ -156,7 +156,7 @@ export default function PokemonPickerModal({ allPokemon = [], onSelect, onClose 
                             style={{ imageRendering: 'pixelated' }}
                             loading="lazy"
                             onError={e => {
-                              e.target.src = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/0.png';
+                              e.target.src = 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/0.png';
                             }}
                           />
                         </div>

@@ -9,29 +9,29 @@
 export const getPokemonIconUrl = (number) => {
   // 9세대 이상 (906번~)은 기본 이미지 사용
   if (number > 905) {
-    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`;
+    return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${number}.png`;
   }
   // 1-8세대는 generation-viii/icons 사용
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${number}.png`;
+  return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-viii/icons/${number}.png`;
 };
 
 // 스프라이트 URL 생성 (상세 정보용)
 export const getPokemonSpriteUrl = (number) => {
   // 5세대 도트 그래픽 (1-649번까지만 존재)
   if (number <= 649) {
-    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/${number}.png`;
+    return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-v/black-white/${number}.png`;
   }
   // 6세대 이상은 기본 이미지 사용
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`;
+  return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${number}.png`;
 };
 
 // 공식 아트워크 URL 생성 (도감/상세용)
 export const getPokemonArtworkUrl = (number) => {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${number}.png`;
+  return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/${number}.png`;
 };
 
-const FEMALE_SPRITE_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female';
-const FEMALE_SHINY_SPRITE_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/female';
+const FEMALE_SPRITE_BASE = 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/female';
+const FEMALE_SHINY_SPRITE_BASE = 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/female';
 
 /**
  * 성별을 고려한 스프라이트 URL 반환
@@ -72,10 +72,10 @@ export const getOwnedPokemonSpriteUrl = (pokemon, pokemonData = pokemon) => {
     if (pokemon.shinySprite) return pokemon.shinySprite;
     if (pokemon.shinySpriteUrl) return pokemon.shinySpriteUrl;
 
-    if (number) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${number}.png`;
+    if (number) return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/${number}.png`;
   }
 
-  if (number) return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`;
+  if (number) return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${number}.png`;
   if (pokemon.spriteUrl) return pokemon.spriteUrl;
   if (pokemon.sprite) return pokemon.sprite;
   if (pokemon.imageUrl) return pokemon.imageUrl;

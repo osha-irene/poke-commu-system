@@ -92,7 +92,7 @@ export default function MemberPokemonViewMode({
                   className="w-20 h-20"
                   style={{ imageRendering: 'pixelated' }}
                   onError={(event) => {
-                    event.currentTarget.src = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/0.png';
+                    event.currentTarget.src = 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/0.png';
                   }}
                 />
                 <div className="flex-1 min-w-0">

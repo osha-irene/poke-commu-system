@@ -5,7 +5,7 @@
  * 포켓몬 이색 스프라이트 URL 생성 함수
  */
 const getShinySprite = (number) => {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${number}.png`;
+  return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/${number}.png`;
 };
 
 /**

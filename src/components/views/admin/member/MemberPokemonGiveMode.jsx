@@ -63,7 +63,7 @@ export default function MemberPokemonGiveMode({
               src={
                 getGenderedSpriteUrl({ gender: giveData.gender }, giveData.selectedPokemon) ||
                 giveData.selectedPokemon.spriteUrl ||
-                `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${giveData.selectedPokemon.number}.png`
+                `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${giveData.selectedPokemon.number}.png`
               }
               alt={giveData.selectedPokemon.name}
               className="h-12 w-12"

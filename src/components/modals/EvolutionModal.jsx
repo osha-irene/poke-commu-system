@@ -87,7 +87,7 @@ export default function EvolutionModal({
                 <div 
                   className="w-40 h-40 mx-auto mb-4 relative z-10"
                   style={{
-                    backgroundImage: `url(https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${evolvedPokemon.number}.png)`,
+                    backgroundImage: `url(https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${evolvedPokemon.number}.png)`,
                     backgroundSize: 'contain',
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'center',

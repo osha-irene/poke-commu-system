@@ -7,16 +7,25 @@
   mix-blend-mode: normal;
 }
 
-.sakura {
+.sakura-petal {
   position: absolute;
   top: -8vh;
   pointer-events: none;
+  will-change: transform;
+  animation-name: sakura-fall-blow;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.sakura {
+  display: block;
+  pointer-events: none;
   border-radius: 72% 28% 68% 32%;
   box-shadow: 0 0 4px rgba(233, 241, 153, 0.28);
-  transform: translate3d(0, 0, 0) rotate(var(--sakura-rotate));
-  animation-name: sakura-fall, sakura-blow, sakura-sway;
-  animation-timing-function: linear, linear, ease-in-out;
-  animation-iteration-count: infinite, infinite, infinite;
+  will-change: transform;
+  animation-name: sakura-sway;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
 }
 
 .sakura--tone-0 {
@@ -31,23 +40,13 @@
   background: linear-gradient(105deg, rgba(66, 100, 47, 0.56), rgba(226, 236, 136, 0.44));
 }
 
-@keyframes sakura-fall {
+@keyframes sakura-fall-blow {
   0% {
-    top: -8vh;
+    transform: translate3d(0, 0, 0);
   }
 
   100% {
-    top: 108vh;
-  }
-}
-
-@keyframes sakura-blow {
-  0% {
-    margin-left: 0;
-  }
-
-  100% {
-    margin-left: var(--sakura-drift);
+    transform: translate3d(var(--sakura-drift), 116vh, 0);
   }
 }
 

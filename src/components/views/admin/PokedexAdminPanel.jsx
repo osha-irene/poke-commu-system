@@ -252,7 +252,7 @@ export default function PokedexAdminPanel({ allPokemonMaster, gamePokedex, updat
 
     const spriteNumber = pokemon.originalNumber || pokemon.number;
     return spriteNumber
-      ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${spriteNumber}.png`
+      ? `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${spriteNumber}.png`
       : '';
   };
 

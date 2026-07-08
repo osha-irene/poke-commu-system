@@ -6,7 +6,7 @@
       "nameEn": "Normal",
       "nameKo": "노말",
       "nameJa": "ノーマル",
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/normal.png"
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/types/generation-viii/sword-shield/normal.png"
     },
     {
       "id": 2,
@@ -14,7 +14,7 @@
       "nameEn": "Fighting",
       "nameKo": "격투",
       "nameJa": "かくとう",
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/fighting.png"
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/types/generation-viii/sword-shield/fighting.png"
     },
     {
       "id": 3,
@@ -22,7 +22,7 @@
       "nameEn": "Flying",
       "nameKo": "비행",
       "nameJa": "ひこう",
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/flying.png"
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/types/generation-viii/sword-shield/flying.png"
     },
     {
       "id": 4,
@@ -30,7 +30,7 @@
       "nameEn": "Poison",
       "nameKo": "독",
       "nameJa": "どく",
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/poison.png"
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/types/generation-viii/sword-shield/poison.png"
     },
     {
       "id": 5,
@@ -38,7 +38,7 @@
       "nameEn": "Ground",
       "nameKo": "땅",
       "nameJa": "じめん",
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/ground.png"
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/types/generation-viii/sword-shield/ground.png"
     },
     {
       "id": 6,
@@ -46,7 +46,7 @@
       "nameEn": "Rock",
       "nameKo": "바위",
       "nameJa": "いわ",
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/rock.png"
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/types/generation-viii/sword-shield/rock.png"
     },
     {
       "id": 7,
@@ -54,7 +54,7 @@
       "nameEn": "Bug",
       "nameKo": "벌레",
       "nameJa": "むし",
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/bug.png"
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/types/generation-viii/sword-shield/bug.png"
     },
     {
       "id": 8,
@@ -62,7 +62,7 @@
       "nameEn": "Ghost",
       "nameKo": "고스트",
       "nameJa": "ゴースト",
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/ghost.png"
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/types/generation-viii/sword-shield/ghost.png"
     },
     {
       "id": 9,
@@ -70,7 +70,7 @@
       "nameEn": "Steel",
       "nameKo": "강철",
       "nameJa": "はがね",
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/steel.png"
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/types/generation-viii/sword-shield/steel.png"
     },
     {
       "id": 10,
@@ -78,7 +78,7 @@
       "nameEn": "Fire",
       "nameKo": "불꽃",
       "nameJa": "ほのお",
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/fire.png"
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/types/generation-viii/sword-shield/fire.png"
     },
     {
       "id": 11,
@@ -86,7 +86,7 @@
       "nameEn": "Water",
       "nameKo": "물",
       "nameJa": "みず",
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/water.png"
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/types/generation-viii/sword-shield/water.png"
     },
     {
       "id": 12,
@@ -94,7 +94,7 @@
       "nameEn": "Grass",
       "nameKo": "풀",
       "nameJa": "くさ",
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/grass.png"
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/types/generation-viii/sword-shield/grass.png"
     },
     {
       "id": 13,
@@ -102,7 +102,7 @@
       "nameEn": "Electric",
       "nameKo": "전기",
       "nameJa": "でんき",
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/electric.png"
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/types/generation-viii/sword-shield/electric.png"
     },
     {
       "id": 14,
@@ -110,7 +110,7 @@
       "nameEn": "Psychic",
       "nameKo": "에스퍼",
       "nameJa": "エスパー",
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/psychic.png"
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/types/generation-viii/sword-shield/psychic.png"
     },
     {
       "id": 15,
@@ -118,7 +118,7 @@
       "nameEn": "Ice",
       "nameKo": "얼음",
       "nameJa": "こおり",
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/ice.png"
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/types/generation-viii/sword-shield/ice.png"
     },
     {
       "id": 16,
@@ -126,7 +126,7 @@
       "nameEn": "Dragon",
       "nameKo": "드래곤",
       "nameJa": "ドラゴン",
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/dragon.png"
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/types/generation-viii/sword-shield/dragon.png"
     },
     {
       "id": 17,
@@ -134,7 +134,7 @@
       "nameEn": "Dark",
       "nameKo": "악",
       "nameJa": "あく",
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/dark.png"
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/types/generation-viii/sword-shield/dark.png"
     },
     {
       "id": 18,
@@ -142,7 +142,7 @@
       "nameEn": "Fairy",
       "nameKo": "페어리",
       "nameJa": "フェアリー",
-      "imageUrl": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/types/generation-viii/sword-shield/fairy.png"
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/types/generation-viii/sword-shield/fairy.png"
     }
   ],
   "totalCount": 18,

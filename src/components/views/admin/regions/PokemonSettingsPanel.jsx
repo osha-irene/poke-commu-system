@@ -1,7 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Settings, Percent, TrendingUp, Sparkles, Package, Plus, X, Save, ShieldCheck, ChevronDown } from 'lucide-react';
+import { Settings, Percent, TrendingUp, Sparkles, Package, Plus, X, Save, ShieldCheck, ChevronDown, ImageOff } from 'lucide-react';
 import { useGame } from '../../../../contexts/GameContext';
 import { getPokemonDisplayParts } from '../../../../utils/pokemonDisplayName';
+import CachedImage from '../../../common/CachedImage';
+
+const SELECTABLE_POKEMON_RENDER_LIMIT = 180;
 
 const toPercent = (value, fallback = 100) => {
   const parsed = Number(value);
@@ -15,11 +18,110 @@ const toRate = (value, fallback = 1) => {
   return Math.max(0, Math.min(100, parsed)) / 100;
 };
 
-const hasPokemonId = (pokemon, pokemonId) => (
-  pokemon.id === pokemonId ||
-  pokemon.number === pokemonId ||
-  pokemon.originalNumber === pokemonId
-);
+const getPokemonSpriteSrc = (pokemon, fallbackNumber = pokemon?.number) =>
+  pokemon?.spriteUrl || `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${fallbackNumber}.png`;
+
+const getPokemonFallbackSpriteSrc = (pokemon, fallbackNumber = pokemon?.number) =>
+  fallbackNumber ? `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${fallbackNumber}.png` : '';
+
+const IMAGE_MAX_RETRIES = 2;
+const IMAGE_RETRY_DELAY_MS = 1500;
+
+function LazyPokemonImage({ src, fallbackSrc = '', alt, className, style, immediate = false }) {
+  const wrapRef = React.useRef(null);
+  const retryTimerRef = React.useRef(null);
+  const [shouldLoad, setShouldLoad] = useState(() => immediate);
+  const [activeSrc, setActiveSrc] = useState(src);
+  const [hasTriedFallback, setHasTriedFallback] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [hasFailed, setHasFailed] = useState(false);
+
+  useEffect(() => {
+    setActiveSrc(src);
+    setHasTriedFallback(false);
+    setRetryCount(0);
+    setHasFailed(false);
+    setShouldLoad(immediate);
+  }, [src, immediate]);
+
+  useEffect(() => () => {
+    if (retryTimerRef.current) window.clearTimeout(retryTimerRef.current);
+  }, []);
+
+  useEffect(() => {
+    if (immediate || shouldLoad) return undefined;
+    const element = wrapRef.current;
+    if (!element) return undefined;
+    if (typeof IntersectionObserver === 'undefined') {
+      setShouldLoad(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        setShouldLoad(true);
+        observer.disconnect();
+      },
+      { root: null, rootMargin: '180px 0px', threshold: 0.01 }
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [immediate, shouldLoad]);
+
+  if (!shouldLoad || !activeSrc) {
+    return (
+      <div
+        ref={wrapRef}
+        className={className}
+        style={{ ...style, background: 'rgba(148, 163, 184, 0.12)' }}
+      />
+    );
+  }
+
+  if (hasFailed) {
+    return (
+      <div
+        className={className}
+        style={{
+          ...style,
+          background: 'rgba(148, 163, 184, 0.12)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <ImageOff size={20} className="text-gray-300" />
+      </div>
+    );
+  }
+
+  return (
+    <CachedImage
+      key={`${activeSrc}:${retryCount}`}
+      src={activeSrc}
+      alt={alt}
+      className={className}
+      style={style}
+      onError={() => {
+        if (retryCount < IMAGE_MAX_RETRIES) {
+          if (retryTimerRef.current) window.clearTimeout(retryTimerRef.current);
+          retryTimerRef.current = window.setTimeout(() => {
+            setRetryCount(count => count + 1);
+          }, IMAGE_RETRY_DELAY_MS * (retryCount + 1));
+          return;
+        }
+        if (fallbackSrc && activeSrc !== fallbackSrc && !hasTriedFallback) {
+          setHasTriedFallback(true);
+          setActiveSrc(fallbackSrc);
+          setRetryCount(0);
+          return;
+        }
+        setHasFailed(true);
+      }}
+    />
+  );
+}
 
 // ─── 폼 선택 팝업 (지역 모드) ───────────────────────────────────────────────
 function FormSelectPopup({ basePokemon, forms, selected, onToggle, onClose }) {
@@ -55,9 +157,11 @@ function FormSelectPopup({ basePokemon, forms, selected, onToggle, onClose }) {
                   onChange={() => !isLast && onToggle(f.number)}
                   className="w-4 h-4 accent-indigo-500"
                 />
-                <img
-                  src={f.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${f.number}.png`}
+                <LazyPokemonImage
+                  src={getPokemonSpriteSrc(f)}
+                  fallbackSrc={getPokemonFallbackSpriteSrc(f)}
                   alt={f.name}
+                  immediate
                   className="w-8 h-8 object-contain"
                   style={{ imageRendering: 'pixelated' }}
                 />
@@ -106,6 +210,7 @@ export default function PokemonSettingsPanel({
     region.allowNationalPokedex !== undefined ? region.allowNationalPokedex : false
   );
   const [pokedexTab, setPokedexTab] = useState(allowNationalPokedex ? 'national' : 'game');
+  const [isSelectablePokemonOpen, setIsSelectablePokemonOpen] = useState(false);
 
   // ── 지역 모드 전용 상태 ──
   // selectedPokemon: base number[]
@@ -126,13 +231,57 @@ export default function PokemonSettingsPanel({
   );
   const [formWeights, setFormWeights] = useState(region.pokemonRates || {});
 
+  const pokemonLookup = useMemo(() => {
+    const byId = new Map();
+    const byNumber = new Map();
+    const formsByOriginal = new Map();
+    (allPokemonMaster || []).forEach((pokemon) => {
+      if (!pokemon) return;
+      [pokemon.id, pokemon.number, pokemon.originalNumber].forEach((key) => {
+        if (key !== undefined && key !== null && !byId.has(String(key))) {
+          byId.set(String(key), pokemon);
+        }
+      });
+      if (pokemon.number !== undefined && pokemon.number !== null) {
+        byNumber.set(Number(pokemon.number), pokemon);
+      }
+      if (pokemon.originalNumber !== undefined && pokemon.originalNumber !== null && pokemon.formVariant) {
+        const originalKey = Number(pokemon.originalNumber);
+        const forms = formsByOriginal.get(originalKey) || [];
+        forms.push(pokemon);
+        formsByOriginal.set(originalKey, forms);
+      }
+    });
+    return { byId, byNumber, formsByOriginal };
+  }, [allPokemonMaster]);
+
+  const regionPokemonPoolSet = useMemo(
+    () => new Set(regionPokemonPool.map(id => String(id))),
+    [regionPokemonPool]
+  );
+
+  const selectedPokemonSet = useMemo(
+    () => new Set(selectedPokemon.map(id => Number(id))),
+    [selectedPokemon]
+  );
+
+  const gamePokedexIdSet = useMemo(() => {
+    const ids = new Set();
+    (gamePokedex || []).forEach((pokemon) => {
+      [pokemon?.id, pokemon?.number, pokemon?.originalNumber].forEach((id) => {
+        if (id !== undefined && id !== null) ids.add(String(id));
+      });
+    });
+    return ids;
+  }, [gamePokedex]);
+
   // ─────────────────────────────────────────────────────────────────────────
   const getPokemonById = (pokemonId) =>
-    allPokemonMaster.find(p => hasPokemonId(p, pokemonId));
+    pokemonLookup.byId.get(String(pokemonId));
 
   // 폼 변형 목록 (사철록 봄의 모습 레이블 포함)
   const getFormsForPokemon = (baseNumber) => {
-    const forms = allPokemonMaster.filter(p => p.originalNumber === baseNumber && p.formVariant);
+    const forms = pokemonLookup.formsByOriginal.get(Number(baseNumber)) || [];
     const hasBase = forms.some(f => f.number === baseNumber);
     let result;
     if (!hasBase) {
@@ -193,9 +342,13 @@ export default function PokemonSettingsPanel({
         return true;
       }
       if (regionPokemonPool.length === 0) return false;
-      return regionPokemonPool.some(id => hasPokemonId(pokemon, id));
+      return (
+        regionPokemonPoolSet.has(String(pokemon.id)) ||
+        regionPokemonPoolSet.has(String(pokemon.number)) ||
+        regionPokemonPoolSet.has(String(pokemon.originalNumber))
+      );
     });
-  }, [currentPokedex, isRegionMode, regionPokemonPool]);
+  }, [currentPokedex, isRegionMode, regionPokemonPool.length, regionPokemonPoolSet]);
 
   const filteredSelectablePokemon = useMemo(() => {
     const query = pokemonSearchQuery.trim().toLowerCase().replace(/^#/, '');
@@ -209,7 +362,13 @@ export default function PokemonSettingsPanel({
     });
   }, [pokemonSearchQuery, selectablePokemon]);
 
-  const isInGamePokedex = id => gamePokedex.some(p => hasPokemonId(p, id));
+  const visibleSelectablePokemon = useMemo(
+    () => filteredSelectablePokemon.slice(0, SELECTABLE_POKEMON_RENDER_LIMIT),
+    [filteredSelectablePokemon]
+  );
+  const hiddenSelectableCount = Math.max(0, filteredSelectablePokemon.length - visibleSelectablePokemon.length);
+
+  const isInGamePokedex = id => gamePokedexIdSet.has(String(id));
 
   // ── 장소 모드: 지역 풀을 폼 카드로 확장 ──
   const placeFormPool = useMemo(() => {
@@ -219,11 +378,11 @@ export default function PokemonSettingsPanel({
       const configForms = parentRegion?.pokemonFormConfig?.[baseId];
       if (configForms && configForms.length > 0) {
         return configForms.map(fid => {
-          const p = allPokemonMaster.find(q => q.number === fid);
+          const p = pokemonLookup.byNumber.get(Number(fid));
           if (!p) return null;
           // 사철록 봄의 모습 레이블
           if (fid === baseId) {
-            const siblings = allPokemonMaster.filter(q => q.originalNumber === baseId && q.formVariant);
+            const siblings = pokemonLookup.formsByOriginal.get(Number(baseId)) || [];
             const isSeason = siblings.some(q => q.nameEn?.endsWith('-summer') || q.nameEn?.endsWith('-autumn') || q.nameEn?.endsWith('-winter'));
             if (isSeason) return { ...p, name: `${p.name} (봄의 모습)` };
           }
@@ -234,12 +393,17 @@ export default function PokemonSettingsPanel({
       const base = getPokemonById(baseId);
       return base ? [base] : [];
     });
-  }, [isRegionMode, regionPokemonPool, parentRegion?.pokemonFormConfig, allPokemonMaster]);
+  }, [isRegionMode, regionPokemonPool, parentRegion?.pokemonFormConfig, pokemonLookup]);
 
   // ── 장소 모드: 확률 계산 ──
+  const placeFormIdSet = useMemo(
+    () => new Set(placeFormPool.map(form => form.number)),
+    [placeFormPool]
+  );
+
   const availableFormIds = useMemo(
-    () => selectedFormIds.filter(fid => placeFormPool.some(f => f.number === fid)),
-    [selectedFormIds, placeFormPool]
+    () => selectedFormIds.filter(fid => placeFormIdSet.has(fid)),
+    [selectedFormIds, placeFormIdSet]
   );
 
   const placeProbabilities = useMemo(() => {
@@ -325,9 +489,9 @@ export default function PokemonSettingsPanel({
                 return {
                   ...place,
                   pokemons: (place.pokemons || []).filter(fid => {
-                    const p = allPokemonMaster.find(q => q.number === fid);
+                    const p = pokemonLookup.byNumber.get(Number(fid));
                     const base = p?.originalNumber && p.originalNumber !== fid ? p.originalNumber : fid;
-                    return selectedPokemon.includes(base) || selectedPokemon.includes(fid);
+                    return selectedPokemonSet.has(Number(base)) || selectedPokemonSet.has(Number(fid));
                   }),
                   encounterRate: place.encounterRate !== undefined ? place.encounterRate : parseFloat(encounterRate) || 0,
                   maxLevel: Math.min(place.maxLevel || cappedMaxLevel, cappedMaxLevel),
@@ -338,7 +502,7 @@ export default function PokemonSettingsPanel({
         }
       : {
           ...region,
-          pokemons: selectedFormIds.filter(fid => placeFormPool.some(f => f.number === fid)),
+          pokemons: selectedFormIds.filter(fid => placeFormIdSet.has(fid)),
           pokemonRates: Object.fromEntries(
             availableFormIds.map(id => [id, formWeights[id] || 10])
           ),
@@ -366,7 +530,7 @@ export default function PokemonSettingsPanel({
 
     // 단일 폼 선택 시 해당 폼 이미지 사용
     const displayPokemon = selectedForms.length === 1
-      ? (allPokemonMaster.find(p => p.number === selectedForms[0]) || pokemon)
+      ? (pokemonLookup.byNumber.get(Number(selectedForms[0])) || pokemon)
       : pokemon;
 
     return (
@@ -386,9 +550,11 @@ export default function PokemonSettingsPanel({
           <X size={14} />
         </button>
 
-        <img
-          src={displayPokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${displayPokemon.number}.png`}
+        <LazyPokemonImage
+          src={getPokemonSpriteSrc(displayPokemon)}
+          fallbackSrc={getPokemonFallbackSpriteSrc(displayPokemon)}
           alt={displayPokemon.name}
+          immediate
           className="h-[72px] w-[72px] object-contain"
           style={{ imageRendering: 'pixelated' }}
         />
@@ -436,9 +602,11 @@ export default function PokemonSettingsPanel({
             : 'bg-white border-gray-200 text-gray-500 hover:border-indigo-300'
         }`}
       >
-        <img
-          src={formPokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${fid}.png`}
+        <LazyPokemonImage
+          src={getPokemonSpriteSrc(formPokemon, fid)}
+          fallbackSrc={getPokemonFallbackSpriteSrc(formPokemon, fid)}
           alt={formPokemon.name}
+          immediate={isSelected}
           className={`h-16 w-16 mx-auto object-contain ${isSelected ? '' : 'opacity-40 grayscale'}`}
           style={{ imageRendering: 'pixelated' }}
         />
@@ -592,8 +760,8 @@ export default function PokemonSettingsPanel({
             >
               {Math.max(0, 100 - Number(encounterRate || 0)) >= 5 && '미조우'}
             </div>
-            {placeProbabilities.sort((a, b) => b.actualProb - a.actualProb).map(({ id, actualProb }, idx) => {
-              const p = allPokemonMaster.find(q => q.number === id);
+            {[...placeProbabilities].sort((a, b) => b.actualProb - a.actualProb).map(({ id, actualProb }, idx) => {
+              const p = pokemonLookup.byNumber.get(Number(id));
               return (
                 <div key={id}
                   className="flex items-center justify-center text-white text-xs font-bold hover:brightness-110"
@@ -644,6 +812,19 @@ export default function PokemonSettingsPanel({
             <h5 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
               <Plus size={20} /> 포켓몬 추가
             </h5>
+            <button
+              type="button"
+              onClick={() => setIsSelectablePokemonOpen(open => !open)}
+              className="mb-3 flex w-full items-center justify-between rounded-lg border-2 border-lime-200 bg-lime-50 px-4 py-3 text-sm font-bold text-lime-900 transition-colors hover:bg-lime-100"
+            >
+              <span>선택 가능한 도감 목록</span>
+              <span className="flex items-center gap-2 text-xs text-lime-700">
+                {isSelectablePokemonOpen ? '닫기' : '열기'} · {pokedexTab === 'game' ? (gamePokedex?.length || 0) : (allPokemonMaster?.length || 0)}마리
+                <ChevronDown size={16} className={`transition-transform ${isSelectablePokemonOpen ? 'rotate-180' : ''}`} />
+              </span>
+            </button>
+            {isSelectablePokemonOpen && (
+              <>
             <input
               type="search" value={pokemonSearchQuery}
               onChange={e => setPokemonSearchQuery(e.target.value)}
@@ -667,11 +848,16 @@ export default function PokemonSettingsPanel({
             <div className="text-xs text-gray-600 mb-2 flex items-center gap-1">
               <Package size={12} /> {filteredSelectablePokemon.length}마리 표시 중
             </div>
+            {hiddenSelectableCount > 0 && (
+              <div className="mb-2 text-xs font-semibold text-amber-600">
+                처음 {visibleSelectablePokemon.length}마리만 먼저 표시 중입니다. 나머지 {hiddenSelectableCount}마리는 검색으로 좁혀주세요.
+              </div>
+            )}
             <div className="grid max-h-80 gap-2 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-2 [grid-template-columns:repeat(auto-fill,minmax(104px,1fr))]">
               {filteredSelectablePokemon.length === 0 ? (
                 <div className="col-span-full py-8 text-center text-sm font-semibold text-gray-500">검색 결과가 없습니다.</div>
-              ) : filteredSelectablePokemon.map(pokemon => {
-                const isSel = selectedPokemon.includes(pokemon.number);
+              ) : visibleSelectablePokemon.map(pokemon => {
+                const isSel = selectedPokemonSet.has(Number(pokemon.number));
                 const parts = getPokemonDisplayParts(pokemon);
                 return (
                   <button key={pokemon.id || pokemon.number} type="button"
@@ -682,8 +868,9 @@ export default function PokemonSettingsPanel({
                     title={pokemon.name}
                   >
                     <div className="flex h-24 w-full items-center justify-center">
-                      <img
-                        src={pokemon.spriteUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.number}.png`}
+                      <LazyPokemonImage
+                        src={getPokemonSpriteSrc(pokemon)}
+                        fallbackSrc={getPokemonFallbackSpriteSrc(pokemon)}
                         alt={pokemon.name}
                         className="h-24 w-24 max-w-none object-contain"
                         style={{ imageRendering: 'pixelated' }}
@@ -703,6 +890,8 @@ export default function PokemonSettingsPanel({
                 );
               })}
             </div>
+              </>
+            )}
           </div>
         </>
       )}

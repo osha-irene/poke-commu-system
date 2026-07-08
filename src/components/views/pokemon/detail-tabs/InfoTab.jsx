@@ -91,7 +91,7 @@ export default function InfoTab({
         ball.nameEn === pokemon.caughtWithBall.toLowerCase()
       );
       if (ballInfo) {
-        return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${ballInfo.nameEn}.png`;
+        return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/${ballInfo.nameEn}.png`;
       }
     }
     
@@ -99,7 +99,7 @@ export default function InfoTab({
       return pokemon.ballImageUrl;
     }
     
-    return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
+    return 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png';
   };
   
   const ballImage = getBallImage();

@@ -35,20 +35,15 @@ export default function RegionExplorePanel({
   }, [regions, selectedRegionId]);
 
   const handleRegionClick = (region) => {
-  console.log('🔍 선택한 지역 원본:', region);
-  console.log('🔍 allowNationalPokedex 값:', region.allowNationalPokedex);
-  
-  const sanitizedRegion = {
-    ...region,
-    pokemons: Array.isArray(region.pokemons) ? region.pokemons : [],
-    allowNationalPokedex: region.allowNationalPokedex !== undefined ? region.allowNationalPokedex : false
+    const sanitizedRegion = {
+      ...region,
+      pokemons: Array.isArray(region.pokemons) ? region.pokemons : [],
+      allowNationalPokedex: region.allowNationalPokedex !== undefined ? region.allowNationalPokedex : false
+    };
+
+    setSelectedRegion(sanitizedRegion);
+    setEditMode(null);
   };
-  
-  console.log('🔍 sanitizedRegion:', sanitizedRegion);
-  
-  setSelectedRegion(sanitizedRegion);
-  setEditMode(null);
-};
 
   const groupedRegions = useMemo(() => {
     if (!regions || !Array.isArray(regions)) return {};

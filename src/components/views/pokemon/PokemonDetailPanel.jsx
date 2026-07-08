@@ -39,7 +39,7 @@ import { getOwnedPokemonSpriteUrl } from '../../../utils/pokemonImageUtils';
 const getBaseName = (pokemon) => getPokemonDisplayParts(pokemon).name;
 
 const getPokemonSpriteUrl = (number) =>
-  `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png`;
+  `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${number}.png`;
 
 // ⭐ 여기에 헬퍼 함수들 추가
 
@@ -340,7 +340,7 @@ const getBallImage = () => {
     );
     
     if (ballInfo) {
-      return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${ballInfo.nameEn}.png`;
+      return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/${ballInfo.nameEn}.png`;
     }
   }
   
@@ -349,7 +349,7 @@ const getBallImage = () => {
     return pokemon.ballImageUrl;
   }
   
-  return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
+  return 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png';
 };
 const ballImage = getBallImage();
 
@@ -1002,7 +1002,7 @@ const ballImage = getBallImage();
               {isHoldingEverstone && (
                 <div className="bg-gray-50 rounded-lg p-3 border-2 border-gray-300">
                   <div className="flex items-center gap-2">
-                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/everstone.png" alt="변함없는돌" style={{ width: 36, height: 36, imageRendering: 'pixelated' }} />
+                    <img src="https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/everstone.png" alt="변함없는돌" style={{ width: 36, height: 36, imageRendering: 'pixelated' }} />
                     <div>
                       <div className="text-sm font-bold text-gray-700">변함없는돌 착용 중</div>
                       <div className="text-xs text-gray-600">이 포켓몬은 진화하지 않습니다</div>
