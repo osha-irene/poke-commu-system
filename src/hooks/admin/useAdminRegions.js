@@ -58,7 +58,11 @@ export const useAdminRegions = (
 
   // ========== 吏???ъ폆紐??낅뜲?댄듃 ==========
   const updateRegionPokemon = async (regionId, updatedData, legacyRates, legacyEncounterRate, legacyMinLevel, legacyMaxLevel, background) => {
-    if (!currentUser?.isAdmin) return;
+    if (!currentUser?.isAdmin && !currentUser?.isSuperAdmin) {
+      console.error('❌ updateRegionPokemon: 관리자 권한 없음 (저장되지 않음)', currentUser);
+      alert('관리자 권한이 없어 저장하지 못했습니다.');
+      return false;
+    }
 
     const existingRegion = regions.find(region => region.id === regionId) || {};
     const normalizedData = Array.isArray(updatedData)
@@ -107,6 +111,7 @@ export const useAdminRegions = (
       isSafari: normalizedData.isSafari === true,
       places: Array.isArray(normalizedData.places) ? normalizedData.places : [],
       pokemonFormConfig: normalizedData.pokemonFormConfig !== undefined ? normalizedData.pokemonFormConfig : {},
+      lootConfig: normalizedData.lootConfig !== undefined ? normalizedData.lootConfig : existingRegion.lootConfig,
       ...(normalizedData.background ? { background: normalizedData.background } : {}),
     };
     
@@ -120,9 +125,12 @@ export const useAdminRegions = (
     
     try {
       await persistRegions(updatedRegions);
-      console.log('??吏???낅뜲?댄듃 ?꾨즺:', regionId);
+      console.log('region update complete:', regionId);
+      return true;
     } catch (error) {
-      console.error('??吏???낅뜲?댄듃 ?ㅽ뙣:', error);
+      console.error('region update failed:', error);
+      alert('저장 중 오류가 발생했습니다.');
+      return false;
     }
   };
 

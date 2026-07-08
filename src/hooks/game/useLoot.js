@@ -163,14 +163,18 @@ export const useLoot = (currentUser, updateCurrentUser, setMembers, allItems, me
 
   // 지역 전리품 설정 업데이트
   const updateRegionLootConfig = async (regionId, lootConfig, regions, setRegions) => {
-    if (!currentUser?.isAdmin) return;
-    
+    if (!currentUser?.isAdmin && !currentUser?.isSuperAdmin) {
+      console.error('❌ updateRegionLootConfig: 관리자 권한 없음 (저장되지 않음)', currentUser);
+      alert('관리자 권한이 없어 저장하지 못했습니다.');
+      return false;
+    }
+
     const updatedRegions = (Array.isArray(regions) ? regions : []).map(region =>
       region.id === regionId ? { ...region, lootConfig } : region
     );
 
     setRegions(updatedRegions);
-    
+
     try {
       await set(ref(database, 'gameData/regions'), updatedRegions);
 
@@ -181,10 +185,11 @@ export const useLoot = (currentUser, updateCurrentUser, setMembers, allItems, me
         ...currentConfig,
         regions: updatedRegions
       });
-      alert('보상 설정이 저장되었습니다!');
+      return true;
     } catch (error) {
       console.error('보상 설정 저장 실패:', error);
       alert('저장 중 오류가 발생했습니다.');
+      return false;
     }
   };
 

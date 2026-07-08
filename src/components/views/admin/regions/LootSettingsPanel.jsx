@@ -84,7 +84,7 @@ export default function LootSettingsPanel({
   );
   const [lootConfig, setLootConfig] = useState(normalizeConfig(region.lootConfig));
   const [itemSearch, setItemSearch] = useState('');
-  const [itemCategory, setItemCategory] = useState('all');
+  const [itemCategory, setItemCategory] = useState('pokeballs');
   const [showSelectedPool, setShowSelectedPool] = useState(false);
 
   useEffect(() => {
@@ -177,7 +177,8 @@ export default function LootSettingsPanel({
 
   const handleSave = async () => {
     const nextConfig = sanitizeForSave();
-    await onUpdateRegionLootConfig(region.id, nextConfig);
+    const success = await onUpdateRegionLootConfig(region.id, nextConfig);
+    if (success === false) return;
     setLootConfig(nextConfig);
     alert(isRegionMode ? '지역 보상 기준이 저장되었습니다.' : '장소 보상 설정이 저장되었습니다.');
   };

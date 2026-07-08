@@ -135,8 +135,8 @@ export default function RegionManagementPanel({
   };
 
   const updateSelectedRegionPlaces = async (nextPlaces) => {
-    if (!selectedRegion) return;
-    await onUpdateRegion?.(selectedRegion.id, {
+    if (!selectedRegion) return false;
+    return onUpdateRegion?.(selectedRegion.id, {
       ...selectedRegion,
       places: nextPlaces
     });
@@ -262,19 +262,19 @@ export default function RegionManagementPanel({
   };
 
   const handleUpdateSelectedPlaceLoot = async (_placeTargetId, lootConfig) => {
-    if (!selectedRegion || !selectedPlace) return;
+    if (!selectedRegion || !selectedPlace) return false;
 
     const nextPlaces = selectedRegionPlaces.map((place) => (
       place.id === selectedPlace.id ? { ...place, lootConfig } : place
     ));
 
-    await updateSelectedRegionPlaces(nextPlaces);
+    return updateSelectedRegionPlaces(nextPlaces);
   };
 
   const handleUpdateRegionLoot = async (_regionId, lootConfig) => {
-    if (!selectedRegion) return;
+    if (!selectedRegion) return false;
 
-    await onUpdateRegion?.(selectedRegion.id, {
+    return onUpdateRegion?.(selectedRegion.id, {
       ...selectedRegion,
       lootConfig
     });
