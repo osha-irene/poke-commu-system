@@ -12,7 +12,7 @@ import { DEFAULT_IVS, withNormalizedIVs } from '../../utils/pokemonIndividualVal
 
 // Firebase sometimes returns sparse arrays as objects with numeric keys — normalize back to array
 const normalizePokemonArray = (value) => {
-  if (!value) return value;
+  if (!value) return [null, null, null, null, null, null];
   if (Array.isArray(value)) return value;
   if (typeof value === 'object') {
     const maxIndex = Math.max(...Object.keys(value).map(Number));

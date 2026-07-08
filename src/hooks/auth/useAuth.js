@@ -197,10 +197,14 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
       ...updates,
       ...(updates.caughtPokemon ? { caughtPokemon: [...updates.caughtPokemon] } : {})
     };
-    
-    if (updates.caughtPokemon) {
-      updatedUser.caughtPokemon = ensurePartyPadding(updates.caughtPokemon, allPokemonMaster);
-    }
+
+    // ⭐ members/ 실시간 스냅샷(latestUser)에는 caughtPokemon이 패딩되지 않은 채(심지어 undefined로) 들어올 수 있으므로,
+    // updates에 caughtPokemon이 없어도 항상 패딩된 배열로 보정한다 (안 그러면 다음 updateCurrentUser 호출에서
+    // currentUser.caughtPokemon이 undefined가 되어 포획 시 TypeError 발생)
+    updatedUser.caughtPokemon = ensurePartyPadding(
+      updates.caughtPokemon || latestUser.caughtPokemon || currentUser.caughtPokemon,
+      allPokemonMaster
+    );
 
     if (updates.partnerPokemon !== undefined) {
       updatedUser.partnerPokemon = withNormalizedIVs(updates.partnerPokemon, DEFAULT_IVS);
