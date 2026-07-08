@@ -50,7 +50,6 @@ export default function ProfileView({ trainer, caughtPokemon, items, titles = []
   const [isEditingMastodon, setIsEditingMastodon] = useState(false);
   const [mastodonInput, setMastodonInput] = useState('');
 
-  const todayWalksUsed = trainer.maxDailyWalks - trainer.dailyWalks;
   const trainerId = trainer.trainerId || (trainer.id
     ? String(trainer.id.split('').reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) & 0xFFFFFF, 0)).padStart(6, '0').slice(-6)
     : '000000');
@@ -158,7 +157,7 @@ export default function ProfileView({ trainer, caughtPokemon, items, titles = []
                 {trainer.hometown && <div>출신 지역 <strong className="text-gray-700">{trainer.hometown}</strong></div>}
                 <div>여행을 시작한 날 <strong className="text-gray-700">7월 5일</strong></div>
                 <br></br>
-                <div>탐험 횟수 <strong className="text-gray-700">{todayWalksUsed}/{trainer.maxDailyWalks}회</strong></div>
+                <div>총 탐험 횟수 <strong className="text-gray-700">{(Number(trainer.totalExploreCount) || 0).toLocaleString()}회</strong></div>
                 <div>경험치 <strong className="text-gray-700">{(trainer.trainerExp || 0).toLocaleString()}</strong></div>
                 <div>보유 금액 <strong className="text-gray-700">{trainer.money?.toLocaleString() || 0}원</strong></div>
 

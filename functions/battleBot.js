@@ -891,7 +891,7 @@ const faintWinner = (battle, session) => {
 const createBattle = (session) => {
   registerCustomBattleData();
   const { Battle } = getPokemonSim();
-  const battle = new Battle({ formatid: FORMAT_ID });
+  const battle = new Battle({ formatid: FORMAT_ID, seed: session.seed });
   battle.setPlayer('p1', { name: session.player1Name || '1P', team: session.player1Team });
   battle.setPlayer('p2', { name: session.player2Name || '2P', team: session.player2Team });
   battle.choose('p1', `team ${Number(session.player1Lead || 1)}`);
@@ -1185,6 +1185,9 @@ const createBattleBot = ({
       pendingChoices: {},
       pendingTeamChoices: {},
       turns: [],
+      // ⭐ 배틀은 매 턴마다 처음부터 재생(replay)되므로, 고정 시드가 없으면
+      // 같은 턴 기록을 다시 재생할 때마다 데미지/명중 등 랜덤 결과가 달라진다.
+      seed: getPokemonSim().PRNG.generateSeed(),
       mastodonStatusId: status.id,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

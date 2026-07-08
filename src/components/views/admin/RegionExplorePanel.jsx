@@ -74,7 +74,7 @@ export default function RegionExplorePanel({
             y: region.y,
             color: region.color,
             isDefaultTown: region.isDefaultTown || false,
-            townOrder: Number.isFinite(Number(region.townOrder)) ? Number(region.townOrder) : townMap.size
+            townOrder: Number.isFinite(Number(region.townOrder)) ? Number(region.townOrder) : null
           });
         }
         if (!region.isTownMeta) {
@@ -82,10 +82,13 @@ export default function RegionExplorePanel({
         }
       }
     });
+    // townOrder가 없는 마을은 항상 뒤로 보내고, groupId로 타이브레이크해서
+    // 렌더링/실시간 스냅샷마다 순서가 흔들리지 않게 한다 (순회 중 크기값 등 비결정적 값 사용 금지)
     return Array.from(townMap.values()).sort((a, b) => {
-      const orderA = Number.isFinite(Number(a.townOrder)) ? Number(a.townOrder) : 0;
-      const orderB = Number.isFinite(Number(b.townOrder)) ? Number(b.townOrder) : 0;
-      return orderA - orderB;
+      const orderA = a.townOrder !== null ? a.townOrder : Infinity;
+      const orderB = b.townOrder !== null ? b.townOrder : Infinity;
+      if (orderA !== orderB) return orderA - orderB;
+      return String(a.groupId).localeCompare(String(b.groupId));
     });
   }, [regions]);
 

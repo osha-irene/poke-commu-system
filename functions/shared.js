@@ -67,12 +67,27 @@ const findMemberByAccount = (members, account, host) => {
       return { id, member: { ...member, id: member.id || id } };
     }
   }
+
+  console.error('❌ findMemberByAccount: 매칭 실패', {
+    account,
+    host,
+    normalizedTarget: normalizeAccount(account, host),
+    memberAccounts: Object.entries(members).map(([id, member]) => ({
+      id,
+      name: member?.name,
+      mastodonAccount: member?.mastodonAccount || null,
+      mastodonId: member?.mastodonId || null,
+      mastodonUsername: member?.mastodonUsername || null,
+      acct: member?.acct || null,
+    })),
+  });
+
   return null;
 };
 
 const isFromBotAccount = (status, botAccount) => {
   const account = getAuthorAccount(status);
-  return localUsername(account) === localUsername(botAccount);
+  return localUsername(account).toLowerCase() === localUsername(botAccount).toLowerCase();
 };
 
 const isBotMentioned = (status, botAccount, host) => {

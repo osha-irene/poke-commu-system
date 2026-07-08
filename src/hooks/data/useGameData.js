@@ -43,14 +43,16 @@ const getTownRowsFromRegions = (nextRegions = []) => {
       color: region.color,
       isDefaultTown: region.isDefaultTown || false,
       visible: region.groupVisible !== false,
-      townOrder: Number.isFinite(Number(region.townOrder)) ? Number(region.townOrder) : townMap.size
+      townOrder: Number.isFinite(Number(region.townOrder)) ? Number(region.townOrder) : null
     });
   });
 
+  // townOrder가 없는 마을은 항상 뒤로 보내고 groupId로 타이브레이크 (비결정적 순서 방지)
   return Array.from(townMap.values()).sort((a, b) => {
-    const orderA = Number.isFinite(Number(a.townOrder)) ? Number(a.townOrder) : 0;
-    const orderB = Number.isFinite(Number(b.townOrder)) ? Number(b.townOrder) : 0;
-    return orderA - orderB;
+    const orderA = a.townOrder !== null ? a.townOrder : Infinity;
+    const orderB = b.townOrder !== null ? b.townOrder : Infinity;
+    if (orderA !== orderB) return orderA - orderB;
+    return String(a.groupId).localeCompare(String(b.groupId));
   });
 };
 

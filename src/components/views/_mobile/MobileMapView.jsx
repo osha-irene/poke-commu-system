@@ -48,7 +48,7 @@ export default function MobileMapView({
           color: r.color,
           visible: r.groupVisible !== false,
           isDefaultTown: r.isDefaultTown || false,
-          townOrder: Number.isFinite(Number(r.townOrder)) ? Number(r.townOrder) : map.size,
+          townOrder: Number.isFinite(Number(r.townOrder)) ? Number(r.townOrder) : null,
           areas: []
         });
       }
@@ -56,7 +56,13 @@ export default function MobileMapView({
         map.get(r.groupId).areas.push(r);
       }
     });
-    const orderedTowns = Array.from(map.values()).sort((a, b) => a.townOrder - b.townOrder);
+    // townOrder가 없는 마을은 항상 뒤로 보내고 groupId로 타이브레이크 (비결정적 순서 방지)
+    const orderedTowns = Array.from(map.values()).sort((a, b) => {
+      const orderA = a.townOrder !== null ? a.townOrder : Infinity;
+      const orderB = b.townOrder !== null ? b.townOrder : Infinity;
+      if (orderA !== orderB) return orderA - orderB;
+      return String(a.groupId).localeCompare(String(b.groupId));
+    });
     const defaultTownIndex = orderedTowns.findIndex(town => town.isDefaultTown);
     const boundaryIndex = defaultTownIndex >= 0 ? defaultTownIndex : 0;
 
