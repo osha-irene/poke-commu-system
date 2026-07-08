@@ -124,20 +124,43 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
     };
   }, [allPokemonMaster, setMembers]);
 
-  // egg 필드 실시간 감지 (어드민이 캠핑 결과 반영 시 즉시 반영)
+  // 본인 데이터 실시간 감지 (관리자가 다른 화면에서 내 정보를 수정해도 새로고침 없이 즉시 반영)
   useEffect(() => {
-    if (!currentUser?.id) return;
-    const eggRef = ref(database, `members/${currentUser.id}/egg`);
-    const unsub = onValue(eggRef, (snapshot) => {
-      const egg = snapshot.val() || null;
+    if (!currentUser?.id) return undefined;
+    const memberId = currentUser.id;
+    const memberRef = ref(database, `members/${memberId}`);
+    const unsub = onValue(memberRef, (snapshot) => {
+      if (!snapshot.exists()) return;
+      const memberData = snapshot.val();
+
       setCurrentUser(prev => {
         if (!prev) return prev;
-        if (prev.egg === egg) return prev;
-        return { ...prev, egg };
+        const merged = {
+          ...prev,
+          ...memberData,
+          id: prev.id,
+          authUid: prev.authUid,
+          email: prev.email,
+          caughtPokemon: ensurePartyPadding(memberData.caughtPokemon || [], allPokemonMaster),
+          partnerPokemon: withNormalizedIVs(memberData.partnerPokemon, DEFAULT_IVS),
+        };
+        return JSON.stringify(prev) === JSON.stringify(merged) ? prev : merged;
       });
+
+      setMembers(prevMembers => ({
+        ...prevMembers,
+        [memberId]: {
+          ...(prevMembers[memberId] || {}),
+          ...memberData,
+          id: memberId,
+          caughtPokemon: ensurePartyPadding(memberData.caughtPokemon || [], allPokemonMaster),
+          partnerPokemon: withNormalizedIVs(memberData.partnerPokemon, DEFAULT_IVS),
+        }
+      }));
     });
+
     return () => unsub();
-  }, [currentUser?.id]);
+  }, [currentUser?.id, allPokemonMaster, setMembers]);
 
   const handleLogin = async (userId, password) => {
     try {

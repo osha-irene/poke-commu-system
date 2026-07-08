@@ -471,7 +471,7 @@ function EntryTab({ party, allItems = [] }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {party.map((p, i) => {
-        const types = (Array.isArray(p?.types) ? p.types : [p?.type]).filter(Boolean);
+        const types = (Array.isArray(p?.types) ? p.types : [p?.type, p?.type2]).filter(Boolean);
         const ballUrl = getBallUrl(p, allItems);
         const baseName = p?.nameKo || p?.name || '';
         const nickname = p?.nickname && p.nickname !== baseName ? p.nickname : null;

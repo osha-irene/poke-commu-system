@@ -1555,24 +1555,17 @@ export default function App() {
     return () => window.clearTimeout(timer);
   }, [isCoreLoading, isInitialPageReady]);
 
-  // 寃뚯떆??濡쒕뱶
+  // 게시판 실시간 로드
   useEffect(() => {
-    const loadQnaPosts = async () => {
-      try {
-        const postsRef = ref(database, 'community/qnaPosts');
-        const snapshot = await get(postsRef);
-        
-        if (snapshot.exists()) {
-          setQnaPosts(snapshot.val());
-        }
-      } catch (error) {
-        console.error('??寃뚯떆??濡쒕뱶 ?ㅽ뙣:', error);
-      } finally {
-        setIsLoadingPosts(false);
-      }
-    };
-
-    loadQnaPosts();
+    const postsRef = ref(database, 'community/qnaPosts');
+    const unsub = onValue(postsRef, (snapshot) => {
+      setQnaPosts(snapshot.exists() ? snapshot.val() : []);
+      setIsLoadingPosts(false);
+    }, (error) => {
+      console.error('❌ 게시판 로드 실패:', error);
+      setIsLoadingPosts(false);
+    });
+    return () => unsub();
   }, []);
 
   // 일정 실시간 로드 (App 레벨 — 모바일 공개홈에서도 사용)
@@ -1604,21 +1597,6 @@ export default function App() {
     loadSoundSettings();
   }, [currentUser]);
 
-  // 寃뚯떆?????
-  useEffect(() => {
-    const saveQnaPosts = async () => {
-      if (isLoadingPosts) return;
-
-      try {
-        const postsRef = ref(database, 'community/qnaPosts');
-        await set(postsRef, qnaPosts);
-      } catch (error) {
-        console.error('??寃뚯떆??????ㅽ뙣:', error);
-      }
-    };
-
-    saveQnaPosts();
-  }, [qnaPosts, isLoadingPosts]);
 
   // ?ъ슫?????
   useEffect(() => {
@@ -1658,28 +1636,35 @@ export default function App() {
     return () => document.removeEventListener('click', handleGlobalClick);
   }, [soundEnabled]);
 
+  const saveQnaPosts = (nextPosts) => {
+    setQnaPosts(nextPosts);
+    set(ref(database, 'community/qnaPosts'), nextPosts).catch((error) => {
+      console.error('❌ 게시판 저장 실패:', error);
+    });
+  };
+
   const handleCreatePost = (post) => {
-    setQnaPosts([post, ...qnaPosts]);
+    saveQnaPosts([post, ...qnaPosts]);
   };
 
   const handleDeletePost = (postId) => {
-    setQnaPosts(qnaPosts.filter(p => p.id !== postId));
+    saveQnaPosts(qnaPosts.filter(p => p.id !== postId));
   };
 
   const handleCreateComment = (postId, comment) => {
-    setQnaPosts(qnaPosts.map(p => 
-      p.id === postId 
+    saveQnaPosts(qnaPosts.map(p =>
+      p.id === postId
         ? { ...p, comments: [...(p.comments || []), comment] }
         : p
     ));
   };
 
   const handleEditPost = (postId, updates) => {
-    setQnaPosts(qnaPosts.map(p => p.id === postId ? { ...p, ...updates } : p));
+    saveQnaPosts(qnaPosts.map(p => p.id === postId ? { ...p, ...updates } : p));
   };
 
   const handleDeleteComment = (postId, commentId) => {
-    setQnaPosts(qnaPosts.map(p =>
+    saveQnaPosts(qnaPosts.map(p =>
       p.id === postId
         ? { ...p, comments: p.comments.filter(c => c.id !== commentId) }
         : p

@@ -30,6 +30,42 @@ const normalizeRegions = (nextRegions = []) => {
   ));
 };
 
+const buildAllItems = (customItems = []) => {
+  const baseItems = itemsData.items;
+  const tmItems = technicalMachinesData.tms.map(tm => ({
+    id: tm.id,
+    name: tm.name,
+    nameEn: tm.nameEn,
+    category: ITEM_POCKETS.MACHINES,
+    categoryData: {
+      id: ITEM_POCKETS.MACHINES,
+      nameEn: 'machines',
+      name: '기술머신',
+      pocket: ITEM_POCKETS.MACHINES
+    },
+    cost: 10000, // 기본 가격 (필요시 조정)
+    sellPrice: 5000,
+    canSell: true,
+    effect: tm.description,
+    description: tm.description,
+    spriteUrl: tm.spriteUrl,
+    imageUrl: tm.spriteUrl,
+    // TM 전용 데이터
+    tmNumber: tm.tmNumber,
+    moveId: tm.moveId,
+    type: tm.type,
+    typeEn: tm.typeEn,
+    moveCategory: tm.category,
+    power: tm.power,
+    accuracy: tm.accuracy,
+    pp: tm.pp,
+    isTM: true,
+    generation: tm.generation
+  }));
+
+  return [...baseItems, ...tmItems, ...(Array.isArray(customItems) ? customItems : [])];
+};
+
 const getTownRowsFromRegions = (nextRegions = []) => {
   const townMap = new Map();
 
@@ -74,52 +110,7 @@ export const useGameData = (allPokemonData) => {
   useEffect(() => {
     const loadGameData = async () => {
       try {
-        // 1. 커스텀 아이템 로드
-        const customItemsRef = ref(database, 'gameData/customItems');
-        const customSnapshot = await get(customItemsRef);
-        const customItems = customSnapshot.exists() ? customSnapshot.val() : [];
-        
-        // 2. 기본 아이템 + TM 아이템 병합
-        const baseItems = itemsData.items;
-        const tmItems = technicalMachinesData.tms.map(tm => ({
-            id: tm.id,
-            name: tm.name,
-            nameEn: tm.nameEn,
-            category: ITEM_POCKETS.MACHINES,
-            categoryData: {
-              id: ITEM_POCKETS.MACHINES, 
-              nameEn: 'machines',
-              name: '기술머신',
-              pocket: ITEM_POCKETS.MACHINES 
-            },
-          cost: 10000, // 기본 가격 (필요시 조정)
-          sellPrice: 5000,
-          canSell: true,
-          effect: tm.description,
-          description: tm.description,
-          spriteUrl: tm.spriteUrl,
-          imageUrl: tm.spriteUrl,
-          // TM 전용 데이터
-          tmNumber: tm.tmNumber,
-          moveId: tm.moveId,
-          type: tm.type,
-          typeEn: tm.typeEn,
-          moveCategory: tm.category,
-          power: tm.power,
-          accuracy: tm.accuracy,
-          pp: tm.pp,
-          isTM: true,
-          generation: tm.generation
-        }));
-        
-        const allItemsCombined = [...baseItems, ...tmItems, ...customItems];
-        setAllItems(allItemsCombined);
-        console.log('📦 전체 아이템 로딩:', allItemsCombined.length, '개');
-        console.log('   - 기본 아이템:', baseItems.length, '개');
-        console.log('   - TM:', tmItems.length, '개');
-        console.log('   - 커스텀:', customItems.length, '개');
-
-        // 3. 지역 데이터 로드
+        // 1. 지역 데이터 로드
         const regionsRef = ref(database, 'gameData/regions');
         const regionsSnapshot = await get(regionsRef);
         if (regionsSnapshot.exists()) {
@@ -233,6 +224,19 @@ export const useGameData = (allPokemonData) => {
 
     loadGameData();
   }, [allPokemonData]);
+
+  // 커스텀 아이템 실시간 리스너 (관리자가 커스텀 아이템 추가/수정/삭제 시 즉시 반영)
+  useEffect(() => {
+    if (isLoading) return undefined;
+
+    const customItemsRef = ref(database, 'gameData/customItems');
+    const unsubscribe = onValue(customItemsRef, (snapshot) => {
+      const customItems = snapshot.exists() ? snapshot.val() : [];
+      setAllItems(buildAllItems(customItems));
+    });
+
+    return () => unsubscribe();
+  }, [isLoading]);
 
   useEffect(() => {
     if (isLoading) return undefined;
