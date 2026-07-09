@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { get, ref, set } from 'firebase/database';
+import { get, ref, set, runTransaction } from 'firebase/database';
 import { getAuth } from 'firebase/auth';
 import { database } from '../../firebase';
 import { useGame } from '../../contexts/GameContext';
@@ -845,13 +845,12 @@ export function BattleView() {
     // Firebase 저장
     if (!userId) return;
     try {
-      const snapshot = await get(ref(database, `members/${userId}/inventory`));
-      if (!snapshot.exists()) return;
-      const inv = Array.isArray(snapshot.val()) ? snapshot.val() : [];
-      const updated = inv
-        .map(i => matchItem(i) ? decrementItem(i) : i)
-        .filter(i => (i.count ?? i.quantity ?? 1) > 0);
-      await set(ref(database, `members/${userId}/inventory`), updated);
+      await runTransaction(ref(database, `members/${userId}/inventory`), (currentInventory) => {
+        const inv = Array.isArray(currentInventory) ? currentInventory : [];
+        return inv
+          .map(i => matchItem(i) ? decrementItem(i) : i)
+          .filter(i => (i.count ?? i.quantity ?? 1) > 0);
+      });
     } catch (e) {
       console.warn('아이템 소모 저장 실패:', e);
     }
@@ -882,17 +881,17 @@ export function BattleView() {
     // Firebase 저장
     if (!userId) return;
     try {
-      const snap = await get(ref(database, `members/${userId}/inventory`));
-      const inv = snap.exists() && Array.isArray(snap.val()) ? snap.val() : [];
-      const exists = inv.some(matchItem);
-      const updated = exists
-        ? inv.map(i => {
-            if (!matchItem(i)) return i;
-            const cur = i.count ?? i.quantity ?? 0;
-            return { ...i, count: cur + 1, quantity: cur + 1 };
-          })
-        : [...inv, { ...item, count: 1, quantity: 1 }];
-      await set(ref(database, `members/${userId}/inventory`), updated);
+      await runTransaction(ref(database, `members/${userId}/inventory`), (currentInventory) => {
+        const inv = Array.isArray(currentInventory) ? currentInventory : [];
+        const exists = inv.some(matchItem);
+        return exists
+          ? inv.map(i => {
+              if (!matchItem(i)) return i;
+              const cur = i.count ?? i.quantity ?? 0;
+              return { ...i, count: cur + 1, quantity: cur + 1 };
+            })
+          : [...inv, { ...item, count: 1, quantity: 1 }];
+      });
     } catch (e) {
       console.warn('아이템 반환 저장 실패:', e);
     }

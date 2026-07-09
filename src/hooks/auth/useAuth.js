@@ -2,7 +2,7 @@
 // onValue 리스너를 제거하고 로그인 시에만 데이터 로드
 
 import { useState, useEffect } from 'react';
-import { ref, get, set, onValue } from 'firebase/database';
+import { ref, get, set, onValue, update } from 'firebase/database';
 import { 
   signInWithEmailAndPassword,
   signOut,
@@ -243,16 +243,27 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
     
     // ⭐ 그 다음 Firebase에 저장
     try {
-      const { id, email, ...dataToSave } = updatedUser;
+      const dataToSave = { ...updates };
+      delete dataToSave.id;
+      delete dataToSave.email;
+      delete dataToSave.authUid;
+
+      if (updates.caughtPokemon !== undefined) {
+        dataToSave.caughtPokemon = updatedUser.caughtPokemon;
+      }
+      if (updates.partnerPokemon !== undefined) {
+        dataToSave.partnerPokemon = updatedUser.partnerPokemon;
+      }
       
       const cleanData = JSON.parse(
         JSON.stringify(dataToSave, (key, value) => 
           value === undefined ? null : value
         )
       );
+      if (Object.keys(cleanData).length === 0) return;
       
       const memberRef = ref(database, `members/${currentUser.id}`);
-      await set(memberRef, cleanData);
+      await update(memberRef, cleanData);
       console.log('✅ Firebase 저장 완료');
     } catch (error) {
       console.error('❌ Firebase 저장 실패:', error);

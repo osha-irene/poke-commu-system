@@ -2,7 +2,7 @@
 // 요리 시스템
 
 import { useState, useEffect } from 'react';
-import { ref, get, set, onValue } from 'firebase/database';
+import { ref, get, set, onValue, runTransaction } from 'firebase/database';
 import { database } from '../../firebase';
 import recipesData from '../../data/recipes.json';
 
@@ -124,12 +124,18 @@ export const useRecipes = (currentUser, updateCurrentUser) => {
     const globalDiscovered = Array.isArray(discoveredRecipes) ? discoveredRecipes : Object.values(discoveredRecipes || {}).flat();
 
     if (!globalDiscovered.includes(recipeId)) {
-      const updated = [...new Set([...globalDiscovered, recipeId])];
-      setDiscoveredRecipes(updated);
-      
       try {
         const discoveredRef = ref(database, 'gameData/discoveredRecipes');
-        await set(discoveredRef, updated);
+        const result = await runTransaction(discoveredRef, (currentDiscovered) => {
+          const current = Array.isArray(currentDiscovered)
+            ? currentDiscovered
+            : Object.values(currentDiscovered || {}).flat();
+          return [...new Set([...current, recipeId])];
+        });
+
+        if (result.committed) {
+          setDiscoveredRecipes(result.snapshot.val() || []);
+        }
       } catch (error) {
         console.error('발견된 레시피 저장 실패:', error);
       }

@@ -14,6 +14,9 @@ export const useAdminRegions = (
 ) => {
   const persistRegions = async (updatedRegions, extraConfig = {}) => {
     await set(ref(database, 'gameData/regions'), updatedRegions);
+    if (extraConfig.pokedex) {
+      await set(ref(database, 'gameData/gamePokedex'), extraConfig.pokedex);
+    }
 
     const configRef = ref(database, 'gameData/config');
     const snapshot = await get(configRef);

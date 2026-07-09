@@ -191,7 +191,7 @@ export const usePokemonCatch = (
     const isFirstOriginalCatch = isRegionalForm
       ? await recordFirstCatch(originalNumber)
       : isFirstFormCatch;
-    const isFirstCatch = isFirstFormCatch || isFirstOriginalCatch;
+    const isFirstCatch = isFirstOriginalCatch;
     const pokemonNumber = originalNumber;
 
     return { isFirstCatch, pokemonNumber, pokemonTemplate, updatedInventory };

@@ -1,26 +1,25 @@
 // src/hooks/community/useQnA.js
-// Q&A 게시판 로직 훅
+// Q&A board data helpers
 
 import { useState, useEffect } from 'react';
-import { ref, get, set } from 'firebase/database';
+import { ref, get, set, runTransaction } from 'firebase/database';
 import { database } from '../../firebase';
 
 export function useQnA() {
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 게시판 로드
   useEffect(() => {
     const loadPosts = async () => {
       try {
         const postsRef = ref(database, 'community/qnaPosts');
         const snapshot = await get(postsRef);
-        
+
         if (snapshot.exists()) {
           setPosts(snapshot.val());
         }
       } catch (error) {
-        console.error('게시판 로드 실패:', error);
+        console.error('QnA posts load failed:', error);
       } finally {
         setIsLoading(false);
       }
@@ -29,46 +28,42 @@ export function useQnA() {
     loadPosts();
   }, []);
 
-  // 게시판 저장
-  useEffect(() => {
-    const savePosts = async () => {
-      if (isLoading || posts.length === 0) return;
+  const updatePosts = async (updater) => {
+    try {
+      const postsRef = ref(database, 'community/qnaPosts');
+      const result = await runTransaction(postsRef, (currentPosts) => {
+        const current = Array.isArray(currentPosts) ? currentPosts : [];
+        return updater(current);
+      });
 
-      try {
-        const postsRef = ref(database, 'community/qnaPosts');
-        await set(postsRef, posts);
-      } catch (error) {
-        console.error('게시판 저장 실패:', error);
+      if (result.committed) {
+        setPosts(result.snapshot.val() || []);
       }
-    };
+    } catch (error) {
+      console.error('QnA posts save failed:', error);
+    }
+  };
 
-    savePosts();
-  }, [posts, isLoading]);
-
-  // 게시글 생성
   const createPost = (post) => {
-    setPosts(prev => [post, ...prev]);
+    updatePosts(prev => [post, ...prev]);
   };
 
-  // 게시글 삭제
   const deletePost = (postId) => {
-    setPosts(prev => prev.filter(p => p.id !== postId));
+    updatePosts(prev => prev.filter(p => p.id !== postId));
   };
 
-  // 댓글 생성
   const createComment = (postId, comment) => {
-    setPosts(prev => prev.map(p => 
-      p.id === postId 
+    updatePosts(prev => prev.map(p =>
+      p.id === postId
         ? { ...p, comments: [...(p.comments || []), comment] }
         : p
     ));
   };
 
-  // 댓글 삭제
   const deleteComment = (postId, commentId) => {
-    setPosts(prev => prev.map(p =>
+    updatePosts(prev => prev.map(p =>
       p.id === postId
-        ? { ...p, comments: p.comments.filter(c => c.id !== commentId) }
+        ? { ...p, comments: (p.comments || []).filter(c => c.id !== commentId) }
         : p
     ));
   };

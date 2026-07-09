@@ -1,7 +1,7 @@
 // src/hooks/useGameData.js - Firebase 완전 버전 + TM 통합
 
 import { useState, useEffect } from 'react';
-import { ref, get, set, onValue } from 'firebase/database';
+import { ref, get, set, onValue, runTransaction } from 'firebase/database';
 import { database } from '../../firebase';
 import itemsData from '../../data/items.json';
 import regionsData from '../../data/regions.json';
@@ -295,36 +295,6 @@ export const useGameData = (allPokemonData) => {
     return () => unsub();
   }, [isLoading]);
 
-  // 🔥 지역 데이터 변경 시 Firebase에 저장
-  useEffect(() => {
-    const saveRegions = async () => {
-      if (isLoading || regions.length === 0) return;
-      try {
-        const regionsRef = ref(database, 'gameData/regions');
-        await set(regionsRef, regions);
-        console.log('💾 지역 데이터 저장:', regions.length, '개');
-      } catch (error) {
-        console.error('❌ 지역 데이터 저장 실패:', error);
-      }
-    };
-    saveRegions();
-  }, [regions, isLoading]);
-
-  // 🔥 영운 도감 변경 시 Firebase에 저장
-  useEffect(() => {
-    const saveGamePokedex = async () => {
-      if (isLoading || gamePokedex.length === 0) return;
-      try {
-        const pokedexRef = ref(database, 'gameData/gamePokedex');
-        await set(pokedexRef, gamePokedex);
-        console.log('💾 영운 도감 저장:', gamePokedex.length, '마리');
-      } catch (error) {
-        console.error('❌ 영운 도감 저장 실패:', error);
-      }
-    };
-    saveGamePokedex();
-  }, [gamePokedex, isLoading]);
-
   // 공유 도감은 onValue 실시간 리스너로 관리 — 전체 덮어쓰기 불필요
 
   // 🔥 점검 모드 실시간 리스너
@@ -373,31 +343,35 @@ export const useGameData = (allPokemonData) => {
 
   const updatePokedexMemo = async (pokemonNumber, memo, currentUser) => {
     const numericKey = String(pokemonNumber);
-    
-    const entry = sharedPokedexData[numericKey];
-    if (!entry || entry.firstCatcher !== currentUser.name) {
-      alert('첫 포획자만 메모를 작성할 수 있습니다!');
-      return;
-    }
-    
-    const updatedEntry = {
-      ...entry,
-      memo: memo
-    };
-    
-    setSharedPokedexData(prev => ({
-      ...prev,
-      [numericKey]: updatedEntry
-    }));
-    
-    // 🔥 Firebase에 직접 저장
+
     try {
       const pokedexRef = ref(database, `gameData/sharedPokedex/${numericKey}`);
-      await set(pokedexRef, updatedEntry);
-      console.log('✅ 메모 저장 완료:', numericKey);
+      const result = await runTransaction(pokedexRef, (currentEntry) => {
+        if (!currentEntry || currentEntry.firstCatcher !== currentUser.name) {
+          return;
+        }
+
+        return {
+          ...currentEntry,
+          memo: memo || null
+        };
+      });
+
+      if (!result.committed) {
+        alert('첫 포획자만 메모를 작성할 수 있습니다!');
+        return;
+      }
+
+      const updatedEntry = result.snapshot.val();
+      setSharedPokedexData(prev => ({
+        ...prev,
+        [numericKey]: updatedEntry
+      }));
+      console.log('Pokedex memo saved:', numericKey);
     } catch (error) {
-      console.error('❌ 메모 저장 실패:', error);
+      console.error('Failed to save Pokedex memo:', error);
     }
+
   };
 
   const updateSystemSettings = async (nextSettings) => {

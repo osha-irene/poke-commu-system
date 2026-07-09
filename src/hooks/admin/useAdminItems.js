@@ -1,7 +1,7 @@
 // src/hooks/admin/useAdminItems.js
 // 아이템 관리 전용 훅
 
-import { ref, get, set } from 'firebase/database';
+import { ref, get, set, update } from 'firebase/database';
 import { database } from '../../firebase';
 
 export const useAdminItems = (
@@ -111,7 +111,7 @@ export const useAdminItems = (
       );
       
       const memberRef = ref(database, `members/${memberId}`);
-      await set(memberRef, cleanData);
+      await update(memberRef, { inventory: cleanData.inventory });
       
       setMembers(prev => ({
         ...prev,
@@ -213,7 +213,7 @@ export const useAdminItems = (
     try {
       const { id, email, ...dataToSave } = updatedMember;
       const cleanData = JSON.parse(JSON.stringify(dataToSave, (k, v) => v === undefined ? null : v));
-      await set(ref(database, `members/${memberId}`), cleanData);
+      await update(ref(database, `members/${memberId}`), { inventory: cleanData.inventory });
       setMembers(prev => ({ ...prev, [memberId]: updatedMember }));
       if (memberId === currentUser?.id) updateCurrentUser({ inventory: newInventory });
     } catch (error) {
@@ -233,7 +233,7 @@ export const useAdminItems = (
     try {
       const { id, email, ...dataToSave } = updatedMember;
       const cleanData = JSON.parse(JSON.stringify(dataToSave, (k, v) => v === undefined ? null : v));
-      await set(ref(database, `members/${memberId}`), cleanData);
+      await update(ref(database, `members/${memberId}`), { inventory: cleanData.inventory });
       setMembers(prev => ({ ...prev, [memberId]: updatedMember }));
       if (memberId === currentUser?.id) updateCurrentUser({ inventory: newInventory });
     } catch (error) {

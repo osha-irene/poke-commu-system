@@ -1,149 +1,139 @@
 // src/hooks/game/usePokedex.js
-// 도감 관리 시스템
+// Shared Pokedex management
 
-import { ref, set, remove } from 'firebase/database';
+import { ref, set, remove, runTransaction } from 'firebase/database';
 import { database } from '../../firebase';
 
 export const usePokedex = (sharedPokedexData, setSharedPokedexData, currentUser) => {
-  
-  // 첫 조우 기록
-  const recordFirstEncounter = async (pokemonNumber, regionName) => {
-    const numericKey = String(pokemonNumber);
-    const isFirstEncounter = !sharedPokedexData[numericKey];
-    
-    if (isFirstEncounter) {
-      const newEntry = {
-        firstEncounter: currentUser.name,
-        encounteredAt: new Date().toISOString(),
-        caughtBy: null,
-        caughtAt: null,
-        memo: null,
-        regions: [regionName]
-      };
-      
-      setSharedPokedexData(prev => ({
-        ...prev,
-        [numericKey]: newEntry
-      }));
-      
-      try {
-        const pokedexRef = ref(database, `gameData/sharedPokedex/${numericKey}`);
-        await set(pokedexRef, newEntry);
-        console.log('✅ 첫 조우 기록 완료:', numericKey);
-      } catch (error) {
-        console.error('❌ 도감 데이터 저장 실패:', error);
-      }
-    } else {
-      // 지역 추가
-      const entry = sharedPokedexData[numericKey];
-      const currentRegions = entry?.regions || [];
-      
-      if (!currentRegions.includes(regionName)) {
-        const updatedEntry = {
-          ...entry,
-          regions: [...currentRegions, regionName]
-        };
-        
-        setSharedPokedexData(prev => ({
-          ...prev,
-          [numericKey]: updatedEntry
-        }));
-        
-        try {
-          const pokedexRef = ref(database, `gameData/sharedPokedex/${numericKey}`);
-          await set(pokedexRef, updatedEntry);
-          console.log('✅ 지역 추가 완료:', numericKey, regionName);
-        } catch (error) {
-          console.error('❌ 도감 데이터 저장 실패:', error);
-        }
-      }
-    }
-  };
-
-  // 첫 포획 기록
-  const recordFirstCatch = async (pokemonNumber) => {
-    const numericKey = String(pokemonNumber);
-    const entry = sharedPokedexData[numericKey] || {};
-    
-    if (!entry.firstCatcher) {
-      const updatedEntry = {
-        ...entry,
-        firstEncounter: entry.firstEncounter || currentUser.name,
-        encounteredAt: entry.encounteredAt || new Date().toISOString(),
-        firstCatcher: currentUser.name,
-        caughtBy: currentUser.name,
-        caughtAt: new Date().toISOString(),
-        regions: entry.regions || []
-      };
-      
-      setSharedPokedexData(prev => ({
-        ...prev,
-        [numericKey]: updatedEntry
-      }));
-        
-      try {
-        const pokedexRef = ref(database, `gameData/sharedPokedex/${numericKey}`);
-        await set(pokedexRef, updatedEntry);
-        console.log('✅ 첫 포획 기록 완료:', numericKey);
-        return true; // 첫 포획임을 알림
-      } catch (error) {
-        console.error('❌ 도감 데이터 저장 실패:', error);
-      }
-    }
-    return false;
-  };
-
-  // 메모 저장
-  const savePokedexMemo = async (pokemonNumber, memo) => {
-    const numericKey = String(pokemonNumber);
-    
-    const updatedEntry = {
-      ...sharedPokedexData[numericKey],
-      memo: memo || null
-    };
-    
+  const mergeSharedEntry = (numericKey, updatedEntry) => {
     setSharedPokedexData(prev => ({
       ...prev,
       [numericKey]: updatedEntry
     }));
-    
+  };
+
+  const recordFirstEncounter = async (pokemonNumber, regionName) => {
+    const numericKey = String(pokemonNumber);
+    const pokedexRef = ref(database, `gameData/sharedPokedex/${numericKey}`);
+
     try {
-      const pokedexRef = ref(database, `gameData/sharedPokedex/${numericKey}`);
-      await set(pokedexRef, updatedEntry);
-      console.log('✅ 메모 저장 완료:', numericKey);
+      const result = await runTransaction(pokedexRef, (currentEntry) => {
+        const regions = currentEntry?.regions || [];
+
+        if (currentEntry && regions.includes(regionName)) {
+          return;
+        }
+
+        if (!currentEntry) {
+          return {
+            firstEncounter: currentUser.name,
+            encounteredAt: new Date().toISOString(),
+            caughtBy: null,
+            caughtAt: null,
+            memo: null,
+            regions: [regionName]
+          };
+        }
+
+        return {
+          ...currentEntry,
+          regions: [...regions, regionName]
+        };
+      });
+
+      if (result.committed) {
+        mergeSharedEntry(numericKey, result.snapshot.val());
+        console.log('Shared Pokedex encounter saved:', numericKey, regionName);
+      }
     } catch (error) {
-      console.error('❌ 메모 저장 실패:', error);
+      console.error('Failed to save shared Pokedex encounter:', error);
     }
   };
 
-  // 지역 정보 업데이트 (관리자)
+  const recordFirstCatch = async (pokemonNumber) => {
+    const numericKey = String(pokemonNumber);
+    const pokedexRef = ref(database, `gameData/sharedPokedex/${numericKey}`);
+
+    try {
+      const result = await runTransaction(pokedexRef, (currentEntry) => {
+        if (currentEntry?.firstCatcher) {
+          return;
+        }
+
+        const entry = currentEntry || {};
+        return {
+          ...entry,
+          firstEncounter: entry.firstEncounter || currentUser.name,
+          encounteredAt: entry.encounteredAt || new Date().toISOString(),
+          firstCatcher: currentUser.name,
+          caughtBy: currentUser.name,
+          caughtAt: new Date().toISOString(),
+          regions: entry.regions || []
+        };
+      });
+
+      if (result.committed) {
+        mergeSharedEntry(numericKey, result.snapshot.val());
+        console.log('Shared Pokedex first catch saved:', numericKey);
+        return true;
+      }
+    } catch (error) {
+      console.error('Failed to save shared Pokedex first catch:', error);
+    }
+
+    return false;
+  };
+
+  const savePokedexMemo = async (pokemonNumber, memo) => {
+    const numericKey = String(pokemonNumber);
+    const pokedexRef = ref(database, `gameData/sharedPokedex/${numericKey}`);
+
+    try {
+      const result = await runTransaction(pokedexRef, (currentEntry) => {
+        if (!currentEntry || currentEntry.firstCatcher !== currentUser.name) {
+          return;
+        }
+
+        return {
+          ...currentEntry,
+          memo: memo || null
+        };
+      });
+
+      if (result.committed) {
+        mergeSharedEntry(numericKey, result.snapshot.val());
+        console.log('Shared Pokedex memo saved:', numericKey);
+      } else {
+        console.warn('Skipped memo save because current user is not first catcher:', numericKey);
+      }
+    } catch (error) {
+      console.error('Failed to save shared Pokedex memo:', error);
+    }
+  };
+
   const updatePokedexRegions = async (pokemonNumber, regions) => {
     if (!currentUser?.isAdmin) return;
-    
+
     const numericKey = String(pokemonNumber);
-    
+
     const entry = sharedPokedexData[numericKey] || {};
     const updatedEntry = {
       ...entry,
       regions: regions,
       manuallyEdited: true
     };
-    
-    setSharedPokedexData(prev => ({
-      ...prev,
-      [numericKey]: updatedEntry
-    }));
-    
+
+    mergeSharedEntry(numericKey, updatedEntry);
+
     try {
       const pokedexRef = ref(database, `gameData/sharedPokedex/${numericKey}`);
       await set(pokedexRef, updatedEntry);
-      console.log('✅ 도감 지역 업데이트 완료:', numericKey);
+      console.log('Shared Pokedex regions updated:', numericKey);
     } catch (error) {
-      console.error('❌ 도감 지역 업데이트 실패:', error);
+      console.error('Failed to update shared Pokedex regions:', error);
     }
   };
 
-  // 도감 전체 리셋 (관리자)
   const resetPokedex = async () => {
     if (!currentUser?.isAdmin) return;
 
@@ -152,9 +142,9 @@ export const usePokedex = (sharedPokedexData, setSharedPokedexData, currentUser)
     try {
       const pokedexRef = ref(database, 'gameData/sharedPokedex');
       await remove(pokedexRef);
-      console.log('✅ 도감 리셋 완료');
+      console.log('Shared Pokedex reset complete');
     } catch (error) {
-      console.error('❌ 도감 리셋 실패:', error);
+      console.error('Failed to reset shared Pokedex:', error);
     }
   };
 

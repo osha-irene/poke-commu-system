@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useGame } from '../../contexts/GameContext';
-import { ref as dbRef, get, set } from 'firebase/database';
+import { ref as dbRef, get, set, update } from 'firebase/database';
 import { database } from '../../firebase';
 import { User, ChevronRight, X, Users, Map, BookOpen, ShoppingBag, UtensilsCrossed, Tent, Calendar, Settings, AlertTriangle, Medal, Wrench, Info, Trash2, Zap, Wind, Ban, Bot } from 'lucide-react';
 import useMediaQuery from '../../hooks/useMediaQuery';
@@ -390,7 +390,7 @@ export default function AdminView() {
         );
 
         const memberRef = dbRef(database, `members/${memberId}`);
-        await set(memberRef, cleanData);
+        await update(memberRef, { maxDailyWalks: cleanData.maxDailyWalks });
 
         setMembers(prev => ({
           ...prev,

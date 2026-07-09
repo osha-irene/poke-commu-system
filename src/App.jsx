@@ -7,7 +7,7 @@ import SakuraEffect from './effects/sakura';
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { ref, get, set, onValue } from 'firebase/database';
+import { ref, get, set, onValue, runTransaction } from 'firebase/database';
 import { database } from './firebase';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
@@ -1636,23 +1636,41 @@ export default function App() {
     return () => document.removeEventListener('click', handleGlobalClick);
   }, [soundEnabled]);
 
-  const saveQnaPosts = (nextPosts) => {
-    setQnaPosts(nextPosts);
-    set(ref(database, 'community/qnaPosts'), nextPosts).catch((error) => {
+  const saveQnaPosts = async (nextPostsOrUpdater) => {
+    if (typeof nextPostsOrUpdater === 'function') {
+      try {
+        const postsRef = ref(database, 'community/qnaPosts');
+        const result = await runTransaction(postsRef, (currentPosts) => {
+          const posts = Array.isArray(currentPosts) ? currentPosts : [];
+          return nextPostsOrUpdater(posts);
+        });
+
+        if (result.committed) {
+          setQnaPosts(result.snapshot.val() || []);
+        }
+      } catch (error) {
+        console.error('QnA posts save failed:', error);
+      }
+      return;
+    }
+
+    const nextPosts = nextPostsOrUpdater;
+    console.warn('QnA posts must be updated with a transaction updater.', nextPosts);
+    void Promise.resolve().catch((error) => {
       console.error('❌ 게시판 저장 실패:', error);
     });
   };
 
   const handleCreatePost = (post) => {
-    saveQnaPosts([post, ...qnaPosts]);
+    saveQnaPosts(posts => [post, ...posts]);
   };
 
   const handleDeletePost = (postId) => {
-    saveQnaPosts(qnaPosts.filter(p => p.id !== postId));
+    saveQnaPosts(posts => posts.filter(p => p.id !== postId));
   };
 
   const handleCreateComment = (postId, comment) => {
-    saveQnaPosts(qnaPosts.map(p =>
+    saveQnaPosts(posts => posts.map(p =>
       p.id === postId
         ? { ...p, comments: [...(p.comments || []), comment] }
         : p
@@ -1660,13 +1678,13 @@ export default function App() {
   };
 
   const handleEditPost = (postId, updates) => {
-    saveQnaPosts(qnaPosts.map(p => p.id === postId ? { ...p, ...updates } : p));
+    saveQnaPosts(posts => posts.map(p => p.id === postId ? { ...p, ...updates } : p));
   };
 
   const handleDeleteComment = (postId, commentId) => {
-    saveQnaPosts(qnaPosts.map(p =>
+    saveQnaPosts(posts => posts.map(p =>
       p.id === postId
-        ? { ...p, comments: p.comments.filter(c => c.id !== commentId) }
+        ? { ...p, comments: (p.comments || []).filter(c => c.id !== commentId) }
         : p
     ));
   };
