@@ -165,6 +165,40 @@ export default function PokedexView({
     const pokemonNumber = pokemon.number;
     const pokemonOriginalNumber = pokemon.originalNumber || pokemon.number;
 
+    const pokemonRegionCandidateIds = [
+      pokemon.id,
+      pokemonNumber,
+      pokemonOriginalNumber,
+    ]
+      .filter(value => value !== undefined && value !== null)
+      .map(value => String(value));
+
+    const hasPokemonInCurrentSetting = (pokemonIds = []) => (
+      Array.isArray(pokemonIds) &&
+      pokemonIds.some(id => pokemonRegionCandidateIds.includes(String(id)))
+    );
+
+    const currentSettingRegions = (regions || [])
+      .filter(region => region && !region.isTownMeta && region.name)
+      .flatMap(region => {
+        const regionLabel = region.name;
+        const places = Array.isArray(region.places)
+          ? region.places.filter(place => place?.name)
+          : [];
+        const matchedPlaces = places
+          .filter(place => hasPokemonInCurrentSetting(place.pokemons))
+          .map(place => `${regionLabel} ${place.name}`);
+
+        if (matchedPlaces.length > 0) return matchedPlaces;
+        return places.length === 0 && hasPokemonInCurrentSetting(region.pokemons)
+          ? [regionLabel]
+          : [];
+      });
+
+    if (currentSettingRegions.length > 0) {
+      return [...new Set(currentSettingRegions)];
+    }
+
     console.log('?뿺截?異쒗쁽 吏??寃??', pokemon.name, 'number:', pokemon.number, 'originalNumber:', pokemon.originalNumber);
 
     const getCurrentRegionLabels = () => {

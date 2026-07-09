@@ -174,7 +174,8 @@ export default function PokemonDetailPanel({
     : Math.max(0, requiredLevelExp - (Number(pokemon.exp) || 0));
   const selectedExpAmount = Math.max(0, Math.floor(Number(expInput) || 0));
   const canAllocateExp = selectedExpAmount > 0 && trainerExp >= selectedExpAmount;
-  const abilityData = getAbilityByName(pokemon.abilityEn || pokemon.ability);
+  const abilityName = pokemon.abilityEn || pokemon.ability;
+  const abilityData = getAbilityByName(abilityName);
   const abilityDescription = abilityData
     ? abilityData.effectKo ||
       abilityData.flavorTextKo ||
@@ -967,11 +968,11 @@ const ballImage = getBallImage();
                   )}
                 </div>
                 <div className={`rounded-lg border p-3 ${pokemon.isHiddenAbility ? 'bg-yellow-50 border-yellow-200' : 'bg-indigo-50 border-indigo-100'}`}>
-                  {pokemon.ability ? (
+                  {abilityName ? (
                     <>
                       <div className="flex items-center gap-1 mb-1">
                         {pokemon.isHiddenAbility && <span className="text-yellow-500">⭐</span>}
-                        <span className={`text-base font-bold ${pokemon.isHiddenAbility ? 'text-yellow-700' : 'text-indigo-700'}`}>{abilityData?.name || pokemon.ability}</span>
+                        <span className={`text-base font-bold ${pokemon.isHiddenAbility ? 'text-yellow-700' : 'text-indigo-700'}`}>{abilityData?.name || abilityName}</span>
                       </div>
                       {abilityDescription && <div className="text-sm text-gray-500 leading-relaxed">{abilityDescription}</div>}
                     </>

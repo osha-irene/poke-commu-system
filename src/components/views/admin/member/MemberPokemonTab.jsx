@@ -12,7 +12,7 @@ import { getPokemonGenderOptions } from '../../../../utils/pokemonGender';
 import { getPokemonDisplayParts } from '../../../../utils/pokemonDisplayName';
 import evolutionsData from '../../../../data/evolutions.json';
 import { getBaseStatPatch } from '../../../../utils/pokemonBaseStats';
-import { getAbilityEnglishName } from '../../../../utils/abilityUtils';
+import { getAbilityEnglishName, getAbilityKoreanName } from '../../../../utils/abilityUtils';
 
 const emptyEffort = { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 };
 const emptyCondition = { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 };
@@ -215,6 +215,8 @@ function MemberPokemonTab({
     setShowMoveModal(false);
     setShowEditItemModal(false);
     
+    const abilityEn = pokemon.abilityEn || getAbilityEnglishName(pokemon.ability) || pokemon.ability || '';
+
     setSelectedPokemon(pokemon);
     setEditData({
       level: pokemon.level || 5,
@@ -226,7 +228,7 @@ function MemberPokemonTab({
       isShiny: pokemon.isShiny || false,
       isPartner: pokemon.isPartner || false,
       heldItem: pokemon.heldItem || null,
-      ability: pokemon.ability || '',
+      ability: abilityEn,
       isHiddenAbility: pokemon.isHiddenAbility || false,
       friendship: pokemon.friendship || 0,
      gender: pokemon.gender || 'random', 
@@ -244,8 +246,8 @@ function MemberPokemonTab({
   const handleSaveEdit = () => {
     if (!selectedPokemon) return;
     const pokemonTemplate = getPokemonTemplate(selectedPokemon);
-    const finalAbility = editData.ability || pokemonTemplate?.abilitiesEn?.[0] || selectedPokemon.abilityEn || selectedPokemon.ability || '';
-    const finalAbilityEn = getAbilityEnglishName(finalAbility) || finalAbility || '';
+    const finalAbilityEn = getAbilityEnglishName(editData.ability) || editData.ability || pokemonTemplate?.abilitiesEn?.[0] || selectedPokemon.abilityEn || getAbilityEnglishName(selectedPokemon.ability) || selectedPokemon.ability || '';
+    const finalAbility = getAbilityKoreanName(finalAbilityEn) || finalAbilityEn;
 
     let finalSpriteUrl = editData.spriteUrl;
     if (editData.isShiny !== selectedPokemon.isShiny) {
@@ -702,4 +704,3 @@ function MemberPokemonTab({
 }
 
 export default MemberPokemonTab;
-
