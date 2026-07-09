@@ -128,7 +128,7 @@ export default function PokedexView({
     if (!pokedexActiveTowns || pokedexActiveTowns.length === 0) return null;
     const nums = new Set();
     (regions || []).forEach(region => {
-      if (region.isTownMeta || region.visible === false || !pokedexActiveTowns.includes(region.groupId)) return;
+      if (region.isTownMeta || region.visible === false || region.groupVisible === false || !pokedexActiveTowns.includes(region.groupId)) return;
       (region.pokemons || []).forEach(n => nums.add(Number(n)));
       (region.places || []).forEach(place => {
         if (place?.visible === false) return;
@@ -181,10 +181,10 @@ export default function PokedexView({
       pokemonIds.some(id => pokemonRegionCandidateIds.includes(String(id)))
     );
 
-    // 지도에서 숨김(visible === false) 처리된 지역/장소는 아직 공개되지 않은 것이므로
-    // 출현 장소 목록에서 제외한다.
+    // 지도에서 숨김(visible === false) 처리됐거나, 소속 마을 자체가 아직 공개 안
+    // 됐으면(groupVisible === false) 출현 장소 목록에서 제외한다.
     const currentSettingRegions = (regions || [])
-      .filter(region => region && !region.isTownMeta && region.name && region.visible !== false)
+      .filter(region => region && !region.isTownMeta && region.name && region.visible !== false && region.groupVisible !== false)
       .flatMap(region => {
         const regionLabel = region.name;
         const places = Array.isArray(region.places)
@@ -206,16 +206,19 @@ export default function PokedexView({
 
     console.log('?뿺截?異쒗쁽 吏??寃??', pokemon.name, 'number:', pokemon.number, 'originalNumber:', pokemon.originalNumber);
 
+    // 여기서는 visible 여부를 걸지 않는다: 관리자가 "편집"으로 수동 지정한 지역은
+    // 그 지역이 지도에서 잠시 숨겨져 있어도 그대로 유지/표시되어야 하기 때문.
+    // (visible 필터는 자동 감지 경로에만 적용한다.)
     const getCurrentRegionLabels = () => {
       const labelSet = new Set();
 
       (regions || []).forEach(region => {
-        if (!region || region.isTownMeta || !region.name || region.visible === false) return;
+        if (!region || region.isTownMeta || !region.name) return;
 
         labelSet.add(region.name);
         const places = Array.isArray(region.places) ? region.places : [];
         places.forEach(place => {
-          if (place?.name && place.visible !== false) {
+          if (place?.name) {
             labelSet.add(`${region.name} ${place.name}`);
           }
         });
@@ -262,7 +265,7 @@ export default function PokedexView({
 
     // 3. ?먮룞 寃?? ?μ냼蹂?異쒗쁽 ?ㅼ젙 ?곗꽑, 湲곗〈 吏???ㅼ젙? ?대갚
     const foundRegions = regions
-      .filter(region => !region?.isTownMeta && region?.visible !== false)
+      .filter(region => !region?.isTownMeta && region?.visible !== false && region?.groupVisible !== false)
       .flatMap(region => {
       const regionLabel = region.name;
       const places = Array.isArray(region.places)
@@ -396,7 +399,7 @@ export default function PokedexView({
   };
 
   const handleStartEditRegions = () => {
-    const pokemonRegions = getPokemonRegions(selectedPokemon);
+    const pokemonRegions = getPokemonRegions(selectedForm || selectedPokemon);
     setEditableRegions(pokemonRegions);
     setIsEditingRegions(true);
   };
@@ -410,7 +413,8 @@ export default function PokedexView({
   };
 
   const handleSaveRegions = () => {
-    const pokemonOriginalNumber = selectedPokemon.originalNumber || selectedPokemon.number;
+    const target = selectedForm || selectedPokemon;
+    const pokemonOriginalNumber = target.originalNumber || target.number;
     if (onUpdatePokedexRegions) {
       onUpdatePokedexRegions(pokemonOriginalNumber, editableRegions);
     }
