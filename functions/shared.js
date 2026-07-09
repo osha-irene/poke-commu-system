@@ -9,13 +9,47 @@ const stripHtml = (html = '') =>
     .replace(/&amp;/g, '&')
     .trim();
 
-const normalizeAccount = (account = '', host = '') => {
-  const cleaned = String(account).trim().replace(/^@/, '').toLowerCase();
-  if (!cleaned) return '';
-  return cleaned.includes('@') ? cleaned : `${cleaned}@${host}`;
+const parseAccount = (account = '', host = '') => {
+  const fallbackHost = String(host || '').trim().toLowerCase();
+  let value = String(account || '').trim().toLowerCase();
+  if (!value) return null;
+
+  value = value.replace(/^acct:/, '').replace(/^@+/, '').replace(/\/+$/, '');
+
+  if (/^https?:\/\//i.test(value)) {
+    try {
+      const url = new URL(value);
+      const match = url.pathname.match(/\/@([^/?#]+)/);
+      if (match?.[1]) {
+        value = `${match[1].replace(/^@+/, '')}@${url.host.toLowerCase()}`;
+      }
+    } catch (_) {}
+  }
+
+  const pathMatch = value.match(/^([^/]+)\/@([^/?#]+)$/);
+  if (pathMatch) value = `${pathMatch[2]}@${pathMatch[1]}`;
+
+  const atParts = value.split('@').filter(Boolean);
+  const username = atParts[0]?.trim();
+  const accountHost = atParts[1]?.trim() || fallbackHost;
+  if (!username) return null;
+
+  return {
+    username,
+    host: accountHost,
+    full: accountHost ? `${username}@${accountHost}` : username,
+  };
 };
 
-const localUsername = (account = '') => String(account || '').split('@')[0] || '';
+const normalizeAccount = (account = '', host = '') => {
+  const parsed = parseAccount(account, host);
+  return parsed?.full || '';
+};
+
+const localUsername = (account = '') => {
+  const parsed = parseAccount(account);
+  return parsed?.username || String(account || '').replace(/^@+/, '').split('@')[0] || '';
+};
 
 const toProbability = (value, fallback) => {
   const numeric = Number(value);
@@ -32,12 +66,52 @@ const accountMention = (account) => {
   return cleaned ? `@${cleaned}` : '';
 };
 
-const getAuthorAccount = status => status?.account?.acct || status?.account?.username || '';
+const getAuthorAccount = status =>
+  status?.account?.acct ||
+  status?.account?.username ||
+  status?.account?.url ||
+  status?.account?.uri ||
+  status?.account?.id ||
+  '';
 
-const extractMentionAccounts = status =>
-  (status?.mentions || [])
-    .map(mention => mention.acct || mention.username)
+const extractMentionAccounts = status => {
+  const rawContent = String(status?.content || '');
+  const fromMentions = (status?.mentions || [])
+    .flatMap(mention => [
+      mention.acct,
+      mention.username,
+      mention.url,
+      mention.uri,
+      mention.id,
+    ])
     .filter(Boolean);
+  const fromContent = (stripHtml(rawContent).match(/@[\w.-]+(?:@[\w.-]+)?/g) || [])
+    .map(account => account.replace(/^@/, ''));
+  const fromProfileLinks = Array.from(rawContent.matchAll(/https?:\/\/[^"'\s<>]+\/(?:@|users\/)([^"'\/?#\s<>]+)/gi))
+    .map(match => match[0].includes('/@') ? match[0] : match[1]);
+  return [...new Set([...fromMentions, ...fromContent, ...fromProfileLinks])];
+};
+
+const getAuthorAccountCandidates = (status, host) => [
+  status?.account?.acct,
+  status?.account?.username,
+  status?.account?.url,
+  status?.account?.uri,
+  status?.account?.id,
+].filter(Boolean).map(account => normalizeAccount(account, host)).filter(Boolean);
+
+const getMemberAccountValues = member => [
+  member?.mastodonAccount,
+  member?.mastodonId,
+  member?.mastodonUsername,
+  member?.acct,
+  member?.account?.mastodon,
+  member?.account?.mastodonAccount,
+  member?.profile?.mastodon,
+  member?.profile?.mastodonAccount,
+  member?.social?.mastodon,
+  member?.socials?.mastodon,
+].filter(Boolean);
 
 const getMembers = async (db) => {
   const snapshot = await db.ref('members').once('value');
@@ -45,20 +119,36 @@ const getMembers = async (db) => {
 };
 
 const memberMatchesAccount = (member, account, host) => {
-  const target = normalizeAccount(account, host);
-  const shortTarget = localUsername(target);
-  const candidates = [
-    member?.mastodonAccount,
-    member?.mastodonId,
-    member?.mastodonUsername,
-    member?.acct,
+  const target = parseAccount(account, host);
+  if (!target) return false;
+
+  return getMemberAccountValues(member).some(value => {
+    const candidate = parseAccount(value, host);
+    if (!candidate) return false;
+    if (candidate.full === target.full) return true;
+    return candidate.username === target.username && (
+      !candidate.host ||
+      !target.host ||
+      candidate.host === target.host ||
+      candidate.host === host ||
+      target.host === host
+    );
+  });
+};
+
+const memberNameMatchesAccount = (member, account, host) => {
+  const target = parseAccount(account, host);
+  if (!target) return false;
+  const targetUsername = target.username.toLowerCase();
+  return [
+    member?.name,
+    member?.nickname,
+    member?.displayName,
+    member?.trainerName,
+    member?.username,
   ]
     .filter(Boolean)
-    .map(a => normalizeAccount(a, host));
-
-  return candidates.some(
-    candidate => candidate === target || localUsername(candidate) === shortTarget
-  );
+    .some(value => String(value).trim().toLowerCase() === targetUsername);
 };
 
 const findMemberByAccount = (members, account, host) => {
@@ -68,18 +158,27 @@ const findMemberByAccount = (members, account, host) => {
     }
   }
 
+  const nameMatches = Object.entries(members).filter(([, member]) =>
+    memberNameMatchesAccount(member, account, host)
+  );
+  if (nameMatches.length === 1) {
+    const [id, member] = nameMatches[0];
+    console.warn('findMemberByAccount: mastodon field match failed, using unique name fallback', {
+      account,
+      host,
+      memberId: id,
+      memberName: member?.name || member?.nickname || null,
+    });
+    return { id, member: { ...member, id: member.id || id } };
+  }
+
+  // 전체 회원 목록을 매 실패마다 통째로 로그로 찍으면 회원 수가 늘어날수록 웹훅 응답이
+  // 느려진다 (Cloud Logging 직렬화 비용). 검색값과 회원 수만 남긴다.
   console.error('❌ findMemberByAccount: 매칭 실패', {
     account,
     host,
     normalizedTarget: normalizeAccount(account, host),
-    memberAccounts: Object.entries(members).map(([id, member]) => ({
-      id,
-      name: member?.name,
-      mastodonAccount: member?.mastodonAccount || null,
-      mastodonId: member?.mastodonId || null,
-      mastodonUsername: member?.mastodonUsername || null,
-      acct: member?.acct || null,
-    })),
+    memberCount: Object.keys(members).length,
   });
 
   return null;
@@ -151,7 +250,12 @@ const createBotContext = ({ instanceUrl, token, botAccount }) => {
   const replyToStatus = async (status, content, visibility = 'public') => {
     const acct = status?.account?.acct;
     const mention = acct ? `@${acct}` : '';
-    const body = mention && !content.includes(mention) ? `${mention} ${content}` : content;
+    // content에 이미 같은 사람이 다른 대소문자/호스트 표기(예: @user vs @user@host)로
+    // 멘션돼 있으면 중복으로 또 붙이지 않는다.
+    const mentionUsername = localUsername(acct);
+    const alreadyMentioned = mentionUsername &&
+      new RegExp(`@${mentionUsername.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(@|\\b)`, 'i').test(content);
+    const body = mention && !alreadyMentioned ? `${mention} ${content}` : content;
     return makeMastodonRequest('/api/v1/statuses', 'POST', {
       status: body,
       in_reply_to_id: status.id,
@@ -176,6 +280,17 @@ const createBotContext = ({ instanceUrl, token, botAccount }) => {
       : [];
   };
 
+  // 웹훅 payload에 status.account.acct/username이 비어 숫자 id만 오는 경우, 그 글이 봇
+  // 자신이 쓴 글이어도 localUsername 비교로는 자기 자신임을 못 알아챈다. verify_credentials는
+  // 토큰 스코프 부족으로 403이 나므로 API 호출 없이, 다른 사용자가 이 봇을 멘션한 status의
+  // mentions[]에서 얻은 실제 id를 호출부(index.js)가 기억해뒀다가 넘겨주는 방식을 쓴다.
+  let knownBotAccountId = null;
+  const setBotAccountId = (id) => { if (id) knownBotAccountId = String(id); };
+  const isFromBotAccountById = (status) => {
+    const accountId = status?.account?.id;
+    return Boolean(knownBotAccountId) && Boolean(accountId) && String(accountId) === knownBotAccountId;
+  };
+
   return {
     host,
     botAccount,
@@ -187,8 +302,11 @@ const createBotContext = ({ instanceUrl, token, botAccount }) => {
     localUsername,
     findMemberByAccount: (members, account) => findMemberByAccount(members, account, host),
     isFromBotAccount: (status) => isFromBotAccount(status, botAccount),
+    isFromBotAccountById,
+    setBotAccountId,
     isBotMentioned: (status) => isBotMentioned(status, botAccount, host),
     getAuthorAccount,
+    getAuthorAccountCandidates: (status) => getAuthorAccountCandidates(status, host),
     extractMentionAccounts,
   };
 };
@@ -200,7 +318,9 @@ module.exports = {
   toProbability,
   clamp,
   accountMention,
+  parseAccount,
   getAuthorAccount,
+  getAuthorAccountCandidates,
   extractMentionAccounts,
   getMembers,
   findMemberByAccount,

@@ -1,5 +1,6 @@
 const FORMAT_ID = 'gen9customgame';
 const BATTLE_CHOICE_TIMEOUT_MS = 10 * 60 * 1000;
+const BATTLE_PENDING_EXPIRATION_MS = 24 * 60 * 60 * 1000;
 let pokemonSim = null;
 let customBattleDataRegistered = false;
 let movesDataCache = null;
@@ -331,7 +332,11 @@ const teamChoiceFromText = (content) => {
   const text = extractBracketText(content);
   const match = text.match(/^(?:포켓몬|엔트리|선택)\s*([1-6])$/i) || text.match(/^([1-6])번?$/);
   if (match) return { type: 'index', value: Number(match[1]) };
-  if (text && !/^(캠핑|계속|만족|교환|배틀|기권)/i.test(text)) return { type: 'name', value: text };
+  // 대괄호로 감싼 이름만 "이름으로 선택"으로 인정한다. 대괄호가 없으면 extractBracketText가
+  // 메시지 전체를 그대로 돌려주므로, 여기서 막지 않으면 배틀과 무관한 잡담까지
+  // selectPokemon 명령으로 오인식된다.
+  const hasBracket = /\[[^\]]+\]/.test(stripCommandText(content));
+  if (hasBracket && text && !/^(캠핑|계속|만족|교환|배틀|기권)/i.test(text)) return { type: 'name', value: text };
   return null;
 };
 
@@ -764,37 +769,37 @@ const recordMoveUsage = async (db, log, session) => {
   }
 
   // 각 멤버의 caughtPokemon에서 해당 pokemon을 찾아 업데이트
+  // transaction으로 읽고 쓴다: 같은 사람이 거의 동시에 교환/캠핑 등으로 caughtPokemon을
+  // 건드리면 .set()만으로는 서로의 변경을 덮어쓸 수 있기 때문.
   const memberIds = new Set([...Object.keys(usage), ...Object.keys(crits)]);
   await Promise.all([...memberIds].map(async (memberId) => {
-    const snap = await db.ref(`members/${memberId}/caughtPokemon`).once('value');
-    const caught = snap.val();
-    if (!Array.isArray(caught)) return;
+    await db.ref(`members/${memberId}/caughtPokemon`).transaction((caught) => {
+      if (!Array.isArray(caught)) return caught;
 
-    const updated = caught.map(p => {
-      const key = pokemonKey(p);
-      let next = p;
+      return caught.map(p => {
+        const key = pokemonKey(p);
+        let next = p;
 
-      if (usage[memberId]?.[key]) {
-        const prev = next.moveUsage || {};
-        const merged = { ...prev };
-        for (const [mid, cnt] of Object.entries(usage[memberId][key])) {
-          merged[mid] = (merged[mid] || 0) + cnt;
+        if (usage[memberId]?.[key]) {
+          const prev = next.moveUsage || {};
+          const merged = { ...prev };
+          for (const [mid, cnt] of Object.entries(usage[memberId][key])) {
+            merged[mid] = (merged[mid] || 0) + cnt;
+          }
+          next = { ...next, moveUsage: merged };
         }
-        next = { ...next, moveUsage: merged };
-      }
 
-      if (crits[memberId]?.[key]) {
-        // 이 배틀에서의 급소 횟수만 저장 (누적 아님 — 진화 조건이 "한 배틀에서" 이므로)
-        next = { ...next, lastBattleCritCount: crits[memberId][key] };
-      } else if (next.lastBattleCritCount !== undefined) {
-        // 배틀마다 초기화
-        next = { ...next, lastBattleCritCount: 0 };
-      }
+        if (crits[memberId]?.[key]) {
+          // 이 배틀에서의 급소 횟수만 저장 (누적 아님 — 진화 조건이 "한 배틀에서" 이므로)
+          next = { ...next, lastBattleCritCount: crits[memberId][key] };
+        } else if (next.lastBattleCritCount !== undefined) {
+          // 배틀마다 초기화
+          next = { ...next, lastBattleCritCount: 0 };
+        }
 
-      return next;
+        return next;
+      });
     });
-
-    await db.ref(`members/${memberId}/caughtPokemon`).set(updated);
   }));
 };
 
@@ -1043,14 +1048,38 @@ const createBattleBot = ({
 }) => {
   const findTaggedOpponent = (members, status, authorAccount) => {
     const author = normalizeAccount(authorAccount);
-    const accounts = extractMentionAccounts(status)
+    const botUsername = localUsername(botAccount);
+    const rawAccounts = extractMentionAccounts(status);
+    // extractMentionAccounts는 멘션마다 acct/username/url/id를 모두 뽑기 때문에, 봇을
+    // 유저네임으로 태그했어도 그 멘션의 숫자 id가 별도 후보로 섞여 들어온다.
+    // localUsername만으로는 그 id를 걸러내지 못하므로, mentions에서 봇과 일치하는
+    // 항목의 id도 함께 제외한다.
+    const botMentionIds = new Set(
+      (status?.mentions || [])
+        .filter(m => localUsername(m?.acct || m?.username || '') === botUsername)
+        .map(m => String(m?.id || ''))
+        .filter(Boolean)
+    );
+    const accounts = rawAccounts
       .map(normalizeAccount)
-      .filter(account => localUsername(account) !== botAccount && account !== author);
+      .filter(account =>
+        localUsername(account) !== botUsername &&
+        account !== author &&
+        !botMentionIds.has(localUsername(account))
+      );
 
     for (const account of accounts) {
       const match = findMemberByAccount(members, account);
       if (match) return { ...match, account };
     }
+    console.warn('battleBot: tagged opponent not found', {
+      statusId: status?.id || null,
+      authorAccount,
+      botAccount,
+      rawAccounts,
+      normalizedAccounts: accounts,
+      memberCount: Object.keys(members || {}).length,
+    });
     return null;
   };
 
@@ -1147,6 +1176,32 @@ const createBattleBot = ({
     return closed;
   };
 
+  // 24시간 넘게 수락되지 않은 배틀 신청은 알림 없이 조용히 만료 처리한다.
+  // (신청이 계속 쌓이기만 하고 정리가 안 되던 문제)
+  const expireStalePendingChallenges = async (now = Date.now()) => {
+    const snapshot = await db.ref('gameData/battleSessions').once('value');
+    const sessions = snapshot.val() || {};
+    let expiredCount = 0;
+
+    for (const [sessionKey, session] of Object.entries(sessions)) {
+      if (session.status !== 'pending') continue;
+      const createdAt = Date.parse(session.createdAt || '');
+      if (!Number.isFinite(createdAt) || now - createdAt < BATTLE_PENDING_EXPIRATION_MS) continue;
+
+      const ref = db.ref(`gameData/battleSessions/${sessionKey}`);
+      const result = await ref.transaction((current) => {
+        if (!current || current.status !== 'pending') return;
+        const currentCreatedAt = Date.parse(current.createdAt || '');
+        if (!Number.isFinite(currentCreatedAt) || now - currentCreatedAt < BATTLE_PENDING_EXPIRATION_MS) return;
+        return { ...current, status: 'expired', expiredAt: new Date(now).toISOString(), updatedAt: new Date(now).toISOString() };
+      });
+
+      if (result.committed) expiredCount += 1;
+    }
+
+    return { count: expiredCount };
+  };
+
   const createChallenge = async ({ status, members, author, authorAccount }) => {
     const opponent = findTaggedOpponent(members, status, authorAccount);
     if (!opponent) return '[배틀 신청] 뒤에 상대 계정을 함께 태그해 주세요.';
@@ -1235,16 +1290,24 @@ const createBattleBot = ({
       return `선택할 수 있는 번호나 이름을 찾지 못했어요. [포켓몬 1] 또는 [피카츄]처럼 입력해 주세요.\n${formatEntryList(side === 'p1' ? session.player1Name : session.player2Name, entries)}`;
     }
 
-    const pendingTeamChoices = {
-      ...(session.pendingTeamChoices || {}),
-      [side]: selectedSlot,
-    };
-
-    if (!pendingTeamChoices.p1 || !pendingTeamChoices.p2) {
-      await db.ref(`gameData/battleSessions/${sessionKey}`).update({
-        pendingTeamChoices,
+    // chooseMove와 동일한 이유로, 두 선수가 거의 동시에 엔트리를 고르면 .update()는
+    // 한쪽 선택을 지울 수 있다. transaction으로 원자적으로 병합한다.
+    const sessionRef = db.ref(`gameData/battleSessions/${sessionKey}`);
+    const txResult = await sessionRef.transaction((current) => {
+      if (!current || current.status !== 'selecting') return current;
+      return {
+        ...current,
+        pendingTeamChoices: { ...(current.pendingTeamChoices || {}), [side]: selectedSlot },
         updatedAt: new Date().toISOString(),
-      });
+      };
+    });
+
+    if (!txResult.committed || txResult.snapshot.val()?.status !== 'selecting') {
+      return '지금은 엔트리를 선택할 수 없는 상태예요.';
+    }
+
+    const pendingTeamChoices = txResult.snapshot.val().pendingTeamChoices || {};
+    if (!pendingTeamChoices.p1 || !pendingTeamChoices.p2) {
       return null;
     }
 
@@ -1342,16 +1405,25 @@ const createBattleBot = ({
       return formatChoiceError(validation.errors);
     }
 
-    const pendingChoices = {
-      ...(session.pendingChoices || {}),
-      [side]: choice,
-    };
-
-    if (!pendingChoices.p1 || !pendingChoices.p2) {
-      await db.ref(`gameData/battleSessions/${sessionKey}`).update({
-        pendingChoices,
+    // 두 선수가 거의 동시에 기술을 선택하면 .update()로는 서로의 선택을 덮어쓸 수 있다
+    // (read 이후 두 요청이 동시에 진행되면 나중에 쓰는 쪽이 상대 선택을 지워버림).
+    // transaction으로 원자적으로 병합해야 양쪽 선택이 모두 안전하게 남는다.
+    const sessionRef = db.ref(`gameData/battleSessions/${sessionKey}`);
+    const txResult = await sessionRef.transaction((current) => {
+      if (!current || current.status !== 'active') return current;
+      return {
+        ...current,
+        pendingChoices: { ...(current.pendingChoices || {}), [side]: choice },
         updatedAt: new Date().toISOString(),
-      });
+      };
+    });
+
+    if (!txResult.committed || txResult.snapshot.val()?.status !== 'active') {
+      return '지금은 기술을 선택할 수 없는 상태예요.';
+    }
+
+    const pendingChoices = txResult.snapshot.val().pendingChoices || {};
+    if (!pendingChoices.p1 || !pendingChoices.p2) {
       return null;
     }
 
@@ -1436,6 +1508,7 @@ const createBattleBot = ({
     handle,
     findSessionByMember,
     closeTimedOutBattles,
+    expireStalePendingChallenges,
   };
 };
 

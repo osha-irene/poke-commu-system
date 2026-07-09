@@ -300,17 +300,25 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
 
   const clearPendingStart = memberId => pendingRef(memberId).remove();
 
-  const applyFriendship = (memberData, participantKeys, bonus) => {
+  const applyFriendshipToCaught = (caughtPokemon, participantKeys, bonus) => {
     const keys = new Set(participantKeys);
-    const caughtPokemon = Array.isArray(memberData.caughtPokemon)
-      ? memberData.caughtPokemon.map(p => p && keys.has(pokemonKey(p)) ? { ...p, friendship: Math.min(255, Number(p.friendship || 0) + bonus) } : p)
-      : memberData.caughtPokemon;
-    let partnerPokemon = memberData.partnerPokemon || null;
-    if (partnerPokemon && keys.has(pokemonKey(partnerPokemon))) {
-      partnerPokemon = { ...partnerPokemon, friendship: Math.min(255, Number(partnerPokemon.friendship || 0) + bonus) };
-    }
-    return { caughtPokemon, partnerPokemon };
+    return Array.isArray(caughtPokemon)
+      ? caughtPokemon.map(p => p && keys.has(pokemonKey(p)) ? { ...p, friendship: Math.min(255, Number(p.friendship || 0) + bonus) } : p)
+      : caughtPokemon;
   };
+
+  const applyFriendshipToPartner = (partnerPokemon, participantKeys, bonus) => {
+    const keys = new Set(participantKeys);
+    if (partnerPokemon && keys.has(pokemonKey(partnerPokemon))) {
+      return { ...partnerPokemon, friendship: Math.min(255, Number(partnerPokemon.friendship || 0) + bonus) };
+    }
+    return partnerPokemon || null;
+  };
+
+  const applyFriendship = (memberData, participantKeys, bonus) => ({
+    caughtPokemon: applyFriendshipToCaught(memberData.caughtPokemon, participantKeys, bonus),
+    partnerPokemon: applyFriendshipToPartner(memberData.partnerPokemon, participantKeys, bonus),
+  });
 
   const findActiveSession = async memberId => {
     const snap = await db.ref('gameData/campingSessions').once('value');
@@ -403,11 +411,17 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
       'campingData/totalCampings': Number(memberData.campingData?.totalCampings || 0) + 1,
       'campingData/bestStageReached': Math.max(Number(memberData.campingData?.bestStageReached || 0), Number(session.currentStage || 0)),
     };
-    if (Array.isArray(friendshipResult.caughtPokemon)) updates.caughtPokemon = friendshipResult.caughtPokemon;
-    if (friendshipResult.partnerPokemon) updates.partnerPokemon = friendshipResult.partnerPokemon;
     if (egg) updates.egg = egg;
 
     await memberRef.update(updates);
+    // caughtPokemon/partnerPokemon은 배틀·교환 등 다른 흐름과 동시에 건드릴 수 있어서,
+    // memberData 스냅샷을 그대로 덮어쓰지 않고 transaction으로 최신 값 위에 친밀도만 얹는다.
+    if (participantKeys.length) {
+      await memberRef.child('caughtPokemon').transaction((current) =>
+        applyFriendshipToCaught(current, participantKeys, friendshipBonus));
+      await memberRef.child('partnerPokemon').transaction((current) =>
+        applyFriendshipToPartner(current, participantKeys, friendshipBonus));
+    }
     const finishedStatus = success ? 'applied' : 'failed';
     await db.ref(`gameData/campingSessions/${sessionKey}`).update({
       status: finishedStatus,
@@ -459,9 +473,16 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
 
   const findTaggedPartner = (members, status, authorAccount) => {
     const author = normalizeAccount(authorAccount);
+    const botUsername = localUsername(botAccount);
+    const botMentionIds = new Set(
+      (status?.mentions || [])
+        .filter(m => localUsername(m?.acct || m?.username || '') === botUsername)
+        .map(m => String(m?.id || ''))
+        .filter(Boolean)
+    );
     const accounts = extractMentionAccounts(status)
       .map(normalizeAccount)
-      .filter(a => localUsername(a) !== botAccount && a !== author);
+      .filter(a => localUsername(a) !== botUsername && a !== author && !botMentionIds.has(localUsername(a)));
     for (const a of accounts) {
       const match = findMemberByAccount(members, a);
       if (match) return match;

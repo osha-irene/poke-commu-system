@@ -169,52 +169,102 @@ const markProcessingFailed = async (db, statusId, prefix, error, source) => {
   });
 };
 
-const isAlreadyProcessed = async (db, statusId, prefix) => {
-  const snap = await db.ref(`mastodonBot/processedStatuses/${statusId}_${prefix}`).once('value');
-  if (!snap.exists()) return false;
-  const val = snap.val() || {};
-  const now = Date.now();
-  const attempts = Number(val.attempts || 0);
-  if (attempts >= MAX_PROCESS_ATTEMPTS && val.status !== 'done') return true;
-  if (val.status === 'failed') {
-    return now - Number(val.failedAt || 0) < FAILURE_RETRY_COOLDOWN_MS;
+const findAuthorForStatus = async (ctx, members, status) => {
+  const accounts = ctx.getAuthorAccountCandidates?.(status) || [ctx.getAuthorAccount(status)];
+  for (const account of accounts) {
+    const author = ctx.findMemberByAccount(members, account);
+    if (author) return { author, authorAccount: account };
   }
-  if (val.status === 'processing' && now - Number(val.processingStartedAt || 0) > PROCESSING_STALE_MS) return false;
-  return true;
+
+  // 웹훅 payload에 status.account.acct/username이 비어 있고 숫자 id만 오는 경우가 있다.
+  // members DB는 유저네임 기반 mastodonAccount만 저장하므로, 이 경우 Mastodon API로
+  // 계정을 조회해 실제 acct를 얻은 뒤 다시 매칭을 시도한다.
+  const accountId = status?.account?.id;
+  if (accountId && ctx.makeMastodonRequest) {
+    try {
+      const resolved = await ctx.makeMastodonRequest(`/api/v1/accounts/${accountId}`);
+      const resolvedHandle = resolved?.acct || resolved?.username;
+      if (resolvedHandle) {
+        const normalized = ctx.normalizeAccount(resolvedHandle);
+        const author = ctx.findMemberByAccount(members, normalized);
+        if (author) return { author, authorAccount: normalized };
+      }
+    } catch (e) {
+      console.warn('findAuthorForStatus: account API lookup failed', { accountId, error: e.message });
+    }
+  }
+
+  return { author: null, authorAccount: accounts[0] || ctx.getAuthorAccount(status) || '' };
 };
 
-const startProcessing = async (db, statusId, prefix) => {
+// 봇 자신의 계정 id를 status.mentions에서 배워 캐시해두고, self-check에 사용한다.
+// verify_credentials 호출은 토큰 스코프 부족으로 403이 나서 쓸 수 없다.
+const botIdLoadedFromDb = { camp: false, trade: false, battle: false };
+const isSelfAuthoredStatus = async (prefix, ctx, status) => {
+  if (ctx.isFromBotAccount(status)) return true;
+
+  const botUsername = ctx.localUsername(ctx.botAccount);
+  for (const mention of status?.mentions || []) {
+    const handle = mention?.acct || mention?.username;
+    if (mention?.id && handle && ctx.localUsername(handle) === botUsername) {
+      ctx.setBotAccountId(mention.id);
+      db.ref(`mastodonBot/botAccountIds/${prefix}`).set(String(mention.id)).catch(() => {});
+      break;
+    }
+  }
+
+  if (!botIdLoadedFromDb[prefix]) {
+    botIdLoadedFromDb[prefix] = true;
+    try {
+      const snap = await db.ref(`mastodonBot/botAccountIds/${prefix}`).once('value');
+      if (snap.exists()) ctx.setBotAccountId(snap.val());
+    } catch (_) {}
+  }
+
+  return ctx.isFromBotAccountById(status);
+};
+
+// 웹훅 재전송(Mastodon retry)이나 웹훅+폴러가 같은 status를 거의 동시에 넘길 수 있어서,
+// "이미 처리 중인지 확인" 후 "처리 중으로 표시"를 각각 따로 하면 그 사이 틈에 둘 다
+// 통과해 같은 글을 두 번 처리(세션 중복 생성 등)할 수 있다. transaction으로 원자적으로
+// 판단+claim을 한 번에 한다.
+const claimProcessing = async (db, statusId, prefix) => {
   const ref = db.ref(`mastodonBot/processedStatuses/${statusId}_${prefix}`);
-  const snap = await ref.once('value');
-  const prev = snap.val() || {};
-  await ref.update({
-    status: 'processing',
-    processingStartedAt: Date.now(),
-    attempts: Number(prev.attempts || 0) + 1,
+  const now = Date.now();
+  const result = await ref.transaction((current) => {
+    const val = current || {};
+    const attempts = Number(val.attempts || 0);
+    if (attempts >= MAX_PROCESS_ATTEMPTS && val.status !== 'done') return; // 재시도 한도 초과 → 거부
+    if (val.status === 'done') return; // 이미 완료됨 → 거부
+    if (val.status === 'failed' && now - Number(val.failedAt || 0) < FAILURE_RETRY_COOLDOWN_MS) return; // 실패 쿨다운 중 → 거부
+    if (val.status === 'processing' && now - Number(val.processingStartedAt || 0) <= PROCESSING_STALE_MS) return; // 다른 요청이 처리 중 → 거부
+    return { ...val, status: 'processing', processingStartedAt: now, attempts: attempts + 1 };
   });
+  return result.committed;
 };
 
 // ── 캠핑 봇 처리 ────────────────────────────────────────────────
 const processCampStatus = async (status, source = 'webhook') => {
   if (!status?.id) return { ignored: true, reason: 'no id' };
-  if (campCtx.isFromBotAccount(status)) return { ignored: true, reason: 'self' };
+  if (await isSelfAuthoredStatus('camp', campCtx, status)) return { ignored: true, reason: 'self' };
+  const content = stripHtml(status.content);
+  if (getBattleBot().getCommand(content) || getTradeCommand(content)) {
+    return { ignored: true, reason: 'routed to another bot' };
+  }
   if (!campCtx.isBotMentioned(status)) return { ignored: true, reason: 'not mentioned' };
 
   const key = `${status.id}_camp`;
-  if (await isAlreadyProcessed(db, status.id, 'camp')) return { ignored: true, reason: 'already processed' };
-  await startProcessing(db, status.id, 'camp');
+  if (!(await claimProcessing(db, status.id, 'camp'))) return { ignored: true, reason: 'already processed' };
 
-  const content = stripHtml(status.content);
   const command = getCampCommand(content);
   if (!command) {
+    // 답글 체인에 멘션이 계속 남아있는 경우가 많아, 알 수 없는 명령은 조용히 무시한다.
     await markProcessed(db, key, { source, ignored: 'unknown command' });
-    await campCtx.replyToStatus(status, '[캠핑 시작], [계속], [만족] 중 하나를 사용해 주세요.');
     return { ignored: true, reason: 'unknown command' };
   }
 
   const members = await getMembers(db);
-  const authorAccount = campCtx.getAuthorAccount(status);
-  const author = campCtx.findMemberByAccount(members, authorAccount);
+  const { author, authorAccount } = await findAuthorForStatus(campCtx, members, status);
   if (!author) {
     await markProcessed(db, key, { source, ignored: 'unlinked' });
     await campCtx.replyToStatus(status, '연동된 계정을 찾을 수 없어요. 프로필 설정에서 마스토돈 계정을 연결해 주세요.');
@@ -230,24 +280,24 @@ const processCampStatus = async (status, source = 'webhook') => {
 // ── 교환 봇 처리 ────────────────────────────────────────────────
 const processTradeStatus = async (status, source = 'webhook') => {
   if (!status?.id) return { ignored: true, reason: 'no id' };
-  if (tradeCtx.isFromBotAccount(status)) return { ignored: true, reason: 'self' };
+  if (await isSelfAuthoredStatus('trade', tradeCtx, status)) return { ignored: true, reason: 'self' };
+  const content = stripHtml(status.content);
+  if (getBattleBot().getCommand(content) || getCampCommand(content)) {
+    return { ignored: true, reason: 'routed to another bot' };
+  }
   if (!tradeCtx.isBotMentioned(status)) return { ignored: true, reason: 'not mentioned' };
 
   const key = `${status.id}_trade`;
-  if (await isAlreadyProcessed(db, status.id, 'trade')) return { ignored: true, reason: 'already processed' };
-  await startProcessing(db, status.id, 'trade');
+  if (!(await claimProcessing(db, status.id, 'trade'))) return { ignored: true, reason: 'already processed' };
 
-  const content = stripHtml(status.content);
   const tradeCommand = getTradeCommand(content);
   if (!tradeCommand) {
     await markProcessed(db, key, { source, ignored: 'unknown command' });
-    await tradeCtx.replyToStatus(status, '[교환 신청], [교환 수락], [교환 거절], [교환: 포켓몬이름] 중 하나를 사용해 주세요.');
     return { ignored: true, reason: 'unknown command' };
   }
 
   const members = await getMembers(db);
-  const authorAccount = tradeCtx.getAuthorAccount(status);
-  const author = tradeCtx.findMemberByAccount(members, authorAccount);
+  const { author, authorAccount } = await findAuthorForStatus(tradeCtx, members, status);
   if (!author) {
     await markProcessed(db, key, { source, ignored: 'unlinked' });
     await tradeCtx.replyToStatus(status, '연동된 계정을 찾을 수 없어요. 프로필 설정에서 마스토돈 계정을 연결해 주세요.');
@@ -277,24 +327,24 @@ const processTradeStatus = async (status, source = 'webhook') => {
 // ── 배틀 봇 처리 ────────────────────────────────────────────────
 const processBattleStatus = async (status, source = 'webhook') => {
   if (!status?.id) return { ignored: true, reason: 'no id' };
-  if (battleCtx.isFromBotAccount(status)) return { ignored: true, reason: 'self' };
+  if (await isSelfAuthoredStatus('battle', battleCtx, status)) return { ignored: true, reason: 'self' };
+  const content = stripHtml(status.content);
+  if (getTradeCommand(content) || getCampCommand(content)) {
+    return { ignored: true, reason: 'routed to another bot' };
+  }
+  const command = getBattleBot().getCommand(content);
   if (!battleCtx.isBotMentioned(status)) return { ignored: true, reason: 'not mentioned' };
 
   const key = `${status.id}_battle`;
-  if (await isAlreadyProcessed(db, status.id, 'battle')) return { ignored: true, reason: 'already processed' };
-  await startProcessing(db, status.id, 'battle');
+  if (!(await claimProcessing(db, status.id, 'battle'))) return { ignored: true, reason: 'already processed' };
 
-  const content = stripHtml(status.content);
-  const command = getBattleBot().getCommand(content);
   if (!command) {
     await markProcessed(db, key, { source, ignored: 'unknown command' });
-    await battleCtx.replyToStatus(status, '[배틀 신청], [배틀 수락], [포켓몬 N], [기술 N] 중 하나를 사용해 주세요.');
     return { ignored: true, reason: 'unknown command' };
   }
 
   const members = await getMembers(db);
-  const authorAccount = battleCtx.getAuthorAccount(status);
-  const author = battleCtx.findMemberByAccount(members, authorAccount);
+  const { author, authorAccount } = await findAuthorForStatus(battleCtx, members, status);
   if (!author) {
     await markProcessed(db, key, { source, ignored: 'unlinked' });
     await battleCtx.replyToStatus(status, '연동된 계정을 찾을 수 없어요. 프로필 설정에서 마스토돈 계정을 연결해 주세요.');
@@ -367,6 +417,25 @@ const handleBotWebhook = async (req, res, processStatus, prefix) => {
   }
 };
 
+const getBotRoutesForStatus = (status) => {
+  const content = stripHtml(status?.content || '');
+  if (getBattleBot().getCommand(content)) {
+    return [{ prefix: 'battle', processStatus: processBattleStatus }];
+  }
+  if (getTradeCommand(content)) {
+    return [{ prefix: 'trade', processStatus: processTradeStatus }];
+  }
+  if (getCampCommand(content)) {
+    return [{ prefix: 'camp', processStatus: processCampStatus }];
+  }
+
+  const routes = [];
+  if (campCtx.isBotMentioned(status)) routes.push({ prefix: 'camp', processStatus: processCampStatus });
+  if (tradeCtx.isBotMentioned(status)) routes.push({ prefix: 'trade', processStatus: processTradeStatus });
+  if (battleCtx.isBotMentioned(status)) routes.push({ prefix: 'battle', processStatus: processBattleStatus });
+  return routes;
+};
+
 const closeTimedOutBattleSessions = async () => {
   const closed = await getBattleBot().closeTimedOutBattles?.();
   if (!closed?.length) return { count: 0 };
@@ -418,7 +487,8 @@ exports.checkBattleMentions = functions.region(region.region).runWith(scheduleOp
     try {
       const mentions = await pollMentions(battleCtx, processBattleStatus, 'lastBattleNotificationId', 'battle');
       const timeouts = await closeTimedOutBattleSessions();
-      return { mentions, timeouts };
+      const expired = await getBattleBot().expireStalePendingChallenges?.();
+      return { mentions, timeouts, expired };
     } catch (e) { console.error(e); return null; }
   });
 
@@ -540,18 +610,20 @@ exports.mastodonWebhook = functions.region(region.region).runWith(webhookOpts).h
   try {
     status = statusFromWebhookBody(req.body);
     if (!status) { res.status(200).json({ ignored: true }); return; }
-    const results = await Promise.allSettled([
-      processCampStatus(status, 'webhook'),
-      processTradeStatus(status, 'webhook'),
-      processBattleStatus(status, 'webhook'),
-    ]);
+    const routes = getBotRoutesForStatus(status);
+    if (!routes.length) { res.status(200).json({ ignored: true, reason: 'no matching bot route' }); return; }
+    const results = await Promise.allSettled(routes.map(route => route.processStatus(status, 'webhook')));
     await Promise.all(results.map((result, index) => {
       if (result.status !== 'rejected') return null;
-      const prefix = ['camp', 'trade', 'battle'][index];
+      const prefix = routes[index]?.prefix;
       return markProcessingFailed(db, status?.id, prefix, result.reason, 'webhook');
     }));
     const processed = results.filter(r => r.status === 'fulfilled' && r.value?.processed);
-    res.status(200).json({ processed: processed.length > 0, results: results.map(r => r.value || r.reason?.message) });
+    res.status(200).json({
+      processed: processed.length > 0,
+      routes: routes.map(route => route.prefix),
+      results: results.map(r => r.value || r.reason?.message),
+    });
   } catch (e) {
     await Promise.all(['camp', 'trade', 'battle'].map(prefix => markProcessingFailed(db, status?.id, prefix, e, 'webhook')));
     console.error('mastodonWebhook error:', e);

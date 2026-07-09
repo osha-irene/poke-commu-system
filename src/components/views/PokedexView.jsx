@@ -178,12 +178,14 @@ export default function PokedexView({
       pokemonIds.some(id => pokemonRegionCandidateIds.includes(String(id)))
     );
 
+    // 지도에서 숨김(visible === false) 처리된 지역/장소는 아직 공개되지 않은 것이므로
+    // 출현 장소 목록에서 제외한다.
     const currentSettingRegions = (regions || [])
-      .filter(region => region && !region.isTownMeta && region.name)
+      .filter(region => region && !region.isTownMeta && region.name && region.visible !== false)
       .flatMap(region => {
         const regionLabel = region.name;
         const places = Array.isArray(region.places)
-          ? region.places.filter(place => place?.name)
+          ? region.places.filter(place => place?.name && place.visible !== false)
           : [];
         const matchedPlaces = places
           .filter(place => hasPokemonInCurrentSetting(place.pokemons))
@@ -205,12 +207,12 @@ export default function PokedexView({
       const labelSet = new Set();
 
       (regions || []).forEach(region => {
-        if (!region || region.isTownMeta || !region.name) return;
+        if (!region || region.isTownMeta || !region.name || region.visible === false) return;
 
         labelSet.add(region.name);
         const places = Array.isArray(region.places) ? region.places : [];
         places.forEach(place => {
-          if (place?.name) {
+          if (place?.name && place.visible !== false) {
             labelSet.add(`${region.name} ${place.name}`);
           }
         });
@@ -257,10 +259,12 @@ export default function PokedexView({
 
     // 3. ?먮룞 寃?? ?μ냼蹂?異쒗쁽 ?ㅼ젙 ?곗꽑, 湲곗〈 吏???ㅼ젙? ?대갚
     const foundRegions = regions
-      .filter(region => !region?.isTownMeta)
+      .filter(region => !region?.isTownMeta && region?.visible !== false)
       .flatMap(region => {
       const regionLabel = region.name;
-      const places = Array.isArray(region.places) ? region.places : [];
+      const places = Array.isArray(region.places)
+        ? region.places.filter(place => place?.visible !== false)
+        : [];
       const matchedPlaces = places
         .filter(place => hasPokemonId(place.pokemons))
         .map(place => `${regionLabel} ${place.name}`);

@@ -185,27 +185,41 @@ const createTradeBot = ({ db, pokemonData, findMemberByAccount, extractMentionAc
     const tEvo = checkTradeEvolution(tReceived);
     let tEvoEntry = null;
     if (tEvo) { const before = tReceived.displayName || tReceived.name; tReceived = applyTradeEvolution(tReceived, tEvo.template); tEvoEntry = makeEvoEntry(tReceived, tEvo.template, before); evoMessages.push(`${trade.targetName || '상대'}의 ${before}이(가) ${tEvo.template.name}(으)로 진화했어요! 🎉`); }
-    rCaught[rIdx] = rReceived;
-    tCaught[tIdx] = tReceived;
+    // caughtPokemon은 배틀/캠핑 등 다른 흐름이 동시에 건드릴 수 있어서, 읽어둔 스냅샷을
+    // 통째로 되쓰지 않고 각자 transaction으로 커밋 시점의 최신 배열에서 해당 포켓몬만
+    // 교체한다. 그래야 그 사이 다른 곳에서 생긴 변경(예: 배틀 기술 사용 기록)이 보존된다.
+    const rTx = await db.ref(`members/${trade.requesterId}/caughtPokemon`).transaction((current) => {
+      if (!Array.isArray(current)) return;
+      const idx = current.findIndex(p => p && getTradePokemonKey(p) === trade.requesterPokemonKey);
+      if (idx < 0) return;
+      const next = [...current];
+      next[idx] = rReceived;
+      return next;
+    });
+    const tTx = await db.ref(`members/${trade.targetId}/caughtPokemon`).transaction((current) => {
+      if (!Array.isArray(current)) return;
+      const idx = current.findIndex(p => p && getTradePokemonKey(p) === trade.targetPokemonKey);
+      if (idx < 0) return;
+      const next = [...current];
+      next[idx] = tReceived;
+      return next;
+    });
 
-    const rUpdates = { caughtPokemon: rCaught };
-    const tUpdates = { caughtPokemon: tCaught };
+    if (!rTx.committed || !tTx.committed) {
+      await db.ref(`gameData/tradeRequests/${tradeKey}`).update({ status: 'failed', failedReason: 'concurrent_update_conflict', updatedAt: Date.now() });
+      return '교환 처리 중 문제가 발생했어요. 포켓몬이 그 사이 사라졌을 수 있어요. 다시 시도해 주세요.';
+    }
+
     if (rEvoEntry) {
-      const rHistSnap = await db.ref(`members/${trade.requesterId}/evolutionHistory`).once('value');
-      const rHist = Array.isArray(rHistSnap.val()) ? rHistSnap.val() : [];
-      rUpdates.evolutionHistory = [rEvoEntry, ...rHist].slice(0, 10);
+      await db.ref(`members/${trade.requesterId}/evolutionHistory`).transaction((hist) =>
+        [rEvoEntry, ...(Array.isArray(hist) ? hist : [])].slice(0, 10));
     }
     if (tEvoEntry) {
-      const tHistSnap = await db.ref(`members/${trade.targetId}/evolutionHistory`).once('value');
-      const tHist = Array.isArray(tHistSnap.val()) ? tHistSnap.val() : [];
-      tUpdates.evolutionHistory = [tEvoEntry, ...tHist].slice(0, 10);
+      await db.ref(`members/${trade.targetId}/evolutionHistory`).transaction((hist) =>
+        [tEvoEntry, ...(Array.isArray(hist) ? hist : [])].slice(0, 10));
     }
 
-    await Promise.all([
-      db.ref(`members/${trade.requesterId}`).update(rUpdates),
-      db.ref(`members/${trade.targetId}`).update(tUpdates),
-      db.ref(`gameData/tradeRequests/${tradeKey}`).update({ status: 'completed', targetPokemonKey: getTradePokemonKey(tPokemon), targetPokemonName: tradePokemonLabel(tPokemon), completedAt: Date.now(), updatedAt: Date.now() }),
-    ]);
+    await db.ref(`gameData/tradeRequests/${tradeKey}`).update({ status: 'completed', targetPokemonKey: getTradePokemonKey(tPokemon), targetPokemonName: tradePokemonLabel(tPokemon), completedAt: Date.now(), updatedAt: Date.now() });
     return [[accountMention(trade.requesterAccount), accountMention(trade.targetAccount)].filter(Boolean).join(' '), '교환 완료!', `${trade.requesterName || '신청자'}의 ${tradePokemonLabel(rPokemon)} ↔ ${trade.targetName || '상대'}의 ${tradePokemonLabel(tPokemon)}`, ...evoMessages].filter(Boolean).join('\n');
   };
 
@@ -271,7 +285,16 @@ const createTradeBot = ({ db, pokemonData, findMemberByAccount, extractMentionAc
       const tradeCommand = getTradeCommand(content);
       const offeredName = extractTradePokemonName(content);
       const authorNorm = normalizeAccount(authorAccount);
-      const taggedAccount = extractMentionAccounts(status).map(normalizeAccount).find(a => localUsername(a) !== botAccount && a !== authorNorm);
+      const botUsername = localUsername(botAccount);
+      const botMentionIds = new Set(
+        (status?.mentions || [])
+          .filter(m => localUsername(m?.acct || m?.username || '') === botUsername)
+          .map(m => String(m?.id || ''))
+          .filter(Boolean)
+      );
+      const taggedAccount = extractMentionAccounts(status)
+        .map(normalizeAccount)
+        .find(a => localUsername(a) !== botUsername && a !== authorNorm && !botMentionIds.has(localUsername(a)));
       const taggedMember = taggedAccount ? findMemberByAccount(members, taggedAccount) : null;
       const inReplyToId = status.in_reply_to_id || null;
 
