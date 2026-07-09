@@ -122,13 +122,16 @@ export default function PokedexView({
   });
 
   // 활성 마을에 속한 포켓몬 번호 집합 계산
+  // 숨김(visible === false) 처리된 지역/장소는 아직 공개되지 않은 것이므로 제외한다.
+  // 안 그러면 캐치 안 한 미공개 포켓몬이 "미등장(?)" 카드로 섞여 들어간다.
   const activeTownPokemonNums = useMemo(() => {
     if (!pokedexActiveTowns || pokedexActiveTowns.length === 0) return null;
     const nums = new Set();
     (regions || []).forEach(region => {
-      if (region.isTownMeta || !pokedexActiveTowns.includes(region.groupId)) return;
+      if (region.isTownMeta || region.visible === false || !pokedexActiveTowns.includes(region.groupId)) return;
       (region.pokemons || []).forEach(n => nums.add(Number(n)));
       (region.places || []).forEach(place => {
+        if (place?.visible === false) return;
         (place.pokemons || []).forEach(n => nums.add(Number(n)));
       });
     });
