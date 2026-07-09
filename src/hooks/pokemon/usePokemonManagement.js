@@ -587,30 +587,33 @@ const usePokemonManagement = (
       alert('오류가 발생했습니다. 페이지를 새로고침해주세요.');
       return false;
     }
-    
+
     const itemIndex = currentUser.inventory.findIndex(i => i.name === itemName);
-    if (itemIndex === -1) { 
-      alert('해당 아이템이 없습니다!'); 
-      return false; 
+    if (itemIndex === -1) {
+      alert('해당 아이템이 없습니다!');
+      return false;
     }
-    
+
     const item = currentUser.inventory[itemIndex];
-    if (item.count <= 0) { 
-      alert('아이템이 소진되었습니다!'); 
-      return false; 
+    if (item.count <= 0) {
+      alert('아이템이 소진되었습니다!');
+      return false;
     }
-    
-    const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === pokemonUniqueId);
-    if (!pokemon) { 
-      alert('포켓몬을 찾을 수 없습니다!'); 
-      return false; 
+
+    const isPartnerPokemon = currentUser.partnerPokemon?.uniqueId === pokemonUniqueId;
+    const pokemon = isPartnerPokemon
+      ? currentUser.partnerPokemon
+      : currentUser.caughtPokemon.find(p => p && p.uniqueId === pokemonUniqueId);
+    if (!pokemon) {
+      alert('포켓몬을 찾을 수 없습니다!');
+      return false;
     }
-    
+
     if (pokemon.heldItem) {
       if (!window.confirm((pokemon.nickname || pokemon.name) + '이(가) 이미 ' + pokemon.heldItem + '을(를) 들고 있습니다. 교체하시겠습니까?')) {
         return false;
       }
-      
+
       const existingItemIndex = currentUser.inventory.findIndex(i => i.name === pokemon.heldItem);
       if (existingItemIndex !== -1) {
         currentUser.inventory[existingItemIndex].count++;
@@ -618,18 +621,21 @@ const usePokemonManagement = (
         currentUser.inventory.push({ name: pokemon.heldItem, count: 1, imageUrl: item.imageUrl });
       }
     }
-    
+
     const newInventory = [...currentUser.inventory];
     newInventory[itemIndex] = { ...item, count: item.count - 1 };
     if (newInventory[itemIndex].count <= 0) {
       newInventory.splice(itemIndex, 1);
     }
-    
-    const newCaughtPokemon = currentUser.caughtPokemon.map(p =>
-      p && p.uniqueId === pokemonUniqueId ? { ...p, heldItem: itemName } : p
-    );
-    
-    updateCurrentUser({ inventory: newInventory, caughtPokemon: newCaughtPokemon });
+
+    if (isPartnerPokemon) {
+      updateCurrentUser({ inventory: newInventory, partnerPokemon: { ...pokemon, heldItem: itemName } });
+    } else {
+      const newCaughtPokemon = currentUser.caughtPokemon.map(p =>
+        p && p.uniqueId === pokemonUniqueId ? { ...p, heldItem: itemName } : p
+      );
+      updateCurrentUser({ inventory: newInventory, caughtPokemon: newCaughtPokemon });
+    }
     alert((pokemon.nickname || pokemon.name) + '에게 ' + itemName + '을(를) 주었습니다.');
     return true;
   };
@@ -640,18 +646,21 @@ const usePokemonManagement = (
       alert('오류가 발생했습니다. 페이지를 새로고침해주세요.');
       return;
     }
-    
-    const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === pokemonUniqueId);
+
+    const isPartnerPokemon = currentUser.partnerPokemon?.uniqueId === pokemonUniqueId;
+    const pokemon = isPartnerPokemon
+      ? currentUser.partnerPokemon
+      : currentUser.caughtPokemon.find(p => p && p.uniqueId === pokemonUniqueId);
     if (!pokemon) return;
-    
-    if (!pokemon.heldItem) { 
-      alert('이 포켓몬은 아이템을 들고 있지 않습니다!'); 
-      return; 
+
+    if (!pokemon.heldItem) {
+      alert('이 포켓몬은 아이템을 들고 있지 않습니다!');
+      return;
     }
-    
+
     const itemName = pokemon.heldItem;
     const itemIndex = currentUser.inventory.findIndex(i => i.name === itemName);
-    
+
     const itemList = getItemList(allItems);
     const newInventory = [...currentUser.inventory];
     if (itemIndex !== -1) {
@@ -660,12 +669,15 @@ const usePokemonManagement = (
       const itemData = itemList.find(i => i.name === itemName || i.nameEn === itemName || i.id === itemName);
       newInventory.push({ name: itemName, count: 1, imageUrl: itemData?.spriteUrl || '/default-item.png' });
     }
-    
-    const newCaughtPokemon = currentUser.caughtPokemon.map(p =>
-      p && p.uniqueId === pokemonUniqueId ? { ...p, heldItem: null } : p
-    );
-    
-    updateCurrentUser({ inventory: newInventory, caughtPokemon: newCaughtPokemon });
+
+    if (isPartnerPokemon) {
+      updateCurrentUser({ inventory: newInventory, partnerPokemon: { ...pokemon, heldItem: null } });
+    } else {
+      const newCaughtPokemon = currentUser.caughtPokemon.map(p =>
+        p && p.uniqueId === pokemonUniqueId ? { ...p, heldItem: null } : p
+      );
+      updateCurrentUser({ inventory: newInventory, caughtPokemon: newCaughtPokemon });
+    }
     alert((pokemon.nickname || pokemon.name) + '에게서 ' + itemName + '을(를) 뺐습니다!');
   };
 
