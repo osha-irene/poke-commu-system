@@ -1,6 +1,7 @@
 {
   "projects": {
-    "default": "poke-commu-system-dev",
-    "production": "poke-commu-system"
+    "default": "poke-commu-system",
+    "production": "poke-commu-system",
+    "dev": "poke-commu-system-dev"
   }
 }
