@@ -90,7 +90,7 @@ const getDefaultRandomBoxes = () => ([
   { id: 3, name: '골드 박스', price: 5000, enabled: false, items: [] }
 ]);
 
-export const useShop = (currentUser, updateCurrentUser, allItems) => {
+export const useShop = (currentUser, updateCurrentUser, allItems, updateInventory) => {
   const [shopData, setShopData] = useState({
     dailyItems: {},
     initialDailyItems: {},
@@ -371,89 +371,102 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
     }
   };
 
-  const sellItem = (item, count) => {
+  const sellItem = async (item, count) => {
     if (!currentUser) return false;
-    
-    const inventoryItem = currentUser.inventory.find(i => 
+
+    const inventoryItem = currentUser.inventory.find(i =>
       i.itemId === item.itemId || i.name === item.name
     );
-    
+
     if (!inventoryItem || inventoryItem.count < count) {
       alert('판매할 아이템이 부족합니다!');
       return false;
     }
-    
+
     const isTrash = item._isTrash === true;
     const itemData = allItems.find(i => i.id === item.itemId || i.name === item.name);
-    
+
     if (!isTrash && itemData && !itemData.canSell) {
       alert('이 아이템은 판매할 수 없습니다!');
       return false;
     }
-    
+
     const sellPrice = isTrash ? 0 : (itemData?.sellPrice || Math.floor((itemData?.cost || 0) * 0.5));
     const totalPrice = sellPrice * count;
-    
-    const newInventory = currentUser.inventory
-      .map(i => 
-        (i.itemId === item.itemId || i.name === item.name)
-          ? { ...i, count: i.count - count }
-          : i
-      )
-      .filter(i => i.count > 0);
-    
+
+    const txResult = await updateInventory((inventory) => {
+      const target = inventory.find(i => i.itemId === item.itemId || i.name === item.name);
+      if (!target || target.count < count) {
+        return; // 그 사이 수량이 줄어들어 트랜잭션 중단
+      }
+      return inventory
+        .map(i =>
+          (i.itemId === item.itemId || i.name === item.name)
+            ? { ...i, count: i.count - count }
+            : i
+        )
+        .filter(i => i.count > 0);
+    });
+
+    if (!txResult.committed) {
+      alert('판매할 아이템이 부족합니다!');
+      return false;
+    }
+
     updateCurrentUser({
-      inventory: newInventory,
       money: currentUser.money + totalPrice
     });
-    
+
     if (isTrash) {
       alert(`${itemData?.name || item.name} ${count}개를 버렸습니다.`);
     } else {
       alert(`${itemData?.name || item.name} ${count}개를 ₽${totalPrice.toLocaleString()}에 판매했습니다!`);
     }
-    
+
     return true;
   };
 
   // 랜덤박스 구매
-  const buyRandomBox = (box, result) => {
+  const buyRandomBox = async (box, result) => {
     if (!currentUser) return false;
-    
-    const newMoney = currentUser.money - box.price;
-    
-    const existingItem = currentUser.inventory.find(
-      i => i.itemId === result.itemId || i.name === result.name
-    );
-    
+
     const itemData = allItems.find(i => i.id === result.itemId);
-    
-    const newInventory = existingItem
-      ? currentUser.inventory.map(i =>
-          (i.itemId === result.itemId || i.name === result.name)
-            ? { ...i, count: i.count + result.count }
-            : i
-        )
-      : [
-          ...currentUser.inventory,
-          {
-            itemId: result.itemId,
-            name: result.name,
-            nameEn: itemData?.nameEn,
-            count: result.count,
-            imageUrl: itemData?.spriteUrl || itemData?.imageUrl,
-            cost: itemData?.cost || 0,
-            sellPrice: itemData?.sellPrice || 0,
-            category: itemData?.category,
-            pocket: itemData?.pocket
-          }
-        ];
-    
-    updateCurrentUser({
-      money: newMoney,
-      inventory: newInventory
+
+    const txResult = await updateInventory((inventory) => {
+      const existingItem = inventory.find(
+        i => i.itemId === result.itemId || i.name === result.name
+      );
+      return existingItem
+        ? inventory.map(i =>
+            (i.itemId === result.itemId || i.name === result.name)
+              ? { ...i, count: i.count + result.count }
+              : i
+          )
+        : [
+            ...inventory,
+            {
+              itemId: result.itemId,
+              name: result.name,
+              nameEn: itemData?.nameEn,
+              count: result.count,
+              imageUrl: itemData?.spriteUrl || itemData?.imageUrl,
+              cost: itemData?.cost || 0,
+              sellPrice: itemData?.sellPrice || 0,
+              category: itemData?.category,
+              pocket: itemData?.pocket
+            }
+          ];
     });
-    
+
+    if (!txResult.committed) {
+      alert('구매 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+      return false;
+    }
+
+    updateCurrentUser({
+      money: currentUser.money - box.price
+    });
+
     console.log(`✅ ${box.name} 구매 완료! ${result.name} x${result.count} 획득`);
     return true;
   };
@@ -520,56 +533,56 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
       }
     }
     
-    // 인벤토리에 아이템 추가
-    const existingItem = currentUser.inventory.find(
-      i => i.itemId === resolvedItemId || i.name === itemData.name
-    );
-    
-    const newInventory = existingItem
-      ? currentUser.inventory.map(i =>
-          (i.itemId === resolvedItemId || i.name === itemData.name)
-            ? { ...i, count: i.count + quantity }
-            : i
-        )
-      : [
-          ...currentUser.inventory,
-          {
-            itemId: resolvedItemId,
-            name: itemData.name,
-            nameEn: itemData.nameEn,
-            count: quantity,
-            imageUrl: itemData.spriteUrl || itemData.imageUrl,
-            cost: itemCost,
-            sellPrice: itemData.sellPrice,
-            category: itemData.category,
-            pocket: itemData.pocket,
-            effect: itemData.effect,
-            friendshipBoost: itemData.friendshipBoost,
-            ivBoost: itemData.ivBoost,
-            evBoost: itemData.evBoost,
-            conditionBoost: itemData.conditionBoost,
-            specialEffect: itemData.specialEffect
-          }
-        ];
-    
     const newMoney = currentUser.money - totalCost;
 
     // 몬스터볼 10개당 프리미어볼 1개 증정
     const isPokeBall = itemData.nameEn === 'poke-ball' || itemData.name === '몬스터볼';
     const premierBallCount = isPokeBall ? Math.floor(quantity / 10) : 0;
-    let inventoryWithPremier = newInventory;
-    if (premierBallCount > 0) {
-      const premierData = allItems.find(i => i.nameEn === 'premier-ball');
+    const premierData = premierBallCount > 0 ? allItems.find(i => i.nameEn === 'premier-ball') : null;
+
+    // 인벤토리에 아이템(+프리미어볼 증정분) 추가 - 항상 최신 인벤토리 기준으로 병합
+    const invTxResult = await updateInventory((inventory) => {
+      const existingItem = inventory.find(
+        i => i.itemId === resolvedItemId || i.name === itemData.name
+      );
+
+      let next = existingItem
+        ? inventory.map(i =>
+            (i.itemId === resolvedItemId || i.name === itemData.name)
+              ? { ...i, count: i.count + quantity }
+              : i
+          )
+        : [
+            ...inventory,
+            {
+              itemId: resolvedItemId,
+              name: itemData.name,
+              nameEn: itemData.nameEn,
+              count: quantity,
+              imageUrl: itemData.spriteUrl || itemData.imageUrl,
+              cost: itemCost,
+              sellPrice: itemData.sellPrice,
+              category: itemData.category,
+              pocket: itemData.pocket,
+              effect: itemData.effect,
+              friendshipBoost: itemData.friendshipBoost,
+              ivBoost: itemData.ivBoost,
+              evBoost: itemData.evBoost,
+              conditionBoost: itemData.conditionBoost,
+              specialEffect: itemData.specialEffect
+            }
+          ];
+
       if (premierData) {
-        const existingPremier = inventoryWithPremier.find(i => i.itemId === premierData.id || i.nameEn === 'premier-ball');
-        inventoryWithPremier = existingPremier
-          ? inventoryWithPremier.map(i =>
+        const existingPremier = next.find(i => i.itemId === premierData.id || i.nameEn === 'premier-ball');
+        next = existingPremier
+          ? next.map(i =>
               (i.itemId === premierData.id || i.nameEn === 'premier-ball')
                 ? { ...i, count: i.count + premierBallCount }
                 : i
             )
           : [
-              ...inventoryWithPremier,
+              ...next,
               {
                 itemId: premierData.id,
                 name: premierData.name,
@@ -583,6 +596,13 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
               }
             ];
       }
+
+      return next;
+    });
+
+    if (!invTxResult.committed) {
+      alert('구매 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+      return false;
     }
 
     // 상점 재고 감소 처리
@@ -610,7 +630,6 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
         }
         
         updateCurrentUser({
-          inventory: inventoryWithPremier,
           money: newMoney,
           purchaseHistory: purchaseHistory
         });
@@ -648,7 +667,6 @@ export const useShop = (currentUser, updateCurrentUser, allItems) => {
 
       if (itemType !== 'rare') {
         updateCurrentUser({
-          inventory: inventoryWithPremier,
           money: newMoney
         });
       }

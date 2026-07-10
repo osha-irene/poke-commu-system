@@ -4,7 +4,7 @@
 import { ref, get, set, update } from 'firebase/database';
 import { database } from '../../firebase';
 
-export const useLoot = (currentUser, updateCurrentUser, setMembers, allItems, members = {}) => {
+export const useLoot = (currentUser, updateCurrentUser, setMembers, allItems, members = {}, updateInventory) => {
   
   // 기본 전리품 설정
   const getDefaultLootConfig = () => ({
@@ -84,40 +84,37 @@ export const useLoot = (currentUser, updateCurrentUser, setMembers, allItems, me
   };
 
   // 전리품 적용
-  const applyLoot = (loot, ballUsed = null) => {
+  const applyLoot = async (loot, ballUsed = null) => {
     if (!loot || !currentUser) return;
 
-    const buildLootUpdate = (baseUser) => {
-      const sourceUser = baseUser || currentUser;
-      const newMoney = (Number(sourceUser.money) || 0) + (Number(loot.money) || 0);
-      let newInventory = Array.isArray(sourceUser.inventory) ? [...sourceUser.inventory] : [];
+    const allLootItems = [...loot.items, ...loot.ingredients, ...loot.berries];
 
-      // 볼 사용 처리
-      if (ballUsed && !sourceUser.isSuperAdmin) {
-        newInventory = newInventory.map(item =>
+    // 인벤토리(볼 소모 + 전리품 획득)는 항상 최신 값 기준으로 병합되도록 트랜잭션으로 처리
+    const invTxResult = await updateInventory((inventory) => {
+      let next = Array.isArray(inventory) ? [...inventory] : [];
+
+      if (ballUsed && !currentUser.isSuperAdmin) {
+        next = next.map(item =>
           (item.itemId === ballUsed.id || item.name === ballUsed.name)
             ? { ...item, count: Math.max(0, (Number(item.count) || 0) - 1) }
             : item
         );
       }
 
-      // 전리품 추가
-      const allLootItems = [...loot.items, ...loot.ingredients, ...loot.berries];
-
       allLootItems.forEach(lootItem => {
-        const existingIndex = newInventory.findIndex(i =>
+        const existingIndex = next.findIndex(i =>
           i.itemId === lootItem.id || i.name === lootItem.name
         );
 
         if (existingIndex !== -1) {
-          newInventory[existingIndex] = {
-            ...newInventory[existingIndex],
-            count: (Number(newInventory[existingIndex].count) || 0) + lootItem.count
+          next[existingIndex] = {
+            ...next[existingIndex],
+            count: (Number(next[existingIndex].count) || 0) + lootItem.count
           };
         } else {
           const itemData = allItems.find(i => i.id === lootItem.id);
           if (itemData) {
-            const newItem = {
+            next.push({
               itemId: lootItem.id,
               name: lootItem.name,
               nameEn: itemData.nameEn,
@@ -125,36 +122,30 @@ export const useLoot = (currentUser, updateCurrentUser, setMembers, allItems, me
               imageUrl: itemData.spriteUrl || itemData.imageUrl,
               category: itemData.category,
               onUse: itemData.onUse || null
-            };
-            newInventory.push(newItem);
+            });
           }
         }
       });
 
-      return {
-        ...sourceUser,
-        money: newMoney,
-        inventory: newInventory
-      };
-    };
-
-    // members state 업데이트
-    setMembers(prev => {
-      const latestUser = prev[currentUser.id] || currentUser;
-      return {
-        ...prev,
-        [currentUser.id]: buildLootUpdate(latestUser)
-      };
+      return next;
     });
-    
-    // Firebase 저장 (update로 해당 필드만 갱신 — caughtPokemon 등 덮어쓰기 방지)
-    const memberRef = ref(database, `members/${currentUser.id}`);
+
+    if (!invTxResult.committed) {
+      console.error('❌ applyLoot: 인벤토리 업데이트 실패');
+      return;
+    }
+
+    // 돈 지급 (기존 방식 유지 — caughtPokemon 등 다른 필드를 덮어쓰지 않도록 update로 해당 필드만 갱신)
     const latestUser = members[currentUser.id] || currentUser;
-    const latestUpdatedUser = buildLootUpdate(latestUser);
-    update(memberRef, {
-      money: latestUpdatedUser.money,
-      inventory: JSON.parse(JSON.stringify(latestUpdatedUser.inventory, (k, v) => v === undefined ? null : v))
-    }).then(() => {
+    const newMoney = (Number(latestUser.money) || 0) + (Number(loot.money) || 0);
+
+    setMembers(prev => ({
+      ...prev,
+      [currentUser.id]: { ...(prev[currentUser.id] || latestUser), money: newMoney }
+    }));
+
+    const memberRef = ref(database, `members/${currentUser.id}`);
+    update(memberRef, { money: newMoney }).then(() => {
       console.log('✅ applyLoot: Firebase 저장 완료');
     }).catch(error => {
       console.error('❌ applyLoot: Firebase 저장 실패:', error);

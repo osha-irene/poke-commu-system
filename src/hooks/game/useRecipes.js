@@ -6,7 +6,7 @@ import { ref, get, set, onValue, runTransaction } from 'firebase/database';
 import { database } from '../../firebase';
 import recipesData from '../../data/recipes.json';
 
-export const useRecipes = (currentUser, updateCurrentUser) => {
+export const useRecipes = (currentUser, updateCurrentUser, updateInventory) => {
   const [recipes, setRecipes] = useState([]);
   const [discoveredRecipes, setDiscoveredRecipes] = useState({});
 
@@ -152,52 +152,70 @@ export const useRecipes = (currentUser, updateCurrentUser) => {
     console.log('🍳 요리 시작:', recipe.name);
     console.log('📦 사용 재료:', usedIngredients);
     
-    // 재료 확인
+    // 재료 확인 (빠른 UX 피드백용 사전 체크, 실제 검증은 트랜잭션 내부에서 최신 값 기준으로 재확인됨)
     const hasAllIngredients = usedIngredients.every(ing => {
       const userItem = currentUser.inventory.find(i => i.name === ing.name);
       return userItem && userItem.count >= ing.count;
     });
-    
+
     if (!hasAllIngredients) {
       alert('재료가 부족합니다!');
       return false;
     }
-    
-    // 재료 소모
-    let newInventory = [...currentUser.inventory];
-    usedIngredients.forEach(ing => {
-      newInventory = newInventory.map(item => 
-        item.name === ing.name 
-          ? { ...item, count: item.count - ing.count }
-          : item
-      ).filter(item => item.count > 0);
-    });
-    
-    // 결과물 추가
+
     const resultItem = recipe.result;
-    const existingResult = newInventory.find(i => i.name === resultItem.name);
-    
-    if (existingResult) {
-      newInventory = newInventory.map(item =>
-        item.name === resultItem.name
-          ? { ...item, count: item.count + 1 }
-          : item
-      );
-    } else {
-      newInventory.push({
-        itemId: `cooked_${Date.now()}`,
-        name: resultItem.name,
-        count: 1,
-        imageUrl: resultItem.spriteUrl || '/images/items/default.png',
-        pocket: resultItem.pocket,
-        effect: resultItem.effect,
-        friendshipBoost: resultItem.friendshipBoost || 0,
-        conditionBoost: resultItem.conditionBoost || {},
-        canSell: true,
-        isCooked: true
+
+    const invTxResult = await updateInventory((inventory) => {
+      const enoughIngredients = usedIngredients.every(ing => {
+        const userItem = inventory.find(i => i.name === ing.name);
+        return userItem && userItem.count >= ing.count;
       });
+      if (!enoughIngredients) {
+        return; // 그 사이 재료가 소모되어 트랜잭션 중단
+      }
+
+      let next = [...inventory];
+      usedIngredients.forEach(ing => {
+        next = next.map(item =>
+          item.name === ing.name
+            ? { ...item, count: item.count - ing.count }
+            : item
+        ).filter(item => item.count > 0);
+      });
+
+      const existingResult = next.find(i => i.name === resultItem.name);
+      if (existingResult) {
+        next = next.map(item =>
+          item.name === resultItem.name
+            ? { ...item, count: item.count + 1 }
+            : item
+        );
+      } else {
+        next = [
+          ...next,
+          {
+            itemId: `cooked_${Date.now()}`,
+            name: resultItem.name,
+            count: 1,
+            imageUrl: resultItem.spriteUrl || '/images/items/default.png',
+            pocket: resultItem.pocket,
+            effect: resultItem.effect,
+            friendshipBoost: resultItem.friendshipBoost || 0,
+            conditionBoost: resultItem.conditionBoost || {},
+            canSell: true,
+            isCooked: true
+          }
+        ];
+      }
+
+      return next;
+    });
+
+    if (!invTxResult.committed) {
+      alert('재료가 부족합니다!');
+      return false;
     }
-    
+
     const cookedAt = Date.now();
     const isFailure = recipe.id?.startsWith('fail_');
     const isFirstDiscovery = !isFailure ? await discoverRecipe(recipe.id) : false;
@@ -214,7 +232,6 @@ export const useRecipes = (currentUser, updateCurrentUser) => {
     };
 
     await updateCurrentUser({
-      inventory: newInventory,
       cookingHistory: [
         cookingHistoryEntry,
         ...((currentUser.cookingHistory || []).filter(Boolean))

@@ -108,6 +108,7 @@ export default function useGameState() {
     handleLogin,
     handleLogout,
     updateCurrentUser,
+    updateInventory,
     changeCurrentUserPassword,
     isLoading: isAuthLoading
   } = useAuth(members, setMembers, allPokemonDataParsed);
@@ -121,7 +122,7 @@ export default function useGameState() {
     removeDailyItem,
     toggleItemPersistent,
     handlePurchase
-  } = useShop(currentUser, updateCurrentUser, allItems);
+  } = useShop(currentUser, updateCurrentUser, allItems, updateInventory);
 
   // 기술
   const movesHook = useMoves(currentUser, updateCurrentUser, allMoves, pokemonLearnsets);
@@ -142,7 +143,8 @@ export default function useGameState() {
     sharedPokedexData,
     pokemonLearnsets,
     allMoves,
-    evolutionHook.checkEvolutionOnLevelUp 
+    evolutionHook.checkEvolutionOnLevelUp,
+    updateInventory
   );
   
   // 캠핑 기능
@@ -178,7 +180,8 @@ export default function useGameState() {
     members,
     setMembers,
     updateCurrentUser,
-    allItems
+    allItems,
+    updateInventory
   );
 
   const adminTitles = useAdminTitles();
@@ -187,13 +190,13 @@ export default function useGameState() {
   const individualValues = useIndividualValues();
 
   // 전리품
-  const lootHook = useLoot(currentUser, updateCurrentUser, setMembers, allItems, members);
+  const lootHook = useLoot(currentUser, updateCurrentUser, setMembers, allItems, members, updateInventory);
 
   // 도감
   const pokedexHook = usePokedex(sharedPokedexData, setSharedPokedexData, currentUser);
 
   // 레시피
-  const recipesHook = useRecipes(currentUser, updateCurrentUser);
+  const recipesHook = useRecipes(currentUser, updateCurrentUser, updateInventory);
 
   // 포켓몬 잡기
   const pokemonCatchHook = usePokemonCatch(
@@ -327,15 +330,13 @@ export default function useGameState() {
     if (result && pokemon.pendingSafariBallReward > 0) {
       const safariBall = allItems.find(item => item.nameEn === 'safari-ball' || item.name === '사파리볼');
       if (safariBall) {
-        const inv = (result.updatedInventory || currentUser.inventory || []);
-        const idx = inv.findIndex(i => i.id === safariBall.id || i.nameEn === safariBall.nameEn);
-        let newInv;
-        if (idx >= 0) {
-          newInv = inv.map((i, n) => n === idx ? { ...i, count: (i.count || 0) + pokemon.pendingSafariBallReward } : i);
-        } else {
-          newInv = [...inv, { ...safariBall, count: pokemon.pendingSafariBallReward }];
-        }
-        await updateCurrentUser({ inventory: newInv });
+        await updateInventory((inventory) => {
+          const idx = inventory.findIndex(i => i.id === safariBall.id || i.nameEn === safariBall.nameEn);
+          if (idx >= 0) {
+            return inventory.map((i, n) => n === idx ? { ...i, count: (i.count || 0) + pokemon.pendingSafariBallReward } : i);
+          }
+          return [...inventory, { ...safariBall, count: pokemon.pendingSafariBallReward }];
+        });
       }
     }
 

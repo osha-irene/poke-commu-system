@@ -22,7 +22,8 @@ const usePokemonManagement = (
   sharedPokedexData,
   pokemonLearnsets,
   allMoves,
-  checkEvolutionOnLevelUp
+  checkEvolutionOnLevelUp,
+  updateInventory
 ) => {
   const getPokemonTemplate = (pokemon) => {
     if (!pokemon) return null;
@@ -582,20 +583,19 @@ const usePokemonManagement = (
   };
 
   // 아이템 지급
-  const giveItemToPokemon = (pokemonUniqueId, itemName, allItems) => {
+  const giveItemToPokemon = async (pokemonUniqueId, itemName, allItems) => {
     if (!currentUser || !currentUser.inventory || !currentUser.caughtPokemon) {
       alert('오류가 발생했습니다. 페이지를 새로고침해주세요.');
       return false;
     }
 
-    const itemIndex = currentUser.inventory.findIndex(i => i.name === itemName);
-    if (itemIndex === -1) {
+    // 빠른 UX 피드백용 사전 체크 (실제 검증은 트랜잭션 내부에서 최신 값 기준으로 다시 수행됨)
+    const preCheckItem = currentUser.inventory.find(i => i.name === itemName);
+    if (!preCheckItem) {
       alert('해당 아이템이 없습니다!');
       return false;
     }
-
-    const item = currentUser.inventory[itemIndex];
-    if (item.count <= 0) {
+    if (preCheckItem.count <= 0) {
       alert('아이템이 소진되었습니다!');
       return false;
     }
@@ -613,36 +613,49 @@ const usePokemonManagement = (
       if (!window.confirm((pokemon.nickname || pokemon.name) + '이(가) 이미 ' + pokemon.heldItem + '을(를) 들고 있습니다. 교체하시겠습니까?')) {
         return false;
       }
-
-      const existingItemIndex = currentUser.inventory.findIndex(i => i.name === pokemon.heldItem);
-      if (existingItemIndex !== -1) {
-        currentUser.inventory[existingItemIndex].count++;
-      } else {
-        currentUser.inventory.push({ name: pokemon.heldItem, count: 1, imageUrl: item.imageUrl });
-      }
     }
 
-    const newInventory = [...currentUser.inventory];
-    newInventory[itemIndex] = { ...item, count: item.count - 1 };
-    if (newInventory[itemIndex].count <= 0) {
-      newInventory.splice(itemIndex, 1);
+    const result = await updateInventory((inventory) => {
+      const itemIndex = inventory.findIndex(i => i.name === itemName);
+      if (itemIndex === -1 || inventory[itemIndex].count <= 0) {
+        return; // 트랜잭션 중단 (아이템이 그 사이 소진됨)
+      }
+      const item = inventory[itemIndex];
+
+      let next = inventory
+        .map((it, idx) => (idx === itemIndex ? { ...it, count: it.count - 1 } : it))
+        .filter(it => it.count > 0);
+
+      if (pokemon.heldItem) {
+        const existingIndex = next.findIndex(i => i.name === pokemon.heldItem);
+        next = existingIndex !== -1
+          ? next.map((it, idx) => (idx === existingIndex ? { ...it, count: it.count + 1 } : it))
+          : [...next, { name: pokemon.heldItem, count: 1, imageUrl: item.imageUrl }];
+      }
+
+      return next;
+    });
+
+    if (!result.committed) {
+      alert('아이템 수량이 변경되었습니다. 다시 시도해주세요.');
+      return false;
     }
 
     if (isPartnerPokemon) {
-      updateCurrentUser({ inventory: newInventory, partnerPokemon: { ...pokemon, heldItem: itemName } });
+      updateCurrentUser({ partnerPokemon: { ...pokemon, heldItem: itemName } });
     } else {
       const newCaughtPokemon = currentUser.caughtPokemon.map(p =>
         p && p.uniqueId === pokemonUniqueId ? { ...p, heldItem: itemName } : p
       );
-      updateCurrentUser({ inventory: newInventory, caughtPokemon: newCaughtPokemon });
+      updateCurrentUser({ caughtPokemon: newCaughtPokemon });
     }
     alert((pokemon.nickname || pokemon.name) + '에게 ' + itemName + '을(를) 주었습니다.');
     return true;
   };
 
   // 아이템 뺏기
-  const takeItemFromPokemon = (pokemonUniqueId, allItems) => {
-    if (!currentUser || !currentUser.caughtPokemon || !currentUser.inventory) {
+  const takeItemFromPokemon = async (pokemonUniqueId, allItems) => {
+    if (!currentUser || !currentUser.caughtPokemon) {
       alert('오류가 발생했습니다. 페이지를 새로고침해주세요.');
       return;
     }
@@ -659,24 +672,31 @@ const usePokemonManagement = (
     }
 
     const itemName = pokemon.heldItem;
-    const itemIndex = currentUser.inventory.findIndex(i => i.name === itemName);
-
     const itemList = getItemList(allItems);
-    const newInventory = [...currentUser.inventory];
-    if (itemIndex !== -1) {
-      newInventory[itemIndex] = { ...newInventory[itemIndex], count: newInventory[itemIndex].count + 1 };
-    } else {
+
+    const result = await updateInventory((inventory) => {
+      const itemIndex = inventory.findIndex(i => i.name === itemName);
+      if (itemIndex !== -1) {
+        return inventory.map((it, idx) => (
+          idx === itemIndex ? { ...it, count: it.count + 1 } : it
+        ));
+      }
       const itemData = itemList.find(i => i.name === itemName || i.nameEn === itemName || i.id === itemName);
-      newInventory.push({ name: itemName, count: 1, imageUrl: itemData?.spriteUrl || '/default-item.png' });
+      return [...inventory, { name: itemName, count: 1, imageUrl: itemData?.spriteUrl || '/default-item.png' }];
+    });
+
+    if (!result.committed) {
+      alert('오류가 발생했습니다. 다시 시도해주세요.');
+      return;
     }
 
     if (isPartnerPokemon) {
-      updateCurrentUser({ inventory: newInventory, partnerPokemon: { ...pokemon, heldItem: null } });
+      updateCurrentUser({ partnerPokemon: { ...pokemon, heldItem: null } });
     } else {
       const newCaughtPokemon = currentUser.caughtPokemon.map(p =>
         p && p.uniqueId === pokemonUniqueId ? { ...p, heldItem: null } : p
       );
-      updateCurrentUser({ inventory: newInventory, caughtPokemon: newCaughtPokemon });
+      updateCurrentUser({ caughtPokemon: newCaughtPokemon });
     }
     alert((pokemon.nickname || pokemon.name) + '에게서 ' + itemName + '을(를) 뺐습니다!');
   };

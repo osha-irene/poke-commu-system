@@ -2,7 +2,7 @@
 // onValue 리스너를 제거하고 로그인 시에만 데이터 로드
 
 import { useState, useEffect } from 'react';
-import { ref, get, set, onValue, update } from 'firebase/database';
+import { ref, get, set, onValue, update, runTransaction } from 'firebase/database';
 import { 
   signInWithEmailAndPassword,
   signOut,
@@ -270,6 +270,36 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
     }
   };
 
+  // ⭐ 인벤토리 전용 트랜잭션 업데이트 - 항상 Firebase의 최신 값을 기준으로 병합되므로
+  // 동시에 여러 곳(상점 구매, 아이템 지급/회수, 관리자 지급 등)에서 인벤토리를 바꿔도
+  // 마지막 쓰기가 이전 변경을 통째로 덮어쓰는 문제가 없다.
+  const updateInventory = async (mutate) => {
+    if (!currentUser) {
+      console.error('❌ currentUser가 없음!');
+      return { committed: false };
+    }
+
+    const inventoryRef = ref(database, `members/${currentUser.id}/inventory`);
+    const result = await runTransaction(inventoryRef, (currentInventory) => {
+      const next = mutate(currentInventory || []);
+      if (next === undefined) return; // 트랜잭션 중단
+      // Firebase는 undefined 값을 허용하지 않으므로 null로 치환
+      return JSON.parse(JSON.stringify(next, (key, value) => (value === undefined ? null : value)));
+    });
+
+    if (result.committed) {
+      const newInventory = result.snapshot.val() || [];
+      setCurrentUser(prev => (prev ? { ...prev, inventory: newInventory } : prev));
+      setMembers(prevMembers => (
+        prevMembers[currentUser.id]
+          ? { ...prevMembers, [currentUser.id]: { ...prevMembers[currentUser.id], inventory: newInventory } }
+          : prevMembers
+      ));
+    }
+
+    return result;
+  };
+
   const changeCurrentUserPassword = async (newPassword) => {
     if (!auth.currentUser || !currentUser) {
       alert('로그인 정보를 확인할 수 없습니다. 다시 로그인해주세요.');
@@ -304,6 +334,7 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
     handleLogin,
     handleLogout,
     updateCurrentUser,
+    updateInventory,
     changeCurrentUserPassword,
     isLoading: isAuthLoading
   };

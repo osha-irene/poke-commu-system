@@ -1,7 +1,7 @@
 // src/hooks/admin/useAdminItems.js
 // 아이템 관리 전용 훅
 
-import { ref, get, set, update } from 'firebase/database';
+import { ref, get, set, runTransaction } from 'firebase/database';
 import { database } from '../../firebase';
 
 export const useAdminItems = (
@@ -9,7 +9,8 @@ export const useAdminItems = (
   members,
   setMembers,
   updateCurrentUser,
-  allItems
+  allItems,
+  updateInventory
 ) => {
   const canManageItems = () => Boolean(
     currentUser?.isAdmin ||
@@ -17,30 +18,46 @@ export const useAdminItems = (
     currentUser?.canManageItems
   );
 
-  // ========== 자신에게 아이템 추가 ==========
-  const addItemToSelf = (item, count) => {
-    if (!currentUser) {
-      alert('사용자 정보를 불러올 수 없습니다!');
-      return;
+  // 특정 회원의 인벤토리를 항상 Firebase의 최신 값 기준으로 병합하는 트랜잭션 헬퍼.
+  // 대상이 본인이면 useAuth의 updateInventory(로컬 currentUser 상태까지 동기화)를 그대로 재사용하고,
+  // 다른 회원이면 members/{memberId}/inventory에 직접 트랜잭션을 걸어 members 상태만 갱신한다.
+  const applyInventoryMutation = async (memberId, mutate) => {
+    if (memberId === currentUser?.id) {
+      return updateInventory(mutate);
     }
-    
-    if (!canManageItems()) {
-      alert('아이템 관리 권한이 없습니다!');
-      return;
+
+    const inventoryRef = ref(database, `members/${memberId}/inventory`);
+    const result = await runTransaction(inventoryRef, (currentInventory) => {
+      const next = mutate(currentInventory || []);
+      if (next === undefined) return; // 트랜잭션 중단
+      return JSON.parse(JSON.stringify(next, (key, value) => (value === undefined ? null : value)));
+    });
+
+    if (result.committed) {
+      const newInventory = result.snapshot.val() || [];
+      setMembers(prev => (
+        prev[memberId]
+          ? { ...prev, [memberId]: { ...prev[memberId], inventory: newInventory } }
+          : prev
+      ));
     }
-    
-    const existingItem = currentUser.inventory.find(i => 
+
+    return result;
+  };
+
+  const buildInventoryAddMutator = (item, count) => (inventory) => {
+    const existingItem = inventory.find(i =>
       i.itemId === item.id || i.name === item.name
     );
-    
-    const newInventory = existingItem
-      ? currentUser.inventory.map(i => 
+
+    return existingItem
+      ? inventory.map(i =>
           (i.itemId === item.id || i.name === item.name)
             ? { ...i, count: i.count + count }
             : i
         )
       : [
-          ...currentUser.inventory,
+          ...inventory,
           {
             itemId: item.id,
             name: item.name,
@@ -55,78 +72,44 @@ export const useAdminItems = (
             isCustom: item.isCustom || false
           }
         ];
-    
-    updateCurrentUser({ inventory: newInventory });
+  };
+
+  // ========== 자신에게 아이템 추가 ==========
+  const addItemToSelf = async (item, count) => {
+    if (!currentUser) {
+      alert('사용자 정보를 불러올 수 없습니다!');
+      return;
+    }
+
+    if (!canManageItems()) {
+      alert('아이템 관리 권한이 없습니다!');
+      return;
+    }
+
+    const result = await applyInventoryMutation(currentUser.id, buildInventoryAddMutator(item, count));
+
+    if (!result.committed) {
+      alert('아이템 추가 중 오류가 발생했습니다!');
+      return;
+    }
     alert(`${item.name} ${count}개를 추가했습니다!`);
   };
 
   // ========== 회원에게 아이템 지급 ==========
   const giveItemToMember = async (memberId, item, count) => {
     if (!canManageItems()) return;
-    
+
     const member = members[memberId];
     if (!member) return;
-    
-    const currentInventory = member.inventory || [];
-    
-    const existingItem = currentInventory.find(i => 
-      i.itemId === item.id || i.name === item.name
-    );
-    
-    const newInventory = existingItem
-      ? currentInventory.map(i => 
-          (i.itemId === item.id || i.name === item.name)
-            ? { ...i, count: i.count + count }
-            : i
-        )
-      : [
-          ...currentInventory,
-          {
-            itemId: item.id,
-            name: item.name,
-            nameEn: item.nameEn,
-            count: count,
-            imageUrl: item.spriteUrl || item.imageUrl,
-            category: item.category,
-            effect: item.effect,
-            cost: item.cost,
-            sellPrice: item.sellPrice,
-            canSell: item.canSell ?? true,
-            isCustom: item.isCustom || false
-          }
-        ];
 
-    const updatedMember = {
-      ...member,
-      inventory: newInventory
-    };
-    
-    try {
-      const { id, email, ...dataToSave } = updatedMember;
-      
-      const cleanData = JSON.parse(
-        JSON.stringify(dataToSave, (key, value) => 
-          value === undefined ? null : value
-        )
-      );
-      
-      const memberRef = ref(database, `members/${memberId}`);
-      await update(memberRef, { inventory: cleanData.inventory });
-      
-      setMembers(prev => ({
-        ...prev,
-        [memberId]: updatedMember
-      }));
-      
-      // 본인에게 지급한 경우 currentUser도 업데이트
-      if (memberId === currentUser?.id) {
-        updateCurrentUser({ inventory: newInventory });
-      }
-      
-      alert(`${member.name}님에게 ${item.name} ${count}개를 지급했습니다!`);
-    } catch (error) {
+    const result = await applyInventoryMutation(memberId, buildInventoryAddMutator(item, count));
+
+    if (!result.committed) {
       alert('아이템 지급 중 오류가 발생했습니다!');
+      return;
     }
+
+    alert(`${member.name}님에게 ${item.name} ${count}개를 지급했습니다!`);
   };
 
   // ========== 커스텀 아이템 생성 ==========
@@ -208,15 +191,12 @@ export const useAdminItems = (
     if (!canManageItems()) return;
     const member = members[memberId];
     if (!member) return;
-    const newInventory = (member.inventory || []).filter(i => i.name !== itemName);
-    const updatedMember = { ...member, inventory: newInventory };
-    try {
-      const { id, email, ...dataToSave } = updatedMember;
-      const cleanData = JSON.parse(JSON.stringify(dataToSave, (k, v) => v === undefined ? null : v));
-      await update(ref(database, `members/${memberId}`), { inventory: cleanData.inventory });
-      setMembers(prev => ({ ...prev, [memberId]: updatedMember }));
-      if (memberId === currentUser?.id) updateCurrentUser({ inventory: newInventory });
-    } catch (error) {
+
+    const result = await applyInventoryMutation(memberId, (inventory) => (
+      inventory.filter(i => i.name !== itemName)
+    ));
+
+    if (!result.committed) {
       alert('아이템 삭제 중 오류가 발생했습니다!');
     }
   };
@@ -226,17 +206,14 @@ export const useAdminItems = (
     if (!canManageItems()) return;
     const member = members[memberId];
     if (!member) return;
-    const newInventory = newCount <= 0
-      ? (member.inventory || []).filter(i => i.name !== itemName)
-      : (member.inventory || []).map(i => i.name === itemName ? { ...i, count: newCount } : i);
-    const updatedMember = { ...member, inventory: newInventory };
-    try {
-      const { id, email, ...dataToSave } = updatedMember;
-      const cleanData = JSON.parse(JSON.stringify(dataToSave, (k, v) => v === undefined ? null : v));
-      await update(ref(database, `members/${memberId}`), { inventory: cleanData.inventory });
-      setMembers(prev => ({ ...prev, [memberId]: updatedMember }));
-      if (memberId === currentUser?.id) updateCurrentUser({ inventory: newInventory });
-    } catch (error) {
+
+    const result = await applyInventoryMutation(memberId, (inventory) => (
+      newCount <= 0
+        ? inventory.filter(i => i.name !== itemName)
+        : inventory.map(i => i.name === itemName ? { ...i, count: newCount } : i)
+    ));
+
+    if (!result.committed) {
       alert('아이템 수정 중 오류가 발생했습니다!');
     }
   };
