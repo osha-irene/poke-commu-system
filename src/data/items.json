@@ -2381,9 +2381,9 @@
         "name": "vitamins",
         "pocket": "medicine"
       },
-      "cost": 10000,
-      "sellPrice": 5000,
-      "canSell": true,
+      "cost": null,
+      "sellPrice": null,
+      "canSell": null,
       "effect": "에너지가 가득한 사탕. 먹이면 포켓몬 1마리의 레벨이 1만큼 올라간다.",
       "description": "에너지가 가득한 사탕. 먹이면 포켓몬 1마리의 레벨이 1만큼 올라간다.",
       "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/rare-candy.png",
