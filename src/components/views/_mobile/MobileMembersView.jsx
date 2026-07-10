@@ -149,7 +149,7 @@ const getBallUrl = (p, allItems = []) => {
 
 const getParty = m => {
   const partner = m?.partnerPokemon;
-  const caught = (m?.caughtPokemon || []).filter(Boolean);
+  const caught = (m?.caughtPokemon || []).slice(0, 6).filter(Boolean);
   const rest = caught.filter(p => !p?.isPartner);
   return partner
     ? [{ ...partner, _isPartner: true }, ...rest].slice(0, 6)

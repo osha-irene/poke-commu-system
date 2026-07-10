@@ -159,7 +159,7 @@ const getMemberList = (members) =>
       return (a.name || '').localeCompare(b.name || '', 'ko');
     });
 
-const getParty = m => (m?.caughtPokemon || []).filter(Boolean).slice(0, 6);
+const getParty = m => (m?.caughtPokemon || []).slice(0, 6).filter(Boolean);
 const getFaceImg = m => m?.profileImageThumb || m?.profileImage || m?.profileImageFull || m?.profileImageUrl || '';
 const getFullImg     = m => m?.profileImageFull || m?.profileImage || m?.profileImageUrl || '';
 const MEMBER_CHARACTER_Z_INDEX = 46;
