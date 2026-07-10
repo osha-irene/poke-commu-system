@@ -13,6 +13,7 @@ import { getAbilityEnglishName } from '../../utils/abilityUtils';
 import { normalizePokemonGender } from '../../utils/pokemonGender';
 import { DEFAULT_IVS, generateRandomIVs, normalizeIVs } from '../../utils/pokemonIndividualValues';
 import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
+import { withWurmpleEvolutionId } from '../../utils/wurmpleEvolution';
 import movesData from '../../data/moves.json';
 import evolutionsData from '../../data/evolutions.json';
 
@@ -249,7 +250,7 @@ export const useAdminMembers = (
       }
     }
 
-    return {
+    return withWurmpleEvolutionId({
       uniqueId: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
       pokemonId: pokemonTemplate.id,
       name: getPokemonDisplayParts(pokemonTemplate).name || pokemonTemplate.name,
@@ -294,7 +295,7 @@ export const useAdminMembers = (
       })(),
       ...(inheritedNature ? { nature: inheritedNature } : {}),
       favoriteFlavor: inheritedFlavor || ['매운맛','신맛','단맛','쓴맛','짠맛'][Math.floor(Math.random() * 5)]
-    };
+    });
   };
 
   const addPokemonToAvailableSlot = (caughtPokemon = [], pokemon) => {
@@ -687,7 +688,7 @@ export const useAdminMembers = (
     const finalHeight = height || (baseHeight * (heightVariation / 100));
     const finalWeight = weight || (baseWeight * (weightVariation / 100));
 
-    const newPokemon = {
+    const newPokemon = withWurmpleEvolutionId({
       uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       isAdminGiven: true,
       favoriteFlavor,
@@ -728,7 +729,7 @@ export const useAdminMembers = (
       imageUrl: pokemonTemplate.imageUrl,
       iconUrl,
       spriteUrl
-    };
+    });
 
     let updatedPokemonList = [...member.caughtPokemon];
     let newPartnerPokemon = member.partnerPokemon;

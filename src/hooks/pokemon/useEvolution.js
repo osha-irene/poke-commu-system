@@ -3,6 +3,11 @@ import evolutionsData from '../../data/evolutions.json';
 import movesDataRaw from '../../data/moves.json';
 import { getBaseStatPatch } from '../../utils/pokemonBaseStats';
 import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
+import {
+  getWurmpleEvolutionTarget,
+  isWurmple,
+  withWurmpleEvolutionId
+} from '../../utils/wurmpleEvolution';
 
 const allMovesData = Array.isArray(movesDataRaw) ? movesDataRaw : movesDataRaw.moves || [];
 
@@ -49,9 +54,11 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
 
   const findAllEvolutionsForPokemon = (pokemon) => {
     const candidates = getPokemonNumberCandidates(pokemon);
+    const wurmpleTarget = getWurmpleEvolutionTarget(pokemon);
     const seenTargets = new Set();
     return evolutionsData.evolutions
       .filter((evo) => candidates.includes(toPokemonNumber(evo.from)))
+      .filter((evo) => wurmpleTarget === null || toPokemonNumber(evo.to) === wurmpleTarget)
       .filter((evo) => {
         const key = `${evo.to}-${evo.toName || ''}`;
         if (seenTargets.has(key)) return false;
@@ -68,6 +75,30 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
       allPokemonMaster.find((pokemon) => !pokemon.regionalForm && toPokemonNumber(pokemon.originalNumber) === targetNumber) ||
       allPokemonMaster.find((pokemon) => toPokemonNumber(pokemon.originalNumber) === targetNumber)
     );
+  };
+
+  const ensureStoredWurmpleEvolutionId = (pokemon) => {
+    if (!isWurmple(pokemon)) return pokemon;
+    const preparedPokemon = withWurmpleEvolutionId(pokemon);
+
+    if (preparedPokemon.wurmpleEvolutionId === pokemon.wurmpleEvolutionId) {
+      return preparedPokemon;
+    }
+
+    const updatedCaught = (currentUser.caughtPokemon || []).map(p =>
+      p?.uniqueId === pokemon.uniqueId ? preparedPokemon : p
+    );
+    const updates = { caughtPokemon: updatedCaught };
+
+    if (currentUser.partnerPokemon?.uniqueId === pokemon.uniqueId) {
+      updates.partnerPokemon = {
+        ...currentUser.partnerPokemon,
+        wurmpleEvolutionId: preparedPokemon.wurmpleEvolutionId
+      };
+    }
+
+    updateCurrentUser(updates);
+    return preparedPokemon;
   };
 
   // 레벨업이 필요한 조건 타입 (아이템/교환 진화는 즉시 적용)
@@ -216,7 +247,8 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
       return false;
     }
     
-    const evolution = checkEvolution(pokemon, { onLevelUp: true });
+    const preparedPokemon = ensureStoredWurmpleEvolutionId(pokemon);
+    const evolution = checkEvolution(preparedPokemon, { onLevelUp: true });
     console.log('🎯 진화 정보:', evolution);
     
     if (evolution) {
@@ -232,16 +264,16 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
       // 레벨업으로 조건 충족됨을 기록 → 이후 수동 진화 허용
       if (!pokemon.evolutionReady) {
         const updatedCaught = (currentUser.caughtPokemon || []).map(p =>
-          p?.uniqueId === pokemon.uniqueId ? { ...p, evolutionReady: true } : p
+          p?.uniqueId === preparedPokemon.uniqueId ? { ...p, ...preparedPokemon, evolutionReady: true } : p
         );
         updateCurrentUser({ caughtPokemon: updatedCaught });
       }
 
       setEvolutionModal({
         show: true,
-        pokemon: { ...pokemon, evolutionReady: true },
+        pokemon: { ...preparedPokemon, evolutionReady: true },
         evolution: evolution,
-        fromPokemon: pokemon,
+        fromPokemon: preparedPokemon,
         toPokemon: evolvedPokemonData,
         isItemEvolution: false
       });
@@ -407,7 +439,8 @@ const manualEvolve = (pokemon) => {
     return false;
   }
   
-  const evolution = checkEvolution(pokemon);
+  const preparedPokemon = ensureStoredWurmpleEvolutionId(pokemon);
+  const evolution = checkEvolution(preparedPokemon);
   console.log('🎯 진화 정보:', evolution);
   
   if (!evolution) {
@@ -427,9 +460,9 @@ const manualEvolve = (pokemon) => {
   
   setEvolutionModal({
     show: true,
-    pokemon: pokemon,
+    pokemon: preparedPokemon,
     evolution: evolution,
-    fromPokemon: pokemon,
+    fromPokemon: preparedPokemon,
     toPokemon: evolvedPokemonData,
     isItemEvolution: false
   });

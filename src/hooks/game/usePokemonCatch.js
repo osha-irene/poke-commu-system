@@ -5,6 +5,7 @@ import { getBaseStatPatch } from '../../utils/pokemonBaseStats';
 import { getAbilityEnglishName } from '../../utils/abilityUtils';
 import { normalizeIVs } from '../../utils/pokemonIndividualValues';
 import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
+import { withWurmpleEvolutionId } from '../../utils/wurmpleEvolution';
 
 export const usePokemonCatch = (
   currentUser,
@@ -74,7 +75,7 @@ export const usePokemonCatch = (
     const FLAVORS = ['매운맛', '신맛', '단맛', '쓴맛', '짠맛'];
     const favoriteFlavor = FLAVORS[Math.floor(Math.random() * FLAVORS.length)];
 
-    const newPokemon = {
+    const newPokemon = withWurmpleEvolutionId({
       uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       favoriteFlavor,
       pokemonId: pokemonTemplate.id,
@@ -135,7 +136,7 @@ export const usePokemonCatch = (
       spriteUrl: pokemon.isShiny
         ? `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/${pokemonTemplate.number}.png`
         : `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pokemonTemplate.number}.png`
-    };
+    });
 
     const currentPokemon = [...currentUser.caughtPokemon];
     const party = currentPokemon.slice(0, 6);
