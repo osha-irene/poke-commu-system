@@ -374,9 +374,12 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
   const sellItem = async (item, count) => {
     if (!currentUser) return false;
 
-    const inventoryItem = currentUser.inventory.find(i =>
-      i.itemId === item.itemId || i.name === item.name
+    const matchesSoldItem = (i) => (
+      (item.itemId != null && i.itemId === item.itemId) ||
+      (item.name != null && i.name === item.name)
     );
+
+    const inventoryItem = currentUser.inventory.find(matchesSoldItem);
 
     if (!inventoryItem || inventoryItem.count < count) {
       alert('판매할 아이템이 부족합니다!');
@@ -395,16 +398,12 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
     const totalPrice = sellPrice * count;
 
     const txResult = await updateInventory((inventory) => {
-      const target = inventory.find(i => i.itemId === item.itemId || i.name === item.name);
+      const target = inventory.find(matchesSoldItem);
       if (!target || target.count < count) {
         return; // 그 사이 수량이 줄어들어 트랜잭션 중단
       }
       return inventory
-        .map(i =>
-          (i.itemId === item.itemId || i.name === item.name)
-            ? { ...i, count: i.count - count }
-            : i
-        )
+        .map(i => (matchesSoldItem(i) ? { ...i, count: i.count - count } : i))
         .filter(i => i.count > 0);
     });
 

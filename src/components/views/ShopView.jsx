@@ -118,9 +118,9 @@ export default function ShopView() {
     const inventory = Array.isArray(trainer?.inventory) ? trainer.inventory : [];
     return inventory.reduce((total, inventoryItem) => {
       const sameItem = (
-        inventoryItem.itemId === item.id ||
-        inventoryItem.itemId === item.itemId ||
-        inventoryItem.name === item.name
+        (item.id != null && inventoryItem.itemId === item.id) ||
+        (item.itemId != null && inventoryItem.itemId === item.itemId) ||
+        (item.name != null && inventoryItem.name === item.name)
       );
       return sameItem ? total + (Number(inventoryItem.count) || 0) : total;
     }, 0);
