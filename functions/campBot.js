@@ -105,10 +105,10 @@ const normalizeSettings = (raw = {}) => {
 };
 
 const getCommand = content => {
-  if (/\[?\s*캠핑\s*시작\s*\]?/i.test(content) || /\[캠핑\]/i.test(content)) return 'start';
+  if (/\[\s*캠핑\s*시작\s*\]/i.test(content) || /\[\s*캠핑\s*\]/i.test(content)) return 'start';
   if (getCampingDishChoice(content)) return 'dish';
-  if (/\[?\s*계속\s*\]?/i.test(content)) return 'continue';
-  if (/\[?\s*만족\s*\]?/i.test(content)) return 'satisfy';
+  if (/\[\s*계속\s*\]/i.test(content)) return 'continue';
+  if (/\[\s*만족\s*\]/i.test(content)) return 'satisfy';
   return null;
 };
 

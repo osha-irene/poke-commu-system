@@ -305,12 +305,12 @@ const extractBracketText = (content) => {
   return matches.length ? matches[matches.length - 1] : text.trim();
 };
 
-const wantsMega = (content) => /\[?\s*메가\s*진화\s*\]?|\[?\s*메가진화\s*\]?/i.test(content);
+const wantsMega = (content) => /\[\s*메가\s*진화\s*\]|\[\s*메가진화\s*\]/i.test(content);
 
 const moveChoiceTokenFromText = (content) => {
   const text = stripCommandText(content)
-    .replace(/\[?\s*메가\s*진화\s*\]?/gi, '')
-    .replace(/\[?\s*메가진화\s*\]?/gi, '')
+    .replace(/\[\s*메가\s*진화\s*\]/gi, '')
+    .replace(/\[\s*메가진화\s*\]/gi, '')
     .trim();
 
   const moveNumber = text.match(/\[?\s*기술\s*([1-4])\s*\]?/i);
@@ -353,8 +353,8 @@ const resolveTeamChoice = (token, entries) => {
 
 const isExplicitMoveText = (content) => {
   // 기술 번호 또는 '기술' 접두어 있는 경우만 명시적 기술 선택으로 인정
-  const stripped = stripCommandText(content).replace(/\[?\s*메가\s*진화\s*\]?/gi, '').trim();
-  if (/\[?\s*기술\s*[1-4]\s*\]?/i.test(stripped)) return true;
+  const stripped = stripCommandText(content).replace(/\[\s*메가\s*진화\s*\]/gi, '').trim();
+  if (/\[\s*기술\s*[1-4]\s*\]/i.test(stripped)) return true;
   const bracket = extractBracketText(stripped);
   if (!bracket) return false;
   return /^기술\s+\S/i.test(bracket); // [기술 리프스톰] 형태만
@@ -378,12 +378,12 @@ const isBattleMoveLikeText = (content) => {
 };
 
 const getBattleCommand = (content) => {
-  if (/\[?\s*배틀\s*신청\s*\]?/i.test(content)) return 'challenge';
-  if (/\[?\s*배틀\s*수락\s*\]?/i.test(content)) return 'accept';
-  if (/\[?\s*배틀\s*거절\s*\]?/i.test(content)) return 'decline';
-  if (/\[?\s*배틀\s*종료\s*\]?/i.test(content)) return 'endByHp';
-  if (/\[?\s*기권\s*\]?/i.test(content)) return 'forfeit';
-  if (/\[?\s*배틀\s*(?:도움말|help)\s*\]?/i.test(content)) return 'help';
+  if (/\[\s*배틀\s*신청\s*\]/i.test(content)) return 'challenge';
+  if (/\[\s*배틀\s*수락\s*\]/i.test(content)) return 'accept';
+  if (/\[\s*배틀\s*거절\s*\]/i.test(content)) return 'decline';
+  if (/\[\s*배틀\s*종료\s*\]/i.test(content)) return 'endByHp';
+  if (/\[\s*기권\s*\]/i.test(content)) return 'forfeit';
+  if (/\[\s*배틀\s*(?:도움말|help)\s*\]/i.test(content)) return 'help';
   if (isBattleMoveLikeText(content)) return 'move';
   if (teamChoiceFromText(content) !== null) return 'selectPokemon';
   return null;
@@ -1072,17 +1072,31 @@ const resolveMoveChoice = (battle, side, content) => {
   const activePokemon = battle[side]?.active?.[0];
   const moveSlots = (activePokemon?.moveSlots || []).slice(0, 4);
 
+  // 구멍파기/공중날기 2턴째처럼 trapped 상태면 서버 request의 moves가 원래 4개 기술 중
+  // 단 하나로 줄어든다. 이때 제출할 "move N"은 moveSlots(원래 4개) 기준이 아니라
+  // 이 축소된 요청 목록 안에서의 위치 기준이어야 한다 (안 그러면 choose()가 조용히 거부됨).
+  const requestMoves = battle[side]?.activeRequest?.active?.[0]?.moves;
+  const effectiveList = Array.isArray(requestMoves) && requestMoves.length ? requestMoves : moveSlots;
+
+  // 발버둥(PP 소진)이나 하이퍼빔류 반동(recharge)은 서버가 moveSlots에도 없는 의사 기술
+  // 하나만 요청 목록에 내려준다. 선택지가 하나뿐이면 이름이 안 맞아도 그걸로 확정한다 —
+  // 실제로도 플레이어가 고를 여지가 없는 상태라, 이름 불일치로 거부하면 영영 진행 불가.
+  if (effectiveList.length === 1) return 1;
+
   if (token.kind === 'index') {
-    if (!moveSlots[token.value]) return null;
-    return token.value + 1;
+    const targetSlot = moveSlots[token.value];
+    if (!targetSlot) return null;
+    if (effectiveList === moveSlots) return token.value + 1;
+    const restrictedIndex = effectiveList.findIndex((move) => normalizeId(move.id || move.move) === normalizeId(targetSlot.id));
+    return restrictedIndex >= 0 ? restrictedIndex + 1 : null;
   }
 
   const requested = normalizeId(token.value);
-  const matchedIndex = moveSlots.findIndex((moveSlot) => {
+  const matchedIndex = effectiveList.findIndex((move) => {
     const candidates = [
-      moveSlot.id,
-      moveSlot.move,
-      translateMoveName(moveSlot.id || moveSlot.move),
+      move.id,
+      move.move,
+      translateMoveName(move.id || move.move),
     ].map(normalizeId);
     return candidates.includes(requested);
   });

@@ -294,7 +294,8 @@ const processCampStatus = async (status, source = 'webhook') => {
   if (!status?.id) return { ignored: true, reason: 'no id' };
   if (await isSelfAuthoredStatus('camp', campCtx, status)) return { ignored: true, reason: 'self' };
   const content = stripHtml(status.content);
-  if (getBattleBot().getCommand(content) || getTradeCommand(content)) {
+  if ((battleCtx.isBotMentioned(status) && getBattleBot().getCommand(content)) ||
+      (tradeCtx.isBotMentioned(status) && getTradeCommand(content))) {
     return { ignored: true, reason: 'routed to another bot' };
   }
   if (!campCtx.isBotMentioned(status)) return { ignored: true, reason: 'not mentioned' };
@@ -328,7 +329,8 @@ const processTradeStatus = async (status, source = 'webhook') => {
   if (!status?.id) return { ignored: true, reason: 'no id' };
   if (await isSelfAuthoredStatus('trade', tradeCtx, status)) return { ignored: true, reason: 'self' };
   const content = stripHtml(status.content);
-  if (getBattleBot().getCommand(content) || getCampCommand(content)) {
+  if ((battleCtx.isBotMentioned(status) && getBattleBot().getCommand(content)) ||
+      (campCtx.isBotMentioned(status) && getCampCommand(content))) {
     return { ignored: true, reason: 'routed to another bot' };
   }
   if (!tradeCtx.isBotMentioned(status)) return { ignored: true, reason: 'not mentioned' };
@@ -375,7 +377,8 @@ const processBattleStatus = async (status, source = 'webhook') => {
   if (!status?.id) return { ignored: true, reason: 'no id' };
   if (await isSelfAuthoredStatus('battle', battleCtx, status)) return { ignored: true, reason: 'self' };
   const content = stripHtml(status.content);
-  if (getTradeCommand(content) || getCampCommand(content)) {
+  if ((tradeCtx.isBotMentioned(status) && getTradeCommand(content)) ||
+      (campCtx.isBotMentioned(status) && getCampCommand(content))) {
     return { ignored: true, reason: 'routed to another bot' };
   }
   const command = getBattleBot().getCommand(content);

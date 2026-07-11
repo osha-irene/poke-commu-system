@@ -14,10 +14,10 @@ const getItemNameEn = name => TRADE_HELD_ITEM_MAP[name] || String(name || '').to
 
 const getTradeCommand = (content = '') => {
   const text = String(content || '');
-  if (/\[\s*교환\s*신청\s*\]|\b교환\s*신청\b/i.test(text)) return 'request';
-  if (/\[\s*교환\s*수락\s*\]|\b교환\s*수락\b/i.test(text)) return 'accept';
-  if (/\[\s*교환\s*거절\s*\]|\b교환\s*거절\b/i.test(text)) return 'decline';
-  if (/\[\s*교환\s*종료\s*\]|\b교환\s*종료\b/i.test(text)) return 'cancel';
+  if (/\[\s*교환\s*신청\s*\]/i.test(text)) return 'request';
+  if (/\[\s*교환\s*수락\s*\]/i.test(text)) return 'accept';
+  if (/\[\s*교환\s*거절\s*\]/i.test(text)) return 'decline';
+  if (/\[\s*교환\s*종료\s*\]/i.test(text)) return 'cancel';
   if (extractTradePokemonName(text)) return 'selectPokemon';
   const plain = text.replace(/<[^>]+>/g, '').replace(/@\S+/g, '').trim();
   if (/^\d+$/.test(plain)) return 'pickNumber';
@@ -27,13 +27,8 @@ const getTradeCommand = (content = '') => {
 const extractTradePokemonName = (content = '') => {
   const text = String(content || '');
   const bracketMatch = text.match(/\[\s*교환\s*[:：]\s*([^\]]+)\]/i);
-  if (bracketMatch) {
-    const value = bracketMatch[1].trim();
-    return /^(신청|수락|거절)$/i.test(value) ? null : value;
-  }
-  const looseMatch = text.match(/교환\s*[:：]\s*([^\n\r\[]+)/i);
-  if (!looseMatch) return null;
-  const value = looseMatch[1].replace(/@\S+/g, '').trim();
+  if (!bracketMatch) return null;
+  const value = bracketMatch[1].trim();
   return /^(신청|수락|거절)$/i.test(value) ? null : value;
 };
 

@@ -32,15 +32,15 @@ const getMovesData = () => {
   return movesDataCache;
 };
 
-const JOIN_PATTERN = /\[?\s*참가\s*[:：]/i;
+const JOIN_PATTERN = /\[\s*참가\s*[:：]/i;
 
 const getContestCommand = (content) => {
   const text = String(content || '').trim();
-  if (/\[?\s*콘테스트\s*(?:시작|개설)\s*\]?/i.test(text)) return 'start';
+  if (/\[\s*콘테스트\s*(?:시작|개설)\s*\]/i.test(text)) return 'start';
   if (JOIN_PATTERN.test(text)) return 'join';
-  if (/\[?\s*콘테스트\s*마감\s*\]?/i.test(text)) return 'close';
-  if (/\[?\s*콘테스트\s*(?:취소|중단)\s*\]?/i.test(text)) return 'cancel';
-  if (/\[?\s*콘테스트\s*(?:도움말|help)\s*\]?/i.test(text)) return 'help';
+  if (/\[\s*콘테스트\s*마감\s*\]/i.test(text)) return 'close';
+  if (/\[\s*콘테스트\s*(?:취소|중단)\s*\]/i.test(text)) return 'cancel';
+  if (/\[\s*콘테스트\s*(?:도움말|help)\s*\]/i.test(text)) return 'help';
   return 'declareMove'; // 그 외 멘션은 전부 기술 선언 시도로 취급 (isBotMentioned로 이미 걸러진 상태)
 };
 
