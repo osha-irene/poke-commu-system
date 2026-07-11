@@ -1,7 +1,7 @@
 // 콘테스트 자동 판정 엔진 (1차 심사 + 2차 심사 6라운드)
 // 순수 상태 객체(JSON 직렬화 가능)를 입력받아 새 상태를 반환하는 함수형 엔진.
 // UI(React)는 이 상태를 그대로 useState로 들고 있으면 됨.
-import {
+const {
   MAX_STARS,
   MAX_APPLAUSE,
   roll2d6,
@@ -10,9 +10,9 @@ import {
   rollNervous,
   getPenaltyMultiplier,
   isMatchingMove,
-} from './contestRules';
-import { getContestEffectHandler, getRepeatExemptMoveIds } from './contestEffects';
-import { isComboStarter, isValidComboFollowUp, COMBO_FOLLOWUP_BONUS } from './comboChart';
+} = require('./contestRules');
+const { getContestEffectHandler, getRepeatExemptMoveIds } = require('./contestEffects');
+const { isComboStarter, isValidComboFollowUp, COMBO_FOLLOWUP_BONUS } = require('./comboChart');
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
@@ -22,7 +22,7 @@ const randomPick = (arr) => arr[Math.floor(Math.random() * arr.length)];
  * participantsInput: [{ id, name, pokemonName, conditionValue, moves: [moveData, ...] }]
  * moveData는 src/data/moves.json의 기술 객체(contestType/contestAppeals/contestJam/contestEffect 포함)를 그대로 사용.
  */
-export const createContestState = (contestType, participantsInput) => ({
+const createContestState = (contestType, participantsInput) => ({
   contestType,
   phase: 'setup',
   round: 0,
@@ -60,7 +60,7 @@ const sortByAppealDesc = (participants, key = 'totalAppeal') => {
   return withTiebreak.map((x) => x.p.id);
 };
 
-export const runFirstJudging = (stateIn) => {
+const runFirstJudging = (stateIn) => {
   const state = clone(stateIn);
   state.participants.forEach((p) => {
     const roll = roll2d6();
@@ -77,13 +77,13 @@ export const runFirstJudging = (stateIn) => {
   return state;
 };
 
-export const getCurrentActor = (state) => {
+const getCurrentActor = (state) => {
   if (state.phase !== 'secondJudging') return null;
   const id = state.order[state.turnPointer];
   return state.participants.find((p) => p.id === id) || null;
 };
 
-export const canUseMove = (state, participantId, moveId, allMoves = []) => {
+const canUseMove = (state, participantId, moveId, allMoves = []) => {
   const actor = state.participants.find((p) => p.id === participantId);
   if (!actor) return false;
   const move = actor.moves.find((m) => m.id === moveId);
@@ -115,7 +115,7 @@ const applyJam = (state, targetId, amount) => {
  * 현재 턴 진행: 긴장 판정 → (긴장 아니면) 기술 효과 계산 → 결과 반영 → 다음 턴/라운드로 이동.
  * options: { moveId, targetId, declareCombo, comboSuccessBonus, rng }
  */
-export const advanceTurn = (stateIn, options = {}) => {
+const advanceTurn = (stateIn, options = {}) => {
   const state = clone(stateIn);
   if (state.phase !== 'secondJudging') return state;
 
@@ -336,7 +336,7 @@ const endRound = (state) => {
 };
 
 // 응답 시간 초과 등으로 GM/봇이 강제로 이번 턴을 넘길 때 사용 (긴장 판정 없이 0 어필로 스킵)
-export const forceSkipTurn = (stateIn, reason = 'timeout') => {
+const forceSkipTurn = (stateIn, reason = 'timeout') => {
   const state = clone(stateIn);
   if (state.phase !== 'secondJudging') return state;
 
@@ -351,9 +351,20 @@ export const forceSkipTurn = (stateIn, reason = 'timeout') => {
   return state;
 };
 
-export const getStandings = (state) => {
+const getStandings = (state) => {
   const sorted = [...state.participants].sort((a, b) => b.totalAppeal - a.totalAppeal);
   return sorted.map((p, index) => ({ rank: index + 1, ...p }));
 };
 
-export const isContestDone = (state) => state.phase === 'done';
+const isContestDone = (state) => state.phase === 'done';
+
+module.exports = {
+  createContestState,
+  runFirstJudging,
+  getCurrentActor,
+  canUseMove,
+  advanceTurn,
+  forceSkipTurn,
+  getStandings,
+  isContestDone,
+};

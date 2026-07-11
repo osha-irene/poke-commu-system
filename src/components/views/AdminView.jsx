@@ -105,7 +105,7 @@ function CustomItemManageModal({ items, onUpdate, onDelete, onClose }) {
       <CustomItemModal
         editItem={editingItem}
         onSubmit={async (payload) => {
-          const { id, isCustom, isRecipe, createdBy, createdAt, recipeId, ...fields } = payload;
+          const { id, isCustom, isRecipe, createdBy, createdAt, recipeId, __customItemSource, ...fields } = payload;
           const ok = await onUpdate(editingItem.id, fields);
           if (ok) alert(`"${fields.name}" 수정 완료.`);
           return ok;
@@ -908,7 +908,7 @@ export default function AdminView() {
                   onClick={() => setShowCustomItemManage(true)}
                   className="flex items-center gap-1.5 border border-gray-300 bg-white text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50 font-semibold text-sm transition"
                 >
-                  관리 ({allItems.filter(i => i.isCustom).length})
+                  관리 ({allItems.filter(i => i.__customItemSource === 'database').length})
                 </button>
                 <CustomItemCreator
                   onCreateItem={async (data) => {
@@ -921,7 +921,7 @@ export default function AdminView() {
           </Card>
           {showCustomItemManage && (
             <CustomItemManageModal
-              items={allItems.filter(i => i.isCustom)}
+              items={allItems.filter(i => i.__customItemSource === 'database')}
               onUpdate={updateCustomItem}
               onDelete={deleteCustomItem}
               onClose={() => setShowCustomItemManage(false)}

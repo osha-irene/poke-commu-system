@@ -54,6 +54,16 @@ const getDefaultPokedex = (allPokemonData = []) => (
     }))
 );
 
+const markDatabaseCustomItems = (customItems = []) => (
+  (Array.isArray(customItems) ? customItems : Object.values(customItems || {}))
+    .filter(Boolean)
+    .map(item => ({
+      ...item,
+      isCustom: true,
+      __customItemSource: 'database'
+    }))
+);
+
 const buildAllItems = (customItems = []) => {
   const tmItems = technicalMachinesData.tms.map(tm => ({
     id: tm.id,
@@ -85,11 +95,11 @@ const buildAllItems = (customItems = []) => {
     generation: tm.generation
   }));
 
-  return [...itemsData.items, ...tmItems, ...(Array.isArray(customItems) ? customItems : [])];
+  return [...itemsData.items, ...tmItems, ...markDatabaseCustomItems(customItems)];
 };
 
 const getCustomItemsFromAllItems = (allItems = []) => (
-  allItems.filter(item => item?.isCustom)
+  allItems.filter(item => item?.__customItemSource === 'database')
 );
 
 const getTownRowsFromRegions = (nextRegions = []) => {

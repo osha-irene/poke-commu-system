@@ -7,7 +7,6 @@ import { database } from '../firebase';
 
 // 데이터 (JSON 파일들 먼저)
 import allPokemonDataRaw from '../data/allPokemon.json';
-import itemsData from '../data/items.json';
 import movesData from '../data/moves.json';
 
 // 의존성 없는 기본 훅들 (순서 중요!)
@@ -370,26 +369,7 @@ export default function useGameState() {
   // 커스텀 아이템 생성 (adminItems 훅 사용)
   const createCustomItem = async (itemData) => {
     console.log('🎯 useGameState createCustomItem 호출');
-    
-    const result = await adminItems.createCustomItem(itemData);
-    
-    if (result) {
-      try {
-        const customItemsRef = ref(database, 'gameData/customItems');
-        const snapshot = await get(customItemsRef);
-        const customItems = snapshot.exists() ? snapshot.val() : [];
-        
-        const baseItems = itemsData.items;
-        const updatedAllItems = [...baseItems, ...customItems];
-        
-        setAllItems(updatedAllItems);
-        
-      } catch (error) {
-        console.error('❌ 커스텀 아이템 로드 실패:', error);
-      }
-    }
-    
-    return result;
+    return adminItems.createCustomItem(itemData);
   };
 
   const { useRareCandy, ...restPokemonManagement } = pokemonManagement;
@@ -525,12 +505,22 @@ export default function useGameState() {
     adjustMemberItemCount: adminItems.adjustMemberItemCount,
     updateCustomItem: async (itemId, updatedFields) => {
       const ok = await adminItems.updateCustomItem(itemId, updatedFields);
-      if (ok) setAllItems(prev => prev.map(i => i.id === itemId ? { ...i, ...updatedFields } : i));
+      if (ok) {
+        setAllItems(prev => prev.map(i => (
+          i.__customItemSource === 'database' && i.id === itemId
+            ? { ...i, ...updatedFields }
+            : i
+        )));
+      }
       return ok;
     },
     deleteCustomItem: async (itemId) => {
       const ok = await adminItems.deleteCustomItem(itemId);
-      if (ok) setAllItems(prev => prev.filter(i => i.id !== itemId));
+      if (ok) {
+        setAllItems(prev => prev.filter(i => (
+          i.__customItemSource !== 'database' || i.id !== itemId
+        )));
+      }
       return ok;
     }
   };

@@ -5,6 +5,7 @@ const { createCampBot, getCommand: getCampCommand } = require('./campBot');
 const { createTradeBot, getTradeCommand, extractTradePokemonName } = require('./tradeBot');
 const { createNotifyBot } = require('./notifyBot');
 const { createBattleBot } = require('./battleBot');
+const { createContestBot, getContestCommand } = require('./contestBot');
 
 // ── Firebase 초기화 ──────────────────────────────────────────────
 const getFirebaseConfig = () => {
@@ -68,6 +69,12 @@ const notifyCtx = createBotContext({
   botAccount: (process.env.MASTODON_ACCOUNT_NOTIFY || process.env.MASTODON_ACCOUNT || 'notifybot').toLowerCase(),
 });
 
+const contestCtx = createBotContext({
+  instanceUrl: INSTANCE_URL,
+  token: process.env.MASTODON_TOKEN_CONTEST || FALLBACK_TOKEN,
+  botAccount: (process.env.MASTODON_ACCOUNT_CONTEST || FALLBACK_ACCOUNT || 'contestbot').toLowerCase(),
+});
+
 // ── 봇 핸들러 (lazy 초기화) ──────────────────────────────────────
 let _campBot = null;
 const getCampBot = () => {
@@ -115,6 +122,16 @@ const getBattleBot = () => {
     botAccount: battleCtx.botAccount,
   });
   return _battleBot;
+};
+
+let _contestBot = null;
+const getContestBot = () => {
+  if (!_contestBot) _contestBot = createContestBot({
+    db,
+    findMemberByAccount: contestCtx.findMemberByAccount,
+    normalizeAccount: contestCtx.normalizeAccount,
+  });
+  return _contestBot;
 };
 
 const notifyBot = createNotifyBot({
@@ -228,7 +245,7 @@ const findAuthorForStatus = async (ctx, members, status) => {
 
 // 봇 자신의 계정 id를 status.mentions에서 배워 캐시해두고, self-check에 사용한다.
 // verify_credentials 호출은 토큰 스코프 부족으로 403이 나서 쓸 수 없다.
-const botIdLoadedFromDb = { camp: false, trade: false, battle: false };
+const botIdLoadedFromDb = { camp: false, trade: false, battle: false, contest: false };
 const isSelfAuthoredStatus = async (prefix, ctx, status) => {
   if (ctx.isFromBotAccount(status)) return true;
 
@@ -419,6 +436,54 @@ const processBattleStatus = async (status, source = 'webhook') => {
   return { processed: true, command };
 };
 
+// ── 콘테스트 봇 처리 ────────────────────────────────────────────
+// 배틀/캠핑/교환과 달리 참가자별 세션이 아니라 gameData/activeContest 하나를 공개 스레드로
+// 계속 이어붙이는 구조라, 매 응답을 항상 lastStatusId(직전 봇 포스트)에 답글로 단다.
+const processContestStatus = async (status, source = 'webhook') => {
+  if (!status?.id) return { ignored: true, reason: 'no id' };
+  if (await isSelfAuthoredStatus('contest', contestCtx, status)) return { ignored: true, reason: 'self' };
+  const content = stripHtml(status.content);
+  if (!contestCtx.isBotMentioned(status)) return { ignored: true, reason: 'not mentioned' };
+
+  const key = `${status.id}_contest`;
+  if (!(await claimProcessing(db, status.id, 'contest'))) return { ignored: true, reason: 'already processed' };
+
+  const command = getContestCommand(content);
+  const members = await getMembers(db);
+  const { author, authorAccount } = await findAuthorForStatus(contestCtx, members, status);
+  if (!author) {
+    await markProcessed(db, key, { source, ignored: 'unlinked' });
+    await contestCtx.replyToStatus(status, '연동된 계정을 찾을 수 없어요. 프로필 설정에서 마스토돈 계정을 연결해 주세요.');
+    return { ignored: true, reason: 'unlinked' };
+  }
+
+  const response = await getContestBot().handle({ status, content, command, members, author, authorAccount });
+  await markProcessed(db, key, { source, command, account: authorAccount });
+  if (response) {
+    const contest = await getContestBot().getContest();
+    const lastStatusId = contest?.lastStatusId;
+    const posted = lastStatusId
+      ? await contestCtx.replyToStatusId(lastStatusId, response, 'public')
+      : await contestCtx.replyToStatus(status, response);
+    if (posted?.id) {
+      const patch = { lastStatusId: posted.id };
+      if (!contest?.rootStatusId) patch.rootStatusId = posted.id;
+      await db.ref('gameData/activeContest').update(patch);
+    }
+  }
+  return { processed: true, command };
+};
+
+const closeTimedOutContestTurn = async () => {
+  const result = await getContestBot().closeTimedOutTurn?.();
+  if (!result?.message) return { closed: false };
+  const posted = result.lastStatusId
+    ? await contestCtx.replyToStatusId(result.lastStatusId, result.message, 'public')
+    : await contestCtx.makeMastodonRequest('/api/v1/statuses', 'POST', { status: result.message, visibility: 'public' });
+  if (posted?.id) await db.ref('gameData/activeContest/lastStatusId').set(posted.id);
+  return { closed: true };
+};
+
 // ── 폴링 헬퍼 ──────────────────────────────────────────────────
 const pollMentions = async (ctx, processStatus, lastIdKey, prefix) => {
   const lastIdRef = db.ref(`mastodonBot/${lastIdKey}`);
@@ -462,11 +527,18 @@ const getBotRoutesForStatus = (status) => {
   if (getCampCommand(content)) {
     return [{ prefix: 'camp', processStatus: processCampStatus }];
   }
+  // 콘테스트 봇의 기술 선언(declareMove)은 이름만으로 배틀 기술 선언과 겹칠 수 있어
+  // 레거시 공용 웹훅에서는 명시적 명령(시작/참가/마감/취소/도움말)만 우선 라우팅한다.
+  // 기술 선언은 전용 contestWebhook을 통해서만 안전하게 처리된다.
+  if (getContestCommand(content) !== 'declareMove') {
+    return [{ prefix: 'contest', processStatus: processContestStatus }];
+  }
 
   const routes = [];
   if (campCtx.isBotMentioned(status)) routes.push({ prefix: 'camp', processStatus: processCampStatus });
   if (tradeCtx.isBotMentioned(status)) routes.push({ prefix: 'trade', processStatus: processTradeStatus });
   if (battleCtx.isBotMentioned(status)) routes.push({ prefix: 'battle', processStatus: processBattleStatus });
+  if (contestCtx.isBotMentioned(status)) routes.push({ prefix: 'contest', processStatus: processContestStatus });
   return routes;
 };
 
@@ -523,6 +595,20 @@ exports.checkBattleMentions = functions.region(region.region).runWith(scheduleOp
       const timeouts = await closeTimedOutBattleSessions();
       const expired = await getBattleBot().expireStalePendingChallenges?.();
       return { mentions, timeouts, expired };
+    } catch (e) { console.error(e); return null; }
+  });
+
+// 콘테스트 봇
+exports.contestWebhook = functions.region(region.region).runWith(webhookOpts).https.onRequest(async (req, res) => {
+  await handleBotWebhook(req, res, processContestStatus, 'contest');
+});
+exports.checkContestMentions = functions.region(region.region).runWith(scheduleOpts)
+  .pubsub.schedule('every 1 minutes').timeZone('Asia/Seoul')
+  .onRun(async () => {
+    try {
+      const mentions = await pollMentions(contestCtx, processContestStatus, 'lastContestNotificationId', 'contest');
+      const timeout = await closeTimedOutContestTurn();
+      return { mentions, timeout };
     } catch (e) { console.error(e); return null; }
   });
 
@@ -663,7 +749,7 @@ exports.mastodonWebhook = functions.region(region.region).runWith(webhookOpts).h
       results: results.map(r => r.value || r.reason?.message),
     });
   } catch (e) {
-    await Promise.all(['camp', 'trade', 'battle'].map(prefix => markProcessingFailed(db, status?.id, prefix, e, 'webhook')));
+    await Promise.all(['camp', 'trade', 'battle', 'contest'].map(prefix => markProcessingFailed(db, status?.id, prefix, e, 'webhook')));
     console.error('mastodonWebhook error:', e);
     res.status(200).json({ ok: false, accepted: true, retrySuppressed: true, error: e.message });
   }
