@@ -97,6 +97,11 @@ img[src*="items/"][src$=".png"] {
   background: rgba(147, 51, 234, 0.11);
 }
 
+.item-effect-pill--trainerExp {
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.11);
+}
+
 
 /* Pixel-perfect Pokemon sprites: preserve each layout size and only disable smoothing. */
 img[src*="/sprites/pokemon/"],

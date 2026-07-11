@@ -58,6 +58,18 @@ export const getItemEffectBadges = (item = {}) => {
     });
   }
 
+  if (item.specialEffect === 'trainerExp') {
+    const trainerExpBoost = Number(item.boostAmount) || 0;
+    if (trainerExpBoost > 0) {
+      badges.push({
+        label: `멤버 경험치 +${trainerExpBoost}`,
+        title: `사용한 멤버 본인의 경험치 +${trainerExpBoost}`,
+        tone: 'trainerExp',
+        cls: 'bg-blue-50 text-blue-700'
+      });
+    }
+  }
+
   if (item.specialEffect === 'conditionSelect') {
     const amount = Number(item.boostAmount) || positiveEntries(item.conditionBoost)[0]?.[1] || 0;
     if (Number(amount) > 0) {

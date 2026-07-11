@@ -630,8 +630,7 @@ const categories = CATEGORIES.map(cat => {
                           return (
                             <>
                               <p className="text-gray-700 mb-4 text-center">
-                                이 아이템을 사용하면 포켓몬이 아닌<br />
-                                <span className="text-purple-700 font-semibold">회원님 본인의 경험치</span>가 오릅니다.
+                                <span className="text-purple-700 font-semibold">본인의 경험치</span>가 {details.boostAmount}점 상승합니다.
                               </p>
                               <div className="flex gap-2">
                                 <button onClick={closeModal} className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors">

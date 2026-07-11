@@ -310,8 +310,7 @@ export default function MobileItemsView() {
             </div>
             {selectedDetails.specialEffect === 'trainerExp' ? (
               <div style={{ padding: 20, textAlign: 'center', color: P.text, fontSize: 13, lineHeight: 1.6 }}>
-                이 아이템을 사용하면 포켓몬이 아닌<br />
-                <span style={{ color: '#7020c0', fontWeight: 700 }}>회원님 본인의 경험치</span>가 오릅니다.
+                <span style={{ color: '#7020c0', fontWeight: 700 }}>본인의 경험치</span>가 {selectedDetails.boostAmount}점 상승합니다.
               </div>
             ) : (
             <div style={{ overflowY: 'auto', padding: 12, scrollbarWidth: 'none', flex: 1 }}>
