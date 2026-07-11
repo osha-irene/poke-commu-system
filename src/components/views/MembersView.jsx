@@ -875,6 +875,12 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   const isOwner = String(member.id || '') === String(currentUserId || '');
   const canEdit = isAdmin;
   const canEditRelations = isAdmin || isOwner;
+  const updateMemberViewFields = async (updates) => {
+    const { getDatabase, ref, update } = await import('firebase/database');
+    const db = getDatabase();
+    await update(ref(db, `members/${member.id}`), updates);
+    await update(ref(db, `memberViewData/${member.id}`), updates);
+  };
   const fullImg = getFullImg(member);
   const imgRef = useRef(null);
   const opaqueBottomRatioRef = useRef(1);
@@ -1090,7 +1096,6 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
 
   const saveBadgeCleanlinessLevels = async (nextLevels, cleanedIndex, markCleaned = false) => {
     try {
-      const { getDatabase, ref, update } = await import('firebase/database');
       const now = Date.now();
       const nextCleanedAtLevels = badgeCleanedAtLevels.map((value, i) => {
         if (i !== cleanedIndex) return value;
@@ -1098,7 +1103,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
       });
       setBadgeCleanedAtLevels(nextCleanedAtLevels);
       if (markCleaned) setBadgeSparkleNow(now);
-      await update(ref(getDatabase(), `members/${member.id}`), {
+      await updateMemberViewFields({
         badgeCleanlinessLevels: nextLevels,
         badgeCleanedAtLevels: nextCleanedAtLevels,
       });
@@ -1168,8 +1173,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   const saveRelations = async (nextRelations) => {
     setRelationSaving(true);
     try {
-      const { getDatabase, ref, update } = await import('firebase/database');
-      await update(ref(getDatabase(), `members/${member.id}`), { relations: nextRelations });
+      await updateMemberViewFields({ relations: nextRelations });
       setRelations(nextRelations);
     } catch (err) {
       console.error('관계 저장 실패:', err);
@@ -1188,8 +1192,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     if (!canEdit) return;
     setEtcSaving(true);
     try {
-      const { getDatabase, ref, update } = await import('firebase/database');
-      await update(ref(getDatabase(), `members/${member.id}`), { etcText });
+      await updateMemberViewFields({ etcText });
     } finally {
       setEtcSaving(false);
       setEtcEditing(false);
@@ -1200,9 +1203,8 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     if (!canEdit) return;
     setKwSaving(true);
     try {
-      const { getDatabase, ref, update } = await import('firebase/database');
       const next = [...keywordTexts];
-      await update(ref(getDatabase(), `members/${member.id}`), { keywordTexts: next });
+      await updateMemberViewFields({ keywordTexts: next });
     } finally {
       setKwSaving(false);
       setKwEditing(null);
@@ -1213,8 +1215,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     if (!canEdit) return;
     setNoteSaving(true);
     try {
-      const { getDatabase, ref, update } = await import('firebase/database');
-      await update(ref(getDatabase(), `members/${member.id}`), { note: note.trim() });
+      await updateMemberViewFields({ note: note.trim() });
     } finally {
       setNoteSaving(false);
       setNoteEditing(false);
@@ -1227,8 +1228,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     if (nextText === savedPartnerText) return true;
     setPartnerTextSaving(true);
     try {
-      const { getDatabase, ref, update } = await import('firebase/database');
-      await update(ref(getDatabase(), `members/${member.id}`), { partnerText: nextText });
+      await updateMemberViewFields({ partnerText: nextText });
       setPartnerText(nextText);
       setSavedPartnerText(nextText);
       return true;
@@ -1633,13 +1633,14 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             marginLeft: '-13%',
             zIndex: MEMBER_CHARACTER_Z_INDEX, pointerEvents: 'none',
           }}>
-            <div style={{
+            <div
+              className={`rmv-polaroid-detail${(tab === 'text' || tab === 'relation') ? ' rmv-polaroid-pushed' : ''}${charTabTransition ? ` ${charTabTransition}` : ''}`}
+              style={{
               position: 'relative',
               aspectRatio: '628 / 747',
               height: '62vh',
               marginTop: '-15%',
               filter: 'drop-shadow(4px 5px 1px rgba(0,0,0,0.32))',
-              transform: 'translate(-50px, 20px) rotate(-8deg)',
             }}>
               {/* 폴라로이드 프레임 — 아래 레이어 */}
               <img src={polaroidDetailWhite} alt="" draggable={false} style={{

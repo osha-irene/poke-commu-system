@@ -3,7 +3,7 @@
 
 import { initializeApp, deleteApp } from 'firebase/app';
 import { createUserWithEmailAndPassword, getAuth, signOut } from 'firebase/auth';
-import { ref, set, update } from 'firebase/database';
+import { ref, set, update, get } from 'firebase/database';
 import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
 import { auth, database, storage, functions } from '../../firebase';
@@ -33,6 +33,19 @@ export const useAdminMembers = (
   const isEmptyPokemonSlot = (pokemon) => (
     pokemon === null || pokemon === undefined || pokemon === 'null'
   );
+
+  // Firebase는 null이 섞인 배열을 숫자 키 객체로 돌려줄 수 있어 배열로 복원한다
+  const normalizeToArray = (value) => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'object') {
+      const keys = Object.keys(value).map(Number).filter(Number.isFinite);
+      if (keys.length === 0) return [];
+      const maxIndex = Math.max(...keys);
+      return Array.from({ length: maxIndex + 1 }, (_, i) => value[i] ?? null);
+    }
+    return [];
+  };
 
   const getSpeciesNumber = (pokemon) => Number(pokemon?.originalNumber || pokemon?.displayNumber || pokemon?.number);
 
@@ -567,6 +580,123 @@ export const useAdminMembers = (
       alert('모든 회원의 산책 횟수가 초기화되었습니다!');
     } catch (error) {
       console.error('❌ 전체 산책 횟수 초기화 실패:', error);
+    }
+  };
+
+  // ========== 파트너 포켓몬 레벨 일괄 조정 (선택 회원 대상) ==========
+  const bulkAdjustPartnerLevel = async (memberIds, delta) => {
+    if (!currentUser?.isAdmin) return;
+
+    const numericDelta = Number(delta);
+    if (!Number.isFinite(numericDelta) || numericDelta === 0) {
+      alert('조정할 레벨 값을 입력해주세요.');
+      return;
+    }
+
+    const targetIds = (memberIds || []).filter(id => members[id]?.partnerPokemon);
+    if (targetIds.length === 0) {
+      alert('선택한 회원 중 파트너 포켓몬을 보유한 회원이 없습니다.');
+      return;
+    }
+
+    try {
+      const updates = {};
+      for (const id of targetIds) {
+        const member = members[id];
+        const currentLevel = member.partnerPokemon.level || 1;
+        const newLevel = Math.max(1, Math.min(100, currentLevel + numericDelta));
+        const updatedPartner = { ...member.partnerPokemon, level: newLevel };
+
+        await update(ref(database, `members/${id}/partnerPokemon`), { level: newLevel });
+
+        updates[id] = { ...member, partnerPokemon: updatedPartner };
+      }
+
+      setMembers(prev => ({ ...prev, ...updates }));
+
+      const selfUpdate = updates[currentUser?.id];
+      if (selfUpdate) {
+        updateCurrentUser({ partnerPokemon: selfUpdate.partnerPokemon });
+      }
+
+      const sign = numericDelta > 0 ? '+' : '';
+      alert(`${targetIds.length}명의 파트너 포켓몬 레벨을 ${sign}${numericDelta} 조정했습니다!`);
+    } catch (error) {
+      console.error('❌ 파트너 포켓몬 레벨 일괄 조정 실패:', error);
+      alert('레벨 조정 중 오류가 발생했습니다: ' + error.message);
+    }
+  };
+
+  // ========== 보유 포켓몬 전체 친밀도 일괄 증가 (선택 회원 대상) ==========
+  const bulkIncreaseFriendship = async (memberIds, amount) => {
+    if (!currentUser?.isAdmin) return;
+
+    const numericAmount = Number(amount);
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      alert('증가시킬 친밀도 값을 입력해주세요.');
+      return;
+    }
+
+    const targetIds = (memberIds || []).filter(id => members[id]);
+    if (targetIds.length === 0) {
+      alert('선택한 회원이 없습니다.');
+      return;
+    }
+
+    try {
+      const updates = {};
+      let affectedPokemonCount = 0;
+      let alreadyMaxCount = 0;
+      let changedCount = 0;
+
+      const increaseOne = (p) => {
+        if (!p) return p;
+        affectedPokemonCount += 1;
+        const before = p.friendship || 0;
+        const after = Math.min(255, before + numericAmount);
+        if (before >= 255) alreadyMaxCount += 1;
+        else if (after !== before) changedCount += 1;
+        return { ...p, friendship: after };
+      };
+
+      for (const id of targetIds) {
+        // 항상 Firebase의 최신 값을 기준으로 다시 읽어서 계산 — 로컬 캐시가 서버와
+        // 어긋나 있어도(예: 방금 다른 곳에서 변경된 직후) 증가가 누락되지 않게 한다.
+        const memberSnapshot = await get(ref(database, `members/${id}`));
+        const latestMember = memberSnapshot.exists() ? memberSnapshot.val() : members[id];
+        const latestCaught = normalizeToArray(latestMember?.caughtPokemon);
+
+        const updatedCaught = latestCaught.map(increaseOne);
+        const updatedPartner = latestMember?.partnerPokemon
+          ? increaseOne(latestMember.partnerPokemon)
+          : latestMember?.partnerPokemon;
+
+        const fieldUpdates = { caughtPokemon: updatedCaught };
+        if (updatedPartner) fieldUpdates.partnerPokemon = updatedPartner;
+
+        const cleanUpdates = JSON.parse(
+          JSON.stringify(fieldUpdates, (key, value) => (value === undefined ? null : value))
+        );
+        await update(ref(database, `members/${id}`), cleanUpdates);
+
+        updates[id] = { ...members[id], ...latestMember, id, caughtPokemon: updatedCaught, ...(updatedPartner ? { partnerPokemon: updatedPartner } : {}) };
+      }
+
+      setMembers(prev => ({ ...prev, ...updates }));
+
+      const selfUpdate = updates[currentUser?.id];
+      if (selfUpdate) {
+        updateCurrentUser({
+          caughtPokemon: selfUpdate.caughtPokemon,
+          ...(selfUpdate.partnerPokemon ? { partnerPokemon: selfUpdate.partnerPokemon } : {})
+        });
+      }
+
+      const maxNote = alreadyMaxCount > 0 ? `\n(이미 친밀도 255(최대)라 변화 없는 포켓몬 ${alreadyMaxCount}마리 포함)` : '';
+      alert(`${targetIds.length}명의 보유 포켓몬(총 ${affectedPokemonCount}마리 중 ${changedCount}마리 실제 증가) 친밀도를 ${numericAmount} 증가시켰습니다!${maxNote}`);
+    } catch (error) {
+      console.error('❌ 친밀도 일괄 증가 실패:', error);
+      alert('친밀도 증가 중 오류가 발생했습니다: ' + error.message);
     }
   };
 
@@ -1634,6 +1764,8 @@ export const useAdminMembers = (
     updateMaxDailyWalks,
     resetMemberWalkCount,
     resetAllWalkCounts,
+    bulkAdjustPartnerLevel,
+    bulkIncreaseFriendship,
     givePokemonToMember,
     transferMemberPokemon,
     deleteMemberPokemon,

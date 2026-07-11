@@ -10,6 +10,7 @@ import RegionEditModal from '../modals/RegionEditModal';
 import PokedexAdminPanel from './admin/PokedexAdminPanel';
 import ShopAdminPanel from './admin/ShopAdminPanel';
 import MemberDetailPanel from './admin/MemberDetailPanel';
+import BulkMemberActionsModal from './admin/BulkMemberActionsModal';
 import CustomItemCreator, { CustomItemModal } from './admin/CustomItemCreator';
 import RegionExplorePanel from './admin/RegionExplorePanel';
 import CookingAdminPanel from './admin/CookingAdminPanel';
@@ -17,6 +18,7 @@ import LevelRestrictionPanel from './admin/LevelRestrictionPanel';
 import CampingAdminPanel from './admin/CampingAdminPanel';
 import ScheduleAdminPanel from './admin/ScheduleAdminPanel';
 import MapEditorPanel from './admin/MapEditorPanel';
+import ContestAdminPanel from './admin/ContestAdminPanel';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
@@ -201,6 +203,9 @@ export default function AdminView() {
     toggleAdminStatus,
     resetMemberWalkCount,
     resetAllWalkCounts,
+    bulkAdjustPartnerLevel,
+    bulkIncreaseFriendship,
+    bulkGiveItem,
     resetGameData,
     giveItemToMember,
     givePokemonToMember,
@@ -236,6 +241,7 @@ export default function AdminView() {
   const [conditionMax, setConditionMax] = useState(systemSettings.conditionMax || 100);
   const [editingRegion, setEditingRegion] = useState(null);
   const [selectedMemberId, setSelectedMemberId] = useState(null);
+  const [showBulkActions, setShowBulkActions] = useState(false);
   const [newMemberId, setNewMemberId] = useState('');
   const [newMemberPassword, setNewMemberPassword] = useState('');
   const [newMemberName, setNewMemberName] = useState('');
@@ -444,6 +450,13 @@ export default function AdminView() {
     }
   };
 
+  const handleEmergencyMaintenance = () => {
+    if (window.confirm('긴급 점검을 시작하시겠습니까?\n\n카운트다운 없이 즉시 모든 유저의 접근이 차단됩니다.')) {
+      cancelScheduledMaintenance?.();
+      setMaintenanceMode?.(true);
+    }
+  };
+
   const handleDeleteRecipe = (recipeId) => {
     deleteRecipe?.(recipeId);
   };
@@ -495,6 +508,7 @@ export default function AdminView() {
     { id: 'shop',     label: '상점',  icon: ShoppingBag },
     { id: 'cooking',  label: '요리',  icon: UtensilsCrossed },
     { id: 'camping',  label: '캠핑',  icon: Tent },
+    { id: 'contest',  label: '콘테스트', icon: Medal },
     { id: 'schedule', label: '일정',  icon: Calendar },
     { id: 'settings', label: '시스템', icon: Settings },
     ...(trainer?.isSuperAdmin ? [{ id: 'danger', label: '위험', icon: AlertTriangle, variant: 'danger' }] : []),
@@ -604,13 +618,22 @@ export default function AdminView() {
               <h4 className="font-semibold text-gray-700">
                 멤버 목록 ({Object.values(members).filter(m => !m.isNPC).length}명)
               </h4>
-              <Button
-                variant="warning"
-                size="sm"
-                onClick={handleBulkResetWalks}
-              >
-                전체 탐험 횟수 리셋
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setShowBulkActions(true)}
+                >
+                  일괄 작업
+                </Button>
+                <Button
+                  variant="warning"
+                  size="sm"
+                  onClick={handleBulkResetWalks}
+                >
+                  전체 탐험 횟수 리셋
+                </Button>
+              </div>
             </div>
 
             {Object.values(members).filter(m => !m.isNPC).map((member) => (
@@ -821,13 +844,24 @@ export default function AdminView() {
                   </div>
                 </div>
               </div>
-              <Button
-                variant={maintenanceMode || maintenanceScheduledAt ? 'success' : 'warning'}
-                size="md"
-                onClick={handleToggleMaintenance}
-              >
-                {maintenanceMode ? '점검 종료' : maintenanceScheduledAt ? '점검 예약 취소' : '점검 시작'}
-              </Button>
+              <div className="flex gap-2">
+                {!maintenanceMode && (
+                  <Button
+                    variant="danger"
+                    size="md"
+                    onClick={handleEmergencyMaintenance}
+                  >
+                    긴급 점검
+                  </Button>
+                )}
+                <Button
+                  variant={maintenanceMode || maintenanceScheduledAt ? 'success' : 'warning'}
+                  size="md"
+                  onClick={handleToggleMaintenance}
+                >
+                  {maintenanceMode ? '점검 종료' : maintenanceScheduledAt ? '점검 예약 취소' : '점검 시작'}
+                </Button>
+              </div>
             </div>
           </Card>
           <Card className="p-6">
@@ -1150,6 +1184,8 @@ export default function AdminView() {
 		  />
 		)}
 
+      {adminTab === 'contest' && <ContestAdminPanel />}
+
       {adminTab === 'schedule' && <ScheduleAdminPanel />}
 
       {/* 위험 구역 탭 */}
@@ -1210,6 +1246,16 @@ export default function AdminView() {
           updateCurrentUser={updateCurrentUser}
         />
       )}
+
+      <BulkMemberActionsModal
+        show={showBulkActions}
+        onClose={() => setShowBulkActions(false)}
+        members={members}
+        allItems={allItems}
+        onBulkAdjustPartnerLevel={bulkAdjustPartnerLevel}
+        onBulkIncreaseFriendship={bulkIncreaseFriendship}
+        onBulkGiveItem={bulkGiveItem}
+      />
     </div>
   );
 }

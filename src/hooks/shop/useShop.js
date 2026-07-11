@@ -1,7 +1,7 @@
 // src/hooks/shop/useShop.js - 완전한 최종 버전
 
 import { useState, useEffect } from 'react';
-import { ref, onValue, set } from 'firebase/database';
+import { ref, get, onChildAdded, onChildChanged, onChildRemoved, set } from 'firebase/database';
 import { database } from '../../firebase';
 import { getItemPocket } from '../../utils/itemUtils';
 
@@ -110,186 +110,168 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log('🔄 useShop useEffect 실행');
-    console.log('📦 allItems:', allItems?.length || 0, '개');
-    
-    if (!allItems || allItems.length === 0) {
-      console.log('⏳ allItems 로딩 대기 중...');
-      return;
-    }
-    
+    if (!allItems || allItems.length === 0) return;
+
     const shopRef = ref(database, 'gameData/shopData');
-    
-    const unsubscribe = onValue(shopRef, async (snapshot) => {
-      if (snapshot.exists()) {
-        const loadedData = snapshot.val();
-        const currentWeek = getWeekKey(new Date());
-        
-        // 기본값 설정
-        if (!loadedData.randomBoxes) {
-          loadedData.randomBoxes = getDefaultRandomBoxes();
-        }
-        if (!loadedData.initialDailyItems) {
-          loadedData.initialDailyItems = getDefaultInitialDailyItems();
-        }
-        if (!loadedData.rareItemConfig) {
-          loadedData.rareItemConfig = { enabled: false };
-        }
-        if (!loadedData.periodItemPool) {
-          loadedData.periodItemPool = [];
-        }
-        if (!loadedData.periodItemConfig) {
-          loadedData.periodItemConfig = { enabled: false };
-        }
+    let isMounted = true;
+    let isInitialLoad = true;
 
-        // ⭐ 희귀템 자동 추첨 체크
-        const today = new Date().toISOString().split('T')[0];
-        const needsRareItemRefresh = loadedData.rareDailyItem?.lastRefresh !== today;
+    const normalizeShopData = (loadedData = {}) => {
+      const currentWeek = getWeekKey(new Date());
+      const initialDailyItems = loadedData.initialDailyItems || getDefaultInitialDailyItems();
+      const enrichedDailyItems = {};
 
-        if (needsRareItemRefresh && loadedData.rareItemPool && loadedData.rareItemPool.length > 0) {
-          console.log('🎲 희귀템 자동 추첨 실행');
-          const randomIndex = Math.floor(Math.random() * loadedData.rareItemPool.length);
-          const selectedRareItem = loadedData.rareItemPool[randomIndex];
+      for (const [day, items] of Object.entries(loadedData.dailyItems || {})) {
+        enrichedDailyItems[day] = items.map(item => {
+          if (item.imageUrl && item.description) return item;
+          return enrichItemData(item, allItems);
+        }).filter(Boolean);
+      }
 
-          loadedData.rareDailyItem = {
-            itemId: selectedRareItem.itemId,
-            price: selectedRareItem.price,
-            stock: 1,
-            lastRefresh: today
-          };
+      return {
+        dailyItems: enrichedDailyItems,
+        initialDailyItems,
+        permanentItems: loadedData.permanentItems || [],
+        rareDailyItem: loadedData.rareDailyItem || null,
+        rareItemPool: loadedData.rareItemPool || [],
+        rareItemConfig: loadedData.rareItemConfig || { enabled: false },
+        periodItem: loadedData.periodItem || null,
+        periodItemPool: loadedData.periodItemPool || [],
+        periodItemConfig: loadedData.periodItemConfig || { enabled: false },
+        gachaBall: loadedData.gachaBall || { enabled: false, balls: [] },
+        randomBoxes: loadedData.randomBoxes || getDefaultRandomBoxes(),
+        refreshInterval: loadedData.refreshInterval || 86400000,
+        lastRefresh: loadedData.lastRefresh || Date.now(),
+        lastWeekReset: loadedData.lastWeekReset || currentWeek
+      };
+    };
 
-          await set(shopRef, loadedData);
-          console.log('✅ 오늘의 한정 아이템 추첨 완료:', allItems.find(i => i.id === selectedRareItem.itemId)?.name);
-        }
+    const ensureShopData = async (loadedData = {}) => {
+      const currentWeek = getWeekKey(new Date());
+      const baseData = {
+        ...loadedData,
+        randomBoxes: loadedData.randomBoxes || getDefaultRandomBoxes(),
+        initialDailyItems: loadedData.initialDailyItems || getDefaultInitialDailyItems(),
+        dailyItems: loadedData.dailyItems || {},
+        rareItemConfig: loadedData.rareItemConfig || { enabled: false },
+        periodItemPool: loadedData.periodItemPool || [],
+        periodItemConfig: loadedData.periodItemConfig || { enabled: false },
+      };
 
-        // ⭐ 기간한정 아이템 자동 추첨 체크 (주단위)
-        const needsPeriodItemRefresh = loadedData.periodItem?.lastRefresh !== currentWeek;
+      const today = new Date().toISOString().split('T')[0];
+      if (baseData.rareDailyItem?.lastRefresh !== today && baseData.rareItemPool?.length > 0) {
+        const selectedRareItem = baseData.rareItemPool[Math.floor(Math.random() * baseData.rareItemPool.length)];
+        baseData.rareDailyItem = {
+          itemId: selectedRareItem.itemId,
+          price: selectedRareItem.price,
+          stock: 1,
+          lastRefresh: today
+        };
+      }
 
-        if (needsPeriodItemRefresh && loadedData.periodItemPool && loadedData.periodItemPool.length > 0) {
-          console.log('🎲 기간한정 아이템 자동 추첨 실행');
-          const randomIndex = Math.floor(Math.random() * loadedData.periodItemPool.length);
-          const selectedPeriodItem = loadedData.periodItemPool[randomIndex];
+      if (baseData.periodItem?.lastRefresh !== currentWeek && baseData.periodItemPool?.length > 0) {
+        const randomIndex = Math.floor(Math.random() * baseData.periodItemPool.length);
+        const selectedPeriodItem = baseData.periodItemPool[randomIndex];
+        baseData.periodItem = {
+          itemId: selectedPeriodItem.itemId,
+          price: selectedPeriodItem.price,
+          stock: selectedPeriodItem.stock ?? 10,
+          lastRefresh: currentWeek
+        };
+        baseData.periodItemPool = baseData.periodItemPool.filter((_, idx) => idx !== randomIndex);
+      }
 
-          loadedData.periodItem = {
-            itemId: selectedPeriodItem.itemId,
-            price: selectedPeriodItem.price,
-            stock: selectedPeriodItem.stock ?? 10,
-            lastRefresh: currentWeek
-          };
-          loadedData.periodItemPool = loadedData.periodItemPool.filter(
-            (_, idx) => idx !== randomIndex
-          );
-
-          await set(shopRef, loadedData);
-          console.log('✅ 이번 주 기간한정 아이템 추첨 완료 (풀에서 제거됨):', allItems.find(i => i.id === selectedPeriodItem.itemId)?.name);
-        }
-
-        const needsWeeklyReset = !loadedData.lastWeekReset || loadedData.lastWeekReset !== currentWeek;
-        
-        if (needsWeeklyReset) {
-          console.log('🔄 새로운 주 감지! 요일별 아이템 재고 리셋');
-          
-          const resetDailyItems = {};
-          
-          for (const day of ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']) {
-            const initialItems = loadedData.initialDailyItems[day] || [];
-            const currentItems = loadedData.dailyItems[day] || [];
-            
-            const enrichedInitialItems = initialItems
-              .map(template => enrichItemData(template, allItems))
-              .filter(Boolean);
-            
-            const persistentAddedItems = currentItems.filter(item => 
-              item.isPersistent === true && 
-              !initialItems.some(init => init.itemId === item.itemId)
-            );
-            
-            resetDailyItems[day] = [...enrichedInitialItems, ...persistentAddedItems];
-            console.log(`✅ ${day}: ${resetDailyItems[day].length}개`);
-          }
-          
-          const resetData = {
-            ...loadedData,
-            dailyItems: resetDailyItems,
-            lastWeekReset: currentWeek
-          };
-          
-          await set(shopRef, resetData);
-          setShopData(resetData);
-          console.log('✅ 리셋 완료');
-          
-        } else {
-          console.log('ℹ️ 주간 리셋 불필요, enrichment 적용');
-          
-          const enrichedDailyItems = {};
-          for (const [day, items] of Object.entries(loadedData.dailyItems || {})) {
-            enrichedDailyItems[day] = items.map(item => {
-              if (item.imageUrl && item.description) {
-                return item;
-              }
-              return enrichItemData(item, allItems);
-            }).filter(Boolean);
-          }
-          
-          const normalizedData = {
-            dailyItems: enrichedDailyItems,
-            initialDailyItems: loadedData.initialDailyItems || getDefaultInitialDailyItems(),
-            permanentItems: loadedData.permanentItems || [],
-            rareDailyItem: loadedData.rareDailyItem || null,
-            rareItemPool: loadedData.rareItemPool || [],
-            rareItemConfig: loadedData.rareItemConfig || { enabled: false },
-            periodItem: loadedData.periodItem || null,
-            periodItemPool: loadedData.periodItemPool || [],
-            periodItemConfig: loadedData.periodItemConfig || { enabled: false },
-            gachaBall: loadedData.gachaBall || { enabled: false, balls: [] },
-            randomBoxes: loadedData.randomBoxes || getDefaultRandomBoxes(),
-            refreshInterval: loadedData.refreshInterval || 86400000,
-            lastRefresh: loadedData.lastRefresh || Date.now(),
-            lastWeekReset: loadedData.lastWeekReset || currentWeek
-          };
-          
-          setShopData(normalizedData);
-        }
-        
-      } else {
-        console.log('🔧 초기 상점 데이터 생성 중...');
-        
-        const currentWeek = getWeekKey(new Date());
-        const defaultTemplate = getDefaultInitialDailyItems();
-        
-        const enrichedDailyItems = {};
-        for (const [day, items] of Object.entries(defaultTemplate)) {
-          enrichedDailyItems[day] = items
+      if (!baseData.lastWeekReset || baseData.lastWeekReset !== currentWeek) {
+        const resetDailyItems = {};
+        for (const day of ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']) {
+          const initialItems = baseData.initialDailyItems[day] || [];
+          const currentItems = baseData.dailyItems?.[day] || [];
+          const enrichedInitialItems = initialItems
             .map(template => enrichItemData(template, allItems))
             .filter(Boolean);
+          const persistentAddedItems = currentItems.filter(item =>
+            item.isPersistent === true &&
+            !initialItems.some(init => init.itemId === item.itemId)
+          );
+          resetDailyItems[day] = [...enrichedInitialItems, ...persistentAddedItems];
         }
-        
-        const initialShopData = {
-          dailyItems: enrichedDailyItems,
-          initialDailyItems: defaultTemplate,
-          permanentItems: [],
-          rareDailyItem: null,
-          rareItemPool: [],
-          rareItemConfig: { enabled: false },
-          periodItem: null,
-          periodItemPool: [],
-          periodItemConfig: { enabled: false },
-          gachaBall: { enabled: false, balls: [] },
-          randomBoxes: getDefaultRandomBoxes(),
-          refreshInterval: 86400000,
-          lastRefresh: Date.now(),
-          lastWeekReset: currentWeek
-        };
-        
-        await set(shopRef, initialShopData);
-        setShopData(initialShopData);
-        console.log('✅ 초기 상점 데이터 생성 완료');
+        baseData.dailyItems = resetDailyItems;
+        baseData.lastWeekReset = currentWeek;
       }
-      
-      setIsLoading(false);
+
+      return baseData;
+    };
+
+    get(shopRef)
+      .then(async (snapshot) => {
+        if (!snapshot.exists()) {
+          const currentWeek = getWeekKey(new Date());
+          const defaultTemplate = getDefaultInitialDailyItems();
+          const enrichedDailyItems = {};
+          for (const [day, items] of Object.entries(defaultTemplate)) {
+            enrichedDailyItems[day] = items.map(template => enrichItemData(template, allItems)).filter(Boolean);
+          }
+          const initialShopData = {
+            dailyItems: enrichedDailyItems,
+            initialDailyItems: defaultTemplate,
+            permanentItems: [],
+            rareDailyItem: null,
+            rareItemPool: [],
+            rareItemConfig: { enabled: false },
+            periodItem: null,
+            periodItemPool: [],
+            periodItemConfig: { enabled: false },
+            gachaBall: { enabled: false, balls: [] },
+            randomBoxes: getDefaultRandomBoxes(),
+            refreshInterval: 86400000,
+            lastRefresh: Date.now(),
+            lastWeekReset: currentWeek
+          };
+          await set(shopRef, initialShopData);
+          if (isMounted) setShopData(initialShopData);
+          return;
+        }
+
+        const loadedData = snapshot.val();
+        const ensuredData = await ensureShopData(loadedData);
+        if (JSON.stringify(ensuredData) !== JSON.stringify(loadedData)) {
+          await set(shopRef, ensuredData);
+        }
+        if (isMounted) setShopData(normalizeShopData(ensuredData));
+      })
+      .catch((error) => {
+        console.error('shop data load failed:', error);
+      })
+      .finally(() => {
+        isInitialLoad = false;
+        if (isMounted) setIsLoading(false);
+      });
+
+    const handleChildSnapshot = (snapshot) => {
+      if (isInitialLoad) return;
+      setShopData(prev => normalizeShopData({
+        ...prev,
+        [snapshot.key]: snapshot.val()
+      }));
+    };
+
+    const unsubAdded = onChildAdded(shopRef, handleChildSnapshot);
+    const unsubChanged = onChildChanged(shopRef, handleChildSnapshot);
+    const unsubRemoved = onChildRemoved(shopRef, (snapshot) => {
+      if (isInitialLoad) return;
+      setShopData(prev => {
+        const next = { ...prev };
+        delete next[snapshot.key];
+        return normalizeShopData(next);
+      });
     });
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubAdded();
+      unsubChanged();
+      unsubRemoved();
+    };
   }, [allItems]);
 
   const updateShopData = async (newShopData) => {

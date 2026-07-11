@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Sketch from '@uiw/react-color-sketch';
-import { ref, set, onValue } from 'firebase/database';
+import { ref, get, set, onChildAdded, onChildChanged, onChildRemoved } from 'firebase/database';
 import { database } from '../../../firebase';
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
@@ -73,10 +73,40 @@ export default function ScheduleAdminPanel() {
 
   useEffect(() => {
     const eventsRef = ref(database, 'gameData/scheduleEvents');
-    const unsub = onValue(eventsRef, (snap) => {
-      setEvents(snap.exists() ? Object.values(snap.val()) : []);
+    let isInitialLoad = true;
+
+    get(eventsRef)
+      .then((snap) => {
+        setEvents(snap.exists()
+          ? Object.entries(snap.val()).map(([key, value]) => ({ firebaseKey: key, ...value }))
+          : []);
+      })
+      .finally(() => {
+        isInitialLoad = false;
+      });
+
+    const upsertEvent = (snap) => {
+      if (isInitialLoad || !snap.exists()) return;
+      const nextEvent = { firebaseKey: snap.key, ...snap.val() };
+      setEvents(prev => {
+        const exists = prev.some(event => event.firebaseKey === snap.key);
+        if (!exists) return [...prev, nextEvent];
+        return prev.map(event => event.firebaseKey === snap.key ? nextEvent : event);
+      });
+    };
+
+    const unsubAdded = onChildAdded(eventsRef, upsertEvent);
+    const unsubChanged = onChildChanged(eventsRef, upsertEvent);
+    const unsubRemoved = onChildRemoved(eventsRef, (snap) => {
+      if (isInitialLoad) return;
+      setEvents(prev => prev.filter(event => event.firebaseKey !== snap.key));
     });
-    return () => unsub();
+
+    return () => {
+      unsubAdded();
+      unsubChanged();
+      unsubRemoved();
+    };
   }, []);
 
   const saveEvents = async (next) => {

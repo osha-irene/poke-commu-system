@@ -112,6 +112,35 @@ export const useAdminItems = (
     alert(`${member.name}님에게 ${item.name} ${count}개를 지급했습니다!`);
   };
 
+  // ========== 여러 회원에게 아이템 일괄 지급 ==========
+  const bulkGiveItem = async (memberIds, item, count) => {
+    if (!canManageItems()) return;
+
+    const targetIds = (memberIds || []).filter(id => members[id]);
+    if (targetIds.length === 0) {
+      alert('선택한 회원이 없습니다.');
+      return;
+    }
+
+    let successCount = 0;
+    const failedNames = [];
+
+    for (const memberId of targetIds) {
+      const result = await applyInventoryMutation(memberId, buildInventoryAddMutator(item, count));
+      if (result.committed) {
+        successCount += 1;
+      } else {
+        failedNames.push(members[memberId]?.name || memberId);
+      }
+    }
+
+    if (failedNames.length > 0) {
+      alert(`${successCount}명에게 ${item.name} ${count}개를 지급했습니다.\n실패: ${failedNames.join(', ')}`);
+    } else {
+      alert(`${successCount}명에게 ${item.name} ${count}개씩 지급했습니다!`);
+    }
+  };
+
   // ========== 커스텀 아이템 생성 ==========
   const createCustomItem = async (itemData, { silent = false } = {}) => {
     if (!canManageItems()) {
@@ -221,6 +250,7 @@ export const useAdminItems = (
   return {
     addItemToSelf,
     giveItemToMember,
+    bulkGiveItem,
     deleteItemFromMember,
     adjustMemberItemCount,
     createCustomItem,

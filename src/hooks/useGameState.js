@@ -80,6 +80,7 @@ export default function useGameState() {
   const [allPokemonMaster] = useState(allPokemonDataParsed);
   const [allMoves] = useState(movesData.moves || []);
   const [pokemonLearnsets] = useState(movesData.pokemonLearnsets || {});
+  const [loadFullMembers, setLoadFullMembers] = useState(false);
 
   // 기본 데이터 & 인증
   const {
@@ -101,7 +102,7 @@ export default function useGameState() {
     updatePokedexMemo: gameDataUpdatePokedexMemo
   } = useGameData(allPokemonDataParsed);
 
-  const { members, setMembers, isLoading: isMembersLoading } = useMembers(allPokemonDataParsed);
+  const { members, memberViewMembers, setMembers, isLoading: isMembersLoading } = useMembers(allPokemonDataParsed, loadFullMembers);
 
   const {
     currentUser,
@@ -112,6 +113,10 @@ export default function useGameState() {
     changeCurrentUserPassword,
     isLoading: isAuthLoading
   } = useAuth(members, setMembers, allPokemonDataParsed);
+
+  useEffect(() => {
+    setLoadFullMembers(Boolean(currentUser?.isAdmin || currentUser?.isSuperAdmin));
+  }, [currentUser?.isAdmin, currentUser?.isSuperAdmin]);
 
   // 상점
   const {
@@ -394,6 +399,7 @@ export default function useGameState() {
     const titleValue = titleId === 'none' ? null : titleId;
     try {
       await update(ref(database, `members/${currentUser.id}`), { title: titleValue });
+      await update(ref(database, `memberViewData/${currentUser.id}`), { title: titleValue });
       updateCurrentUser({ title: titleValue });
     } catch (e) {
       console.error('칭호 변경 실패:', e);
@@ -419,6 +425,7 @@ export default function useGameState() {
     allPokemonMaster,
     allItems,
     members,
+    memberViewMembers,
     gamePokedex,
     sharedPokedexData,
     shopData,
@@ -513,6 +520,7 @@ export default function useGameState() {
     // 관리자 기능 - 아이템 관리
     addItemToSelf: adminItems.addItemToSelf,
     giveItemToMember: adminItems.giveItemToMember,
+    bulkGiveItem: adminItems.bulkGiveItem,
     deleteItemFromMember: adminItems.deleteItemFromMember,
     adjustMemberItemCount: adminItems.adjustMemberItemCount,
     updateCustomItem: async (itemId, updatedFields) => {

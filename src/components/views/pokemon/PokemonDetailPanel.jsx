@@ -18,6 +18,8 @@ import {
   FileText,
   Menu
 } from 'lucide-react';
+import RibbonIcon from '../../icons/RibbonIcon';
+import CrossedSwordsIcon from '../../icons/CrossedSwordsIcon';
 import { 
   RadarChart, 
   Radar, 
@@ -131,6 +133,7 @@ export default function PokemonDetailPanel({
   const [tooltipType, setTooltipType] = useState('');
 
   const [activeTab, setActiveTab] = useState('skills');
+  const [movesContestMode, setMovesContestMode] = useState(false);
   const [memoText, setMemoText] = useState(pokemon.memo || '');
   const [isEditingMemo, setIsEditingMemo] = useState(false);
 
@@ -912,12 +915,34 @@ const ballImage = getBallImage();
               {/* 기술 */}
               <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-gray-700">배운 기술 ({pokemon.moves?.length || 0}/4)</h3>
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                    기술 목록 ({pokemon.moves?.length || 0}/4)
+                    <button
+                      type="button"
+                      onClick={() => setMovesContestMode(false)}
+                      title="배틀 정보 보기"
+                      className={`p-1 rounded transition-all ${
+                        !movesContestMode ? 'bg-indigo-100' : 'grayscale opacity-40 hover:opacity-70'
+                      }`}
+                    >
+                      <CrossedSwordsIcon size={15} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMovesContestMode(true)}
+                      title="콘테스트 정보 보기"
+                      className={`p-1 rounded transition-all ${
+                        movesContestMode ? 'bg-pink-100' : 'grayscale opacity-40 hover:opacity-70'
+                      }`}
+                    >
+                      <RibbonIcon size={15} />
+                    </button>
+                  </h3>
                   {(isAdmin || isOwner) && (!pokemon.moves || pokemon.moves.length < 4) && (
                     <button onClick={() => setShowMoveSelectModal(true)} className="text-xs bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 font-semibold transition-colors">+ 기술 추가</button>
                   )}
                 </div>
-                <MovesList moves={pokemon.moves || []} onForgetMove={(isAdmin || isOwner) && onForgetMove ? (moveId) => onForgetMove(pokemon.uniqueId, moveId) : undefined} canEdit={(isAdmin || isOwner) && !!onForgetMove} allMoves={allMoves} />
+                <MovesList moves={pokemon.moves || []} onForgetMove={(isAdmin || isOwner) && onForgetMove ? (moveId) => onForgetMove(pokemon.uniqueId, moveId) : undefined} canEdit={(isAdmin || isOwner) && !!onForgetMove} allMoves={allMoves} contestMode={movesContestMode} />
               </div>
             </div>
           )}

@@ -302,9 +302,13 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
 
   const applyFriendshipToCaught = (caughtPokemon, participantKeys, bonus) => {
     const keys = new Set(participantKeys);
-    return Array.isArray(caughtPokemon)
-      ? caughtPokemon.map(p => p && keys.has(pokemonKey(p)) ? { ...p, friendship: Math.min(255, Number(p.friendship || 0) + bonus) } : p)
-      : caughtPokemon;
+    if (!Array.isArray(caughtPokemon)) return caughtPokemon;
+    // 중간에 삭제된 자리로 배열에 구멍이 있으면 .map()이 건너뛰어 구멍이 그대로 남고,
+    // Firebase는 그 구멍(undefined)을 그대로 쓸 수 없어 트랜잭션이 예외로 실패한다.
+    return Array.from({ length: caughtPokemon.length }, (_, i) => {
+      const p = caughtPokemon[i] ?? null;
+      return p && keys.has(pokemonKey(p)) ? { ...p, friendship: Math.min(255, Number(p.friendship || 0) + bonus) } : p;
+    });
   };
 
   const applyFriendshipToPartner = (partnerPokemon, participantKeys, bonus) => {

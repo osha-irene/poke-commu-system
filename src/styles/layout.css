@@ -786,6 +786,28 @@ body.rmv-detail-open .site-header {
 .rmv-char-scroll-from-text {
   animation: rmv-char-scroll-from-text 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+.rmv-polaroid-detail {
+  transform: translate(-50px, 20px) rotate(-8deg);
+  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.rmv-polaroid-pushed {
+  transform: translate(-140px, 20px) rotate(-8deg) scale(0.98);
+}
+@keyframes rmv-polaroid-to-text {
+  from { transform: translate(-50px, 20px) rotate(-8deg); }
+  to { transform: translate(-140px, 20px) rotate(-8deg) scale(0.98); }
+}
+.rmv-polaroid-detail.rmv-char-to-text {
+  animation: rmv-polaroid-to-text 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes rmv-polaroid-from-text {
+  from { transform: translate(-140px, 20px) rotate(-8deg) scale(0.98); }
+  to { transform: translate(-50px, 20px) rotate(-8deg); }
+}
+.rmv-polaroid-detail.rmv-char-from-text {
+  animation: rmv-polaroid-from-text 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
 @keyframes rmv-partner-text-in {
   from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }

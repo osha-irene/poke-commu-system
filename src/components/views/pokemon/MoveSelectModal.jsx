@@ -3,12 +3,17 @@ import React, { useState, useMemo } from 'react';
 import { X, Search, Zap, Shield, Star } from 'lucide-react';
 import { getTypeNameKr, getTypeColor, COLORS } from '../../../styles/theme';
 import { getLearnsetTmMoves, getPokemonLearnset } from '../../../utils/pokemonLearnsets';
+import { getContestTypeColor, getContestEffectKo } from '../../../utils/contestMoveData';
+import RibbonIcon from '../../icons/RibbonIcon';
+import CrossedSwordsIcon from '../../icons/CrossedSwordsIcon';
 
 const CATEGORY_NAMES_KR = {
   'physical': '물리',
   'special': '특수',
   'status': '변화'
 };
+
+const CONTEST_CATEGORY_ORDER = ['아름다움', '귀여움', '강인함', '근사함', '슬기로움'];
 
 const getCategoryIcon = (category) => {
   const categoryKr = CATEGORY_NAMES_KR[category] || category;
@@ -19,6 +24,13 @@ const getCategoryIcon = (category) => {
     default: return null;
   }
 };
+
+const repeatContestIcon = (value, icon) => {
+  const count = Number(value) || 0;
+  return icon.repeat(count);
+};
+
+const hasContestValue = (value) => Number(value) > 0;
 
 export default function MoveSelectModal({
   pokemon,
@@ -35,9 +47,13 @@ export default function MoveSelectModal({
   const [showLearnableOnly, setShowLearnableOnly] = useState(true);
   const [hoveredMove, setHoveredMove] = useState(null);
   const [selectedMove, setSelectedMove] = useState(null);
+  const [moveViewMode, setMoveViewMode] = useState('battle');
+  const [contestTypeFilter, setContestTypeFilter] = useState('all');
+
+  const isContestMode = moveViewMode === 'contest';
 
   const learnedMoveIds = useMemo(() =>
-    currentMoves.map(m => m.moveId),
+    currentMoves.map(m => String(m.moveId ?? m.id)),
     [currentMoves]
   );
 
@@ -74,7 +90,11 @@ const learnableMovesIds = useMemo(() => {
       moves = moves.filter(m => learnableMovesIds.includes(m.id));
     }
 
-    if (filterType !== 'all') {
+    if (isContestMode) {
+      moves = moves.filter(m => !!m.contestEffect);
+    }
+
+    if (!isContestMode && filterType !== 'all') {
       moves = moves.filter(m => {
         const typeKr = getTypeNameKr(m.type) || m.type;
         return typeKr === filterType || m.type === filterType;
@@ -92,11 +112,44 @@ const learnableMovesIds = useMemo(() => {
     return moves.map(move => ({
       ...move,
       type: getTypeNameKr(move.type) || move.type,
-      category: CATEGORY_NAMES_KR[move.category] || move.category
+      category: CATEGORY_NAMES_KR[move.category] || move.category,
+      contestType: move.contestType
     }));
-  }, [allMoves, learnableMovesIds, showLearnableOnly, filterType, searchTerm]);
+  }, [allMoves, learnableMovesIds, showLearnableOnly, filterType, searchTerm, isContestMode]);
+
+  const switchMoveViewMode = (mode) => {
+    setMoveViewMode(mode);
+    setSelectedMove(null);
+    setHoveredMove(null);
+    if (mode === 'contest') setFilterType('all');
+    if (mode === 'battle') setContestTypeFilter('all');
+  };
 
   const types = ['all', '노말', '불꽃', '물', '전기', '풀', '얼음', '격투', '독', '땅', '비행', '에스퍼', '벌레', '바위', '고스트', '드래곤', '악', '강철', '페어리'];
+
+  const groupedContestMoves = useMemo(() => {
+    const groups = new Map();
+    filteredMoves.forEach((move) => {
+      const key = move.contestType || '기타';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(move);
+    });
+
+    return Array.from(groups.entries()).sort(([a], [b]) => {
+      const ai = CONTEST_CATEGORY_ORDER.indexOf(a);
+      const bi = CONTEST_CATEGORY_ORDER.indexOf(b);
+      if (ai !== -1 || bi !== -1) {
+        return (ai === -1 ? Number.MAX_SAFE_INTEGER : ai) - (bi === -1 ? Number.MAX_SAFE_INTEGER : bi);
+      }
+      return String(a).localeCompare(String(b), 'ko');
+    });
+  }, [filteredMoves]);
+
+  const visibleContestMoves = useMemo(() => (
+    contestTypeFilter === 'all'
+      ? filteredMoves
+      : filteredMoves.filter((move) => move.contestType === contestTypeFilter)
+  ), [contestTypeFilter, filteredMoves]);
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
@@ -120,9 +173,31 @@ const learnableMovesIds = useMemo(() => {
         </div>
 
         {/* 필터 */}
-        <div className="p-4 border-b border-gray-200 flex-shrink-0 space-y-3">
+        <div className="p-4 border-b border-gray-200 flex-shrink-0 grid grid-cols-[auto,1fr] items-center gap-x-2 gap-y-3">
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => switchMoveViewMode('battle')}
+              title="배틀 기술 보기"
+              className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border transition-all ${
+                !isContestMode ? 'border-indigo-300 bg-indigo-50' : 'border-gray-200 bg-white grayscale opacity-50 hover:opacity-80'
+              }`}
+            >
+              <CrossedSwordsIcon size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={() => switchMoveViewMode('contest')}
+              title="콘테스트 기술 보기"
+              className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border transition-all ${
+                isContestMode ? 'border-pink-300 bg-pink-50' : 'border-gray-200 bg-white grayscale opacity-50 hover:opacity-80'
+              }`}
+            >
+              <RibbonIcon size={18} />
+            </button>
+          </div>
           {/* 검색 */}
-          <div className="relative">
+          <div className="relative min-w-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
@@ -134,7 +209,7 @@ const learnableMovesIds = useMemo(() => {
           </div>
 
           {/* 타입 필터 */}
-          <div id="move-modal-type-filter" className="flex gap-2" style={{ overflowX: 'auto', paddingBottom: '6px' }}>
+          {!isContestMode && <div id="move-modal-type-filter" className="col-span-2 flex gap-2" style={{ overflowX: 'auto', paddingBottom: '6px' }}>
             {types.map(type => {
               const typeColors = type !== 'all' ? getTypeColor(type) : null;
               const isSelected = filterType === type;
@@ -162,15 +237,48 @@ const learnableMovesIds = useMemo(() => {
                 </button>
               );
             })}
-          </div>
+          </div>}
 
           {/* 배울 수 있는 기술만 */}
+          {isContestMode && (
+            <div className="col-span-2 flex gap-2" style={{ overflowX: 'auto', paddingBottom: '6px' }}>
+              <button
+                type="button"
+                onClick={() => setContestTypeFilter('all')}
+                className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all flex-shrink-0 ${
+                  contestTypeFilter === 'all' ? 'bg-pink-500 text-white shadow-sm' : 'bg-pink-50 text-pink-700 border border-pink-200'
+                }`}
+              >
+                전체 ({filteredMoves.length})
+              </button>
+              {groupedContestMoves.map(([contestType, moves]) => {
+                const colors = getContestTypeColor(contestType);
+                const isSelected = contestTypeFilter === contestType;
+                return (
+                  <button
+                    key={contestType}
+                    type="button"
+                    onClick={() => setContestTypeFilter(contestType)}
+                    className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all flex-shrink-0 ${isSelected ? 'scale-105 shadow-sm' : ''}`}
+                    style={{
+                      backgroundColor: isSelected ? colors.bg : `${colors.bg}66`,
+                      color: colors.text,
+                      border: `1.5px solid ${colors.bg}`
+                    }}
+                  >
+                    {contestType} ({moves.length})
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {levelUpOnly ? (
-            <p className="text-xs text-indigo-600 font-medium">
+            <p className="col-span-2 text-xs text-indigo-600 font-medium">
               현재 레벨({maxLevel}) 이하에서 배우는 레벨업 기술만 추가할 수 있습니다.
             </p>
           ) : (
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <label className="col-span-2 flex items-center gap-2 text-sm cursor-pointer">
               <input
                 type="checkbox"
                 checked={showLearnableOnly}
@@ -191,9 +299,10 @@ const learnableMovesIds = useMemo(() => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {filteredMoves.map(move => {
-                const isLearned = learnedMoveIds.includes(move.id);
+              {(isContestMode ? visibleContestMoves : filteredMoves).map(move => {
+                const isLearned = learnedMoveIds.includes(String(move.id));
                 const typeColors = getTypeColor(move.type);
+                const contestColors = getContestTypeColor(move.contestType);
                 
                 return (
                   <button
@@ -217,15 +326,27 @@ const learnableMovesIds = useMemo(() => {
                       <span className="font-bold text-gray-800 text-base">
                         {move.name}
                       </span>
-                      <span
-                        className="text-xs px-2 py-1 rounded font-bold flex-shrink-0 inline-flex items-center justify-center min-w-[3rem]"
-                        style={{ 
-                          backgroundColor: typeColors.bg,
-                          color: typeColors.text
-                        }}
-                      >
-                        {move.type}
-                      </span>
+                      {isContestMode ? (
+                        <span
+                          className="text-xs px-2 py-1 rounded font-bold flex-shrink-0 inline-flex items-center justify-center min-w-[3rem]"
+                          style={{
+                            backgroundColor: contestColors.bg,
+                            color: contestColors.text
+                          }}
+                        >
+                          {move.contestType}
+                        </span>
+                      ) : (
+                        <span
+                          className="text-xs px-2 py-1 rounded font-bold flex-shrink-0 inline-flex items-center justify-center min-w-[3rem]"
+                          style={{
+                            backgroundColor: typeColors.bg,
+                            color: typeColors.text
+                          }}
+                        >
+                          {move.type}
+                        </span>
+                      )}
                       {isLearned && (
                         <span className="ml-auto text-xs text-gray-400 font-semibold">
                           ✓ 습득
@@ -234,6 +355,22 @@ const learnableMovesIds = useMemo(() => {
                     </div>
 
                     {/* 카테고리 & 스탯 */}
+                    {isContestMode && (hasContestValue(move.contestAppeals) || hasContestValue(move.contestJam)) ? (
+                      <div className="flex items-center gap-3 text-sm mb-2">
+                        {hasContestValue(move.contestAppeals) && (
+                          <span className="text-gray-700">
+                            <span className="text-pink-500 font-bold">어필</span>{' '}
+                            <span className="font-bold text-pink-500 tracking-wide">{repeatContestIcon(move.contestAppeals, '♥')}</span>
+                          </span>
+                        )}
+                        {hasContestValue(move.contestJam) && (
+                          <span className="text-gray-700">
+                            <span className="text-indigo-400 font-bold">방해</span>{' '}
+                            <span className="font-bold text-indigo-400 tracking-wide">{repeatContestIcon(move.contestJam, '♡')}</span>
+                          </span>
+                        )}
+                      </div>
+                    ) : !isContestMode && (
                     <div className="flex items-center gap-3 text-sm mb-2">
                       <span className="flex items-center gap-1 text-gray-600">
                         {getCategoryIcon(move.category)}
@@ -254,9 +391,14 @@ const learnableMovesIds = useMemo(() => {
                         <span className="font-bold text-green-600">{move.pp}</span>
                       </span>
                     </div>
+                    )}
 
                     {/* 설명 */}
-                    {move.description && (
+                    {isContestMode ? (
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        {getContestEffectKo(move.contestEffect) || '효과 정보 없음'}
+                      </p>
+                    ) : move.description && (
                       <p className="text-xs text-gray-600 leading-relaxed">
                         {move.description}
                       </p>
@@ -271,7 +413,7 @@ const learnableMovesIds = useMemo(() => {
         {/* 푸터 - 항상 영역 확보 */}
         {(() => {
           const displayMove = selectedMove || hoveredMove;
-          const isEmpty = !displayMove || learnedMoveIds.includes(displayMove.id);
+          const isEmpty = !displayMove || learnedMoveIds.includes(String(displayMove.id));
           return (
             <div className="p-4 bg-indigo-50 border-t border-indigo-200 flex-shrink-0" style={{ minHeight: '72px' }}>
               {!isEmpty && (

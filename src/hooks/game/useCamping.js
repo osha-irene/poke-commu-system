@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ref, get, set, push, update, onValue } from 'firebase/database';
+import { ref, get, set, push, update, onValue, onChildAdded, onChildChanged, onChildRemoved } from 'firebase/database';
 import { database } from '../../firebase';
 import * as campingHelper from '../../utils/campingHelper';
 
@@ -107,7 +107,7 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
   const [userCampingData, setUserCampingData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // 사용자 캠핑 데이터 실시간 리스너
+  // User camping data realtime listener
   useEffect(() => {
     if (!currentUser?.id) return;
 
@@ -123,30 +123,58 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
         });
       }
     }, (error) => {
-      console.error('캠핑 데이터 로드 실패:', error);
+      console.error('camping data load failed:', error);
     });
 
     return () => unsub();
   }, [currentUser?.id]);
 
-  // 모든 캠핑 세션 실시간 리스너
+  // Camping sessions: load once, then receive changed children only.
   useEffect(() => {
     const sessionsRef = ref(database, 'gameData/campingSessions');
-    const unsub = onValue(sessionsRef, (snapshot) => {
-      if (snapshot.exists()) {
+    let isInitialLoad = true;
+
+    get(sessionsRef)
+      .then((snapshot) => {
+        if (!snapshot.exists()) {
+          setCampingSessions([]);
+          return;
+        }
         const sessions = Object.entries(snapshot.val()).map(([key, value]) => ({
           firebaseKey: key,
           ...value
         }));
         setCampingSessions(sessions);
-      } else {
-        setCampingSessions([]);
-      }
-    }, (error) => {
-      console.error('캠핑 세션 로드 실패:', error);
+      })
+      .catch((error) => {
+        console.error('camping sessions load failed:', error);
+      })
+      .finally(() => {
+        isInitialLoad = false;
+      });
+
+    const upsertSession = (snapshot) => {
+      if (isInitialLoad || !snapshot.exists()) return;
+      const nextSession = { firebaseKey: snapshot.key, ...snapshot.val() };
+      setCampingSessions(prev => {
+        const exists = prev.some(session => session.firebaseKey === snapshot.key);
+        if (!exists) return [...prev, nextSession];
+        return prev.map(session => session.firebaseKey === snapshot.key ? nextSession : session);
+      });
+    };
+
+    const unsubAdded = onChildAdded(sessionsRef, upsertSession);
+    const unsubChanged = onChildChanged(sessionsRef, upsertSession);
+    const unsubRemoved = onChildRemoved(sessionsRef, (snapshot) => {
+      if (isInitialLoad) return;
+      setCampingSessions(prev => prev.filter(session => session.firebaseKey !== snapshot.key));
     });
 
-    return () => unsub();
+    return () => {
+      unsubAdded();
+      unsubChanged();
+      unsubRemoved();
+    };
   }, []);
 
   // 캠핑 시작

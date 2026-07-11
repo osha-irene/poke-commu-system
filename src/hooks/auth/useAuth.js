@@ -2,7 +2,7 @@
 // onValue 리스너를 제거하고 로그인 시에만 데이터 로드
 
 import { useState, useEffect } from 'react';
-import { ref, get, set, onValue, update, runTransaction } from 'firebase/database';
+import { ref, get, onChildChanged, onChildRemoved, update, runTransaction } from 'firebase/database';
 import { 
   signInWithEmailAndPassword,
   signOut,
@@ -13,6 +13,7 @@ import { auth, database } from '../../firebase';
 import { fillMissingBaseStats, findPokemonTemplate } from '../../utils/pokemonBaseStats';
 import { getAbilityEnglishName } from '../../utils/abilityUtils';
 import { DEFAULT_IVS, withNormalizedIVs } from '../../utils/pokemonIndividualValues';
+import { toMemberViewData } from '../../utils/memberViewData';
 
 const ensurePartyPadding = (caughtPokemon, allPokemonMaster = []) => {
   if (caughtPokemon && typeof caughtPokemon === 'object' && !Array.isArray(caughtPokemon)) {
@@ -129,21 +130,22 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
     if (!currentUser?.id) return undefined;
     const memberId = currentUser.id;
     const memberRef = ref(database, `members/${memberId}`);
-    const unsub = onValue(memberRef, (snapshot) => {
-      if (!snapshot.exists()) return;
-      const memberData = snapshot.val();
+    const normalizeMemberChildValue = (key, value) => {
+      if (key === 'caughtPokemon') {
+        return ensurePartyPadding(value || [], allPokemonMaster);
+      }
+      if (key === 'partnerPokemon') {
+        return withNormalizedIVs(value, DEFAULT_IVS);
+      }
+      return value;
+    };
+    const applyMemberChildUpdate = (key, rawValue) => {
+      if (!key || key === 'id' || key === 'authUid' || key === 'email') return;
+      const value = normalizeMemberChildValue(key, rawValue);
 
       setCurrentUser(prev => {
         if (!prev) return prev;
-        const merged = {
-          ...prev,
-          ...memberData,
-          id: prev.id,
-          authUid: prev.authUid,
-          email: prev.email,
-          caughtPokemon: ensurePartyPadding(memberData.caughtPokemon || [], allPokemonMaster),
-          partnerPokemon: withNormalizedIVs(memberData.partnerPokemon, DEFAULT_IVS),
-        };
+        const merged = { ...prev, [key]: value };
         return JSON.stringify(prev) === JSON.stringify(merged) ? prev : merged;
       });
 
@@ -151,15 +153,23 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
         ...prevMembers,
         [memberId]: {
           ...(prevMembers[memberId] || {}),
-          ...memberData,
           id: memberId,
-          caughtPokemon: ensurePartyPadding(memberData.caughtPokemon || [], allPokemonMaster),
-          partnerPokemon: withNormalizedIVs(memberData.partnerPokemon, DEFAULT_IVS),
+          [key]: value,
         }
       }));
+    };
+
+    const unsubChanged = onChildChanged(memberRef, (snapshot) => {
+      applyMemberChildUpdate(snapshot.key, snapshot.val());
+    });
+    const unsubRemoved = onChildRemoved(memberRef, (snapshot) => {
+      applyMemberChildUpdate(snapshot.key, null);
     });
 
-    return () => unsub();
+    return () => {
+      unsubChanged();
+      unsubRemoved();
+    };
   }, [currentUser?.id, allPokemonMaster, setMembers]);
 
   const handleLogin = async (userId, password) => {
@@ -264,6 +274,7 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
       
       const memberRef = ref(database, `members/${currentUser.id}`);
       await update(memberRef, cleanData);
+      await update(ref(database, `memberViewData/${currentUser.id}`), toMemberViewData(updatedUser, currentUser.id));
       console.log('✅ Firebase 저장 완료');
     } catch (error) {
       console.error('❌ Firebase 저장 실패:', error);

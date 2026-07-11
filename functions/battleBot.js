@@ -510,6 +510,46 @@ const formatEffectSource = (parts = []) => {
   return '';
 };
 
+const formatRawEffectSource = (parts = []) => {
+  const fromIndex = parts.findIndex(part => part === '[from]');
+  return fromIndex >= 0 && parts[fromIndex + 1] ? String(parts[fromIndex + 1]).trim() : '';
+};
+
+const formatDamageMessage = (parts = []) => {
+  const name = extractName(parts[2]);
+  const hp = formatHp(parts[3]);
+  const source = formatRawEffectSource(parts);
+  const normalizedSource = normalizeId(source);
+
+  if (normalizedSource === 'psn' || normalizedSource === 'tox') {
+    return `${name}은(는) 독으로 피해를 입었다! HP ${hp}`;
+  }
+  if (normalizedSource === 'brn') {
+    return `${name}은(는) 화상으로 피해를 입었다! HP ${hp}`;
+  }
+  if (/^item:\s*/i.test(source)) {
+    return `${name}은(는) ${translateItemName(source.replace(/^item:\s*/i, ''))}의 효과로 피해를 입었다! HP ${hp}`;
+  }
+  if (source) {
+    return `${name}은(는) ${formatBattleEffect(source)} 효과로 피해를 입었다! HP ${hp}`;
+  }
+  return `${name}에게 피해! HP ${hp}`;
+};
+
+const formatHealMessage = (parts = []) => {
+  const name = extractName(parts[2]);
+  const hp = formatHp(parts[3]);
+  const source = formatRawEffectSource(parts);
+
+  if (/^item:\s*/i.test(source)) {
+    return `${name}은(는) ${translateItemName(source.replace(/^item:\s*/i, ''))}을(를) 사용해 HP를 회복했다! HP ${hp}`;
+  }
+  if (source) {
+    return `${name}의 HP가 ${formatBattleEffect(source)} 효과로 회복되었다! HP ${hp}`;
+  }
+  return `${name}의 HP가 회복되었다! HP ${hp}`;
+};
+
 const formatSourceSuffix = (parts = []) => {
   const source = formatEffectSource(parts);
   return source ? ` (${translateMoveName(source)})` : '';
@@ -526,6 +566,7 @@ const formatBattleEffect = effect => {
   if (/^ability:\s*/i.test(text)) return translateAbilityName(text.replace(/^ability:\s*/i, ''));
   if (/^item:\s*/i.test(text)) return translateItemName(text.replace(/^item:\s*/i, ''));
   const cleaned = text.replace(/^move:\s*/i, '');
+  if (normalizeId(cleaned) === 'confusion') return '혼란';
   return translateMoveName(cleaned);
 };
 
@@ -615,9 +656,9 @@ const protocolToMessage = (line) => {
       }
       return `${extractName(parts[2])}의 ${translateMoveName(parts[3])}!${formatMoveSource(parts)}`;
     case '-damage':
-      return `${extractName(parts[2])}에게 피해! HP ${formatHp(parts[3])}`;
+      return formatDamageMessage(parts);
     case '-heal':
-      return `${extractName(parts[2])}의 HP가 회복되었다! HP ${formatHp(parts[3])}`;
+      return formatHealMessage(parts);
     case '-boost':
       return `${extractName(parts[2])}의 ${formatStat(parts[3])}이(가) ${parts[4]}랭크 올랐다!${formatSourceSuffix(parts)}`;
     case '-unboost':
@@ -664,9 +705,11 @@ const protocolToMessage = (line) => {
     case '-crit':
       return '급소에 맞았다!';
     case '-item':
-      return `${extractName(parts[2])}의 ${translateItemName(parts[3])}!`;
+      return `${extractName(parts[2])}의 ${translateItemName(parts[3])}이(가) 발동했다!`;
     case '-enditem':
-      return `${extractName(parts[2])}의 ${translateItemName(parts[3])}은(는) 사라졌다.`;
+      return parts.includes('[eat]')
+        ? `${extractName(parts[2])}은(는) ${translateItemName(parts[3])}을(를) 사용했다!`
+        : `${extractName(parts[2])}의 ${translateItemName(parts[3])}은(는) 사라졌다.`;
     case '-ability':
       return `${extractName(parts[2])}의 특성 ${translateAbilityName(parts[3])}!`;
     case '-endability':
@@ -722,9 +765,9 @@ const protocolToMessage = (line) => {
 // 배틀 로그에서 기술 사용 횟수를 파싱해 members DB에 누적
 const recordMoveUsage = async (db, log, session) => {
   // p1/p2 선택된 포켓몬 uniqueId
-  const p1Key = session.player1Entries?.[session.pendingTeamChoices?.p1 - 1]?.key
+  const p1Key = session.player1Entries?.[Number(session.player1Lead || 1) - 1]?.key
     || session.player1Entries?.[0]?.key;
-  const p2Key = session.player2Entries?.[session.pendingTeamChoices?.p2 - 1]?.key
+  const p2Key = session.player2Entries?.[Number(session.player2Lead || 1) - 1]?.key
     || session.player2Entries?.[0]?.key;
 
   // 슬롯 → {memberId, pokemonKey} 매핑
@@ -738,6 +781,7 @@ const recordMoveUsage = async (db, log, session) => {
   // crits: { memberId: { pokemonKey: count } }  ← 이 배틀에서 맞힌 급소 수
   const usage = {};
   const crits = {}; // 급소를 "맞힌" 포켓몬 슬롯 기준
+  const consumedItems = {};
   let lastMoveSlot = null; // 직전 move 라인의 슬롯 (급소는 공격자 기준)
 
   for (const line of log) {
@@ -766,40 +810,79 @@ const recordMoveUsage = async (db, log, session) => {
         crits[info.memberId][info.key] = (crits[info.memberId][info.key] || 0) + 1;
       }
     }
+
+    if (line.startsWith('|-enditem|') && parts.includes('[eat]')) {
+      const slotRaw = parts[2] || '';
+      const slot = slotRaw.split(':')[0].trim().toLowerCase();
+      const itemName = (parts[3] || '').trim();
+      const info = slotMap[slot];
+      if (itemName && info?.memberId && info?.key) {
+        if (!consumedItems[info.memberId]) consumedItems[info.memberId] = {};
+        consumedItems[info.memberId][info.key] = itemName;
+      }
+    }
   }
 
   // 각 멤버의 caughtPokemon에서 해당 pokemon을 찾아 업데이트
   // transaction으로 읽고 쓴다: 같은 사람이 거의 동시에 교환/캠핑 등으로 caughtPokemon을
   // 건드리면 .set()만으로는 서로의 변경을 덮어쓸 수 있기 때문.
-  const memberIds = new Set([...Object.keys(usage), ...Object.keys(crits)]);
+  const applyPokemonBattleUpdates = (pokemon, memberId) => {
+    if (!pokemon) return pokemon;
+    const key = pokemonKey(pokemon);
+    let next = pokemon;
+
+    if (usage[memberId]?.[key]) {
+      const prev = next.moveUsage || {};
+      const merged = { ...prev };
+      for (const [mid, cnt] of Object.entries(usage[memberId][key])) {
+        merged[mid] = (merged[mid] || 0) + cnt;
+      }
+      next = { ...next, moveUsage: merged };
+    }
+
+    if (crits[memberId]?.[key]) {
+      next = { ...next, lastBattleCritCount: crits[memberId][key] };
+    } else if (next.lastBattleCritCount !== undefined) {
+      next = { ...next, lastBattleCritCount: 0 };
+    }
+
+    const consumedItem = consumedItems[memberId]?.[key];
+    if (consumedItem) {
+      const heldItemKeys = [
+        next.heldItem,
+        next.heldItemEn,
+        next.item,
+        next.itemEn,
+      ].map(normalizeId).filter(Boolean);
+      const consumedKey = normalizeId(consumedItem);
+      if (!heldItemKeys.length || heldItemKeys.includes(consumedKey)) {
+        next = {
+          ...next,
+          heldItem: null,
+          heldItemEn: null,
+          item: null,
+          itemEn: null,
+          lastBattleConsumedItem: consumedItem,
+        };
+      }
+    }
+
+    return next;
+  };
+
+  const memberIds = new Set([...Object.keys(usage), ...Object.keys(crits), ...Object.keys(consumedItems)]);
   await Promise.all([...memberIds].map(async (memberId) => {
-    await db.ref(`members/${memberId}/caughtPokemon`).transaction((caught) => {
-      if (!Array.isArray(caught)) return caught;
-
-      return caught.map(p => {
-        const key = pokemonKey(p);
-        let next = p;
-
-        if (usage[memberId]?.[key]) {
-          const prev = next.moveUsage || {};
-          const merged = { ...prev };
-          for (const [mid, cnt] of Object.entries(usage[memberId][key])) {
-            merged[mid] = (merged[mid] || 0) + cnt;
-          }
-          next = { ...next, moveUsage: merged };
-        }
-
-        if (crits[memberId]?.[key]) {
-          // 이 배틀에서의 급소 횟수만 저장 (누적 아님 — 진화 조건이 "한 배틀에서" 이므로)
-          next = { ...next, lastBattleCritCount: crits[memberId][key] };
-        } else if (next.lastBattleCritCount !== undefined) {
-          // 배틀마다 초기화
-          next = { ...next, lastBattleCritCount: 0 };
-        }
-
-        return next;
-      });
-    });
+    await Promise.all([
+      db.ref(`members/${memberId}/caughtPokemon`).transaction((caught) => {
+        if (!Array.isArray(caught)) return caught;
+        // 중간에 삭제된 자리로 배열에 구멍이 있으면 .map()이 건너뛰어 구멍이 그대로 남고,
+        // Firebase는 그 구멍(undefined)을 그대로 쓸 수 없어 트랜잭션이 예외로 실패한다.
+        return Array.from({ length: caught.length }, (_, i) => applyPokemonBattleUpdates(caught[i] ?? null, memberId));
+      }),
+      db.ref(`members/${memberId}/partnerPokemon`).transaction((partner) =>
+        applyPokemonBattleUpdates(partner, memberId)
+      ),
+    ]);
   }));
 };
 
@@ -1157,7 +1240,8 @@ const createBattleBot = ({
 
       const ref = db.ref(`gameData/battleSessions/${sessionKey}`);
       const result = await ref.transaction((current) => {
-        if (!current || current.status !== 'active') return;
+        if (current === null) return current;
+        if (current.status !== 'active') return;
         const currentUpdated = Date.parse(current.updatedAt || current.startedAt || current.createdAt || '');
         if (!Number.isFinite(currentUpdated) || now - currentUpdated < BATTLE_CHOICE_TIMEOUT_MS) return;
         return { ...current, ...updates };
@@ -1190,7 +1274,8 @@ const createBattleBot = ({
 
       const ref = db.ref(`gameData/battleSessions/${sessionKey}`);
       const result = await ref.transaction((current) => {
-        if (!current || current.status !== 'pending') return;
+        if (current === null) return current;
+        if (current.status !== 'pending') return;
         const currentCreatedAt = Date.parse(current.createdAt || '');
         if (!Number.isFinite(currentCreatedAt) || now - currentCreatedAt < BATTLE_PENDING_EXPIRATION_MS) return;
         return { ...current, status: 'expired', expiredAt: new Date(now).toISOString(), updatedAt: new Date(now).toISOString() };

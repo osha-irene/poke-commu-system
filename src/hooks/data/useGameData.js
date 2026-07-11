@@ -1,7 +1,16 @@
-// src/hooks/useGameData.js - Firebase 완전 버전 + TM 통합
+// src/hooks/useGameData.js
 
 import { useState, useEffect } from 'react';
-import { ref, get, set, onValue, runTransaction } from 'firebase/database';
+import {
+  ref,
+  get,
+  set,
+  onValue,
+  onChildAdded,
+  onChildChanged,
+  onChildRemoved,
+  runTransaction
+} from 'firebase/database';
 import { database } from '../../firebase';
 import itemsData from '../../data/items.json';
 import regionsData from '../../data/regions.json';
@@ -17,21 +26,35 @@ const toRegionList = (nextRegions = []) => {
     .filter(([key]) => /^\d+$/.test(key))
     .sort(([a], [b]) => Number(a) - Number(b));
 
-  if (numericEntries.length > 0) {
-    return numericEntries.map(([, value]) => value);
-  }
-
-  return entries.map(([, value]) => value);
+  return numericEntries.length > 0
+    ? numericEntries.map(([, value]) => value)
+    : entries.map(([, value]) => value);
 };
 
-const normalizeRegions = (nextRegions = []) => {
-  return toRegionList(nextRegions).filter(region => region?.id && region?.name && !(
+const normalizeRegions = (nextRegions = []) => (
+  toRegionList(nextRegions).filter(region => region?.id && region?.name && !(
     region?.isTownMeta && (!region.groupId || !region.groupName)
-  ));
-};
+  ))
+);
+
+const getDefaultRegions = () => (
+  regionsData.regions.map(region => ({
+    ...region,
+    pokemons: region.defaultPokemon
+  }))
+);
+
+const getDefaultPokedex = (allPokemonData = []) => (
+  allPokemonData
+    .filter(pokemon => parseInt(pokemon.generation, 10) === 1)
+    .map((pokemon, index) => ({
+      ...pokemon,
+      originalNumber: pokemon.number,
+      newNumber: index + 1
+    }))
+);
 
 const buildAllItems = (customItems = []) => {
-  const baseItems = itemsData.items;
   const tmItems = technicalMachinesData.tms.map(tm => ({
     id: tm.id,
     name: tm.name,
@@ -43,14 +66,13 @@ const buildAllItems = (customItems = []) => {
       name: '기술머신',
       pocket: ITEM_POCKETS.MACHINES
     },
-    cost: 10000, // 기본 가격 (필요시 조정)
+    cost: 10000,
     sellPrice: 5000,
     canSell: true,
     effect: tm.description,
     description: tm.description,
     spriteUrl: tm.spriteUrl,
     imageUrl: tm.spriteUrl,
-    // TM 전용 데이터
     tmNumber: tm.tmNumber,
     moveId: tm.moveId,
     type: tm.type,
@@ -63,8 +85,12 @@ const buildAllItems = (customItems = []) => {
     generation: tm.generation
   }));
 
-  return [...baseItems, ...tmItems, ...(Array.isArray(customItems) ? customItems : [])];
+  return [...itemsData.items, ...tmItems, ...(Array.isArray(customItems) ? customItems : [])];
 };
+
+const getCustomItemsFromAllItems = (allItems = []) => (
+  allItems.filter(item => item?.isCustom)
+);
 
 const getTownRowsFromRegions = (nextRegions = []) => {
   const townMap = new Map();
@@ -83,7 +109,6 @@ const getTownRowsFromRegions = (nextRegions = []) => {
     });
   });
 
-  // townOrder가 없는 마을은 항상 뒤로 보내고 groupId로 타이브레이크 (비결정적 순서 방지)
   return Array.from(townMap.values()).sort((a, b) => {
     const orderA = a.townOrder !== null ? a.townOrder : Infinity;
     const orderB = b.townOrder !== null ? b.townOrder : Infinity;
@@ -91,6 +116,31 @@ const getTownRowsFromRegions = (nextRegions = []) => {
     return String(a.groupId).localeCompare(String(b.groupId));
   });
 };
+
+const upsertArrayChild = (prev, key, value, normalize = items => items) => {
+  const next = Array.isArray(prev) ? [...prev] : [];
+  if (/^\d+$/.test(String(key))) {
+    next[Number(key)] = value;
+  } else {
+    const index = next.findIndex(item => String(item?.id) === String(key));
+    if (index >= 0) next[index] = value;
+    else next.push(value);
+  }
+  return normalize(next);
+};
+
+const removeArrayChild = (prev, key, normalize = items => items.filter(Boolean)) => {
+  const next = Array.isArray(prev) ? [...prev] : [];
+  if (/^\d+$/.test(String(key))) {
+    next.splice(Number(key), 1);
+    return normalize(next);
+  }
+  return normalize(next.filter(item => String(item?.id) !== String(key)));
+};
+
+const isValidSharedPokedexEntry = (key, value) => (
+  !isNaN(key) && typeof value === 'object' && value !== null
+);
 
 export const useGameData = (allPokemonData) => {
   const [allItems, setAllItems] = useState([]);
@@ -106,11 +156,11 @@ export const useGameData = (allPokemonData) => {
   });
   const [isLoading, setIsLoading] = useState(true);
 
-  // 🔥 Firebase에서 데이터 로드
   useEffect(() => {
     const loadGameData = async () => {
       try {
-        // 1. 지역 데이터 로드
+        setAllItems(buildAllItems([]));
+
         const regionsRef = ref(database, 'gameData/regions');
         const regionsSnapshot = await get(regionsRef);
         if (regionsSnapshot.exists()) {
@@ -122,65 +172,27 @@ export const useGameData = (allPokemonData) => {
             await set(ref(database, 'gameData/towns'), getTownRowsFromRegions(normalizedRegions));
             const configRef = ref(database, 'gameData/config');
             const configSnapshot = await get(configRef);
-            const currentConfig = configSnapshot.val() || {};
             await set(configRef, {
-              ...currentConfig,
+              ...(configSnapshot.val() || {}),
               regions: normalizedRegions
             });
-            console.log('🧹 삭제된 마을의 남은 메타 데이터 정리 완료');
           }
-          console.log('💾 지역 데이터 로드:', normalizedRegions.length, '개');
         } else {
-          // 초기 데이터 설정
-          const initialRegions = regionsData.regions.map(region => ({
-            ...region,
-            pokemons: region.defaultPokemon
-          }));
+          const initialRegions = getDefaultRegions();
           await set(regionsRef, initialRegions);
           setRegions(initialRegions);
-          console.log('🔧 초기 지역 데이터 생성');
         }
 
-        // 4. 영운 도감 로드
         const pokedexRef = ref(database, 'gameData/gamePokedex');
         const pokedexSnapshot = await get(pokedexRef);
         if (pokedexSnapshot.exists()) {
           setGamePokedex(pokedexSnapshot.val());
-          console.log('📖 영운 도감 로드 완료:', pokedexSnapshot.val().length, '마리');
         } else {
-          // 초기 데이터 설정 (1세대만)
-          const initialPokedex = allPokemonData
-            .filter(p => parseInt(p.generation) === 1)
-            .map((p, index) => ({
-              ...p,
-              originalNumber: p.number,
-              newNumber: index + 1
-            }));
+          const initialPokedex = getDefaultPokedex(allPokemonData);
           await set(pokedexRef, initialPokedex);
           setGamePokedex(initialPokedex);
-          console.log('🔧 초기 영운 도감 생성');
         }
 
-        // 5. 공유 도감 실시간 리스너 (다른 브라우저/기기에서 변경 즉시 반영)
-        const sharedPokedexRef = ref(database, 'gameData/sharedPokedex');
-        onValue(sharedPokedexRef, (snapshot) => {
-          if (snapshot.exists()) {
-            const sharedData = snapshot.val();
-            const validatedData = {};
-            Object.entries(sharedData).forEach(([key, value]) => {
-              if (!isNaN(key) && typeof value === 'object' && value !== null) {
-                validatedData[key] = value;
-              }
-            });
-            setSharedPokedexData(validatedData);
-          } else {
-            setSharedPokedexData({});
-          }
-        });
-
-        // 6. 점검 모드 로드 (onValue로 실시간 처리, 별도 useEffect에서 구독)
-
-        // 7. 시스템 설정 로드
         const systemSettingsRef = ref(database, 'gameData/systemSettings');
         const systemSettingsSnapshot = await get(systemSettingsRef);
         const savedSystemSettings = systemSettingsSnapshot.exists() ? systemSettingsSnapshot.val() : {};
@@ -197,23 +209,11 @@ export const useGameData = (allPokemonData) => {
         };
         await set(systemSettingsRef, normalizedSystemSettings);
         setSystemSettings(normalizedSystemSettings);
-        console.log('⚙️ 시스템 설정:', normalizedSystemSettings);
-
-        console.log('✅ 게임 데이터 로딩 완료!');
       } catch (error) {
-        console.error('❌ 게임 데이터 로드 실패:', error);
-        // 폴백: JSON 파일 사용
-        const tmItems = technicalMachinesData.tms.map(tm => ({
-          id: tm.id,
-          name: tm.name,
-          nameEn: tm.nameEn,
-          category: 'machines',
-          spriteUrl: tm.spriteUrl,
-          isTM: true
-        }));
-        setAllItems([...itemsData.items, ...tmItems]);
-        setRegions(regionsData.regions.map(r => ({ ...r, pokemons: r.defaultPokemon })));
-        setGamePokedex(allPokemonData.filter(p => parseInt(p.generation) === 1));
+        console.error('Game data load failed:', error);
+        setAllItems(buildAllItems([]));
+        setRegions(getDefaultRegions());
+        setGamePokedex(getDefaultPokedex(allPokemonData));
         setSharedPokedexData({});
         setMaintenanceMode(false);
         setSystemSettings({ maxNonPartnerPokemon: 18, escapeMode: 'none', campingSettings: {} });
@@ -225,59 +225,107 @@ export const useGameData = (allPokemonData) => {
     loadGameData();
   }, [allPokemonData]);
 
-  // 커스텀 아이템 실시간 리스너 (관리자가 커스텀 아이템 추가/수정/삭제 시 즉시 반영)
   useEffect(() => {
     if (isLoading) return undefined;
 
     const customItemsRef = ref(database, 'gameData/customItems');
-    const unsubscribe = onValue(customItemsRef, (snapshot) => {
-      const customItems = snapshot.exists() ? snapshot.val() : [];
-      setAllItems(buildAllItems(customItems));
-    });
+    const applyCustomItem = (snapshot) => {
+      setAllItems(prevItems => {
+        const customItems = getCustomItemsFromAllItems(prevItems);
+        return buildAllItems(upsertArrayChild(customItems, snapshot.key, snapshot.val()));
+      });
+    };
+    const removeCustomItem = (snapshot) => {
+      setAllItems(prevItems => {
+        const customItems = getCustomItemsFromAllItems(prevItems);
+        return buildAllItems(removeArrayChild(customItems, snapshot.key));
+      });
+    };
 
-    return () => unsubscribe();
+    const unsubAdded = onChildAdded(customItemsRef, applyCustomItem);
+    const unsubChanged = onChildChanged(customItemsRef, applyCustomItem);
+    const unsubRemoved = onChildRemoved(customItemsRef, removeCustomItem);
+
+    return () => {
+      unsubAdded();
+      unsubChanged();
+      unsubRemoved();
+    };
   }, [isLoading]);
 
   useEffect(() => {
     if (isLoading) return undefined;
 
     const regionsRef = ref(database, 'gameData/regions');
-    const unsubscribe = onValue(regionsRef, (snapshot) => {
-      if (!snapshot.exists()) return;
+    const applyRegion = (snapshot) => {
+      setRegions(prevRegions => upsertArrayChild(prevRegions, snapshot.key, snapshot.val(), normalizeRegions));
+    };
+    const removeRegion = (snapshot) => {
+      setRegions(prevRegions => removeArrayChild(prevRegions, snapshot.key, normalizeRegions));
+    };
 
-      const rawRegions = snapshot.val();
-      const normalizedRegions = normalizeRegions(rawRegions);
-      setRegions(prevRegions => (
-        JSON.stringify(prevRegions) === JSON.stringify(normalizedRegions)
-          ? prevRegions
-          : normalizedRegions
-      ));
-    }, (error) => {
-      console.error('지역 데이터 실시간 동기화 실패:', error);
-    });
+    const unsubAdded = onChildAdded(regionsRef, applyRegion);
+    const unsubChanged = onChildChanged(regionsRef, applyRegion);
+    const unsubRemoved = onChildRemoved(regionsRef, removeRegion);
 
-    return () => unsubscribe();
+    return () => {
+      unsubAdded();
+      unsubChanged();
+      unsubRemoved();
+    };
   }, [isLoading]);
 
-  // 영운 도감 실시간 리스너
   useEffect(() => {
     if (isLoading) return undefined;
 
     const pokedexRef = ref(database, 'gameData/gamePokedex');
-    const unsub = onValue(pokedexRef, (snapshot) => {
-      if (!snapshot.exists()) return;
-      const data = snapshot.val();
-      setGamePokedex(prev =>
-        JSON.stringify(prev) === JSON.stringify(data) ? prev : data
-      );
-    }, (error) => {
-      console.error('영운 도감 실시간 동기화 실패:', error);
-    });
+    const applyPokedexEntry = (snapshot) => {
+      setGamePokedex(prev => upsertArrayChild(prev, snapshot.key, snapshot.val(), items => items.filter(Boolean)));
+    };
+    const removePokedexEntry = (snapshot) => {
+      setGamePokedex(prev => removeArrayChild(prev, snapshot.key));
+    };
 
-    return () => unsub();
+    const unsubAdded = onChildAdded(pokedexRef, applyPokedexEntry);
+    const unsubChanged = onChildChanged(pokedexRef, applyPokedexEntry);
+    const unsubRemoved = onChildRemoved(pokedexRef, removePokedexEntry);
+
+    return () => {
+      unsubAdded();
+      unsubChanged();
+      unsubRemoved();
+    };
   }, [isLoading]);
 
-  // 시스템 설정 실시간 리스너
+  useEffect(() => {
+    if (isLoading) return undefined;
+
+    const sharedPokedexRef = ref(database, 'gameData/sharedPokedex');
+    const applySharedEntry = (snapshot) => {
+      const key = snapshot.key;
+      const value = snapshot.val();
+      if (!isValidSharedPokedexEntry(key, value)) return;
+      setSharedPokedexData(prev => ({ ...prev, [key]: value }));
+    };
+    const removeSharedEntry = (snapshot) => {
+      setSharedPokedexData(prev => {
+        const next = { ...prev };
+        delete next[snapshot.key];
+        return next;
+      });
+    };
+
+    const unsubAdded = onChildAdded(sharedPokedexRef, applySharedEntry);
+    const unsubChanged = onChildChanged(sharedPokedexRef, applySharedEntry);
+    const unsubRemoved = onChildRemoved(sharedPokedexRef, removeSharedEntry);
+
+    return () => {
+      unsubAdded();
+      unsubChanged();
+      unsubRemoved();
+    };
+  }, [isLoading]);
+
   useEffect(() => {
     if (isLoading) return undefined;
 
@@ -285,19 +333,16 @@ export const useGameData = (allPokemonData) => {
     const unsub = onValue(systemSettingsRef, (snapshot) => {
       if (!snapshot.exists()) return;
       const data = snapshot.val();
-      setSystemSettings(prev =>
+      setSystemSettings(prev => (
         JSON.stringify(prev) === JSON.stringify(data) ? prev : data
-      );
+      ));
     }, (error) => {
-      console.error('시스템 설정 실시간 동기화 실패:', error);
+      console.error('System settings listener failed:', error);
     });
 
     return () => unsub();
   }, [isLoading]);
 
-  // 공유 도감은 onValue 실시간 리스너로 관리 — 전체 덮어쓰기 불필요
-
-  // 🔥 점검 모드 실시간 리스너
   useEffect(() => {
     const maintenanceRef = ref(database, 'gameData/maintenanceMode');
     const unsub = onValue(maintenanceRef, (snapshot) => {
@@ -306,7 +351,6 @@ export const useGameData = (allPokemonData) => {
     return () => unsub();
   }, []);
 
-  // 🔥 점검 예약 시각 실시간 리스너
   useEffect(() => {
     const scheduledRef = ref(database, 'gameData/maintenanceScheduledAt');
     const unsub = onValue(scheduledRef, (snapshot) => {
@@ -315,31 +359,20 @@ export const useGameData = (allPokemonData) => {
     return () => unsub();
   }, []);
 
+  useEffect(() => {
+    if (isLoading) return;
+    set(ref(database, 'gameData/maintenanceMode'), maintenanceMode).catch((error) => {
+      console.error('Maintenance mode save failed:', error);
+    });
+  }, [maintenanceMode, isLoading]);
+
   const scheduleMaintenanceMode = async (delayMs = 5 * 60 * 1000) => {
-    const scheduledAt = Date.now() + delayMs;
-    const scheduledRef = ref(database, 'gameData/maintenanceScheduledAt');
-    await set(scheduledRef, scheduledAt);
+    await set(ref(database, 'gameData/maintenanceScheduledAt'), Date.now() + delayMs);
   };
 
   const cancelScheduledMaintenance = async () => {
-    const scheduledRef = ref(database, 'gameData/maintenanceScheduledAt');
-    await set(scheduledRef, null);
+    await set(ref(database, 'gameData/maintenanceScheduledAt'), null);
   };
-
-  // 🔥 점검 모드 변경 시 Firebase에 저장
-  useEffect(() => {
-    const saveMaintenanceMode = async () => {
-      if (isLoading) return;
-      try {
-        const maintenanceRef = ref(database, 'gameData/maintenanceMode');
-        await set(maintenanceRef, maintenanceMode);
-        console.log('💾 점검 모드 저장:', maintenanceMode);
-      } catch (error) {
-        console.error('❌ 점검 모드 저장 실패:', error);
-      }
-    };
-    saveMaintenanceMode();
-  }, [maintenanceMode, isLoading]);
 
   const updatePokedexMemo = async (pokemonNumber, memo, currentUser) => {
     const numericKey = String(pokemonNumber);
@@ -362,16 +395,13 @@ export const useGameData = (allPokemonData) => {
         return;
       }
 
-      const updatedEntry = result.snapshot.val();
       setSharedPokedexData(prev => ({
         ...prev,
-        [numericKey]: updatedEntry
+        [numericKey]: result.snapshot.val()
       }));
-      console.log('Pokedex memo saved:', numericKey);
     } catch (error) {
       console.error('Failed to save Pokedex memo:', error);
     }
-
   };
 
   const updateSystemSettings = async (nextSettings) => {
@@ -384,16 +414,11 @@ export const useGameData = (allPokemonData) => {
     };
 
     setSystemSettings(normalizedSettings);
+    await set(ref(database, 'gameData/systemSettings'), normalizedSettings);
 
-    const systemSettingsRef = ref(database, 'gameData/systemSettings');
-    await set(systemSettingsRef, normalizedSettings);
-
-    // 봇이 gameData/campingSettings를 우선 참조하므로 동기화
     if (normalizedSettings.campingSettings) {
       await set(ref(database, 'gameData/campingSettings'), normalizedSettings.campingSettings);
     }
-
-    console.log('💾 시스템 설정 저장:', normalizedSettings);
   };
 
   return {

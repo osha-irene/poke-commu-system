@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ref, onValue, set, update } from 'firebase/database';
+import { ref, get, onChildAdded, onChildChanged, onChildRemoved, onValue, set, update } from 'firebase/database';
 import { database } from '../../firebase';
 
 const DEFAULT_TEMPLATE = [
@@ -34,7 +34,38 @@ export function useMemberProfile(memberId) {
   useEffect(() => {
     if (!memberId) return;
     const r = ref(database, SECTIONS_PATH(memberId));
-    return onValue(r, snap => setSections(snap.val() || {}));
+    let isInitialLoad = true;
+
+    get(r)
+      .then(snap => setSections(snap.val() || {}))
+      .finally(() => {
+        isInitialLoad = false;
+      });
+
+    const upsertSection = (snap) => {
+      if (isInitialLoad) return;
+      setSections(prev => ({
+        ...prev,
+        [snap.key]: snap.val()
+      }));
+    };
+
+    const unsubAdded = onChildAdded(r, upsertSection);
+    const unsubChanged = onChildChanged(r, upsertSection);
+    const unsubRemoved = onChildRemoved(r, (snap) => {
+      if (isInitialLoad) return;
+      setSections(prev => {
+        const next = { ...prev };
+        delete next[snap.key];
+        return next;
+      });
+    });
+
+    return () => {
+      unsubAdded();
+      unsubChanged();
+      unsubRemoved();
+    };
   }, [memberId]);
 
   const saveSection = async (key, value) => {

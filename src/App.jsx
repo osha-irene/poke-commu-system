@@ -7,7 +7,7 @@ import SakuraEffect from './effects/sakura';
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { ref, get, set, onValue, runTransaction } from 'firebase/database';
+import { ref, get, set, onChildAdded, onChildChanged, onChildRemoved, runTransaction } from 'firebase/database';
 import { database } from './firebase';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
@@ -25,6 +25,7 @@ import FirstCatchMemoModal from './components/modals/FirstCatchMemoModal';
 import StatSelectModal from './components/modals/StatSelectModal';
 import EvolutionModal from './components/modals/EvolutionModal';
 import useGameState from './hooks/useGameState';
+import useDeployRefresh from './hooks/useDeployRefresh';
 import ShopView from './components/views/ShopView';
 import NpcView from './components/views/NpcView';
 import MembersView from './components/views/MembersView';
@@ -622,6 +623,7 @@ function HomeDashboard({
   attendanceClaimed = false,
   isClaimingAttendance = false,
   members = {},
+  scheduleEvents = [],
   titles = [],
   onUpdateTitle,
   onProfileClick,
@@ -637,7 +639,6 @@ function HomeDashboard({
   }).format(new Date(Date.UTC(koreaToday.year, koreaToday.month - 1, 1)));
   const weekDays = ['\uC77C', '\uC6D4', '\uD654', '\uC218', '\uBAA9', '\uAE08', '\uD1A0'];
 
-  const [scheduleEvents, setScheduleEvents] = useState([]);
   const [calTooltip, setCalTooltip] = useState(null);
   const [calTooltipPos, setCalTooltipPos] = useState({ x: 0, y: 0 });
   const calTooltipTimer = useRef(null);
@@ -647,14 +648,6 @@ function HomeDashboard({
     updateKoreaToday();
     const timer = window.setInterval(updateKoreaToday, 60 * 1000);
     return () => window.clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    const eventsRef = ref(database, 'gameData/scheduleEvents');
-    const unsub = onValue(eventsRef, (snap) => {
-      setScheduleEvents(snap.exists() ? Object.values(snap.val()) : []);
-    });
-    return () => unsub();
   }, []);
 
   const { cookingFeed, evolutionFeed } = getHomeFeeds(members);
@@ -1362,6 +1355,7 @@ export default function App() {
     regions,
     allPokemonMaster,
     members,
+    memberViewMembers,
     gamePokedex,
     sharedPokedexData,
     handleLogin,
@@ -1406,11 +1400,15 @@ export default function App() {
     titles,
     updateSelfTitle,
   } = gameState;
+  useDeployRefresh({ defer: Boolean(encounterPokemon || firstCatchPokemon) });
   const isFeaturePage = currentTab !== 'home';
   const isMembersPage = currentTab === 'members';
   const isTopMenuPage = ['notice', 'world', 'system', 'qna'].includes(currentTab);
   const hasContentSurface = isFeaturePage && !isMembersPage && currentTab !== 'profile' && currentTab !== 'npcs' && currentTab !== 'map' && (isMobile || currentTab !== 'shop');
   const isCoreLoading = isAuthLoading || isMembersLoading;
+  const displayMembers = process.env.NODE_ENV === 'development'
+    ? { ...MOCK_MEMBERS, ...memberViewMembers }
+    : memberViewMembers;
   const [isInitialPageReady, setIsInitialPageReady] = useState(false);
 
   const [maintenanceCountdown, setMaintenanceCountdown] = useState(null);
@@ -1431,8 +1429,8 @@ export default function App() {
   }, [maintenanceScheduledAt, publicMaintenanceScheduledAt]);
 
   const effectivePokedexData = useMemo(
-    () => computeEffectivePokedexData(sharedPokedexData, members),
-    [sharedPokedexData, members]
+    () => computeEffectivePokedexData(sharedPokedexData, displayMembers),
+    [sharedPokedexData, displayMembers]
   );
 
   const effectiveMaintenanceMode = maintenanceMode || publicMaintenanceMode;
@@ -1558,23 +1556,87 @@ export default function App() {
   // 게시판 실시간 로드
   useEffect(() => {
     const postsRef = ref(database, 'community/qnaPosts');
-    const unsub = onValue(postsRef, (snapshot) => {
-      setQnaPosts(snapshot.exists() ? snapshot.val() : []);
-      setIsLoadingPosts(false);
-    }, (error) => {
-      console.error('❌ 게시판 로드 실패:', error);
-      setIsLoadingPosts(false);
+    let isInitialLoad = true;
+
+    get(postsRef)
+      .then((snapshot) => {
+        setQnaPosts(snapshot.exists() ? snapshot.val() : []);
+      })
+      .catch((error) => {
+        console.error('❌ 게시판 로드 실패:', error);
+      })
+      .finally(() => {
+        isInitialLoad = false;
+        setIsLoadingPosts(false);
+      });
+
+    const setPostChild = (snapshot) => {
+      if (isInitialLoad) return;
+      setQnaPosts(prev => {
+        const next = Array.isArray(prev) ? [...prev] : [];
+        next[Number(snapshot.key)] = snapshot.val();
+        return next.filter(Boolean);
+      });
+    };
+
+    const unsubAdded = onChildAdded(postsRef, setPostChild);
+    const unsubChanged = onChildChanged(postsRef, setPostChild);
+    const unsubRemoved = onChildRemoved(postsRef, (snapshot) => {
+      if (isInitialLoad) return;
+      setQnaPosts(prev => {
+        const next = Array.isArray(prev) ? [...prev] : [];
+        next.splice(Number(snapshot.key), 1);
+        return next.filter(Boolean);
+      });
     });
-    return () => unsub();
+
+    return () => {
+      unsubAdded();
+      unsubChanged();
+      unsubRemoved();
+    };
   }, []);
 
   // 일정 실시간 로드 (App 레벨 — 모바일 공개홈에서도 사용)
   useEffect(() => {
     const eventsRef = ref(database, 'gameData/scheduleEvents');
-    const unsub = onValue(eventsRef, (snap) => {
-      setScheduleEvents(snap.exists() ? Object.values(snap.val()) : []);
+    let isInitialLoad = true;
+
+    get(eventsRef)
+      .then((snap) => {
+        setScheduleEvents(snap.exists()
+          ? Object.entries(snap.val()).map(([key, value]) => ({ firebaseKey: key, ...value }))
+          : []);
+      })
+      .catch((error) => {
+        console.error('schedule events load failed:', error);
+      })
+      .finally(() => {
+        isInitialLoad = false;
+      });
+
+    const upsertEvent = (snap) => {
+      if (isInitialLoad || !snap.exists()) return;
+      const nextEvent = { firebaseKey: snap.key, ...snap.val() };
+      setScheduleEvents(prev => {
+        const exists = prev.some(event => event.firebaseKey === snap.key);
+        if (!exists) return [...prev, nextEvent];
+        return prev.map(event => event.firebaseKey === snap.key ? nextEvent : event);
+      });
+    };
+
+    const unsubAdded = onChildAdded(eventsRef, upsertEvent);
+    const unsubChanged = onChildChanged(eventsRef, upsertEvent);
+    const unsubRemoved = onChildRemoved(eventsRef, (snap) => {
+      if (isInitialLoad) return;
+      setScheduleEvents(prev => prev.filter(event => event.firebaseKey !== snap.key));
     });
-    return () => unsub();
+
+    return () => {
+      unsubAdded();
+      unsubChanged();
+      unsubRemoved();
+    };
   }, []);
 
   // ?ъ슫??濡쒕뱶
@@ -1775,7 +1837,7 @@ return (
           {currentTab === 'home' && (
             <MobileHomeDashboard
               trainer={trainer}
-              members={members}
+              members={displayMembers}
               scheduleEvents={scheduleEvents}
               onCookingClick={() => setCurrentTab('cooking')}
               onPokemonClick={() => setCurrentTab('pokemon')}
@@ -1812,14 +1874,14 @@ return (
           {currentTab === 'members' && (
             <div key="members">
               <MobileMembersView
-                members={members}
+                members={displayMembers}
                 titles={titles}
                 initialMemberId={initialMemberId}
                 onClearInitialMember={() => setInitialMemberId(null)}
               />
             </div>
           )}
-          {currentTab === 'npcs' && <div key="npcs"><NpcView members={members} isLoading={isMembersLoading} isAdmin={isAdmin} npcOnly /></div>}
+          {currentTab === 'npcs' && <div key="npcs"><NpcView members={displayMembers} isLoading={isMembersLoading} isAdmin={isAdmin} npcOnly /></div>}
           {currentTab === 'pokemon' && <PokemonView />}
           {currentTab === 'items' && <ItemsView />}
           {currentTab === 'shop' && <ShopView />}
@@ -1889,7 +1951,8 @@ return (
           onClaimAttendance={handleClaimAttendance}
           attendanceClaimed={attendanceClaimed || attendanceLocked}
           isClaimingAttendance={isClaimingAttendance}
-          members={members}
+          members={displayMembers}
+          scheduleEvents={scheduleEvents}
           titles={titles || []}
           onUpdateTitle={updateSelfTitle}
           onProfileClick={trainer?.id ? () => {
@@ -1913,7 +1976,7 @@ return (
             onLogout={handleLogout}
             onPokemonClick={() => setCurrentTab('pokemon')}
             onItemsClick={() => setCurrentTab('items')}
-            members={members}
+            members={displayMembers}
         />
       )}
       {currentTab === 'world' && <CommunityPlaceholder type="world" trainer={trainer} />}
@@ -1947,8 +2010,8 @@ return (
 			/>
 		  )}
 		  
-		  {currentTab === 'members' && <div key="members"><MembersView members={process.env.NODE_ENV === 'development' ? { ...MOCK_MEMBERS, ...members } : members} isLoading={isMembersLoading} currentUserId={currentUser?.id} isAdmin={isAdmin} titles={titles} onSwitchTab={setCurrentTab} initialMemberId={initialMemberId} onClearInitialMember={() => setInitialMemberId(null)} /></div>}
-		  {currentTab === 'npcs' && <div key="npcs"><NpcView members={members} isLoading={isMembersLoading} isAdmin={isAdmin} npcOnly onSwitchTab={setCurrentTab} /></div>}
+		  {currentTab === 'members' && <div key="members"><MembersView members={displayMembers} isLoading={isMembersLoading} currentUserId={currentUser?.id} isAdmin={isAdmin} titles={titles} onSwitchTab={setCurrentTab} initialMemberId={initialMemberId} onClearInitialMember={() => setInitialMemberId(null)} /></div>}
+		  {currentTab === 'npcs' && <div key="npcs"><NpcView members={displayMembers} isLoading={isMembersLoading} isAdmin={isAdmin} npcOnly onSwitchTab={setCurrentTab} /></div>}
 		  {currentTab === 'pokemon' && <PokemonView />}
 		  {currentTab === 'items' && <ItemsView />}
 		  {currentTab === 'shop' && <ShopView />}
@@ -1975,6 +2038,7 @@ return (
 			  currentUser={currentUser}
 			  onCreatePost={handleCreatePost}
 			  onDeletePost={handleDeletePost}
+			  onEditPost={handleEditPost}
 			  onCreateComment={handleCreateComment}
 			  onDeleteComment={handleDeleteComment}
 			/>

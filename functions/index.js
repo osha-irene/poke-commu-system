@@ -169,6 +169,35 @@ const markProcessingFailed = async (db, statusId, prefix, error, source) => {
   });
 };
 
+const markIgnoredBattleCandidate = async (status, source, reason, content = '') => {
+  if (!status?.id) return false;
+  try {
+    const members = await getMembers(db);
+    const { author, authorAccount } = await findAuthorForStatus(battleCtx, members, status);
+    if (!author) return false;
+
+    const sessionSnap = await getBattleBot().findSessionByMember?.(author.id);
+    if (!sessionSnap?.sessionKey) return false;
+
+    await markProcessed(db, `${status.id}_battle`, {
+      source,
+      ignored: reason,
+      account: authorAccount,
+      activeBattleSessionKey: sessionSnap.sessionKey,
+      activeBattleStatus: sessionSnap.session?.status || null,
+      contentPreview: String(content || stripHtml(status.content || '')).slice(0, 200),
+    });
+    return true;
+  } catch (e) {
+    console.warn('markIgnoredBattleCandidate failed', {
+      statusId: status?.id || null,
+      reason,
+      error: e.message,
+    });
+    return false;
+  }
+};
+
 const findAuthorForStatus = async (ctx, members, status) => {
   const accounts = ctx.getAuthorAccountCandidates?.(status) || [ctx.getAuthorAccount(status)];
   for (const account of accounts) {
@@ -333,13 +362,18 @@ const processBattleStatus = async (status, source = 'webhook') => {
     return { ignored: true, reason: 'routed to another bot' };
   }
   const command = getBattleBot().getCommand(content);
-  if (!battleCtx.isBotMentioned(status)) return { ignored: true, reason: 'not mentioned' };
+  if (!battleCtx.isBotMentioned(status)) {
+    await markIgnoredBattleCandidate(status, source, 'not mentioned', content);
+    return { ignored: true, reason: 'not mentioned' };
+  }
 
   const key = `${status.id}_battle`;
   if (!(await claimProcessing(db, status.id, 'battle'))) return { ignored: true, reason: 'already processed' };
 
   if (!command) {
-    await markProcessed(db, key, { source, ignored: 'unknown command' });
+    if (!(await markIgnoredBattleCandidate(status, source, 'unknown command', content))) {
+      await markProcessed(db, key, { source, ignored: 'unknown command' });
+    }
     return { ignored: true, reason: 'unknown command' };
   }
 
@@ -611,7 +645,11 @@ exports.mastodonWebhook = functions.region(region.region).runWith(webhookOpts).h
     status = statusFromWebhookBody(req.body);
     if (!status) { res.status(200).json({ ignored: true }); return; }
     const routes = getBotRoutesForStatus(status);
-    if (!routes.length) { res.status(200).json({ ignored: true, reason: 'no matching bot route' }); return; }
+    if (!routes.length) {
+      await markIgnoredBattleCandidate(status, 'webhook', 'no matching bot route');
+      res.status(200).json({ ignored: true, reason: 'no matching bot route' });
+      return;
+    }
     const results = await Promise.allSettled(routes.map(route => route.processStatus(status, 'webhook')));
     await Promise.all(results.map((result, index) => {
       if (result.status !== 'rejected') return null;

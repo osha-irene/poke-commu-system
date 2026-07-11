@@ -394,10 +394,14 @@ export default function EncounterModal({
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
-      onClick={() => setSelectedBall(null)}
+      onClick={() => {
+        if (catching || result) return;
+        setSelectedBall(null);
+      }}
     >
       <div
         className="w-full max-w-2xl mx-4"
+        onClick={e => e.stopPropagation()}
       >
         {!result && !catching && (
           <div style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>

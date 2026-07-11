@@ -2,6 +2,7 @@
 import React from 'react';
 import { Zap, Shield, Star, Trash2 } from 'lucide-react';
 import { getTypeNameKr, getTypeColor } from '../../../styles/theme';
+import { getContestTypeColor, getContestEffectKo } from '../../../utils/contestMoveData';
 
 // ✅ 카테고리 영문→한글 매핑
 const CATEGORY_NAMES_KR = {
@@ -26,13 +27,20 @@ const getCategoryIcon = (category) => {
   }
 };
 
-export default function MovesList({ 
+const repeatContestIcon = (value, icon) => {
+  const count = Number(value) || 0;
+  return icon.repeat(count);
+};
+
+const hasContestValue = (value) => Number(value) > 0;
+
+export default function MovesList({
   moves = [],
   allMoves = [],
   onForgetMove,
-  canEdit = true 
+  canEdit = true,
+  contestMode = false
 }) {
-  
   const displayMoves = moves.map((m, idx) => {
     // 여러 방법으로 찾아보기
     const moveData1 = allMoves.find(move => move.id === m.moveId);
@@ -75,10 +83,13 @@ export default function MovesList({
     <div className="grid grid-cols-1 gap-3 w-full">
       {displayMoves.map((move, index) => {
         const typeColors = getTypeColor(move.type);
-        
+        const key = `${move.id}-${index}`;
+        const hasContestData = !!move.contestType;
+        const contestColors = getContestTypeColor(move.contestType);
+
         return (
           <div
-            key={`${move.id}-${index}`}
+            key={key}
             className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-all w-full"
           >
             <div className="flex items-center gap-2 mb-2">
@@ -87,7 +98,7 @@ export default function MovesList({
               </span>
               <span
                 className="text-xs px-2 py-1 rounded font-bold inline-flex items-center justify-center min-w-[3rem]"
-                style={{ 
+                style={{
                   backgroundColor: typeColors.bg,
                   color: typeColors.text
                 }}
@@ -108,36 +119,70 @@ export default function MovesList({
                 </button>
               )}
             </div>
-            <div className="flex items-center gap-3 mb-2">
-              <span className="flex items-center gap-1 text-xs text-gray-600">
-                {getCategoryIcon(move.category)}
-                <span className="font-medium">{move.category}</span>
-              </span>
-              {move.power > 0 && (
-                <span className="flex items-center gap-1 text-xs">
-                  <span className="text-gray-500">위력</span>
-                  <span className="text-gray-700 font-bold">{move.power}</span>
-                </span>
-              )}
-              <span className="flex items-center gap-1 text-xs">
-                <span className="text-gray-500">명중</span>
-                <span className="text-gray-700 font-bold">{move.accuracy}</span>
-              </span>
-              <span className="flex items-center gap-1 text-xs">
-                <span className="text-gray-500">PP</span>
-                <span className={`font-bold ${
-                  move.currentPp === 0 ? 'text-red-500' :
-                  move.pp && move.currentPp <= move.pp / 4 ? 'text-orange-500' :
-                  'text-gray-700'
-                }`}>
-                  {move.currentPp ?? move.pp}/{move.pp}
-                </span>
-              </span>
-            </div>
-            {move.description && (
-              <div className="text-sm text-gray-600 w-full leading-relaxed">
-                {move.description}
-              </div>
+            {contestMode ? (
+              hasContestData ? (
+                <>
+                  <div className="flex items-center gap-3 mb-2">
+                    <span
+                      className="text-xs px-2 py-1 rounded font-bold inline-flex items-center justify-center"
+                      style={{ backgroundColor: contestColors.bg, color: contestColors.text }}
+                    >
+                      {move.contestType}
+                    </span>
+                    {hasContestValue(move.contestAppeals) && (
+                      <span className="flex items-center gap-1 text-xs">
+                        <span className="text-pink-500 font-bold">어필</span>
+                        <span className="text-pink-500 font-bold tracking-wide">{repeatContestIcon(move.contestAppeals, '♥')}</span>
+                      </span>
+                    )}
+                    {hasContestValue(move.contestJam) && (
+                      <span className="flex items-center gap-1 text-xs">
+                        <span className="text-indigo-400 font-bold">방해</span>
+                        <span className="text-indigo-400 font-bold tracking-wide">{repeatContestIcon(move.contestJam, '♡')}</span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-600 w-full leading-relaxed">
+                    {getContestEffectKo(move.contestEffect) || '효과 정보 없음'}
+                  </div>
+                </>
+              ) : (
+                <div className="text-xs text-gray-400 italic">콘테스트 데이터 없음</div>
+              )
+            ) : (
+              <>
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="flex items-center gap-1 text-xs text-gray-600">
+                    {getCategoryIcon(move.category)}
+                    <span className="font-medium">{move.category}</span>
+                  </span>
+                  {move.power > 0 && (
+                    <span className="flex items-center gap-1 text-xs">
+                      <span className="text-gray-500">위력</span>
+                      <span className="text-gray-700 font-bold">{move.power}</span>
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1 text-xs">
+                    <span className="text-gray-500">명중</span>
+                    <span className="text-gray-700 font-bold">{move.accuracy}</span>
+                  </span>
+                  <span className="flex items-center gap-1 text-xs">
+                    <span className="text-gray-500">PP</span>
+                    <span className={`font-bold ${
+                      move.currentPp === 0 ? 'text-red-500' :
+                      move.pp && move.currentPp <= move.pp / 4 ? 'text-orange-500' :
+                      'text-gray-700'
+                    }`}>
+                      {move.currentPp ?? move.pp}/{move.pp}
+                    </span>
+                  </span>
+                </div>
+                {move.description && (
+                  <div className="text-sm text-gray-600 w-full leading-relaxed">
+                    {move.description}
+                  </div>
+                )}
+              </>
             )}
           </div>
         );

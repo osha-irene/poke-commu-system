@@ -87,6 +87,7 @@ export default function QnABoard({
 
   const handleSaveEdit = () => {
     if (!editingPost.title.trim() || !editingPost.content.trim()) return;
+    if (!selectedPost || typeof onEditPost !== 'function') return;
     onEditPost(selectedPost.id, {
       title: editingPost.title.trim(),
       content: editingPost.content.trim(),

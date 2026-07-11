@@ -139,7 +139,23 @@ const createTradeBot = ({ db, pokemonData, findMemberByAccount, extractMentionAc
     return { tradeKey: active[0][0], trade: active[0][1] };
   };
 
+  // 중간에 삭제된 자리 때문에 caughtPokemon 배열에 구멍(hole)이 있으면 [...current]로 복사할 때
+  // 그 구멍이 명시적 undefined로 채워져서 Firebase에 그대로 못 쓴다 (RTDB는 undefined를 거부).
+  // 배열을 재구성할 때 구멍을 null로 메워서 안전하게 만든다.
+  const sanitizeArrayHoles = (arr) => Array.from({ length: arr.length }, (_, i) => (arr[i] === undefined ? null : arr[i]));
+
   const completeTrade = async ({ tradeKey, trade }) => {
+    // 동일 교환에 대해 completeTrade가 동시에 여러 번 트리거돼도 단 한 번만 실행되도록 선점
+    // (Firebase transaction은 로컬에 값이 캐시돼 있지 않으면 콜백을 먼저 null로 호출한 뒤
+    //  서버의 실제 값으로 재호출한다. null이라고 바로 중단(undefined 반환)하면 실제 값을
+    //  받아보기도 전에 committed:false로 끝나버리므로, null일 때는 그대로 반환해 재시도를 유도한다.)
+    const claim = await db.ref(`gameData/tradeRequests/${tradeKey}`).transaction((current) => {
+      if (current === null) return current;
+      if (current.status !== 'accepted') return; // 실제로 다른 실행이 처리 중이거나 끝났음 → 중단
+      return { ...current, status: 'completing', updatedAt: Date.now() };
+    });
+    if (!claim.committed) return null;
+
     const [rs, ts] = await Promise.all([
       db.ref(`members/${trade.requesterId}`).once('value'),
       db.ref(`members/${trade.targetId}`).once('value'),
@@ -189,23 +205,52 @@ const createTradeBot = ({ db, pokemonData, findMemberByAccount, extractMentionAc
     // 통째로 되쓰지 않고 각자 transaction으로 커밋 시점의 최신 배열에서 해당 포켓몬만
     // 교체한다. 그래야 그 사이 다른 곳에서 생긴 변경(예: 배틀 기술 사용 기록)이 보존된다.
     const rTx = await db.ref(`members/${trade.requesterId}/caughtPokemon`).transaction((current) => {
+      if (current === null) return current;
       if (!Array.isArray(current)) return;
       const idx = current.findIndex(p => p && getTradePokemonKey(p) === trade.requesterPokemonKey);
       if (idx < 0) return;
-      const next = [...current];
+      const next = sanitizeArrayHoles(current);
       next[idx] = rReceived;
       return next;
     });
     const tTx = await db.ref(`members/${trade.targetId}/caughtPokemon`).transaction((current) => {
+      if (current === null) return current;
       if (!Array.isArray(current)) return;
       const idx = current.findIndex(p => p && getTradePokemonKey(p) === trade.targetPokemonKey);
       if (idx < 0) return;
-      const next = [...current];
+      const next = sanitizeArrayHoles(current);
       next[idx] = tReceived;
       return next;
     });
 
     if (!rTx.committed || !tTx.committed) {
+      // 한쪽만 커밋됐다면 포켓몬 중복/유실을 막기 위해 원상복구한다
+      if (rTx.committed && !tTx.committed) {
+        await db.ref(`members/${trade.requesterId}/caughtPokemon`).transaction((current) => {
+          if (current === null) return current;
+          if (!Array.isArray(current)) return;
+          const idx = current.findIndex(p => p && getTradePokemonKey(p) === getTradePokemonKey(rReceived));
+          if (idx < 0) return;
+          const next = sanitizeArrayHoles(current);
+          next[idx] = rPokemon;
+          return next;
+        });
+      } else if (tTx.committed && !rTx.committed) {
+        await db.ref(`members/${trade.targetId}/caughtPokemon`).transaction((current) => {
+          if (current === null) return current;
+          if (!Array.isArray(current)) return;
+          const idx = current.findIndex(p => p && getTradePokemonKey(p) === getTradePokemonKey(tReceived));
+          if (idx < 0) return;
+          const next = sanitizeArrayHoles(current);
+          next[idx] = tPokemon;
+          return next;
+        });
+      }
+      console.warn('completeTrade concurrent_update_conflict', {
+        tradeKey, requesterId: trade.requesterId, targetId: trade.targetId,
+        requesterPokemonKey: trade.requesterPokemonKey, targetPokemonKey: trade.targetPokemonKey,
+        rTxCommitted: rTx.committed, tTxCommitted: tTx.committed,
+      });
       await db.ref(`gameData/tradeRequests/${tradeKey}`).update({ status: 'failed', failedReason: 'concurrent_update_conflict', updatedAt: Date.now() });
       return '교환 처리 중 문제가 발생했어요. 포켓몬이 그 사이 사라졌을 수 있어요. 다시 시도해 주세요.';
     }
@@ -233,6 +278,19 @@ const createTradeBot = ({ db, pokemonData, findMemberByAccount, extractMentionAc
     return `${i + 1}. ${nameStr}${parts ? ` — ${parts}` : ''}`;
   };
 
+  // gameData/tradeRequests/{tradeKey}에 트랜잭션으로 갱신 — 신청자/상대방이 거의 동시에
+  // 포켓몬을 선택해도 두 값이 모두 반영된 "최종" 상태를 원자적으로 확인할 수 있다.
+  // (기존에는 update() 후 메모리 속 stale한 trade 객체로 완료 여부를 판단해서
+  //  양쪽 다 선택했는데도 completeTrade가 트리거되지 않거나 중복 트리거되는 경합이 있었다.)
+  const applyTradeSelectionUpdate = async (tradeKey, updates) => {
+    const result = await db.ref(`gameData/tradeRequests/${tradeKey}`).transaction((current) => {
+      if (current === null) return current; // 아직 캐시 없음 — 그대로 반환해 실제 서버 값으로 재시도 유도
+      if (!['pending', 'accepted'].includes(current.status)) return; // 실제로 종료된 교환 → 중단
+      return { ...current, ...updates };
+    });
+    return result.committed ? result.snapshot.val() : null;
+  };
+
   const saveTradePokemonSelection = async ({ tradeKey, trade, author, offeredName, pickIndex }) => {
     const isRequester = author.id === trade.requesterId;
     const isTarget = author.id === trade.targetId;
@@ -250,8 +308,8 @@ const createTradeBot = ({ db, pokemonData, findMemberByAccount, extractMentionAc
       const updates = { status: 'accepted', updatedAt: Date.now(), [clearKey]: null };
       if (isRequester) { updates.requesterPokemonKey = getTradePokemonKey(pokemon); updates.requesterPokemonName = tradePokemonLabel(pokemon); }
       else { updates.targetPokemonKey = getTradePokemonKey(pokemon); updates.targetPokemonName = tradePokemonLabel(pokemon); }
-      await db.ref(`gameData/tradeRequests/${tradeKey}`).update(updates);
-      const updated = { ...trade, ...updates };
+      const updated = await applyTradeSelectionUpdate(tradeKey, updates);
+      if (!updated) return '이미 종료되었거나 처리할 수 없는 교환이에요.';
       if (updated.requesterPokemonKey && updated.targetPokemonKey) return completeTrade({ tradeKey, trade: updated });
       const waitFor = updated.requesterPokemonKey ? updated.targetAccount : updated.requesterAccount;
       return [accountMention(waitFor), `${tradePokemonLabel(pokemon)}을(를) 교환 포켓몬으로 선택했어요.`, '상대도 [교환: 포켓몬이름]을 보내면 교환이 완료돼요.'].filter(Boolean).join('\n');
@@ -271,8 +329,8 @@ const createTradeBot = ({ db, pokemonData, findMemberByAccount, extractMentionAc
     const updates = { status: 'accepted', updatedAt: Date.now() };
     if (isRequester) { updates.requesterPokemonKey = getTradePokemonKey(pokemon); updates.requesterPokemonName = tradePokemonLabel(pokemon); }
     else { updates.targetPokemonKey = getTradePokemonKey(pokemon); updates.targetPokemonName = tradePokemonLabel(pokemon); }
-    await db.ref(`gameData/tradeRequests/${tradeKey}`).update(updates);
-    const updated = { ...trade, ...updates };
+    const updated = await applyTradeSelectionUpdate(tradeKey, updates);
+    if (!updated) return '이미 종료되었거나 처리할 수 없는 교환이에요.';
     if (updated.requesterPokemonKey && updated.targetPokemonKey) return completeTrade({ tradeKey, trade: updated });
     const waitFor = updated.requesterPokemonKey ? updated.targetAccount : updated.requesterAccount;
     return [accountMention(waitFor), `${tradePokemonLabel(pokemon)}을(를) 교환 포켓몬으로 선택했어요.`, '상대도 [교환: 포켓몬이름]을 보내면 교환이 완료돼요.'].filter(Boolean).join('\n');
