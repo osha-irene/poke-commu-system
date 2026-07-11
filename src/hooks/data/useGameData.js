@@ -93,8 +93,8 @@ const deriveRecipeItems = (recipes = []) => (
         effortBoost: result.effortBoost || {},
         friendshipBoost: result.friendshipBoost || 0,
         cost: 0,
-        sellPrice: 0,
-        canSell: false,
+        sellPrice: result.sellPrice || 0,
+        canSell: result.canSell || false,
         __customItemSource: 'recipe'
       };
     })

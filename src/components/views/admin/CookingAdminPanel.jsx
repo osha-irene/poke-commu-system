@@ -142,6 +142,30 @@ const effortLabels = {
   speed: '스피드'
 };
 
+const RESULT_EFFECT_CATEGORIES = [
+  { id: 'none', label: '없음' },
+  { id: 'friendship', label: '친밀도 증가' },
+  { id: 'condition', label: '컨디션 증가' },
+  { id: 'ev', label: '노력치 증가' },
+  { id: 'trainerExp', label: '경험치 상승' },
+];
+
+// 결과 아이템은 friendshipBoost/conditionBoost/effortBoost/specialEffect를 동시에 들고 있을 수 있는
+// 구조라, 관리 화면에서는 "지금 어떤 효과가 켜져있는지" 하나로 판단해서 보여준다.
+const getResultEffectCategory = (item) => {
+  if (item.specialEffect === 'trainerExp') return 'trainerExp';
+  if (item.specialEffect === 'conditionSelect') return 'condition';
+  if (item.specialEffect === 'evSelect') return 'ev';
+  if (item.specialEffect === 'friendship' || Number(item.friendshipBoost) > 0) return 'friendship';
+  if (item.specialEffect === 'condition' || Object.values(item.conditionBoost || {}).some(v => Number(v) > 0)) return 'condition';
+  if (item.specialEffect === 'ev' || Object.values(item.effortBoost || {}).some(v => Number(v) > 0)) return 'ev';
+  return 'none';
+};
+
+const getResultEffectMode = (item) => (
+  (item.specialEffect === 'conditionSelect' || item.specialEffect === 'evSelect') ? 'select' : 'all'
+);
+
 const emptyIngredients = () => [
   { name: '', count: 1 },
   { name: '', count: 1 },
@@ -159,6 +183,8 @@ const emptyResultItem = () => ({
   // 특수 효과 — conditionSelect/evSelect: 사용 시 유저가 항목 선택, trainerExp: 멤버 경험치 상승
   specialEffect: null,
   boostAmount: 0,
+  canSell: false,
+  sellPrice: 0,
 });
 
 const emptyRequiredStats = () => ({
@@ -219,6 +245,34 @@ export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDe
     setIngredients(next);
   };
 
+  const resultEffectCategory = getResultEffectCategory(resultItem);
+  const resultEffectMode = getResultEffectMode(resultItem);
+
+  const selectResultEffectCategory = (category) => {
+    if (category === resultEffectCategory) return;
+
+    const base = {
+      ...resultItem,
+      specialEffect: null,
+      boostAmount: 0,
+      friendshipBoost: 0,
+      conditionBoost: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
+      effortBoost: { hp: 0, attack: 0, defense: 0, spAttack: 0, spDefense: 0, speed: 0 },
+    };
+
+    if (category === 'none') setResultItem(base);
+    else setResultItem({ ...base, specialEffect: category });
+  };
+
+  const selectResultEffectMode = (category, mode) => {
+    const selectType = category === 'condition' ? 'conditionSelect' : 'evSelect';
+    setResultItem({
+      ...resultItem,
+      specialEffect: mode === 'select' ? selectType : category,
+      boostAmount: mode === 'select' ? (resultItem.boostAmount || 1) : 0,
+    });
+  };
+
   const handleDeleteRecipe = (recipeId) => {
     if (window.confirm('정말로 이 레시피를 삭제하시겠습니까?')) {
       if (editingRecipeId === recipeId) {
@@ -246,6 +300,12 @@ export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDe
 
     if (!resultItem.effect.trim()) {
       alert('결과 아이템 설명을 입력해주세요!');
+      return null;
+    }
+
+    const needsBoostAmount = ['conditionSelect', 'evSelect', 'trainerExp'].includes(resultItem.specialEffect);
+    if (needsBoostAmount && (!resultItem.boostAmount || resultItem.boostAmount <= 0)) {
+      alert('상승량을 입력해주세요!');
       return null;
     }
 
@@ -535,169 +595,237 @@ export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDe
               </div>
 
               <div className="bg-gray-50 rounded-lg p-4 border-2 border-gray-300 flex flex-col" style={{ height: '510px' }}>
-                <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
+                <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2 shrink-0">
                   <Gift size={20} /> 결과 아이템
                 </h4>
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <input
-                    type="text"
-                    value={resultItem.name}
-                    onChange={(event) => setResultItem({ ...resultItem, name: event.target.value })}
-                    className="px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="아이템 이름 *"
-                  />
-                  <select
-                    value={resultItem.pocket}
-                    onChange={(event) => setResultItem({ ...resultItem, pocket: event.target.value })}
-                    className="px-3 py-2 border border-gray-300 rounded-lg"
-                  >
-                    <option value="berries">나무열매</option>
-                    <option value="medicine">회복</option>
-                    <option value="vitamins">영양</option>
-                    <option value="misc">기타</option>
-                  </select>
-                </div>
-                <textarea
-                  value={resultItem.effect}
-                  onChange={(event) => setResultItem({ ...resultItem, effect: event.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2 resize-none"
-                  rows="4"
-                  placeholder="효과 설명 *"
-                />
-                <div className="flex gap-2 mb-2">
-                  <input
-                    type="text"
-                    value={resultItem.spriteUrl}
-                    onChange={(event) => setResultItem({ ...resultItem, spriteUrl: event.target.value })}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="이미지 URL 또는 선택"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowImagePicker(true)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-1 text-sm text-gray-600 shrink-0"
-                    title="public 이미지에서 선택"
-                  >
-                    <Image size={15} /> 선택
-                  </button>
-                </div>
-                {resultItem.spriteUrl && (
-                  <div className="mb-2">
-                    <img src={resultItem.spriteUrl} alt="preview" className="w-12 h-12 object-contain border rounded" style={{ imageRendering: 'pixelated' }} onError={e => { e.target.style.display = 'none'; }} />
+
+                <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      value={resultItem.name}
+                      onChange={(event) => setResultItem({ ...resultItem, name: event.target.value })}
+                      className="px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="아이템 이름 *"
+                    />
+                    <select
+                      value={resultItem.pocket}
+                      onChange={(event) => setResultItem({ ...resultItem, pocket: event.target.value })}
+                      className="px-3 py-2 border border-gray-300 rounded-lg"
+                    >
+                      <option value="berries">나무열매</option>
+                      <option value="medicine">회복</option>
+                      <option value="vitamins">영양</option>
+                      <option value="misc">기타</option>
+                    </select>
                   </div>
-                )}
 
-                <div className="mb-2">
-                  <label className="block text-xs text-gray-600 mb-1">친밀도 증가</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={resultItem.friendshipBoost}
-                    onChange={(event) => setResultItem({ ...resultItem, friendshipBoost: parseInt(event.target.value, 10) || 0 })}
-                    className="w-full px-2 py-1 border border-gray-300 rounded"
+                  <textarea
+                    value={resultItem.effect}
+                    onChange={(event) => setResultItem({ ...resultItem, effect: event.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-y"
+                    rows="3"
+                    placeholder="효과 설명 *"
                   />
-                </div>
 
-                <div className="mb-2">
-                  <label className="block text-xs text-gray-600 mb-1">컨디션 증가</label>
-                  <div className="grid grid-cols-5 gap-1">
-                    {Object.keys(resultItem.conditionBoost).map((stat) => (
-                      <div key={stat}>
-                        <label className="block text-[10px] text-gray-500 mb-0.5">{conditionLabels[stat] || stat}</label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={resultItem.conditionBoost[stat]}
-                          onChange={(event) => setResultItem({
-                            ...resultItem,
-                            conditionBoost: {
-                              ...resultItem.conditionBoost,
-                              [stat]: parseInt(event.target.value, 10) || 0
-                            }
-                          })}
-                          className="w-full px-1 py-1 border border-gray-300 rounded text-xs"
-                        />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={resultItem.spriteUrl}
+                      onChange={(event) => setResultItem({ ...resultItem, spriteUrl: event.target.value })}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="이미지 URL 또는 선택"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowImagePicker(true)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-1 text-sm text-gray-600 shrink-0"
+                      title="public 이미지에서 선택"
+                    >
+                      <Image size={15} /> 선택
+                    </button>
+                    {resultItem.spriteUrl && (
+                      <img src={resultItem.spriteUrl} alt="preview" className="w-9 h-9 object-contain border rounded shrink-0" style={{ imageRendering: 'pixelated' }} onError={e => { e.target.style.display = 'none'; }} />
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="resultCanSell"
+                      checked={resultItem.canSell}
+                      onChange={(event) => setResultItem({ ...resultItem, canSell: event.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <label htmlFor="resultCanSell" className="text-xs font-semibold text-gray-700">판매 가능한 아이템</label>
+                    {resultItem.canSell && (
+                      <input
+                        type="number"
+                        min="0"
+                        value={resultItem.sellPrice}
+                        onChange={(event) => setResultItem({ ...resultItem, sellPrice: parseInt(event.target.value, 10) || 0 })}
+                        className="w-24 ml-auto px-2 py-1 border border-gray-300 rounded text-xs"
+                        placeholder="판매 가격"
+                      />
+                    )}
+                  </div>
+
+                  {/* 효과 종류 */}
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">효과 종류</label>
+                    <div className="grid grid-cols-5 gap-1">
+                      {RESULT_EFFECT_CATEGORIES.map(cat => (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => selectResultEffectCategory(cat.id)}
+                          className={`px-1.5 py-1.5 rounded text-[11px] font-semibold border transition-colors ${
+                            resultEffectCategory === cat.id
+                              ? 'bg-indigo-600 text-white border-indigo-600'
+                              : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-100'
+                          }`}
+                        >
+                          {cat.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {resultEffectCategory === 'friendship' && (
+                    <div className="bg-pink-50 border border-pink-200 rounded p-2">
+                      <label className="block text-[10px] text-pink-700 mb-1">친밀도 상승량</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={resultItem.friendshipBoost}
+                        onChange={(event) => setResultItem({ ...resultItem, friendshipBoost: parseInt(event.target.value, 10) || 0 })}
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                      />
+                    </div>
+                  )}
+
+                  {resultEffectCategory === 'condition' && (
+                    <div className="bg-green-50 border border-green-200 rounded p-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[11px] font-semibold text-green-800">컨디션 증가</span>
+                        <div className="flex gap-1">
+                          {[['all', '전체 입력'], ['select', '선택 상승']].map(([mode, label]) => (
+                            <button
+                              key={mode}
+                              type="button"
+                              onClick={() => selectResultEffectMode('condition', mode)}
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-semibold transition-colors ${
+                                resultEffectMode === mode ? 'bg-green-600 text-white' : 'bg-white text-green-700 border border-green-300'
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                      {resultEffectMode === 'all' ? (
+                        <div className="grid grid-cols-5 gap-1">
+                          {Object.keys(resultItem.conditionBoost).map((stat) => (
+                            <div key={stat}>
+                              <label className="block text-[10px] text-gray-500 mb-0.5">{conditionLabels[stat] || stat}</label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={resultItem.conditionBoost[stat]}
+                                onChange={(event) => setResultItem({
+                                  ...resultItem,
+                                  conditionBoost: {
+                                    ...resultItem.conditionBoost,
+                                    [stat]: parseInt(event.target.value, 10) || 0
+                                  }
+                                })}
+                                className="w-full px-1 py-1 border border-gray-300 rounded text-xs"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex gap-3 items-center">
+                          <p className="flex-1 text-xs text-green-700">사용 시 유저가 원하는 컨디션 항목을 직접 선택해 올립니다</p>
+                          <div className="shrink-0">
+                            <label className="block text-[10px] text-gray-500 mb-0.5">상승량</label>
+                            <input type="number" min={1} value={resultItem.boostAmount}
+                              onChange={e => setResultItem({ ...resultItem, boostAmount: parseInt(e.target.value) || 0 })}
+                              className="w-16 px-2 py-1 border border-gray-300 rounded text-xs text-center" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-                <div className="mb-2">
-                  <label className="block text-xs text-gray-600 mb-1">노력치 증가</label>
-                  <div className="grid grid-cols-6 gap-1">
-                    {Object.keys(resultItem.effortBoost).map((stat) => (
-                      <div key={stat}>
-                        <label className="block text-[10px] text-gray-500 mb-0.5">{effortLabels[stat] || stat}</label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={resultItem.effortBoost[stat]}
-                          onChange={(event) => setResultItem({
-                            ...resultItem,
-                            effortBoost: {
-                              ...resultItem.effortBoost,
-                              [stat]: parseInt(event.target.value, 10) || 0
-                            }
-                          })}
-                          className="w-full px-1 py-1 border border-gray-300 rounded text-xs"
-                        />
+                  {resultEffectCategory === 'ev' && (
+                    <div className="bg-purple-50 border border-purple-200 rounded p-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[11px] font-semibold text-purple-800">노력치 증가</span>
+                        <div className="flex gap-1">
+                          {[['all', '전체 입력'], ['select', '선택 상승']].map(([mode, label]) => (
+                            <button
+                              key={mode}
+                              type="button"
+                              onClick={() => selectResultEffectMode('ev', mode)}
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-semibold transition-colors ${
+                                resultEffectMode === mode ? 'bg-purple-600 text-white' : 'bg-white text-purple-700 border border-purple-300'
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    ))}
-                  </div>
+                      {resultEffectMode === 'all' ? (
+                        <div className="grid grid-cols-6 gap-1">
+                          {Object.keys(resultItem.effortBoost).map((stat) => (
+                            <div key={stat}>
+                              <label className="block text-[10px] text-gray-500 mb-0.5">{effortLabels[stat] || stat}</label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={resultItem.effortBoost[stat]}
+                                onChange={(event) => setResultItem({
+                                  ...resultItem,
+                                  effortBoost: {
+                                    ...resultItem.effortBoost,
+                                    [stat]: parseInt(event.target.value, 10) || 0
+                                  }
+                                })}
+                                className="w-full px-1 py-1 border border-gray-300 rounded text-xs"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex gap-3 items-center">
+                          <p className="flex-1 text-xs text-purple-700">사용 시 유저가 원하는 노력치 항목을 직접 선택해 올립니다</p>
+                          <div className="shrink-0">
+                            <label className="block text-[10px] text-gray-500 mb-0.5">상승량</label>
+                            <input type="number" min={1} value={resultItem.boostAmount}
+                              onChange={e => setResultItem({ ...resultItem, boostAmount: parseInt(e.target.value) || 0 })}
+                              className="w-16 px-2 py-1 border border-gray-300 rounded text-xs text-center" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {resultEffectCategory === 'trainerExp' && (
+                    <div className="bg-blue-50 border border-blue-200 rounded p-2 flex gap-3 items-center">
+                      <p className="flex-1 text-xs text-blue-700">사용 시 포켓몬이 아닌 사용한 멤버 본인의 경험치가 상승합니다</p>
+                      <div className="shrink-0">
+                        <label className="block text-[10px] text-gray-500 mb-0.5">상승량</label>
+                        <input type="number" min={1} value={resultItem.boostAmount}
+                          onChange={e => setResultItem({ ...resultItem, boostAmount: parseInt(e.target.value) || 0 })}
+                          className="w-16 px-2 py-1 border border-gray-300 rounded text-xs text-center" />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* 특수 효과 */}
-                <div className="mb-2">
-                  <label className="block text-xs text-gray-600 mb-1">특수 효과 (선택)</label>
-                  <select
-                    value={resultItem.specialEffect || ''}
-                    onChange={e => setResultItem({ ...resultItem, specialEffect: e.target.value || null, boostAmount: 0 })}
-                    className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
-                  >
-                    <option value="">없음</option>
-                    <option value="conditionSelect">컨디션 특정 항목 고정 상승</option>
-                    <option value="evSelect">노력치 특정 항목 고정 상승</option>
-                    <option value="trainerExp">멤버(트레이너) 경험치 상승</option>
-                  </select>
-                </div>
-
-                {resultItem.specialEffect === 'trainerExp' && (
-                  <div className="bg-blue-50 border border-blue-200 rounded p-2 mb-2 flex gap-3 items-center">
-                    <p className="flex-1 text-xs text-blue-700">사용 시 포켓몬이 아닌 사용한 멤버 본인의 경험치가 상승합니다</p>
-                    <div className="shrink-0">
-                      <label className="block text-[10px] text-gray-500 mb-0.5">상승량</label>
-                      <input type="number" min={1} value={resultItem.boostAmount}
-                        onChange={e => setResultItem({ ...resultItem, boostAmount: parseInt(e.target.value) || 0 })}
-                        className="w-16 px-2 py-1 border border-gray-300 rounded text-xs text-center" />
-                    </div>
-                  </div>
-                )}
-
-                {resultItem.specialEffect === 'conditionSelect' && (
-                  <div className="bg-green-50 border border-green-200 rounded p-2 mb-2 flex gap-3 items-center">
-                    <p className="flex-1 text-xs text-green-700">사용 시 사용자가 원하는 컨디션 항목을 직접 선택해 올립니다</p>
-                    <div className="shrink-0">
-                      <label className="block text-[10px] text-gray-500 mb-0.5">상승량</label>
-                      <input type="number" min={1} value={resultItem.boostAmount}
-                        onChange={e => setResultItem({ ...resultItem, boostAmount: parseInt(e.target.value) || 0 })}
-                        className="w-16 px-2 py-1 border border-gray-300 rounded text-xs text-center" />
-                    </div>
-                  </div>
-                )}
-
-                {resultItem.specialEffect === 'evSelect' && (
-                  <div className="bg-purple-50 border border-purple-200 rounded p-2 mb-2 flex gap-3 items-center">
-                    <p className="flex-1 text-xs text-purple-700">사용 시 사용자가 원하는 노력치 항목을 직접 선택해 올립니다</p>
-                    <div className="shrink-0">
-                      <label className="block text-[10px] text-gray-500 mb-0.5">상승량</label>
-                      <input type="number" min={1} value={resultItem.boostAmount}
-                        onChange={e => setResultItem({ ...resultItem, boostAmount: parseInt(e.target.value) || 0 })}
-                        className="w-16 px-2 py-1 border border-gray-300 rounded text-xs text-center" />
-                    </div>
-                  </div>
-                )}
-
-                <div className="mt-auto pt-4 flex justify-end">
+                <div className="pt-3 mt-2 border-t border-gray-200 flex justify-end shrink-0">
                   <Button variant="primary" size="md" onClick={handleSaveRecipe} className="px-8">
                     <Save size={16} />
                     <span>{editingRecipeId ? '레시피 수정' : '레시피 등록'}</span>
