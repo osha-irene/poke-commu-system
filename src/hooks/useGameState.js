@@ -81,7 +81,27 @@ export default function useGameState() {
   const [pokemonLearnsets] = useState(movesData.pokemonLearnsets || {});
   const [loadFullMembers, setLoadFullMembers] = useState(false);
 
-  // 기본 데이터 & 인증
+  // 회원 & 인증 (레시피가 요리 결과 아이템을 파생시키려면 allItems보다 먼저 준비되어야 함)
+  const { members, memberViewMembers, setMembers, isLoading: isMembersLoading } = useMembers(allPokemonDataParsed, loadFullMembers);
+
+  const {
+    currentUser,
+    handleLogin,
+    handleLogout,
+    updateCurrentUser,
+    updateInventory,
+    changeCurrentUserPassword,
+    isLoading: isAuthLoading
+  } = useAuth(members, setMembers, allPokemonDataParsed);
+
+  useEffect(() => {
+    setLoadFullMembers(Boolean(currentUser?.isAdmin || currentUser?.isSuperAdmin));
+  }, [currentUser?.isAdmin, currentUser?.isSuperAdmin]);
+
+  // 레시피 (요리 결과 아이템은 useGameData의 allItems에 파생되어 들어가므로 먼저 로드)
+  const recipesHook = useRecipes(currentUser, updateCurrentUser, updateInventory);
+
+  // 기본 데이터
   const {
     allItems,
     setAllItems,
@@ -99,23 +119,7 @@ export default function useGameState() {
     systemSettings,
     updateSystemSettings,
     updatePokedexMemo: gameDataUpdatePokedexMemo
-  } = useGameData(allPokemonDataParsed);
-
-  const { members, memberViewMembers, setMembers, isLoading: isMembersLoading } = useMembers(allPokemonDataParsed, loadFullMembers);
-
-  const {
-    currentUser,
-    handleLogin,
-    handleLogout,
-    updateCurrentUser,
-    updateInventory,
-    changeCurrentUserPassword,
-    isLoading: isAuthLoading
-  } = useAuth(members, setMembers, allPokemonDataParsed);
-
-  useEffect(() => {
-    setLoadFullMembers(Boolean(currentUser?.isAdmin || currentUser?.isSuperAdmin));
-  }, [currentUser?.isAdmin, currentUser?.isSuperAdmin]);
+  } = useGameData(allPokemonDataParsed, recipesHook.recipes);
 
   // 상점
   const {
@@ -198,9 +202,6 @@ export default function useGameState() {
 
   // 도감
   const pokedexHook = usePokedex(sharedPokedexData, setSharedPokedexData, currentUser);
-
-  // 레시피
-  const recipesHook = useRecipes(currentUser, updateCurrentUser, updateInventory);
 
   // 포켓몬 잡기
   const pokemonCatchHook = usePokemonCatch(

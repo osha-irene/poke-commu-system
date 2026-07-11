@@ -818,8 +818,6 @@ export default function AdminView() {
           onUpdateRecipe={updateRecipe}
           onUpdateIngredientStats={updateIngredientStats}
           onDeleteRecipe={handleDeleteRecipe}
-          onCreateCustomItem={(data) => createCustomItem(data, { silent: true })}
-          onUpdateCustomItem={(id, fields) => updateCustomItem(id, fields)}
           allItems={allItems}
           recipes={recipes}
         />

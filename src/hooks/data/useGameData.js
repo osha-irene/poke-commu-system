@@ -57,6 +57,10 @@ const getDefaultPokedex = (allPokemonData = []) => (
 const markDatabaseCustomItems = (customItems = []) => (
   (Array.isArray(customItems) ? customItems : Object.values(customItems || {}))
     .filter(Boolean)
+    // Recipe result items are derived from `recipes` at render time (see deriveRecipeItems),
+    // so any leftover recipe_item_* rows still sitting in the DB from before that change
+    // must be dropped here to avoid rendering the same item twice.
+    .filter(item => !item.isRecipe)
     .map(item => ({
       ...item,
       isCustom: true,
@@ -64,7 +68,39 @@ const markDatabaseCustomItems = (customItems = []) => (
     }))
 );
 
-const buildAllItems = (customItems = []) => {
+// Recipe results used to be manually mirrored into gameData/customItems on every
+// create/update (see CookingAdminPanel), which meant every boost/friendship/name edit
+// had to be applied twice and deletes left orphaned entries behind. Deriving the display
+// item straight from the recipe removes that duplication entirely.
+const deriveRecipeItems = (recipes = []) => (
+  (Array.isArray(recipes) ? recipes : [])
+    .filter(recipe => recipe?.result?.name)
+    .map(recipe => {
+      const result = recipe.result;
+      return {
+        id: `recipe_item_${recipe.id}`,
+        name: result.name,
+        effect: result.effect,
+        spriteUrl: result.spriteUrl || '',
+        pocket: result.pocket || 'misc',
+        category: result.pocket || 'misc',
+        isCustom: true,
+        isRecipe: true,
+        recipeId: recipe.id,
+        specialEffect: result.specialEffect || null,
+        boostAmount: result.boostAmount || 0,
+        conditionBoost: result.conditionBoost || {},
+        effortBoost: result.effortBoost || {},
+        friendshipBoost: result.friendshipBoost || 0,
+        cost: 0,
+        sellPrice: 0,
+        canSell: false,
+        __customItemSource: 'recipe'
+      };
+    })
+);
+
+const buildAllItems = (customItems = [], recipes = []) => {
   const tmItems = technicalMachinesData.tms.map(tm => ({
     id: tm.id,
     name: tm.name,
@@ -95,7 +131,12 @@ const buildAllItems = (customItems = []) => {
     generation: tm.generation
   }));
 
-  return [...itemsData.items, ...tmItems, ...markDatabaseCustomItems(customItems)];
+  return [
+    ...itemsData.items,
+    ...tmItems,
+    ...markDatabaseCustomItems(customItems),
+    ...deriveRecipeItems(recipes)
+  ];
 };
 
 const getCustomItemsFromAllItems = (allItems = []) => (
@@ -152,7 +193,7 @@ const isValidSharedPokedexEntry = (key, value) => (
   !isNaN(key) && typeof value === 'object' && value !== null
 );
 
-export const useGameData = (allPokemonData) => {
+export const useGameData = (allPokemonData, recipes = []) => {
   const [allItems, setAllItems] = useState([]);
   const [regions, setRegions] = useState([]);
   const [gamePokedex, setGamePokedex] = useState([]);
@@ -169,7 +210,7 @@ export const useGameData = (allPokemonData) => {
   useEffect(() => {
     const loadGameData = async () => {
       try {
-        setAllItems(buildAllItems([]));
+        setAllItems(buildAllItems([], recipes));
 
         const regionsRef = ref(database, 'gameData/regions');
         const regionsSnapshot = await get(regionsRef);
@@ -221,7 +262,7 @@ export const useGameData = (allPokemonData) => {
         setSystemSettings(normalizedSystemSettings);
       } catch (error) {
         console.error('Game data load failed:', error);
-        setAllItems(buildAllItems([]));
+        setAllItems(buildAllItems([], recipes));
         setRegions(getDefaultRegions());
         setGamePokedex(getDefaultPokedex(allPokemonData));
         setSharedPokedexData({});
@@ -242,13 +283,13 @@ export const useGameData = (allPokemonData) => {
     const applyCustomItem = (snapshot) => {
       setAllItems(prevItems => {
         const customItems = getCustomItemsFromAllItems(prevItems);
-        return buildAllItems(upsertArrayChild(customItems, snapshot.key, snapshot.val()));
+        return buildAllItems(upsertArrayChild(customItems, snapshot.key, snapshot.val()), recipes);
       });
     };
     const removeCustomItem = (snapshot) => {
       setAllItems(prevItems => {
         const customItems = getCustomItemsFromAllItems(prevItems);
-        return buildAllItems(removeArrayChild(customItems, snapshot.key));
+        return buildAllItems(removeArrayChild(customItems, snapshot.key), recipes);
       });
     };
 
@@ -261,7 +302,14 @@ export const useGameData = (allPokemonData) => {
       unsubChanged();
       unsubRemoved();
     };
-  }, [isLoading]);
+  }, [isLoading, recipes]);
+
+  // Recipes load asynchronously from a separate hook/DB path, so re-derive the
+  // recipe result items into allItems whenever the recipe list changes (create/update/delete).
+  useEffect(() => {
+    if (isLoading) return;
+    setAllItems(prevItems => buildAllItems(getCustomItemsFromAllItems(prevItems), recipes));
+  }, [recipes, isLoading]);
 
   useEffect(() => {
     if (isLoading) return undefined;

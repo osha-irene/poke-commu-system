@@ -187,7 +187,7 @@ const recipeSupports = (recipe, type) => {
   return recipe.type === type;
 };
 
-export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDeleteRecipe, onCreateCustomItem, onUpdateCustomItem, allItems = [], recipes = [] }) {
+export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDeleteRecipe, allItems = [], recipes = [] }) {
   const [recipeType, setRecipeType] = useState('fixed');
   const [enabledRecipeTypes, setEnabledRecipeTypes] = useState({ fixed: true, stat: false });
   const [showImagePicker, setShowImagePicker] = useState(false);
@@ -289,48 +289,11 @@ export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDe
     const recipeId = editingRecipeId || `recipe_${Date.now()}`;
 
     if (editingRecipeId) {
+      // 결과 아이템은 recipes 데이터에서 파생되어 표시되므로(useGameData의 allItems),
+      // 여기서 별도로 customItems를 만들거나 갱신할 필요가 없다.
       await onUpdateRecipe?.(editingRecipeId, payload);
-      // 커스텀 아이템 목록에서도 이름/효과/이미지 업데이트
-      if (onUpdateCustomItem) {
-        const existCustomId = `recipe_item_${editingRecipeId}`;
-        await onUpdateCustomItem(existCustomId, {
-          name: payload.result.name,
-          effect: payload.result.effect,
-          spriteUrl: payload.result.spriteUrl || '',
-          specialEffect: payload.result.specialEffect || null,
-
-          boostAmount: payload.result.boostAmount || 0,
-          conditionBoost: payload.result.conditionBoost || {},
-          effortBoost: payload.result.effortBoost || {},
-          friendshipBoost: payload.result.friendshipBoost || 0,
-          pocket: payload.result.pocket || 'misc',
-        });
-      }
     } else {
       await onCreateRecipe?.({ id: recipeId, ...payload, createdAt: new Date().toISOString() });
-      // 커스텀 아이템으로도 등록
-      if (onCreateCustomItem && payload.result.name) {
-        await onCreateCustomItem({
-          id: `recipe_item_${recipeId}`,
-          name: payload.result.name,
-          effect: payload.result.effect,
-          spriteUrl: payload.result.spriteUrl || '',
-          pocket: payload.result.pocket || 'misc',
-          category: payload.result.pocket || 'misc',
-          isCustom: true,
-          isRecipe: true,
-          recipeId,
-          specialEffect: payload.result.specialEffect || null,
-
-          boostAmount: payload.result.boostAmount || 0,
-          conditionBoost: payload.result.conditionBoost || {},
-          effortBoost: payload.result.effortBoost || {},
-          friendshipBoost: payload.result.friendshipBoost || 0,
-          cost: 0,
-          sellPrice: 0,
-          canSell: false,
-        });
-      }
     }
 
     resetForm();
