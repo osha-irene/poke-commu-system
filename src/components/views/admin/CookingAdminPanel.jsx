@@ -156,7 +156,7 @@ const emptyResultItem = () => ({
   conditionBoost: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
   effortBoost: { hp: 0, attack: 0, defense: 0, spAttack: 0, spDefense: 0, speed: 0 },
   spriteUrl: '',
-  // 특수 효과 — conditionSelect/evSelect: 사용 시 유저가 항목 선택
+  // 특수 효과 — conditionSelect/evSelect: 사용 시 유저가 항목 선택, trainerExp: 멤버 경험치 상승
   specialEffect: null,
   boostAmount: 0,
 });
@@ -657,8 +657,21 @@ export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDe
                     <option value="">없음</option>
                     <option value="conditionSelect">컨디션 특정 항목 고정 상승</option>
                     <option value="evSelect">노력치 특정 항목 고정 상승</option>
+                    <option value="trainerExp">멤버(트레이너) 경험치 상승</option>
                   </select>
                 </div>
+
+                {resultItem.specialEffect === 'trainerExp' && (
+                  <div className="bg-blue-50 border border-blue-200 rounded p-2 mb-2 flex gap-3 items-center">
+                    <p className="flex-1 text-xs text-blue-700">사용 시 포켓몬이 아닌 사용한 멤버 본인의 경험치가 상승합니다</p>
+                    <div className="shrink-0">
+                      <label className="block text-[10px] text-gray-500 mb-0.5">상승량</label>
+                      <input type="number" min={1} value={resultItem.boostAmount}
+                        onChange={e => setResultItem({ ...resultItem, boostAmount: parseInt(e.target.value) || 0 })}
+                        className="w-16 px-2 py-1 border border-gray-300 rounded text-xs text-center" />
+                    </div>
+                  </div>
+                )}
 
                 {resultItem.specialEffect === 'conditionSelect' && (
                   <div className="bg-green-50 border border-green-200 rounded p-2 mb-2 flex gap-3 items-center">

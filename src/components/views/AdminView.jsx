@@ -88,7 +88,10 @@ function CustomItemManageModal({ items, onUpdate, onDelete, onClose }) {
                 <button className="text-red-500 text-xs px-2 py-1 rounded hover:bg-red-50"
                   onClick={async e => {
                     e.stopPropagation();
-                    if (!window.confirm(`"${item.name}" 아이템을 삭제하시겠습니까?`)) return;
+                    const confirmMsg = item.isRecipe
+                      ? `"${item.name}"은(는) 레시피 결과 아이템입니다. 삭제하면 연결된 레시피 자체가 삭제됩니다. 계속하시겠습니까?`
+                      : `"${item.name}" 아이템을 삭제하시겠습니까?`;
+                    if (!window.confirm(confirmMsg)) return;
                     const ok = await onDelete(item.id);
                     if (ok) alert(`"${item.name}" 삭제 완료.`);
                   }}>삭제</button>
@@ -459,6 +462,27 @@ export default function AdminView() {
 
   const handleDeleteRecipe = (recipeId) => {
     deleteRecipe?.(recipeId);
+  };
+
+  // 커스텀 아이템 관리 모달에서는 레시피 결과 아이템도 함께 보여준다.
+  // 레시피 결과 아이템은 recipes 쪽 데이터에서 파생되므로(customItems에 별도 저장 X),
+  // 수정/삭제 요청은 customItems가 아니라 연결된 레시피 쪽으로 라우팅한다.
+  const handleUpdateManagedItem = async (itemId, fields) => {
+    const target = allItems.find(i => i.id === itemId);
+    if (target?.isRecipe && target.recipeId) {
+      const recipe = recipes.find(r => r.id === target.recipeId);
+      if (!recipe) return false;
+      return updateRecipe?.(target.recipeId, { result: { ...recipe.result, ...fields } });
+    }
+    return updateCustomItem(itemId, fields);
+  };
+
+  const handleDeleteManagedItem = async (itemId) => {
+    const target = allItems.find(i => i.id === itemId);
+    if (target?.isRecipe && target.recipeId) {
+      return deleteRecipe?.(target.recipeId);
+    }
+    return deleteCustomItem(itemId);
   };
 
   const handleEscapeModeChange = async (mode) => {
@@ -906,7 +930,7 @@ export default function AdminView() {
                   onClick={() => setShowCustomItemManage(true)}
                   className="flex items-center gap-1.5 border border-gray-300 bg-white text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50 font-semibold text-sm transition"
                 >
-                  관리 ({allItems.filter(i => i.__customItemSource === 'database').length})
+                  관리 ({allItems.filter(i => i.__customItemSource === 'database' || i.__customItemSource === 'recipe').length})
                 </button>
                 <CustomItemCreator
                   onCreateItem={async (data) => {
@@ -919,9 +943,9 @@ export default function AdminView() {
           </Card>
           {showCustomItemManage && (
             <CustomItemManageModal
-              items={allItems.filter(i => i.__customItemSource === 'database')}
-              onUpdate={updateCustomItem}
-              onDelete={deleteCustomItem}
+              items={allItems.filter(i => i.__customItemSource === 'database' || i.__customItemSource === 'recipe')}
+              onUpdate={handleUpdateManagedItem}
+              onDelete={handleDeleteManagedItem}
               onClose={() => setShowCustomItemManage(false)}
             />
           )}
