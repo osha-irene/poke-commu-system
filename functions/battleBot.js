@@ -1,3 +1,5 @@
+const { normalizeCaughtPokemon } = require('./shared');
+
 const FORMAT_ID = 'gen9customgame';
 const BATTLE_CHOICE_TIMEOUT_MS = 10 * 60 * 1000;
 const BATTLE_PENDING_EXPIRATION_MS = 24 * 60 * 60 * 1000;
@@ -566,7 +568,9 @@ const formatBattleEffect = effect => {
   if (/^ability:\s*/i.test(text)) return translateAbilityName(text.replace(/^ability:\s*/i, ''));
   if (/^item:\s*/i.test(text)) return translateItemName(text.replace(/^item:\s*/i, ''));
   const cleaned = text.replace(/^move:\s*/i, '');
-  if (normalizeId(cleaned) === 'confusion') return '혼란';
+  const normalized = normalizeId(cleaned);
+  if (normalized === 'confusion') return '혼란';
+  if (['psn', 'tox', 'par', 'brn', 'frz', 'slp'].includes(normalized)) return formatStatus(normalized);
   return translateMoveName(cleaned);
 };
 
@@ -744,6 +748,23 @@ const protocolToMessage = (line) => {
       return `${extractName(parts[2])}은(는) ${parts[3]}번 맞았다!`;
     case '-mustrecharge':
       return `${extractName(parts[2])}은(는) 반동으로 움직일 수 없다!`;
+    case 'cant': {
+      const name = extractName(parts[2]);
+      const reason = parts[3];
+      const reasonMessages = {
+        par: `${name}은(는) 몸이 저려서 움직일 수 없다!`,
+        frz: `${name}은(는) 얼어붙어서 움직일 수 없다!`,
+        slp: `${name}은(는) 잠들어 있다.`,
+        flinch: `${name}은(는) 풀이 죽어 움직일 수 없었다!`,
+        trapped: `${name}은(는) 도망칠 수 없다!`,
+        truant: `${name}은(는) 게으름 특성으로 움직이지 않았다!`,
+        nopp: `${name}은(는) 그 기술의 PP가 없다!`,
+      };
+      if (reasonMessages[reason]) return reasonMessages[reason];
+      const moveMatch = /^move:\s*(.+)$/.exec(reason || '');
+      if (moveMatch) return `${name}은(는) ${translateMoveName(moveMatch[1])} 효과로 움직일 수 없었다!`;
+      return `${name}은(는) 움직일 수 없었다!`;
+    }
     case '-singleturn':
       return `${extractName(parts[2])}은(는) ${formatBattleEffect(parts[3])} 태세를 취했다!`;
     case 'switch':
@@ -874,10 +895,12 @@ const recordMoveUsage = async (db, log, session) => {
   await Promise.all([...memberIds].map(async (memberId) => {
     await Promise.all([
       db.ref(`members/${memberId}/caughtPokemon`).transaction((caught) => {
-        if (!Array.isArray(caught)) return caught;
-        // 중간에 삭제된 자리로 배열에 구멍이 있으면 .map()이 건너뛰어 구멍이 그대로 남고,
-        // Firebase는 그 구멍(undefined)을 그대로 쓸 수 없어 트랜잭션이 예외로 실패한다.
-        return Array.from({ length: caught.length }, (_, i) => applyPokemonBattleUpdates(caught[i] ?? null, memberId));
+        if (caught === null || caught === undefined) return caught;
+        // 중간에 삭제된 자리로 배열에 구멍이 있으면 Firebase가 caught를 배열이 아니라
+        // 숫자 키 객체로 돌려준다. 두 형태 모두 정규화해서 처리하고, 쓸 때는 구멍을
+        // undefined 대신 null로 채운 배열로 되돌린다 (undefined는 그대로 쓸 수 없어 실패한다).
+        const list = normalizeCaughtPokemon(caught);
+        return Array.from({ length: list.length }, (_, i) => applyPokemonBattleUpdates(list[i] ?? null, memberId));
       }),
       db.ref(`members/${memberId}/partnerPokemon`).transaction((partner) =>
         applyPokemonBattleUpdates(partner, memberId)
@@ -1061,7 +1084,10 @@ const formatPokemonName = (pokemon) => {
 const formatEntryList = (label, pokemonList = []) => [
   `${label} 엔트리`,
   ...pokemonList.slice(0, 6).map((pokemon, index) => (
-    `${index + 1}. ${formatPokemonName(pokemon)} Lv.${pokemon.level || 50}`
+    // player1Entries/player2Entries의 pokemon.name은 세션 생성 시 이미 formatPokemonName으로
+    // "닉네임 (종족명)" 형태로 만들어둔 값이라, 여기서 다시 formatPokemonName을 부르면
+    // "닉네임 (닉네임 (종족명))"처럼 이중으로 감싸진다.
+    `${index + 1}. ${pokemon.name || formatPokemonName(pokemon)} Lv.${pokemon.level || 50}`
   )),
 ].join('\n');
 

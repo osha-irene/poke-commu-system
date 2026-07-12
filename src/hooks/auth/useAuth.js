@@ -222,30 +222,36 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
     
     console.log('📝 updateCurrentUser 호출됨');
     console.log('📝 업데이트 내용:', updates);
-    
-    const latestUser = members[currentUser.id] || currentUser;
-    
-    let updatedUser = {
-      ...latestUser,
-      ...updates,
-      ...(updates.caughtPokemon ? { caughtPokemon: [...updates.caughtPokemon] } : {})
-    };
 
-    // ⭐ members/ 실시간 스냅샷(latestUser)에는 caughtPokemon이 패딩되지 않은 채(심지어 undefined로) 들어올 수 있으므로,
-    // updates에 caughtPokemon이 없어도 항상 패딩된 배열로 보정한다 (안 그러면 다음 updateCurrentUser 호출에서
-    // currentUser.caughtPokemon이 undefined가 되어 포획 시 TypeError 발생)
-    updatedUser.caughtPokemon = ensurePartyPadding(
-      updates.caughtPokemon || latestUser.caughtPokemon || currentUser.caughtPokemon,
-      allPokemonMaster
-    );
+    // ⭐ updateInventory 등 다른 호출이 방금 currentUser를 갱신했을 수 있으므로, 클로저에 갇힌
+    // currentUser/members 스냅샷이 아니라 setCurrentUser의 functional update로 "그 시점의 최신" 값 위에
+    // updates만 얹는다. 그렇지 않으면 예: 요리 후 재료 차감(updateInventory)이 반영된 직후 이 함수가
+    // 오래된 인벤토리를 통째로 되살려버린다.
+    let updatedUser;
+    setCurrentUser(prev => {
+      const latestUser = prev || members[currentUser.id] || currentUser;
 
-    if (updates.partnerPokemon !== undefined) {
-      updatedUser.partnerPokemon = withNormalizedIVs(updates.partnerPokemon, DEFAULT_IVS);
-    }
-    
-    // ⭐ 로컬 상태 먼저 업데이트
-    setCurrentUser(updatedUser);
-    
+      updatedUser = {
+        ...latestUser,
+        ...updates,
+        ...(updates.caughtPokemon ? { caughtPokemon: [...updates.caughtPokemon] } : {})
+      };
+
+      // ⭐ members/ 실시간 스냅샷(latestUser)에는 caughtPokemon이 패딩되지 않은 채(심지어 undefined로) 들어올 수 있으므로,
+      // updates에 caughtPokemon이 없어도 항상 패딩된 배열로 보정한다 (안 그러면 다음 updateCurrentUser 호출에서
+      // currentUser.caughtPokemon이 undefined가 되어 포획 시 TypeError 발생)
+      updatedUser.caughtPokemon = ensurePartyPadding(
+        updates.caughtPokemon || latestUser.caughtPokemon || currentUser.caughtPokemon,
+        allPokemonMaster
+      );
+
+      if (updates.partnerPokemon !== undefined) {
+        updatedUser.partnerPokemon = withNormalizedIVs(updates.partnerPokemon, DEFAULT_IVS);
+      }
+
+      return updatedUser;
+    });
+
     setMembers(prevMembers => ({
       ...prevMembers,
       [currentUser.id]: updatedUser

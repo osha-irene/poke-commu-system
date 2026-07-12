@@ -1,7 +1,7 @@
 // src/hooks/game/useRecipes.js
 
 import { useState, useEffect } from 'react';
-import { ref, get, set, onChildAdded, onChildChanged, onChildRemoved, runTransaction } from 'firebase/database';
+import { ref, get, set, onValue, onChildAdded, onChildChanged, onChildRemoved, runTransaction } from 'firebase/database';
 import { database } from '../../firebase';
 import recipesData from '../../data/recipes.json';
 
@@ -17,6 +17,7 @@ const normalizeDiscoveredRecipes = (value) => (
 export const useRecipes = (currentUser, updateCurrentUser, updateInventory) => {
   const [recipes, setRecipes] = useState([]);
   const [discoveredRecipes, setDiscoveredRecipes] = useState([]);
+  const [recipeMemos, setRecipeMemos] = useState({});
 
   useEffect(() => {
     const recipesRef = ref(database, 'gameData/recipes');
@@ -64,10 +65,18 @@ export const useRecipes = (currentUser, updateCurrentUser, updateInventory) => {
     const unsubChanged = onChildChanged(discoveredRef, applyDiscovered);
     const unsubRemoved = onChildRemoved(discoveredRef, removeDiscovered);
 
+    const recipeMemosRef = ref(database, 'gameData/recipeMemos');
+    const unsubMemos = onValue(recipeMemosRef, (snapshot) => {
+      setRecipeMemos(snapshot.val() || {});
+    }, error => {
+      console.error('Recipe memo listener failed:', error);
+    });
+
     return () => {
       unsubAdded();
       unsubChanged();
       unsubRemoved();
+      unsubMemos();
     };
   }, []);
 
@@ -140,11 +149,49 @@ export const useRecipes = (currentUser, updateCurrentUser, updateInventory) => {
       if (result.committed) {
         setDiscoveredRecipes(normalizeDiscoveredRecipes(result.snapshot.val()));
       }
+
+      // 도감의 firstCatcher와 같은 개념: 이 레시피를 처음 발견한 사람만 메모를 남길 수 있다.
+      // 이미 기록되어 있으면 트랜잭션이 그대로 두므로 중복 발견 시에도 안전하다.
+      const memoRef = ref(database, `gameData/recipeMemos/${recipeId}`);
+      await runTransaction(memoRef, (currentEntry) => {
+        if (currentEntry && currentEntry.firstDiscoverer) return currentEntry;
+        return { firstDiscoverer: currentUser.name, memo: currentEntry?.memo || null };
+      });
     } catch (error) {
       console.error('Discovered recipe save failed:', error);
     }
 
     return true;
+  };
+
+  const updateRecipeMemo = async (recipeId, memo, user) => {
+    if (!user) return;
+
+    try {
+      const memoRef = ref(database, `gameData/recipeMemos/${recipeId}`);
+      const result = await runTransaction(memoRef, (currentEntry) => {
+        if (!currentEntry || currentEntry.firstDiscoverer !== user.name) {
+          return;
+        }
+
+        return {
+          ...currentEntry,
+          memo: memo || null
+        };
+      });
+
+      if (!result.committed) {
+        alert('최초 발견자만 메모를 작성할 수 있습니다!');
+        return;
+      }
+
+      setRecipeMemos(prev => ({
+        ...prev,
+        [recipeId]: result.snapshot.val()
+      }));
+    } catch (error) {
+      console.error('Recipe memo save failed:', error);
+    }
   };
 
   const cookRecipe = async (recipe, usedIngredients) => {
@@ -251,11 +298,13 @@ export const useRecipes = (currentUser, updateCurrentUser, updateInventory) => {
   return {
     recipes,
     discoveredRecipes: normalizeDiscoveredRecipes(discoveredRecipes),
+    recipeMemos,
     createRecipe,
     updateRecipe,
     deleteRecipe,
     discoverRecipe,
     cookRecipe,
+    updateRecipeMemo,
     updateIngredientStats
   };
 };

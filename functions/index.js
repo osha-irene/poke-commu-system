@@ -1,6 +1,6 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-const { createBotContext, stripHtml, getMembers } = require('./shared');
+const { createBotContext, stripHtml, getMembers, normalizeCaughtPokemon } = require('./shared');
 const { createCampBot, getCommand: getCampCommand } = require('./campBot');
 const { createTradeBot, getTradeCommand, extractTradePokemonName } = require('./tradeBot');
 const { createNotifyBot } = require('./notifyBot');
@@ -110,7 +110,7 @@ const getBattleBot = () => {
     findMemberByAccount: battleCtx.findMemberByAccount,
     getAuthorAccount: battleCtx.getAuthorAccount,
     getParticipantPokemon: member => {
-      const caught = Array.isArray(member?.caughtPokemon) ? member.caughtPokemon.slice(0, 6).filter(Boolean) : [];
+      const caught = normalizeCaughtPokemon(member?.caughtPokemon).slice(0, 6).filter(Boolean);
       const partner = member?.partnerPokemon ? [member.partnerPokemon] : [];
       const byId = new Map();
       [...partner, ...caught].forEach(p => { const k = p.uniqueId || p.id || p.pokemonId || `${p.number}_${p.name}`; if (k && !byId.has(k)) byId.set(k, p); });

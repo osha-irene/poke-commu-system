@@ -1,4 +1,4 @@
-const { toProbability, clamp, accountMention } = require('./shared');
+const { toProbability, clamp, accountMention, normalizeCaughtPokemon } = require('./shared');
 
 const DEFAULT_CAMPING_SETTINGS = {
   minCampingCount: 1,
@@ -142,7 +142,7 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
   };
 
   const getParticipantPokemon = member => {
-    const caught = Array.isArray(member?.caughtPokemon) ? member.caughtPokemon.slice(0, 6).filter(Boolean) : [];
+    const caught = normalizeCaughtPokemon(member?.caughtPokemon).slice(0, 6).filter(Boolean);
     const partner = member?.partnerPokemon ? [member.partnerPokemon] : [];
     const byId = new Map();
     [...partner, ...caught].forEach(p => {
@@ -302,13 +302,23 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
 
   const applyFriendshipToCaught = (caughtPokemon, participantKeys, bonus) => {
     const keys = new Set(participantKeys);
-    if (!Array.isArray(caughtPokemon)) return caughtPokemon;
-    // 중간에 삭제된 자리로 배열에 구멍이 있으면 .map()이 건너뛰어 구멍이 그대로 남고,
-    // Firebase는 그 구멍(undefined)을 그대로 쓸 수 없어 트랜잭션이 예외로 실패한다.
-    return Array.from({ length: caughtPokemon.length }, (_, i) => {
-      const p = caughtPokemon[i] ?? null;
-      return p && keys.has(pokemonKey(p)) ? { ...p, friendship: Math.min(255, Number(p.friendship || 0) + bonus) } : p;
-    });
+    const applyBonus = (p) => (
+      p && keys.has(pokemonKey(p)) ? { ...p, friendship: Math.min(255, Number(p.friendship || 0) + bonus) } : p
+    );
+
+    if (Array.isArray(caughtPokemon)) {
+      // 중간에 삭제된 자리로 배열에 구멍이 있으면 .map()이 건너뛰어 구멍이 그대로 남고,
+      // Firebase는 그 구멍(undefined)을 그대로 쓸 수 없어 트랜잭션이 예외로 실패한다.
+      return Array.from({ length: caughtPokemon.length }, (_, i) => applyBonus(caughtPokemon[i] ?? null));
+    }
+
+    if (caughtPokemon && typeof caughtPokemon === 'object') {
+      // Firebase가 구멍 있는 배열을 숫자 키 객체로 돌려준 경우 — 같은 형태로 되돌려 써야
+      // 기존 인덱스가 흐트러지지 않는다.
+      return Object.fromEntries(Object.entries(caughtPokemon).map(([key, p]) => [key, applyBonus(p)]));
+    }
+
+    return caughtPokemon;
   };
 
   const applyFriendshipToPartner = (partnerPokemon, participantKeys, bonus) => {
@@ -378,7 +388,7 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
     const entryIdSet = new Set((session.entryPokemon || []).flatMap(e => [e.uniqueId, e.pokemonId]).filter(Boolean));
     const isEntry = p => p && (entryIdSet.has(p.uniqueId) || entryIdSet.has(p.id) || entryIdSet.has(p.pokemonId));
     const memberEntryPokemon = [
-      ...(friendshipResult.caughtPokemon || []).filter(isEntry),
+      ...normalizeCaughtPokemon(friendshipResult.caughtPokemon).filter(isEntry),
       ...(friendshipResult.partnerPokemon ? [friendshipResult.partnerPokemon] : []),
     ];
     const highFriendship = memberEntryPokemon.some(p => Number(p.friendship || 0) >= settings.minFriendshipForBonus);

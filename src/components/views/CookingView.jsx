@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ChefHat, Book, Plus, Minus, Sparkles, X, Utensils, Package, Soup, BookOpen, HelpCircle } from 'lucide-react';
+import { ChefHat, Book, Plus, Minus, Sparkles, X, Utensils, Package, Soup, BookOpen, HelpCircle, Edit2 } from 'lucide-react';
 import recipesData from '../../data/recipes.json';
 
 import { useGame } from '../../contexts/GameContext';
@@ -521,11 +521,34 @@ function ResultItemImage({ imageUrl }) {
 }
 
 function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
-  const { allItems = [] } = useGame();
+  const { allItems = [], recipeMemos = {}, updateRecipeMemo, currentUser } = useGame();
   const [activeTab, setActiveTab] = useState('요리');
   const isMobile = useMediaQuery('(max-width: 768px)');
   const recipeGridRef = useRef(null);
   const [recipeScrollbar, setRecipeScrollbar] = useState({ visible: false, height: 0, top: 0 });
+  const [editingMemoRecipeId, setEditingMemoRecipeId] = useState(null);
+  const [memoText, setMemoText] = useState('');
+
+  const handleEditMemo = (recipe) => {
+    const entry = recipeMemos[recipe.id];
+    if (entry?.firstDiscoverer !== currentUser?.name) {
+      alert('최초 발견자만 메모를 작성할 수 있습니다!');
+      return;
+    }
+    setMemoText(entry?.memo || '');
+    setEditingMemoRecipeId(recipe.id);
+  };
+
+  const handleSaveMemo = (recipe) => {
+    if (!updateRecipeMemo) return;
+    const entry = recipeMemos[recipe.id];
+    if (entry?.firstDiscoverer !== currentUser?.name) {
+      alert('최초 발견자만 메모를 작성할 수 있습니다!');
+      return;
+    }
+    updateRecipeMemo(recipe.id, memoText.trim());
+    setEditingMemoRecipeId(null);
+  };
 
   const updateRecipeScrollbar = useCallback(() => {
     const el = recipeGridRef.current;
@@ -588,7 +611,7 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
             </div>
             <div className="flex items-center justify-center gap-4 p-3">
               <div className="flex-shrink-0 mx-3 flex flex-col items-center gap-1">
-                <PortalTooltip text={recipe.description}>
+                <PortalTooltip text={recipe.result?.effect}>
                   <ResultItemImage imageUrl={getItemImageUrl(recipe.result, allItems)} />
                 </PortalTooltip>
               </div>
@@ -615,6 +638,55 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
                 )}
               </div>
             </div>
+            {(() => {
+              const memoEntry = recipeMemos[recipe.id];
+              const canEditMemo = memoEntry?.firstDiscoverer === currentUser?.name;
+              const isEditingThis = editingMemoRecipeId === recipe.id;
+              if (!memoEntry?.firstDiscoverer && !isEditingThis) return null;
+              return (
+                <div className="px-3 pb-2">
+                  {isEditingThis ? (
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="text"
+                        value={memoText}
+                        onChange={(e) => setMemoText(e.target.value)}
+                        placeholder="이 레시피에 대한 한 줄 메모..."
+                        maxLength="60"
+                        autoFocus
+                        className="flex-1 min-w-0 rounded border border-orange-300 bg-white px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                      />
+                      <button
+                        onClick={() => handleSaveMemo(recipe)}
+                        className="shrink-0 rounded bg-orange-500 px-2 py-1 text-xs font-semibold text-white hover:bg-orange-600"
+                      >
+                        저장
+                      </button>
+                      <button
+                        onClick={() => setEditingMemoRecipeId(null)}
+                        className="shrink-0 rounded bg-gray-200 px-2 py-1 text-xs font-semibold text-gray-600 hover:bg-gray-300"
+                      >
+                        취소
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1 text-xs italic text-gray-500">
+                      <span className="truncate">
+                        {memoEntry.memo ? `"${memoEntry.memo}"` : (canEditMemo ? '메모를 남겨보세요' : '')}
+                      </span>
+                      {canEditMemo && (
+                        <button
+                          onClick={() => handleEditMemo(recipe)}
+                          className="shrink-0 text-gray-400 hover:text-orange-600"
+                        >
+                          <Edit2 size={12} />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </>
         ) : (
           <div style={{ flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>

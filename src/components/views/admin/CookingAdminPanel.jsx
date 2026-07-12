@@ -328,7 +328,6 @@ export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDe
       name: resultItem.name,
       type: enabledTypes.length === 2 ? 'both' : enabledTypes[0],
       types: enabledTypes,
-      description: resultItem.effect,
       ingredients: enabledRecipeTypes.fixed ? validIngredients : [],
       requiredStats: enabledRecipeTypes.stat ? requiredStats : {},
       requiredEfforts: enabledRecipeTypes.stat ? requiredEfforts : {},
@@ -382,7 +381,7 @@ export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDe
       ...emptyResultItem(),
       ...r,
       name: r.name || recipe.name || '',
-      effect: r.effect || recipe.description || '',
+      effect: r.effect || '',
       spriteUrl: r.spriteUrl || '',
       specialEffect: r.specialEffect || null,
       boostAmount: r.boostAmount || 0,
@@ -919,7 +918,7 @@ export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDe
                         </span>
                       </span>
                       <p className="text-xs text-gray-600 line-clamp-3">
-                        {recipe.description || recipe.result?.effect || '특별한 요리 아이템'}
+                        {recipe.result?.effect || '특별한 요리 아이템'}
                       </p>
                     </div>
                   </div>

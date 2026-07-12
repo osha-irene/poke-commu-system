@@ -66,10 +66,14 @@ export const usePokemonCatch = (
     const isLuxuryBall = ballName.includes('럭셔리') || ballNameEn === 'luxury-ball';
     
     // 개체값 생성
-    const gender = generateGender(pokemonTemplate);
+    // 성별/특성은 조우 화면(useRegionExplore)에서 이미 뽑아 유저에게 보여준 값이 있으므로,
+    // 여기서 다시 뽑으면 "조우 때 본 것"과 "실제로 잡히는 것"이 달라질 수 있다. level/ivs/isShiny와
+    // 같은 방식으로 encounter에서 넘어온 값을 그대로 쓰고, 없을 때만(다른 경로로 호출된 경우) 새로 뽑는다.
+    // 크기(size)는 조우 화면에 안 보여주므로 여기서 새로 뽑아도 안전하다.
+    const gender = pokemon.gender || generateGender(pokemonTemplate);
     const size = generateSize(pokemonTemplate);
-    const ability = generateAbility(pokemonTemplate, false);
-    const abilityEn = getAbilityEnglishName(ability) || pokemonTemplate.abilitiesEn?.[0] || null;
+    const ability = pokemon.ability || generateAbility(pokemonTemplate, false);
+    const abilityEn = pokemon.abilityEn || getAbilityEnglishName(ability) || pokemonTemplate.abilitiesEn?.[0] || null;
     const ivs = pokemon.ivs ? normalizeIVs(pokemon.ivs) : generateIVs();
     
     const FLAVORS = ['매운맛', '신맛', '단맛', '쓴맛', '짠맛'];

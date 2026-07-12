@@ -1,4 +1,4 @@
-const { accountMention } = require('./shared');
+const { accountMention, normalizeCaughtPokemon } = require('./shared');
 
 const TRADE_EXPIRATION_MS = 24 * 60 * 60 * 1000; // 1일 미진행 시 자동 만료
 
@@ -86,7 +86,7 @@ const createTradeBot = ({ db, pokemonData, findMemberByAccount, extractMentionAc
   const findOwnedPokemonForTrade = (member, query) => {
     const nq = normalizePokemonSearchText(query);
     if (!nq) return { error: '교환할 포켓몬 이름을 찾을 수 없어요. [교환: 피카츄]처럼 적어 주세요.' };
-    const caught = Array.isArray(member?.caughtPokemon) ? member.caughtPokemon : [];
+    const caught = normalizeCaughtPokemon(member?.caughtPokemon);
     const candidates = caught.map((p, i) => ({ pokemon: p, index: i })).filter(({ pokemon }) => pokemon && !pokemon.isPartner);
     const exact = candidates.filter(({ pokemon }) => getTradeSearchFields(pokemon).some(f => normalizePokemonSearchText(f) === nq));
     const matches = exact.length ? exact : candidates.filter(({ pokemon }) => getTradeSearchFields(pokemon).some(f => normalizePokemonSearchText(f).includes(nq)));
@@ -161,8 +161,8 @@ const createTradeBot = ({ db, pokemonData, findMemberByAccount, extractMentionAc
     }
     const requester = rs.val();
     const target = ts.val();
-    const rCaught = Array.isArray(requester.caughtPokemon) ? [...requester.caughtPokemon] : [];
-    const tCaught = Array.isArray(target.caughtPokemon) ? [...target.caughtPokemon] : [];
+    const rCaught = normalizeCaughtPokemon(requester.caughtPokemon);
+    const tCaught = normalizeCaughtPokemon(target.caughtPokemon);
     const rIdx = rCaught.findIndex(p => p && getTradePokemonKey(p) === trade.requesterPokemonKey);
     if (rIdx < 0) {
       await db.ref(`gameData/tradeRequests/${tradeKey}`).update({ status: 'failed', failedReason: 'requester_pokemon_missing', updatedAt: Date.now() });
@@ -201,19 +201,19 @@ const createTradeBot = ({ db, pokemonData, findMemberByAccount, extractMentionAc
     // 교체한다. 그래야 그 사이 다른 곳에서 생긴 변경(예: 배틀 기술 사용 기록)이 보존된다.
     const rTx = await db.ref(`members/${trade.requesterId}/caughtPokemon`).transaction((current) => {
       if (current === null) return current;
-      if (!Array.isArray(current)) return;
-      const idx = current.findIndex(p => p && getTradePokemonKey(p) === trade.requesterPokemonKey);
+      const list = normalizeCaughtPokemon(current);
+      const idx = list.findIndex(p => p && getTradePokemonKey(p) === trade.requesterPokemonKey);
       if (idx < 0) return;
-      const next = sanitizeArrayHoles(current);
+      const next = sanitizeArrayHoles(list);
       next[idx] = rReceived;
       return next;
     });
     const tTx = await db.ref(`members/${trade.targetId}/caughtPokemon`).transaction((current) => {
       if (current === null) return current;
-      if (!Array.isArray(current)) return;
-      const idx = current.findIndex(p => p && getTradePokemonKey(p) === trade.targetPokemonKey);
+      const list = normalizeCaughtPokemon(current);
+      const idx = list.findIndex(p => p && getTradePokemonKey(p) === trade.targetPokemonKey);
       if (idx < 0) return;
-      const next = sanitizeArrayHoles(current);
+      const next = sanitizeArrayHoles(list);
       next[idx] = tReceived;
       return next;
     });
@@ -223,20 +223,20 @@ const createTradeBot = ({ db, pokemonData, findMemberByAccount, extractMentionAc
       if (rTx.committed && !tTx.committed) {
         await db.ref(`members/${trade.requesterId}/caughtPokemon`).transaction((current) => {
           if (current === null) return current;
-          if (!Array.isArray(current)) return;
-          const idx = current.findIndex(p => p && getTradePokemonKey(p) === getTradePokemonKey(rReceived));
+          const list = normalizeCaughtPokemon(current);
+          const idx = list.findIndex(p => p && getTradePokemonKey(p) === getTradePokemonKey(rReceived));
           if (idx < 0) return;
-          const next = sanitizeArrayHoles(current);
+          const next = sanitizeArrayHoles(list);
           next[idx] = rPokemon;
           return next;
         });
       } else if (tTx.committed && !rTx.committed) {
         await db.ref(`members/${trade.targetId}/caughtPokemon`).transaction((current) => {
           if (current === null) return current;
-          if (!Array.isArray(current)) return;
-          const idx = current.findIndex(p => p && getTradePokemonKey(p) === getTradePokemonKey(tReceived));
+          const list = normalizeCaughtPokemon(current);
+          const idx = list.findIndex(p => p && getTradePokemonKey(p) === getTradePokemonKey(tReceived));
           if (idx < 0) return;
-          const next = sanitizeArrayHoles(current);
+          const next = sanitizeArrayHoles(list);
           next[idx] = tPokemon;
           return next;
         });
@@ -296,7 +296,7 @@ const createTradeBot = ({ db, pokemonData, findMemberByAccount, extractMentionAc
       if (!Array.isArray(saved) || !saved.length) return '선택할 목록이 없어요. 먼저 [교환: 포켓몬이름]으로 포켓몬을 지정해 주세요.';
       const idx = pickIndex - 1;
       if (idx < 0 || idx >= saved.length) return `1~${saved.length} 사이의 번호를 골라 주세요.`;
-      const caught = Array.isArray(author.member?.caughtPokemon) ? author.member.caughtPokemon : [];
+      const caught = normalizeCaughtPokemon(author.member?.caughtPokemon);
       const pokemon = caught.find(p => p && getTradePokemonKey(p) === saved[idx]);
       if (!pokemon) return '해당 포켓몬을 찾을 수 없어요. 다시 시도해 주세요.';
       const clearKey = isRequester ? 'requesterCandidates' : 'targetCandidates';

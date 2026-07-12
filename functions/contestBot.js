@@ -4,6 +4,8 @@
 const TURN_TIMEOUT_MS = 15 * 60 * 1000;
 const CONTEST_PATH = 'gameData/activeContest';
 
+const { normalizeCaughtPokemon } = require('./shared');
+
 const {
   CONTEST_TYPES,
   CONDITION_KEY_BY_CONTEST_TYPE,
@@ -111,7 +113,7 @@ const createContestBot = ({ db, findMemberByAccount, normalizeAccount }) => {
 
   // 참가 가능한 포켓몬: 파트너 + 엔트리(caughtPokemon 앞 6마리). 박스 포켓몬(7번째 이후)은 제외.
   const getEligiblePokemon = (member) => {
-    const entry = Array.isArray(member?.caughtPokemon) ? member.caughtPokemon.slice(0, 6).filter(Boolean) : [];
+    const entry = normalizeCaughtPokemon(member?.caughtPokemon).slice(0, 6).filter(Boolean);
     const partner = member?.partnerPokemon ? [member.partnerPokemon] : [];
     const byKey = new Map();
     [...partner, ...entry].forEach((p) => {
@@ -122,7 +124,7 @@ const createContestBot = ({ db, findMemberByAccount, normalizeAccount }) => {
   };
 
   const isBoxOnlyPokemon = (member, query) => {
-    const box = Array.isArray(member?.caughtPokemon) ? member.caughtPokemon.slice(6).filter(Boolean) : [];
+    const box = normalizeCaughtPokemon(member?.caughtPokemon).slice(6).filter(Boolean);
     return box.some((p) => getPokemonSearchNames(p).some((name) => name.includes(query)));
   };
 

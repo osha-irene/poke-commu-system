@@ -1,0 +1,3555 @@
+[
+    {
+        "createdAt": "2026-06-28T15:49:11.559Z",
+        "id": "recipe_1782661751559",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "포테이토팩"
+            },
+            {
+                "count": 1,
+                "name": "마요네즈"
+            }
+        ],
+        "name": "감자샐러드",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "감자를 메인으로 만든 샐러드. 빵과는 궁합이 상당히 잘 맞는다.",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 0,
+            "name": "감자샐러드",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "https://www.serebii.net/itemdex/sprites/potatosalad.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"],
+        "updatedAt": "2026-07-11T06:05:17.950Z"
+    },
+    {
+        "createdAt": "2026-06-28T15:51:19.983Z",
+        "id": "recipe_1782661879983",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "감자샐러드"
+            },
+            {
+                "count": 1,
+                "name": "식빵"
+            }
+        ],
+        "name": "감자 샌드위치",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "빵 사이에 감자를 끼워둔 샌드위치. 탄수화물 사이 마요네즈를 섞은 탄수화물의 조합은 실패하지 않는다.",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 0,
+            "name": "감자 샌드위치",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "img\\items\\foods\\potato-sandwich.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"],
+        "updatedAt": "2026-07-11T06:05:24.269Z"
+    },
+    {
+        "createdAt": "2026-06-28T15:52:08.301Z",
+        "id": "recipe_1782661928301",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "포테이토팩"
+            },
+            {
+                "count": 1,
+                "name": "신선한크림"
+            },
+            {
+                "count": 1,
+                "name": "튼튼밀크"
+            }
+        ],
+        "name": "감자수프",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "감자로 만든 따끈따끈한 수프. 고소한 크림과 우유의 맛이 감돈다. 몸이 따뜻해지는 기분이 든다.",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 0,
+            "name": "감자수프",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "img\\items\\foods\\potato-soup.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"],
+        "updatedAt": "2026-06-29T16:49:08.121Z"
+    },
+    {
+        "createdAt": "2026-06-28T15:52:54.496Z",
+        "id": "recipe_1782661974496",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "포테이토팩"
+            },
+            {
+                "count": 1,
+                "name": "소금"
+            },
+            {
+                "count": 1,
+                "name": "올리브오일"
+            }
+        ],
+        "name": "감자튀김",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "감자로 만든 바삭한 튀김. 아직 뜨거울 때 먹어야 맛있다. 케첩이 있으면 금상첨화.",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 0,
+            "name": "감자튀김",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "img\\items\\foods\\potato-fried.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"],
+        "updatedAt": "2026-06-29T17:32:15.003Z"
+    },
+    {
+        "createdAt": "2026-06-28T15:54:12.617Z",
+        "id": "recipe_1782662052617",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "튼튼밀크"
+            },
+            {
+                "count": 1,
+                "name": "포테이토팩"
+            },
+            {
+                "count": 1,
+                "name": "버터"
+            }
+        ],
+        "name": "매쉬드포테이토",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "삶은 감자를 으깨어 부드럽게 만든 음식. 그레이비 소스와 함께하면 더욱 맛있다.",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 0,
+            "name": "매쉬드포테이토",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "img\\items\\foods\\potato-mashed.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"],
+        "updatedAt": "2026-06-29T17:32:26.490Z"
+    },
+    {
+        "createdAt": "2026-06-29T17:31:50.699Z",
+        "id": "recipe_1782754310699",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "밀가루"
+            },
+            {
+                "count": 1,
+                "name": "설탕"
+            },
+            {
+                "count": 1,
+                "name": "버터"
+            }
+        ],
+        "name": "쿠키",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "바삭바삭한 쿠키. 버터의 풍미가 느껴진다.",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 0,
+            "name": "쿠키",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "img\\items\\foods\\cookie.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "createdAt": "2026-06-29T17:34:52.950Z",
+        "id": "recipe_1782754492950",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "토마토슬라이스"
+            },
+            {
+                "count": 1,
+                "name": "설탕"
+            }
+        ],
+        "name": "토마토 설탕절임",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "토마토에 설탕을 듬뿍 부어 섞었다. 건강에 안좋을지 모른다고? 맛을 보면 생각이 바뀐다.",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 0,
+            "name": "토마토 설탕절임",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/tomato-sugared.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "createdAt": "2026-06-29T17:37:10.351Z",
+        "id": "recipe_1782754630351",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "초콜릿"
+            },
+            {
+                "count": 1,
+                "name": "오렌지"
+            },
+            {
+                "count": 1,
+                "name": "딸기슬라이스"
+            }
+        ],
+        "name": "과일 초콜릿",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "과일이 콕콕 박힌 초콜릿. 달콤 쌉싸름한 초콜릿의 맛 위로 상큼달콤한 과일이 씹힌다. ",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 0,
+            "name": "과일 초콜릿",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "img\\items\\foods\\chocolate-fruit.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"],
+        "updatedAt": "2026-06-29T17:43:27.679Z"
+    },
+    {
+        "createdAt": "2026-06-29T17:39:18.984Z",
+        "id": "recipe_1782754758984",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "딸기슬라이스"
+            },
+            {
+                "count": 1,
+                "name": "오렌지"
+            },
+            {
+                "count": 1,
+                "name": "설탕"
+            }
+        ],
+        "name": "과일청",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "과일을 잘게 썰어 설탕에 절였다. 따뜻하게 물에 타서 마시면 달콤한 차가, 시원한 탄산수에 얼음과 함께 타서 마시면 청량한 에이드가 된다.",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 0,
+            "name": "과일청",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "img\\items\\foods\\fruit-cordial.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"],
+        "updatedAt": "2026-06-29T17:43:22.008Z"
+    },
+    {
+        "createdAt": "2026-06-29T17:41:35.179Z",
+        "id": "recipe_1782754895179",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "럭키의 알"
+            },
+            {
+                "count": 1,
+                "name": "구운베이컨"
+            },
+            {
+                "count": 1,
+                "name": "식빵"
+            }
+        ],
+        "name": "에그 베이컨 토스트",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "노릇하게 구운 토스트 위에 기름이 차르르 흐르는 베이컨, 그 위에 노른자를 반숙으로 익힌 알을 올렸다! 누구나 부러워할 한 끼 식사다.",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 0,
+            "name": "에그 베이컨 토스트",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "img\\items\\foods\\egg-bacon-toast.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"],
+        "updatedAt": "2026-06-29T17:43:14.407Z"
+    },
+    {
+        "createdAt": "2026-06-29T17:42:51.802Z",
+        "id": "recipe_1782754971802",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "럭키의 알"
+            },
+            {
+                "count": 1,
+                "name": "소금"
+            },
+            {
+                "count": 1,
+                "name": "올리브오일"
+            }
+        ],
+        "name": "에그후라이",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "기름을 잘 두른 팬에 알을 풀고, 그 위에 소금을 뿌렸다. 간단하지만 실패없는 선택.",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 0,
+            "name": "에그후라이",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "img\\items\\foods\\fried-egg.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"],
+        "updatedAt": "2026-06-29T17:43:04.215Z"
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.145Z",
+        "id": "recipe_food_001",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "당근"
+            },
+            {
+                "count": 1,
+                "name": "빵"
+            },
+            {
+                "count": 1,
+                "name": "휘핑크림"
+            }
+        ],
+        "name": "당근 케이크",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "달콤한 시트와 생크림, 신선한 당근을 듬뿍 넣어 맛도 영양도 챙긴 최고의 간식. 단점이라면 만마드도 이 간식에 환장한다는 것. 먹을 땐 뒤를 꼭 확인할 것. 발굽 소리가 들린다면… 이미 늦었을지도?",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 0,
+            "name": "당근 케이크",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/carrot-cake.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"],
+        "updatedAt": "2026-06-30T08:26:35.288Z"
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.146Z",
+        "id": "recipe_food_002",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "쿠키"
+            },
+            {
+                "count": 1,
+                "name": "당근"
+            }
+        ],
+        "name": "당근 쿠키",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "잘 구워낸 당근쿠키. 보기엔 평범한 간식이지만 의외의 쓰임새가 있다. 도움이 필요하다면 당근을… 아니, 당근쿠키를 흔들어 구조를 요청하자.  ",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 0,
+            "name": "당근 쿠키",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/carrot-cookie.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"],
+        "updatedAt": "2026-06-30T08:28:40.420Z"
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.146Z",
+        "id": "recipe_food_003",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "빵"
+            },
+            {
+                "count": 1,
+                "name": "두리안"
+            },
+            {
+                "count": 1,
+                "name": "튼튼치즈"
+            }
+        ],
+        "name": "두리안 치즈 피자",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "알로라산 두리안과 밀탱크 치즈의 풍미가 입안을 채운다.\n스컹탱크와 마빌크를 합쳐놓으면 이런 맛일까?",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 0,
+            "name": "두리안 치즈 피자",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/durian-cheese-pizza.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"],
+        "updatedAt": "2026-06-30T08:35:08.803Z"
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.146Z",
+        "id": "recipe_food_004",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "딸기슬라이스"
+            },
+            {
+                "count": 1,
+                "name": "아몬드가루"
+            },
+            {
+                "count": 1,
+                "name": "설탕"
+            }
+        ],
+        "name": "딸기 마카롱",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "딸기를 졸여 만든 콩포트와 필링을 핑크색의 꼬끄 사이에 끼우고, 그 위에 생크림과 딸기로 마무리한 마카롱. 한 입에 딸기밭이 펼쳐진다!",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 0,
+            "name": "딸기 마카롱",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/strawberry-macaron.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"],
+        "updatedAt": "2026-07-11T06:16:47.328Z"
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.146Z",
+        "id": "recipe_food_005",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "초콜릿"
+            },
+            {
+                "count": 1,
+                "name": "아몬드가루"
+            },
+            {
+                "count": 1,
+                "name": "설탕"
+            }
+        ],
+        "name": "초코 마카롱",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "초콜릿을 넣어 만든 초콜릿 꼬끄에 초콜릿 필링을 넣어 만든 초코 마카롱. …끝내주게 달다!",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 0,
+            "name": "초코 마카롱",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/choco-macaron.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"],
+        "updatedAt": "2026-07-11T06:35:23.854Z"
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.146Z",
+        "id": "recipe_food_006",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "베리잼"
+            },
+            {
+                "count": 1,
+                "name": "아몬드가루"
+            },
+            {
+                "count": 1,
+                "name": "설탕"
+            }
+        ],
+        "name": "베리 마카롱",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "생크림 필링 사이사이로 블루베리 콩포트가 들어있다. 은은한 라벤더 색의 꼬끄가 산뜻하다.",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 0,
+            "name": "베리 마카롱",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/berry-macaron.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"],
+        "updatedAt": "2026-07-11T06:37:25.145Z"
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.146Z",
+        "id": "recipe_food_007",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "초콜릿"
+            },
+            {
+                "count": 1,
+                "name": "딸기슬라이스"
+            },
+            {
+                "count": 1,
+                "name": "신선한크림"
+            }
+        ],
+        "name": "딸기 초콜릿",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "진짜 딸기를 넣어 만든 초콜릿. 시중에서 파는 딸기향 초콜릿과는 다르다!",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 0,
+            "name": "딸기 초콜릿",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/chocolate-strawberry.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"],
+        "updatedAt": "2026-07-11T06:37:55.548Z"
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.146Z",
+        "id": "recipe_food_008",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "빵"
+            },
+            {
+                "count": 1,
+                "name": "딸기슬라이스"
+            },
+            {
+                "count": 1,
+                "name": "신선한크림"
+            }
+        ],
+        "name": "딸기 케이크",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "생크림과 딸기를 교차하여 켜켜이 올린 폭신한 케이크. 새콤달콤한 딸기와 부드러운 크림의 조화가 일품이다.",
+            "friendshipBoost": 0,
+            "name": "딸기 케이크",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/strawberry_cake.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.146Z",
+        "id": "recipe_food_009",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "딸기슬라이스"
+            },
+            {
+                "count": 2,
+                "name": "빵"
+            }
+        ],
+        "name": "딸기 타르트",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "바삭한 타르트지 위에 딸기를 가득 올렸다. 한 입 베어물면 상큼함이 입안 가득 퍼진다.",
+            "friendshipBoost": 0,
+            "name": "딸기 타르트",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/strawberry_cake.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.146Z",
+        "id": "recipe_food_010",
+        "ingredients": [
+            {
+                "count": 2,
+                "name": "딸기슬라이스"
+            },
+            {
+                "count": 1,
+                "name": "설탕"
+            }
+        ],
+        "name": "딸기잼",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "딸기를 푹 조려 만든 새콤달콤한 잼. 빵과 함께한다면 꾸준한 모두의 스테디셀러.",
+            "friendshipBoost": 0,
+            "name": "딸기잼",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/jam.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_011",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "쿠키"
+            },
+            {
+                "count": 1,
+                "name": "딸기잼"
+            }
+        ],
+        "name": "딸기잼 쿠키",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "바삭한 쿠키 중앙에 동그랗게 말린 딸기잼이 있다. 차와 함께 어떨까?",
+            "friendshipBoost": 0,
+            "name": "딸기잼 쿠키",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/cookie-jam.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_012",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "포테이토팩"
+            },
+            {
+                "count": 1,
+                "name": "튼튼밀크"
+            },
+            {
+                "count": 1,
+                "name": "버터"
+            }
+        ],
+        "name": "매쉬드 포테이토",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "삶은 감자를 곱게 으깨고 튼튼밀크와 버터로 부드럽게 섞어 마무리했다. 자체로도, 곁들임으로도 완벽하다.",
+            "friendshipBoost": 0,
+            "name": "매쉬드 포테이토",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/potato-mashed.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_013",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "홍차"
+            },
+            {
+                "count": 1,
+                "name": "설탕"
+            },
+            {
+                "count": 1,
+                "name": "튼튼밀크"
+            }
+        ],
+        "name": "밀크티",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "진하게 우린 홍차에 튼튼밀크를 듬뿍 넣었다. 달콤하고 고소한 향이 은은하게 퍼진다.",
+            "friendshipBoost": 0,
+            "name": "밀크티",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/milktea.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_014",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "초콜릿"
+            },
+            {
+                "count": 1,
+                "name": "밀가루"
+            },
+            {
+                "count": 1,
+                "name": "설탕"
+            }
+        ],
+        "name": "초코빵",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "촉촉한 반죽 속에 초콜릿을 듬뿍 넣어 구운 빵. 한 입 베어물면 초콜릿이 주르륵 흐른다.",
+            "friendshipBoost": 0,
+            "name": "초코빵",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/choco-bread.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_015",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "구운베이컨"
+            },
+            {
+                "count": 1,
+                "name": "럭키의 알"
+            },
+            {
+                "count": 1,
+                "name": "팬케이크"
+            }
+        ],
+        "name": "브렉퍼스트",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "바삭한 베이컨과 폭신한 팬케이크, 노른자가 자르르 흐르는 반숙 알을 한 접시에 담았다. 하루를 든든하게 시작할 수 있는 한 끼.",
+            "friendshipBoost": 0,
+            "name": "브렉퍼스트",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/breakfast.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_016",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "베리잼"
+            },
+            {
+                "count": 1,
+                "name": "휘핑크림"
+            },
+            {
+                "count": 1,
+                "name": "빵"
+            }
+        ],
+        "name": "베리 케이크",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "새콤한 베리잼과 폭신한 휘핑크림을 빵 사이에 듬뿍 채웠다. 베리향이 은은하게 퍼진다.",
+            "friendshipBoost": 0,
+            "name": "베리 케이크",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/berry-cake.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_017",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "밀가루"
+            },
+            {
+                "count": 1,
+                "name": "럭키의 알"
+            },
+            {
+                "count": 1,
+                "name": "버터"
+            }
+        ],
+        "name": "빵",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "럭키의 알과 버터를 듬뿍 넣어 폭신하게 구워낸 기본 빵. 무엇과 곁들여도 실패가 없다.",
+            "friendshipBoost": 0,
+            "name": "빵",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/bread.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_018",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "사과슬라이스"
+            },
+            {
+                "count": 1,
+                "name": "빵"
+            },
+            {
+                "count": 1,
+                "name": "설탕"
+            }
+        ],
+        "name": "사과 파이",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "달콤하게 졸인 사과를 빵 반죽으로 감싸 구웠다. 계피향이 살짝 감돌면 완벽할지도?",
+            "friendshipBoost": 0,
+            "name": "사과 파이",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/apple-pie.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_019",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "딸기슬라이스"
+            },
+            {
+                "count": 1,
+                "name": "설탕"
+            }
+        ],
+        "name": "설탕 딸기",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "잘 익은 딸기에 설탕을 듬뿍 묻혔다. 상큼달콤하지만 무서운 설탕의 그림자가 뒤에 어른거린다.",
+            "friendshipBoost": 0,
+            "name": "설탕 딸기",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/strawberry-sugar.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_020",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "복슝열매"
+            },
+            {
+                "count": 1,
+                "name": "홍차"
+            },
+            {
+                "count": 1,
+                "name": "맛있는물"
+            }
+        ],
+        "name": "아이스티",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "홍차를 시원하게 우려 복슝열매 시럽을 더했다. 에스프레소 샷을 추가해도 좋다.",
+            "friendshipBoost": 0,
+            "name": "아이스티",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/ice-tea.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_021",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "매쉬드 포테이토"
+            },
+            {
+                "count": 1,
+                "name": "튼튼치즈"
+            }
+        ],
+        "name": "알리고",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "매쉬드 포테이토에 튼튼치즈를 듬뿍 섞어 쭉쭉 늘어나게 만들었다. 치즈를 좋아한다면 거부할 수 없는 맛.",
+            "friendshipBoost": 0,
+            "name": "알리고",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/aligo.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_022",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "럭키의 알"
+            },
+            {
+                "count": 1,
+                "name": "마요네즈"
+            }
+        ],
+        "name": "에그마요",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "삶은 알을 곱게 다져 마요네즈와 버무렸다. 부드럽고 고소해서 어디에나 잘 어울린다.",
+            "friendshipBoost": 0,
+            "name": "에그마요",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/egg-mayo.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_023",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "럭키의 알"
+            },
+            {
+                "count": 1,
+                "name": "빵"
+            }
+        ],
+        "name": "에그 타르트",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "바삭한 타르트지 위에 부드러운 커스터드를 채워 구웠다. 겉은 바삭, 속은 촉촉하다.",
+            "friendshipBoost": 0,
+            "name": "에그 타르트",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/egg-tart.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_024",
+        "ingredients": [
+            {
+                "count": 2,
+                "name": "오렌지"
+            },
+            {
+                "count": 1,
+                "name": "맛있는물"
+            }
+        ],
+        "name": "오렌지 주스",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "잘 익은 오렌지를 짜낸 새콤달콤한 주스. 상큼한 향이 코끝을 스친다.",
+            "friendshipBoost": 0,
+            "name": "오렌지 주스",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/orange-juice.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_025",
+        "ingredients": [
+            {
+                "count": 2,
+                "name": "럭키의 알"
+            },
+            {
+                "count": 1,
+                "name": "버터"
+            }
+        ],
+        "name": "오믈렛",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "럭키의 알을 곱게 풀어 버터에 부드럽게 익혔다. 폭신폭신한 식감이 매력적이다.",
+            "friendshipBoost": 0,
+            "name": "오믈렛",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/omelet.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_026",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "옥수수"
+            },
+            {
+                "count": 1,
+                "name": "버터"
+            }
+        ],
+        "name": "옥수수 구이",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "노릇하게 구운 옥수수에 버터를 발랐다. 고소한 냄새가 입맛을 자극한다.",
+            "friendshipBoost": 0,
+            "name": "옥수수 구이",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/fried-corn.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_027",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "옥수수"
+            },
+            {
+                "count": 1,
+                "name": "소금"
+            },
+            {
+                "count": 1,
+                "name": "올리브오일"
+            }
+        ],
+        "name": "팝콘",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "옥수수 알갱이를 잘 튀기면 팝팝! 옥수수 꽃이 핀다. 재밌는 구경에 빠질 수 없는 간식!",
+            "friendshipBoost": 0,
+            "name": "팝콘",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/popcorn.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_028",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "딸기잼"
+            },
+            {
+                "count": 1,
+                "name": "식빵"
+            },
+            {
+                "count": 1,
+                "name": "버터"
+            }
+        ],
+        "name": "딸기잼 토스트",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "노릇하게 구운 식빵에 버터와 딸기잼을 듬뿍 발랐다. 아침 식사로 제격이다.",
+            "friendshipBoost": 0,
+            "name": "딸기잼 토스트",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/toast-jam.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_029",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "버터"
+            },
+            {
+                "count": 1,
+                "name": "식빵"
+            }
+        ],
+        "name": "토스트",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "버터를 발라 노릇하게 구운 식빵. 단순하지만 실패 없는 클래식.",
+            "friendshipBoost": 0,
+            "name": "토스트",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/toast.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_030",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "버터"
+            },
+            {
+                "count": 1,
+                "name": "식빵"
+            },
+            {
+                "count": 1,
+                "name": "크림치즈"
+            }
+        ],
+        "name": "크림치즈 토스트",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "노릇한 식빵 위에 부드러운 크림치즈를 듬뿍 발랐다. 짭짤하고 고소한 맛이 매력적이다.",
+            "friendshipBoost": 0,
+            "name": "크림치즈 토스트",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/toast-creamcheese.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_031",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "젤라틴"
+            },
+            {
+                "count": 1,
+                "name": "딸기슬라이스"
+            }
+        ],
+        "name": "딸기젤리",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "딸기 과즙을 넣어 만든 새콤달콤한 젤리. 탱글탱글한 식감이 재미있다.",
+            "friendshipBoost": 0,
+            "name": "딸기젤리",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/strawberry-jelly.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_032",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "젤라틴"
+            },
+            {
+                "count": 1,
+                "name": "오렌지"
+            }
+        ],
+        "name": "오렌지 젤리",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "오렌지 과즙으로 만든 상큼한 젤리. 씹을 때마다 톡톡 터지는 과즙이 느껴진다.",
+            "friendshipBoost": 0,
+            "name": "오렌지 젤리",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/orange-jelly.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_033",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "젤라틴"
+            },
+            {
+                "count": 1,
+                "name": "버섯팩"
+            }
+        ],
+        "name": "버섯젤리",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "버섯 육수로 만든 독특한 젤리. 의외로 감칠맛이 살아있어 호불호가 갈릴지도.",
+            "friendshipBoost": 0,
+            "name": "버섯젤리",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/mushroom-jelly.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_034",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "젤라틴"
+            },
+            {
+                "count": 1,
+                "name": "파인애플슬라이스"
+            }
+        ],
+        "name": "파인애플 젤리",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "파인애플 과즙을 넣어 만든 새콤달콤한 젤리. 가본 적 없는 알로라의 기억이 은은하게 스친다.",
+            "friendshipBoost": 0,
+            "name": "파인애플 젤리",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/pineapple-jelly.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_035",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "젤라틴"
+            },
+            {
+                "count": 1,
+                "name": "꼬리훈제"
+            },
+            {
+                "count": 1,
+                "name": "굵은 대파"
+            }
+        ],
+        "name": "대파 꼬리훈제 젤리",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "꼬리훈제 육수에 대파 향을 더한 독특한 젤리. 도전하는 당신은 용기 있는 사람!.",
+            "friendshipBoost": 0,
+            "name": "대파 꼬리훈제 젤리",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/slowpoke-tail-jelly.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_036",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "훈제토막"
+            },
+            {
+                "count": 1,
+                "name": "포테이토팩"
+            },
+            {
+                "count": 1,
+                "name": "구운베이컨"
+            }
+        ],
+        "name": "차우더",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "훈제토막과 감자, 베이컨을 넣고 진하게 끓인 크림 수프. 든든하게 배를 채워준다.",
+            "friendshipBoost": 0,
+            "name": "차우더",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/chowder.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_037",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "초콜릿"
+            },
+            {
+                "count": 1,
+                "name": "딸기"
+            }
+        ],
+        "name": "초코 딸기",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "잘 익은 딸기에 초콜릿을 듬뿍 코팅했다. 새콤함과 달콤함이 동시에 느껴진다.",
+            "friendshipBoost": 0,
+            "name": "초코 딸기",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/strawberry-choco.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_038",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "초콜릿"
+            },
+            {
+                "count": 1,
+                "name": "빵"
+            },
+            {
+                "count": 1,
+                "name": "휘핑크림"
+            }
+        ],
+        "name": "초코 케이크",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "폭신한 시트 사이사이에 초콜릿과 휘핑크림을 듬뿍 채웠다. 진한 초콜릿 향이 매력적이다.",
+            "friendshipBoost": 0,
+            "name": "초코 케이크",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/choco-bread.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_039",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "초콜릿"
+            },
+            {
+                "count": 1,
+                "name": "식빵"
+            },
+            {
+                "count": 1,
+                "name": "버터"
+            }
+        ],
+        "name": "초코 토스트",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "노릇하게 구운 식빵에 버터와 초콜릿을 듬뿍 발랐다. 달콤함이 입안 가득 퍼진다.",
+            "friendshipBoost": 0,
+            "name": "초코 토스트",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/toast-choco.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_040",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "쿠키"
+            },
+            {
+                "count": 1,
+                "name": "초콜릿"
+            }
+        ],
+        "name": "초코칩 쿠키",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "바삭한 쿠키 반죽에 초콜릿 조각을 콕콕 박아 구웠다. 씹을 때마다 초콜릿이 와작와작 씹힌다.",
+            "friendshipBoost": 0,
+            "name": "초코칩 쿠키",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/choco-cookie.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_041",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "크림치즈"
+            },
+            {
+                "count": 1,
+                "name": "빵"
+            },
+            {
+                "count": 1,
+                "name": "휘핑크림"
+            }
+        ],
+        "name": "치즈 케이크",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "부드러운 크림치즈와 휘핑크림을 듬뿍 넣어 진하게 만들었다. 진한 치즈향이 입안 가득 퍼진다.",
+            "friendshipBoost": 0,
+            "name": "치즈 케이크",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/cheese-cake.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_042",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "토마토슬라이스"
+            },
+            {
+                "count": 1,
+                "name": "튼튼치즈"
+            },
+            {
+                "count": 1,
+                "name": "비니거"
+            }
+        ],
+        "name": "카프레제",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "토마토와 튼튼치즈를 번갈아 쌓고 비니거를 살짝 뿌렸다. 상큼하고 담백한 한 접시.",
+            "friendshipBoost": 0,
+            "name": "카프레제",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/caprese.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_043",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "밀가루"
+            },
+            {
+                "count": 1,
+                "name": "설탕"
+            },
+            {
+                "count": 1,
+                "name": "버터"
+            }
+        ],
+        "name": "쿠키",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "밀가루와 버터, 설탕을 반죽해 바삭하게 구워낸 기본 쿠키. 은은한 버터향이 감돈다.",
+            "friendshipBoost": 0,
+            "name": "쿠키",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/cookie.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_044",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "토마토슬라이스"
+            },
+            {
+                "count": 1,
+                "name": "튼튼치즈"
+            },
+            {
+                "count": 1,
+                "name": "파스타"
+            }
+        ],
+        "name": "토마토 파스타",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "잘 익은 토마토와 튼튼치즈를 듬뿍 얹은 파스타. 새콤하고 고소한 맛의 조화가 좋다. 매운맛을 더해도 좋다.",
+            "friendshipBoost": 0,
+            "name": "토마토 파스타",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/tomato-pasta.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_045",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "빵"
+            },
+            {
+                "count": 1,
+                "name": "케첩"
+            },
+            {
+                "count": 1,
+                "name": "파인애플 슬라이스"
+            }
+        ],
+        "name": "알로라 피자",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "빵 반죽 위에 케첩과 파인애플을 올려 구웠다. 호불호가 갈리지만 알로라에서는 국민 메뉴다.",
+            "friendshipBoost": 0,
+            "name": "알로라 피자",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/pizza-alola.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_046",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "밀가루"
+            },
+            {
+                "count": 1,
+                "name": "럭키의 알"
+            },
+            {
+                "count": 1,
+                "name": "튼튼밀크"
+            }
+        ],
+        "name": "팬케이크",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "밀가루와 럭키의 알, 튼튼밀크를 섞어 폭신하게 구워냈다. 시럽을 듬뿍 뿌려 먹으면 더욱 맛있다.",
+            "friendshipBoost": 0,
+            "name": "팬케이크",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/pancake.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_047",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "설탕"
+            },
+            {
+                "count": 1,
+                "name": "튼튼밀크"
+            },
+            {
+                "count": 1,
+                "name": "럭키의 알"
+            }
+        ],
+        "name": "푸딩",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "설탕과 튼튼밀크, 럭키의 알을 섞어 부드럽게 굳혔다. 말랑말랑 흔들리는 식감이 재미있다.",
+            "friendshipBoost": 0,
+            "name": "푸딩",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/pudding.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_048",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "빵"
+            },
+            {
+                "count": 1,
+                "name": "케첩"
+            },
+            {
+                "count": 1,
+                "name": "튼튼치즈"
+            }
+        ],
+        "name": "피자",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "빵 반죽에 케첩과 튼튼치즈를 듬뿍 올려 구웠다. 치즈가 쭉 늘어나는 게 보기만 해도 군침이 돈다.",
+            "friendshipBoost": 0,
+            "name": "피자",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/pizza.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_049",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "달콤한꿀"
+            },
+            {
+                "count": 1,
+                "name": "식빵"
+            },
+            {
+                "count": 1,
+                "name": "버터"
+            }
+        ],
+        "name": "허니 토스트",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "노릇한 식빵에 버터와 달콤한 꿀을 듬뿍 발랐다. 은은한 꿀향이 매력적이다.",
+            "friendshipBoost": 0,
+            "name": "허니 토스트",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/toast-honey.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_050",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "홍차"
+            },
+            {
+                "count": 1,
+                "name": "설탕"
+            },
+            {
+                "count": 1,
+                "name": "튼튼밀크"
+            }
+        ],
+        "name": "홍차 스프레드",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "진하게 우린 홍차와 튼튼밀크, 설탕을 졸여 만든 스프레드. 빵에 발라 먹으면 은은한 홍차향이 퍼진다.",
+            "friendshipBoost": 0,
+            "name": "홍차 스프레드",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/blacktea-paste.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_051",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "미역"
+            },
+            {
+                "count": 1,
+                "name": "꼬리훈제"
+            },
+            {
+                "count": 1,
+                "name": "맛있는물"
+            }
+        ],
+        "name": "꼬리훈제 미역국",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "미역과 꼬리훈제를 푹 우려낸 시원한 국물 요리. 속이 편안해지는 기분이 든다. 생일상에는 있어줘야지.",
+            "friendshipBoost": 0,
+            "name": "꼬리훈제 미역국",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/slowpoke-tail-stew.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_052",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "버섯팩"
+            },
+            {
+                "count": 1,
+                "name": "채소팩"
+            },
+            {
+                "count": 1,
+                "name": "올리브오일"
+            }
+        ],
+        "name": "버섯 채소 볶음",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "버섯과 각종 채소를 올리브오일에 볶아냈다. 담백하고 건강한 한 끼.",
+            "friendshipBoost": 0,
+            "name": "버섯 채소 볶음",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/fried-mushveg.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_053",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "부추"
+            },
+            {
+                "count": 1,
+                "name": "굵은대파"
+            },
+            {
+                "count": 1,
+                "name": "밀가루"
+            }
+        ],
+        "name": "부추파전",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "부추와 대파를 넣어 바삭하게 부친 전. 노릇한 겉면과 쫄깃한 속이 조화롭다.",
+            "friendshipBoost": 0,
+            "name": "부추파전",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/boochoopa.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_054",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "커피"
+            },
+            {
+                "count": 1,
+                "name": "식용 얼음"
+            }
+        ],
+        "name": "커피빙수",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "곱게 간 얼음 위에 진한 커피를 듬뿍 뿌렸다. 씁쓸달콤한 어른의 맛.",
+            "friendshipBoost": 0,
+            "name": "커피빙수",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/coffee-bingsu.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_055",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "복슝열매"
+            },
+            {
+                "count": 1,
+                "name": "식용 얼음"
+            }
+        ],
+        "name": "복슝열매 빙수",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "곱게 간 얼음 위에 복슝열매를 듬뿍 올렸다. 상큼달콤한 맛이 더위를 싹 가시게 한다.",
+            "friendshipBoost": 0,
+            "name": "복슝열매 빙수",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/peach-bingsu.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_056",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "크림치즈"
+            },
+            {
+                "count": 1,
+                "name": "식용 얼음"
+            },
+            {
+                "count": 1,
+                "name": "치즈케이크"
+            }
+        ],
+        "name": "치즈케이크 빙수",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "곱게 간 얼음 위에 치즈케이크 조각과 크림치즈를 듬뿍 올렸다. 진한 치즈향이 여운을 남긴다.",
+            "friendshipBoost": 0,
+            "name": "치즈케이크 빙수",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/cheesecake-bingsu.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_057",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "튼튼밀크"
+            },
+            {
+                "count": 1,
+                "name": "신선한크림"
+            },
+            {
+                "count": 1,
+                "name": "식용얼음"
+            }
+        ],
+        "name": "아이스크림",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "튼튼밀크와 신선한 크림을 얼려 부드럽게 만들었다. 입안에서 사르르 녹는다.",
+            "friendshipBoost": 0,
+            "name": "아이스크림",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/icecream.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_058",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "콩통조림"
+            },
+            {
+                "count": 1,
+                "name": "올리브오일"
+            }
+        ],
+        "name": "콩볶음",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "콩을 올리브오일에 노릇하게 볶았다. 고소한 맛이 있다. 편식은 금물!",
+            "friendshipBoost": 0,
+            "name": "콩볶음",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/fried-beans.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_059",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "콩통조림"
+            },
+            {
+                "count": 1,
+                "name": "맛있는물"
+            },
+            {
+                "count": 1,
+                "name": "소금"
+            }
+        ],
+        "name": "두부",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "부드러운 식감과 고소한 콩의 향이 감돈다. 콩을 싫어한다고 두부도 안 먹으면 안 돼.",
+            "friendshipBoost": 0,
+            "name": "두부",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/tofu.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_060",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "두부"
+            },
+            {
+                "count": 1,
+                "name": "된장"
+            },
+            {
+                "count": 1,
+                "name": "맛있는물"
+            }
+        ],
+        "name": "된장찌개",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "두부와 된장을 넣고 자글자글 끓인 구수한 찌개. 영운의 평범한 가정식이다.",
+            "friendshipBoost": 0,
+            "name": "된장찌개",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/soy-stew.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_061",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "채소팩"
+            },
+            {
+                "count": 1,
+                "name": "비니거"
+            }
+        ],
+        "name": "샐러드",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "신선한 채소에 비니거를 살짝 뿌렸다. 가볍고 상큼하게 즐기기 좋다. 다이어트의 친구.",
+            "friendshipBoost": 0,
+            "name": "샐러드",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/salad.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_062",
+        "ingredients": [
+            {
+                "count": 2,
+                "name": "콩통조림"
+            },
+            {
+                "count": 1,
+                "name": "밀가루"
+            }
+        ],
+        "name": "콩고기",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "콩을 곱게 갈아 밀가루와 반죽해 만든 대체육. 고기 못지않은 든든한 식감을 자랑한다.",
+            "friendshipBoost": 0,
+            "name": "콩고기",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/soymeat.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_063",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "콩고기"
+            },
+            {
+                "count": 1,
+                "name": "버터"
+            }
+        ],
+        "name": "콩고기 스테이크",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "콩고기를 버터에 노릇하게 구워냈다. 담백하면서도 고소한 풍미가 일품.",
+            "friendshipBoost": 0,
+            "name": "콩고기 스테이크",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/soymeat-steak.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_064",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "빵"
+            },
+            {
+                "count": 1,
+                "name": "콩고기"
+            },
+            {
+                "count": 1,
+                "name": "케첩"
+            }
+        ],
+        "name": "콩고기 핫도그",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "빵 사이에 노릇하게 구운 콩고기와 케첩을 곁들였다. 케첩 덕분일까? 고기랑 구분이 안간다!",
+            "friendshipBoost": 0,
+            "name": "콩고기 핫도그",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/soymeat-hotdog.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_065",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "라이스"
+            },
+            {
+                "count": 1,
+                "name": "고추장"
+            },
+            {
+                "count": 1,
+                "name": "채소팩"
+            }
+        ],
+        "name": "비빔밥",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "흰 쌀밥 위에 나물을 고루 얹고 고추장을 뿌렸다. 에그후라이는 잊지 않았겠지?",
+            "friendshipBoost": 0,
+            "name": "비빔밥",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/t.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_066",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "라이스"
+            },
+            {
+                "count": 1,
+                "name": "레토르트카레"
+            }
+        ],
+        "name": "카레라이스",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "밥 위에 얹으면 간편한 한 끼! 가본 적 없는 가라르의 추억이 느껴진다.",
+            "friendshipBoost": 0,
+            "name": "카레라이스",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/curry-rice.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_067",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "커피"
+            },
+            {
+                "count": 1,
+                "name": "튼튼밀크"
+            }
+        ],
+        "name": "라떼",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "진한 커피에 튼튼밀크를 듬뿍 부었다. 부드럽고 고소한 맛이 매력적이다.",
+            "friendshipBoost": 0,
+            "name": "라떼",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/coffee.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_068",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "커피"
+            },
+            {
+                "count": 1,
+                "name": "아이스크림"
+            }
+        ],
+        "name": "커피아이스크림",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "부드러운 아이스크림에 진한 커피 시럽을 뿌렸다. 씁쓸함과 달콤함이 동시에 느껴진다.",
+            "friendshipBoost": 0,
+            "name": "커피아이스크림",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/coffe-icecream.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_069",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "채소팩"
+            },
+            {
+                "count": 1,
+                "name": "소금"
+            },
+            {
+                "count": 1,
+                "name": "스파이스세트"
+            }
+        ],
+        "name": "김치",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "영운 지방의 모두가 김치냉장고를 가지고 있는 건 아니야. 그치만 우리 집에는 있어.",
+            "friendshipBoost": 0,
+            "name": "김치",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/kimchi.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_070",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "떡"
+            },
+            {
+                "count": 1,
+                "name": "고추장"
+            }
+        ],
+        "name": "떡볶이",
+        "result": {
+            "boostAmount": 0,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "쫄깃한 떡에 고추장 양념을 풀어 졸였다. 떡볶이가 달아야하는가 아닌가는 영운의 유명한 난제.",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 10,
+            "name": "떡볶이",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "spriteUrl": "/img/items/foods/tbk.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"],
+        "updatedAt": "2026-06-30T04:48:14.439Z"
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_071",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "떡"
+            },
+            {
+                "count": 1,
+                "name": "간장"
+            },
+            {
+                "count": 1,
+                "name": "꼬리훈제"
+            }
+        ],
+        "name": "궁중떡볶이",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "먼 옛날 임금님이 먹었다던 떡볶이. 자극적이지 않고 슴슴한 맛이 매력이라면 매력.",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 15,
+            "name": "궁중떡볶이",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "spriteUrl": "/img/items/foods/tbk-soy.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"],
+        "updatedAt": "2026-06-30T04:48:37.924Z"
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_072",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "떡"
+            },
+            {
+                "count": 1,
+                "name": "고추장"
+            },
+            {
+                "count": 1,
+                "name": "올리브오일"
+            }
+        ],
+        "name": "기름떡볶이",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "기름에 바삭하게 튀겨낸 떡에 양념을 묻혔다. 한 번 맛을 들이면 평범한 떡볶이로는 만족을 못할지도.",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 15,
+            "name": "기름떡볶이",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "spriteUrl": "/img/items/foods/tbk.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"],
+        "updatedAt": "2026-06-30T04:56:48.341Z"
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_073",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "떡"
+            },
+            {
+                "count": 1,
+                "name": "레토르트카레"
+            }
+        ],
+        "name": "가라르 떡볶이",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "가라르 식으로 카레를 얹은 떡볶이. 가라르에서는 카레에 떡을 넣으면 영운식 카레라고 할까?",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 10,
+            "name": "가라르 떡볶이",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "spriteUrl": "/img/items/foods/tbk-galar.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"],
+        "updatedAt": "2026-06-30T04:55:47.211Z"
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_074",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "떡볶이"
+            },
+            {
+                "count": 1,
+                "name": "빵"
+            }
+        ],
+        "name": "팔데아식 떡볶이 샌드위치",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "conditionBoost": {
+                "beauty": 0,
+                "cuteness": 0,
+                "elegance": 0,
+                "intelligence": 0,
+                "strength": 0
+            },
+            "effect": "떡볶이를 팔데아 식으로 만든 샌드위치. 아무튼 빵 사이에 넣으면 팔데아 식이라고 할 수 있겠다. 여기 팔데아 출신 없지?",
+            "effortBoost": {
+                "attack": 0,
+                "defense": 0,
+                "hp": 0,
+                "spAttack": 0,
+                "spDefense": 0,
+                "speed": 0
+            },
+            "friendshipBoost": 15,
+            "name": "팔데아식 떡볶이 샌드위치",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "spriteUrl": "/img/items/foods/tbk-sandwich-paldea.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"],
+        "updatedAt": "2026-06-30T04:54:44.641Z"
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_075",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "떡"
+            },
+            {
+                "count": 1,
+                "name": "신선한크림"
+            },
+            {
+                "count": 1,
+                "name": "버섯팩"
+            }
+        ],
+        "name": "크림떡볶이",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "쫄깃한 떡을 신선한 크림과 버섯과 함께 부드럽게 끓여냈다. 매콤함 대신 고소함이 가득하다.",
+            "friendshipBoost": 15,
+            "name": "크림떡볶이",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "spriteUrl": "/img/items/foods/tbk-cream.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_076",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "떡"
+            },
+            {
+                "count": 1,
+                "name": "토마토슬라이스"
+            },
+            {
+                "count": 1,
+                "name": "신선한크림"
+            }
+        ],
+        "name": "로제떡볶이",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "평범한 떡볶이는 가라! 매콤한 양념에 토마토와 크림을 더해 부드럽게 끓였다. 매콤함과 고소함의 완벽한 밸런스.",
+            "friendshipBoost": 15,
+            "name": "로제떡볶이",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "spriteUrl": "/img/items/foods/tbk-rose.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_077",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "떡"
+            },
+            {
+                "count": 1,
+                "name": "대포무노 먹물"
+            },
+            {
+                "count": 1,
+                "name": "신선한크림"
+            }
+        ],
+        "name": "먹물크림떡볶이",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "대포무노의 먹물로 검게 물든 떡볶이. 먹어도 되는지 모르겠다고 망설이는 순간 빈 접시만 남아있을 것이다.",
+            "friendshipBoost": 15,
+            "name": "먹물크림떡볶이",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "spriteUrl": "/img/items/foods/tbk-black.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_078",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "떡"
+            },
+            {
+                "count": 1,
+                "name": "고추장"
+            },
+            {
+                "count": 1,
+                "name": "튼튼치즈"
+            }
+        ],
+        "name": "치즈 떡볶이",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "평범한 떡볶이 위에 튼튼치즈를 듬뿍 올리면 그것만으로 업그레이드! 치즈를 늘려 먹는 재미가 쏠쏠하다.",
+            "friendshipBoost": 15,
+            "name": "치즈 떡볶이",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "spriteUrl": "/img/items/foods/tbk-cheese.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_079",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "떡볶이"
+            },
+            {
+                "count": 1,
+                "name": "라이스"
+            }
+        ],
+        "name": "떡볶이 볶음밥",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "떡도 밥도 탄수화물이라고? 알게 뭐야 맛있으면 그만이다! 이것이 바로 영운의 유명한 후식!",
+            "friendshipBoost": 15,
+            "name": "떡볶이 볶음밥",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "spriteUrl": "/img/items/foods/tbk.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_080",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "떡"
+            },
+            {
+                "count": 1,
+                "name": "고추장"
+            },
+            {
+                "count": 1,
+                "name": "스파이스세트"
+            }
+        ],
+        "name": "불대문자 떡볶이",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "스파이스를 듬뿍 넣어 화끈하게 매운 떡볶이. 그 맛을 기술로 따지자면 마치 불대문자!",
+            "friendshipBoost": 15,
+            "name": "불대문자 떡볶이",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "spriteUrl": "/img/items/foods/tbk-fire.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_081",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "떡"
+            },
+            {
+                "count": 1,
+                "name": "고추장"
+            },
+            {
+                "count": 1,
+                "name": "마라소스"
+            }
+        ],
+        "name": "마라떡볶이",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "마라소스를 더해 얼얼하고 매콤한 맛을 낸 퓨전 떡볶이. 한 번 맛보면 그 중독성에서 헤어나올 수 없다.",
+            "friendshipBoost": 15,
+            "name": "마라떡볶이",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "spriteUrl": "/img/items/foods/tbk.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_082",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "떡"
+            },
+            {
+                "count": 1,
+                "name": "케첩"
+            }
+        ],
+        "name": "케첩 떡볶이",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "고추장 대신 케첩으로 양념한 순한 맛 떡볶이. 매운 걸 못 먹는 입맛에도 딱이다.",
+            "friendshipBoost": 10,
+            "name": "케첩 떡볶이",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "spriteUrl": "/img/items/foods/tbk.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_083",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "떡"
+            },
+            {
+                "count": 1,
+                "name": "케첩"
+            },
+            {
+                "count": 1,
+                "name": "올리브오일"
+            }
+        ],
+        "name": "떡꼬치",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "노릇노릇 바삭한 떡을 꼬치에 꽂고, 그 위에 떡꼬치 소스를 듬뿍. 케첩과 고추장의 황금비율이 중요하다.",
+            "friendshipBoost": 0,
+            "name": "떡꼬치",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/tch.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_084",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "떡볶이"
+            },
+            {
+                "count": 1,
+                "name": "절벼게 맛살"
+            },
+            {
+                "count": 1,
+                "name": "훈제토막"
+            }
+        ],
+        "name": "해물 떡볶이",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "떡볶이에 절벼게 맛살과 훈제토막을 듬뿍 넣었다. 바다의 감칠맛이 더해져 더욱 풍성하다.",
+            "friendshipBoost": 25,
+            "name": "해물 떡볶이",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "spriteUrl": "/img/items/foods/tbk-seafood.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_085",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "떡볶이"
+            },
+            {
+                "count": 1,
+                "name": "바나나슬라이스"
+            },
+            {
+                "count": 1,
+                "name": "딸기슬라이스"
+            }
+        ],
+        "name": "딸바떡볶이",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "딸기와 바나나와 떡이라니! 이건 식문화의 붕괴야! ………엥? 생각보다 맛있다.",
+            "friendshipBoost": 25,
+            "name": "딸바떡볶이",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "spriteUrl": "/img/items/foods/tbk-strawnana.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_086",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "떡"
+            },
+            {
+                "count": 1,
+                "name": "채소팩"
+            },
+            {
+                "count": 1,
+                "name": "비니거"
+            }
+        ],
+        "name": "샐러드 떡볶이",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "떡과 신선한 채소에 비니거를 더해 산뜻하게 즐긴다. 한끼 식사로 나쁘지 않을지도?",
+            "friendshipBoost": 15,
+            "name": "샐러드 떡볶이",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "spriteUrl": "/img/items/foods/tbk-salad.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_087",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "감자"
+            },
+            {
+                "count": 1,
+                "name": "밀가루"
+            }
+        ],
+        "name": "옹심이",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "감자와 밀가루를 반죽해 동글동글하게 빚었다. 쫀득한 식감이 매력적이다.",
+            "friendshipBoost": 0,
+            "name": "옹심이",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "specialEffect": "trainerExp",
+            "spriteUrl": "/img/items/foods/ongsim.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_088",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "옹심이"
+            },
+            {
+                "count": 1,
+                "name": "고추장"
+            }
+        ],
+        "name": "옹심이 떡볶이",
+        "result": {
+            "boostAmount": 5,
+            "canSell": true,
+            "effect": "동글동글한 옹심이를 매콤한 양념에 조려냈다. 쫀득함이 배가되어 쫀득쫀득한 색다른 떡볶이.",
+            "friendshipBoost": 15,
+            "name": "옹심이 떡볶이",
+            "pocket": "misc",
+            "sellPrice": 200,
+            "spriteUrl": "/img/items/foods/ongsim.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_089",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "떡"
+            },
+            {
+                "count": 1,
+                "name": "고추장"
+            },
+            {
+                "count": 1,
+                "name": "파인애플 슬라이스"
+            }
+        ],
+        "name": "알로라 떡볶이",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "매콤한 떡볶이와 달콤한 파인애플의 조화. 영운과 알로라의 조화.",
+            "friendshipBoost": 15,
+            "name": "알로라 떡볶이",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "spriteUrl": "/img/items/foods/tbk-alola.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_090",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "떡"
+            },
+            {
+                "count": 1,
+                "name": "민트"
+            },
+            {
+                "count": 1,
+                "name": "초코"
+            }
+        ],
+        "name": "민트초코 떡볶이",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "무엇을 상상하든 그 이상을 보게 될거야.",
+            "friendshipBoost": 15,
+            "name": "민트초코 떡볶이",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "spriteUrl": "/img/items/foods/tbk-mintchoco.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    },
+    {
+        "category": "요리",
+        "createdAt": "2026-06-29T18:02:16.147Z",
+        "id": "recipe_food_091",
+        "ingredients": [
+            {
+                "count": 1,
+                "name": "떡"
+            },
+            {
+                "count": 1,
+                "name": "고추장"
+            },
+            {
+                "count": 1,
+                "name": "식용얼음"
+            }
+        ],
+        "name": "냉떡볶이",
+        "result": {
+            "boostAmount": 10,
+            "canSell": true,
+            "effect": "얼음을 더해 시원하게 즐기는 떡볶이. 의외로 나쁘지 않은 편이다.",
+            "friendshipBoost": 15,
+            "name": "냉떡볶이",
+            "pocket": "misc",
+            "sellPrice": 300,
+            "spriteUrl": "/img/items/foods/tbk-cold.png"
+        },
+        "type": "fixed",
+        "types": ["fixed"]
+    }
+]

@@ -51,7 +51,10 @@ const getMemberPokemonOptions = (member = {}) => {
   if (member.partnerPokemon) {
     options.push({ pokemon: member.partnerPokemon, key: getPokemonKey(member.partnerPokemon, 'partner'), labelPrefix: '파트너' });
   }
-  (Array.isArray(member.caughtPokemon) ? member.caughtPokemon : []).forEach((pokemon, index) => {
+  const caughtList = Array.isArray(member.caughtPokemon)
+    ? member.caughtPokemon
+    : Object.values(member.caughtPokemon || {});
+  caughtList.forEach((pokemon, index) => {
     if (!pokemon) return;
     const key = getPokemonKey(pokemon, index);
     if (options.some((option) => option.key === key)) return;

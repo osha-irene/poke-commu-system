@@ -61,6 +61,20 @@ const toProbability = (value, fallback) => {
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
+// Firebase RTDB는 배열 중간에 구멍(삭제/방출 등으로 인덱스가 비는 경우)이 있으면
+// 이를 배열이 아니라 숫자 키를 가진 객체로 돌려준다. Array.isArray()로만 체크하면
+// 이런 경우 전체를 빈 목록으로 취급해버리므로, 두 형태를 모두 받아 순서를 보존한
+// 배열로 정규화한다.
+const normalizeCaughtPokemon = (value) => {
+  if (Array.isArray(value)) return value;
+  if (value && typeof value === 'object') {
+    return Object.keys(value)
+      .sort((a, b) => Number(a) - Number(b))
+      .map((key) => value[key]);
+  }
+  return [];
+};
+
 const accountMention = (account) => {
   const cleaned = String(account || '').trim().replace(/^@/, '');
   return cleaned ? `@${cleaned}` : '';
@@ -318,6 +332,7 @@ module.exports = {
   toProbability,
   clamp,
   accountMention,
+  normalizeCaughtPokemon,
   parseAccount,
   getAuthorAccount,
   getAuthorAccountCandidates,
