@@ -629,6 +629,39 @@ exports.sendNotify = functions.region(region.region).runWith(webhookOpts).https.
   } catch (e) { console.error('sendNotify error:', e); res.status(500).json({ error: e.message }); }
 });
 
+// ── DB 트리거: memberViewData 동기화 ──────────────────────────────
+// 프론트엔드의 memberViewData는 members의 열람용 사본인데, 예전엔 "관리자가 지금
+// 접속해 있어야만" 클라이언트가 재동기화하는 방식이라 배틀/캠핑/교환 봇처럼 서버에서
+// members를 직접 쓰는 경우 아무도 안 보고 있으면 영영 갱신이 안 됐다 (예: 엔트리 탭에
+// 특성이 실제로는 있는데 "없음"으로 보이는 문제). 여기서 서버 쪽에서 항상 동기화한다.
+const MEMBER_VIEW_OMIT_KEYS = new Set([
+  'auth', 'authUid', 'email', 'password', 'forcePasswordChange',
+  'inventory', 'money', 'purchaseHistory', 'dailyWalks', 'maxDailyWalks',
+  'lastAttendanceDate', 'trainerExp', 'canManageItems', 'isAdmin', 'isSuperAdmin', 'egg',
+]);
+
+const toMemberViewData = (member = {}, id) => {
+  const viewData = {};
+  Object.entries(member).forEach(([key, value]) => {
+    if (!MEMBER_VIEW_OMIT_KEYS.has(key)) viewData[key] = value;
+  });
+  if (id) viewData.id = id;
+  return JSON.parse(JSON.stringify(viewData, (_, v) => (v === undefined ? null : v)));
+};
+
+exports.syncMemberViewData = functions
+  .region('us-central1')
+  .database.ref('members/{memberId}')
+  .onWrite(async (change, context) => {
+    const { memberId } = context.params;
+    if (!change.after.exists()) {
+      await db.ref(`memberViewData/${memberId}`).set(null);
+      return null;
+    }
+    await db.ref(`memberViewData/${memberId}`).set(toMemberViewData(change.after.val(), memberId));
+    return null;
+  });
+
 // ── DB 트리거: 진화 감지 ──────────────────────────────────────────
 // members/{memberId}/evolutionHistory 배열이 바뀌면 맨 앞 항목을 새 진화로 판단
 exports.onEvolutionHistory = functions

@@ -518,6 +518,7 @@ function EntryTab({ party, allItems = [] }) {
                   const tc = TYPE_COLORS[t] || { bg: '#888', text: '#fff' };
                   return <span key={ti} style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: tc.bg, color: tc.text }}>{t}</span>;
                 })}
+                {p?.level && <span style={{ fontSize: 10, fontWeight: 600, color: '#666', whiteSpace: 'nowrap' }}>Lv.{p.level}</span>}
                 {p?.ability && <span style={{ fontSize: 10, color: '#666', marginLeft: 'auto', whiteSpace: 'nowrap' }}>{getAbilityKoreanName(p.ability) || p.ability}</span>}
               </div>
               {moves.length > 0 && (

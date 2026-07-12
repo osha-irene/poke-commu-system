@@ -1,6 +1,7 @@
 import campingData from '../data/camping.json';
 import { DEFAULT_IVS } from './pokemonIndividualValues';
 import { getPokemonDisplayParts } from './pokemonDisplayName';
+import { getAbilityKoreanName } from './abilityUtils';
 
 /**
  * 알 획득 가능 여부 체크 (2인 캠핑 전용)
@@ -232,6 +233,7 @@ export function hatchEgg(egg, allPokemonMaster, allMoves, movesData) {
     type: pokemonData.type,
     type2: pokemonData.type2 || null,
     level: 1,
+    caughtLevel: 1, // 알에서 부화한 순간의 레벨을 고정 저장
     hp: pokemonData.baseHp,
     maxHp: pokemonData.baseHp,
     exp: 0,
@@ -252,7 +254,12 @@ export function hatchEgg(egg, allPokemonMaster, allMoves, movesData) {
       const ranks = ['XXXS', 'XXS', 'XS', 'S', 'M', 'M', 'M', 'L', 'XL', 'XXL', 'XXXL'];
       return ranks[Math.floor(Math.random() * ranks.length)];
     })(),
-    ability: pokemonData.abilities?.[0] || '없음',
+    ability: (() => {
+      const abilitiesEn = pokemonData.abilitiesEn || [];
+      if (!abilitiesEn.length) return '없음';
+      const selectedAbilityEn = abilitiesEn[Math.floor(Math.random() * abilitiesEn.length)];
+      return getAbilityKoreanName(selectedAbilityEn) || selectedAbilityEn;
+    })(),
     isHiddenAbility: false,
     condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
     effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },

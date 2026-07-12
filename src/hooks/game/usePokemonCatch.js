@@ -93,6 +93,7 @@ export const usePokemonCatch = (
       type2: pokemonTemplate.type2 || null,
       ...getBaseStatPatch(pokemonTemplate),
       level: level,
+      caughtLevel: level, // 만난 순간의 레벨을 고정 저장 (레벨업해도 "레벨 N에 만났다" 문구가 안 바뀌도록)
       hp: pokemonTemplate.baseHp,
       maxHp: pokemonTemplate.baseHp,
       exp: 0,

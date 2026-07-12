@@ -1,7 +1,7 @@
 // src/hooks/game/useLoot.js
 // 전리품 생성 및 적용 시스템
 
-import { ref, get, set, update } from 'firebase/database';
+import { ref, get, set, runTransaction } from 'firebase/database';
 import { database } from '../../firebase';
 
 export const useLoot = (currentUser, updateCurrentUser, setMembers, allItems, members = {}, updateInventory) => {
@@ -135,21 +135,27 @@ export const useLoot = (currentUser, updateCurrentUser, setMembers, allItems, me
       return;
     }
 
-    // 돈 지급 (기존 방식 유지 — caughtPokemon 등 다른 필드를 덮어쓰지 않도록 update로 해당 필드만 갱신)
-    const latestUser = members[currentUser.id] || currentUser;
-    const newMoney = (Number(latestUser.money) || 0) + (Number(loot.money) || 0);
+    // 돈 지급 — 로컬 state(members/currentUser)가 최신이 아닐 수 있으므로, 인벤토리와 동일하게
+    // Firebase의 실제 최신 값을 기준으로 트랜잭션으로 더한다 (그렇지 않으면 로컬 값이 stale일 때
+    // 기존 소지금을 무시하고 주운 돈만 남는 문제가 생긴다).
+    const moneyRef = ref(database, `members/${currentUser.id}/money`);
+    const moneyResult = await runTransaction(moneyRef, (currentMoney) => (
+      (Number(currentMoney) || 0) + (Number(loot.money) || 0)
+    ));
+
+    if (!moneyResult.committed) {
+      console.error('❌ applyLoot: 소지금 업데이트 실패');
+      return;
+    }
+
+    const newMoney = moneyResult.snapshot.val();
 
     setMembers(prev => ({
       ...prev,
-      [currentUser.id]: { ...(prev[currentUser.id] || latestUser), money: newMoney }
+      [currentUser.id]: { ...(prev[currentUser.id] || currentUser), money: newMoney }
     }));
 
-    const memberRef = ref(database, `members/${currentUser.id}`);
-    update(memberRef, { money: newMoney }).then(() => {
-      console.log('✅ applyLoot: Firebase 저장 완료');
-    }).catch(error => {
-      console.error('❌ applyLoot: Firebase 저장 실패:', error);
-    });
+    console.log('✅ applyLoot: Firebase 저장 완료');
   };
 
   // 지역 전리품 설정 업데이트

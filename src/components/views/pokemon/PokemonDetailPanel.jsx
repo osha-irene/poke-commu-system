@@ -1100,14 +1100,19 @@ const ballImage = getBallImage();
                 {!pokemon.isPartner && pokemon.sizeRank && (
                   <div className="text-base text-gray-500 leading-relaxed italic mb-2">
                     <div>
-                      {pokemon.isFromEgg
-                        ? (pokemon.parents?.parent1 || pokemon.parents?.parent2)
-                          ? `캠핑에서 생긴 알이 레벨 ${pokemon.level}로 부화했다.`
-                          : `특별한 만남을 가지고 레벨 ${pokemon.level}로 알에서 부화했다.`
-                        : pokemon.isAdminGiven
-                          ? `레벨 ${pokemon.level}에 특별한 만남을 가졌다.`
-                          : `레벨 ${pokemon.level}에 ${pokemon.caughtLocation || pokemon.metLocation || '야생'}에서 만났다.`
-                      }
+                      {(() => {
+                        // 만난 순간의 레벨은 caughtLevel에 고정 저장된다. 이 필드가 없는 예전 개체만
+                        // 현재 level로 대체한다 (안 그러면 레벨업할 때마다 문구의 숫자가 계속 바뀐다).
+                        const metLevel = pokemon.caughtLevel ?? pokemon.level;
+                        if (pokemon.isFromEgg) {
+                          return (pokemon.parents?.parent1 || pokemon.parents?.parent2)
+                            ? `캠핑에서 생긴 알이 레벨 ${metLevel}로 부화했다.`
+                            : `특별한 만남을 가지고 레벨 ${metLevel}로 알에서 부화했다.`;
+                        }
+                        return pokemon.isAdminGiven
+                          ? `레벨 ${metLevel}에 특별한 만남을 가졌다.`
+                          : `레벨 ${metLevel}에 ${pokemon.caughtLocation || pokemon.metLocation || '야생'}에서 만났다.`;
+                      })()}
                     </div>
                     {pokemon.isFromEgg && (pokemon.parents?.parent1 || pokemon.parents?.parent2) && (
                       <div>

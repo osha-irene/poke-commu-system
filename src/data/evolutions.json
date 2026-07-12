@@ -4661,16 +4661,6 @@
       }
     },
     {
-      "from": 922,
-      "to": 923,
-      "fromName": "pawmo",
-      "toName": "pawmot",
-      "condition": {
-        "type": "level",
-        "level": 32
-      }
-    },
-    {
       "from": 924,
       "to": 925,
       "fromName": "tandemaus",
@@ -5190,6 +5180,76 @@
       "condition": {
         "type": "battleCrit",
         "count": 3
+      }
+    },
+    {
+      "from": 922,
+      "to": 923,
+      "fromName": "pawmo",
+      "toName": "pawmot",
+      "condition": {
+        "type": "item",
+        "item": "running-shoes"
+      }
+    },
+    {
+      "from": 625,
+      "to": 983,
+      "fromName": "bisharp",
+      "toName": "kingambit",
+      "condition": {
+        "type": "item",
+        "item": "leaders-crest"
+      }
+    },
+    {
+      "from": 723,
+      "to": 10244,
+      "fromName": "dartrix",
+      "toName": "decidueye-hisui",
+      "condition": {
+        "type": "item",
+        "item": "dawn-island-stone"
+      }
+    },
+    {
+      "from": 156,
+      "to": 10233,
+      "fromName": "quilava",
+      "toName": "typhlosion-hisui",
+      "condition": {
+        "type": "item",
+        "item": "dawn-island-stone"
+      }
+    },
+    {
+      "from": 502,
+      "to": 10236,
+      "fromName": "dewott",
+      "toName": "samurott-hisui",
+      "condition": {
+        "type": "item",
+        "item": "dawn-island-stone"
+      }
+    },
+    {
+      "from": 627,
+      "to": 10240,
+      "fromName": "rufflet",
+      "toName": "braviary-hisui",
+      "condition": {
+        "type": "item",
+        "item": "dawn-island-stone"
+      }
+    },
+    {
+      "from": 548,
+      "to": 10237,
+      "fromName": "petilil",
+      "toName": "lilligant-hisui",
+      "condition": {
+        "type": "item",
+        "item": "dawn-island-stone"
       }
     }
   ]

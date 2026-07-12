@@ -9,7 +9,7 @@ import { httpsCallable } from 'firebase/functions';
 import { auth, database, storage, functions } from '../../firebase';
 import { POKEBALL_LIST } from '../../styles/theme';
 import { getBaseStatPatch } from '../../utils/pokemonBaseStats';
-import { getAbilityEnglishName } from '../../utils/abilityUtils';
+import { getAbilityEnglishName, getAbilityKoreanName } from '../../utils/abilityUtils';
 import { normalizePokemonGender } from '../../utils/pokemonGender';
 import { DEFAULT_IVS, generateRandomIVs, normalizeIVs } from '../../utils/pokemonIndividualValues';
 import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
@@ -276,6 +276,7 @@ export const useAdminMembers = (
       type2: pokemonTemplate.type2 || null,
       ...getBaseStatPatch(pokemonTemplate),
       level: 1,
+      caughtLevel: 1, // 알에서 부화한 순간의 레벨을 고정 저장
       hp: pokemonTemplate.baseHp || pokemonTemplate.hp || 10,
       maxHp: pokemonTemplate.baseHp || pokemonTemplate.hp || 10,
       exp: 0,
@@ -287,7 +288,12 @@ export const useAdminMembers = (
       isPartner: false,
       isShiny: Math.random() < 0.001,
       gender: Math.random() < 0.5 ? 'male' : 'female',
-      ability: pokemonTemplate.abilities?.[0] || '없음',
+      ability: (() => {
+        const abilitiesEn = pokemonTemplate.abilitiesEn || [];
+        if (!abilitiesEn.length) return '없음';
+        const selectedAbilityEn = abilitiesEn[Math.floor(Math.random() * abilitiesEn.length)];
+        return getAbilityKoreanName(selectedAbilityEn) || selectedAbilityEn;
+      })(),
       ivs: { ...DEFAULT_IVS },
       condition: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
       effort: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
@@ -807,8 +813,8 @@ export const useAdminMembers = (
     // 기본값 설정
     const finalGender = normalizePokemonGender(gender, pokemonTemplate);
     
-    const finalAbility = ability || (pokemonTemplate.abilities && pokemonTemplate.abilities.length > 0 ? 
-      pokemonTemplate.abilities[0] : '없음');
+    const finalAbility = ability || (pokemonTemplate.abilitiesEn && pokemonTemplate.abilitiesEn.length > 0 ?
+      (getAbilityKoreanName(pokemonTemplate.abilitiesEn[0]) || pokemonTemplate.abilitiesEn[0]) : '없음');
     const finalAbilityEn = getAbilityEnglishName(finalAbility) || pokemonTemplate.abilitiesEn?.[0] || null;
     const isHiddenAbility = Boolean(pokemonTemplate.hiddenAbilityEn && finalAbilityEn === pokemonTemplate.hiddenAbilityEn);
     
@@ -834,6 +840,7 @@ export const useAdminMembers = (
       type2: pokemonTemplate.type2 || null,
       ...getBaseStatPatch(pokemonTemplate),
       level,
+      caughtLevel: level, // 지급받은 순간의 레벨을 고정 저장
       hp: pokemonTemplate.baseHp,
       maxHp: pokemonTemplate.baseHp,
       exp: 0,

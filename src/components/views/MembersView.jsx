@@ -407,11 +407,14 @@ const SIZE_DESC = {
   XXXL: '믿기 어려울 만큼 큰 크기인 것 같다.',
 };
 const getPokemonOriginLines = (p) => {
+  // 만난 순간의 레벨은 caughtLevel에 고정 저장된다. 예전에 만들어진 개체는 이 필드가 없을 수
+  // 있으니 그때만 현재 level로 대체한다 (그 이후로도 레벨업 때마다 계속 바뀌는 건 이 필드가 있으면 막힘).
+  const metLevel = p.caughtLevel ?? p.level;
   const lines = [];
   if (p.isFromEgg) {
     lines.push((p.parents?.parent1 || p.parents?.parent2)
-      ? `캠핑에서 생긴 알이 레벨 ${p.level}로 부화했다.`
-      : `특별한 만남을 가지고 레벨 ${p.level}로 알에서 부화했다.`);
+      ? `캠핑에서 생긴 알이 레벨 ${metLevel}로 부화했다.`
+      : `특별한 만남을 가지고 레벨 ${metLevel}로 알에서 부화했다.`);
     if (p.parents?.parent1 || p.parents?.parent2) {
       const pr = p.parents;
       const p1 = pr.trainer1 ? `${pr.trainer1}의 ${pr.parent1}` : pr.parent1;
@@ -419,9 +422,9 @@ const getPokemonOriginLines = (p) => {
       lines.push(p1 && p2 ? `${p1}와(과) ${p2}와(과) 성격이 닮은 것 같다.` : `${p1 || p2}와 성격이 닮은 것 같다.`);
     }
   } else if (p.isAdminGiven) {
-    lines.push(`레벨 ${p.level}에 특별한 만남을 가졌다.`);
+    lines.push(`레벨 ${metLevel}에 특별한 만남을 가졌다.`);
   } else {
-    lines.push(`레벨 ${p.level}에 ${p.caughtLocation || p.metLocation || '야생'}에서 만났다.`);
+    lines.push(`레벨 ${metLevel}에 ${p.caughtLocation || p.metLocation || '야생'}에서 만났다.`);
   }
   if (p.sizeRank) {
     const sizeStr = SIZE_DESC[p.sizeRank] || '알 수 없는 크기인 것 같다.';
@@ -2591,6 +2594,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                             const tc = TYPE_COLORS[t] || { bg: '#888', text: '#fff' };
                             return <span key={ti} style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: tc.bg, color: tc.text }}>{t}</span>;
                           })}
+                          {p.level && <span style={{ fontSize: 11, fontWeight: 600, color: '#555', whiteSpace: 'nowrap' }}>Lv.{p.level}</span>}
                           {p.ability && <span style={{ fontSize: 11, color: '#555', marginLeft: 'auto', whiteSpace: 'nowrap' }}>{getAbilityKoreanName(p.ability) || p.ability}</span>}
                           {p.isPartner && <span style={{ fontSize: 11, fontWeight: 600, color: '#d97706' }}>파트너</span>}
                         </div>
