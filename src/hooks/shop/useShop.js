@@ -1,7 +1,7 @@
 // src/hooks/shop/useShop.js - 완전한 최종 버전
 
 import { useState, useEffect } from 'react';
-import { ref, get, onChildAdded, onChildChanged, onChildRemoved, set } from 'firebase/database';
+import { ref, get, onChildAdded, onChildChanged, onChildRemoved, set, runTransaction } from 'firebase/database';
 import { database } from '../../firebase';
 import { getItemPocket } from '../../utils/itemUtils';
 
@@ -108,6 +108,13 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
     lastWeekReset: null
   });
   const [isLoading, setIsLoading] = useState(true);
+
+  // 소지금 증감 — 로컬 스냅샷(currentUser.money)이 아니라 Firebase의 실제 최신 값을 기준으로
+  // 원자적으로 반영한다. 로컬 값을 기준으로 계산하면 그 사이 다른 곳에서 바뀐 금액을 덮어쓸 수 있다.
+  const adjustMoney = (delta) => {
+    const moneyRef = ref(database, `members/${currentUser.id}/money`);
+    return runTransaction(moneyRef, (money) => (Number(money) || 0) + delta);
+  };
 
   useEffect(() => {
     if (!allItems || allItems.length === 0) return;
@@ -394,9 +401,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
       return false;
     }
 
-    updateCurrentUser({
-      money: currentUser.money + totalPrice
-    });
+    await adjustMoney(totalPrice);
 
     if (isTrash) {
       alert(`${itemData?.name || item.name} ${count}개를 버렸습니다.`);
@@ -444,9 +449,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
       return false;
     }
 
-    updateCurrentUser({
-      money: currentUser.money - box.price
-    });
+    await adjustMoney(-box.price);
 
     console.log(`✅ ${box.name} 구매 완료! ${result.name} x${result.count} 획득`);
     return true;
@@ -514,8 +517,6 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
       }
     }
     
-    const newMoney = currentUser.money - totalCost;
-
     // 몬스터볼 10개당 프리미어볼 1개 증정
     const isPokeBall = itemData.nameEn === 'poke-ball' || itemData.name === '몬스터볼';
     const premierBallCount = isPokeBall ? Math.floor(quantity / 10) : 0;
@@ -610,8 +611,8 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
           needShopUpdate = true;
         }
         
+        await adjustMoney(-totalCost);
         updateCurrentUser({
-          money: newMoney,
           purchaseHistory: purchaseHistory
         });
 
@@ -647,9 +648,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
       }
 
       if (itemType !== 'rare') {
-        updateCurrentUser({
-          money: newMoney
-        });
+        await adjustMoney(-totalCost);
       }
 
       const premierMsg = premierBallCount > 0 ? `프레미어볼 ${premierBallCount}개를 증정 받았다!` : '';

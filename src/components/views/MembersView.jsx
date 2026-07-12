@@ -419,7 +419,12 @@ const getPokemonOriginLines = (p) => {
       const pr = p.parents;
       const p1 = pr.trainer1 ? `${pr.trainer1}의 ${pr.parent1}` : pr.parent1;
       const p2 = pr.trainer2 ? `${pr.trainer2}의 ${pr.parent2}` : pr.parent2;
-      lines.push(p1 && p2 ? `${p1}와(과) ${p2}와(과) 성격이 닮은 것 같다.` : `${p1 || p2}와 성격이 닮은 것 같다.`);
+      // 트레이너 이름 두 개가 붙으면 문장이 길어져 카드 폭에서 줄바꿈이 잘 일어난다.
+      // 이 줄만 줄바꿈 없이(필요하면 살짝 작게) 한 줄로 보여준다.
+      lines.push({
+        text: p1 && p2 ? `${p1}와(과) ${p2}와(과) 성격이 닮은 것 같다.` : `${p1 || p2}와 성격이 닮은 것 같다.`,
+        nowrap: true,
+      });
     }
   } else if (p.isAdminGiven) {
     lines.push(`레벨 ${metLevel}에 특별한 만남을 가졌다.`);
@@ -431,6 +436,9 @@ const getPokemonOriginLines = (p) => {
     lines.push(p.favoriteFlavor ? `${sizeStr} ${p.favoriteFlavor}을 좋아한다.` : sizeStr);
   } else if (p.favoriteFlavor) {
     lines.push(`${p.favoriteFlavor}을 좋아한다.`);
+  }
+  if (p.ability) {
+    lines.push(`특성은 ${getAbilityKoreanName(p.ability) || p.ability}.`);
   }
   return lines;
 };
@@ -2595,7 +2603,6 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                             return <span key={ti} style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: tc.bg, color: tc.text }}>{t}</span>;
                           })}
                           {p.level && <span style={{ fontSize: 11, fontWeight: 600, color: '#555', whiteSpace: 'nowrap' }}>Lv.{p.level}</span>}
-                          {p.ability && <span style={{ fontSize: 11, color: '#555', marginLeft: 'auto', whiteSpace: 'nowrap' }}>{getAbilityKoreanName(p.ability) || p.ability}</span>}
                           {p.isPartner && <span style={{ fontSize: 11, fontWeight: 600, color: '#d97706' }}>파트너</span>}
                         </div>
                         {moves.length > 0 && (
@@ -2648,9 +2655,14 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {/* 출신 메모 */}
                       <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.90)', lineHeight: 1.75 }}>
-                        {getPokemonOriginLines(p).map((line, li) => (
-                          <div key={li}>{line}</div>
-                        ))}
+                        {getPokemonOriginLines(p).map((line, li) => {
+                          const isObj = line && typeof line === 'object';
+                          const text = isObj ? line.text : line;
+                          const nowrap = isObj && line.nowrap;
+                          return (
+                            <div key={li} style={nowrap ? { whiteSpace: 'nowrap', fontSize: 10 } : undefined}>{text}</div>
+                          );
+                        })}
                       </div>
                     </div>
                     {/* 컨디션 — 하단 고정 */}
