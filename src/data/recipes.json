@@ -803,7 +803,33 @@
     { "name": "와사비소스",     "stats": { "elegance": 30 } },
     { "name": "물냉이",         "stats": { "elegance": 10, "intelligence": 10 } },
     { "name": "바질",           "stats": { "elegance": 10, "intelligence": 15 } },
-    { "name": "달콤한꿀",       "stats": { "cuteness": 20, "beauty": 10 } }
+    { "name": "달콤한꿀",       "stats": { "cuteness": 20, "beauty": 10 } },
+    { "name": "설탕", "stats": { "cuteness": 10 } },
+    { "name": "밀가루", "stats": { "beauty": 10 } },
+    { "name": "오렌지", "stats": { "strength": 10 } },
+    { "name": "당근", "stats": { "cuteness": 10 } },
+    { "name": "럭키의 알", "stats": { "beauty": 10 } },
+    { "name": "옥수수", "stats": { "cuteness": 10 } },
+    { "name": "고추장", "stats": { "elegance": 10 } },
+    { "name": "간장", "stats": { "strength": 10 } },
+    { "name": "된장", "stats": { "intelligence": 20 } },
+    { "name": "미역", "stats": { "strength": 10 } },
+    { "name": "부추", "stats": { "elegance": 10 } },
+    { "name": "홍차", "stats": { "intelligence": 20 } },
+    { "name": "커피", "stats": { "intelligence": 20 } },
+    { "name": "초콜릿", "stats": { "intelligence": 20 } },
+    { "name": "초코", "stats": { "intelligence": 20 } },
+    { "name": "아몬드가루", "stats": { "intelligence": 20 } },
+    { "name": "젤라틴", "stats": { "beauty": 20 } },
+    { "name": "식용 얼음", "stats": { "beauty": 20 } },
+    { "name": "민트", "stats": { "beauty": 20 } },
+    { "name": "두리안", "stats": { "intelligence": 30 } },
+    { "name": "마라소스", "stats": { "elegance": 30 } },
+    { "name": "대포무노 먹물", "stats": { "intelligence": 30 } },
+    { "name": "떡", "stats": { "cuteness": 10 } },
+    { "name": "로셀열매", "stats": { "cuteness": 40 } },
+    { "name": "악키열매", "stats": { "strength": 15 } },
+    { "name": "타라프열매", "stats": { "intelligence": 15 } }
   ],
   "statBasedRecipes": [
     {
@@ -822,6 +848,276 @@
           "beauty": 25
         },
         "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/berry.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_spicy_special",
+      "name": "특제 매운 오란다",
+      "type": "stat",
+      "description": "재료의 매운맛 스탯 합이 51 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "elegance": 51
+      },
+      "result": {
+              "name": "특제 매운 오란다",
+              "pocket": "berries",
+              "effect": "포켓몬의 근사함을 5 증가시킨다",
+              "conditionBoost": {
+                      "elegance": 5
+              },
+              "spriteUrl": "/img/items/oranda/spicy-oranda-ss.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_spicy_adv",
+      "name": "고급 매운 오란다",
+      "type": "stat",
+      "description": "재료의 매운맛 스탯 합이 41 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "elegance": 41
+      },
+      "result": {
+              "name": "고급 매운 오란다",
+              "pocket": "berries",
+              "effect": "포켓몬의 근사함을 3 증가시킨다",
+              "conditionBoost": {
+                      "elegance": 3
+              },
+              "spriteUrl": "/img/items/oranda/spicy-oranda-sp.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_spicy_base",
+      "name": "매운 오란다",
+      "type": "stat",
+      "description": "재료의 매운맛 스탯 합이 21 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "elegance": 21
+      },
+      "result": {
+              "name": "매운 오란다",
+              "pocket": "berries",
+              "effect": "포켓몬의 근사함을 1 증가시킨다",
+              "conditionBoost": {
+                      "elegance": 1
+              },
+              "spriteUrl": "/img/items/oranda/spicy-oranda.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_dry_special",
+      "name": "특제 떫은 오란다",
+      "type": "stat",
+      "description": "재료의 떫은맛 스탯 합이 51 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "beauty": 51
+      },
+      "result": {
+              "name": "특제 떫은 오란다",
+              "pocket": "berries",
+              "effect": "포켓몬의 아름다움을 5 증가시킨다",
+              "conditionBoost": {
+                      "beauty": 5
+              },
+              "spriteUrl": "/img/items/oranda/dry-oranda-ss.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_dry_adv",
+      "name": "고급 떫은 오란다",
+      "type": "stat",
+      "description": "재료의 떫은맛 스탯 합이 41 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "beauty": 41
+      },
+      "result": {
+              "name": "고급 떫은 오란다",
+              "pocket": "berries",
+              "effect": "포켓몬의 아름다움을 3 증가시킨다",
+              "conditionBoost": {
+                      "beauty": 3
+              },
+              "spriteUrl": "/img/items/oranda/dry-oranda-sp.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_dry_base",
+      "name": "떫은 오란다",
+      "type": "stat",
+      "description": "재료의 떫은맛 스탯 합이 21 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "beauty": 21
+      },
+      "result": {
+              "name": "떫은 오란다",
+              "pocket": "berries",
+              "effect": "포켓몬의 아름다움을 1 증가시킨다",
+              "conditionBoost": {
+                      "beauty": 1
+              },
+              "spriteUrl": "/img/items/oranda/dry-oranda.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_sweet_special",
+      "name": "특제 단 오란다",
+      "type": "stat",
+      "description": "재료의 단맛 스탯 합이 51 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "cuteness": 51
+      },
+      "result": {
+              "name": "특제 단 오란다",
+              "pocket": "berries",
+              "effect": "포켓몬의 귀여움을 5 증가시킨다",
+              "conditionBoost": {
+                      "cuteness": 5
+              },
+              "spriteUrl": "/img/items/oranda/sweet-oranda-ss.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_sweet_adv",
+      "name": "고급 단 오란다",
+      "type": "stat",
+      "description": "재료의 단맛 스탯 합이 41 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "cuteness": 41
+      },
+      "result": {
+              "name": "고급 단 오란다",
+              "pocket": "berries",
+              "effect": "포켓몬의 귀여움을 3 증가시킨다",
+              "conditionBoost": {
+                      "cuteness": 3
+              },
+              "spriteUrl": "/img/items/oranda/sweet-oranda-sp.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_sweet_base",
+      "name": "단 오란다",
+      "type": "stat",
+      "description": "재료의 단맛 스탯 합이 21 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "cuteness": 21
+      },
+      "result": {
+              "name": "단 오란다",
+              "pocket": "berries",
+              "effect": "포켓몬의 귀여움을 1 증가시킨다",
+              "conditionBoost": {
+                      "cuteness": 1
+              },
+              "spriteUrl": "/img/items/oranda/sweet-oranda.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_bitter_special",
+      "name": "특제 쓴 오란다",
+      "type": "stat",
+      "description": "재료의 쓴맛 스탯 합이 51 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "intelligence": 51
+      },
+      "result": {
+              "name": "특제 쓴 오란다",
+              "pocket": "berries",
+              "effect": "포켓몬의 슬기로움을 5 증가시킨다",
+              "conditionBoost": {
+                      "intelligence": 5
+              },
+              "spriteUrl": "/img/items/oranda/bitter-oranda-ss.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_bitter_adv",
+      "name": "고급 쓴 오란다",
+      "type": "stat",
+      "description": "재료의 쓴맛 스탯 합이 41 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "intelligence": 41
+      },
+      "result": {
+              "name": "고급 쓴 오란다",
+              "pocket": "berries",
+              "effect": "포켓몬의 슬기로움을 3 증가시킨다",
+              "conditionBoost": {
+                      "intelligence": 3
+              },
+              "spriteUrl": "/img/items/oranda/bitter-oranda-sp.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_bitter_base",
+      "name": "쓴 오란다",
+      "type": "stat",
+      "description": "재료의 쓴맛 스탯 합이 21 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "intelligence": 21
+      },
+      "result": {
+              "name": "쓴 오란다",
+              "pocket": "berries",
+              "effect": "포켓몬의 슬기로움을 1 증가시킨다",
+              "conditionBoost": {
+                      "intelligence": 1
+              },
+              "spriteUrl": "/img/items/oranda/bitter-oranda.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_sour_special",
+      "name": "특제 신 오란다",
+      "type": "stat",
+      "description": "재료의 신맛 스탯 합이 51 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "strength": 51
+      },
+      "result": {
+              "name": "특제 신 오란다",
+              "pocket": "berries",
+              "effect": "포켓몬의 강인함을 5 증가시킨다",
+              "conditionBoost": {
+                      "strength": 5
+              },
+              "spriteUrl": "/img/items/oranda/sour-oranda-ss.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_sour_adv",
+      "name": "고급 신 오란다",
+      "type": "stat",
+      "description": "재료의 신맛 스탯 합이 41 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "strength": 41
+      },
+      "result": {
+              "name": "고급 신 오란다",
+              "pocket": "berries",
+              "effect": "포켓몬의 강인함을 3 증가시킨다",
+              "conditionBoost": {
+                      "strength": 3
+              },
+              "spriteUrl": "/img/items/oranda/sour-oranda-sp.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_sour_base",
+      "name": "신 오란다",
+      "type": "stat",
+      "description": "재료의 신맛 스탯 합이 21 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "strength": 21
+      },
+      "result": {
+              "name": "신 오란다",
+              "pocket": "berries",
+              "effect": "포켓몬의 강인함을 1 증가시킨다",
+              "conditionBoost": {
+                      "strength": 1
+              },
+              "spriteUrl": "/img/items/oranda/sour-oranda.png"
       }
     }
   ]
