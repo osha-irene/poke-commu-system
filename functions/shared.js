@@ -248,6 +248,7 @@ const createBotContext = ({ instanceUrl, token, botAccount }) => {
             const err = new Error(`Mastodon API ${response.statusCode}`);
             err.statusCode = response.statusCode;
             err.response = parsed;
+            err.retryAfter = Number(response.headers['retry-after']) || null;
             reject(err);
             return;
           }

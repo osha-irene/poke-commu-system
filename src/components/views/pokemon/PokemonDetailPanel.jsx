@@ -1109,7 +1109,7 @@ const ballImage = getBallImage();
                             ? `캠핑에서 생긴 알이 레벨 ${metLevel}로 부화했다.`
                             : `특별한 만남을 가지고 레벨 ${metLevel}로 알에서 부화했다.`;
                         }
-                        return pokemon.isAdminGiven
+                        return (pokemon.isAdminGiven && !(pokemon.caughtLocation || pokemon.metLocation))
                           ? `레벨 ${metLevel}에 특별한 만남을 가졌다.`
                           : `레벨 ${metLevel}에 ${pokemon.caughtLocation || pokemon.metLocation || '야생'}에서 만났다.`;
                       })()}

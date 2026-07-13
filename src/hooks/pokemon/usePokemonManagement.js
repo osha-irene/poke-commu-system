@@ -642,12 +642,12 @@ const usePokemonManagement = (
     }
 
     if (isPartnerPokemon) {
-      updateCurrentUser({ partnerPokemon: { ...pokemon, heldItem: itemName } });
+      await updateCurrentUser({ partnerPokemon: { ...pokemon, heldItem: itemName } });
     } else {
       const newCaughtPokemon = currentUser.caughtPokemon.map(p =>
         p && p.uniqueId === pokemonUniqueId ? { ...p, heldItem: itemName } : p
       );
-      updateCurrentUser({ caughtPokemon: newCaughtPokemon });
+      await updateCurrentUser({ caughtPokemon: newCaughtPokemon });
     }
     alert((pokemon.nickname || pokemon.name) + '에게 ' + itemName + '을(를) 주었습니다.');
     return true;
@@ -691,12 +691,12 @@ const usePokemonManagement = (
     }
 
     if (isPartnerPokemon) {
-      updateCurrentUser({ partnerPokemon: { ...pokemon, heldItem: null } });
+      await updateCurrentUser({ partnerPokemon: { ...pokemon, heldItem: null } });
     } else {
       const newCaughtPokemon = currentUser.caughtPokemon.map(p =>
         p && p.uniqueId === pokemonUniqueId ? { ...p, heldItem: null } : p
       );
-      updateCurrentUser({ caughtPokemon: newCaughtPokemon });
+      await updateCurrentUser({ caughtPokemon: newCaughtPokemon });
     }
     alert((pokemon.nickname || pokemon.name) + '에게서 ' + itemName + '을(를) 뺐습니다!');
   };

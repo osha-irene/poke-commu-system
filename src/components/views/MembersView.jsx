@@ -426,7 +426,7 @@ const getPokemonOriginLines = (p) => {
         nowrap: true,
       });
     }
-  } else if (p.isAdminGiven) {
+  } else if (p.isAdminGiven && !(p.caughtLocation || p.metLocation)) {
     lines.push(`레벨 ${metLevel}에 특별한 만남을 가졌다.`);
   } else {
     lines.push(`레벨 ${metLevel}에 ${p.caughtLocation || p.metLocation || '야생'}에서 만났다.`);

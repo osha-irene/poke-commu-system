@@ -137,6 +137,7 @@ const getContestBot = () => {
 const notifyBot = createNotifyBot({
   makeMastodonRequest: notifyCtx.makeMastodonRequest,
   instanceUrl: INSTANCE_URL,
+  db,
 });
 
 // ── 공통 처리 헬퍼 ───────────────────────────────────────────────
@@ -785,12 +786,19 @@ exports.onCookingHistory = functions
     const trainerName = member.name || member.nickname || '트레이너';
     const itemName = latest.itemName || latest.recipeName || '요리';
 
+    // 오란다는 요리로 취급하지 않음 — 알림 대상에서 제외
+    const isOranda = itemName.includes('오란다') || String(latest.recipeId || '').includes('oranda');
+    if (isOranda) return null;
+
     const isFailure = latest.isFailure === true || latest.success === false || String(latest.recipeId || '').startsWith('fail_');
+    const isFirstDiscovery = latest.isFirstDiscovery === true;
+
+    // 실패한 요리 / 처음 만든 요리만 알림
+    if (!isFailure && !isFirstDiscovery) return null;
+
     const message = isFailure
       ? `🍳 ${trainerName}가 요리에 실패했다! ${itemName}가 만들어졌다...!`
-      : latest.isFirstDiscovery
-        ? `🍳 ${trainerName}가 처음으로 ${itemName}을(를) 만들었다!`
-        : `🍳 ${trainerName}가 ${itemName}을(를) 만들었다!`;
+      : `🍳 ${trainerName}가 처음으로 ${itemName}을(를) 만들었다!`;
 
     try {
       await notifyBot.broadcast(message, 'public');
