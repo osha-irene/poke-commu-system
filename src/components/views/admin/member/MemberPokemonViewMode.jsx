@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRightLeft, Edit, Gift, Plus, RefreshCw, Sparkles, Trash2, X } from 'lucide-react';
+import { ArrowRightLeft, Edit, Gift, Plus, RefreshCw, Sparkles, Swords, Trash2, X } from 'lucide-react';
 import FormIconSprite from '../../pokemon/FormIconSprite';
 import { getOwnedPokemonDisplayParts } from '../../../../utils/ownedPokemonDisplay';
 import { getGenderedSpriteUrl } from '../../../../utils/pokemonImageUtils';
@@ -7,6 +7,7 @@ import { getGenderedSpriteUrl } from '../../../../utils/pokemonImageUtils';
 export default function MemberPokemonViewMode({
   member,
   allPokemonMaster = [],
+  allMoves = [],
   getPokemonFormCandidates,
   onStartEdit,
   onChangeForm,
@@ -15,6 +16,7 @@ export default function MemberPokemonViewMode({
   onStartTransfer,
   maxNonPartnerPokemon = 18,
 }) {
+  const isNpcMember = Boolean(member?.isNPC);
   const [openFormPokemonId, setOpenFormPokemonId] = useState(null);
   const partnerPokemon = member?.partnerPokemon?.uniqueId ? member.partnerPokemon : null;
   const caughtPokemon = member?.caughtPokemon?.filter(pokemon => pokemon && pokemon.uniqueId) || [];
@@ -111,6 +113,16 @@ export default function MemberPokemonViewMode({
                     <div className="flex items-center gap-1 mt-1">
                       <Gift size={10} className="text-purple-500" />
                       <p className="text-xs text-purple-600">{pokemon.heldItem}</p>
+                    </div>
+                  )}
+                  {isNpcMember && pokemon.moves?.length > 0 && (
+                    <div className="flex items-start gap-1 mt-1">
+                      <Swords size={10} className="text-teal-600 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-teal-700 leading-snug">
+                        {pokemon.moves
+                          .map(move => allMoves.find(m => m.id === move.moveId)?.name || '???')
+                          .join(', ')}
+                      </p>
                     </div>
                   )}
                 </div>

@@ -39,6 +39,619 @@
         },
         "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/potion.png"
       }
+    },
+    {
+      "id": "recipe_oranda_spicy_base_1",
+      "name": "매운 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 매운맛 오란다.",
+      "ingredients": [
+        { "name": "버치열매", "count": 3 }
+      ],
+      "result": {
+        "name": "매운 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 근사함을 1 증가시킨다",
+        "conditionBoost": { "elegance": 1 },
+        "spriteUrl": "/img/items/oranda/spicy-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_spicy_base_2",
+      "name": "매운 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 매운맛 오란다.",
+      "ingredients": [
+        { "name": "버치열매", "count": 2 },
+        { "name": "과사열매", "count": 1 }
+      ],
+      "result": {
+        "name": "매운 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 근사함을 1 증가시킨다",
+        "conditionBoost": { "elegance": 1 },
+        "spriteUrl": "/img/items/oranda/spicy-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_spicy_base_3",
+      "name": "매운 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 매운맛 오란다.",
+      "ingredients": [
+        { "name": "버치열매", "count": 1 },
+        { "name": "과사열매", "count": 2 }
+      ],
+      "result": {
+        "name": "매운 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 근사함을 1 증가시킨다",
+        "conditionBoost": { "elegance": 1 },
+        "spriteUrl": "/img/items/oranda/spicy-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_spicy_base_4",
+      "name": "매운 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 매운맛 오란다.",
+      "ingredients": [
+        { "name": "과사열매", "count": 3 }
+      ],
+      "result": {
+        "name": "매운 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 근사함을 1 증가시킨다",
+        "conditionBoost": { "elegance": 1 },
+        "spriteUrl": "/img/items/oranda/spicy-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_spicy_adv_1",
+      "name": "고급 매운 오란다",
+      "type": "fixed",
+      "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 매운맛 오란다.",
+      "ingredients": [
+        { "name": "무화열매", "count": 1 },
+        { "name": "버치열매", "count": 1 },
+        { "name": "과사열매", "count": 1 }
+      ],
+      "result": {
+        "name": "고급 매운 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 근사함을 3 증가시킨다",
+        "conditionBoost": { "elegance": 3 },
+        "spriteUrl": "/img/items/oranda/spicy-oranda-sp.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_spicy_adv_2",
+      "name": "고급 매운 오란다",
+      "type": "fixed",
+      "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 매운맛 오란다.",
+      "ingredients": [
+        { "name": "무화열매", "count": 2 },
+        { "name": "버치열매", "count": 1 }
+      ],
+      "result": {
+        "name": "고급 매운 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 근사함을 3 증가시킨다",
+        "conditionBoost": { "elegance": 3 },
+        "spriteUrl": "/img/items/oranda/spicy-oranda-sp.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_spicy_special_1",
+      "name": "특제 매운 오란다",
+      "type": "fixed",
+      "description": "와작바작콰삭한 식감이 영운님도 반하고 갈 명물 특제 매운맛 오란다.",
+      "ingredients": [
+        { "name": "의문열매", "count": 1 },
+        { "name": "무화열매", "count": 1 },
+        { "name": "버치열매", "count": 1 }
+      ],
+      "result": {
+        "name": "특제 매운 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 근사함을 5 증가시킨다",
+        "conditionBoost": { "elegance": 5 },
+        "spriteUrl": "/img/items/oranda/spicy-oranda-ss.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_dry_base_1",
+      "name": "떫은 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 떫은맛 오란다.",
+      "ingredients": [
+        { "name": "유루열매", "count": 3 }
+      ],
+      "result": {
+        "name": "떫은 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 아름다움을 1 증가시킨다",
+        "conditionBoost": { "beauty": 1 },
+        "spriteUrl": "/img/items/oranda/dry-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_dry_base_2",
+      "name": "떫은 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 떫은맛 오란다.",
+      "ingredients": [
+        { "name": "유루열매", "count": 2 },
+        { "name": "오랭열매", "count": 1 }
+      ],
+      "result": {
+        "name": "떫은 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 아름다움을 1 증가시킨다",
+        "conditionBoost": { "beauty": 1 },
+        "spriteUrl": "/img/items/oranda/dry-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_dry_base_3",
+      "name": "떫은 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 떫은맛 오란다.",
+      "ingredients": [
+        { "name": "유루열매", "count": 1 },
+        { "name": "오랭열매", "count": 2 }
+      ],
+      "result": {
+        "name": "떫은 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 아름다움을 1 증가시킨다",
+        "conditionBoost": { "beauty": 1 },
+        "spriteUrl": "/img/items/oranda/dry-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_dry_base_4",
+      "name": "떫은 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 떫은맛 오란다.",
+      "ingredients": [
+        { "name": "오랭열매", "count": 3 }
+      ],
+      "result": {
+        "name": "떫은 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 아름다움을 1 증가시킨다",
+        "conditionBoost": { "beauty": 1 },
+        "spriteUrl": "/img/items/oranda/dry-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_dry_adv_1",
+      "name": "고급 떫은 오란다",
+      "type": "fixed",
+      "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 떫은맛 오란다.",
+      "ingredients": [
+        { "name": "위키열매", "count": 1 },
+        { "name": "유루열매", "count": 1 },
+        { "name": "오랭열매", "count": 1 }
+      ],
+      "result": {
+        "name": "고급 떫은 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 아름다움을 3 증가시킨다",
+        "conditionBoost": { "beauty": 3 },
+        "spriteUrl": "/img/items/oranda/dry-oranda-sp.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_dry_adv_2",
+      "name": "고급 떫은 오란다",
+      "type": "fixed",
+      "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 떫은맛 오란다.",
+      "ingredients": [
+        { "name": "위키열매", "count": 2 },
+        { "name": "유루열매", "count": 1 }
+      ],
+      "result": {
+        "name": "고급 떫은 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 아름다움을 3 증가시킨다",
+        "conditionBoost": { "beauty": 3 },
+        "spriteUrl": "/img/items/oranda/dry-oranda-sp.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_dry_special_1",
+      "name": "특제 떫은 오란다",
+      "type": "fixed",
+      "description": "와작바작콰삭한 식감이 영운님도 반하고 갈 명물 특제 떫은맛 오란다.",
+      "ingredients": [
+        { "name": "미클열매", "count": 1 },
+        { "name": "위키열매", "count": 1 },
+        { "name": "유루열매", "count": 1 }
+      ],
+      "result": {
+        "name": "특제 떫은 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 아름다움을 5 증가시킨다",
+        "conditionBoost": { "beauty": 5 },
+        "spriteUrl": "/img/items/oranda/dry-oranda-ss.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sweet_base_1",
+      "name": "단 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 단맛 오란다.",
+      "ingredients": [
+        { "name": "복슝열매", "count": 3 }
+      ],
+      "result": {
+        "name": "단 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 귀여움을 1 증가시킨다",
+        "conditionBoost": { "cuteness": 1 },
+        "spriteUrl": "/img/items/oranda/sweet-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sweet_base_2",
+      "name": "단 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 단맛 오란다.",
+      "ingredients": [
+        { "name": "복슝열매", "count": 2 },
+        { "name": "시몬열매", "count": 1 }
+      ],
+      "result": {
+        "name": "단 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 귀여움을 1 증가시킨다",
+        "conditionBoost": { "cuteness": 1 },
+        "spriteUrl": "/img/items/oranda/sweet-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sweet_base_3",
+      "name": "단 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 단맛 오란다.",
+      "ingredients": [
+        { "name": "복슝열매", "count": 1 },
+        { "name": "시몬열매", "count": 2 }
+      ],
+      "result": {
+        "name": "단 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 귀여움을 1 증가시킨다",
+        "conditionBoost": { "cuteness": 1 },
+        "spriteUrl": "/img/items/oranda/sweet-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sweet_base_4",
+      "name": "단 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 단맛 오란다.",
+      "ingredients": [
+        { "name": "시몬열매", "count": 3 }
+      ],
+      "result": {
+        "name": "단 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 귀여움을 1 증가시킨다",
+        "conditionBoost": { "cuteness": 1 },
+        "spriteUrl": "/img/items/oranda/sweet-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sweet_adv_1",
+      "name": "고급 단 오란다",
+      "type": "fixed",
+      "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 단맛 오란다.",
+      "ingredients": [
+        { "name": "마고열매", "count": 1 },
+        { "name": "복슝열매", "count": 1 },
+        { "name": "시몬열매", "count": 1 }
+      ],
+      "result": {
+        "name": "고급 단 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 귀여움을 3 증가시킨다",
+        "conditionBoost": { "cuteness": 3 },
+        "spriteUrl": "/img/items/oranda/sweet-oranda-sp.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sweet_adv_2",
+      "name": "고급 단 오란다",
+      "type": "fixed",
+      "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 단맛 오란다.",
+      "ingredients": [
+        { "name": "마고열매", "count": 2 },
+        { "name": "복슝열매", "count": 1 }
+      ],
+      "result": {
+        "name": "고급 단 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 귀여움을 3 증가시킨다",
+        "conditionBoost": { "cuteness": 3 },
+        "spriteUrl": "/img/items/oranda/sweet-oranda-sp.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sweet_special_1",
+      "name": "특제 단 오란다",
+      "type": "fixed",
+      "description": "와작바작콰삭한 식감이 영운님도 반하고 갈 명물 특제 단맛 오란다.",
+      "ingredients": [
+        { "name": "애슈열매", "count": 1 },
+        { "name": "마고열매", "count": 1 },
+        { "name": "복슝열매", "count": 1 }
+      ],
+      "result": {
+        "name": "특제 단 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 귀여움을 5 증가시킨다",
+        "conditionBoost": { "cuteness": 5 },
+        "spriteUrl": "/img/items/oranda/sweet-oranda-ss.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sweet_special_2",
+      "name": "특제 단 오란다",
+      "type": "fixed",
+      "description": "와작바작콰삭한 식감이 영운님도 반하고 갈 명물 특제 단맛 오란다.",
+      "ingredients": [
+        { "name": "로셀열매", "count": 1 },
+        { "name": "마고열매", "count": 1 },
+        { "name": "시몬열매", "count": 1 }
+      ],
+      "result": {
+        "name": "특제 단 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 귀여움을 5 증가시킨다",
+        "conditionBoost": { "cuteness": 5 },
+        "spriteUrl": "/img/items/oranda/sweet-oranda-ss.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_bitter_base_1",
+      "name": "쓴 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 쓴맛 오란다.",
+      "ingredients": [
+        { "name": "복분열매", "count": 3 }
+      ],
+      "result": {
+        "name": "쓴 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 슬기로움을 1 증가시킨다",
+        "conditionBoost": { "intelligence": 1 },
+        "spriteUrl": "/img/items/oranda/bitter-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_bitter_base_2",
+      "name": "쓴 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 쓴맛 오란다.",
+      "ingredients": [
+        { "name": "복분열매", "count": 2 },
+        { "name": "리샘열매", "count": 1 }
+      ],
+      "result": {
+        "name": "쓴 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 슬기로움을 1 증가시킨다",
+        "conditionBoost": { "intelligence": 1 },
+        "spriteUrl": "/img/items/oranda/bitter-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_bitter_base_3",
+      "name": "쓴 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 쓴맛 오란다.",
+      "ingredients": [
+        { "name": "복분열매", "count": 1 },
+        { "name": "리샘열매", "count": 2 }
+      ],
+      "result": {
+        "name": "쓴 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 슬기로움을 1 증가시킨다",
+        "conditionBoost": { "intelligence": 1 },
+        "spriteUrl": "/img/items/oranda/bitter-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_bitter_base_4",
+      "name": "쓴 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 쓴맛 오란다.",
+      "ingredients": [
+        { "name": "리샘열매", "count": 3 }
+      ],
+      "result": {
+        "name": "쓴 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 슬기로움을 1 증가시킨다",
+        "conditionBoost": { "intelligence": 1 },
+        "spriteUrl": "/img/items/oranda/bitter-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_bitter_adv_1",
+      "name": "고급 쓴 오란다",
+      "type": "fixed",
+      "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 쓴맛 오란다.",
+      "ingredients": [
+        { "name": "아바열매", "count": 1 },
+        { "name": "복분열매", "count": 1 },
+        { "name": "리샘열매", "count": 1 }
+      ],
+      "result": {
+        "name": "고급 쓴 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 슬기로움을 3 증가시킨다",
+        "conditionBoost": { "intelligence": 3 },
+        "spriteUrl": "/img/items/oranda/bitter-oranda-sp.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_bitter_adv_2",
+      "name": "고급 쓴 오란다",
+      "type": "fixed",
+      "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 쓴맛 오란다.",
+      "ingredients": [
+        { "name": "아바열매", "count": 2 },
+        { "name": "복분열매", "count": 1 }
+      ],
+      "result": {
+        "name": "고급 쓴 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 슬기로움을 3 증가시킨다",
+        "conditionBoost": { "intelligence": 3 },
+        "spriteUrl": "/img/items/oranda/bitter-oranda-sp.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_bitter_special_1",
+      "name": "특제 쓴 오란다",
+      "type": "fixed",
+      "description": "와작바작콰삭한 식감이 영운님도 반하고 갈 명물 특제 쓴맛 오란다.",
+      "ingredients": [
+        { "name": "자보열매", "count": 1 },
+        { "name": "아바열매", "count": 1 },
+        { "name": "복분열매", "count": 1 }
+      ],
+      "result": {
+        "name": "특제 쓴 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 슬기로움을 5 증가시킨다",
+        "conditionBoost": { "intelligence": 5 },
+        "spriteUrl": "/img/items/oranda/bitter-oranda-ss.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sour_base_1",
+      "name": "신 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 신맛 오란다.",
+      "ingredients": [
+        { "name": "배리열매", "count": 3 }
+      ],
+      "result": {
+        "name": "신 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 강인함을 1 증가시킨다",
+        "conditionBoost": { "strength": 1 },
+        "spriteUrl": "/img/items/oranda/sour-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sour_base_2",
+      "name": "신 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 신맛 오란다.",
+      "ingredients": [
+        { "name": "배리열매", "count": 2 },
+        { "name": "자뭉열매", "count": 1 }
+      ],
+      "result": {
+        "name": "신 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 강인함을 1 증가시킨다",
+        "conditionBoost": { "strength": 1 },
+        "spriteUrl": "/img/items/oranda/sour-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sour_base_3",
+      "name": "신 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 신맛 오란다.",
+      "ingredients": [
+        { "name": "배리열매", "count": 1 },
+        { "name": "자뭉열매", "count": 2 }
+      ],
+      "result": {
+        "name": "신 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 강인함을 1 증가시킨다",
+        "conditionBoost": { "strength": 1 },
+        "spriteUrl": "/img/items/oranda/sour-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sour_base_4",
+      "name": "신 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 신맛 오란다.",
+      "ingredients": [
+        { "name": "자뭉열매", "count": 3 }
+      ],
+      "result": {
+        "name": "신 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 강인함을 1 증가시킨다",
+        "conditionBoost": { "strength": 1 },
+        "spriteUrl": "/img/items/oranda/sour-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sour_adv_1",
+      "name": "고급 신 오란다",
+      "type": "fixed",
+      "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 신맛 오란다.",
+      "ingredients": [
+        { "name": "파야열매", "count": 1 },
+        { "name": "배리열매", "count": 1 },
+        { "name": "자뭉열매", "count": 1 }
+      ],
+      "result": {
+        "name": "고급 신 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 강인함을 3 증가시킨다",
+        "conditionBoost": { "strength": 3 },
+        "spriteUrl": "/img/items/oranda/sour-oranda-sp.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sour_adv_2",
+      "name": "고급 신 오란다",
+      "type": "fixed",
+      "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 신맛 오란다.",
+      "ingredients": [
+        { "name": "파야열매", "count": 2 },
+        { "name": "배리열매", "count": 1 }
+      ],
+      "result": {
+        "name": "고급 신 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 강인함을 3 증가시킨다",
+        "conditionBoost": { "strength": 3 },
+        "spriteUrl": "/img/items/oranda/sour-oranda-sp.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sour_special_1",
+      "name": "특제 신 오란다",
+      "type": "fixed",
+      "description": "와작바작콰삭한 식감이 영운님도 반하고 갈 명물 특제 신맛 오란다.",
+      "ingredients": [
+        { "name": "애터열매", "count": 1 },
+        { "name": "파야열매", "count": 1 },
+        { "name": "배리열매", "count": 1 }
+      ],
+      "result": {
+        "name": "특제 신 오란다",
+        "pocket": "berries",
+        "effect": "포켓몬의 강인함을 5 증가시킨다",
+        "conditionBoost": { "strength": 5 },
+        "spriteUrl": "/img/items/oranda/sour-oranda-ss.png"
+      }
     }
   ],
   "ingredientStats": [

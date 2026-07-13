@@ -1707,6 +1707,7 @@ export const useAdminMembers = (
         ? { npcOrder: Number.isFinite(npcOrder) && npcOrder > 0 ? npcOrder : null }
         : {}),
       ...(settings.npcPrivate !== undefined ? { npcPrivate: !!settings.npcPrivate } : {}),
+      ...(settings.npcShowPartyDetails !== undefined ? { npcShowPartyDetails: !!settings.npcShowPartyDetails } : {}),
     };
     const updatedMember = { ...member, ...nextSettings };
 

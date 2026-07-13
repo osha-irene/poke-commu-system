@@ -1904,7 +1904,7 @@ return (
               />
             </div>
           )}
-          {currentTab === 'npcs' && <div key="npcs"><NpcView members={displayMembers} isLoading={isMembersLoading} isAdmin={isAdmin} npcOnly /></div>}
+          {currentTab === 'npcs' && <div key="npcs"><NpcView members={displayMembers} isLoading={isMembersLoading} isAdmin={isAdmin} allMoves={allMoves} npcOnly /></div>}
           {currentTab === 'pokemon' && <PokemonView />}
           {currentTab === 'items' && <ItemsView />}
           {currentTab === 'shop' && <ShopView />}
@@ -2035,7 +2035,7 @@ return (
 		  )}
 		  
 		  {currentTab === 'members' && <div key="members"><MembersView members={displayMembers} isLoading={isMembersLoading} currentUserId={currentUser?.id} isAdmin={isAdmin} titles={titles} onSwitchTab={setCurrentTab} initialMemberId={initialMemberId} onClearInitialMember={() => setInitialMemberId(null)} /></div>}
-		  {currentTab === 'npcs' && <div key="npcs"><NpcView members={displayMembers} isLoading={isMembersLoading} isAdmin={isAdmin} npcOnly onSwitchTab={setCurrentTab} /></div>}
+		  {currentTab === 'npcs' && <div key="npcs"><NpcView members={displayMembers} isLoading={isMembersLoading} isAdmin={isAdmin} allMoves={allMoves} npcOnly onSwitchTab={setCurrentTab} /></div>}
 		  {currentTab === 'pokemon' && <PokemonView />}
 		  {currentTab === 'items' && <ItemsView />}
 		  {currentTab === 'shop' && <ShopView />}

@@ -2,7 +2,7 @@
 import { Heart, ChevronLeft, ChevronRight, Shield, User } from 'lucide-react';
 import memberButtonImg from '../../assets/members/member-button.png';
 import npcBg from '../../assets/members/npcbg.png';
-import { TYPE_COLORS } from '../../constants/pokemon';
+import { TYPE_COLORS, getTypeColorByEn } from '../../constants/pokemon';
 import { getTypeColor } from '../../styles/theme';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import { getAbilityKoreanName } from '../../utils/abilityUtils';
@@ -174,9 +174,14 @@ const getPokemonAbility = pokemon => {
   return koFromEn || stored;
 };
 
-function PkDetailCard({ pokemon, large, isPartner = false }) {
+function PkDetailCard({ pokemon, large, isPartner = false, showPartyDetails = false, allMoves = [] }) {
   const types = getPokemonTypes(pokemon);
   const ability = getPokemonAbility(pokemon);
+  const moveEntries = showPartyDetails
+    ? (pokemon?.moves || [])
+        .map(move => allMoves.find(m => m.id === move.moveId))
+        .filter(Boolean)
+    : [];
   return (
     <div className={`mbr-pk${large ? ' mbr-pk--large' : ''}${isPartner ? ' mbr-pk--partner' : ''}`}>
       {isPartner && <Heart className="mbr-pk-partner-heart" size={18} aria-label="partner" fill="currentColor" strokeWidth={1.8} />}
@@ -201,14 +206,37 @@ function PkDetailCard({ pokemon, large, isPartner = false }) {
             })}
           </div>
         )}
-        {ability && <div className="mbr-pk-ability">{ability}</div>}
+        {(ability || (showPartyDetails && pokemon?.heldItem)) && (
+          <div className="mbr-pk-ability-row">
+            {ability && <span className="mbr-pk-ability">{ability}</span>}
+            {showPartyDetails && pokemon?.heldItem && (
+              <span className="mbr-pk-item">{pokemon.heldItem}</span>
+            )}
+          </div>
+        )}
+        {showPartyDetails && moveEntries.length > 0 && (
+          <div className="mbr-pk-moves">
+            {moveEntries.map((move, i) => {
+              const colors = getTypeColorByEn(move.type) || { bg: '#777', text: '#fff' };
+              return (
+                <span
+                  key={`${move.id}-${i}`}
+                  className="mbr-pk-move"
+                  style={{ background: colors.bg, color: colors.text, border: 'none' }}
+                >
+                  {move.name}
+                </span>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 /* ━━ 전체화면 오버레이 ━━ */
-function MemberOverlay({ member, onClose, isAdmin, closing }) {
+function MemberOverlay({ member, onClose, isAdmin, closing, allMoves = [] }) {
   const [phase, setPhase] = useState('intro');
   const [introVisible, setIntroVisible] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
@@ -414,7 +442,7 @@ function MemberOverlay({ member, onClose, isAdmin, closing }) {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                       {entryPokemon.map((p, i) => (
                         <Reveal key={p.uniqueId || i} delay={i * 40}>
-                        <PkDetailCard pokemon={p} large={false} isPartner={isSamePokemon(p, partner)} />
+                        <PkDetailCard pokemon={p} large={false} isPartner={isSamePokemon(p, partner)} showPartyDetails={!!member.npcShowPartyDetails} allMoves={allMoves} />
                         </Reveal>
                       ))}
                     </div>
@@ -451,7 +479,7 @@ function MemberOverlay({ member, onClose, isAdmin, closing }) {
 }
 
 /* ── 목록 뷰 ── */
-export default function NpcView({ members = {}, isLoading = false, isAdmin = false, npcOnly = false, onSwitchTab }) {
+export default function NpcView({ members = {}, isLoading = false, isAdmin = false, npcOnly = false, onSwitchTab, allMoves = [] }) {
   const [activeId, setActiveId] = useState(null);
   const [closing, setClosing]   = useState(false);
   const [returning, setReturning] = useState(false);
@@ -539,7 +567,7 @@ export default function NpcView({ members = {}, isLoading = false, isAdmin = fal
 
       {/* 전체화면 오버레이 */}
       {activeMember && (
-        <MemberOverlay member={activeMember} onClose={handleClose} isAdmin={isAdmin} closing={closing} />
+        <MemberOverlay member={activeMember} onClose={handleClose} isAdmin={isAdmin} closing={closing} allMoves={allMoves} />
       )}
     </>
   );

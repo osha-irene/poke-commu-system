@@ -140,6 +140,15 @@ function MemberInfoTab({
                   />
                   <span className="text-gray-700 font-medium">비공개 배지 표시</span>
                 </label>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={!!member.npcShowPartyDetails}
+                    onChange={(e) => onUpdateNpcSettings?.(member.id, { npcShowPartyDetails: e.target.checked })}
+                    className="w-4 h-4 rounded accent-indigo-600"
+                  />
+                  <span className="text-gray-700 font-medium">포켓몬 도구/기술 공개</span>
+                </label>
 
               </div>
             )}
