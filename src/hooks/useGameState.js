@@ -72,6 +72,8 @@ export default function useGameState() {
   const [firstCatchPokemon, setFirstCatchPokemon] = useState(null);
   const [statSelectPending, setStatSelectPending] = useState(null); // { item, pokemon, type, amount }
   const [moveChoicePending, setMoveChoicePending] = useState(null); // { item, pokemon, options, kind }
+  const [qnaItemWritePending, setQnaItemWritePending] = useState(null); // { item, permitKind }
+  const [abilitySelectPending, setAbilitySelectPending] = useState(null); // { item, pokemon, options }
   
   const allPokemonDataParsed = Array.isArray(allPokemonDataRaw) 
     ? allPokemonDataRaw 
@@ -246,7 +248,9 @@ export default function useGameState() {
     systemSettings,
     (item, pokemon, type, amount) => setStatSelectPending({ item, pokemon, type, amount }),
     (item, pokemon, options, kind) => setMoveChoicePending({ item, pokemon, options, kind }),
-    (item, permitKind) => grantQnaItemPermit(item, permitKind)
+    (item, permitKind) => setQnaItemWritePending({ item, permitKind }),
+    allPokemonMaster,
+    (item, pokemon, options) => setAbilitySelectPending({ item, pokemon, options })
   );
 
   const handleStatSelectComplete = (statKey) => {
@@ -284,31 +288,28 @@ export default function useGameState() {
     }, pokemon);
   };
 
-  // 볼 변경 티켓 / 미용실 이용권 사용 - 아이템은 소모하지 않고 QnA "아이템" 탭에
-  // 글을 한 번 쓸 수 있는 권한만 부여한다(실제 소모는 글이 등록에 성공했을 때 consumeQnaItemPermit에서 처리)
-  const grantQnaItemPermit = (item, permitKind) => {
-    if (!currentUser) return;
-    const permit = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      itemId: item?.itemId ?? item?.id ?? null,
-      itemName: item?.name || null,
-      kind: permitKind,
-      grantedAt: Date.now()
-    };
-    updateCurrentUser({ qnaItemPermits: [...(currentUser.qnaItemPermits || []), permit] });
-    alert(`${item?.name || '아이템'}을(를) 사용했습니다! QnA "아이템" 탭에 글을 한 번 쓸 수 있습니다.`);
+  // 특성패치로 특성을 고른 뒤 실제 적용 + 아이템 소모를 진행
+  const handleAbilitySelectComplete = (chosenAbility) => {
+    if (!abilitySelectPending) return;
+    const { item, pokemon } = abilitySelectPending;
+    setAbilitySelectPending(null);
+    if (!chosenAbility) return; // 취소
+    itemEffectsHook.useItemOnPokemon({
+      ...item,
+      __chosenAbility: chosenAbility
+    }, pokemon);
   };
 
-  // QnA "아이템" 탭 글이 실제로 등록된 뒤에만 호출 - 가장 먼저 받은 권한 1개를 제거하고
-  // 해당 권한을 부여한 티켓을 인벤토리에서 차감한다. 인벤토리 변경은 CLAUDE.md 규칙에 따라
-  // updateCurrentUser로 직접 건드리지 않고 runTransaction 기반 updateInventory로만 처리한다.
-  const consumeQnaItemPermit = () => {
-    if (!currentUser) return;
-    const permits = currentUser.qnaItemPermits || [];
-    if (permits.length === 0) return;
+  // 볼 변경 티켓 / 미용실 이용권 사용 시 QnA "아이템" 탭 작성 모달을 취소 없이 닫는다 (아이템 미소모)
+  const cancelQnaItemWrite = () => setQnaItemWritePending(null);
 
-    const [permitToConsume, ...remainingPermits] = permits;
-    updateCurrentUser({ qnaItemPermits: remainingPermits });
+  // QnA "아이템" 탭 글이 실제로 등록된 뒤에만 호출 - 사용했던 티켓을 인벤토리에서 차감한다.
+  // 인벤토리 변경은 CLAUDE.md 규칙에 따라 updateCurrentUser로 직접 건드리지 않고
+  // runTransaction 기반 updateInventory로만 처리한다.
+  const consumeQnaItemWrite = () => {
+    if (!currentUser || !qnaItemWritePending?.item) return;
+    const usedItem = qnaItemWritePending.item;
+    setQnaItemWritePending(null);
 
     if (currentUser.isSuperAdmin) return;
 
@@ -317,8 +318,8 @@ export default function useGameState() {
       return currentInventory
         .map(invItem => {
           if (consumed) return invItem;
-          const matches = (permitToConsume.itemId != null && invItem.itemId === permitToConsume.itemId)
-            || (permitToConsume.itemName && invItem.name === permitToConsume.itemName);
+          const matches = (usedItem.itemId != null && invItem.itemId === usedItem.itemId)
+            || (usedItem.name && invItem.name === usedItem.name);
           if (matches) {
             consumed = true;
             return { ...invItem, count: (invItem.count || 0) - 1 };
@@ -466,7 +467,11 @@ export default function useGameState() {
     handleStatSelectComplete,
     moveChoicePending,
     handleMoveChoiceComplete,
-    consumeQnaItemPermit,
+    qnaItemWritePending,
+    cancelQnaItemWrite,
+    consumeQnaItemWrite,
+    abilitySelectPending,
+    handleAbilitySelectComplete,
     regions,
     setRegions,
     allPokemon,

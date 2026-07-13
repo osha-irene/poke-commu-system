@@ -24,6 +24,8 @@ import EncounterModal from './components/modals/EncounterModal';
 import FirstCatchMemoModal from './components/modals/FirstCatchMemoModal';
 import StatSelectModal from './components/modals/StatSelectModal';
 import MoveChoiceModal from './components/views/pokemon/MoveChoiceModal';
+import QnaItemWriteModal from './components/modals/QnaItemWriteModal';
+import AbilitySelectModal from './components/modals/AbilitySelectModal';
 import EvolutionModal from './components/modals/EvolutionModal';
 import useGameState from './hooks/useGameState';
 import useDeployRefresh from './hooks/useDeployRefresh';
@@ -1360,7 +1362,11 @@ export default function App() {
     handleStatSelectComplete,
     moveChoicePending,
     handleMoveChoiceComplete,
-    consumeQnaItemPermit,
+    qnaItemWritePending,
+    cancelQnaItemWrite,
+    consumeQnaItemWrite,
+    abilitySelectPending,
+    handleAbilitySelectComplete,
     regions,
     allPokemonMaster,
     members,
@@ -1735,18 +1741,29 @@ export default function App() {
     return false;
   };
 
-  // 볼 변경 티켓/미용실 이용권으로 받은 권한이 있어야만 "아이템" 탭에 글을 쓸 수 있다.
-  // 아이템 소모는 글이 실제로 등록(committed)된 경우에만 진행한다.
-  const canPostQnaItemTab = (currentUser?.qnaItemPermits?.length || 0) > 0;
-
   const handleCreatePost = async (post) => {
-    if (post.category === '아이템' && !canPostQnaItemTab) {
-      alert('볼 변경 티켓 또는 미용실 이용권을 사용해야 "아이템" 탭에 글을 쓸 수 있습니다.');
-      return;
-    }
+    await saveQnaPosts(posts => [post, ...posts]);
+  };
+
+  // 볼 변경 티켓 / 미용실 이용권 사용 시 뜨는 QnA "아이템" 탭 작성 모달의 제출 처리.
+  // 글 등록이 성공했을 때만 사용한 티켓을 소모한다.
+  const handleQnaItemWriteSubmit = async (fields) => {
+    if (!qnaItemWritePending) return;
+    const post = {
+      id: Date.now(),
+      authorId: currentUser.id,
+      authorName: currentUser.name,
+      title: fields.title,
+      content: fields.content,
+      isPrivate: fields.isPrivate,
+      category: '아이템',
+      images: fields.images,
+      createdAt: new Date().toISOString(),
+      comments: [],
+    };
     const success = await saveQnaPosts(posts => [post, ...posts]);
-    if (success && post.category === '아이템') {
-      consumeQnaItemPermit();
+    if (success) {
+      consumeQnaItemWrite();
     }
   };
 
@@ -1931,10 +1948,9 @@ return (
               onEditPost={handleEditPost}
               onCreateComment={handleCreateComment}
               onDeleteComment={handleDeleteComment}
-              canPostItem={canPostQnaItemTab}
             />
           )}
-          
+
           {currentTab === 'admin' && isAdmin && <AdminView />}
           {currentTab === 'battle' && isAdmin && <BattleView />}
         </MobileLayout>
@@ -2065,7 +2081,6 @@ return (
 			  onEditPost={handleEditPost}
 			  onCreateComment={handleCreateComment}
 			  onDeleteComment={handleDeleteComment}
-			  canPostItem={canPostQnaItemTab}
 			/>
 		  )}
 		  
@@ -2120,8 +2135,26 @@ return (
           kind={moveChoicePending.kind}
           options={moveChoicePending.options}
           currentMoves={moveChoicePending.pokemon?.moves || []}
+          allMoves={allMoves}
           onConfirm={handleMoveChoiceComplete}
           onCancel={() => handleMoveChoiceComplete(null)}
+        />
+      )}
+
+      {qnaItemWritePending && (
+        <QnaItemWriteModal
+          item={qnaItemWritePending.item}
+          onSubmit={handleQnaItemWriteSubmit}
+          onCancel={cancelQnaItemWrite}
+        />
+      )}
+
+      {abilitySelectPending && (
+        <AbilitySelectModal
+          pokemon={abilitySelectPending.pokemon}
+          options={abilitySelectPending.options}
+          onConfirm={handleAbilitySelectComplete}
+          onCancel={() => handleAbilitySelectComplete(null)}
         />
       )}
 

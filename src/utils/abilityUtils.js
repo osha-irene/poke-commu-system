@@ -285,32 +285,32 @@ export function classifyAbilityEffect(abilityName) {
  */
 export function getPokemonAbilities(pokemonData) {
   if (!pokemonData) return { abilities: [], hiddenAbility: null };
-  
+
   const abilities = [];
-  
-  // 일반 특성
-  if (pokemonData.abilities && Array.isArray(pokemonData.abilities)) {
-    pokemonData.abilities.forEach(abilityName => {
-      const abilityData = getAbilityByName(abilityName);
-      abilities.push({
-        name: abilityName,
-        nameEn: abilityData?.nameEn || null,
-        shortEffect: abilityData?.shortEffect || '',
-        shortEffectKo: abilityData?.shortEffectKo || abilityData?.flavorTextKo || '',
-        effect: abilityData?.effect || '',
-        effectKo: abilityData?.effectKo || '',
-        isHidden: false
-      });
+
+  // 일반 특성 - allPokemon.json은 영문 슬러그 배열(abilitiesEn)로 들고 있다
+  const abilityNames = pokemonData.abilitiesEn || pokemonData.abilities || [];
+  abilityNames.forEach(abilityName => {
+    const abilityData = getAbilityByName(abilityName);
+    abilities.push({
+      name: abilityData?.name || abilityName,
+      nameEn: abilityData?.nameEn || abilityName,
+      shortEffect: abilityData?.shortEffect || '',
+      shortEffectKo: abilityData?.shortEffectKo || abilityData?.flavorTextKo || '',
+      effect: abilityData?.effect || '',
+      effectKo: abilityData?.effectKo || '',
+      isHidden: false
     });
-  }
-  
-  // 숨겨진 특성
+  });
+
+  // 숨겨진 특성 - allPokemon.json은 영문 슬러그(hiddenAbilityEn)로 들고 있다
   let hiddenAbility = null;
-  if (pokemonData.hiddenAbility) {
-    const hiddenData = getAbilityByName(pokemonData.hiddenAbility);
+  const hiddenAbilityName = pokemonData.hiddenAbilityEn || pokemonData.hiddenAbility;
+  if (hiddenAbilityName) {
+    const hiddenData = getAbilityByName(hiddenAbilityName);
     hiddenAbility = {
-      name: pokemonData.hiddenAbility,
-      nameEn: hiddenData?.nameEn || pokemonData.hiddenAbilityEn || null,
+      name: hiddenData?.name || pokemonData.hiddenAbility || hiddenAbilityName,
+      nameEn: hiddenData?.nameEn || pokemonData.hiddenAbilityEn || hiddenAbilityName,
       shortEffect: hiddenData?.shortEffect || '',
       shortEffectKo: hiddenData?.shortEffectKo || hiddenData?.flavorTextKo || '',
       effect: hiddenData?.effect || '',
@@ -318,7 +318,7 @@ export function getPokemonAbilities(pokemonData) {
       isHidden: true
     };
   }
-  
+
   return {
     abilities,
     hiddenAbility

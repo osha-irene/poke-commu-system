@@ -4,6 +4,8 @@ import { isEVItem, applyEVItem } from '../../utils/evItemUtils';
 import { getLearnsetTmMoves, getLearnsetEggMoves, getPokemonLearnset } from '../../utils/pokemonLearnsets';
 import { isRareCandyItem, resolveItemData } from '../../utils/itemUsageRules';
 import { isSoyYYNItem } from '../../utils/specialItemUtils';
+import { findPokemonTemplate } from '../../utils/pokemonBaseStats';
+import { getPokemonAbilities } from '../../utils/abilityUtils';
 
 // 아이템 nameEn → 변경 가능한 포켓몬 originalNumber 목록
 const FORM_CHANGE_ITEMS = {
@@ -37,7 +39,9 @@ export const useItemEffects = (
   systemSettings = {},
   onRequestStatSelection = null,
   onRequestMoveChoice = null,
-  onGrantQnaItemPermit = null
+  onRequestQnaWrite = null,
+  allPokemonMaster = [],
+  onRequestAbilitySelect = null
 ) => {
 
   const movesHook = useMoves;
@@ -152,18 +156,38 @@ export const useItemEffects = (
       return;
     }
 
-    // QnA "아이템" 탭 글쓰기 권한 티켓 - 대상 포켓몬 없이 사용, 여기서는 소모하지 않음
-    // (실제 글이 등록에 성공해야만 소모되도록 App.jsx의 QnA 작성 흐름에서 소모 처리)
+    // 볼 변경 티켓 / 미용실 이용권 - 대상 포켓몬 없이 사용, 즉시 QnA "아이템" 탭 작성 모달을 띄운다.
+    // 여기서는 소모하지 않음 (실제 글이 등록에 성공해야만 소모되도록 App.jsx의 QnA 작성 흐름에서 소모 처리)
     if (src.specialEffect === 'qnaItemPermit') {
-      if (typeof onGrantQnaItemPermit !== 'function') {
+      if (typeof onRequestQnaWrite !== 'function') {
         alert('현재 이 아이템을 사용할 수 없습니다.');
         return;
       }
-      onGrantQnaItemPermit(item, src.permitKind || 'general');
+      onRequestQnaWrite(item, src.permitKind || 'general');
       return;
     }
 
     if (!pokemon) return;
+
+    // 특성패치 - 이 포켓몬이 가질 수 있는 특성(숨겨진 특성 포함) 중 원하는 것을 골라 변경
+    if (src.specialEffect === 'abilityPatch' && !item.__chosenAbility) {
+      const template = findPokemonTemplate(pokemon, allPokemonMaster);
+      const { abilities, hiddenAbility } = getPokemonAbilities(template);
+      const options = [...abilities, ...(hiddenAbility ? [hiddenAbility] : [])]
+        .filter((ability, index, all) => all.findIndex(a => a.nameEn === ability.nameEn) === index);
+
+      if (options.length === 0) {
+        alert('이 포켓몬의 특성 정보를 찾을 수 없습니다!');
+        return;
+      }
+      if (typeof onRequestAbilitySelect !== 'function') {
+        alert('현재 이 아이템을 사용할 수 없습니다.');
+        return;
+      }
+      releaseItemUseLock();
+      onRequestAbilitySelect(item, pokemon, options);
+      return;
+    }
 
     // 기술머신(범용)/하트비늘 - 배울 수 있는 기술 목록에서 하나를 골라 학습
     const isGenericTmItem = src.specialEffect === 'learnAnyTmMove';
@@ -308,6 +332,16 @@ export const useItemEffects = (
       hp: 'HP', attack: '공격', defense: '방어', specialAttack: '특공', specialDefense: '특방', speed: '스피드',
       elegance: '근사함', beauty: '아름다움', cuteness: '귀여움', intelligence: '슬기로움', strength: '강인함',
     };
+
+    // 특성패치 2단계 - 모달에서 이미 특성을 고른 뒤 재호출된 경우 바로 적용 + 소모
+    if (src.specialEffect === 'abilityPatch' && item.__chosenAbility) {
+      updatedPokemon.ability = item.__chosenAbility.name;
+      updatedPokemon.abilityEn = item.__chosenAbility.nameEn;
+      updatePokemonInUser(updatedPokemon);
+      alert(`${pokemon.nickname || pokemon.name}의 특성이 ${item.__chosenAbility.name}(으)로 바뀌었습니다!`);
+      consumeItem(item);
+      return;
+    }
 
     if (src.specialEffect === 'effortEdit' && src.effortOverride) {
       const nextEffort = {

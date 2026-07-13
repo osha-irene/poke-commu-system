@@ -227,6 +227,12 @@ const categories = CATEGORIES.map(cat => {
       return;
     }
 
+    // 볼 변경 티켓 / 미용실 이용권: 포켓몬 선택 없이 바로 QnA "아이템" 탭 작성 모달을 띄운다
+    if (details.specialEffect === 'qnaItemPermit') {
+      onUseItem?.({ ...item, specialEffect: 'qnaItemPermit', permitKind: details.itemData?.permitKind }, null);
+      return;
+    }
+
     if (isFormChangeItem(item)) {
       const itemNameEn = getItemNameEn(item);
       const eligibleNumbers = FORM_CHANGE_ITEM_POKEMON[itemNameEn] || [];
@@ -293,17 +299,6 @@ const categories = CATEGORIES.map(cat => {
         // resolveItemData의 name/nameEn 기반 매칭이 다른 아이템으로 오매칭되는 경우가 있어,
         // 화면에서 이미 정확히 찾아낸 specialEffect/boostAmount를 직접 실어 보냄
         onUseItem({ ...selectedItem, specialEffect: 'trainerExp', boostAmount: details.boostAmount }, null);
-        closeModal();
-      } else {
-        alert('아이템 사용 기능이 연결되지 않았습니다.');
-      }
-      return;
-    }
-
-    // 볼 변경 티켓 / 미용실 이용권: 포켓몬 선택 없이 바로 사용 (QnA 글쓰기 권한 부여)
-    if (details.specialEffect === 'qnaItemPermit') {
-      if (onUseItem && selectedItem) {
-        onUseItem({ ...selectedItem, specialEffect: 'qnaItemPermit', permitKind: details.itemData?.permitKind }, null);
         closeModal();
       } else {
         alert('아이템 사용 기능이 연결되지 않았습니다.');
