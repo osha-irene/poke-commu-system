@@ -3,6 +3,7 @@ import MobileItemsView from './_mobile/MobileItemsView';
 import { getItemPocket, canUseItem, CATEGORIES } from '../../utils/itemUtils';
 import { canUseItemOnPokemonTarget, FORM_CHANGE_ITEM_POKEMON } from '../../utils/itemUsageRules';
 import { isSoyYYNItem } from '../../utils/specialItemUtils';
+import { getItemEffectBadges } from '../../utils/itemEffectBadges';
 import { Package, Circle, Heart, Dumbbell, Apple, Disc, Backpack, Sparkles, Sword, Key, Search, X,Trash2, ShoppingCart } from 'lucide-react'; 
 import React, { useState } from 'react';
 
@@ -509,12 +510,13 @@ const categories = CATEGORIES.map(cat => {
               const details = getItemDetails(item);
               const pocketColor = getPocketColor(details.pocket);
               const badge = getPocketBadge(details.pocket);
-              
+              const effectBadges = getItemEffectBadges(details);
+
               return (
                 <div key={i} className="relative">
                   <button
                     onClick={() => handleItemClick(item)}
-                    className={`relative w-full h-32 overflow-hidden flex items-start gap-4 rounded-lg p-4 border-2 transition-all text-left ${pocketColor} ${
+                    className={`relative w-full min-h-32 flex items-start gap-4 rounded-lg p-4 border-2 transition-all text-left ${pocketColor} ${
                       details.canUse ? 'cursor-pointer hover:shadow-lg hover:scale-[1.02]' : 'cursor-default'
                     }`}
                   >
@@ -538,7 +540,21 @@ const categories = CATEGORIES.map(cat => {
                       <div className="text-sm text-gray-600 line-clamp-3 mb-2">
                         {details.description}
                       </div>
-                      
+
+                      {effectBadges.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {effectBadges.map((effectBadge, badgeIndex) => (
+                            <span
+                              key={badgeIndex}
+                              title={effectBadge.title || effectBadge.label}
+                              className={`item-effect-pill item-effect-pill--${effectBadge.tone || 'default'}`}
+                            >
+                              {effectBadge.label}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           {details.cost > 0 && (

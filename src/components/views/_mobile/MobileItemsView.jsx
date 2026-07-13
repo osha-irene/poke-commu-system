@@ -5,6 +5,7 @@ import { useGame } from '../../../contexts/GameContext';
 import { getItemPocket, canUseItem, CATEGORIES, POCKET_LABELS } from '../../../utils/itemUtils';
 import { isSoyYYNItem } from '../../../utils/specialItemUtils';
 import { getOwnedPokemonSpriteUrl } from '../../../utils/pokemonImageUtils';
+import { getItemEffectBadges } from '../../../utils/itemEffectBadges';
 
 const P = {
   card:     'rgba(255,255,255,0.90)',
@@ -224,6 +225,7 @@ export default function MobileItemsView() {
               const details = getItemDetails(item);
               const pocketName = POCKET_LABELS[details.pocket] || '기타';
               const isSelected = selectedItem?.name === item.name;
+              const effectBadges = getItemEffectBadges(details);
               return (
                 <button
                   key={i}
@@ -248,6 +250,19 @@ export default function MobileItemsView() {
                   {details.description && (
                     <div style={{ fontSize: 10, color: P.muted, lineHeight: 1.4, whiteSpace: 'normal', wordBreak: 'keep-all', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                       {details.description}
+                    </div>
+                  )}
+                  {effectBadges.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                      {effectBadges.map((effectBadge, badgeIndex) => (
+                        <span
+                          key={badgeIndex}
+                          title={effectBadge.title || effectBadge.label}
+                          className={`item-effect-pill item-effect-pill--${effectBadge.tone || 'default'}`}
+                        >
+                          {effectBadge.label}
+                        </span>
+                      ))}
                     </div>
                   )}
                 </button>

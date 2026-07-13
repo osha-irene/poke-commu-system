@@ -581,12 +581,12 @@ function getHomeFeeds(members = {}) {
         itemName: entry.itemName || entry.recipeName || '요리',
         image: entry.imageUrl || entry.image || '',
         eventTime: getEventTime(entry.cookedAt || entry.createdAt, index)
-      }));
+      })).filter((entry) => !entry.itemName.includes('오란다'));
 
       if (historyEntries.length > 0) return historyEntries;
 
       return (member?.inventory || [])
-        .filter((item) => item?.isCooked)
+        .filter((item) => item?.isCooked && !String(item?.name || '').includes('오란다'))
         .map((item, index) => ({
           id: item.itemId || `cooked-item-${member?.id || trainerName}-${index}`,
           trainerName,
