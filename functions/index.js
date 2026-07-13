@@ -629,16 +629,24 @@ exports.sendNotify = functions.region(region.region).runWith(webhookOpts).https.
   } catch (e) { console.error('sendNotify error:', e); res.status(500).json({ error: e.message }); }
 });
 
-// ── DB 트리거: memberViewData 동기화 ──────────────────────────────
-// 프론트엔드의 memberViewData는 members의 열람용 사본인데, 예전엔 "관리자가 지금
+// ── DB 트리거: memberSummary/memberParty 동기화 ──────────────────────
+// 프론트엔드의 memberSummary/memberParty는 members의 열람용 사본인데, 예전엔 "관리자가 지금
 // 접속해 있어야만" 클라이언트가 재동기화하는 방식이라 배틀/캠핑/교환 봇처럼 서버에서
 // members를 직접 쓰는 경우 아무도 안 보고 있으면 영영 갱신이 안 됐다 (예: 엔트리 탭에
 // 특성이 실제로는 있는데 "없음"으로 보이는 문제). 여기서 서버 쪽에서 항상 동기화한다.
+//
+// caughtPokemon/partnerPokemon(스탯·기술·IV 등 포켓몬 상세)은 용량이 커서, 예전처럼 하나의
+// memberViewData 트리에 합쳐 상시 브로드캐스트하면 접속자 전원에게 매 변경마다 재전송되어
+// RTDB 다운로드 사용량이 크게 늘어난다. 그래서 가벼운 요약(memberSummary, 항상 구독)과
+// 무거운 파티 상세(memberParty, 멤버/NPC 탭을 보는 클라이언트만 구독)로 분리하고,
+// 파티 상세는 실제로 caughtPokemon/partnerPokemon이 바뀐 경우에만 쓴다.
 const MEMBER_VIEW_OMIT_KEYS = new Set([
   'auth', 'authUid', 'email', 'password', 'forcePasswordChange',
   'inventory', 'money', 'purchaseHistory', 'dailyWalks', 'maxDailyWalks',
   'lastAttendanceDate', 'trainerExp', 'canManageItems', 'isAdmin', 'isSuperAdmin', 'egg',
 ]);
+
+const HEAVY_MEMBER_VIEW_KEYS = ['caughtPokemon', 'partnerPokemon'];
 
 const toMemberViewData = (member = {}, id) => {
   const viewData = {};
@@ -649,16 +657,57 @@ const toMemberViewData = (member = {}, id) => {
   return JSON.parse(JSON.stringify(viewData, (_, v) => (v === undefined ? null : v)));
 };
 
+const deriveCaughtNumbers = (caughtPokemon) => {
+  if (!Array.isArray(caughtPokemon)) return [];
+  const numbers = new Set();
+  caughtPokemon.forEach((pokemon) => {
+    if (!pokemon) return;
+    [pokemon.number, pokemon.originalNumber].forEach((num) => { if (num) numbers.add(num); });
+  });
+  return Array.from(numbers);
+};
+
+const toMemberSummary = (member = {}, id) => {
+  const viewData = toMemberViewData(member, id);
+  const { caughtPokemon, partnerPokemon, ...summary } = viewData;
+  summary.caughtNumbers = deriveCaughtNumbers(caughtPokemon);
+  return summary;
+};
+
+const toMemberParty = (member = {}, id) => ({
+  id,
+  name: member.name ?? null,
+  hidden: member.hidden ?? false,
+  caughtPokemon: member.caughtPokemon ?? null,
+  partnerPokemon: member.partnerPokemon ?? null,
+});
+
 exports.syncMemberViewData = functions
   .region('us-central1')
   .database.ref('members/{memberId}')
   .onWrite(async (change, context) => {
     const { memberId } = context.params;
     if (!change.after.exists()) {
-      await db.ref(`memberViewData/${memberId}`).set(null);
+      await Promise.all([
+        db.ref(`memberSummary/${memberId}`).set(null),
+        db.ref(`memberParty/${memberId}`).set(null),
+      ]);
       return null;
     }
-    await db.ref(`memberViewData/${memberId}`).set(toMemberViewData(change.after.val(), memberId));
+
+    const before = change.before.exists() ? change.before.val() : null;
+    const after = change.after.val();
+
+    const writes = [db.ref(`memberSummary/${memberId}`).set(toMemberSummary(after, memberId))];
+
+    const partyChanged = !before || HEAVY_MEMBER_VIEW_KEYS.some(
+      (key) => JSON.stringify(before[key] ?? null) !== JSON.stringify(after[key] ?? null)
+    );
+    if (partyChanged) {
+      writes.push(db.ref(`memberParty/${memberId}`).set(toMemberParty(after, memberId)));
+    }
+
+    await Promise.all(writes);
     return null;
   });
 

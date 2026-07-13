@@ -5,7 +5,7 @@ import { auth, database } from '../../firebase';
 import itemsData from '../../data/items.json';
 import { getAbilityEnglishName } from '../../utils/abilityUtils';
 import { preloadDecodedImage } from '../../utils/imageCache';
-import { toMemberViewDataMap } from '../../utils/memberViewData';
+import { toMemberSummary, toMemberSummaryMap, toMemberParty, toMemberPartyMap } from '../../utils/memberViewData';
 import { DEFAULT_IVS, withNormalizedIVs } from '../../utils/pokemonIndividualValues';
 import { fillMissingBaseStats, findPokemonTemplate } from '../../utils/pokemonBaseStats';
 
@@ -21,16 +21,26 @@ const normalizePokemonArray = (value) => {
   return value;
 };
 
-export const useMembers = (allPokemonData, loadFullMembers = false) => {
+// memberSummary: 이름/프로필/요약 등 가벼운 필드 - 모든 로그인 유저에게 항상 실시간 구독됨.
+// memberParty: caughtPokemon/partnerPokemon(스탯·기술·IV 등 상세) - 용량이 커서
+// 멤버/NPC 탭을 보고 있는 클라이언트만(loadPartyDetails=true) 구독한다. 이렇게 나누지 않으면
+// 누군가 포켓몬을 잡거나 파티를 바꿀 때마다 접속자 전원에게 그 상세 데이터가 재전송된다.
+export const useMembers = (allPokemonData, loadFullMembers = false, loadPartyDetails = false) => {
   const [members, setMembers] = useState({});
-  const [memberViewMembers, setMemberViewMembers] = useState({});
+  const [memberSummaries, setMemberSummaries] = useState({});
+  const [memberParties, setMemberParties] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const seededMemberViewDataRef = useRef(false);
-  const memberViewMembersRef = useRef({});
+  const memberSummariesRef = useRef({});
+  const memberPartiesRef = useRef({});
 
   useEffect(() => {
-    memberViewMembersRef.current = memberViewMembers;
-  }, [memberViewMembers]);
+    memberSummariesRef.current = memberSummaries;
+  }, [memberSummaries]);
+
+  useEffect(() => {
+    memberPartiesRef.current = memberParties;
+  }, [memberParties]);
 
   useEffect(() => {
     if (!loadFullMembers) {
@@ -75,7 +85,8 @@ export const useMembers = (allPokemonData, loadFullMembers = false) => {
         if (!snapshot.exists()) {
           const createdMembers = await createInitialMembersWithAuth();
           setMembers(createdMembers);
-          await set(ref(database, 'memberViewData'), toMemberViewDataMap(createdMembers));
+          await set(ref(database, 'memberSummary'), toMemberSummaryMap(createdMembers));
+          await set(ref(database, 'memberParty'), toMemberPartyMap(createdMembers));
           return;
         }
 
@@ -91,9 +102,14 @@ export const useMembers = (allPokemonData, loadFullMembers = false) => {
           JSON.stringify(prev) === JSON.stringify(normalized) ? prev : normalized
         ));
 
-        const nextMemberViewData = toMemberViewDataMap(normalized);
-        if (JSON.stringify(memberViewMembersRef.current) !== JSON.stringify(nextMemberViewData)) {
-          await set(ref(database, 'memberViewData'), nextMemberViewData);
+        const nextSummary = toMemberSummaryMap(normalized);
+        if (JSON.stringify(memberSummariesRef.current) !== JSON.stringify(nextSummary)) {
+          await set(ref(database, 'memberSummary'), nextSummary);
+        }
+
+        const nextParty = toMemberPartyMap(normalized);
+        if (JSON.stringify(memberPartiesRef.current) !== JSON.stringify(nextParty)) {
+          await set(ref(database, 'memberParty'), nextParty);
         }
       })
       .catch((error) => {
@@ -117,7 +133,8 @@ export const useMembers = (allPokemonData, loadFullMembers = false) => {
         [snapshot.key]: normalizedMember
       }));
       try {
-        await set(ref(database, `memberViewData/${snapshot.key}`), toMemberViewDataMap({ [snapshot.key]: normalizedMember })[snapshot.key]);
+        await set(ref(database, `memberSummary/${snapshot.key}`), toMemberSummary(normalizedMember, snapshot.key));
+        await set(ref(database, `memberParty/${snapshot.key}`), toMemberParty(normalizedMember, snapshot.key));
       } catch (error) {
         console.error('Member view data sync failed:', error);
       }
@@ -133,7 +150,8 @@ export const useMembers = (allPokemonData, loadFullMembers = false) => {
         return next;
       });
       try {
-        await set(ref(database, `memberViewData/${snapshot.key}`), null);
+        await set(ref(database, `memberSummary/${snapshot.key}`), null);
+        await set(ref(database, `memberParty/${snapshot.key}`), null);
       } catch (error) {
         console.error('Member view data remove failed:', error);
       }
@@ -146,32 +164,34 @@ export const useMembers = (allPokemonData, loadFullMembers = false) => {
     };
   }, [allPokemonData, loadFullMembers]);
 
+  // 가벼운 요약 - 모든 로그인 유저에게 항상 구독
   useEffect(() => {
-    const viewRef = ref(database, 'memberViewData');
+    const summaryRef = ref(database, 'memberSummary');
     let isInitialLoad = true;
 
-    const normalizeMemberViewEntry = (userId, member = {}) => ({
+    const normalizeSummaryEntry = (userId, member = {}) => ({
       ...member,
-      id: userId,
-      caughtPokemon: normalizePokemonArray(member.caughtPokemon),
-      partnerPokemon: withNormalizedIVs(member.partnerPokemon, DEFAULT_IVS)
+      id: userId
     });
 
-    get(viewRef)
+    get(summaryRef)
       .then(async (snapshot) => {
         if (!snapshot.exists()) {
-          setMemberViewMembers({});
+          setMemberSummaries({});
           if (!seededMemberViewDataRef.current) {
             seededMemberViewDataRef.current = true;
             const membersSnapshot = await get(ref(database, 'members'));
             if (membersSnapshot.exists()) {
-              const nextMemberViewData = toMemberViewDataMap(membersSnapshot.val());
-              await set(ref(database, 'memberViewData'), nextMemberViewData);
+              const rawMembers = membersSnapshot.val();
+              const nextSummary = toMemberSummaryMap(rawMembers);
+              const nextParty = toMemberPartyMap(rawMembers);
+              await set(ref(database, 'memberSummary'), nextSummary);
+              await set(ref(database, 'memberParty'), nextParty);
               const normalized = {};
-              Object.keys(nextMemberViewData).forEach((userId) => {
-                normalized[userId] = normalizeMemberViewEntry(userId, nextMemberViewData[userId] || {});
+              Object.keys(nextSummary).forEach((userId) => {
+                normalized[userId] = normalizeSummaryEntry(userId, nextSummary[userId] || {});
               });
-              setMemberViewMembers(normalized);
+              setMemberSummaries(normalized);
             }
           }
           return;
@@ -180,35 +200,35 @@ export const useMembers = (allPokemonData, loadFullMembers = false) => {
         const data = snapshot.val();
         const normalized = {};
         Object.keys(data).forEach((userId) => {
-          normalized[userId] = normalizeMemberViewEntry(userId, data[userId] || {});
+          normalized[userId] = normalizeSummaryEntry(userId, data[userId] || {});
         });
 
-        setMemberViewMembers(normalized);
+        setMemberSummaries(normalized);
       })
       .catch((error) => {
         seededMemberViewDataRef.current = false;
-        console.error('Member view data listener failed:', error);
-        setMemberViewMembers({});
+        console.error('Member summary listener failed:', error);
+        setMemberSummaries({});
       })
       .finally(() => {
         isInitialLoad = false;
         setIsLoading(false);
       });
 
-    const upsertMemberView = (snapshot) => {
+    const upsertSummary = (snapshot) => {
       if (isInitialLoad || !snapshot.exists()) return;
-      const nextMember = normalizeMemberViewEntry(snapshot.key, snapshot.val() || {});
-      setMemberViewMembers(prev => ({
+      const nextMember = normalizeSummaryEntry(snapshot.key, snapshot.val() || {});
+      setMemberSummaries(prev => ({
         ...prev,
         [snapshot.key]: nextMember
       }));
     };
 
-    const unsubAdded = onChildAdded(viewRef, upsertMemberView);
-    const unsubChanged = onChildChanged(viewRef, upsertMemberView);
-    const unsubRemoved = onChildRemoved(viewRef, (snapshot) => {
+    const unsubAdded = onChildAdded(summaryRef, upsertSummary);
+    const unsubChanged = onChildChanged(summaryRef, upsertSummary);
+    const unsubRemoved = onChildRemoved(summaryRef, (snapshot) => {
       if (isInitialLoad) return;
-      setMemberViewMembers(prev => {
+      setMemberSummaries(prev => {
         const next = { ...prev };
         delete next[snapshot.key];
         return next;
@@ -222,26 +242,108 @@ export const useMembers = (allPokemonData, loadFullMembers = false) => {
     };
   }, []);
 
+  // 무거운 파티 상세 - 멤버/NPC 탭을 보고 있을 때만(loadPartyDetails=true) 구독
+  useEffect(() => {
+    if (!loadPartyDetails) {
+      setMemberParties({});
+      return undefined;
+    }
+
+    const partyRef = ref(database, 'memberParty');
+    let isInitialLoad = true;
+
+    const normalizePartyEntry = (userId, member = {}) => ({
+      ...member,
+      id: userId,
+      caughtPokemon: normalizePokemonArray(member.caughtPokemon),
+      partnerPokemon: withNormalizedIVs(member.partnerPokemon, DEFAULT_IVS)
+    });
+
+    get(partyRef)
+      .then((snapshot) => {
+        if (!snapshot.exists()) {
+          setMemberParties({});
+          return;
+        }
+
+        const data = snapshot.val();
+        const normalized = {};
+        Object.keys(data).forEach((userId) => {
+          normalized[userId] = normalizePartyEntry(userId, data[userId] || {});
+        });
+
+        setMemberParties(normalized);
+      })
+      .catch((error) => {
+        console.error('Member party listener failed:', error);
+        setMemberParties({});
+      })
+      .finally(() => {
+        isInitialLoad = false;
+      });
+
+    const upsertParty = (snapshot) => {
+      if (isInitialLoad || !snapshot.exists()) return;
+      const nextMember = normalizePartyEntry(snapshot.key, snapshot.val() || {});
+      setMemberParties(prev => ({
+        ...prev,
+        [snapshot.key]: nextMember
+      }));
+    };
+
+    const unsubAdded = onChildAdded(partyRef, upsertParty);
+    const unsubChanged = onChildChanged(partyRef, upsertParty);
+    const unsubRemoved = onChildRemoved(partyRef, (snapshot) => {
+      if (isInitialLoad) return;
+      setMemberParties(prev => {
+        const next = { ...prev };
+        delete next[snapshot.key];
+        return next;
+      });
+    });
+
+    return () => {
+      unsubAdded();
+      unsubChanged();
+      unsubRemoved();
+    };
+  }, [loadPartyDetails]);
+
   useEffect(() => {
     if (!loadFullMembers) return;
     if (seededMemberViewDataRef.current) return;
-    if (Object.keys(memberViewMembers).length > 0) return;
+    if (Object.keys(memberSummaries).length > 0) return;
     if (Object.keys(members).length === 0) return;
 
     seededMemberViewDataRef.current = true;
-    set(ref(database, 'memberViewData'), toMemberViewDataMap(members)).catch((error) => {
+    Promise.all([
+      set(ref(database, 'memberSummary'), toMemberSummaryMap(members)),
+      set(ref(database, 'memberParty'), toMemberPartyMap(members)),
+    ]).catch((error) => {
       seededMemberViewDataRef.current = false;
       console.error('Member view data seed failed:', error);
     });
-  }, [loadFullMembers, members, memberViewMembers]);
+  }, [loadFullMembers, members, memberSummaries]);
 
-  const effectiveMemberViewMembers = Object.keys(memberViewMembers).length > 0
-    ? memberViewMembers
-    : toMemberViewDataMap(members);
+  const effectiveMemberSummaries = Object.keys(memberSummaries).length > 0
+    ? memberSummaries
+    : toMemberSummaryMap(members);
+
+  const effectiveMemberParties = loadPartyDetails
+    ? (Object.keys(memberParties).length > 0 ? memberParties : toMemberPartyMap(members))
+    : {};
+
+  const memberViewMembers = {};
+  Object.keys(effectiveMemberSummaries).forEach((id) => {
+    memberViewMembers[id] = {
+      ...effectiveMemberSummaries[id],
+      ...(effectiveMemberParties[id] || {})
+    };
+  });
 
   return {
     members,
-    memberViewMembers: effectiveMemberViewMembers,
+    memberViewMembers,
     setMembers,
     isLoading
   };

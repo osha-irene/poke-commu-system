@@ -49,14 +49,42 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
   }
 
   const handleToggleBox = (boxId) => {
-    const updatedBoxes = randomBoxes.map(box => 
+    const updatedBoxes = randomBoxes.map(box =>
       box.id === boxId ? { ...box, enabled: !box.enabled } : box
     );
-    
-    onUpdateShop({ 
-      ...shopData, 
-      randomBoxes: updatedBoxes 
+
+    onUpdateShop({
+      ...shopData,
+      randomBoxes: updatedBoxes
     });
+  };
+
+  const handleAddBox = () => {
+    const newBox = {
+      id: Date.now(),
+      name: '새 박스',
+      price: 1000,
+      enabled: false,
+      items: []
+    };
+
+    onUpdateShop({
+      ...shopData,
+      randomBoxes: [...randomBoxes, newBox]
+    });
+
+    setExpandedBox(newBox.id);
+  };
+
+  const handleRemoveBox = (boxId) => {
+    if (!window.confirm('이 랜덤박스를 삭제하시겠습니까? 박스에 포함된 아이템 구성도 함께 삭제됩니다.')) return;
+
+    onUpdateShop({
+      ...shopData,
+      randomBoxes: randomBoxes.filter(box => box.id !== boxId)
+    });
+
+    if (expandedBox === boxId) setExpandedBox(null);
   };
 
   const handleUpdateBox = (boxId, field, value) => {
@@ -179,16 +207,33 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
     <div className="space-y-6">
       {/* 헤더 */}
       <div className="rounded-lg border-2 border-lime-300 bg-white/55 p-6 shadow-sm">
-        <div className="flex items-center gap-3">
-          <Gift size={32} className="text-lime-700" />
-          <div>
-            <h3 className="text-2xl font-bold text-green-950">랜덤박스 관리</h3>
-            <p className="text-green-800 text-sm mt-1">
-              각 랜덤박스의 상품 구성과 확률을 설정하세요
-            </p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Gift size={32} className="text-lime-700" />
+            <div>
+              <h3 className="text-2xl font-bold text-green-950">랜덤박스 관리</h3>
+              <p className="text-green-800 text-sm mt-1">
+                각 랜덤박스의 상품 구성과 확률을 설정하세요
+              </p>
+            </div>
           </div>
+          <button
+            onClick={handleAddBox}
+            className="flex items-center gap-2 bg-lime-600 text-white px-4 py-2 rounded-lg hover:bg-lime-700 font-semibold transition-colors flex-shrink-0"
+          >
+            <Plus size={18} />
+            박스 추가
+          </button>
         </div>
       </div>
+
+      {randomBoxes.length === 0 && (
+        <div className="text-center py-12 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
+          <Gift size={48} className="mx-auto mb-3 opacity-30" />
+          <p className="font-semibold">등록된 랜덤박스가 없습니다</p>
+          <p className="text-sm mt-1">위 "박스 추가" 버튼을 눌러 새 랜덤박스를 만드세요</p>
+        </div>
+      )}
 
       {/* 랜덤박스 리스트 */}
       {randomBoxes.map((box) => {
@@ -253,6 +298,15 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
                   }`}
                 >
                   {box.enabled ? '활성화' : '비활성화'}
+                </button>
+
+                <button
+                  onClick={() => handleRemoveBox(box.id)}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  aria-label="박스 삭제"
+                  title="박스 삭제"
+                >
+                  <Trash2 size={20} />
                 </button>
               </div>
             </div>

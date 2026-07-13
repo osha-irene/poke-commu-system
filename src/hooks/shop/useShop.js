@@ -1,6 +1,6 @@
 // src/hooks/shop/useShop.js - 완전한 최종 버전
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ref, get, onChildAdded, onChildChanged, onChildRemoved, set, runTransaction } from 'firebase/database';
 import { database } from '../../firebase';
 import { getItemPocket } from '../../utils/itemUtils';
@@ -108,6 +108,12 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
     lastWeekReset: null
   });
   const [isLoading, setIsLoading] = useState(true);
+
+  // ⭐ ensureShopData(주간 리셋 병합/희귀·기간한정 아이템 로테이션 + 조건부 Firebase 쓰기)는
+  // 세션당 딱 한 번만 실행되어야 한다. 이 값이 false인 동안 effect가 allItems 참조 변경으로
+  // 여러 번 재실행되면(레시피/커스텀 아이템 갱신 등), 매번 다시 병합 로직을 태워 dailyItems가
+  // 계속 늘어나는 회귀가 생길 수 있다 — ref로 "이미 부트스트랩했는지"를 기억해 재실행을 막는다.
+  const hasBootstrappedRef = useRef(false);
 
   // 소지금 증감 — 로컬 스냅샷(currentUser.money)이 아니라 Firebase의 실제 최신 값을 기준으로
   // 원자적으로 반영한다. 로컬 값을 기준으로 계산하면 그 사이 다른 곳에서 바뀐 금액을 덮어쓸 수 있다.
@@ -240,11 +246,20 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
         }
 
         const loadedData = snapshot.val();
-        const ensuredData = await ensureShopData(loadedData);
-        if (JSON.stringify(ensuredData) !== JSON.stringify(loadedData)) {
-          await set(shopRef, ensuredData);
+
+        // ⭐ 주간 리셋 병합/로테이션은 세션당 한 번만. allItems 참조가 바뀌어 effect가
+        // 다시 실행되더라도, 이미 부트스트랩했다면 최신 allItems로 다시 enrich만 하고
+        // ensureShopData(및 그에 따른 Firebase 쓰기)는 건너뛴다.
+        if (!hasBootstrappedRef.current) {
+          const ensuredData = await ensureShopData(loadedData);
+          hasBootstrappedRef.current = true;
+          if (JSON.stringify(ensuredData) !== JSON.stringify(loadedData)) {
+            await set(shopRef, ensuredData);
+          }
+          if (isMounted) setShopData(normalizeShopData(ensuredData));
+        } else if (isMounted) {
+          setShopData(normalizeShopData(loadedData));
         }
-        if (isMounted) setShopData(normalizeShopData(ensuredData));
       })
       .catch((error) => {
         console.error('shop data load failed:', error);

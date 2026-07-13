@@ -1,63 +1,165 @@
-// 6세대 Contest Spectacular 콤보 조합표 (선행 기술 id -> 유효한 연계 기술 id 목록)
-// 출처: https://bulbapedia.bulbagarden.net/wiki/Contest_combination ("Contest Spectaculars" 섹션)
-// 성공 시 연계 기술은 항상 어필 +3을 추가로 획득한다(3세대의 "2배" 규칙과 다름).
+// 커뮤니티 자체 콘테스트 규칙표 "포켓몬 콘테스트 기술 및 콤보" 시트의 콤보표 기준
+// (선행 기술 id -> [{ moveId: 연계 기술 id, bonusAppeal: 추가 획득 하트, bonusJam: 추가 방해 수치 }])
+// bonusAppeal은 콤보 성공 시 연계 기술 사용자의 어필에 추가되고,
+// bonusJam은 콤보 성공 시 GM이 지정한 대상(targetId)에게 추가로 적용되는 방해 수치다.
 export const COMBO_CHART = {
-  'force-palm': ['hex', 'smelling-salts'],
-  'thunder-wave': ['hex', 'smelling-salts'],
-  'agility': ['baton-pass', 'electro-ball'],
-  'focus-energy': ['blaze-kick', 'drill-run', 'karate-chop', 'night-slash', 'poison-tail', 'shadow-claw', 'stone-edge'],
-  'stealth-rock': ['dragon-tail', 'roar', 'whirlwind'],
-  'inferno': ['hex'],
-  'will-o-wisp': ['hex'],
-  'lovely-kiss': ['dream-eater', 'hex', 'nightmare', 'wake-up-slap'],
-  'spore': ['dream-eater', 'hex', 'nightmare', 'wake-up-slap'],
-  'mean-look': ['explosion', 'memento', 'perish-song', 'self-destruct'],
-  'rain-dance': ['hurricane', 'soak', 'thunder', 'water-sport', 'weather-ball'],
-  'sunny-day': ['growth', 'moonlight', 'morning-sun', 'solar-beam', 'synthesis', 'weather-ball'],
-  'celebrate': ['bestow', 'fling', 'present'],
-  'covet': ['bestow', 'fling', 'present'],
-  'happy-hour': ['bestow', 'fling', 'present'],
-  'wish': ['bestow', 'fling', 'present'],
-  'amnesia': ['baton-pass', 'stored-power'],
-  'hone-claws': ['baton-pass', 'stored-power'],
-  'entrainment': ['circle-throw', 'roar', 'seismic-toss', 'sky-drop', 'smack-down', 'storm-throw', 'vital-throw', 'wake-up-slap'],
-  'play-nice': ['circle-throw', 'roar', 'seismic-toss', 'sky-drop', 'smack-down', 'storm-throw', 'vital-throw', 'wake-up-slap'],
-  'sing': ['dream-eater', 'hex', 'nightmare', 'wake-up-slap'],
-  'yawn': ['dream-eater', 'hex', 'nightmare', 'wake-up-slap'],
-  'block': ['explosion', 'memento', 'perish-song', 'self-destruct'],
-  'defense-curl': ['ice-ball', 'rollout'],
-  'encore': ['counter', 'destiny-bond', 'grudge', 'metal-burst', 'mirror-coat', 'spite'],
-  'rest': ['sleep-talk', 'snore'],
-  'soft-boiled': ['egg-bomb'],
-  'dark-void': ['dream-eater', 'hex', 'nightmare', 'wake-up-slap'],
-  'grass-whistle': ['dream-eater', 'hex', 'nightmare', 'wake-up-slap'],
-  'hypnosis': ['dream-eater', 'hex', 'nightmare', 'wake-up-slap'],
-  'sleep-powder': ['dream-eater', 'hex', 'nightmare', 'wake-up-slap'],
-  'poison-gas': ['hex', 'venom-drench', 'venoshock'],
-  'poison-powder': ['hex', 'venom-drench', 'venoshock'],
-  'toxic': ['hex', 'venom-drench', 'venoshock'],
-  'calm-mind': ['baton-pass', 'stored-power'],
-  'nasty-plot': ['baton-pass', 'stored-power'],
-  'charge': ['charge-beam', 'discharge', 'electro-ball', 'nuzzle', 'parabolic-charge', 'shock-wave', 'spark', 'thunder', 'thunder-fang', 'thunder-punch', 'thunder-shock', 'thunderbolt', 'volt-switch', 'volt-tackle'],
-  'mind-reader': ['sheer-cold'],
-  'parabolic-charge': ['electrify'],
-  'shift-gear': ['gear-grind'],
-  'spikes': ['dragon-tail', 'roar', 'whirlwind'],
-  'string-shot': ['electroweb', 'spider-web', 'sticky-web'],
-  'taunt': ['counter', 'destiny-bond', 'grudge', 'metal-burst', 'mirror-coat', 'spite'],
-  'toxic-spikes': ['dragon-tail', 'hex', 'roar', 'venom-drench', 'venoshock', 'whirlwind'],
-  'endure': ['endeavor', 'flail', 'pain-split', 'reversal'],
-  'glare': ['hex', 'smelling-salts'],
-  'rock-polish': ['baton-pass', 'electro-ball'],
-  'rototiller': ['bullet-seed', 'leech-seed', 'seed-bomb', 'worry-seed'],
-  'sandstorm': ['sand-attack', 'sand-tomb', 'weather-ball'],
-  'stockpile': ['spit-up', 'swallow'],
-  'torment': ['counter', 'destiny-bond', 'grudge', 'metal-burst', 'mirror-coat', 'spite'],
+  'belly-drum': [
+    { moveId: 'rest', bonusAppeal: 2, bonusJam: 0 },
+  ],
+  'charm': [
+    { moveId: 'captivate', bonusAppeal: 2, bonusJam: 0 },
+    { moveId: 'growl', bonusAppeal: 2, bonusJam: 0 },
+    { moveId: 'rest', bonusAppeal: 2, bonusJam: 0 },
+    { moveId: 'tail-whip', bonusAppeal: 2, bonusJam: 0 },
+  ],
+  'defense-curl': [
+    { moveId: 'rollout', bonusAppeal: 3, bonusJam: 0 },
+    { moveId: 'tackle', bonusAppeal: 4, bonusJam: 0 },
+  ],
+  'dive': [
+    { moveId: 'surf', bonusAppeal: 3, bonusJam: 0 },
+  ],
+  'double-team': [
+    { moveId: 'agility', bonusAppeal: 3, bonusJam: 0 },
+    { moveId: 'quick-attack', bonusAppeal: 3, bonusJam: 0 },
+    { moveId: 'teleport', bonusAppeal: 1, bonusJam: 0 },
+  ],
+  'dragon-breath': [
+    { moveId: 'dragon-claw', bonusAppeal: 2, bonusJam: 1 },
+    { moveId: 'dragon-dance', bonusAppeal: 1, bonusJam: 0 },
+  ],
+  'dragon-dance': [
+    { moveId: 'dragon-claw', bonusAppeal: 2, bonusJam: 1 },
+    { moveId: 'dragon-breath', bonusAppeal: 1, bonusJam: 3 },
+  ],
+  'fake-out': [
+    { moveId: 'arm-thrust', bonusAppeal: 2, bonusJam: 1 },
+    { moveId: 'feint-attack', bonusAppeal: 2, bonusJam: 0 },
+    { moveId: 'knock-off', bonusAppeal: 1, bonusJam: 4 },
+    { moveId: 'seismic-toss', bonusAppeal: 2, bonusJam: 1 },
+  ],
+  'fire-punch': [
+    { moveId: 'ice-punch', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'thunder-punch', bonusAppeal: 4, bonusJam: 0 },
+  ],
+  'focus-energy': [
+    { moveId: 'bone-rush', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'brick-break', bonusAppeal: 1, bonusJam: 4 },
+    { moveId: 'cross-chop', bonusAppeal: 3, bonusJam: 0 },
+    { moveId: 'double-edge', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'dynamic-punch', bonusAppeal: 2, bonusJam: 1 },
+    { moveId: 'focus-punch', bonusAppeal: 3, bonusJam: 0 },
+    { moveId: 'headbutt', bonusAppeal: 2, bonusJam: 3 },
+    { moveId: 'mega-kick', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'mega-punch', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'sky-uppercut', bonusAppeal: 2, bonusJam: 1 },
+    { moveId: 'take-down', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'triple-kick', bonusAppeal: 4, bonusJam: 0 },
+  ],
+  'growth': [
+    { moveId: 'absorb', bonusAppeal: 2, bonusJam: 3 },
+    { moveId: 'bullet-seed', bonusAppeal: 2, bonusJam: 1 },
+    { moveId: 'frenzy-plant', bonusAppeal: 4, bonusJam: 4 },
+    { moveId: 'giga-drain', bonusAppeal: 2, bonusJam: 1 },
+    { moveId: 'magical-leaf', bonusAppeal: 2, bonusJam: 0 },
+    { moveId: 'mega-drain', bonusAppeal: 1, bonusJam: 4 },
+    { moveId: 'petal-dance', bonusAppeal: 4, bonusJam: 4 },
+    { moveId: 'razor-leaf', bonusAppeal: 3, bonusJam: 0 },
+    { moveId: 'solar-beam', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'vine-whip', bonusAppeal: 4, bonusJam: 0 },
+  ],
+  'horn-attack': [
+    { moveId: 'fury-cutter', bonusAppeal: 2, bonusJam: 1 },
+    { moveId: 'horn-drill', bonusAppeal: 2, bonusJam: 1 },
+  ],
+  'ice-punch': [
+    { moveId: 'fire-punch', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'thunder-punch', bonusAppeal: 4, bonusJam: 0 },
+  ],
+  'leer': [
+    { moveId: 'bite', bonusAppeal: 1, bonusJam: 3 },
+    { moveId: 'feint-attack', bonusAppeal: 2, bonusJam: 0 },
+    { moveId: 'glare', bonusAppeal: 1, bonusJam: 3 },
+    { moveId: 'horn-attack', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'scary-face', bonusAppeal: 2, bonusJam: 1 },
+    { moveId: 'scratch', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'stomp', bonusAppeal: 1, bonusJam: 4 },
+    { moveId: 'tackle', bonusAppeal: 4, bonusJam: 0 },
+  ],
+  'mud-slap': [
+    { moveId: 'mud-sport', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'sand-attack', bonusAppeal: 2, bonusJam: 1 },
+  ],
+  'mud-sport': [
+    { moveId: 'mud-slap', bonusAppeal: 2, bonusJam: 1 },
+    { moveId: 'water-gun', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'water-sport', bonusAppeal: 4, bonusJam: 0 },
+  ],
+  'peck': [
+    { moveId: 'drill-peck', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'fury-cutter', bonusAppeal: 2, bonusJam: 1 },
+  ],
+  'powder-snow': [
+    { moveId: 'blizzard', bonusAppeal: 4, bonusJam: 0 },
+  ],
+  'rest': [
+    { moveId: 'sleep-talk', bonusAppeal: 3, bonusJam: 0 },
+    { moveId: 'snore', bonusAppeal: 4, bonusJam: 0 },
+  ],
+  'sand-attack': [
+    { moveId: 'mud-slap', bonusAppeal: 2, bonusJam: 1 },
+  ],
+  'snowscape': [
+    { moveId: 'blizzard', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'powder-snow', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'weather-ball', bonusAppeal: 4, bonusJam: 0 },
+  ],
+  'sunny-day': [
+    { moveId: 'blast-burn', bonusAppeal: 4, bonusJam: 4 },
+    { moveId: 'blaze-kick', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'ember', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'eruption', bonusAppeal: 1, bonusJam: 0 },
+    { moveId: 'fire-blast', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'fire-punch', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'fire-spin', bonusAppeal: 3, bonusJam: 0 },
+    { moveId: 'flame-wheel', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'flamethrower', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'heat-wave', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'moonlight', bonusAppeal: 1, bonusJam: 0 },
+    { moveId: 'morning-sun', bonusAppeal: 1, bonusJam: 0 },
+    { moveId: 'overheat', bonusAppeal: 6, bonusJam: 0 },
+    { moveId: 'sacred-fire', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'solar-beam', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'synthesis', bonusAppeal: 1, bonusJam: 0 },
+    { moveId: 'weather-ball', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'will-o-wisp', bonusAppeal: 1, bonusJam: 4 },
+  ],
+  'surf': [
+    { moveId: 'dive', bonusAppeal: 2, bonusJam: 0 },
+  ],
+  'sweet-scent': [
+    { moveId: 'poison-powder', bonusAppeal: 3, bonusJam: 0 },
+    { moveId: 'sleep-powder', bonusAppeal: 1, bonusJam: 3 },
+    { moveId: 'stun-spore', bonusAppeal: 2, bonusJam: 1 },
+  ],
+  'swords-dance': [
+    { moveId: 'crabhammer', bonusAppeal: 3, bonusJam: 0 },
+    { moveId: 'crush-claw', bonusAppeal: 1, bonusJam: 4 },
+    { moveId: 'cut', bonusAppeal: 2, bonusJam: 1 },
+    { moveId: 'false-swipe', bonusAppeal: 1, bonusJam: 3 },
+    { moveId: 'fury-cutter', bonusAppeal: 3, bonusJam: 0 },
+    { moveId: 'slash', bonusAppeal: 3, bonusJam: 0 },
+  ],
+  'thunder-punch': [
+    { moveId: 'fire-punch', bonusAppeal: 4, bonusJam: 0 },
+    { moveId: 'ice-punch', bonusAppeal: 4, bonusJam: 0 },
+  ],
 };
-
-export const COMBO_FOLLOWUP_BONUS = 3;
 
 export const isComboStarter = (moveId) => !!COMBO_CHART[moveId];
 
+export const getComboBonus = (starterMoveId, followUpMoveId) =>
+  COMBO_CHART[starterMoveId]?.find((c) => c.moveId === followUpMoveId) || null;
+
 export const isValidComboFollowUp = (starterMoveId, followUpMoveId) =>
-  !!COMBO_CHART[starterMoveId]?.includes(followUpMoveId);
+  !!getComboBonus(starterMoveId, followUpMoveId);

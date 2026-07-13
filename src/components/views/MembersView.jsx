@@ -890,7 +890,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     const { getDatabase, ref, update } = await import('firebase/database');
     const db = getDatabase();
     await update(ref(db, `members/${member.id}`), updates);
-    await update(ref(db, `memberViewData/${member.id}`), updates);
+    await update(ref(db, `memberSummary/${member.id}`), updates);
   };
   const fullImg = getFullImg(member);
   const imgRef = useRef(null);

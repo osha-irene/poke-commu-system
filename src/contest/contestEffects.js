@@ -1,30 +1,27 @@
-// 콘테스트 기술 효과 판정기 - src/data/moves.json의 contestEffect(podic.kr 6세대 Contest Spectacular
-// 원문 한국어 설명, 34종 고정)를 키로 사용.
-// 각 handler(ctx) => { appealGain, jamTargets: [{targetId, amount}], flags: {...} }
-// ctx = { actor, move, contestType, turnIndex, order, appealedThisTurn, applause, rng }
+// 콘테스트 기술 효과 판정기 - src/data/moves.json의 contestEffect(커뮤니티 자체 콘테스트 규칙표
+// "포켓몬 콘테스트 기술 및 콤보" 시트 원문 한국어 설명, 38종 고정)를 키로 사용.
+// 각 handler(ctx) => { appealGain, jamTargets: [{targetId, amount}], flags: {...}, targetFlags: { [participantId]: {...} } }
+// ctx = { actor, move, contestType, turnIndex, order, appealedThisTurn, applause, targetId, targetIds, participants, rng }
 //
-// 콤보 조합표(선행→연계 기술 쌍)는 이 저장소에 데이터가 없어 자동 판정 불가.
-// comboStandby 상태 추적 및 성공 시 보너스 계산은 엔진이 지원하지만,
-// "이번 콤보가 유효한 조합인지"는 GM이 외부 콤보표를 보고 수동으로 확정해야 한다(ContestEngine.advanceTurn의 declareCombo/comboSuccessBonus 참고).
+// targetId/targetIds는 GM(진행자)이 advanceTurn 호출 시 넘겨주는 "지정한 포켓몬" 대상이다.
+// (ContestAdminPanel.jsx의 대상 선택 UI 참고)
+
+import { isPenaltyMove, isMatchingMove } from './contestRules';
 
 const lastAppealed = (appealedThisTurn) =>
   appealedThisTurn.length ? appealedThisTurn[appealedThisTurn.length - 1] : null;
 
-const sumAppeal = (appealedThisTurn) =>
-  appealedThisTurn.reduce((sum, e) => sum + e.gainedAppeal, 0);
-
 const jamAllAppealed = (appealedThisTurn, amountFn) =>
   appealedThisTurn.map((e) => ({ targetId: e.id, amount: amountFn(e) }));
 
+const findParticipant = (ctx, id) => (ctx.participants || []).find((p) => p.id === id) || null;
+
+const findAppealedEntry = (ctx, id) => (ctx.appealedThisTurn || []).find((e) => e.id === id) || null;
+
 export const CONTEST_EFFECT_HANDLERS = {
-  '☆이 붙어 있으면  추가되는 하트가 3배가 됨': (ctx) => ({
+  '☆이 붙어 있으면 추가되는 하트가 3배가 됨': (ctx) => ({
     appealGain: (ctx.move.contestAppeals || 0) * (ctx.actor.stars > 0 ? 3 : 1),
     flags: { suppressStarBonus: true },
-  }),
-
-  '관중들의 흥분도가 1 상승': (ctx) => ({
-    appealGain: ctx.move.contestAppeals || 0,
-    flags: { forceApplauseRise: true },
   }),
 
   '관중들의 흥분도에 따라 하트가 추가': (ctx) => {
@@ -35,11 +32,6 @@ export const CONTEST_EFFECT_HANDLERS = {
   '그 턴 중 1회 방해받지 않음': (ctx) => ({
     appealGain: ctx.move.contestAppeals || 0,
     flags: { noJamRestOfTurn: true },
-  }),
-
-  '다른 포켓몬들의 콤보 대기 중 상태를 해제': (ctx) => ({
-    appealGain: ctx.move.contestAppeals || 0,
-    flags: { cancelComboStandbyForAppealed: true },
   }),
 
   '다음 턴 순서가 마지막 차례가 됨': (ctx) => ({
@@ -57,7 +49,7 @@ export const CONTEST_EFFECT_HANDLERS = {
     flags: { goFirstNextRound: true },
   }),
 
-  '더 이상 어필에 참가불가': (ctx) => ({
+  '더 이상 어필에 참가불가 (마지막턴 사용불가)': (ctx) => ({
     appealGain: ctx.move.contestAppeals || 0,
     flags: { cannotAppealRestOfContest: true },
   }),
@@ -67,14 +59,14 @@ export const CONTEST_EFFECT_HANDLERS = {
     flags: { makeFollowingNervous: true },
   }),
 
-  '무작위로 하트가 추가': (ctx) => ({
-    appealGain: ctx.rng([1, 2, 4, 8]),
+  '무작위로 [1D6]하트가 추가': (ctx) => ({
+    appealGain: ctx.rng([1, 2, 3, 4, 5, 6]),
   }),
 
-  '바로 앞에서 어필한 포켓몬이 받은 하트 수에 영향받음': (ctx) => {
+  '바로 앞에서 어필한 포켓몬이 받은 하트 수에 1/2 추가 획득': (ctx) => {
     const prev = lastAppealed(ctx.appealedThisTurn);
     const base = ctx.move.contestAppeals || 0;
-    return { appealGain: prev && prev.moveContestType === ctx.move.contestType ? base * 2 : base };
+    return { appealGain: base + (prev ? Math.floor(prev.gainedAppeal / 2) : 0) };
   },
 
   '바로 앞에서 어필한 포켓몬이 받은 하트만큼 하트가 추가': (ctx) => {
@@ -95,30 +87,24 @@ export const CONTEST_EFFECT_HANDLERS = {
     flags: { doubleJamIfHitThisTurn: true },
   }),
 
-  '부문과 맞는 타입으로 턴의 끝에서 어필하면 흥분도가 2 상승': (ctx) => ({
-    appealGain: ctx.move.contestAppeals || 0,
-    flags: { applauseBonusIfLast: 2 },
-  }),
-
-  '부문과 맞는 타입으로 턴의 처음에 어필하면 흥분도가 2 상승': (ctx) => ({
-    appealGain: ctx.move.contestAppeals || 0,
-    flags: { applauseBonusIfFirst: 2 },
-  }),
-
-  '부문과 상반되는 타입으로 어필하면 흥분도가 2 하락': (ctx) => ({
-    appealGain: ctx.move.contestAppeals || 0,
-  }),
-
-  '앞에서 어필한 기술과 같은 타입을 썼다면 받는 하트가 3배': (ctx) => {
-    const prev = lastAppealed(ctx.appealedThisTurn);
+  '부문과 맞는 타입으로 턴의 끝에서 어필하면 하트(♥)2 상승': (ctx) => {
+    const isLast = ctx.turnIndex === ctx.order.length - 1;
+    const isMatch = isMatchingMove(ctx.move.contestType, ctx.contestType);
     const base = ctx.move.contestAppeals || 0;
-    return { appealGain: prev && prev.moveContestType === ctx.move.contestType ? base * 3 : base };
+    return { appealGain: isMatch && isLast ? base + 2 : base };
   },
 
-  '앞에서 어필한 기술과 같은 타입을 썼다면 하트 4개 방해': (ctx) => ({
-    appealGain: ctx.move.contestAppeals || 0,
-    jamTargets: jamAllAppealed(ctx.appealedThisTurn, (e) => (e.moveContestType === ctx.move.contestType ? 4 : (ctx.move.contestJam || 1))),
-  }),
+  '부문과 맞는 타입으로 턴의 처음에 어필하면 하트(♥)2 상승': (ctx) => {
+    const isMatch = isMatchingMove(ctx.move.contestType, ctx.contestType);
+    const base = ctx.move.contestAppeals || 0;
+    return { appealGain: isMatch && ctx.turnIndex === 0 ? base + 2 : base };
+  },
+
+  '부문과 상반되는 타입으로 어필하면 하트(♥)2 하락': (ctx) => {
+    const base = ctx.move.contestAppeals || 0;
+    const penalty = isPenaltyMove(ctx.move.contestType, ctx.contestType);
+    return { appealGain: Math.max(0, base - (penalty ? 2 : 0)) };
+  },
 
   '앞차례 어필한 포켓몬들을 방해': (ctx) => ({
     appealGain: ctx.move.contestAppeals || 0,
@@ -135,15 +121,6 @@ export const CONTEST_EFFECT_HANDLERS = {
     appealGain: ctx.move.contestAppeals || 0,
     flags: { removeStarsFromAppealed: true },
   }),
-
-  '앞차례 포켓몬들의 하트를 절반으로 줄임': (ctx) => ({
-    appealGain: ctx.move.contestAppeals || 0,
-    jamTargets: jamAllAppealed(ctx.appealedThisTurn, (e) => Math.max(1, Math.floor(e.gainedAppeal / 2))),
-  }),
-
-  '앞차례 포켓몬들이 받았던 하트 총합의 절반만큼 하트가 추가': (ctx) => (
-    { appealGain: Math.floor(sumAppeal(ctx.appealedThisTurn) / 2) }
-  ),
 
   '어필한 순서가 느릴수록 하트가 많이 추가': (ctx) => {
     const pos = ctx.turnIndex;
@@ -166,10 +143,87 @@ export const CONTEST_EFFECT_HANDLERS = {
     flags: { noJamRestOfTurn: true },
   }),
 
-  '콤보 대기 중인 포켓몬을 방해할 때는 하트를 5개 줄임': (ctx) => ({
+  '전 턴에서 어필한 기술과 같은 타입을 썼다면 받는 하트가 3배': (ctx) => {
+    const base = ctx.move.contestAppeals || 0;
+    const lastMove = ctx.actor.lastMoveId
+      ? (ctx.actor.moves || []).find((m) => m.id === ctx.actor.lastMoveId)
+      : null;
+    const sameType = lastMove && lastMove.contestType === ctx.move.contestType;
+    return { appealGain: sameType ? base * 3 : base };
+  },
+
+  '지정한 포켓몬 하트를 절반으로 줄임': (ctx) => {
+    if (!ctx.targetId) return { appealGain: ctx.move.contestAppeals || 0 };
+    const target = findParticipant(ctx, ctx.targetId);
+    const amount = target ? Math.ceil(target.totalAppeal / 2) : 0;
+    return {
+      appealGain: ctx.move.contestAppeals || 0,
+      jamTargets: amount > 0 ? [{ targetId: ctx.targetId, amount }] : [],
+    };
+  },
+
+  '지정한 포켓몬들 방해': (ctx) => {
+    const ids = ctx.targetIds && ctx.targetIds.length ? ctx.targetIds : (ctx.targetId ? [ctx.targetId] : []);
+    return {
+      appealGain: ctx.move.contestAppeals || 0,
+      jamTargets: ids.map((id) => ({ targetId: id, amount: ctx.move.contestJam || 1 })),
+    };
+  },
+
+  '지정한 포켓몬을 방해': (ctx) => ({
     appealGain: ctx.move.contestAppeals || 0,
-    jamTargets: jamAllAppealed(ctx.appealedThisTurn, (e) => (e.comboStandby ? 5 : (ctx.move.contestJam || 1))),
+    jamTargets: ctx.targetId ? [{ targetId: ctx.targetId, amount: ctx.move.contestJam || 1 }] : [],
   }),
+
+  '지정한 포켓몬을 방해하고 다음 턴은 행동불가': (ctx) => ({
+    appealGain: ctx.move.contestAppeals || 0,
+    jamTargets: ctx.targetId ? [{ targetId: ctx.targetId, amount: ctx.move.contestJam || 1 }] : [],
+    targetFlags: ctx.targetId ? { [ctx.targetId]: { cannotAppealNextRound: true } } : {},
+  }),
+
+  '지정한 포켓몬의 ☆을 지움': (ctx) => ({
+    appealGain: ctx.move.contestAppeals || 0,
+    targetFlags: ctx.targetId ? { [ctx.targetId]: { clearStars: true } } : {},
+  }),
+
+  '지정한 포켓몬의 콤보 대기 중 상태를 해제': (ctx) => ({
+    appealGain: ctx.move.contestAppeals || 0,
+    targetFlags: ctx.targetId ? { [ctx.targetId]: { clearComboWaiting: true } } : {},
+  }),
+
+  '지정한 포켓몬이 앞 차례일 경우. 어필한 기술과 같은 타입을 썼다면 하트를 4개 방해': (ctx) => {
+    const base = ctx.move.contestAppeals || 0;
+    if (!ctx.targetId) return { appealGain: base };
+    const targetEntry = findAppealedEntry(ctx, ctx.targetId);
+    if (!targetEntry) return { appealGain: base };
+    const amount = targetEntry.moveContestType === ctx.move.contestType ? 4 : (ctx.move.contestJam || 1);
+    return { appealGain: base, jamTargets: [{ targetId: ctx.targetId, amount }] };
+  },
+
+  '지정한 포켓몬이 이번 턴에서 획득하는 어필(♥)를 절반으로 줄임': (ctx) => {
+    const base = ctx.move.contestAppeals || 0;
+    if (!ctx.targetId) return { appealGain: base };
+    const targetEntry = findAppealedEntry(ctx, ctx.targetId);
+    if (targetEntry) {
+      const amount = Math.floor(targetEntry.gainedAppeal / 2);
+      return { appealGain: base, jamTargets: amount > 0 ? [{ targetId: ctx.targetId, amount }] : [] };
+    }
+    return { appealGain: base, targetFlags: { [ctx.targetId]: { appealHalvedThisTurn: true } } };
+  },
+
+  '콤보 대기 중인 지정한 포켓몬을 방해할 때는 하트를 5개 줄임': (ctx) => {
+    if (!ctx.targetId) return { appealGain: ctx.move.contestAppeals || 0 };
+    const target = findParticipant(ctx, ctx.targetId);
+    const amount = target && target.comboWaiting ? 5 : (ctx.move.contestJam || 1);
+    return { appealGain: ctx.move.contestAppeals || 0, jamTargets: [{ targetId: ctx.targetId, amount }] };
+  },
+
+  '콤보 대기 중인 포켓몬을 방해할 때는 하트를 5개 줄임': (ctx) => {
+    if (!ctx.targetId) return { appealGain: ctx.move.contestAppeals || 0 };
+    const target = findParticipant(ctx, ctx.targetId);
+    const amount = target && target.comboWaiting ? 5 : (ctx.move.contestJam || 1);
+    return { appealGain: ctx.move.contestAppeals || 0, jamTargets: [{ targetId: ctx.targetId, amount }] };
+  },
 
   '턴의 마지막에 어필하면 추가되는 하트가 3배': (ctx) => {
     const isLast = ctx.turnIndex === ctx.order.length - 1;
@@ -191,6 +245,27 @@ export const CONTEST_EFFECT_HANDLERS = {
     flags: { gainStar: true },
   }),
 };
+
+// 대상(targetId) 지정이 필요한 효과 문구 집합 - ContestAdminPanel.jsx가 대상 선택 UI를 띄울지 판단할 때 사용.
+export const TARGETED_EFFECTS = new Set([
+  '지정한 포켓몬 하트를 절반으로 줄임',
+  '지정한 포켓몬들 방해',
+  '지정한 포켓몬을 방해',
+  '지정한 포켓몬을 방해하고 다음 턴은 행동불가',
+  '지정한 포켓몬의 ☆을 지움',
+  '지정한 포켓몬의 콤보 대기 중 상태를 해제',
+  '지정한 포켓몬이 앞 차례일 경우. 어필한 기술과 같은 타입을 썼다면 하트를 4개 방해',
+  '지정한 포켓몬이 이번 턴에서 획득하는 어필(♥)를 절반으로 줄임',
+  '콤보 대기 중인 지정한 포켓몬을 방해할 때는 하트를 5개 줄임',
+  '콤보 대기 중인 포켓몬을 방해할 때는 하트를 5개 줄임',
+]);
+
+export const MULTI_TARGET_EFFECTS = new Set(['지정한 포켓몬들 방해']);
+
+// 마지막 라운드(6라운드)에는 사용할 수 없는 효과 문구 집합
+export const FINAL_ROUND_RESTRICTED_EFFECTS = new Set([
+  '더 이상 어필에 참가불가 (마지막턴 사용불가)',
+]);
 
 export const getContestEffectHandler = (contestEffect) => CONTEST_EFFECT_HANDLERS[contestEffect] || null;
 

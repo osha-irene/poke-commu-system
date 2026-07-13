@@ -11,8 +11,10 @@ import {
   getPenaltyMultiplier,
   isMatchingMove,
 } from './contestRules';
-import { getContestEffectHandler, getRepeatExemptMoveIds } from './contestEffects';
-import { isComboStarter, isValidComboFollowUp, COMBO_FOLLOWUP_BONUS } from './comboChart';
+import { getContestEffectHandler, getRepeatExemptMoveIds, FINAL_ROUND_RESTRICTED_EFFECTS } from './contestEffects';
+import { isComboStarter, getComboBonus } from './comboChart';
+
+export const MAX_ROUND = 6;
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
@@ -51,6 +53,7 @@ export const createContestState = (contestType, participantsInput) => ({
     forcedNervousThisRound: false,
     noJamRestOfTurn: false,
     doubleJamIfHitThisTurn: false,
+    appealHalvedThisTurn: false,
   })),
 });
 
@@ -88,6 +91,7 @@ export const canUseMove = (state, participantId, moveId, allMoves = []) => {
   if (!actor) return false;
   const move = actor.moves.find((m) => m.id === moveId);
   if (!move || !move.contestType) return false;
+  if (FINAL_ROUND_RESTRICTED_EFFECTS.has(move.contestEffect) && state.round >= MAX_ROUND) return false;
   if (actor.lastMoveId !== moveId) return true;
   const exemptIds = getRepeatExemptMoveIds(allMoves.length ? allMoves : actor.moves);
   return exemptIds.has(moveId);
@@ -182,6 +186,8 @@ export const advanceTurn = (stateIn, options = {}) => {
     appealedThisTurn: state.appealedThisTurn,
     applause: state.applause,
     targetId: options.targetId,
+    targetIds: options.targetIds,
+    participants: state.participants,
     rng: options.rng || randomPick,
   };
   const result = handler ? handler(ctx) : { appealGain: move.contestAppeals || 0 };
@@ -191,15 +197,22 @@ export const advanceTurn = (stateIn, options = {}) => {
   const isMatch = isMatchingMove(move.contestType, state.contestType);
   let finalAppeal = Math.round((result.appealGain || 0) * multiplier);
 
+  // 지정한 포켓몬이 이번 턴에서 획득하는 어필을 절반으로 줄이는 효과가 먼저 걸려 있었던 경우
+  if (actor.appealHalvedThisTurn) {
+    finalAppeal = Math.floor(finalAppeal / 2);
+    actor.appealHalvedThisTurn = false;
+  }
+
   // ☆ 보유 보너스 (이번 기술 자체가 star 기반 공식일 땐 중복 방지)
   if (finalAppeal > 0 && actor.stars > 0 && !flags.suppressStarBonus) {
     finalAppeal += actor.stars;
   }
 
-  // 콤보 - Bulbapedia "Contest combination"(6세대) 조합표 기준 자동 판정, 성공 시 +3 고정
-  const comboSuccess = !!actor.comboWaiting && isValidComboFollowUp(actor.comboWaiting.moveId, move.id);
+  // 콤보 - 커뮤니티 콤보표 기준 자동 판정, 성공 시 연계 기술별 추가 하트/방해 적용
+  const comboBonus = actor.comboWaiting ? getComboBonus(actor.comboWaiting.moveId, move.id) : null;
+  const comboSuccess = !!comboBonus;
   if (comboSuccess) {
-    finalAppeal += COMBO_FOLLOWUP_BONUS;
+    finalAppeal += comboBonus.bonusAppeal;
   }
 
   actor.totalAppeal += finalAppeal;
@@ -232,6 +245,11 @@ export const advanceTurn = (stateIn, options = {}) => {
     applyJam(state, targetId, Math.round(amount * multiplier));
   });
 
+  // 콤보 성공 시 추가 방해(bonusJam)는 GM이 지정한 대상(targetId)에게 그대로 적용
+  if (comboSuccess && comboBonus.bonusJam > 0 && options.targetId) {
+    applyJam(state, options.targetId, comboBonus.bonusJam);
+  }
+
   // 부가 효과 플래그 반영
   if (flags.gainStar) actor.stars = Math.min(MAX_STARS, actor.stars + 1);
   if (flags.noJamRestOfTurn) actor.noJamRestOfTurn = true;
@@ -263,8 +281,18 @@ export const advanceTurn = (stateIn, options = {}) => {
     });
   }
 
+  // 대상(targetId) 지정 효과의 타겟 전용 플래그 반영
+  Object.entries(result.targetFlags || {}).forEach(([tid, tflags]) => {
+    const target = state.participants.find((pp) => pp.id === tid);
+    if (!target) return;
+    if (tflags.cannotAppealNextRound) target.cannotAppealNextRound = true;
+    if (tflags.clearStars) target.stars = 0;
+    if (tflags.clearComboWaiting) target.comboWaiting = null;
+    if (tflags.appealHalvedThisTurn) target.appealHalvedThisTurn = true;
+  });
+
   if (comboSuccess) {
-    state.log.push({ type: 'combo', participantId: actorId, bonus: COMBO_FOLLOWUP_BONUS });
+    state.log.push({ type: 'combo', participantId: actorId, bonus: comboBonus.bonusAppeal, bonusJam: comboBonus.bonusJam });
   }
   // 이번 기술이 콤보 선행 기술이면 다음 턴 콤보 대기 상태로 전환(성공 여부와 무관하게 갱신)
   actor.comboWaiting = isComboStarter(move.id) ? { moveId: move.id } : null;
@@ -295,13 +323,14 @@ const endRound = (state) => {
     p.forcedNervousThisRound = false;
     p.noJamRestOfTurn = false;
     p.doubleJamIfHitThisTurn = false;
+    p.appealHalvedThisTurn = false;
   });
   state.applause.freezeThisTurn = false;
   state.globalPreventNextJam = false;
 
   state.log.push({ type: 'roundEnd', round: state.round, standings: state.participants.map(p => ({ id: p.id, totalAppeal: p.totalAppeal })) });
 
-  if (state.round >= 6) {
+  if (state.round >= MAX_ROUND) {
     state.phase = 'done';
     return;
   }

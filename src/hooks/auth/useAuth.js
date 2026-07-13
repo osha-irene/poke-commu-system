@@ -13,7 +13,7 @@ import { auth, database } from '../../firebase';
 import { fillMissingBaseStats, findPokemonTemplate } from '../../utils/pokemonBaseStats';
 import { getAbilityEnglishName } from '../../utils/abilityUtils';
 import { DEFAULT_IVS, withNormalizedIVs } from '../../utils/pokemonIndividualValues';
-import { toMemberViewData } from '../../utils/memberViewData';
+import { toMemberSummary, toMemberParty } from '../../utils/memberViewData';
 
 const ensurePartyPadding = (caughtPokemon, allPokemonMaster = []) => {
   if (caughtPokemon && typeof caughtPokemon === 'object' && !Array.isArray(caughtPokemon)) {
@@ -280,7 +280,12 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
       
       const memberRef = ref(database, `members/${currentUser.id}`);
       await update(memberRef, cleanData);
-      await update(ref(database, `memberViewData/${currentUser.id}`), toMemberViewData(updatedUser, currentUser.id));
+      await update(ref(database, `memberSummary/${currentUser.id}`), toMemberSummary(updatedUser, currentUser.id));
+      // caughtPokemon/partnerPokemon(용량 큰 상세)은 실제로 바뀐 경우에만 기록 - 그래야 무관한
+      // 업데이트(출석/구매 등)마다 접속자 전원에게 파티 상세가 재전송되는 걸 막을 수 있다.
+      if (updates.caughtPokemon !== undefined || updates.partnerPokemon !== undefined) {
+        await update(ref(database, `memberParty/${currentUser.id}`), toMemberParty(updatedUser, currentUser.id));
+      }
       console.log('✅ Firebase 저장 완료');
     } catch (error) {
       console.error('❌ Firebase 저장 실패:', error);

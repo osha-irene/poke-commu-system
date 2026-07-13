@@ -314,18 +314,23 @@ function computeEffectivePokedexData(pokedexData, members) {
   if (hiddenNames.size === 0) return pokedexData;
 
   // 포켓몬 번호별 → 해당 포켓몬을 보유한 가시적 멤버 이름 목록
+  // caughtNumbers는 memberSummary에 미리 계산되어 들어있는 가벼운 필드라 caughtPokemon
+  // 상세(스탯/기술 등)를 구독하지 않는 화면에서도 사용할 수 있다. 상세가 이미 로드된
+  // 경우(멤버/NPC 탭)엔 caughtPokemon에서 직접 뽑아 최신 상태를 반영한다.
   const visibleCatchers = {};
   Object.values(members).forEach(member => {
     if (!member || member.hidden) return;
-    (member.caughtPokemon || []).forEach(pokemon => {
-      if (!pokemon) return;
-      [pokemon.number, pokemon.originalNumber].filter(Boolean).forEach(num => {
-        const key = String(num);
-        if (!visibleCatchers[key]) visibleCatchers[key] = [];
-        if (!visibleCatchers[key].includes(member.name)) {
-          visibleCatchers[key].push(member.name);
-        }
-      });
+    const numbers = Array.isArray(member.caughtPokemon)
+      ? member.caughtPokemon
+          .filter(Boolean)
+          .flatMap(pokemon => [pokemon.number, pokemon.originalNumber].filter(Boolean))
+      : (member.caughtNumbers || []);
+    numbers.forEach(num => {
+      const key = String(num);
+      if (!visibleCatchers[key]) visibleCatchers[key] = [];
+      if (!visibleCatchers[key].includes(member.name)) {
+        visibleCatchers[key].push(member.name);
+      }
     });
   });
 

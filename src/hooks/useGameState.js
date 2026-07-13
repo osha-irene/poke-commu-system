@@ -80,9 +80,12 @@ export default function useGameState() {
   const [allMoves] = useState(movesData.moves || []);
   const [pokemonLearnsets] = useState(movesData.pokemonLearnsets || {});
   const [loadFullMembers, setLoadFullMembers] = useState(false);
+  // caughtPokemon/partnerPokemon 상세는 멤버/NPC 목록을 실제로 보고 있을 때만 구독한다
+  // (다운로드 용량 최적화 - 다른 탭에 있을 때는 다른 유저의 파티 변경이 나에게 전송되지 않음)
+  const loadPartyDetails = currentTab === 'members' || currentTab === 'npcs';
 
   // 회원 & 인증 (레시피가 요리 결과 아이템을 파생시키려면 allItems보다 먼저 준비되어야 함)
-  const { members, memberViewMembers, setMembers, isLoading: isMembersLoading } = useMembers(allPokemonDataParsed, loadFullMembers);
+  const { members, memberViewMembers, setMembers, isLoading: isMembersLoading } = useMembers(allPokemonDataParsed, loadFullMembers, loadPartyDetails);
 
   const {
     currentUser,
@@ -380,7 +383,7 @@ export default function useGameState() {
     const titleValue = titleId === 'none' ? null : titleId;
     try {
       await update(ref(database, `members/${currentUser.id}`), { title: titleValue });
-      await update(ref(database, `memberViewData/${currentUser.id}`), { title: titleValue });
+      await update(ref(database, `memberSummary/${currentUser.id}`), { title: titleValue });
       updateCurrentUser({ title: titleValue });
     } catch (e) {
       console.error('칭호 변경 실패:', e);

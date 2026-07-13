@@ -21,6 +21,7 @@ import {
   canUseMove,
 } from '../../../contest/ContestEngine';
 import { isValidComboFollowUp } from '../../../contest/comboChart';
+import { TARGETED_EFFECTS } from '../../../contest/contestEffects';
 import { getContestTypeColor, getContestEffectKo } from '../../../utils/contestMoveData';
 import { formatOwnedPokemonName } from '../../../utils/ownedPokemonDisplay';
 
@@ -181,7 +182,12 @@ function LogLine({ entry, participantsById }) {
     case 'liveAppeal':
       return <div className="text-yellow-400 font-bold">🌟 {nameOf(entry.participantId)} 라이브 어필 발동! +5</div>;
     case 'combo':
-      return <div className="text-purple-400 font-bold">🔗 {nameOf(entry.participantId)} 콤보 성공! +{entry.bonus}</div>;
+      return (
+        <div className="text-purple-400 font-bold">
+          🔗 {nameOf(entry.participantId)} 콤보 성공! 어필+{entry.bonus}
+          {entry.bonusJam > 0 && <span className="text-indigo-300"> · 방해+{entry.bonusJam}</span>}
+        </div>
+      );
     default:
       return null;
   }
@@ -193,6 +199,7 @@ export default function ContestAdminPanel() {
   const [draftParticipants, setDraftParticipants] = useState([]);
   const [state, setState] = useState(null);
   const [error, setError] = useState('');
+  const [selectedTargetIds, setSelectedTargetIds] = useState([]);
 
   const participantsById = useMemo(() => {
     const source = state ? state.participants : draftParticipants;
@@ -208,16 +215,28 @@ export default function ContestAdminPanel() {
   const resetContest = () => {
     setState(null);
     setError('');
+    setSelectedTargetIds([]);
   };
 
   const actor = state ? getCurrentActor(state) : null;
+
+  const toggleTarget = (id) => {
+    setSelectedTargetIds((prev) => (
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    ));
+  };
 
   const handleUseMove = (move) => {
     if (!actor) return;
     setError('');
     try {
-      const next = advanceTurn(state, { moveId: move.id });
+      const next = advanceTurn(state, {
+        moveId: move.id,
+        targetId: selectedTargetIds[0],
+        targetIds: selectedTargetIds,
+      });
       setState(next);
+      setSelectedTargetIds([]);
     } catch (e) {
       setError(e.message);
     }
@@ -307,10 +326,40 @@ export default function ContestAdminPanel() {
                   </span>
                 )}
               </div>
+
+              {state.participants.length > 1 && (
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-indigo-700">
+                    대상 지정 ("지정한 포켓몬" 효과나 콤보 방해에 사용, 필요 없는 기술이면 무시됩니다)
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {state.participants.filter((p) => p.id !== actor.id).map((p) => (
+                      <label
+                        key={p.id}
+                        className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs border cursor-pointer ${
+                          selectedTargetIds.includes(p.id)
+                            ? 'bg-indigo-600 text-white border-indigo-600'
+                            : 'bg-white text-gray-600 border-gray-300'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="hidden"
+                          checked={selectedTargetIds.includes(p.id)}
+                          onChange={() => toggleTarget(p.id)}
+                        />
+                        {p.name}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-wrap gap-2">
                 {actor.moves.map((m) => {
                   const usable = canUseMove(state, actor.id, m.id, allMoves.length ? allMoves : movesData.moves);
                   const isComboFollowUp = actor.comboWaiting && isValidComboFollowUp(actor.comboWaiting.moveId, m.id);
+                  const needsTarget = TARGETED_EFFECTS.has(m.contestEffect);
                   return (
                     <button
                       key={m.id}
@@ -326,6 +375,14 @@ export default function ContestAdminPanel() {
                       <span className="font-bold text-sm flex items-center gap-1">
                         {m.name}
                         {isComboFollowUp && <Link2 size={12} className="text-purple-500" />}
+                        {needsTarget && (
+                          <span
+                            className={`text-[10px] font-semibold ${selectedTargetIds.length ? 'text-indigo-500' : 'text-red-400'}`}
+                            title="대상 지정 필요"
+                          >
+                            🎯{selectedTargetIds.length ? '' : '!'}
+                          </span>
+                        )}
                       </span>
                       <span className="flex items-center gap-1"><MoveBadge move={m} small /> 어필{m.contestAppeals} 방해{m.contestJam}</span>
                     </button>
