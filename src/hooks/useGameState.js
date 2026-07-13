@@ -71,6 +71,7 @@ export default function useGameState() {
   const [encounterPokemon, setEncounterPokemon] = useState(null);
   const [firstCatchPokemon, setFirstCatchPokemon] = useState(null);
   const [statSelectPending, setStatSelectPending] = useState(null); // { item, pokemon, type, amount }
+  const [moveChoicePending, setMoveChoicePending] = useState(null); // { item, pokemon, options, kind }
   
   const allPokemonDataParsed = Array.isArray(allPokemonDataRaw) 
     ? allPokemonDataRaw 
@@ -243,7 +244,9 @@ export default function useGameState() {
     pokemonManagement.getPokemonFormCandidates,
     pokemonManagement.changePokemonForm,
     systemSettings,
-    (item, pokemon, type, amount) => setStatSelectPending({ item, pokemon, type, amount })
+    (item, pokemon, type, amount) => setStatSelectPending({ item, pokemon, type, amount }),
+    (item, pokemon, options, kind) => setMoveChoicePending({ item, pokemon, options, kind }),
+    (item, permitKind) => grantQnaItemPermit(item, permitKind)
   );
 
   const handleStatSelectComplete = (statKey) => {
@@ -266,6 +269,64 @@ export default function useGameState() {
       ? { ...item, specialEffect: null, conditionBoost: { [statKey]: amount } }
       : { ...item, specialEffect: null, evBoost: { [statKey]: amount } };
     itemEffectsHook.useItemOnPokemon(boostedItem, pokemon);
+  };
+
+  // 기술머신(범용)/하트비늘로 배울 기술을 고른 뒤 실제 학습 + 아이템 소모를 진행
+  const handleMoveChoiceComplete = (moveData, oldMoveId = null) => {
+    if (!moveChoicePending) return;
+    const { item, pokemon } = moveChoicePending;
+    setMoveChoicePending(null);
+    if (!moveData) return; // 취소
+    itemEffectsHook.useItemOnPokemon({
+      ...item,
+      __chosenMoveId: moveData.id,
+      __chosenOldMoveId: oldMoveId
+    }, pokemon);
+  };
+
+  // 볼 변경 티켓 / 미용실 이용권 사용 - 아이템은 소모하지 않고 QnA "아이템" 탭에
+  // 글을 한 번 쓸 수 있는 권한만 부여한다(실제 소모는 글이 등록에 성공했을 때 consumeQnaItemPermit에서 처리)
+  const grantQnaItemPermit = (item, permitKind) => {
+    if (!currentUser) return;
+    const permit = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      itemId: item?.itemId ?? item?.id ?? null,
+      itemName: item?.name || null,
+      kind: permitKind,
+      grantedAt: Date.now()
+    };
+    updateCurrentUser({ qnaItemPermits: [...(currentUser.qnaItemPermits || []), permit] });
+    alert(`${item?.name || '아이템'}을(를) 사용했습니다! QnA "아이템" 탭에 글을 한 번 쓸 수 있습니다.`);
+  };
+
+  // QnA "아이템" 탭 글이 실제로 등록된 뒤에만 호출 - 가장 먼저 받은 권한 1개를 제거하고
+  // 해당 권한을 부여한 티켓을 인벤토리에서 차감한다. 인벤토리 변경은 CLAUDE.md 규칙에 따라
+  // updateCurrentUser로 직접 건드리지 않고 runTransaction 기반 updateInventory로만 처리한다.
+  const consumeQnaItemPermit = () => {
+    if (!currentUser) return;
+    const permits = currentUser.qnaItemPermits || [];
+    if (permits.length === 0) return;
+
+    const [permitToConsume, ...remainingPermits] = permits;
+    updateCurrentUser({ qnaItemPermits: remainingPermits });
+
+    if (currentUser.isSuperAdmin) return;
+
+    updateInventory((currentInventory = []) => {
+      let consumed = false;
+      return currentInventory
+        .map(invItem => {
+          if (consumed) return invItem;
+          const matches = (permitToConsume.itemId != null && invItem.itemId === permitToConsume.itemId)
+            || (permitToConsume.itemName && invItem.name === permitToConsume.itemName);
+          if (matches) {
+            consumed = true;
+            return { ...invItem, count: (invItem.count || 0) - 1 };
+          }
+          return invItem;
+        })
+        .filter(invItem => invItem.count > 0);
+    });
   };
 
   // 매일 자정 산책 횟수 리셋
@@ -403,6 +464,9 @@ export default function useGameState() {
     firstCatchPokemon,
     statSelectPending,
     handleStatSelectComplete,
+    moveChoicePending,
+    handleMoveChoiceComplete,
+    consumeQnaItemPermit,
     regions,
     setRegions,
     allPokemon,

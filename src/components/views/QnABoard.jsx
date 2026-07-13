@@ -3,11 +3,12 @@ import ReactDOM from 'react-dom';
 import { ChevronLeft, ChevronRight, Image, Lock, MessageSquare, Pencil, Plus, Search, Send, Trash2, X } from 'lucide-react';
 
 
-const CATEGORIES = ['질문', '정산'];
+const CATEGORIES = ['질문', '정산', '아이템'];
 
 const CATEGORY_STYLE = {
   '질문': { bg: 'rgba(80,130,200,0.55)', text: 'rgba(220,238,255,1)' },
   '정산': { bg: 'rgba(195,150,40,0.55)',  text: 'rgba(255,240,180,1)' },
+  '아이템': { bg: 'rgba(150,90,190,0.55)', text: 'rgba(240,225,255,1)' },
 };
 
 export default function QnABoard({
@@ -18,6 +19,7 @@ export default function QnABoard({
   onEditPost,
   onCreateComment,
   onDeleteComment,
+  canPostItem = false,
 }) {
   const [showWriteModal, setShowWriteModal] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState(null);
@@ -67,6 +69,10 @@ export default function QnABoard({
   const handleCreatePost = () => {
     if (!newPost.title.trim()) { alert('제목을 입력해주세요.'); return; }
     if (!newPost.content.trim()) { alert('내용을 입력해주세요.'); return; }
+    if (newPost.category === '아이템' && !canPostItem) {
+      alert('볼 변경 티켓 또는 미용실 이용권을 사용해야 "아이템" 탭에 글을 쓸 수 있습니다.');
+      return;
+    }
 
     onCreatePost({
       id: Date.now(),
@@ -284,20 +290,30 @@ export default function QnABoard({
               <div>
                 <label className="mb-1.5 block text-xs font-semibold" style={{color:'rgba(60,80,40,0.6)'}}>카테고리</label>
                 <div className="flex gap-2">
-                  {CATEGORIES.map(cat => (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => setNewPost({ ...newPost, category: cat })}
-                      className="rounded-md px-4 py-1.5 text-sm font-semibold transition"
-                      style={newPost.category === cat
-                        ? {background:'rgba(50,70,35,0.85)', color:'rgba(240,255,225,1)', outline:'none'}
-                        : {background:'rgba(0,0,0,0.06)', color:'rgba(60,80,40,0.55)', border:'1px solid rgba(80,120,60,0.2)'}}
-                    >
-                      {cat}
-                    </button>
-                  ))}
+                  {CATEGORIES.map(cat => {
+                    const isLocked = cat === '아이템' && !canPostItem;
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        disabled={isLocked}
+                        title={isLocked ? '볼 변경 티켓 또는 미용실 이용권을 사용해야 글을 쓸 수 있습니다' : undefined}
+                        onClick={() => setNewPost({ ...newPost, category: cat })}
+                        className={`rounded-md px-4 py-1.5 text-sm font-semibold transition ${isLocked ? 'cursor-not-allowed opacity-50' : ''}`}
+                        style={newPost.category === cat
+                          ? {background:'rgba(50,70,35,0.85)', color:'rgba(240,255,225,1)', outline:'none'}
+                          : {background:'rgba(0,0,0,0.06)', color:'rgba(60,80,40,0.55)', border:'1px solid rgba(80,120,60,0.2)'}}
+                      >
+                        {cat}
+                      </button>
+                    );
+                  })}
                 </div>
+                {newPost.category === '아이템' && !canPostItem && (
+                  <p className="mt-1.5 text-xs font-semibold" style={{color:'rgba(180,60,60,0.75)'}}>
+                    볼 변경 티켓 또는 미용실 이용권을 사용해야 이 탭에 글을 쓸 수 있습니다.
+                  </p>
+                )}
               </div>
               <div>
                 <label className="mb-1.5 block text-xs font-semibold" style={{color:'rgba(60,80,40,0.6)'}}>제목</label>

@@ -1,7 +1,7 @@
 // src/hooks/items/useItemEffects.js
 import { useRef, useEffect } from 'react';
 import { isEVItem, applyEVItem } from '../../utils/evItemUtils';
-import { getLearnsetTmMoves, getPokemonLearnset } from '../../utils/pokemonLearnsets';
+import { getLearnsetTmMoves, getLearnsetEggMoves, getPokemonLearnset } from '../../utils/pokemonLearnsets';
 import { isRareCandyItem, resolveItemData } from '../../utils/itemUsageRules';
 import { isSoyYYNItem } from '../../utils/specialItemUtils';
 
@@ -35,7 +35,9 @@ export const useItemEffects = (
   getPokemonFormCandidates,
   changePokemonForm,
   systemSettings = {},
-  onRequestStatSelection = null
+  onRequestStatSelection = null,
+  onRequestMoveChoice = null,
+  onGrantQnaItemPermit = null
 ) => {
 
   const movesHook = useMoves;
@@ -150,7 +152,66 @@ export const useItemEffects = (
       return;
     }
 
+    // QnA "아이템" 탭 글쓰기 권한 티켓 - 대상 포켓몬 없이 사용, 여기서는 소모하지 않음
+    // (실제 글이 등록에 성공해야만 소모되도록 App.jsx의 QnA 작성 흐름에서 소모 처리)
+    if (src.specialEffect === 'qnaItemPermit') {
+      if (typeof onGrantQnaItemPermit !== 'function') {
+        alert('현재 이 아이템을 사용할 수 없습니다.');
+        return;
+      }
+      onGrantQnaItemPermit(item, src.permitKind || 'general');
+      return;
+    }
+
     if (!pokemon) return;
+
+    // 기술머신(범용)/하트비늘 - 배울 수 있는 기술 목록에서 하나를 골라 학습
+    const isGenericTmItem = src.specialEffect === 'learnAnyTmMove';
+    const isGenericEggItem = src.specialEffect === 'learnAnyEggMove';
+
+    if (isGenericTmItem || isGenericEggItem) {
+      // 2단계: 모달에서 이미 기술을 고른 뒤 재호출된 경우 - 바로 학습 + 소모
+      if (item.__chosenMoveId) {
+        const moveData = allMoves.find(m => m.id === item.__chosenMoveId);
+        if (!moveData) {
+          alert('기술 정보를 찾을 수 없습니다!');
+          return;
+        }
+        const success = movesHook.learnMove(pokemon.uniqueId, moveData, item.__chosenOldMoveId || null);
+        if (success) {
+          consumeItem(item);
+        }
+        return;
+      }
+
+      // 1단계: 배울 수 있는 기술 후보를 모아 선택 모달을 요청
+      const learnset = getPokemonLearnset(pokemonLearnsets, pokemon);
+      if (!learnset) {
+        alert(`${pokemon.nickname || pokemon.name}의 기술 습득 정보를 찾을 수 없습니다!`);
+        return;
+      }
+
+      const poolIds = isGenericTmItem ? getLearnsetTmMoves(learnset) : getLearnsetEggMoves(learnset);
+      const knownMoveIds = new Set((pokemon.moves || []).map(m => m.moveId));
+      const options = poolIds
+        .filter(moveId => !knownMoveIds.has(moveId))
+        .map(moveId => allMoves.find(m => m.id === moveId))
+        .filter(Boolean);
+
+      if (options.length === 0) {
+        alert(`${pokemon.nickname || pokemon.name}이(가) 이 아이템으로 새로 배울 수 있는 기술이 없습니다!`);
+        return;
+      }
+
+      if (typeof onRequestMoveChoice !== 'function') {
+        alert('현재 이 아이템을 사용할 수 없습니다.');
+        return;
+      }
+
+      releaseItemUseLock();
+      onRequestMoveChoice(item, pokemon, options, isGenericTmItem ? 'tm' : 'egg');
+      return;
+    }
 
     // 기술머신 (TM) 사용 처리
     if (itemData?.isTM) {

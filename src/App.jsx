@@ -23,6 +23,7 @@ import AdminView from './components/views/AdminView';
 import EncounterModal from './components/modals/EncounterModal';
 import FirstCatchMemoModal from './components/modals/FirstCatchMemoModal';
 import StatSelectModal from './components/modals/StatSelectModal';
+import MoveChoiceModal from './components/views/pokemon/MoveChoiceModal';
 import EvolutionModal from './components/modals/EvolutionModal';
 import useGameState from './hooks/useGameState';
 import useDeployRefresh from './hooks/useDeployRefresh';
@@ -1357,6 +1358,9 @@ export default function App() {
     firstCatchPokemon,
     statSelectPending,
     handleStatSelectComplete,
+    moveChoicePending,
+    handleMoveChoiceComplete,
+    consumeQnaItemPermit,
     regions,
     allPokemonMaster,
     members,
@@ -1714,11 +1718,13 @@ export default function App() {
 
         if (result.committed) {
           setQnaPosts(result.snapshot.val() || []);
+          return true;
         }
+        return false;
       } catch (error) {
         console.error('QnA posts save failed:', error);
+        return false;
       }
-      return;
     }
 
     const nextPosts = nextPostsOrUpdater;
@@ -1726,10 +1732,22 @@ export default function App() {
     void Promise.resolve().catch((error) => {
       console.error('❌ 게시판 저장 실패:', error);
     });
+    return false;
   };
 
-  const handleCreatePost = (post) => {
-    saveQnaPosts(posts => [post, ...posts]);
+  // 볼 변경 티켓/미용실 이용권으로 받은 권한이 있어야만 "아이템" 탭에 글을 쓸 수 있다.
+  // 아이템 소모는 글이 실제로 등록(committed)된 경우에만 진행한다.
+  const canPostQnaItemTab = (currentUser?.qnaItemPermits?.length || 0) > 0;
+
+  const handleCreatePost = async (post) => {
+    if (post.category === '아이템' && !canPostQnaItemTab) {
+      alert('볼 변경 티켓 또는 미용실 이용권을 사용해야 "아이템" 탭에 글을 쓸 수 있습니다.');
+      return;
+    }
+    const success = await saveQnaPosts(posts => [post, ...posts]);
+    if (success && post.category === '아이템') {
+      consumeQnaItemPermit();
+    }
   };
 
   const handleDeletePost = (postId) => {
@@ -1913,6 +1931,7 @@ return (
               onEditPost={handleEditPost}
               onCreateComment={handleCreateComment}
               onDeleteComment={handleDeleteComment}
+              canPostItem={canPostQnaItemTab}
             />
           )}
           
@@ -2046,6 +2065,7 @@ return (
 			  onEditPost={handleEditPost}
 			  onCreateComment={handleCreateComment}
 			  onDeleteComment={handleDeleteComment}
+			  canPostItem={canPostQnaItemTab}
 			/>
 		  )}
 		  
@@ -2091,6 +2111,17 @@ return (
           currentEffort={statSelectPending.pokemon?.effort || statSelectPending.pokemon?.effortValues}
           onSelect={handleStatSelectComplete}
           onClose={() => handleStatSelectComplete(null)}
+        />
+      )}
+
+      {moveChoicePending && (
+        <MoveChoiceModal
+          pokemon={moveChoicePending.pokemon}
+          kind={moveChoicePending.kind}
+          options={moveChoicePending.options}
+          currentMoves={moveChoicePending.pokemon?.moves || []}
+          onConfirm={handleMoveChoiceComplete}
+          onCancel={() => handleMoveChoiceComplete(null)}
         />
       )}
 

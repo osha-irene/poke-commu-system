@@ -31,3 +31,7 @@ export const getPokemonLearnset = (pokemonLearnsets = {}, pokemonOrNumber) => {
 export const getLearnsetTmMoves = (learnset = {}) => (
   learnset.tmMoves || learnset.machineMoves || []
 );
+
+export const getLearnsetEggMoves = (learnset = {}) => (
+  learnset.eggMoves || []
+);

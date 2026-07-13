@@ -1,5 +1,5 @@
 import evolutionsData from '../data/evolutions.json';
-import { getLearnsetTmMoves, getPokemonLearnset } from './pokemonLearnsets';
+import { getLearnsetTmMoves, getLearnsetEggMoves, getPokemonLearnset } from './pokemonLearnsets';
 import { getEVItemEffect, isEVItem } from './evItemUtils';
 import { isSoyYYNItem } from './specialItemUtils';
 
@@ -168,6 +168,16 @@ export const canUseItemOnPokemonTarget = ({
 
   if (isRareCandyItem(item, itemData)) {
     return Number(pokemon.level || 1) < 100;
+  }
+
+  if (resolvedItemData?.specialEffect === 'learnAnyTmMove' || resolvedItemData?.specialEffect === 'learnAnyEggMove') {
+    const learnset = getPokemonLearnset(pokemonLearnsets, pokemon);
+    if (!learnset) return false;
+    const poolIds = resolvedItemData.specialEffect === 'learnAnyTmMove'
+      ? getLearnsetTmMoves(learnset)
+      : getLearnsetEggMoves(learnset);
+    const knownMoveIds = new Set((pokemon.moves || []).map(move => move.moveId));
+    return poolIds.some(moveId => !knownMoveIds.has(moveId));
   }
 
   if (resolvedItemData?.isTM) {

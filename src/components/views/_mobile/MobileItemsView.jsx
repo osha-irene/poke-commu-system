@@ -116,6 +116,13 @@ export default function MobileItemsView() {
       }
       return;
     }
+    if (details?.specialEffect === 'qnaItemPermit') {
+      if (onUseItem && selectedItem) {
+        onUseItem({ ...selectedItem, specialEffect: 'qnaItemPermit', permitKind: details.itemData?.permitKind }, null);
+        closeAll();
+      }
+      return;
+    }
     if (!selectedPokemon) { alert('포켓몬을 선택해주세요!'); return; }
     if (onUseItem && selectedItem) {
       onUseItem(selectedItem, selectedPokemon);

@@ -299,6 +299,17 @@ const categories = CATEGORIES.map(cat => {
       return;
     }
 
+    // 볼 변경 티켓 / 미용실 이용권: 포켓몬 선택 없이 바로 사용 (QnA 글쓰기 권한 부여)
+    if (details.specialEffect === 'qnaItemPermit') {
+      if (onUseItem && selectedItem) {
+        onUseItem({ ...selectedItem, specialEffect: 'qnaItemPermit', permitKind: details.itemData?.permitKind }, null);
+        closeModal();
+      } else {
+        alert('아이템 사용 기능이 연결되지 않았습니다.');
+      }
+      return;
+    }
+
     if (!selectedPokemon) {
       alert('포켓몬을 선택해주세요!');
       return;
