@@ -1,6 +1,6 @@
 // src/hooks/useGameData.js
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   ref,
   get,
@@ -207,6 +207,15 @@ export const useGameData = (allPokemonData, recipes = []) => {
   });
   const [isLoading, setIsLoading] = useState(true);
 
+  // recipes가 바뀔 때마다 customItems 리스너를 재구독하면 onChildAdded가 기존 자식 전체를
+  // "새로 추가됨"으로 다시 리플레이해서 매번 gameData/customItems 전체를 다시 내려받는다
+  // (레시피 생성/수정마다 recipes 참조가 바뀌므로 그때마다 RTDB 다운로드가 튐). 리스너는
+  // 한 번만 붙이고, 최신 recipes 값은 ref로만 참조한다.
+  const recipesRef = useRef(recipes);
+  useEffect(() => {
+    recipesRef.current = recipes;
+  }, [recipes]);
+
   useEffect(() => {
     const loadGameData = async () => {
       try {
@@ -283,13 +292,13 @@ export const useGameData = (allPokemonData, recipes = []) => {
     const applyCustomItem = (snapshot) => {
       setAllItems(prevItems => {
         const customItems = getCustomItemsFromAllItems(prevItems);
-        return buildAllItems(upsertArrayChild(customItems, snapshot.key, snapshot.val()), recipes);
+        return buildAllItems(upsertArrayChild(customItems, snapshot.key, snapshot.val()), recipesRef.current);
       });
     };
     const removeCustomItem = (snapshot) => {
       setAllItems(prevItems => {
         const customItems = getCustomItemsFromAllItems(prevItems);
-        return buildAllItems(removeArrayChild(customItems, snapshot.key), recipes);
+        return buildAllItems(removeArrayChild(customItems, snapshot.key), recipesRef.current);
       });
     };
 
@@ -302,7 +311,7 @@ export const useGameData = (allPokemonData, recipes = []) => {
       unsubChanged();
       unsubRemoved();
     };
-  }, [isLoading, recipes]);
+  }, [isLoading]);
 
   // Recipes load asynchronously from a separate hook/DB path, so re-derive the
   // recipe result items into allItems whenever the recipe list changes (create/update/delete).

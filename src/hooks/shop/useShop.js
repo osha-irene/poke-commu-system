@@ -115,6 +115,17 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
   // 계속 늘어나는 회귀가 생길 수 있다 — ref로 "이미 부트스트랩했는지"를 기억해 재실행을 막는다.
   const hasBootstrappedRef = useRef(false);
 
+  // allItems는 레시피/커스텀 아이템이 하나 바뀔 때마다(recipes 갱신, customItem 추가/수정 등)
+  // 새 배열 참조로 다시 만들어진다. 아래 effect가 allItems를 그대로 의존성 배열에 넣으면
+  // 그때마다 gameData/shopData의 onChildAdded/onChildChanged 리스너가 재구독되면서 상점
+  // 데이터 전체를 매번 다시 내려받는다 — 최신 아이템 목록은 ref로만 참조하고, effect 자체는
+  // "아이템이 처음 준비됐는지"(hasItems)에만 반응하도록 분리한다.
+  const allItemsRef = useRef(allItems);
+  useEffect(() => {
+    allItemsRef.current = allItems;
+  }, [allItems]);
+  const hasItems = Array.isArray(allItems) && allItems.length > 0;
+
   // 소지금 증감 — 로컬 스냅샷(currentUser.money)이 아니라 Firebase의 실제 최신 값을 기준으로
   // 원자적으로 반영한다. 로컬 값을 기준으로 계산하면 그 사이 다른 곳에서 바뀐 금액을 덮어쓸 수 있다.
   const adjustMoney = (delta) => {
@@ -123,7 +134,8 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
   };
 
   useEffect(() => {
-    if (!allItems || allItems.length === 0) return;
+    if (!hasItems) return;
+    const allItems = allItemsRef.current;
 
     const shopRef = ref(database, 'gameData/shopData');
     let isMounted = true;
@@ -294,7 +306,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
       unsubChanged();
       unsubRemoved();
     };
-  }, [allItems]);
+  }, [hasItems]);
 
   const updateShopData = async (newShopData) => {
     try {

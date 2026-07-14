@@ -13,19 +13,23 @@ function stripCountSuffix(name = '') {
   return String(name).replace(/\s*\d+\s*개\s*$/, '').trim();
 }
 
-function getItemImageUrl(item = {}, allItems = []) {
+function findCatalogItem(item = {}, allItems = []) {
   const rawName = stripCountSuffix(item.name || '');
-const itemKeys = [item.itemId, item.id, item.nameEn, rawName]
+  const itemKeys = [item.itemId, item.id, item.nameEn, rawName]
     .filter((value) => value !== undefined && value !== null && String(value).trim() !== '')
     .map((value) => String(value).toLowerCase());
 
-  const sourceItem = allItems.find((candidate) => {
+  return allItems.find((candidate) => {
     const candidateKeys = [candidate.id, candidate.itemId, candidate.nameEn, candidate.name]
       .filter((value) => value !== undefined && value !== null && String(value).trim() !== '')
       .map((value) => String(value).toLowerCase());
 
     return candidateKeys.some((key) => itemKeys.includes(key));
   });
+}
+
+function getItemImageUrl(item = {}, allItems = []) {
+  const sourceItem = findCatalogItem(item, allItems);
 
   return (
     sourceItem?.spriteUrl ||
@@ -40,17 +44,50 @@ const itemKeys = [item.itemId, item.id, item.nameEn, rawName]
   );
 }
 
-function isCookingIngredient(item = {}) {
+// 레시피(관리자가 만든 요리 포함)의 재료 목록에 등장하는 이름들을 모아둔다.
+// 커스텀 아이템(관리자 지급 재료, 레시피 결과물로 파생되는 아이템 등)은 category가
+// "misc"로만 잡혀 있는 경우가 많아서 pocket/category 판정만으로는 재료로 인식되지 않는다.
+// 실제로 어떤 레시피에서 재료로 쓰이고 있다면 그 자체가 "이건 재료다"라는 확실한 근거이므로,
+// 이름 기반으로도 재료 여부를 판정한다.
+function collectKnownIngredientNames(recipes = [], ingredientStats = []) {
+  const names = new Set();
+  recipes.forEach(recipe => {
+    (recipe?.ingredients || []).forEach(ing => {
+      if (ing?.name) names.add(ing.name);
+    });
+  });
+  ingredientStats.forEach(stat => {
+    if (stat?.name) names.add(stat.name);
+  });
+  return names;
+}
+
+// 인벤토리에 저장되는 아이템 스냅샷(useShop/useLoot 등)은 category/pocket 정도만 들고 있고
+// 카탈로그(items.json)의 cooking.isIngredient 플래그는 복사하지 않는다. 그래서 인벤토리
+// 아이템만 보고 판단하면 "맛있는물"처럼 cooking.isIngredient로만 재료 판정되는 아이템은
+// 항상 재료 목록에서 빠진다 - allItems에서 원본 카탈로그 아이템을 찾아 같이 확인한다.
+function isCookingIngredient(item = {}, allItems = [], knownIngredientNames = new Set()) {
+  const catalogItem = findCatalogItem(item, allItems) || {};
   const pocket = getItemPocket(item);
+  const catalogPocket = getItemPocket(catalogItem);
   const category = String(item.category || item.categoryData?.name || '').toLowerCase();
+  const catalogCategory = String(catalogItem.category || catalogItem.categoryData?.name || '').toLowerCase();
+  const rawName = stripCountSuffix(item.name || '');
 
   return (
     pocket === ITEM_POCKETS.BERRIES ||
     pocket === ITEM_POCKETS.INGREDIENTS ||
+    catalogPocket === ITEM_POCKETS.BERRIES ||
+    catalogPocket === ITEM_POCKETS.INGREDIENTS ||
     item.cooking?.isIngredient === true ||
     item.isIngredient === true ||
+    catalogItem.cooking?.isIngredient === true ||
     category.includes('ingredient') ||
-    category.includes('berries')
+    category.includes('berries') ||
+    catalogCategory.includes('ingredient') ||
+    catalogCategory.includes('berries') ||
+    knownIngredientNames.has(rawName) ||
+    knownIngredientNames.has(item.name)
   );
 }
 
@@ -95,7 +132,8 @@ export default function CookingView() {
     ].map(recipe => [recipe.id, recipe])
   ).values());
   const ingredientStats = recipesData.ingredientStats || [];
-  const availableIngredients = userItems.filter(isCookingIngredient);
+  const knownIngredientNames = collectKnownIngredientNames(recipes, ingredientStats);
+  const availableIngredients = userItems.filter(item => isCookingIngredient(item, allItems, knownIngredientNames));
 
   const totalIngredientCount = selectedIngredients.reduce((sum, i) => sum + i.count, 0);
 

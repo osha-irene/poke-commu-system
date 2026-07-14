@@ -1562,8 +1562,8 @@
       "createdBy": "pokeapi",
       "createdAt": null,
       "cooking": {
-        "isIngredient": false,
-        "isCookable": false,
+        "isIngredient": true,
+        "isCookable": true,
         "resultItem": null,
         "requiredItems": [],
         "cookingTime": 0,
@@ -4114,7 +4114,7 @@
       "createdBy": "pokeapi",
       "createdAt": null,
       "cooking": {
-        "isIngredient": false,
+        "isIngredient": true,
         "isCookable": false,
         "resultItem": null,
         "requiredItems": [],
