@@ -20,6 +20,12 @@ import { faCalendarDays, faStore, faGift, faBoxOpen } from '@fortawesome/free-so
 import { useGame } from '../../contexts/GameContext';
 import { getItemPocket, POCKET_LABELS } from '../../utils/itemUtils';
 import useMediaQuery from '../../hooks/useMediaQuery';
+import {
+  getKoreaDateKey,
+  getKoreaDayIndex,
+  getKoreaWeekEndDateKey,
+  getMillisecondsUntilNextKoreaMidnight,
+} from '../../utils/shopTime';
 
 const P = {
   card:      'rgba(255,255,255,0.90)',
@@ -39,7 +45,7 @@ const P = {
 
 const getDailyGachaBalls = (balls) => {
   if (!balls || balls.length <= 2) return balls || [];
-  const dateStr = new Date().toISOString().split('T')[0];
+  const dateStr = getKoreaDateKey();
   let hash = 0;
   for (let i = 0; i < dateStr.length; i++) {
     hash = (hash * 31 + dateStr.charCodeAt(i)) & 0xffffffff;
@@ -82,7 +88,15 @@ export default function ShopView() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [isNavHidden, setIsNavHidden] = useState(false);
+  const [koreaDateKey, setKoreaDateKey] = useState(() => getKoreaDateKey());
   const lastScrollYRef = useRef(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setKoreaDateKey(getKoreaDateKey());
+    }, getMillisecondsUntilNextKoreaMidnight() + 1000);
+    return () => clearTimeout(timer);
+  }, [koreaDateKey]);
 
   useEffect(() => {
     lastScrollYRef.current = window.scrollY;
@@ -98,11 +112,11 @@ export default function ShopView() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const today = new Date();
   const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   const dayNamesKo = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
-  const todayName = dayNames[today.getDay()];
-  const todayNameKo = dayNamesKo[today.getDay()];
+  const koreaDayIndex = getKoreaDayIndex();
+  const todayName = dayNames[koreaDayIndex];
+  const todayNameKo = dayNamesKo[koreaDayIndex];
 // ⭐ getItemDetails 함수를 먼저 선언
   const getItemDetails = (shopItem) => {
     const item = allItems.find(i => i.id === shopItem.itemId);
@@ -1085,11 +1099,8 @@ export default function ShopView() {
   };
 
   const getPeriodItemExpiryLabel = () => {
-    const today = new Date();
-    const dayNum = today.getDay() || 7;
-    const sunday = new Date(today);
-    sunday.setDate(today.getDate() + (7 - dayNum));
-    return `${sunday.getMonth() + 1}/${sunday.getDate()}(일)까지`;
+    const [, month, day] = getKoreaWeekEndDateKey().split('-').map(Number);
+    return `${month}/${day}(일)까지`;
   };
 
   const renderThrownItemHover = () => {
@@ -1240,7 +1251,7 @@ export default function ShopView() {
       const item = getItemDetails(shopData.rareDailyItem);
       if (!item) return null;
       const purchaseHistory = trainer?.purchaseHistory || {};
-      const todayDate = new Date().toISOString().split('T')[0];
+      const todayDate = getKoreaDateKey();
       const alreadyPurchased = ((purchaseHistory[todayDate] || {})[shopData.rareDailyItem.itemId] || 0) >= 1;
       return { item, alreadyPurchased };
     };

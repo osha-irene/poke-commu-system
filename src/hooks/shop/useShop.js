@@ -4,16 +4,12 @@ import { useState, useEffect, useRef } from 'react';
 import { ref, get, onChildAdded, onChildChanged, onChildRemoved, set, runTransaction } from 'firebase/database';
 import { database } from '../../firebase';
 import { getItemPocket } from '../../utils/itemUtils';
-
-// 현재 주차 계산
-const getWeekKey = (date) => {
-  const d = new Date(date);
-  const dayNum = d.getDay() || 7;
-  d.setDate(d.getDate() + 4 - dayNum);
-  const yearStart = new Date(d.getFullYear(), 0, 1);
-  const weekNum = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-  return `${d.getFullYear()}-W${weekNum}`;
-};
+import {
+  getKoreaDateKey,
+  getKoreaDayIndex,
+  getKoreaWeekKey,
+  getMillisecondsUntilNextKoreaMidnight,
+} from '../../utils/shopTime';
 
 // enrichItemData 함수
 const enrichItemData = (itemTemplate, allItems) => {
@@ -91,6 +87,7 @@ const getDefaultRandomBoxes = () => ([
 ]);
 
 export const useShop = (currentUser, updateCurrentUser, allItems, updateInventory) => {
+  const [koreaDateKey, setKoreaDateKey] = useState(() => getKoreaDateKey());
   const [shopData, setShopData] = useState({
     dailyItems: {},
     initialDailyItems: {},
@@ -109,12 +106,17 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
   });
   const [isLoading, setIsLoading] = useState(true);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setKoreaDateKey(getKoreaDateKey());
+    }, getMillisecondsUntilNextKoreaMidnight() + 1000);
+    return () => clearTimeout(timer);
+  }, [koreaDateKey]);
+
   // ⭐ ensureShopData(주간 리셋 병합/희귀·기간한정 아이템 로테이션 + 조건부 Firebase 쓰기)는
   // 세션당 딱 한 번만 실행되어야 한다. 이 값이 false인 동안 effect가 allItems 참조 변경으로
   // 여러 번 재실행되면(레시피/커스텀 아이템 갱신 등), 매번 다시 병합 로직을 태워 dailyItems가
   // 계속 늘어나는 회귀가 생길 수 있다 — ref로 "이미 부트스트랩했는지"를 기억해 재실행을 막는다.
-  const hasBootstrappedRef = useRef(false);
-
   // allItems는 레시피/커스텀 아이템이 하나 바뀔 때마다(recipes 갱신, customItem 추가/수정 등)
   // 새 배열 참조로 다시 만들어진다. 아래 effect가 allItems를 그대로 의존성 배열에 넣으면
   // 그때마다 gameData/shopData의 onChildAdded/onChildChanged 리스너가 재구독되면서 상점
@@ -142,7 +144,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
     let isInitialLoad = true;
 
     const normalizeShopData = (loadedData = {}) => {
-      const currentWeek = getWeekKey(new Date());
+      const currentWeek = getKoreaWeekKey();
       const initialDailyItems = loadedData.initialDailyItems || getDefaultInitialDailyItems();
       const enrichedDailyItems = {};
 
@@ -172,7 +174,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
     };
 
     const ensureShopData = async (loadedData = {}) => {
-      const currentWeek = getWeekKey(new Date());
+      const currentWeek = getKoreaWeekKey();
       const baseData = {
         ...loadedData,
         randomBoxes: loadedData.randomBoxes || getDefaultRandomBoxes(),
@@ -183,7 +185,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
         periodItemConfig: loadedData.periodItemConfig || { enabled: false },
       };
 
-      const today = new Date().toISOString().split('T')[0];
+      const today = getKoreaDateKey();
       if (baseData.rareDailyItem?.lastRefresh !== today && baseData.rareItemPool?.length > 0) {
         const selectedRareItem = baseData.rareItemPool[Math.floor(Math.random() * baseData.rareItemPool.length)];
         baseData.rareDailyItem = {
@@ -230,7 +232,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
     get(shopRef)
       .then(async (snapshot) => {
         if (!snapshot.exists()) {
-          const currentWeek = getWeekKey(new Date());
+          const currentWeek = getKoreaWeekKey();
           const defaultTemplate = getDefaultInitialDailyItems();
           const enrichedDailyItems = {};
           for (const [day, items] of Object.entries(defaultTemplate)) {
@@ -259,19 +261,11 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
 
         const loadedData = snapshot.val();
 
-        // ⭐ 주간 리셋 병합/로테이션은 세션당 한 번만. allItems 참조가 바뀌어 effect가
-        // 다시 실행되더라도, 이미 부트스트랩했다면 최신 allItems로 다시 enrich만 하고
-        // ensureShopData(및 그에 따른 Firebase 쓰기)는 건너뛴다.
-        if (!hasBootstrappedRef.current) {
-          const ensuredData = await ensureShopData(loadedData);
-          hasBootstrappedRef.current = true;
-          if (JSON.stringify(ensuredData) !== JSON.stringify(loadedData)) {
-            await set(shopRef, ensuredData);
-          }
-          if (isMounted) setShopData(normalizeShopData(ensuredData));
-        } else if (isMounted) {
-          setShopData(normalizeShopData(loadedData));
+        const ensuredData = await ensureShopData(loadedData);
+        if (JSON.stringify(ensuredData) !== JSON.stringify(loadedData)) {
+          await set(shopRef, ensuredData);
         }
+        if (isMounted) setShopData(normalizeShopData(ensuredData));
       })
       .catch((error) => {
         console.error('shop data load failed:', error);
@@ -306,7 +300,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
       unsubChanged();
       unsubRemoved();
     };
-  }, [hasItems]);
+  }, [hasItems, koreaDateKey]);
 
   const updateShopData = async (newShopData) => {
     try {
@@ -529,7 +523,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
     
     if (itemType === 'rare') {
       const purchaseHistory = currentUser.purchaseHistory || {};
-      const today = new Date().toISOString().split('T')[0];
+      const today = getKoreaDateKey();
       const todayPurchases = purchaseHistory[today] || {};
       
       const alreadyPurchased = todayPurchases[itemId] || 0;
@@ -616,16 +610,15 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
 
     // 상점 재고 감소 처리
     try {
-      const today = new Date();
       const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-      const todayName = dayNames[today.getDay()];
+      const todayName = dayNames[getKoreaDayIndex()];
       
       let updatedShopData = JSON.parse(JSON.stringify(shopData));
       let needShopUpdate = false;
       
       if (itemType === 'rare' && updatedShopData.rareDailyItem?.itemId === itemId) {
         const purchaseHistory = currentUser.purchaseHistory || {};
-        const todayStr = new Date().toISOString().split('T')[0];
+        const todayStr = getKoreaDateKey();
         const todayPurchases = purchaseHistory[todayStr] || {};
         todayPurchases[itemId] = (todayPurchases[itemId] || 0) + quantity;
         purchaseHistory[todayStr] = todayPurchases;
