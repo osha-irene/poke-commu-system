@@ -1,77 +1,87 @@
-[ 
-  {
-    "id": "trainer-rookie",
-    "label": "초보 트레이너",
-    "icon": "/img/titles/trainer-rookie.png"
-  },
-  {
-    "id": "doctors-helper",
-    "label": "박사님의 조수",
-    "icon": "/img/titles/doctors-helper.png"
-  },
-  {
-    "id": "coordinator-rookie",
-    "label": "초보 코디네이터",
-    "icon": "/img/titles/coordinator-rookie.png"
-  },
+[
     {
-    "id": "coordinator-junior",
-    "label": "떠오르는 샛별",
-    "icon": "/img/titles/coordinator-junior.png"
-  },
-  {
-    "id": "coordinator-senior",
-    "label": "스테이지에 올라설 자",
-    "icon": "/img/titles/coordinator-senior.png"
-  },
-  {
-    "id": "coordinator-master",
-    "label": "올해의 코디네이터",
-    "icon": "/img/titles/coordinator-master.png"
-  }, 
-   {
-    "id": "cooking",
-    "label": "늘 밥을 해줬어",
-    "icon": "/img/titles/cooking.png"
-  },
-  {
-    "id": "muk-maker",
-    "label": "질뻐기 메이커",
-    "icon": "/img/titles/muk-maker.png"
-  },
-  {
-    "id": "family-in-law",
-    "label": "(경)친구와 사돈관계(축)",
-    "icon": "/img/titles/family-in-law.png"
-  },
+        "id": "trainer-rookie",
+        "label": "초보 트레이너",
+        "icon": "/img/titles/trainer-rookie.png"
+    },
     {
-    "id": "frozen-trainer",
-    "label": "트레이너 동결건조 시킬래",
-    "icon": "/img/titles/frozen-trainer.png"
-  },
-  {
-    "id": "bingo",
-    "label": "친해졌길 바라",
-    "icon": "/img/titles/bingo.png"
-  },
-  {
-    "id": "watchout-onehit",
-    "label": "일격필살!을 조심해",
-    "icon": "/img/titles/watchout-onehit.png"
-  },
-      {
-    "id": "millonaire",
-    "label": "황금몸",
-    "icon": "/img/titles/millonaire.png"
-  },
-  {
-    "id": "make-onehit",
-    "label": "인생은 한방!",
-    "icon": "/img/titles/make-onehit.png"
-  },
-  {
-    "id": "over-endless-times",
-    "label": "억겹의 시간을 넘어",
-    "icon": "/img/titles/over-endless-times.png"
-  }
+        "id": "doctors-helper",
+        "label": "박사님의 조수",
+        "icon": "/img/titles/doctors-helper.png"
+    },
+    {
+        "id": "coordinator-rookie",
+        "label": "초보 코디네이터",
+        "icon": "/img/titles/coordinator-rookie.png"
+    },
+    {
+        "id": "coordinator-junior",
+        "label": "떠오르는 샛별",
+        "icon": "/img/titles/coordinator-junior.png"
+    },
+    {
+        "id": "coordinator-senior",
+        "label": "스테이지에 올라설 자",
+        "icon": "/img/titles/coordinator-senior.png"
+    },
+    {
+        "id": "coordinator-master",
+        "label": "올해의 코디네이터",
+        "icon": "/img/titles/coordinator-master.png"
+    },
+    {
+        "id": "cooking",
+        "label": "늘 밥을 해줬어",
+        "icon": "/img/titles/cooking.png"
+    },
+    {
+        "id": "chubby",
+        "label": "제 포켓몬 뚱띵해요?",
+        "icon": "/img/titles/chubby.png"
+    },
+    {
+        "id": "muk-maker",
+        "label": "질뻐기 메이커",
+        "icon": "/img/titles/muk-maker.png"
+    },
+    {
+        "id": "family-in-law",
+        "label": "(경)친구와 사돈관계(축)",
+        "icon": "/img/titles/family-in-law.png"
+    },
+    {
+        "id": "frozen-trainer",
+        "label": "트레이너 동결건조 시킬래",
+        "icon": "/img/titles/frozen-trainer.png"
+    },
+    {
+        "id": "bingo",
+        "label": "친해졌길 바라",
+        "icon": "/img/titles/bingo.png"
+    },
+    {
+        "id": "chef",
+        "label": "인간 밥차(려)",
+        "icon": "/img/titles/chef.png"
+    },
+    {
+        "id": "watchout-onehit",
+        "label": "일격필살!을 조심해",
+        "icon": "/img/titles/watchout-onehit.png"
+    },
+    {
+        "id": "millonaire",
+        "label": "황금몸",
+        "icon": "/img/titles/millonaire.png"
+    },
+    {
+        "id": "make-onehit",
+        "label": "인생은 한방!",
+        "icon": "/img/titles/make-onehit.png"
+    },
+    {
+        "id": "over-endless-times",
+        "label": "억겹의 시간을 넘어",
+        "icon": "/img/titles/over-endless-times.png"
+    }
 ]
