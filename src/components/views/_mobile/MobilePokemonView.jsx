@@ -225,6 +225,7 @@ export default function MobilePokemonView() {
           <div className="flex-1 overflow-y-auto mobile-detail-scroll" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <PokemonDetailPanel
               pokemon={selectedPokemon}
+              currentUser={currentUser}
               hasRareCandy={hasRareCandy}
               rareCandyImage={rareCandyImage}
               isInParty={isSelectedInParty}
