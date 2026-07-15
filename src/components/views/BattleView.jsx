@@ -252,6 +252,24 @@ const PartnerCard = ({ canSelect, onClick, order, pokemon, selected }) => (
   </button>
 );
 
+const BattleSizePicker = ({ accent, size, onChange }) => {
+  const activeClass = accent === 'blue' ? 'bg-blue-600 text-white' : 'bg-red-600 text-white';
+  return (
+    <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1">
+      {[1, 2, 3, 4, 5, 6].map(n => (
+        <button
+          key={n}
+          type="button"
+          onClick={() => onChange(n)}
+          className={`rounded-md px-2.5 py-1 text-xs font-bold ${size === n ? activeClass : 'text-gray-700 hover:bg-gray-100'}`}
+        >
+          {n}
+        </button>
+      ))}
+    </div>
+  );
+};
+
 const EntrySelector = ({
   accent,
   entryPokemon,
@@ -591,7 +609,9 @@ export function BattleView() {
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [loadingPokemon, setLoadingPokemon] = useState({ player1: false, player2: false });
   const [members, setMembers] = useState([]);
-  const [battleSize, setBattleSize] = useState(3);
+  // 양 진영이 서로 다른 마리 수로 배틀할 수 있도록(2:3, 4:3, 6:5 등) 각자 독립적으로 갖는다.
+  const [battleSizeP1, setBattleSizeP1] = useState(3);
+  const [battleSizeP2, setBattleSizeP2] = useState(3);
   const [selectedUser1, setSelectedUser1] = useState('');
   const [selectedUser2, setSelectedUser2] = useState('');
   const [player1Data, setPlayer1Data] = useState({ entryPokemon: [], partnerPokemon: null, inventory: [] });
@@ -681,12 +701,12 @@ export function BattleView() {
     const p2SelectableIds = getSelectablePokemon(player2Data.entryPokemon, player2Data.partnerPokemon)
       .map((pokemon, index) => pokemonKey(pokemon, index));
 
-    setSelectedP1Ids(prev => prev.filter(id => p1SelectableIds.includes(id)).slice(0, Math.min(battleSize, p1SelectableIds.length)));
-    setSelectedP2Ids(prev => prev.filter(id => p2SelectableIds.includes(id)).slice(0, Math.min(battleSize, p2SelectableIds.length)));
-  }, [battleSize, player1Data.entryPokemon, player1Data.partnerPokemon, player2Data.entryPokemon, player2Data.partnerPokemon]);
+    setSelectedP1Ids(prev => prev.filter(id => p1SelectableIds.includes(id)).slice(0, Math.min(battleSizeP1, p1SelectableIds.length)));
+    setSelectedP2Ids(prev => prev.filter(id => p2SelectableIds.includes(id)).slice(0, Math.min(battleSizeP2, p2SelectableIds.length)));
+  }, [battleSizeP1, battleSizeP2, player1Data.entryPokemon, player1Data.partnerPokemon, player2Data.entryPokemon, player2Data.partnerPokemon]);
 
-  const p1RequiredCount = Math.min(battleSize, getSelectablePokemon(player1Data.entryPokemon, player1Data.partnerPokemon).length);
-  const p2RequiredCount = Math.min(battleSize, getSelectablePokemon(player2Data.entryPokemon, player2Data.partnerPokemon).length);
+  const p1RequiredCount = Math.min(battleSizeP1, getSelectablePokemon(player1Data.entryPokemon, player1Data.partnerPokemon).length);
+  const p2RequiredCount = Math.min(battleSizeP2, getSelectablePokemon(player2Data.entryPokemon, player2Data.partnerPokemon).length);
   const canStart = p1RequiredCount > 0
     && p2RequiredCount > 0
     && selectedP1Ids.length === p1RequiredCount
@@ -989,18 +1009,6 @@ export function BattleView() {
           >
             🎒 아이템 사용 {battleItemsEnabled ? 'ON' : 'OFF'}
           </button>
-          <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1">
-            {[3, 6].map(size => (
-              <button
-                key={size}
-                type="button"
-                onClick={() => setBattleSize(size)}
-                className={`rounded-md px-4 py-2 text-sm font-bold ${battleSize === size ? 'bg-gray-900 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
-              >
-                {size}마리
-              </button>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -1024,6 +1032,10 @@ export function BattleView() {
                     <option key={member.uid} value={member.uid}>{getMemberName(member)}</option>
                   ))}
                 </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-600">참가 마리 수</span>
+                <BattleSizePicker accent="blue" size={battleSizeP1} onChange={setBattleSizeP1} />
               </div>
               {selectedUser1 && (
                 <EntrySelector
@@ -1051,6 +1063,10 @@ export function BattleView() {
                     <option key={member.uid} value={member.uid}>{getMemberName(member)}</option>
                   ))}
                 </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-600">참가 마리 수</span>
+                <BattleSizePicker accent="red" size={battleSizeP2} onChange={setBattleSizeP2} />
               </div>
               {selectedUser2 && (
                 <EntrySelector

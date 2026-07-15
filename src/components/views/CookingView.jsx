@@ -68,11 +68,30 @@ function collectKnownIngredientNames(recipes = [], ingredientStats = []) {
 // 항상 재료 목록에서 빠진다 - allItems에서 원본 카탈로그 아이템을 찾아 같이 확인한다.
 function isCookingIngredient(item = {}, allItems = [], knownIngredientNames = new Set()) {
   const catalogItem = findCatalogItem(item, allItems) || {};
+
+  // 관리자가 커스텀 아이템의 cooking.isIngredient를 명시적으로 false로 지정한 경우, 이름이
+  // 우연히 다른 레시피의 재료 이름(예: 공식 "오랭열매")과 같더라도 재료 목록에 넣지 않는다.
+  // (아래 이름 기반 매칭은 원래 isIngredient 플래그가 없는 아이템을 구제하기 위한 것이라,
+  //  명시적 false보다 우선하면 안 됨)
+  if (item.cooking?.isIngredient === false || catalogItem.cooking?.isIngredient === false) {
+    return false;
+  }
+
+  const rawName = stripCountSuffix(item.name || '');
+  const isKnownIngredientName = knownIngredientNames.has(rawName) || knownIngredientNames.has(item.name);
+
+  // 완성된 요리(오란다 등) 자체는 재료가 아니라 완제품이다. 어떤 레시피가 실제로 그 이름을
+  // 재료로 지정해두지 않는 한(예: 오란다를 넣어야 하는 다른 요리가 생기는 경우), 오래된
+  // pocket:"berries" 스냅샷이 인벤토리에 남아있어도 재료 목록에 다시 뜨지 않는다.
+  const isCookedDishResult = item.isCooked === true || catalogItem.isRecipe === true || catalogItem.__customItemSource === 'recipe';
+  if (isCookedDishResult && !isKnownIngredientName) {
+    return false;
+  }
+
   const pocket = getItemPocket(item);
   const catalogPocket = getItemPocket(catalogItem);
   const category = String(item.category || item.categoryData?.name || '').toLowerCase();
   const catalogCategory = String(catalogItem.category || catalogItem.categoryData?.name || '').toLowerCase();
-  const rawName = stripCountSuffix(item.name || '');
 
   return (
     pocket === ITEM_POCKETS.BERRIES ||
@@ -86,8 +105,7 @@ function isCookingIngredient(item = {}, allItems = [], knownIngredientNames = ne
     category.includes('berries') ||
     catalogCategory.includes('ingredient') ||
     catalogCategory.includes('berries') ||
-    knownIngredientNames.has(rawName) ||
-    knownIngredientNames.has(item.name)
+    isKnownIngredientName
   );
 }
 

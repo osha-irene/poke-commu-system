@@ -172,7 +172,10 @@ export const getItemPocket = (item) => {
   // 커스텀 아이템에서 관리자가 cooking.isIngredient를 명시적으로 false로 지정한 경우,
   // 이름에 "열매"가 들어있어도 나무열매 포켓으로 자동 분류하지 않는다.
   // (명시적 false는 "이건 재료/나무열매가 아니다"라는 확실한 의사표시이므로 이름 매칭보다 우선한다)
-  const isExplicitlyNotIngredient = item.cooking?.isIngredient === false;
+  // ⚠️ isCustom인 경우로만 한정한다 - 오랭/버치/유루열매 같은 공식 나무열매는 cooking.isIngredient가
+  // 원래 false인 게 정상(요리 재료가 아닌 상태이상 회복용 지닌 물건일 뿐, 나무열매 포켓 자체는 맞음).
+  // isCustom 체크 없이 적용하면 이 공식 나무열매들이 전부 나무열매 포켓에서 빠져버린다.
+  const isExplicitlyNotIngredient = item.isCustom && item.cooking?.isIngredient === false;
 
   // item.pocket이 나무열매가 아닌 값으로 이미 명시적으로 박혀있으면(관리자가 CustomItemCreator의
   // 카테고리 버튼으로 직접 고른 값, 혹은 그 값이 상점 구매/지급을 거쳐 인벤토리에 그대로 복사된
