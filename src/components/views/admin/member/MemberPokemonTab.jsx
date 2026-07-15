@@ -13,6 +13,9 @@ import { getPokemonDisplayParts } from '../../../../utils/pokemonDisplayName';
 import evolutionsData from '../../../../data/evolutions.json';
 import { getBaseStatPatch } from '../../../../utils/pokemonBaseStats';
 import { getAbilityEnglishName, getAbilityKoreanName } from '../../../../utils/abilityUtils';
+import AlcremieFlavorModal from '../../../modals/AlcremieFlavorModal';
+import AlcremieShapeModal from '../../../modals/AlcremieShapeModal';
+import { getAlcremieImage } from '../../../../utils/alcremieFlavors';
 
 const emptyEffort = { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 };
 const emptyCondition = { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 };
@@ -41,6 +44,8 @@ function MemberPokemonTab({
   const [showGiveItemModal, setShowGiveItemModal] = useState(false);
   const [showGivePokemonPicker, setShowGivePokemonPicker] = useState(false);
   const [transferTarget, setTransferTarget] = useState(null);
+  // 어드민 강제 진화로 마빌크 → 마휘핑 진화 중일 때 { evolvedTemplate }
+  const [alcremieAdminPending, setAlcremieAdminPending] = useState(null);
   
   const [editData, setEditData] = useState({
     level: 5,
@@ -327,22 +332,7 @@ function MemberPokemonTab({
       });
   };
 
-  const handleAdminEvolve = (evolutionEntry) => {
-    if (!selectedPokemon || !evolutionEntry) return;
-    const targetNumber = Number(evolutionEntry.to);
-    const evolvedTemplate =
-      allPokemonMaster.find(p => Number(p.number) === targetNumber) ||
-      allPokemonMaster.find(p => Number(p.id) === targetNumber) ||
-      allPokemonMaster.find(p => !p.regionalForm && Number(p.originalNumber) === targetNumber) ||
-      allPokemonMaster.find(p => Number(p.originalNumber) === targetNumber);
-    if (!evolvedTemplate) {
-      alert('진화 대상 포켓몬 데이터를 찾을 수 없습니다.');
-      return;
-    }
-    const fromName = selectedPokemon.nickname || getPokemonDisplayParts(selectedPokemon).name;
-    const toName = getPokemonDisplayParts(evolvedTemplate).name;
-    if (!window.confirm(`${fromName}을(를) ${toName}(으)로 진화시키겠습니까?`)) return;
-
+  const buildEvolveUpdates = (evolvedTemplate, imageOverrides = {}) => {
     const basePatch = getBaseStatPatch(evolvedTemplate);
     const newName = getPokemonDisplayParts(evolvedTemplate).name;
     const oldName = getPokemonDisplayParts(selectedPokemon).name;
@@ -352,7 +342,7 @@ function MemberPokemonTab({
       currentNickname !== oldName &&
       currentNickname !== selectedPokemon.name &&
       currentNickname !== selectedPokemon.nameEn;
-    const updates = {
+    return {
       number: evolvedTemplate.number,
       originalNumber: evolvedTemplate.originalNumber || evolvedTemplate.number,
       pokemonId: evolvedTemplate.number,
@@ -373,12 +363,57 @@ function MemberPokemonTab({
       nickname: isCustomNickname ? currentNickname : null,
       evolutionCancelled: false,
       evolutionReady: false,
+      ...imageOverrides,
     };
+  };
 
-    onEditPokemon(member.id, selectedPokemon.uniqueId, updates);
+  const handleAdminEvolve = (evolutionEntry) => {
+    if (!selectedPokemon || !evolutionEntry) return;
+    const targetNumber = Number(evolutionEntry.to);
+    const evolvedTemplate =
+      allPokemonMaster.find(p => Number(p.number) === targetNumber) ||
+      allPokemonMaster.find(p => Number(p.id) === targetNumber) ||
+      allPokemonMaster.find(p => !p.regionalForm && Number(p.originalNumber) === targetNumber) ||
+      allPokemonMaster.find(p => Number(p.originalNumber) === targetNumber);
+    if (!evolvedTemplate) {
+      alert('진화 대상 포켓몬 데이터를 찾을 수 없습니다.');
+      return;
+    }
+
+    // 마빌크 → 마휘핑: 강제 진화도 사탕공예(장식) → 맛(크림) 순서로 선택 모달을 거치게 한다
+    if (evolvedTemplate.nameEn === 'alcremie') {
+      setAlcremieAdminPending({ evolvedTemplate, shapeId: null });
+      return;
+    }
+
+    const fromName = selectedPokemon.nickname || getPokemonDisplayParts(selectedPokemon).name;
+    const toName = getPokemonDisplayParts(evolvedTemplate).name;
+    if (!window.confirm(`${fromName}을(를) ${toName}(으)로 진화시키겠습니까?`)) return;
+
+    onEditPokemon(member.id, selectedPokemon.uniqueId, buildEvolveUpdates(evolvedTemplate));
     setMode('view');
     setSelectedPokemon(null);
     alert(`✅ ${fromName}이(가) ${toName}(으)로 진화했습니다!`);
+  };
+
+  const finishAlcremieAdminEvolve = (flavor) => {
+    if (!alcremieAdminPending?.shapeId || !flavor || !selectedPokemon) return;
+    const { evolvedTemplate, shapeId } = alcremieAdminPending;
+    const fromName = selectedPokemon.nickname || getPokemonDisplayParts(selectedPokemon).name;
+    const image = getAlcremieImage(flavor.id, shapeId);
+
+    onEditPokemon(member.id, selectedPokemon.uniqueId, buildEvolveUpdates(evolvedTemplate, image ? {
+      imageUrl: image,
+      spriteUrl: image,
+      iconUrl: image,
+      alcremieFlavor: flavor.id,
+      alcremieShape: shapeId,
+    } : { alcremieFlavor: flavor.id, alcremieShape: shapeId }));
+
+    setAlcremieAdminPending(null);
+    setMode('view');
+    setSelectedPokemon(null);
+    alert(`✅ ${fromName}이(가) ${flavor.label}(으)로 진화했습니다!`);
   };
 
   const handleStartTransferPokemon = (pokemon) => {
@@ -530,6 +565,22 @@ function MemberPokemonTab({
       )}
 
       {/* 모달들 */}
+      {alcremieAdminPending && selectedPokemon && !alcremieAdminPending.shapeId && (
+        <AlcremieShapeModal
+          pokemon={selectedPokemon}
+          onConfirm={(shape) => setAlcremieAdminPending(prev => ({ ...prev, shapeId: shape.id }))}
+          onCancel={() => setAlcremieAdminPending(null)}
+        />
+      )}
+      {alcremieAdminPending && selectedPokemon && alcremieAdminPending.shapeId && (
+        <AlcremieFlavorModal
+          pokemon={selectedPokemon}
+          shapeId={alcremieAdminPending.shapeId}
+          onConfirm={finishAlcremieAdminEvolve}
+          onCancel={() => setAlcremieAdminPending(null)}
+        />
+      )}
+
       {showMoveModal && selectedPokemon && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999 }}>
           <MoveSelectModal

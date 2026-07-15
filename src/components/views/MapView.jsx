@@ -21,12 +21,22 @@ import { database } from '../../firebase';
 const DEFAULT_VIEWPORT = { x: 0, y: 0, w: 100, h: 100 };
 const SCREEN_RATIO = 909 / 655;
 const TOWN_LABEL_CENTER_Y_OFFSET = 0.075;
+// mapBg(map.png) 실측 픽셀 비율(2539×2535 ≈ 1.0016). map.png를 다른 비율의 이미지로
+// 교체하면 이 값도 같이 갱신해야 한다.
+const MAP_IMAGE_ASPECT = 2539 / 2535;
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
-function lockedH(width, containerRect) {
-  if (!containerRect || !containerRect.width || !containerRect.height) return width / SCREEN_RATIO;
-  return width * containerRect.width / (SCREEN_RATIO * containerRect.height);
+// mapBg 원본 이미지는 거의 정사각형(2539×2535)이라 SCREEN_RATIO(909/655, 기기 화면 비율)와
+// 전혀 다르다. lockedH가 이 둘을 같다고 착각하고 h를 계산하면, 배경(backgroundSize: X% auto,
+// 이미지 자체 비율로 세로가 정해짐)과 핀 좌표(viewport.h 기준으로 세로 % 계산)가 서로 다른
+// 세로 스케일을 쓰게 되어 화면 중심에서 멀어진 핀일수록(패닝할수록) 라벨이 실제 그림 위치에서
+// 점점 벗어나 보인다. imageAspect(이미지 자체의 가로/세로 비율)를 반드시 반영해야 한다.
+function lockedH(width, containerRect, imageAspect) {
+  const containerAspect = containerRect && containerRect.width && containerRect.height
+    ? containerRect.width / containerRect.height
+    : SCREEN_RATIO;
+  return width * imageAspect / containerAspect;
 }
 
 function getCenteredViewport(town, viewport) {
@@ -107,7 +117,7 @@ export default function MapView({
       if (!snap.exists()) return;
       const saved = snap.val();
       const screenRect = screenRef.current?.getBoundingClientRect() ?? null;
-      const height = lockedH(Number(saved.w) || DEFAULT_VIEWPORT.w, screenRect);
+      const height = lockedH(Number(saved.w) || DEFAULT_VIEWPORT.w, screenRect, MAP_IMAGE_ASPECT);
       setViewport({ ...saved, h: height });
     }).finally(() => {
       setMapViewportLoaded(true);

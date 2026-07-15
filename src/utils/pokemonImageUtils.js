@@ -5,6 +5,8 @@
  * 포켓몬 이미지 URL 생성 유틸리티
  */
 
+import { getAlcremieImage } from './alcremieFlavors';
+
 // 아이콘 URL 생성 (엔트리/박스용)
 export const getPokemonIconUrl = (number) => {
   // 9세대 이상 (906번~)은 기본 이미지 사용
@@ -62,6 +64,12 @@ export const getGenderedSpriteUrl = (pokemon, pokemonData) => {
 
 export const getOwnedPokemonSpriteUrl = (pokemon, pokemonData = pokemon) => {
   if (!pokemon) return '';
+
+  // 마휘핑: 진화 시 고른 맛(alcremieFlavor)이 있으면 번호 기반 API 이미지 대신 그 맛 이미지를 쓴다
+  if (pokemon.alcremieFlavor) {
+    const flavorImage = getAlcremieImage(pokemon.alcremieFlavor, pokemon.alcremieShape);
+    if (flavorImage) return flavorImage;
+  }
 
   const genderedSprite = getGenderedSpriteUrl(pokemon, pokemonData);
   if (genderedSprite) return genderedSprite;

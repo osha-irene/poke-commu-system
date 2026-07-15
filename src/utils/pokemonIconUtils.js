@@ -69,12 +69,17 @@ export function toPokemonIconFileName(pokemon = {}, options = {}) {
 }
 
 export function getPokemonLocalIconUrl(pokemon = {}, options = {}) {
-  const fileName = toPokemonIconFileName(pokemon, options);
-  if (!fileName) return '';
-
   const basePath = typeof window !== 'undefined' && window.location.pathname.includes('/poke-commu-system')
     ? '/poke-commu-system'
     : '';
+
+  // 마휘핑: 진화 시 고른 맛(alcremieFlavor)이 있으면 맛별 전용 아이콘(ALCREMIE-{맛}.png)을 쓴다
+  if (pokemon.alcremieFlavor) {
+    return `${basePath}/img/icons/ALCREMIE-${pokemon.alcremieFlavor.toUpperCase()}.png`;
+  }
+
+  const fileName = toPokemonIconFileName(pokemon, options);
+  if (!fileName) return '';
 
   return `${basePath}/img/icons/${fileName}.png`;
 }

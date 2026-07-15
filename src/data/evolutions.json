@@ -637,9 +637,9 @@
     },
     {
       "from": 102,
-      "to": 103,
+      "to": 10114,
       "fromName": "exeggcute",
-      "toName": "exeggutor",
+      "toName": "exeggutor-alola",
       "condition": {
         "type": "item",
         "item": "leaf-stone"
@@ -4217,6 +4217,76 @@
       "condition": {
         "type": "level",
         "level": 42
+      }
+    },
+    {
+      "from": 868,
+      "to": 869,
+      "fromName": "milcery",
+      "toName": "alcremie",
+      "condition": {
+        "type": "item",
+        "item": "strawberry-sweet"
+      }
+    },
+    {
+      "from": 868,
+      "to": 869,
+      "fromName": "milcery",
+      "toName": "alcremie",
+      "condition": {
+        "type": "item",
+        "item": "love-sweet"
+      }
+    },
+    {
+      "from": 868,
+      "to": 869,
+      "fromName": "milcery",
+      "toName": "alcremie",
+      "condition": {
+        "type": "item",
+        "item": "berry-sweet"
+      }
+    },
+    {
+      "from": 868,
+      "to": 869,
+      "fromName": "milcery",
+      "toName": "alcremie",
+      "condition": {
+        "type": "item",
+        "item": "clover-sweet"
+      }
+    },
+    {
+      "from": 868,
+      "to": 869,
+      "fromName": "milcery",
+      "toName": "alcremie",
+      "condition": {
+        "type": "item",
+        "item": "flower-sweet"
+      }
+    },
+    {
+      "from": 868,
+      "to": 869,
+      "fromName": "milcery",
+      "toName": "alcremie",
+      "condition": {
+        "type": "item",
+        "item": "star-sweet"
+      }
+    },
+    {
+      "from": 868,
+      "to": 869,
+      "fromName": "milcery",
+      "toName": "alcremie",
+      "condition": {
+        "type": "item",
+        "item": "ribbon-sweet"
       }
     },
     {

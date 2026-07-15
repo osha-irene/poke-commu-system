@@ -250,7 +250,7 @@ export default function MobileItemsView() {
                   </div>
                   {/* 하단: 설명 (이미지 왼쪽 기준) */}
                   {details.description && (
-                    <div style={{ fontSize: 10, color: P.muted, lineHeight: 1.4, whiteSpace: 'normal', wordBreak: 'keep-all', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    <div style={{ fontSize: 10, color: P.muted, lineHeight: 1.4, whiteSpace: 'normal', wordBreak: 'keep-all' }}>
                       {details.description}
                     </div>
                   )}

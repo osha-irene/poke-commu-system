@@ -79,8 +79,9 @@ function DesktopItemsView() {
     );
   }
 
-  // ✅ 이 줄만 수정!
-  const pocket = getItemPocket(itemData) || getItemPocket(item) || 'misc';
+  // itemData가 없으면 getItemPocket(null)이 곧바로 'misc'를 반환해버려서(진짜 값인 'misc'와
+  // "못 찾음"을 구분 못 함) ||로는 item 쪽 category까지 못 내려간다. itemData 존재 여부로 직접 분기.
+  const pocket = itemData ? getItemPocket(itemData) : getItemPocket(item);
   
   const category = item.category || itemData?.category || '';
 
@@ -125,6 +126,7 @@ const getPocketColor = (pocket) => {
     'held-items': 'bg-orange-50 border-orange-200',
     'evolution': 'bg-yellow-50 border-yellow-200',
     'battle-items': 'bg-red-50 border-red-200',
+    'ingredients': 'bg-amber-50 border-amber-200',
     'key-items': 'bg-indigo-50 border-indigo-200'
   };
   return colors[pocket] || 'bg-gray-50 border-gray-200';
@@ -140,6 +142,7 @@ const getPocketBadge = (pocket) => {
     'held-items': { text: '도구', color: 'bg-orange-100 text-orange-700' },
     'evolution': { text: '진화', color: 'bg-yellow-100 text-yellow-700' },
     'battle-items': { text: '배틀', color: 'bg-red-100 text-red-700' },
+    'ingredients': { text: '식재료', color: 'bg-amber-100 text-amber-700' },
     'key-items': { text: '중요', color: 'bg-indigo-100 text-indigo-700' }
   };
   return badges[pocket] || { text: '기타', color: 'bg-gray-100 text-gray-700' };
@@ -156,6 +159,7 @@ const getPocketBadge = (pocket) => {
   'held-items': Backpack,
   'evolution': Sparkles,
   'battle-items': Sword,
+  'ingredients': Apple,
   'key-items': Key,
   'misc': Package
 };
@@ -171,6 +175,7 @@ const categories = CATEGORIES.map(cat => {
     'held-items': 'bg-orange-100 text-orange-700',
     'evolution': 'bg-yellow-100 text-yellow-700',
     'battle-items': 'bg-red-100 text-red-700',
+    'ingredients': 'bg-amber-100 text-amber-700',
     'key-items': 'bg-indigo-100 text-indigo-700',
     'misc': 'bg-gray-100 text-gray-700'
   };
@@ -532,7 +537,7 @@ const categories = CATEGORIES.map(cat => {
                         </span>
                       </div>
                       
-                      <div className="text-sm text-gray-600 line-clamp-3 mb-2">
+                      <div className="text-sm text-gray-600 mb-2">
                         {details.description}
                       </div>
 

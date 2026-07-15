@@ -1575,6 +1575,12 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     if (badgeRotationFrameRef.current !== null) cancelAnimationFrame(badgeRotationFrameRef.current);
   }, []);
 
+  // member.id/tab이 바뀔 때만(= 다른 멤버를 보거나 탭을 전환할 때만) 서버 값으로 다시 동기화한다.
+  // 뱃지 필드(badgeCleanlinessLevels 등)를 deps에 넣으면, 내가 방금 문질러서 저장한 값이
+  // Firebase 리스너를 타고 되돌아올 때마다(=매 스크럽 저장마다) 이 effect가 다시 돌면서
+  // scrubProgressRef를 0으로 밀어버리고 8개 뱃지 전체를 서버 스냅샷으로 재계산했다.
+  // 그 순간 로컬에서 막 반영된 값과 미묘하게 어긋나면(비동기 왕복 타이밍차) 상관없는 다른
+  // 뱃지들까지 잠깐 원래 더러운 opacity로 리렌더되어 "훅 어두워졌다 돌아오는" 것처럼 보였다.
   useEffect(() => {
     setBadgeCleanlinessLevels(getCurrentBadgeCleanlinessLevels(member));
     setBadgeCleanedAtLevels(normalizeBadgeCleanedAtArray(member.badgeCleanedAtLevels, member.badgeCleanedAt));
@@ -1582,7 +1588,8 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     badgePointerRef.current = null;
     badgeLastScrubAtRef.current = 0;
     setBadgeScrubPreview({ index: null, progress: 0 });
-  }, [member.id, member.badgeCleanliness, member.badgeCleanedAt, member.badgeCleanlinessLevels, member.badgeCleanedAtLevels, tab]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [member.id, tab]);
 
   useEffect(() => {
     if (tab !== 'extra') return undefined;
@@ -2574,7 +2581,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                     pointerEvents: isFlipped ? 'none' : 'auto',
                   }}>
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                      <img src={getBallImageUrl(p, allItems)} alt="" style={{ position: 'absolute', top: 6, left: 6, width: 32, height: 32, objectFit: 'contain', imageRendering: 'pixelated', opacity: 0.75, pointerEvents: 'none' }} />
+                      <img src={getBallImageUrl(p, allItems)} alt="" style={{ position: 'absolute', top: 6, left: 6, width: 27, height: 27, objectFit: 'contain', imageRendering: 'pixelated', opacity: 0.75, pointerEvents: 'none' }} />
                       <div
                         className="pokemon-bg-sprite"
                         aria-label={getPokemonName(p)}
@@ -2582,9 +2589,11 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                         style={{
                           width: 96,
                           height: 96,
+                          minWidth: 96,
+                          minHeight: 96,
                           flexShrink: 0,
                           backgroundImage: `url(${getEntryPokemonSprite(p)})`,
-                          backgroundSize: '80%',
+                          backgroundSize: '100%',
                           backgroundPosition: 'center center',
                           backgroundRepeat: 'no-repeat',
                           position: 'relative',

@@ -8,6 +8,7 @@ import {
   isWurmple,
   withWurmpleEvolutionId
 } from '../../utils/wurmpleEvolution';
+import { getAlcremieImage, getAlcremieShapeForItem } from '../../utils/alcremieFlavors';
 
 const allMovesData = Array.isArray(movesDataRaw) ? movesDataRaw : movesDataRaw.moves || [];
 
@@ -15,6 +16,8 @@ const getBaseName = (pokemon) => getPokemonDisplayParts(pokemon).name;
 
 export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) => {
   const [evolutionModal, setEvolutionModal] = useState(null);
+  // 마빌크 → 마휘핑: 어떤 맛(크림)으로 진화할지 고르는 중일 때 {pokemon, evolution, shapeId}
+  const [alcremieFlavorPending, setAlcremieFlavorPending] = useState(null);
 
   const toPokemonNumber = (value) => {
     const number = Number(value);
@@ -336,8 +339,19 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
       return false;
     }
     
+    // 마빌크 → 마휘핑: 일반 진화 모달 대신 맛(크림) 선택 모달을 띄운다
+    if (evolvedPokemonData.nameEn === 'alcremie') {
+      console.log('🍰 마휘핑 맛 선택 모달 표시:', pokemon.name);
+      setAlcremieFlavorPending({
+        pokemon,
+        evolution,
+        shapeId: getAlcremieShapeForItem(itemName)
+      });
+      return true;
+    }
+
     console.log('✨ 진화 모달 표시:', pokemon.name, '→', evolvedPokemonData.name);
-    
+
     // 진화 모달 표시 (실제 진화는 acceptEvolution에서)
     setEvolutionModal({
       show: true,
@@ -347,12 +361,12 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
       toPokemon: evolvedPokemonData,
       isItemEvolution: true
     });
-    
+
     return true;
   };
 
-  // 진화 실행
-  const performEvolution = (pokemon, evolution) => {
+  // 진화 실행 (imageOverrides: 마휘핑 맛처럼 진화 결과 이미지를 직접 지정해야 할 때 사용)
+  const performEvolution = (pokemon, evolution, imageOverrides = {}) => {
     const evolvedTemplate = findPokemonTemplateByNumber(evolution.to);
 
     if (!evolvedTemplate) {
@@ -383,7 +397,8 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
           spriteUrl: `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${evolvedTemplate.number}.png`,
           // 닉네임이 종족명이면 제거, 커스텀 닉네임은 유지
           nickname: (p.nickname && p.nickname !== getBaseName(p) && p.nickname !== p.name && p.nickname !== p.nameEn) ? p.nickname : null,
-          evolutionCancelled: false
+          evolutionCancelled: false,
+          ...imageOverrides
         };
       }
       return p;
@@ -501,6 +516,36 @@ const manualEvolve = (pokemon) => {
     setEvolutionModal(null);
   };
 
+  // 마휘핑 맛 선택 완료 → 선택한 맛의 이미지로 바로 진화
+  const chooseAlcremieFlavor = (flavor) => {
+    if (!alcremieFlavorPending || !flavor) return false;
+    const { pokemon, evolution, shapeId } = alcremieFlavorPending;
+    const image = getAlcremieImage(flavor.id, shapeId);
+
+    const success = performEvolution(pokemon, evolution, image ? {
+      imageUrl: image,
+      spriteUrl: image,
+      iconUrl: image,
+      alcremieFlavor: flavor.id,
+      alcremieShape: shapeId
+    } : { alcremieFlavor: flavor.id, alcremieShape: shapeId });
+
+    if (success) {
+      alert(`🎉 축하합니다!\n${pokemon.nickname || pokemon.name}이(가) ${flavor.label}(으)로 진화했습니다!`);
+    }
+
+    setAlcremieFlavorPending(null);
+    return success;
+  };
+
+  const cancelAlcremieFlavor = () => {
+    if (alcremieFlavorPending?.pokemon) {
+      const p = alcremieFlavorPending.pokemon;
+      alert(`${p.nickname || p.name}의 진화를 취소했습니다.`);
+    }
+    setAlcremieFlavorPending(null);
+  };
+
   // 진화 가능한 모든 포켓몬 찾기
   const getAllEvolvablePokemon = () => {
     if (!currentUser) return [];
@@ -522,6 +567,9 @@ const manualEvolve = (pokemon) => {
     acceptEvolution,
     cancelEvolution,
     manualEvolve,
-    getAllEvolvablePokemon
+    getAllEvolvablePokemon,
+    alcremieFlavorPending,
+    chooseAlcremieFlavor,
+    cancelAlcremieFlavor
   };
 };

@@ -14,6 +14,7 @@ const EMPTY_ITEM = {
   effect: '',
   spriteUrl: '',
   specialEffect: null,
+  cooking: { isIngredient: false },
   evBoost: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
   friendshipBoost: 0,
   conditionBoost: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
@@ -248,6 +249,20 @@ export function CustomItemModal({ editItem = null, onSubmit, onClose }) {
               className="w-4 h-4 text-purple-600 rounded focus:ring-2 focus:ring-purple-500"
             />
             <label htmlFor="canSell" className="text-sm font-semibold text-gray-700">판매 가능한 아이템</label>
+          </div>
+
+          {/* 식재료 겸용 (카테고리와 별개로 요리 재료 목록에도 포함) */}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="isIngredient"
+              checked={Boolean(itemData.cooking?.isIngredient)}
+              onChange={e => set({ cooking: { ...(itemData.cooking || {}), isIngredient: e.target.checked } })}
+              className="w-4 h-4 text-purple-600 rounded focus:ring-2 focus:ring-purple-500"
+            />
+            <label htmlFor="isIngredient" className="text-sm font-semibold text-gray-700">
+              🥕 식재료로도 사용 가능 (원래 카테고리는 유지한 채 요리 재료 목록에 포함)
+            </label>
           </div>
 
           {/* 특수 효과 선택 */}

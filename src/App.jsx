@@ -27,6 +27,7 @@ import MoveChoiceModal from './components/views/pokemon/MoveChoiceModal';
 import QnaItemWriteModal from './components/modals/QnaItemWriteModal';
 import AbilitySelectModal from './components/modals/AbilitySelectModal';
 import EvolutionModal from './components/modals/EvolutionModal';
+import AlcremieFlavorModal from './components/modals/AlcremieFlavorModal';
 import useGameState from './hooks/useGameState';
 import useDeployRefresh from './hooks/useDeployRefresh';
 import ShopView from './components/views/ShopView';
@@ -1410,6 +1411,9 @@ export default function App() {
     evolutionModal,
     acceptEvolution,
     cancelEvolution,
+    alcremieFlavorPending,
+    chooseAlcremieFlavor,
+    cancelAlcremieFlavor,
     increaseEffort,
     camping,
     titles,
@@ -2167,6 +2171,15 @@ return (
         onCancel={cancelEvolution}
       />
     )}
+
+      {alcremieFlavorPending && (
+        <AlcremieFlavorModal
+          pokemon={alcremieFlavorPending.pokemon}
+          shapeId={alcremieFlavorPending.shapeId}
+          onConfirm={chooseAlcremieFlavor}
+          onCancel={cancelAlcremieFlavor}
+        />
+      )}
       {currentUser?.forcePasswordChange && (
         <ForcePasswordChangeModal onChangePassword={changeCurrentUserPassword} />
       )}

@@ -1364,7 +1364,8 @@ body.mbr-overlay-open .mbr-page {
 .mbr-main-visual {
   position: relative; z-index: 2;
   display: flex; align-items: flex-start; justify-content: center;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   transform: translateX(18%);
   transition: transform 0.72s cubic-bezier(0.22,1,0.36,1);
 }

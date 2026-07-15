@@ -281,6 +281,18 @@ const iSuffix = (str) => {
   return (code - 0xAC00) % 28 === 0 ? '가' : '이';
 };
 
+// Showdown 프로토콜 HP 표기("48/100", "48/100 tox", "0 fnt")를 퍼센트로 변환
+const formatHpFraction = (hpText) => {
+  if (!hpText) return hpText;
+  const spaceIndex = hpText.indexOf(' ');
+  const hpPart = spaceIndex === -1 ? hpText : hpText.slice(0, spaceIndex);
+  const suffix = spaceIndex === -1 ? '' : hpText.slice(spaceIndex);
+  const [cur, max] = hpPart.split('/');
+  if (!max) return `${hpPart === '0' ? '0%' : hpText}${suffix}`;
+  const percent = Math.round((Number(cur) / Number(max)) * 100);
+  return `${percent}%${suffix}`;
+};
+
 const protocolToLog = (line) => {
   if (!line || !line.startsWith('|')) return null;
   const parts = line.split('|');
@@ -317,9 +329,9 @@ const protocolToLog = (line) => {
     case 'move':
       return { message: `${extractName(parts[2])}\uc758 ${translateMoveName(parts[3])}!`, type: 'move' };
     case '-damage':
-      return { message: `${extractName(parts[2])} HP ${parts[3]}`, type: 'damage' };
+      return { message: `${extractName(parts[2])} HP ${formatHpFraction(parts[3])}`, type: 'damage' };
     case '-heal':
-      return { message: `${extractName(parts[2])}\uc758 HP\uac00 \ud68c\ubcf5\ub418\uc5c8\ub2e4. HP ${parts[3]}`, type: 'healing' };
+      return { message: `${extractName(parts[2])}\uc758 HP\uac00 \ud68c\ubcf5\ub418\uc5c8\ub2e4. HP ${formatHpFraction(parts[3])}`, type: 'healing' };
     case '-boost':
       return { message: `${extractName(parts[2])}\uc758 ${statLabel[parts[3]] || parts[3]}\uc774(\uac00) ${parts[4]}\ub7ad\ud06c \uc62c\ub790\ub2e4!`, type: 'boost' };
     case '-unboost':
@@ -335,8 +347,13 @@ const protocolToLog = (line) => {
     case '-status':
       return { message: `${extractName(parts[2])}\uc740(\ub294) ${translateStatusName(parts[3])} \uc0c1\ud0dc\uac00 \ub418\uc5c8\ub2e4!`, type: 'status' };
     case '-start': {
-      if (parts[3] === 'typechange') {
-        const newType = translateTypeName(parts[4]) || parts[4] || '???';
+      const startEffect = (parts[3] || '').toLowerCase();
+      if (startEffect === 'typechange' || startEffect === 'typeadd') {
+        const newType = (parts[4] || '')
+          .split('/')
+          .map(t => translateTypeName(t.trim()))
+          .filter(Boolean)
+          .join('/') || parts[4] || '???';
         return { message: `${extractName(parts[2])}\uac00 ${newType}\ud0c0\uc785\uc73c\ub85c \ubcc0\ud588\ub2e4!`, type: 'ability' };
       }
       return { message: `${extractName(parts[2])}\uc5d0\uac8c ${translateEffectName(parts[3])} \ud6a8\uacfc\uac00 \ub098\ud0c0\ub0ac\ub2e4!`, type: 'status' };
@@ -1057,19 +1074,19 @@ export function useAdvancedBattle(initialOptions = {}) {
       pokemon.hp = hp;
       pokemon.fainted = false;
       const speciesName = pokemon.species?.name || pokemon.name || '포켓몬';
-      effectMsg = `${speciesName} 부활 (HP ${hp}/${pokemon.maxhp})`;
+      effectMsg = `${speciesName} 부활 (HP ${formatHpFraction(`${hp}/${pokemon.maxhp}`)})`;
     } else if (effect.type === 'heal') {
       const amount = effect.amount == null ? (pokemon.maxhp - pokemon.hp) : effect.amount;
       const actual = Math.min(amount, pokemon.maxhp - pokemon.hp);
       if (actual <= 0) return null;
       pokemon.hp = pokemon.hp + actual;
-      effectMsg = `HP ${actual} 회복 (${pokemon.hp}/${pokemon.maxhp})`;
+      effectMsg = `HP ${actual} 회복 (${formatHpFraction(`${pokemon.hp}/${pokemon.maxhp}`)})`;
     } else if (effect.type === 'healpercent') {
       const amount = Math.floor(pokemon.maxhp * effect.percent);
       const actual = Math.min(amount, pokemon.maxhp - pokemon.hp);
       if (actual <= 0) return null;
       pokemon.hp = pokemon.hp + actual;
-      effectMsg = `HP ${actual} 회복 (${pokemon.hp}/${pokemon.maxhp})`;
+      effectMsg = `HP ${actual} 회복 (${formatHpFraction(`${pokemon.hp}/${pokemon.maxhp}`)})`;
     } else if (effect.type === 'fullheal') {
       pokemon.hp = pokemon.maxhp;
       pokemon.status = '';

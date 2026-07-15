@@ -487,7 +487,7 @@ function EntryTab({ party, allItems = [] }) {
           }}>
             <img src={ballUrl} alt="" style={{
               position: 'absolute', top: 6, left: 6,
-              width: 'auto', height: 'auto', maxWidth: 36, maxHeight: 36,
+              width: 27, height: 27, objectFit: 'contain',
               imageRendering: 'pixelated', opacity: 0.75, pointerEvents: 'none',
             }} />
             <div
@@ -497,9 +497,11 @@ function EntryTab({ party, allItems = [] }) {
               style={{
                 width: 96,
                 height: 96,
+                minWidth: 96,
+                minHeight: 96,
                 flexShrink: 0,
                 backgroundImage: `url(${getEntryPokemonSprite(p)})`,
-                backgroundSize: '80%',
+                backgroundSize: '100%',
                 backgroundPosition: 'center center',
                 backgroundRepeat: 'no-repeat',
                 position: 'relative',

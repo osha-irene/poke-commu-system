@@ -1253,6 +1253,8 @@ export const useAdminMembers = (
           formVariant: safeValue(updates.formVariant, p.formVariant),
           baseSpecies: safeValue(updates.baseSpecies, p.baseSpecies),
           baseSpeciesEn: safeValue(updates.baseSpeciesEn, p.baseSpeciesEn),
+          alcremieFlavor: safeValue(updates.alcremieFlavor, p.alcremieFlavor),
+          alcremieShape: safeValue(updates.alcremieShape, p.alcremieShape),
           sizeRank: safeValue(updates.sizeRank, p.sizeRank),
           heightVariation: updates.heightVariation !== undefined 
             ? parseFloat(updates.heightVariation) 
