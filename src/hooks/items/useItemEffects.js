@@ -337,6 +337,7 @@ export const useItemEffects = (
     if (src.specialEffect === 'abilityPatch' && item.__chosenAbility) {
       updatedPokemon.ability = item.__chosenAbility.name;
       updatedPokemon.abilityEn = item.__chosenAbility.nameEn;
+      updatedPokemon.isHiddenAbility = Boolean(item.__chosenAbility.isHidden);
       updatePokemonInUser(updatedPokemon);
       alert(`${pokemon.nickname || pokemon.name}의 특성이 ${item.__chosenAbility.name}(으)로 바뀌었습니다!`);
       consumeItem(item);

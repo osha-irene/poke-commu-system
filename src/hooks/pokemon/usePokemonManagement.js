@@ -97,7 +97,7 @@ const usePokemonManagement = (
     abilities: template.abilities || pokemon.abilities,
     abilitiesEn: template.abilitiesEn || pokemon.abilitiesEn,
     ability: pokemon.ability || template.abilities?.[0],
-    abilityEn: getAbilityEnglishName(pokemon.ability) || pokemon.abilityEn || template.abilitiesEn?.[0],
+    abilityEn: pokemon.abilityEn || getAbilityEnglishName(pokemon.ability) || template.abilitiesEn?.[0],
     hiddenAbility: template.hiddenAbility ?? pokemon.hiddenAbility,
     hiddenAbilityEn: template.hiddenAbilityEn ?? pokemon.hiddenAbilityEn,
     baseHp: template.baseHp ?? pokemon.baseHp,

@@ -38,7 +38,7 @@ const ensurePartyPadding = (caughtPokemon, allPokemonMaster = []) => {
     return withNormalizedIVs(fillMissingBaseStats({
       ...p,
       nameEn: p.nameEn || template.nameEn,
-      abilityEn: getAbilityEnglishName(p.ability) || p.abilityEn || template.abilitiesEn?.[0] || null
+      abilityEn: p.abilityEn || getAbilityEnglishName(p.ability) || template.abilitiesEn?.[0] || null
     }, template), DEFAULT_IVS);
   });
   

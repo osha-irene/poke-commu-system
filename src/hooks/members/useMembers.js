@@ -57,7 +57,9 @@ export const useMembers = (allPokemonData, loadFullMembers = false, loadPartyDet
         return withNormalizedIVs(fillMissingBaseStats({
           ...pokemon,
           nameEn: pokemon.nameEn || template.nameEn,
-          abilityEn: getAbilityEnglishName(pokemon.ability) || pokemon.abilityEn || template.abilitiesEn?.[0] || null
+          // abilityEn is the canonical saved value. Falling back to the localized
+          // ability first could resurrect the pre-patch ability in admin views.
+          abilityEn: pokemon.abilityEn || getAbilityEnglishName(pokemon.ability) || template.abilitiesEn?.[0] || null
         }, template), DEFAULT_IVS);
       });
 

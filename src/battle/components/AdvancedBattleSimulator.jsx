@@ -64,6 +64,11 @@ const formatBoosts = (boosts = {}) => Object.entries(boosts)
   .filter(([, value]) => value !== 0)
   .map(([stat, value]) => `${BOOST_LABELS[stat] || stat} ${value > 0 ? '+' : ''}${value}`);
 
+const formatHpPercent = (current, max) => {
+  if (!max) return '0%';
+  return `${Math.max(0, Math.round((current / max) * 100))}%`;
+};
+
 const PokemonNameText = ({ pokemon, className = '', speciesClassName = '' }) => {
   const displayName = getOwnedPokemonDisplayParts(pokemon);
   return (
@@ -125,7 +130,7 @@ const BattleInfoPanel = ({ battleState, onClose }) => {
           <div className="mb-1 font-semibold text-gray-700">현재 포켓몬</div>
           <div className="flex flex-wrap items-center gap-2">
             <PokemonNameText pokemon={active} className="font-bold" />
-            <span>HP {active?.currentHP}/{active?.maxHP}</span>
+            <span>HP {formatHpPercent(active?.currentHP, active?.maxHP)}</span>
             {active?.status && <span className="rounded-full bg-red-100 px-2 py-1 text-red-800">{active.status}</span>}
           </div>
         </div>
@@ -602,7 +607,7 @@ export function AdvancedBattleSimulator({
           </div>
           <div className="mb-2 flex items-center justify-center gap-2">
             <Heart className="text-red-500" size={20} />
-            <div className="font-semibold">HP: {active.currentHP} / {active.maxHP}</div>
+            <div className="font-semibold">HP: {formatHpPercent(active.currentHP, active.maxHP)}</div>
           </div>
           <div className="h-4 w-full overflow-hidden rounded-full bg-gray-200">
             <div
@@ -740,7 +745,7 @@ export function AdvancedBattleSimulator({
                         )}
                       </div>
                       <span className="text-xs opacity-70 shrink-0">
-                        {usable ? `HP ${poke.currentHP}/${poke.maxHP}` : reason}
+                        {usable ? `HP ${formatHpPercent(poke.currentHP, poke.maxHP)}` : reason}
                       </span>
                     </div>
                   </button>
@@ -775,8 +780,8 @@ export function AdvancedBattleSimulator({
                     <span>{poke.name}</span>
                     <span className="text-xs opacity-80">
                       {revivePending[player].battleEffect?.fullHP
-                        ? `→ HP ${poke.maxHP}/${poke.maxHP}`
-                        : `→ HP ${Math.floor(poke.maxHP / 2)}/${poke.maxHP}`}
+                        ? '→ HP 100%'
+                        : '→ HP 50%'}
                     </span>
                   </div>
                 </button>
@@ -935,7 +940,7 @@ export function AdvancedBattleSimulator({
                   >
                     <div className="flex items-center justify-between gap-2">
                       <PokemonNameText pokemon={pokemon} className="font-bold" />
-                      <span>HP {pokemon.currentHP}/{pokemon.maxHP}</span>
+                      <span>HP {formatHpPercent(pokemon.currentHP, pokemon.maxHP)}</span>
                     </div>
                     <div className="mt-1 flex items-center justify-between gap-2 text-xs">
                       <span>{pokemon.types?.join('/')}</span>
