@@ -28,6 +28,8 @@ const NECTAR_FORM_MAP = {
 export const useItemEffects = (
   currentUser,
   updateCurrentUser,
+  updateOwnedPokemonByUniqueId,
+  updateInventory,
   allItems,
   allMoves,
   pokemonLearnsets,
@@ -81,10 +83,11 @@ export const useItemEffects = (
       src_will_be: itemData ? 'itemData' : 'item',
     });
 
-    // extraUpdates: 아이템 소모와 같은 updateCurrentUser 호출에 함께 실어보낼 추가 필드
-    // (updateCurrentUser를 연속으로 두 번 호출하면 뒤 호출이 스테일한 currentUser 기준으로 병합되어
-    //  앞 호출의 변경분을 덮어써버리는 문제가 있어, 한 번의 호출로 합쳐서 보냄)
-    const consumeItem = (item, extraUpdates = {}) => {
+    // ⭐ 인벤토리는 클로저 스냅샷이 아니라 Firebase의 최신 값을 기준으로 트랜잭션으로 소모한다.
+    // (아이템을 연달아 여러 번 쓰거나 여러 포켓몬에게 나눠 쓸 때, 뒤 호출이 스테일한 인벤토리
+    //  기준으로 통째로 덮어써서 앞선 소모분이 되살아나는 문제를 막기 위함)
+    // extraUpdates(예: trainerExp)는 인벤토리와 무관한 필드라 별도 updateCurrentUser로 처리한다.
+    const consumeItem = async (item, extraUpdates = {}) => {
       if (currentUser.isSuperAdmin) {
         if (Object.keys(extraUpdates).length > 0) updateCurrentUser(extraUpdates);
         return;
@@ -108,29 +111,28 @@ export const useItemEffects = (
         );
       };
 
-      let consumed = false;
+      await updateInventory((currentInventory = []) => {
+        let consumed = false;
+        return currentInventory
+          .map(i => {
+            if (!consumed && matchesItem(i)) {
+              consumed = true;
+              return { ...i, count: i.count - 1 };
+            }
+            return i;
+          })
+          .filter(i => i.count > 0);
+      });
 
-      const newInventory = currentUser.inventory
-        .map(i => {
-          if (!consumed && matchesItem(i)) {
-            consumed = true;
-            return { ...i, count: i.count - 1 };
-          }
-          return i;
-        })
-        .filter(i => i.count > 0);
-      updateCurrentUser({ inventory: newInventory, ...extraUpdates });
+      if (Object.keys(extraUpdates).length > 0) {
+        updateCurrentUser(extraUpdates);
+      }
     };
 
-    const updatePokemonInUser = (updatedPokemon) => {
-      const updatedCaughtPokemon = currentUser.caughtPokemon.map(p =>
-        p && p.uniqueId === updatedPokemon.uniqueId ? updatedPokemon : p
-      );
-      const updates = { caughtPokemon: updatedCaughtPokemon };
-      if (currentUser.partnerPokemon?.uniqueId === updatedPokemon.uniqueId) {
-        updates.partnerPokemon = updatedPokemon;
-      }
-      updateCurrentUser(updates);
+    // ⭐ 클로저 스냅샷이 아니라 Firebase의 최신 데이터를 기준으로 트랜잭션으로 해당 포켓몬만 갱신한다.
+    // (같은 포켓몬/다른 포켓몬에게 아이템을 빠르게 연달아 쓸 때 앞선 변경이 사라지는 문제를 막기 위함)
+    const updatePokemonInUser = async (updatedPokemon) => {
+      await updateOwnedPokemonByUniqueId(updatedPokemon.uniqueId, () => updatedPokemon);
     };
 
     // itemData(마스터)가 있으면 마스터 데이터만, 없을 때만 item 데이터 사용
@@ -201,7 +203,7 @@ export const useItemEffects = (
           alert('기술 정보를 찾을 수 없습니다!');
           return;
         }
-        const success = movesHook.learnMove(pokemon.uniqueId, moveData, item.__chosenOldMoveId || null);
+        const success = await movesHook.learnMove(pokemon.uniqueId, moveData, item.__chosenOldMoveId || null);
         if (success) {
           consumeItem(item);
         }
@@ -288,7 +290,7 @@ export const useItemEffects = (
       }
 
       if (currentMoves.length < 4) {
-        const success = movesHook.learnMove(pokemon.uniqueId, moveData);
+        const success = await movesHook.learnMove(pokemon.uniqueId, moveData);
         if (success) {
           consumeItem(item);
         }
@@ -315,7 +317,7 @@ export const useItemEffects = (
       }
 
       const oldMoveId = currentMoves[choiceNum - 1].moveId;
-      const success = movesHook.learnMove(pokemon.uniqueId, moveData, oldMoveId);
+      const success = await movesHook.learnMove(pokemon.uniqueId, moveData, oldMoveId);
 
       if (success) {
         consumeItem(item);

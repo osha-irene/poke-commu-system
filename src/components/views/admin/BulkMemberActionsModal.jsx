@@ -1,8 +1,8 @@
 // src/components/views/admin/BulkMemberActionsModal.jsx
-// 선택한 회원 여러 명을 대상으로 파트너 포켓몬 레벨 조정 / 친밀도 증가 / 아이템 일괄 지급을 처리하는 모달
+// 선택한 회원 여러 명을 대상으로 파트너 포켓몬 레벨 조정 / 친밀도 증가 / 아이템·돈 지급 / 칭호 부여를 처리하는 모달
 import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { X, CheckSquare, Square, TrendingUp, Heart, Gift } from 'lucide-react';
+import { X, CheckSquare, Square, TrendingUp, Heart, Gift, Coins, Award } from 'lucide-react';
 import { getItemIcon, CATEGORIES, filterItemsByPocket } from '../../../utils/itemUtils';
 import { getButtonClass } from '../../../styles/theme';
 
@@ -10,6 +10,8 @@ const ACTION_TABS = [
   { id: 'level', label: '레벨 조정', icon: TrendingUp },
   { id: 'friendship', label: '친밀도 증가', icon: Heart },
   { id: 'item', label: '아이템 지급', icon: Gift },
+  { id: 'money', label: '돈 지급', icon: Coins },
+  { id: 'title', label: '칭호 부여', icon: Award },
 ];
 
 export default function BulkMemberActionsModal({
@@ -17,9 +19,12 @@ export default function BulkMemberActionsModal({
   onClose,
   members = {},
   allItems = [],
+  titles = [],
   onBulkAdjustPartnerLevel,
   onBulkIncreaseFriendship,
   onBulkGiveItem,
+  onBulkGiveMoney,
+  onBulkGrantTitle,
 }) {
   const [actionTab, setActionTab] = useState('level');
   const [selectedIds, setSelectedIds] = useState([]);
@@ -30,6 +35,8 @@ export default function BulkMemberActionsModal({
   const [itemCategory, setItemCategory] = useState('all');
   const [selectedItem, setSelectedItem] = useState(null);
   const [itemCount, setItemCount] = useState(1);
+  const [moneyAmount, setMoneyAmount] = useState(1000);
+  const [selectedTitleId, setSelectedTitleId] = useState('');
 
   const memberList = useMemo(() => {
     const query = memberSearch.trim().toLowerCase();
@@ -67,6 +74,8 @@ export default function BulkMemberActionsModal({
     setItemCount(1);
     setLevelDelta(1);
     setFriendshipAmount(1);
+    setMoneyAmount(1000);
+    setSelectedTitleId('');
   };
 
   const handleClose = () => {
@@ -101,6 +110,22 @@ export default function BulkMemberActionsModal({
     onBulkGiveItem?.(selectedIds, selectedItem, itemCount);
   };
 
+  const handleGiveMoney = () => {
+    if (selectedIds.length === 0) { alert('회원을 선택해주세요.'); return; }
+    const amount = Number(moneyAmount);
+    if (!Number.isFinite(amount) || amount <= 0) { alert('지급할 금액을 입력해주세요.'); return; }
+    if (!window.confirm(`선택한 ${selectedIds.length}명에게 ${amount.toLocaleString()}원을 지급하시겠습니까?`)) return;
+    onBulkGiveMoney?.(selectedIds, amount);
+  };
+
+  const handleGrantTitle = () => {
+    if (selectedIds.length === 0) { alert('회원을 선택해주세요.'); return; }
+    if (!selectedTitleId) { alert('부여할 칭호를 선택해주세요.'); return; }
+    const titleLabel = titles.find(t => t.id === selectedTitleId)?.label || selectedTitleId;
+    if (!window.confirm(`선택한 ${selectedIds.length}명에게 "${titleLabel}" 칭호를 부여하시겠습니까?`)) return;
+    onBulkGrantTitle?.(selectedIds, selectedTitleId);
+  };
+
   return createPortal(
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={handleClose}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
@@ -108,7 +133,7 @@ export default function BulkMemberActionsModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
           <div>
             <h2 className="text-xl font-bold text-gray-900">일괄 작업</h2>
-            <p className="text-sm text-gray-500 mt-0.5">회원을 선택하고 파트너 포켓몬 레벨 조정 / 친밀도 감산 / 아이템 지급을 한 번에 처리합니다.</p>
+            <p className="text-sm text-gray-500 mt-0.5">회원을 선택하고 파트너 포켓몬 레벨 조정 / 친밀도 증가 / 아이템·돈 지급 / 칭호 부여를 한 번에 처리합니다.</p>
           </div>
           <button onClick={handleClose} className="text-gray-400 hover:text-gray-700 p-1 rounded"><X size={20} /></button>
         </div>
@@ -279,6 +304,47 @@ export default function BulkMemberActionsModal({
                       <button onClick={handleGiveItem} className={getButtonClass('success', 'md')}>일괄 지급</button>
                     </div>
                   )}
+                </div>
+              )}
+
+              {actionTab === 'money' && (
+                <div className="space-y-4 max-w-md">
+                  <p className="text-sm text-gray-600">
+                    선택한 회원들에게 <b>소지금</b>을 한 번에 지급합니다. (기존 소지금에 더해집니다)
+                  </p>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 block mb-1">지급 금액</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={moneyAmount}
+                      onChange={e => setMoneyAmount(e.target.value)}
+                      className="w-40 border border-gray-300 rounded-lg px-3 py-2 focus:border-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                  <button onClick={handleGiveMoney} className={getButtonClass('success', 'lg')}>돈 지급 적용</button>
+                </div>
+              )}
+
+              {actionTab === 'title' && (
+                <div className="space-y-4 max-w-md">
+                  <p className="text-sm text-gray-600">
+                    선택한 회원들에게 <b>칭호</b>를 한 번에 부여합니다. (이미 보유한 회원은 건너뜁니다)
+                  </p>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 block mb-1">부여할 칭호</label>
+                    <select
+                      value={selectedTitleId}
+                      onChange={e => setSelectedTitleId(e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-indigo-500 focus:outline-none"
+                    >
+                      <option value="">칭호 선택...</option>
+                      {titles.map(t => (
+                        <option key={t.id} value={t.id}>{t.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <button onClick={handleGrantTitle} className={getButtonClass('success', 'lg')}>칭호 부여 적용</button>
                 </div>
               )}
             </div>

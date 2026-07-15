@@ -97,6 +97,7 @@ export default function useGameState() {
     updateCurrentUser,
     updateInventory,
     updateCaughtPokemon,
+    updateOwnedPokemonByUniqueId,
     changeCurrentUserPassword,
     isLoading: isAuthLoading
   } = useAuth(members, setMembers, allPokemonDataParsed);
@@ -140,7 +141,7 @@ export default function useGameState() {
   } = useShop(currentUser, updateCurrentUser, allItems, updateInventory);
 
   // 기술
-  const movesHook = useMoves(currentUser, updateCurrentUser, allMoves, pokemonLearnsets);
+  const movesHook = useMoves(currentUser, updateCurrentUser, updateOwnedPokemonByUniqueId, allMoves, pokemonLearnsets);
 
   // 진화
   const evolutionHook = useEvolution(
@@ -153,6 +154,7 @@ export default function useGameState() {
   const pokemonManagement = usePokemonManagement(
     currentUser,
     updateCurrentUser,
+    updateOwnedPokemonByUniqueId,
     allPokemonMaster,
     setSharedPokedexData,
     sharedPokedexData,
@@ -240,6 +242,8 @@ export default function useGameState() {
   const itemEffectsHook = useItemEffects(
     currentUser,
     updateCurrentUser,
+    updateOwnedPokemonByUniqueId,
+    updateInventory,
     allItems,
     allMoves,
     pokemonLearnsets,

@@ -3,7 +3,7 @@
 
 import { initializeApp, deleteApp } from 'firebase/app';
 import { createUserWithEmailAndPassword, getAuth, signOut } from 'firebase/auth';
-import { ref, set, update, get } from 'firebase/database';
+import { ref, set, update, get, runTransaction } from 'firebase/database';
 import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
 import { auth, database, storage, functions } from '../../firebase';
@@ -704,6 +704,85 @@ export const useAdminMembers = (
       console.error('❌ 친밀도 일괄 증가 실패:', error);
       alert('친밀도 증가 중 오류가 발생했습니다: ' + error.message);
     }
+  };
+
+  // ========== 돈 일괄 지급 (선택 회원 대상) ==========
+  const bulkGiveMoney = async (memberIds, amount) => {
+    if (!currentUser?.isAdmin) return;
+
+    const numericAmount = Number(amount);
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      alert('지급할 금액을 입력해주세요.');
+      return;
+    }
+
+    const targetIds = (memberIds || []).filter(id => members[id]);
+    if (targetIds.length === 0) {
+      alert('선택한 회원이 없습니다.');
+      return;
+    }
+
+    // 소지금은 여러 화면/액션에서 동시에 바뀔 수 있는 누적값이라, 클로저 스냅샷 기준
+    // "기존값 + 변화량"이 아니라 항상 Firebase의 최신 값을 기준으로 트랜잭션으로 더한다.
+    let successCount = 0;
+    const failedNames = [];
+
+    for (const id of targetIds) {
+      const moneyRef = ref(database, `members/${id}/money`);
+      const result = await runTransaction(moneyRef, (currentMoney) => (
+        (Number(currentMoney) || 0) + numericAmount
+      ));
+
+      if (result.committed) {
+        successCount += 1;
+        const newMoney = result.snapshot.val();
+        setMembers(prev => (
+          prev[id] ? { ...prev, [id]: { ...prev[id], money: newMoney } } : prev
+        ));
+        if (id === currentUser?.id) {
+          updateCurrentUser({ money: newMoney });
+        }
+      } else {
+        failedNames.push(members[id]?.name || id);
+      }
+    }
+
+    if (failedNames.length > 0) {
+      alert(`${successCount}명에게 ${numericAmount}원을 지급했습니다.\n실패: ${failedNames.join(', ')}`);
+    } else {
+      alert(`${successCount}명에게 ${numericAmount}원씩 지급했습니다!`);
+    }
+  };
+
+  // ========== 칭호 일괄 부여 (선택 회원 대상) ==========
+  const bulkGrantTitle = async (memberIds, titleId) => {
+    if (!currentUser?.isAdmin) return;
+    if (!titleId) {
+      alert('부여할 칭호를 선택해주세요.');
+      return;
+    }
+
+    const targetIds = (memberIds || []).filter(id => members[id]);
+    if (targetIds.length === 0) {
+      alert('선택한 회원이 없습니다.');
+      return;
+    }
+
+    let grantedCount = 0;
+    let alreadyHadCount = 0;
+
+    for (const id of targetIds) {
+      const assigned = Array.isArray(members[id]?.assignedTitles) ? members[id].assignedTitles : [];
+      if (assigned.includes(titleId)) {
+        alreadyHadCount += 1;
+        continue;
+      }
+      await grantMemberTitle(id, titleId);
+      grantedCount += 1;
+    }
+
+    const alreadyNote = alreadyHadCount > 0 ? `\n(이미 보유 중이라 제외된 회원 ${alreadyHadCount}명 포함)` : '';
+    alert(`${grantedCount}명에게 칭호를 부여했습니다!${alreadyNote}`);
   };
 
   // ========== 포켓몬 지급 ==========
@@ -1779,6 +1858,8 @@ export const useAdminMembers = (
     resetAllWalkCounts,
     bulkAdjustPartnerLevel,
     bulkIncreaseFriendship,
+    bulkGiveMoney,
+    bulkGrantTitle,
     givePokemonToMember,
     transferMemberPokemon,
     deleteMemberPokemon,

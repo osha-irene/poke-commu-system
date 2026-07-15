@@ -15,10 +15,11 @@ const getItemList = (items) => {
 };
 
 const usePokemonManagement = (
-  currentUser, 
-  updateCurrentUser, 
-  allPokemonMaster, 
-  setSharedPokedexData, 
+  currentUser,
+  updateCurrentUser,
+  updateOwnedPokemonByUniqueId,
+  allPokemonMaster,
+  setSharedPokedexData,
   sharedPokedexData,
   pokemonLearnsets,
   allMoves,
@@ -390,42 +391,23 @@ const usePokemonManagement = (
 
     const isPartnerPokemon = currentUser.partnerPokemon?.uniqueId === uniqueId;
 
-    // Firebase에서 최신 caughtPokemon을 읽어 moveUsage 등 직접 기록된 필드를 보존
-    let latestCaughtPokemon = currentUser.caughtPokemon;
-    if (!isPartnerPokemon) {
-      try {
-        const caughtSnap = await get(ref(database, `members/${currentUser.id}/caughtPokemon`));
-        if (caughtSnap.exists()) {
-          const val = caughtSnap.val();
-          if (Array.isArray(val)) {
-            latestCaughtPokemon = val;
-          } else if (val && typeof val === 'object') {
-            const maxIdx = Math.max(...Object.keys(val).map(Number));
-            latestCaughtPokemon = Array.from({ length: maxIdx + 1 }, (_, i) => val[i] ?? null);
-          }
-        }
-      } catch (e) {
-        console.warn('최신 caughtPokemon 로드 실패, 로컬 상태 사용:', e);
-      }
-    }
+    // ⭐ 클로저/한 번의 get() 스냅샷이 아니라 트랜잭션으로 Firebase의 최신 데이터 위에 레벨/exp만
+    // 패치한다 (moveUsage 등 다른 곳에서 직접 기록된 필드도 자연히 보존됨). 이상한사탕을 여러
+    // 포켓몬에게 빠르게 연달아 먹일 때 앞선 변경이 사라지는 문제를 막기 위함.
+    const result = await updateOwnedPokemonByUniqueId(uniqueId, (latestPokemon) => ({
+      ...latestPokemon,
+      level: newLevel,
+      exp: accExp
+    }));
 
-    // 최신 pokemon 데이터로 패치 (moveUsage 등 보존)
-    const latestPokemon = isPartnerPokemon
-      ? pokemon
-      : (latestCaughtPokemon.find(p => p && p.uniqueId === uniqueId) || pokemon);
-    const updatedPokemonPatch = { ...latestPokemon, level: newLevel, exp: accExp };
+    if (!result.committed) {
+      alert('레벨업 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+      return false;
+    }
 
     // trainerExp에서 배분한 만큼만 차감
     const newTrainerExp = Math.max(0, (Number(currentUser.trainerExp) || 0) - (Number(expAmount) || 0));
-
-    if (isPartnerPokemon) {
-      updateCurrentUser({ partnerPokemon: updatedPokemonPatch, trainerExp: newTrainerExp });
-    } else {
-      const newCaughtPokemon = latestCaughtPokemon.map(p =>
-        p && p.uniqueId === uniqueId ? updatedPokemonPatch : p
-      );
-      updateCurrentUser({ caughtPokemon: newCaughtPokemon, trainerExp: newTrainerExp });
-    }
+    updateCurrentUser({ trainerExp: newTrainerExp });
 
     if (newLevel > oldLevel) {
       const levelMsg = newLevel > oldLevel + 1
