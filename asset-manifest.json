@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.0d299b28.css",
-    "main.js": "/static/js/main.0c7b49f7.js",
+    "main.css": "/static/css/main.02b67d77.css",
+    "main.js": "/static/js/main.3c7b413b.js",
     "static/js/623.69c45dc4.chunk.js": "/static/js/623.69c45dc4.chunk.js",
     "static/media/forest-bg.png": "/static/media/forest-bg.ed51a4032d3a6a7016d2.png",
     "static/media/map.png": "/static/media/map.a93920750eb1513e2792.png",
@@ -23,18 +23,18 @@
     "static/media/ribbon-powerful.png": "/static/media/ribbon-powerful.15ee814249274a1b5a6b.png",
     "static/media/main_deco_leaves (2).png": "/static/media/main_deco_leaves (2).1d65fa47529c541e03ac.png",
     "static/media/logo_text.png": "/static/media/logo_text.fdb1298f93a712fc16a5.png",
-    "static/media/badge4.png": "/static/media/badge4.6e1fc000885ab48e459b.png",
-    "static/media/badge2.png": "/static/media/badge2.eba48e4d73c9f6944351.png",
-    "static/media/badge1.png": "/static/media/badge1.d6af2aa03c6202e2301c.png",
-    "static/media/badge6.png": "/static/media/badge6.15671db179f96b961cfa.png",
-    "static/media/badge8.png": "/static/media/badge8.58d8f3dc6eab374dfcc3.png",
-    "static/media/badge5.png": "/static/media/badge5.f17846f1ea514f09ff54.png",
-    "static/media/badge7.png": "/static/media/badge7.2f27993dd82d421d5b2d.png",
-    "static/media/badge3.png": "/static/media/badge3.02c5962494d3ea4cb251.png",
+    "static/media/badge1.png": "/static/media/badge1.6b356caf19e20a9285ef.png",
+    "static/media/badge8.png": "/static/media/badge8.c7a5c39b09febf56f69b.png",
+    "static/media/badge5.png": "/static/media/badge5.c888ec5b093cb820b835.png",
+    "static/media/badge6.png": "/static/media/badge6.31570a5285c35a083ac9.png",
+    "static/media/badge4.png": "/static/media/badge4.3d54cd17e1bc724af78a.png",
+    "static/media/badge3.png": "/static/media/badge3.846a6bca598a77d69940.png",
+    "static/media/badge7.png": "/static/media/badge7.e2c1707d945fb381a2e3.png",
+    "static/media/badge2.png": "/static/media/badge2.f5dcab2fba187f5ff7e2.png",
     "static/media/rubbing.mp3": "/static/media/rubbing.b846dd12125a470dd965.mp3",
     "static/media/forest-bg-blurred.jpg": "/static/media/forest-bg-blurred.97f48d40be7379db6d3e.jpg",
     "static/media/device-top.png": "/static/media/device-top.33437cbe24c506cd4219.png",
-    "static/media/badge.png": "/static/media/badge.3fe0b70d29b198fe0d93.png",
+    "static/media/badge.png": "/static/media/badge.fe5bbd7a88c51fda0a7d.png",
     "static/media/main_news.png": "/static/media/main_news.1610334b488bf668eaef.png",
     "static/media/logo_compass.png": "/static/media/logo_compass.5e060dd19119f1f61b6d.png",
     "static/media/ribbon-silhouette.png": "/static/media/ribbon-silhouette.226b039f386a263b4ae2.png",
@@ -73,12 +73,12 @@
     "static/media/Whirl Islands cave_arnie.png": "/static/media/Whirl Islands cave_arnie.66120ee2033224a9cc5d.png",
     "index.html": "/index.html",
     "static/media/pokemon-icon.svg": "/static/media/pokemon-icon.d36b6f0655c180980d5acb3287a88011.svg",
-    "main.0d299b28.css.map": "/static/css/main.0d299b28.css.map",
-    "main.0c7b49f7.js.map": "/static/js/main.0c7b49f7.js.map",
+    "main.02b67d77.css.map": "/static/css/main.02b67d77.css.map",
+    "main.3c7b413b.js.map": "/static/js/main.3c7b413b.js.map",
     "623.69c45dc4.chunk.js.map": "/static/js/623.69c45dc4.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.0d299b28.css",
-    "static/js/main.0c7b49f7.js"
+    "static/css/main.02b67d77.css",
+    "static/js/main.3c7b413b.js"
   ]
 }
