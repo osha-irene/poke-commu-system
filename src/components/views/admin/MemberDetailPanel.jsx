@@ -14,6 +14,7 @@ function MemberDetailPanel({ member, onClose }) {
     allPokemonMaster,
     allMoves,
     pokemonLearnsets,
+    regions,
     systemSettings,
     setMembers,
     updateCurrentUser,
@@ -228,6 +229,7 @@ function MemberDetailPanel({ member, onClose }) {
               allPokemonMaster={allPokemonMaster}
               allMoves={allMoves}
               pokemonLearnsets={pokemonLearnsets}
+              regions={regions}
               onGivePokemon={givePokemonToMember}
               onEditPokemon={editMemberPokemon}
               getPokemonFormCandidates={getPokemonFormCandidates}

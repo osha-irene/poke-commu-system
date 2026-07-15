@@ -96,6 +96,7 @@ export default function useGameState() {
     handleLogout,
     updateCurrentUser,
     updateInventory,
+    updateCaughtPokemon,
     changeCurrentUserPassword,
     isLoading: isAuthLoading
   } = useAuth(members, setMembers, allPokemonDataParsed);
@@ -213,6 +214,8 @@ export default function useGameState() {
   const pokemonCatchHook = usePokemonCatch(
     currentUser,
     updateCurrentUser,
+    updateCaughtPokemon,
+    updateInventory,
     allPokemonMaster,
     allItems,
     allMoves,

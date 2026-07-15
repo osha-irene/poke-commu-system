@@ -772,6 +772,7 @@ export const useAdminMembers = (
       effort = null,
       condition = null,
       favoriteFlavor = FLAVORS[Math.floor(Math.random() * FLAVORS.length)],
+      caughtLocation = null,
     } = options;
 
     // 파트너가 아닌 경우에만 포획 제한 체크
@@ -826,7 +827,9 @@ export const useAdminMembers = (
 
     const newPokemon = withWurmpleEvolutionId({
       uniqueId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      isAdminGiven: true,
+      // 만난 장소를 직접 입력한 경우, "특별한 만남"이 아니라 실제 그 장소에서 만난 것으로 기록한다.
+      isAdminGiven: !caughtLocation,
+      caughtLocation: caughtLocation || null,
       favoriteFlavor,
       pokemonId: pokemonTemplate.id,
       name: getPokemonDisplayParts(pokemonTemplate).name || pokemonTemplate.name,

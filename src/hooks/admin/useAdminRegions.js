@@ -104,7 +104,7 @@ export const useAdminRegions = (
       groupVisible: normalizedData.groupVisible !== undefined ? normalizedData.groupVisible : true,
       visible: normalizedData.visible !== undefined ? normalizedData.visible : true,
       isDefaultTown: normalizedData.isDefaultTown !== undefined ? normalizedData.isDefaultTown : false,
-      name: normalizedData.name,
+      name: normalizedData.name !== undefined ? normalizedData.name : existingRegion.name,
       description: normalizedData.description !== undefined ? normalizedData.description : '',
       x: normalizedData.x !== undefined ? normalizedData.x : 50,
       y: normalizedData.y !== undefined ? normalizedData.y : 50,
@@ -114,7 +114,9 @@ export const useAdminRegions = (
       isSafari: normalizedData.isSafari === true,
       places: Array.isArray(normalizedData.places) ? normalizedData.places : [],
       pokemonFormConfig: normalizedData.pokemonFormConfig !== undefined ? normalizedData.pokemonFormConfig : {},
-      lootConfig: normalizedData.lootConfig !== undefined ? normalizedData.lootConfig : existingRegion.lootConfig,
+      lootConfig: normalizedData.lootConfig !== undefined
+        ? normalizedData.lootConfig
+        : (existingRegion.lootConfig !== undefined ? existingRegion.lootConfig : null),
       ...(normalizedData.background ? { background: normalizedData.background } : {}),
     };
     

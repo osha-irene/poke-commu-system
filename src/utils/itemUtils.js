@@ -138,47 +138,60 @@ export const CATEGORIES = [
   }
 ];
 
+const categoryToPocketMap = {
+  'vitamins': ITEM_POCKETS.VITAMINS,
+  'held-items': ITEM_POCKETS.HELD_ITEMS,
+  'species-specific': ITEM_POCKETS.HELD_ITEMS,
+  'type-enhancement': ITEM_POCKETS.HELD_ITEMS,
+  'evolution': ITEM_POCKETS.EVOLUTION,
+  'machines': ITEM_POCKETS.MACHINES,
+  'berries': ITEM_POCKETS.BERRIES,
+  'medicine': ITEM_POCKETS.MEDICINE,
+  'healing': ITEM_POCKETS.MEDICINE,
+  'pokeballs': ITEM_POCKETS.POKEBALLS,
+  'standard-balls': ITEM_POCKETS.POKEBALLS,
+  'special-balls': ITEM_POCKETS.POKEBALLS,
+  'apricorn-balls': ITEM_POCKETS.POKEBALLS,
+  'battle-items': ITEM_POCKETS.BATTLE,
+  'stat-boosts': ITEM_POCKETS.BATTLE,
+  'key-items': ITEM_POCKETS.KEY,
+  'event-items': ITEM_POCKETS.KEY,
+  'gameplay': ITEM_POCKETS.KEY,
+};
+
 // 통일된 아이템 pocket 가져오기
 export const getItemPocket = (item) => {
   if (!item) return ITEM_POCKETS.MISC;
-  
+
   // 예외: 나무열매가 이름에 포함되어 있어도 실제로는 다른 포켓인 아이템들
   const berryNameExceptions = ['나무열매쥬스', 'berry-juice', 'berry juice','딸기사탕공예','베리사탕공예','strawberry'];
-  const isException = berryNameExceptions.some(ex => 
+  const isException = berryNameExceptions.some(ex =>
     item.name?.includes(ex) || item.nameEn?.toLowerCase().includes(ex.toLowerCase())
   );
-  
+
+  // 커스텀 아이템에서 관리자가 cooking.isIngredient를 명시적으로 false로 지정한 경우,
+  // 이름에 "열매"가 들어있어도 나무열매 포켓으로 자동 분류하지 않는다.
+  // (명시적 false는 "이건 재료/나무열매가 아니다"라는 확실한 의사표시이므로 이름 매칭보다 우선한다)
+  const isExplicitlyNotIngredient = item.cooking?.isIngredient === false;
+
+  // 커스텀 아이템에서 관리자가 CustomItemCreator의 카테고리 버튼으로 나무열매가 아닌
+  // 카테고리/포켓을 직접 골라둔 경우에도 이름 매칭보다 그 지정을 우선한다.
+  // (그렇지 않으면 이름에 "열매"가 들어간 순간 category/pocket을 뭘로 바꿔도 항상 나무열매로 고정됨)
+  const hasExplicitNonBerryPocket = item.isCustom && (
+    (item.pocket && item.pocket !== ITEM_POCKETS.MISC && item.pocket !== ITEM_POCKETS.BERRIES) ||
+    (item.category && item.category !== 'misc' && item.category !== 'berries' && categoryToPocketMap[item.category])
+  );
+
   // 나무열매 체크 (예외 제외)
-  if (!isException && (item.name?.includes('열매') || item.nameEn?.toLowerCase().includes('berry'))) {
+  if (!isException && !isExplicitlyNotIngredient && !hasExplicitNonBerryPocket && (item.name?.includes('열매') || item.nameEn?.toLowerCase().includes('berry'))) {
     return ITEM_POCKETS.BERRIES;
   }
-  
+
   // 식재료 체크
   if (item.cooking?.isIngredient || item.category?.includes('ingredient')) {
     return ITEM_POCKETS.INGREDIENTS;
   }
 
-  const categoryToPocketMap = {
-    'vitamins': ITEM_POCKETS.VITAMINS,
-    'held-items': ITEM_POCKETS.HELD_ITEMS,
-    'species-specific': ITEM_POCKETS.HELD_ITEMS,
-    'type-enhancement': ITEM_POCKETS.HELD_ITEMS,
-    'evolution': ITEM_POCKETS.EVOLUTION,
-    'machines': ITEM_POCKETS.MACHINES,
-    'berries': ITEM_POCKETS.BERRIES,
-    'medicine': ITEM_POCKETS.MEDICINE,
-    'healing': ITEM_POCKETS.MEDICINE,
-    'pokeballs': ITEM_POCKETS.POKEBALLS,
-    'standard-balls': ITEM_POCKETS.POKEBALLS,
-    'special-balls': ITEM_POCKETS.POKEBALLS,
-    'apricorn-balls': ITEM_POCKETS.POKEBALLS,
-    'battle-items': ITEM_POCKETS.BATTLE,
-    'stat-boosts': ITEM_POCKETS.BATTLE,
-    'key-items': ITEM_POCKETS.KEY,
-    'event-items': ITEM_POCKETS.KEY,
-    'gameplay': ITEM_POCKETS.KEY,
-  };
-  
   if (item.category && categoryToPocketMap[item.category]) {
     return categoryToPocketMap[item.category];
   }
