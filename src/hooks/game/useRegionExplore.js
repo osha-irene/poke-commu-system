@@ -20,7 +20,8 @@ export const useRegionExplore = (
   allPokemonMaster,
   gamePokedex,
   useLoot,
-  usePokedex
+  usePokedex,
+  updateInventory
 ) => {
 
   const { generateGender, generateAbility } = useIndividualValues();
@@ -71,7 +72,8 @@ export const useRegionExplore = (
       const isDailyExploreExhausted = nextDailyWalks === 0;
       const nextTotalExploreCount = (Number(currentUser.totalExploreCount) || 0) + 1;
 
-      // 탐험 횟수 차감 (사파리볼은 포획 시 지급)
+      // 탐험 횟수 차감 (사파리볼은 사파리 구역 탐험 시 즉시 지급 - 조우 창에서 바로 써야 하므로
+      // 포획 성공 이후로 미루면 정작 그 조우에서 쓸 볼이 없어 아무 볼도 못 고르는 상황이 생김)
       await updateCurrentUser({
         dailyWalks: nextDailyWalks,
         totalExploreCount: nextTotalExploreCount,
@@ -79,6 +81,16 @@ export const useRegionExplore = (
         ...(canReceiveSafariBalls ? { lastSafariBallRewardDate: todayKey } : {})
       });
       console.log('✅ 탐험 횟수 차감 완료:', nextDailyWalks);
+
+      if (canReceiveSafariBalls) {
+        await updateInventory((inventory) => {
+          const idx = (inventory || []).findIndex(i => i.id === safariBall.id || i.nameEn === safariBall.nameEn);
+          if (idx >= 0) {
+            return inventory.map((i, n) => n === idx ? { ...i, count: (i.count || 0) + SAFARI_BALL_DAILY_REWARD_COUNT } : i);
+          }
+          return [...(inventory || []), { ...safariBall, count: SAFARI_BALL_DAILY_REWARD_COUNT }];
+        });
+      }
 
       // 포켓몬 미조우 시
       if (randomEncounter >= encounterRate) {
@@ -168,7 +180,6 @@ export const useRegionExplore = (
       minLevel,
       maxLevel,
       pendingDailyExploreExhaustedExp: isDailyExploreExhausted ? DAILY_EXPLORE_EXHAUSTED_EXP : 0,
-      pendingSafariBallReward: canReceiveSafariBalls ? SAFARI_BALL_DAILY_REWARD_COUNT : 0,
 		};
 
 		setEncounterPokemon(encounteredPokemon);

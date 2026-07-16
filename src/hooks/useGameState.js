@@ -235,7 +235,8 @@ export default function useGameState() {
     allPokemonMaster,
     gamePokedex,
     lootHook,
-    pokedexHook
+    pokedexHook,
+    updateInventory
   );
 
   // 아이템 효과 (useRareCandy를 직접 전달)
@@ -402,20 +403,6 @@ export default function useGameState() {
       regions,
       consumeBall
     );
-
-    // 사파리 구역 일일 보상: 포획 시 사파리볼 조용히 지급
-    if (result && pokemon.pendingSafariBallReward > 0) {
-      const safariBall = allItems.find(item => item.nameEn === 'safari-ball' || item.name === '사파리볼');
-      if (safariBall) {
-        await updateInventory((inventory) => {
-          const idx = inventory.findIndex(i => i.id === safariBall.id || i.nameEn === safariBall.nameEn);
-          if (idx >= 0) {
-            return inventory.map((i, n) => n === idx ? { ...i, count: (i.count || 0) + pokemon.pendingSafariBallReward } : i);
-          }
-          return [...inventory, { ...safariBall, count: pokemon.pendingSafariBallReward }];
-        });
-      }
-    }
 
     if (result && result.isFirstCatch) {
       const tpl = result.pokemonTemplate;

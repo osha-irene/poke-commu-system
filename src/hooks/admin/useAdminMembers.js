@@ -544,22 +544,26 @@ export const useAdminMembers = (
     
     const updatedMember = {
       ...member,
-      dailyWalks: member.maxDailyWalks
+      dailyWalks: member.maxDailyWalks,
+      lastSafariBallRewardDate: null
     };
-    
+
     try {
-      const { id, ...dataToSave } = updatedMember;
+      const { id, ...rest } = updatedMember;
+      // Firebase set()은 undefined 값을 허용하지 않으므로 null로 치환
+      const dataToSave = JSON.parse(JSON.stringify(rest, (key, value) => (value === undefined ? null : value)));
       const memberRef = ref(database, `members/${memberId}`);
       await set(memberRef, dataToSave);
-      
+
       setMembers(prev => ({
         ...prev,
         [memberId]: updatedMember
       }));
-      
+
       alert(`${member.name}님의 산책 횟수가 초기화되었습니다!`);
     } catch (error) {
       console.error('❌ 산책 횟수 초기화 실패:', error);
+      alert('산책 횟수 초기화 중 오류가 발생했습니다: ' + error.message);
     }
   };
 
@@ -572,20 +576,24 @@ export const useAdminMembers = (
       for (const [id, member] of Object.entries(members)) {
         const updatedMember = {
           ...member,
-          dailyWalks: member.maxDailyWalks
+          dailyWalks: member.maxDailyWalks,
+          lastSafariBallRewardDate: null
         };
-        
-        const { id: _, ...dataToSave } = updatedMember;
+
+        const { id: _, ...rest } = updatedMember;
+        // Firebase set()은 undefined 값을 허용하지 않으므로 null로 치환
+        const dataToSave = JSON.parse(JSON.stringify(rest, (key, value) => (value === undefined ? null : value)));
         const memberRef = ref(database, `members/${id}`);
         await set(memberRef, dataToSave);
-        
+
         updates[id] = updatedMember;
       }
-      
+
       setMembers(updates);
       alert('모든 회원의 산책 횟수가 초기화되었습니다!');
     } catch (error) {
       console.error('❌ 전체 산책 횟수 초기화 실패:', error);
+      alert('전체 산책 횟수 초기화 중 오류가 발생했습니다: ' + error.message);
     }
   };
 

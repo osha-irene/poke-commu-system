@@ -120,7 +120,7 @@ export default function EncounterModal({
       const name = item.name.toLowerCase();
       if (!(name.includes('볼') || name.includes('ball'))) return false;
       const isSafariBall = name.includes('사파리') || name.includes('safari');
-      if (isSafariBall && !isSafari) return false;
+      if (isSafariBall !== isSafari) return false;
       return true;
     })
     .filter(item => item.count > 0)
