@@ -209,6 +209,7 @@ export default function AdminView() {
     bulkAdjustPartnerLevel,
     bulkIncreaseFriendship,
     bulkGiveItem,
+    bulkGrantTitle,
     resetGameData,
     giveItemToMember,
     givePokemonToMember,
@@ -1274,9 +1275,11 @@ export default function AdminView() {
         onClose={() => setShowBulkActions(false)}
         members={members}
         allItems={allItems}
+        titles={titles}
         onBulkAdjustPartnerLevel={bulkAdjustPartnerLevel}
         onBulkIncreaseFriendship={bulkIncreaseFriendship}
         onBulkGiveItem={bulkGiveItem}
+        onBulkGrantTitle={bulkGrantTitle}
       />
     </div>
   );

@@ -1688,7 +1688,7 @@
             "createdBy": "pokeapi",
             "createdAt": null,
             "cooking": {
-                "isIngredient": false,
+                "isIngredient": true,
                 "isCookable": false,
                 "resultItem": null,
                 "requiredItems": [],

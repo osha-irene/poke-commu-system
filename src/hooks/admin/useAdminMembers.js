@@ -1555,6 +1555,52 @@ export const useAdminMembers = (
     }
   };
 
+  // ========== 칭호 일괄 부여 (선택 회원 대상) ==========
+  const bulkGrantTitle = async (memberIds, titleId) => {
+    if (!currentUser?.isAdmin) return;
+    if (!titleId) {
+      alert('부여할 칭호를 선택해주세요.');
+      return;
+    }
+
+    const targetIds = (memberIds || []).filter(id => members[id]);
+    if (targetIds.length === 0) {
+      alert('선택한 회원이 없습니다.');
+      return;
+    }
+
+    try {
+      const updates = {};
+      let grantedCount = 0;
+      let alreadyHadCount = 0;
+
+      for (const id of targetIds) {
+        const member = members[id];
+        const assigned = Array.isArray(member.assignedTitles) ? member.assignedTitles : [];
+        if (assigned.includes(titleId)) {
+          alreadyHadCount += 1;
+          continue;
+        }
+
+        const newAssigned = [...assigned, titleId];
+        await update(ref(database, `members/${id}`), { assignedTitles: newAssigned });
+        updates[id] = { ...member, assignedTitles: newAssigned };
+        grantedCount += 1;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        setMembers(prev => ({ ...prev, ...updates }));
+        const selfUpdate = updates[currentUser?.id];
+        if (selfUpdate) updateCurrentUser({ assignedTitles: selfUpdate.assignedTitles });
+      }
+
+      alert(`${grantedCount}명에게 칭호를 부여했습니다.${alreadyHadCount > 0 ? ` (이미 보유 중이라 건너뜀: ${alreadyHadCount}명)` : ''}`);
+    } catch (error) {
+      console.error('❌ 칭호 일괄 부여 실패:', error);
+      alert('칭호 일괄 부여 중 오류가 발생했습니다: ' + error.message);
+    }
+  };
+
   // ========== 회원 삭제 ==========
   const deleteMember = async (memberId) => {
     if (!currentUser?.isSuperAdmin) return false;
@@ -1787,6 +1833,7 @@ export const useAdminMembers = (
     updateMemberTitle,
     grantMemberTitle,
     revokeMemberTitle,
+    bulkGrantTitle,
     deleteMember,
     resetMemberPassword,
     resetGameData,

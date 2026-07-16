@@ -298,13 +298,7 @@ export default function PokemonSettingsPanel({
     } else {
       result = forms;
     }
-    // 같은 이름의 폼은 첫 번째만 남김 (예: 메테노 유성의 모습 색상별 중복 제거)
-    const seen = new Set();
-    return result.filter(f => {
-      if (seen.has(f.name)) return false;
-      seen.add(f.name);
-      return true;
-    });
+    return result;
   };
 
   // ─────────────────────────────────────────────────────────────────────────
