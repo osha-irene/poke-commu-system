@@ -322,6 +322,90 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
     return result;
   };
 
+  // ⭐ 보유 포켓몬(caughtPokemon) 전용 트랜잭션 업데이트 - 항상 Firebase의 최신 배열을 기준으로
+  // 병합되므로, 짧은 시간 안에 여러 마리를 연달아 잡아도(각 호출이 클로저에 갇힌 옛 배열을 기준으로
+  // 통째로 덮어써서) 먼저 잡은 포켓몬이 사라지는 문제가 없다.
+  const updateCaughtPokemon = async (mutate) => {
+    if (!currentUser) {
+      console.error('❌ currentUser가 없음!');
+      return { committed: false };
+    }
+
+    const caughtRef = ref(database, `members/${currentUser.id}/caughtPokemon`);
+    const result = await runTransaction(caughtRef, (currentCaught) => {
+      const next = mutate(ensurePartyPadding(currentCaught, allPokemonMaster));
+      if (next === undefined) return; // 트랜잭션 중단
+      // Firebase는 undefined 값을 허용하지 않으므로 null로 치환
+      return JSON.parse(JSON.stringify(next, (key, value) => (value === undefined ? null : value)));
+    });
+
+    if (result.committed) {
+      const newCaughtPokemon = ensurePartyPadding(result.snapshot.val() || [], allPokemonMaster);
+      setCurrentUser(prev => (prev ? { ...prev, caughtPokemon: newCaughtPokemon } : prev));
+      setMembers(prevMembers => (
+        prevMembers[currentUser.id]
+          ? { ...prevMembers, [currentUser.id]: { ...prevMembers[currentUser.id], caughtPokemon: newCaughtPokemon } }
+          : prevMembers
+      ));
+      await update(
+        ref(database, `memberParty/${currentUser.id}`),
+        toMemberParty({ ...currentUser, caughtPokemon: newCaughtPokemon }, currentUser.id)
+      );
+    }
+
+    return result;
+  };
+
+  // ⭐ 보유 포켓몬 한 마리(파티/박스든 파트너든)를 uniqueId로 찾아 갱신하는 트랜잭션.
+  // 아이템을 연달아 사용하거나 기술을 연달아 가르칠 때도 항상 Firebase의 최신 데이터를 기준으로
+  // 병합되므로, 먼저 한 변경이 나중 호출에 덮여 사라지는 문제가 없다.
+  const updateOwnedPokemonByUniqueId = async (uniqueId, mutate) => {
+    if (!currentUser) {
+      console.error('❌ currentUser가 없음!');
+      return { committed: false };
+    }
+
+    const isPartner = currentUser.partnerPokemon?.uniqueId === uniqueId;
+
+    if (isPartner) {
+      const partnerRef = ref(database, `members/${currentUser.id}/partnerPokemon`);
+      const result = await runTransaction(partnerRef, (currentPartner) => {
+        if (!currentPartner) return currentPartner;
+        const next = mutate(withNormalizedIVs(currentPartner, DEFAULT_IVS));
+        if (next === undefined) return; // 트랜잭션 중단
+        return JSON.parse(JSON.stringify(next, (key, value) => (value === undefined ? null : value)));
+      });
+
+      if (result.committed) {
+        const newPartner = withNormalizedIVs(result.snapshot.val(), DEFAULT_IVS);
+        setCurrentUser(prev => (prev ? { ...prev, partnerPokemon: newPartner } : prev));
+        setMembers(prevMembers => (
+          prevMembers[currentUser.id]
+            ? { ...prevMembers, [currentUser.id]: { ...prevMembers[currentUser.id], partnerPokemon: newPartner } }
+            : prevMembers
+        ));
+        await update(
+          ref(database, `memberParty/${currentUser.id}`),
+          toMemberParty({ ...currentUser, partnerPokemon: newPartner }, currentUser.id)
+        );
+      }
+
+      return result;
+    }
+
+    return updateCaughtPokemon((currentCaught) => {
+      const index = currentCaught.findIndex(p => p && p.uniqueId === uniqueId);
+      if (index === -1) return currentCaught; // 대상을 못 찾음 - 변경 없이 그대로 둠
+
+      const mutated = mutate(currentCaught[index]);
+      if (mutated === undefined) return undefined; // 트랜잭션 중단
+
+      const next = [...currentCaught];
+      next[index] = mutated;
+      return next;
+    });
+  };
+
   const changeCurrentUserPassword = async (newPassword) => {
     if (!auth.currentUser || !currentUser) {
       alert('로그인 정보를 확인할 수 없습니다. 다시 로그인해주세요.');
@@ -357,6 +441,8 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
     handleLogout,
     updateCurrentUser,
     updateInventory,
+    updateCaughtPokemon,
+    updateOwnedPokemonByUniqueId,
     changeCurrentUserPassword,
     isLoading: isAuthLoading
   };

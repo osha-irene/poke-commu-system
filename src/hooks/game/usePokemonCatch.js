@@ -10,6 +10,8 @@ import { withWurmpleEvolutionId } from '../../utils/wurmpleEvolution';
 export const usePokemonCatch = (
   currentUser,
   updateCurrentUser,
+  updateCaughtPokemon,
+  updateInventory,
   allPokemonMaster,
   allItems,
   allMoves,
@@ -143,51 +145,54 @@ export const usePokemonCatch = (
         : `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pokemonTemplate.number}.png`
     });
 
-    const currentPokemon = [...currentUser.caughtPokemon];
-    const party = currentPokemon.slice(0, 6);
-    const box = currentPokemon.slice(6);
-    
-    let emptySlotIndex = -1;
-    for (let i = 0; i < 6; i++) {
-      if (!party[i] || party[i] === null) {
-        emptySlotIndex = i;
-        break;
+    // ⭐ 클로저에 갇힌 caughtPokemon 스냅샷을 기준으로 통째로 덮어쓰면, 짧은 시간 안에 여러 마리를
+    // 연달아 잡을 때 나중 호출이 먼저 잡은 포켓몬을 지운 배열로 되돌려버릴 수 있다(먼저 잡은 포켓몬이
+    // 사라지는 버그의 원인). 항상 Firebase의 최신 배열을 기준으로 트랜잭션으로 병합한다.
+    const caughtResult = await updateCaughtPokemon((currentCaught) => {
+      const party = currentCaught.slice(0, 6);
+      const box = currentCaught.slice(6);
+
+      const emptySlotIndex = party.findIndex(p => !p || p === null);
+
+      if (emptySlotIndex !== -1) {
+        console.log('✅ 엔트리 빈 슬롯', emptySlotIndex, '에 포켓몬 추가');
+        party[emptySlotIndex] = newPokemon;
+        return [...party, ...box];
       }
-    }
-    
-    let updatedCaughtPokemon;
-    
-    if (emptySlotIndex !== -1) {
-      console.log('✅ 엔트리 빈 슬롯', emptySlotIndex, '에 포켓몬 추가');
-      party[emptySlotIndex] = newPokemon;
-      updatedCaughtPokemon = [...party, ...box];
-    } else {
+
       console.log('📦 엔트리 가득참 - 박스에 포켓몬 추가');
-      updatedCaughtPokemon = [...party, ...box, newPokemon];
+      return [...party, ...box, newPokemon];
+    });
+
+    if (!caughtResult.committed) {
+      alert('포켓몬을 잡는 중 오류가 발생했습니다. 다시 시도해주세요.');
+      return;
     }
-    
+
     console.log('🎉 포켓몬 잡기 완료!');
 
     const exhaustedExp = Number(pokemon.pendingDailyExploreExhaustedExp) || 0;
 
-    // consumeBall=true 이면 볼 소모도 같은 updateCurrentUser 호출에서 처리 (stale closure 방지)
+    // consumeBall=true 이면 볼도 같은 이유로 최신 인벤토리를 기준으로 트랜잭션 소모
     let updatedInventory = null;
     if (consumeBall && !currentUser.isSuperAdmin) {
-      const inv = Array.isArray(currentUser.inventory) ? [...currentUser.inventory] : [];
-      updatedInventory = inv.map(item =>
-        (item.itemId === ballUsed?.id || item.name === ballUsed?.name)
-          ? { ...item, count: Math.max(0, (Number(item.count) || 0) - 1) }
-          : item
-      );
+      const invResult = await updateInventory((currentInventory = []) => (
+        currentInventory.map(item =>
+          (item.itemId === ballUsed?.id || item.name === ballUsed?.name)
+            ? { ...item, count: Math.max(0, (Number(item.count) || 0) - 1) }
+            : item
+        )
+      ));
+      if (invResult.committed) {
+        updatedInventory = invResult.snapshot.val();
+      }
     }
 
-    await updateCurrentUser({
-      caughtPokemon: updatedCaughtPokemon,
-      ...(updatedInventory !== null ? { inventory: updatedInventory } : {}),
-      ...(exhaustedExp > 0 && Number(currentUser.dailyWalks) > 0
-        ? { trainerExp: (Number(currentUser.trainerExp) || 0) + exhaustedExp }
-        : {})
-    });
+    if (exhaustedExp > 0 && Number(currentUser.dailyWalks) > 0) {
+      await updateCurrentUser({
+        trainerExp: (Number(currentUser.trainerExp) || 0) + exhaustedExp
+      });
+    }
 
     // 첫 포획 기록
     const formNumber = String(pokemonTemplate.number);

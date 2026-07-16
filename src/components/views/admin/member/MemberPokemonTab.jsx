@@ -5,6 +5,7 @@ import PokemonPickerModal from '../../../modals/PokemonPickerModal';
 import MemberPokemonViewMode from './MemberPokemonViewMode';
 import MemberPokemonEditMode from './MemberPokemonEditMode';
 import MemberPokemonGiveMode from './MemberPokemonGiveMode';
+import CaughtLocationModal from './CaughtLocationModal';
 import MemberPokemonTransferMode from './MemberPokemonTransferMode';
 import { getLearnsetTmMoves, getPokemonLearnset } from '../../../../utils/pokemonLearnsets';
 import { DEFAULT_IVS, normalizeIVs } from '../../../../utils/pokemonIndividualValues';
@@ -28,6 +29,7 @@ function MemberPokemonTab({
   allMoves = [],
   allItems = [],
   pokemonLearnsets = {},
+  regions = [],
   onGivePokemon,
   onEditPokemon,
   getPokemonFormCandidates,
@@ -43,6 +45,7 @@ function MemberPokemonTab({
   const [showEditItemModal, setShowEditItemModal] = useState(false);
   const [showGiveItemModal, setShowGiveItemModal] = useState(false);
   const [showGivePokemonPicker, setShowGivePokemonPicker] = useState(false);
+  const [showCaughtLocationModal, setShowCaughtLocationModal] = useState(false);
   const [transferTarget, setTransferTarget] = useState(null);
   // 어드민 강제 진화로 마빌크 → 마휘핑 진화 중일 때 { evolvedTemplate }
   const [alcremieAdminPending, setAlcremieAdminPending] = useState(null);
@@ -74,8 +77,9 @@ function MemberPokemonTab({
   isShiny: false, 
   friendship: 0, 
   heldItem: null, 
-  selectedMoves: [], 
+  selectedMoves: [],
   randomMoves: false,
+  caughtLocation: '',
   // ⭐ 여기부터 새로 추가된 필드들
   gender: 'random', 
   ability: '', 
@@ -200,15 +204,26 @@ function MemberPokemonTab({
   return [...new Map([...levelMoves, ...machineMoves, ...eggMoves, ...tutorMoves].map(m => [m.id, m])).values()];
 }, [giveData.selectedPokemon, giveData.level, pokemonLearnsets, allMoves]);
 
+  // 랜덤 기술 전용 후보군: "설정한 레벨 이하에서 배울 수 있는" 레벨업 기술로만 제한한다.
+  // (TM/알/교배 기술은 레벨과 무관하게 배울 수 있어서 랜덤 뽑기 취지와 맞지 않음)
+  const giveRandomEligibleMoves = useMemo(() => {
+    if (!giveData.selectedPokemon) return [];
+    const learnset = getPokemonLearnset(pokemonLearnsets, giveData.selectedPokemon);
+    if (!learnset) return [];
 
+    return (learnset.levelUpMoves || [])
+      .filter(entry => entry.level <= giveData.level)
+      .map(entry => allMoves.find(m => m.id === entry.moveId))
+      .filter(Boolean);
+  }, [giveData.selectedPokemon, giveData.level, pokemonLearnsets, allMoves]);
 
   const getRandomMoves = () => {
-  if (giveAvailableMoves.length === 0) {
-    console.log('⚠️ 배울 수 있는 기술이 없습니다');
+  if (giveRandomEligibleMoves.length === 0) {
+    console.log('⚠️ 레벨 이하에서 배울 수 있는 기술이 없습니다');
     return [];
   }
-  
-  const shuffled = [...giveAvailableMoves].sort(() => Math.random() - 0.5);
+
+  const shuffled = [...giveRandomEligibleMoves].sort(() => Math.random() - 0.5);
   const selected = shuffled.slice(0, Math.min(4, shuffled.length));
   
   console.log('🎲 랜덤 기술 생성:', selected.map(m => m.name));
@@ -454,6 +469,7 @@ function MemberPokemonTab({
     heldItem: null,
     selectedMoves: [],
     randomMoves: false,
+    caughtLocation: '',
     gender: 'random',
     ability: '',
     sizeRank: 'M',
@@ -504,7 +520,8 @@ function MemberPokemonTab({
     const pokemonData = {
       level: giveData.level,
       nickname: giveData.nickname || giveData.selectedPokemon.name,
-      isAdminGiven: true,
+      // 만난 장소를 입력했으면 실제로 그 장소에서 만난 것으로 기록되도록 훅에서 isAdminGiven을 계산한다.
+      caughtLocation: giveData.caughtLocation || null,
       favoriteFlavor: FLAVORS[Math.floor(Math.random() * FLAVORS.length)],
       caughtWithBall: giveData.caughtWithBall,
       customBallImage: giveData.customBallImage,
@@ -736,6 +753,16 @@ function MemberPokemonTab({
           onOpenItemModal={() => setShowGiveItemModal(true)}
           onOpenMoveModal={() => setShowGiveMoveModal(true)}
           onOpenPokemonPicker={() => setShowGivePokemonPicker(true)}
+          onOpenCaughtLocationModal={() => setShowCaughtLocationModal(true)}
+        />
+      )}
+
+      {showCaughtLocationModal && (
+        <CaughtLocationModal
+          initialValue={giveData.caughtLocation || ''}
+          regionNames={[...new Set((regions || []).map(r => r.name).filter(Boolean))]}
+          onConfirm={(value) => setGiveData(prev => ({ ...prev, caughtLocation: value }))}
+          onClose={() => setShowCaughtLocationModal(false)}
         />
       )}
 

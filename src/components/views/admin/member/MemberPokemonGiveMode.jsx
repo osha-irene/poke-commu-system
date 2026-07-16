@@ -2,7 +2,7 @@
 // src/components/views/admin/member/MemberPokemonGiveMode.jsx
 import React from 'react';
 import {
-  X, Gift, Sparkles, Plus, Trash2, Award, Zap, Heart, Star, Check, User, Ruler, Scale, Image as ImageIcon, Search
+  X, Gift, Sparkles, Plus, Trash2, Award, Zap, Heart, Star, Check, User, Ruler, Scale, Image as ImageIcon, Search, MapPin
 } from 'lucide-react';
 import { POKEBALL_LIST } from '../../../../styles/theme';
 import { getPokemonGenderOptions } from '../../../../utils/pokemonGender';
@@ -38,7 +38,8 @@ export default function MemberPokemonGiveMode({
   onCancel,
   onOpenItemModal,
   onOpenMoveModal,
-  onOpenPokemonPicker
+  onOpenPokemonPicker,
+  onOpenCaughtLocationModal
 }) {
   const genderOptions = getPokemonGenderOptions(giveData.selectedPokemon);
   const isGenderless = genderOptions.length === 1 && genderOptions[0] === 'none';
@@ -208,6 +209,25 @@ export default function MemberPokemonGiveMode({
                   </label>
                 </div>
               )}
+
+              <div>
+                <label className="block text-sm font-semibold mb-1 flex items-center gap-1">
+                  <MapPin size={14} />
+                  만난 장소
+                </label>
+                <div className="flex gap-2">
+                  <div className="flex-1 bg-gray-50 border rounded px-3 py-2 text-sm text-gray-700 truncate">
+                    {giveData.caughtLocation || '미지정 (특별한 만남으로 기록됨)'}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onOpenCaughtLocationModal}
+                    className="shrink-0 rounded border bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100"
+                  >
+                    입력
+                  </button>
+                </div>
+              </div>
 
                         {/* 성별/특성/체구 설정 */}
           <div className="space-y-4 bg-blue-50 p-4 rounded-lg">

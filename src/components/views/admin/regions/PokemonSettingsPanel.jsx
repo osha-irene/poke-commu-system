@@ -242,7 +242,10 @@ export default function PokemonSettingsPanel({
           byId.set(String(key), pokemon);
         }
       });
-      if (pokemon.number !== undefined && pokemon.number !== null) {
+      // "pokemon-form-10039" 같은 폼 전용 문자열 id는 Number()로 변환하면 전부 NaN이 되어
+      // Map 키가 겹쳐버린다(나중에 처리된 폼이 앞선 폼을 덮어씀 - 지역폼 조회 시 엉뚱한
+      // 포켓몬이 나오는 원인). 진짜 숫자 도감번호일 때만 byNumber에 넣는다.
+      if (pokemon.number !== undefined && pokemon.number !== null && Number.isFinite(Number(pokemon.number))) {
         byNumber.set(Number(pokemon.number), pokemon);
       }
       if (pokemon.originalNumber !== undefined && pokemon.originalNumber !== null && pokemon.formVariant) {
@@ -372,7 +375,7 @@ export default function PokemonSettingsPanel({
       const configForms = parentRegion?.pokemonFormConfig?.[baseId];
       if (configForms && configForms.length > 0) {
         return configForms.map(fid => {
-          const p = pokemonLookup.byNumber.get(Number(fid));
+          const p = pokemonLookup.byId.get(String(fid));
           if (!p) return null;
           // 사철록 봄의 모습 레이블
           if (fid === baseId) {
@@ -483,7 +486,7 @@ export default function PokemonSettingsPanel({
                 return {
                   ...place,
                   pokemons: (place.pokemons || []).filter(fid => {
-                    const p = pokemonLookup.byNumber.get(Number(fid));
+                    const p = pokemonLookup.byId.get(String(fid));
                     const base = p?.originalNumber && p.originalNumber !== fid ? p.originalNumber : fid;
                     return selectedPokemonSet.has(Number(base)) || selectedPokemonSet.has(Number(fid));
                   }),
@@ -524,7 +527,7 @@ export default function PokemonSettingsPanel({
 
     // 단일 폼 선택 시 해당 폼 이미지 사용
     const displayPokemon = selectedForms.length === 1
-      ? (pokemonLookup.byNumber.get(Number(selectedForms[0])) || pokemon)
+      ? (pokemonLookup.byId.get(String(selectedForms[0])) || pokemon)
       : pokemon;
 
     return (
@@ -755,7 +758,7 @@ export default function PokemonSettingsPanel({
               {Math.max(0, 100 - Number(encounterRate || 0)) >= 5 && '미조우'}
             </div>
             {[...placeProbabilities].sort((a, b) => b.actualProb - a.actualProb).map(({ id, actualProb }, idx) => {
-              const p = pokemonLookup.byNumber.get(Number(id));
+              const p = pokemonLookup.byId.get(String(id));
               return (
                 <div key={id}
                   className="flex items-center justify-center text-white text-xs font-bold hover:brightness-110"

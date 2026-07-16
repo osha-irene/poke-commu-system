@@ -138,51 +138,78 @@ export const CATEGORIES = [
   }
 ];
 
+const categoryToPocketMap = {
+  'vitamins': ITEM_POCKETS.VITAMINS,
+  'held-items': ITEM_POCKETS.HELD_ITEMS,
+  'species-specific': ITEM_POCKETS.HELD_ITEMS,
+  'type-enhancement': ITEM_POCKETS.HELD_ITEMS,
+  'evolution': ITEM_POCKETS.EVOLUTION,
+  'machines': ITEM_POCKETS.MACHINES,
+  'berries': ITEM_POCKETS.BERRIES,
+  'medicine': ITEM_POCKETS.MEDICINE,
+  'healing': ITEM_POCKETS.MEDICINE,
+  'pokeballs': ITEM_POCKETS.POKEBALLS,
+  'standard-balls': ITEM_POCKETS.POKEBALLS,
+  'special-balls': ITEM_POCKETS.POKEBALLS,
+  'apricorn-balls': ITEM_POCKETS.POKEBALLS,
+  'battle-items': ITEM_POCKETS.BATTLE,
+  'stat-boosts': ITEM_POCKETS.BATTLE,
+  'key-items': ITEM_POCKETS.KEY,
+  'event-items': ITEM_POCKETS.KEY,
+  'gameplay': ITEM_POCKETS.KEY,
+};
+
 // 통일된 아이템 pocket 가져오기
 export const getItemPocket = (item) => {
   if (!item) return ITEM_POCKETS.MISC;
-  
+
   // 예외: 나무열매가 이름에 포함되어 있어도 실제로는 다른 포켓인 아이템들
   const berryNameExceptions = ['나무열매쥬스', 'berry-juice', 'berry juice','딸기사탕공예','베리사탕공예','strawberry'];
-  const isException = berryNameExceptions.some(ex => 
+  const isException = berryNameExceptions.some(ex =>
     item.name?.includes(ex) || item.nameEn?.toLowerCase().includes(ex.toLowerCase())
   );
-  
+
+  // 커스텀 아이템에서 관리자가 cooking.isIngredient를 명시적으로 false로 지정한 경우,
+  // 이름에 "열매"가 들어있어도 나무열매 포켓으로 자동 분류하지 않는다.
+  // (명시적 false는 "이건 재료/나무열매가 아니다"라는 확실한 의사표시이므로 이름 매칭보다 우선한다)
+  // ⚠️ isCustom인 경우로만 한정한다 - 오랭/버치/유루열매 같은 공식 나무열매는 cooking.isIngredient가
+  // 원래 false인 게 정상(요리 재료가 아닌 상태이상 회복용 지닌 물건일 뿐, 나무열매 포켓 자체는 맞음).
+  // isCustom 체크 없이 적용하면 이 공식 나무열매들이 전부 나무열매 포켓에서 빠져버린다.
+  const isExplicitlyNotIngredient = item.isCustom && item.cooking?.isIngredient === false;
+
+  // item.pocket이 나무열매가 아닌 값으로 이미 명시적으로 박혀있으면(관리자가 CustomItemCreator의
+  // 카테고리 버튼으로 직접 고른 값, 혹은 그 값이 상점 구매/지급을 거쳐 인벤토리에 그대로 복사된
+  // 경우) 이름 매칭보다 그 지정을 우선한다. 공식 아이템(items.json)은 최상위 pocket 필드를 아예
+  // 쓰지 않으므로(카테고리/categoryData.pocket만 사용) 이 체크는 isCustom 여부와 무관하게 안전하다.
+  // (인벤토리로 복사되는 과정에서 isCustom 플래그 자체는 누락되는 경로가 있어, isCustom만 보고
+  // 판단하면 상점에서 산 커스텀 아이템은 이 예외를 못 받는다)
+  const hasExplicitPocket = item.pocket && item.pocket !== ITEM_POCKETS.MISC && item.pocket !== ITEM_POCKETS.BERRIES;
+
+  // 커스텀 아이템에서 관리자가 카테고리를 나무열매가 아닌 값으로 직접 골라둔 경우도 우선한다.
+  // (공식 아이템은 나무열매의 category가 'medicine'으로 잡혀있는 등 이름과 category가 어긋나는
+  // 경우가 있어서, 이 체크는 isCustom인 경우로만 한정한다)
+  const hasExplicitCustomCategory = item.isCustom && item.category && item.category !== 'misc' &&
+    item.category !== 'berries' && categoryToPocketMap[item.category];
+
+  const hasExplicitNonBerryPocket = hasExplicitPocket || hasExplicitCustomCategory;
+
   // 나무열매 체크 (예외 제외)
-  if (!isException && (item.name?.includes('열매') || item.nameEn?.toLowerCase().includes('berry'))) {
+  if (!isException && !isExplicitlyNotIngredient && !hasExplicitNonBerryPocket && (item.name?.includes('열매') || item.nameEn?.toLowerCase().includes('berry'))) {
     return ITEM_POCKETS.BERRIES;
   }
-  
-  // 식재료 체크
+
+  // category가 회복/영양 등으로 이미 명확한 아이템은 그 분류를 우선한다.
+  // (맛있는물처럼 "회복 아이템이면서 요리 재료로도 쓰이는" 경우, 재료 여부는 CookingView 쪽에서
+  // cooking.isIngredient를 따로 확인하므로, 여기 pocket까지 식재료로 덮어쓸 필요는 없다)
+  if (item.category && categoryToPocketMap[item.category]) {
+    return categoryToPocketMap[item.category];
+  }
+
+  // 식재료 체크 (위에서 매칭되는 카테고리가 없을 때만 - 커스텀 재료처럼 category가 misc뿐인 경우)
   if (item.cooking?.isIngredient || item.category?.includes('ingredient')) {
     return ITEM_POCKETS.INGREDIENTS;
   }
 
-  const categoryToPocketMap = {
-    'vitamins': ITEM_POCKETS.VITAMINS,
-    'held-items': ITEM_POCKETS.HELD_ITEMS,
-    'species-specific': ITEM_POCKETS.HELD_ITEMS,
-    'type-enhancement': ITEM_POCKETS.HELD_ITEMS,
-    'evolution': ITEM_POCKETS.EVOLUTION,
-    'machines': ITEM_POCKETS.MACHINES,
-    'berries': ITEM_POCKETS.BERRIES,
-    'medicine': ITEM_POCKETS.MEDICINE,
-    'healing': ITEM_POCKETS.MEDICINE,
-    'pokeballs': ITEM_POCKETS.POKEBALLS,
-    'standard-balls': ITEM_POCKETS.POKEBALLS,
-    'special-balls': ITEM_POCKETS.POKEBALLS,
-    'apricorn-balls': ITEM_POCKETS.POKEBALLS,
-    'battle-items': ITEM_POCKETS.BATTLE,
-    'stat-boosts': ITEM_POCKETS.BATTLE,
-    'key-items': ITEM_POCKETS.KEY,
-    'event-items': ITEM_POCKETS.KEY,
-    'gameplay': ITEM_POCKETS.KEY,
-  };
-  
-  if (item.category && categoryToPocketMap[item.category]) {
-    return categoryToPocketMap[item.category];
-  }
-  
   if (item.categoryData?.pocket) {
     return item.categoryData.pocket;
   }

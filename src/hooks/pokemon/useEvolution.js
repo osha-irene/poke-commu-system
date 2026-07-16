@@ -9,6 +9,7 @@ import {
   withWurmpleEvolutionId
 } from '../../utils/wurmpleEvolution';
 import { getAlcremieImage, getAlcremieShapeForItem } from '../../utils/alcremieFlavors';
+import { getAbilityKoreanName } from '../../utils/abilityUtils';
 
 const allMovesData = Array.isArray(movesDataRaw) ? movesDataRaw : movesDataRaw.moves || [];
 
@@ -365,6 +366,43 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
     return true;
   };
 
+  // 진화형에서도 기존 특성을 그대로 쓸 수 있는지 확인하고, 아예 없어졌다면
+  // (숨겨진 특성이었다면 진화형의 숨겨진 특성으로, 아니면 진화형의 일반 특성 중) 랜덤으로 새로 배정한다.
+  const resolveEvolvedAbility = (pokemon, evolvedTemplate) => {
+    const wasHidden = Boolean(pokemon.isHiddenAbility);
+    const abilitiesEn = evolvedTemplate.abilitiesEn || [];
+    const hiddenAbilityEn = evolvedTemplate.hiddenAbilityEn || null;
+    const currentAbilityEn = pokemon.abilityEn;
+
+    const stillHasAbility = wasHidden
+      ? Boolean(currentAbilityEn) && currentAbilityEn === hiddenAbilityEn
+      : Boolean(currentAbilityEn) && abilitiesEn.includes(currentAbilityEn);
+
+    if (stillHasAbility) {
+      return { ability: pokemon.ability, abilityEn: currentAbilityEn, isHiddenAbility: wasHidden };
+    }
+
+    if (wasHidden && hiddenAbilityEn) {
+      return {
+        ability: getAbilityKoreanName(hiddenAbilityEn) || hiddenAbilityEn,
+        abilityEn: hiddenAbilityEn,
+        isHiddenAbility: true,
+      };
+    }
+
+    if (abilitiesEn.length > 0) {
+      const randomAbilityEn = abilitiesEn[Math.floor(Math.random() * abilitiesEn.length)];
+      return {
+        ability: getAbilityKoreanName(randomAbilityEn) || randomAbilityEn,
+        abilityEn: randomAbilityEn,
+        isHiddenAbility: false,
+      };
+    }
+
+    // 진화형에 특성 정보 자체가 없으면 기존 값 유지
+    return { ability: pokemon.ability, abilityEn: currentAbilityEn, isHiddenAbility: wasHidden };
+  };
+
   // 진화 실행 (imageOverrides: 마휘핑 맛처럼 진화 결과 이미지를 직접 지정해야 할 때 사용)
   const performEvolution = (pokemon, evolution, imageOverrides = {}) => {
     const evolvedTemplate = findPokemonTemplateByNumber(evolution.to);
@@ -374,35 +412,44 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
       return false;
     }
 
-    const updatedPokemon = currentUser.caughtPokemon.map(p => {
-      if (p && p.uniqueId === pokemon.uniqueId) {
-        return {
-          ...p,
-          number: evolvedTemplate.number,
-          originalNumber: evolvedTemplate.originalNumber || evolvedTemplate.number,
-          pokemonId: evolvedTemplate.number,
-          name: getBaseName(evolvedTemplate),
-          nameEn: evolvedTemplate.nameEn,
-          species: evolvedTemplate.species || evolvedTemplate.nameEn,
-          regionalForm: evolvedTemplate.regionalForm || null,
-          formVariant: evolvedTemplate.formVariant || null,
-          isRegionalForm: Boolean(evolvedTemplate.isRegionalForm),
-          baseSpecies: evolvedTemplate.baseSpecies || null,
-          baseSpeciesEn: evolvedTemplate.baseSpeciesEn || null,
-          type: evolvedTemplate.type,
-          type2: evolvedTemplate.type2 || null,
-          ...getBaseStatPatch(evolvedTemplate),
-          imageUrl: evolvedTemplate.imageUrl,
-          iconUrl: (() => { const orig = evolvedTemplate.originalNumber; const n = (orig === 710 || orig === 711) ? orig : evolvedTemplate.number; return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-viii/icons/${n}.png`; })(),
-          spriteUrl: `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${evolvedTemplate.number}.png`,
-          // 닉네임이 종족명이면 제거, 커스텀 닉네임은 유지
-          nickname: (p.nickname && p.nickname !== getBaseName(p) && p.nickname !== p.name && p.nickname !== p.nameEn) ? p.nickname : null,
-          evolutionCancelled: false,
-          ...imageOverrides
-        };
-      }
-      return p;
+    const evolvePokemonObject = (p) => ({
+      ...p,
+      number: evolvedTemplate.number,
+      originalNumber: evolvedTemplate.originalNumber || evolvedTemplate.number,
+      pokemonId: evolvedTemplate.number,
+      name: getBaseName(evolvedTemplate),
+      nameEn: evolvedTemplate.nameEn,
+      species: evolvedTemplate.species || evolvedTemplate.nameEn,
+      regionalForm: evolvedTemplate.regionalForm || null,
+      formVariant: evolvedTemplate.formVariant || null,
+      isRegionalForm: Boolean(evolvedTemplate.isRegionalForm),
+      baseSpecies: evolvedTemplate.baseSpecies || null,
+      baseSpeciesEn: evolvedTemplate.baseSpeciesEn || null,
+      type: evolvedTemplate.type,
+      type2: evolvedTemplate.type2 || null,
+      abilitiesEn: evolvedTemplate.abilitiesEn || p.abilitiesEn,
+      hiddenAbilityEn: evolvedTemplate.hiddenAbilityEn ?? p.hiddenAbilityEn,
+      ...resolveEvolvedAbility(p, evolvedTemplate),
+      ...getBaseStatPatch(evolvedTemplate),
+      imageUrl: evolvedTemplate.imageUrl,
+      iconUrl: (() => { const orig = evolvedTemplate.originalNumber; const n = (orig === 710 || orig === 711) ? orig : evolvedTemplate.number; return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-viii/icons/${n}.png`; })(),
+      spriteUrl: `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${evolvedTemplate.number}.png`,
+      // 닉네임이 종족명이면 제거, 커스텀 닉네임은 유지
+      nickname: (p.nickname && p.nickname !== getBaseName(p) && p.nickname !== p.name && p.nickname !== p.nameEn) ? p.nickname : null,
+      evolutionCancelled: false,
+      ...imageOverrides
     });
+
+    const updatedPokemon = currentUser.caughtPokemon.map(p => (
+      p && p.uniqueId === pokemon.uniqueId ? evolvePokemonObject(p) : p
+    ));
+
+    // 파트너 포켓몬은 caughtPokemon 배열이 아니라 별도 필드에 저장되므로 따로 갱신해야 한다.
+    // (안 그러면 파트너로 지정된 포켓몬은 진화 조건을 통과하고 알림까지 떠도 실제로는 진화하지 않음)
+    const updates = { caughtPokemon: updatedPokemon };
+    if (currentUser.partnerPokemon?.uniqueId === pokemon.uniqueId) {
+      updates.partnerPokemon = evolvePokemonObject(currentUser.partnerPokemon);
+    }
 
     const evolvedAt = Date.now();
     const evolutionHistoryEntry = {
@@ -417,7 +464,7 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
     };
 
     updateCurrentUser({
-      caughtPokemon: updatedPokemon,
+      ...updates,
       evolutionHistory: [
         evolutionHistoryEntry,
         ...((currentUser.evolutionHistory || []).filter(Boolean))

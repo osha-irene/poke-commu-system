@@ -209,6 +209,7 @@ export default function AdminView() {
     bulkAdjustPartnerLevel,
     bulkIncreaseFriendship,
     bulkGiveItem,
+    bulkGiveMoney,
     bulkGrantTitle,
     resetGameData,
     giveItemToMember,
@@ -1279,6 +1280,7 @@ export default function AdminView() {
         onBulkAdjustPartnerLevel={bulkAdjustPartnerLevel}
         onBulkIncreaseFriendship={bulkIncreaseFriendship}
         onBulkGiveItem={bulkGiveItem}
+        onBulkGiveMoney={bulkGiveMoney}
         onBulkGrantTitle={bulkGrantTitle}
       />
     </div>

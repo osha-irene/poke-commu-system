@@ -2,10 +2,13 @@
 
 import { getPokemonLearnset } from '../../utils/pokemonLearnsets';
 
-export const useMoves = (currentUser, updateCurrentUser, allMoves, pokemonLearnsets) => {
-  
+export const useMoves = (currentUser, updateCurrentUser, updateOwnedPokemonByUniqueId, allMoves, pokemonLearnsets) => {
+
   // 기술 배우기/교체
-  const learnMove = (pokemonUniqueId, moveData, oldMoveId = null) => {
+  // ⭐ 클로저에 갇힌 caughtPokemon/partnerPokemon 스냅샷을 기준으로 통째로 덮어쓰면, 기술을
+  // 연달아 여러 개 가르칠 때(또는 다른 포켓몬에게 동시에) 나중 호출이 앞선 변경을 지운 배열로
+  // 되돌려버릴 수 있다. 항상 Firebase의 최신 데이터를 기준으로 트랜잭션으로 병합한다.
+  const learnMove = async (pokemonUniqueId, moveData, oldMoveId = null) => {
     if (!currentUser) return false;
 
     console.log('🎓 === learnMove 함수 실행 ===');
@@ -13,89 +16,69 @@ export const useMoves = (currentUser, updateCurrentUser, allMoves, pokemonLearns
     console.log('🎓 moveData:', moveData);
     console.log('🎓 oldMoveId:', oldMoveId);
 
-    const isPartner = currentUser.partnerPokemon?.uniqueId === pokemonUniqueId;
-    const pokemonIndex = !isPartner
-      ? (currentUser.caughtPokemon || []).findIndex(p => p && p.uniqueId === pokemonUniqueId)
-      : -1;
+    let outcome = null;
+    let pokemonLabel = '포켓몬';
 
-    if (!isPartner && pokemonIndex === -1) {
-      alert('포켓몬을 찾을 수 없습니다!');
-      return false;
-    }
+    const result = await updateOwnedPokemonByUniqueId(pokemonUniqueId, (pokemon) => {
+      pokemonLabel = pokemon.nickname || pokemon.name || pokemonLabel;
+      const currentMoves = pokemon.moves || [];
 
-    const pokemon = isPartner
-      ? currentUser.partnerPokemon
-      : currentUser.caughtPokemon[pokemonIndex];
-    const currentMoves = pokemon.moves || [];
+      if (!oldMoveId && currentMoves.some(m => m.moveId === moveData.id)) {
+        outcome = 'already-known';
+        return undefined; // 트랜잭션 중단
+      }
 
-    console.log('🎓 현재 기술:', currentMoves);
+      let newMoves;
+      if (oldMoveId) {
+        newMoves = currentMoves.map(move =>
+          move.moveId === oldMoveId
+            ? { moveId: moveData.id, currentPp: moveData.pp, learnedAt: pokemon.level }
+            : move
+        );
+      } else {
+        if (currentMoves.length >= 4) {
+          outcome = 'full';
+          return undefined; // 트랜잭션 중단
+        }
+        newMoves = [
+          ...currentMoves,
+          { moveId: moveData.id, currentPp: moveData.pp, learnedAt: pokemon.level }
+        ];
+      }
 
-    // 이미 배운 기술인지 확인
-    if (!oldMoveId && currentMoves.some(m => m.moveId === moveData.id)) {
+      outcome = 'learned';
+      return { ...pokemon, moves: newMoves };
+    });
+
+    if (outcome === 'already-known') {
       alert('이미 배운 기술입니다!');
       return false;
     }
 
-    let newMoves;
-
-    if (oldMoveId) {
-      console.log('🎓 기술 교체 모드');
-      newMoves = currentMoves.map(move =>
-        move.moveId === oldMoveId
-          ? { moveId: moveData.id, currentPp: moveData.pp, learnedAt: pokemon.level }
-          : move
-      );
-    } else {
-      console.log('🎓 기술 추가 모드');
-      if (currentMoves.length >= 4) {
-        alert('기술이 가득 찼습니다!');
-        return 'full';
-      }
-      newMoves = [
-        ...currentMoves,
-        { moveId: moveData.id, currentPp: moveData.pp, learnedAt: pokemon.level }
-      ];
+    if (outcome === 'full') {
+      alert('기술이 가득 찼습니다!');
+      return 'full';
     }
 
-    console.log('🎓 새로운 기술 배열:', newMoves);
-
-    if (isPartner) {
-      updateCurrentUser({ partnerPokemon: { ...pokemon, moves: newMoves } });
-    } else {
-      const newCaughtPokemon = [...currentUser.caughtPokemon];
-      newCaughtPokemon[pokemonIndex] = { ...pokemon, moves: newMoves };
-      updateCurrentUser({ caughtPokemon: newCaughtPokemon });
+    if (!result.committed || outcome !== 'learned') {
+      alert('포켓몬을 찾을 수 없습니다!');
+      return false;
     }
 
     const moveName = moveData.name || '새 기술';
-    alert(`${pokemon.nickname || pokemon.name}이(가) ${moveName}을(를) 배웠습니다!`);
+    alert(`${pokemonLabel}이(가) ${moveName}을(를) 배웠습니다!`);
 
     return true;
   };
 
   // 기술 삭제
-  const forgetMove = (pokemonUniqueId, moveId) => {
+  const forgetMove = async (pokemonUniqueId, moveId) => {
     if (!currentUser) return;
 
-    const isPartner = currentUser.partnerPokemon?.uniqueId === pokemonUniqueId;
-    const pokemonIndex = !isPartner
-      ? (currentUser.caughtPokemon || []).findIndex(p => p && p.uniqueId === pokemonUniqueId)
-      : -1;
-
-    if (!isPartner && pokemonIndex === -1) return;
-
-    const pokemon = isPartner
-      ? currentUser.partnerPokemon
-      : currentUser.caughtPokemon[pokemonIndex];
-    const newMoves = (pokemon.moves || []).filter(m => m.moveId !== moveId);
-
-    if (isPartner) {
-      updateCurrentUser({ partnerPokemon: { ...pokemon, moves: newMoves } });
-    } else {
-      const newCaughtPokemon = [...currentUser.caughtPokemon];
-      newCaughtPokemon[pokemonIndex] = { ...pokemon, moves: newMoves };
-      updateCurrentUser({ caughtPokemon: newCaughtPokemon });
-    }
+    await updateOwnedPokemonByUniqueId(pokemonUniqueId, (pokemon) => ({
+      ...pokemon,
+      moves: (pokemon.moves || []).filter(m => m.moveId !== moveId)
+    }));
   };
   
   // 기술 교체 (4개 꽉 찼을 때)

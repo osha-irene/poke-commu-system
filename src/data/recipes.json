@@ -8,7 +8,7 @@
             "ingredients": [{ "name": "버치열매", "count": 3 }],
             "result": {
                 "name": "매운 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 근사함을 1 증가시킨다",
                 "conditionBoost": { "elegance": 1 },
                 "spriteUrl": "/img/items/oranda/spicy-oranda.png"
@@ -25,7 +25,7 @@
             ],
             "result": {
                 "name": "매운 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 근사함을 1 증가시킨다",
                 "conditionBoost": { "elegance": 1 },
                 "spriteUrl": "/img/items/oranda/spicy-oranda.png"
@@ -42,7 +42,7 @@
             ],
             "result": {
                 "name": "매운 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 근사함을 1 증가시킨다",
                 "conditionBoost": { "elegance": 1 },
                 "spriteUrl": "/img/items/oranda/spicy-oranda.png"
@@ -56,7 +56,7 @@
             "ingredients": [{ "name": "과사열매", "count": 3 }],
             "result": {
                 "name": "매운 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 근사함을 1 증가시킨다",
                 "conditionBoost": { "elegance": 1 },
                 "spriteUrl": "/img/items/oranda/spicy-oranda.png"
@@ -74,7 +74,7 @@
             ],
             "result": {
                 "name": "고급 매운 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 근사함을 3 증가시킨다",
                 "conditionBoost": { "elegance": 3 },
                 "spriteUrl": "/img/items/oranda/spicy-oranda-sp.png"
@@ -91,7 +91,7 @@
             ],
             "result": {
                 "name": "고급 매운 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 근사함을 3 증가시킨다",
                 "conditionBoost": { "elegance": 3 },
                 "spriteUrl": "/img/items/oranda/spicy-oranda-sp.png"
@@ -109,7 +109,7 @@
             ],
             "result": {
                 "name": "특제 매운 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 근사함을 5 증가시킨다",
                 "conditionBoost": { "elegance": 5 },
                 "spriteUrl": "/img/items/oranda/spicy-oranda-ss.png"
@@ -123,7 +123,7 @@
             "ingredients": [{ "name": "유루열매", "count": 3 }],
             "result": {
                 "name": "떫은 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 아름다움을 1 증가시킨다",
                 "conditionBoost": { "beauty": 1 },
                 "spriteUrl": "/img/items/oranda/dry-oranda.png"
@@ -140,7 +140,7 @@
             ],
             "result": {
                 "name": "떫은 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 아름다움을 1 증가시킨다",
                 "conditionBoost": { "beauty": 1 },
                 "spriteUrl": "/img/items/oranda/dry-oranda.png"
@@ -157,7 +157,7 @@
             ],
             "result": {
                 "name": "떫은 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 아름다움을 1 증가시킨다",
                 "conditionBoost": { "beauty": 1 },
                 "spriteUrl": "/img/items/oranda/dry-oranda.png"
@@ -171,7 +171,7 @@
             "ingredients": [{ "name": "오랭열매", "count": 3 }],
             "result": {
                 "name": "떫은 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 아름다움을 1 증가시킨다",
                 "conditionBoost": { "beauty": 1 },
                 "spriteUrl": "/img/items/oranda/dry-oranda.png"
@@ -189,7 +189,7 @@
             ],
             "result": {
                 "name": "고급 떫은 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 아름다움을 3 증가시킨다",
                 "conditionBoost": { "beauty": 3 },
                 "spriteUrl": "/img/items/oranda/dry-oranda-sp.png"
@@ -206,7 +206,7 @@
             ],
             "result": {
                 "name": "고급 떫은 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 아름다움을 3 증가시킨다",
                 "conditionBoost": { "beauty": 3 },
                 "spriteUrl": "/img/items/oranda/dry-oranda-sp.png"
@@ -224,7 +224,7 @@
             ],
             "result": {
                 "name": "특제 떫은 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 아름다움을 5 증가시킨다",
                 "conditionBoost": { "beauty": 5 },
                 "spriteUrl": "/img/items/oranda/dry-oranda-ss.png"
@@ -238,7 +238,7 @@
             "ingredients": [{ "name": "복슝열매", "count": 3 }],
             "result": {
                 "name": "단 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 귀여움을 1 증가시킨다",
                 "conditionBoost": { "cuteness": 1 },
                 "spriteUrl": "/img/items/oranda/sweet-oranda.png"
@@ -255,7 +255,7 @@
             ],
             "result": {
                 "name": "단 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 귀여움을 1 증가시킨다",
                 "conditionBoost": { "cuteness": 1 },
                 "spriteUrl": "/img/items/oranda/sweet-oranda.png"
@@ -272,7 +272,7 @@
             ],
             "result": {
                 "name": "단 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 귀여움을 1 증가시킨다",
                 "conditionBoost": { "cuteness": 1 },
                 "spriteUrl": "/img/items/oranda/sweet-oranda.png"
@@ -286,7 +286,7 @@
             "ingredients": [{ "name": "시몬열매", "count": 3 }],
             "result": {
                 "name": "단 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 귀여움을 1 증가시킨다",
                 "conditionBoost": { "cuteness": 1 },
                 "spriteUrl": "/img/items/oranda/sweet-oranda.png"
@@ -304,7 +304,7 @@
             ],
             "result": {
                 "name": "고급 단 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 귀여움을 3 증가시킨다",
                 "conditionBoost": { "cuteness": 3 },
                 "spriteUrl": "/img/items/oranda/sweet-oranda-sp.png"
@@ -321,7 +321,7 @@
             ],
             "result": {
                 "name": "고급 단 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 귀여움을 3 증가시킨다",
                 "conditionBoost": { "cuteness": 3 },
                 "spriteUrl": "/img/items/oranda/sweet-oranda-sp.png"
@@ -339,7 +339,7 @@
             ],
             "result": {
                 "name": "특제 단 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 귀여움을 5 증가시킨다",
                 "conditionBoost": { "cuteness": 5 },
                 "spriteUrl": "/img/items/oranda/sweet-oranda-ss.png"
@@ -357,7 +357,7 @@
             ],
             "result": {
                 "name": "특제 단 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 귀여움을 5 증가시킨다",
                 "conditionBoost": { "cuteness": 5 },
                 "spriteUrl": "/img/items/oranda/sweet-oranda-ss.png"
@@ -371,7 +371,7 @@
             "ingredients": [{ "name": "복분열매", "count": 3 }],
             "result": {
                 "name": "쓴 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 슬기로움을 1 증가시킨다",
                 "conditionBoost": { "intelligence": 1 },
                 "spriteUrl": "/img/items/oranda/bitter-oranda.png"
@@ -388,7 +388,7 @@
             ],
             "result": {
                 "name": "쓴 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 슬기로움을 1 증가시킨다",
                 "conditionBoost": { "intelligence": 1 },
                 "spriteUrl": "/img/items/oranda/bitter-oranda.png"
@@ -405,7 +405,7 @@
             ],
             "result": {
                 "name": "쓴 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 슬기로움을 1 증가시킨다",
                 "conditionBoost": { "intelligence": 1 },
                 "spriteUrl": "/img/items/oranda/bitter-oranda.png"
@@ -419,7 +419,7 @@
             "ingredients": [{ "name": "리샘열매", "count": 3 }],
             "result": {
                 "name": "쓴 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 슬기로움을 1 증가시킨다",
                 "conditionBoost": { "intelligence": 1 },
                 "spriteUrl": "/img/items/oranda/bitter-oranda.png"
@@ -437,7 +437,7 @@
             ],
             "result": {
                 "name": "고급 쓴 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 슬기로움을 3 증가시킨다",
                 "conditionBoost": { "intelligence": 3 },
                 "spriteUrl": "/img/items/oranda/bitter-oranda-sp.png"
@@ -454,7 +454,7 @@
             ],
             "result": {
                 "name": "고급 쓴 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 슬기로움을 3 증가시킨다",
                 "conditionBoost": { "intelligence": 3 },
                 "spriteUrl": "/img/items/oranda/bitter-oranda-sp.png"
@@ -472,7 +472,7 @@
             ],
             "result": {
                 "name": "특제 쓴 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 슬기로움을 5 증가시킨다",
                 "conditionBoost": { "intelligence": 5 },
                 "spriteUrl": "/img/items/oranda/bitter-oranda-ss.png"
@@ -486,7 +486,7 @@
             "ingredients": [{ "name": "배리열매", "count": 3 }],
             "result": {
                 "name": "신 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 강인함을 1 증가시킨다",
                 "conditionBoost": { "strength": 1 },
                 "spriteUrl": "/img/items/oranda/sour-oranda.png"
@@ -503,7 +503,7 @@
             ],
             "result": {
                 "name": "신 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 강인함을 1 증가시킨다",
                 "conditionBoost": { "strength": 1 },
                 "spriteUrl": "/img/items/oranda/sour-oranda.png"
@@ -520,7 +520,7 @@
             ],
             "result": {
                 "name": "신 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 강인함을 1 증가시킨다",
                 "conditionBoost": { "strength": 1 },
                 "spriteUrl": "/img/items/oranda/sour-oranda.png"
@@ -534,7 +534,7 @@
             "ingredients": [{ "name": "자뭉열매", "count": 3 }],
             "result": {
                 "name": "신 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 강인함을 1 증가시킨다",
                 "conditionBoost": { "strength": 1 },
                 "spriteUrl": "/img/items/oranda/sour-oranda.png"
@@ -552,7 +552,7 @@
             ],
             "result": {
                 "name": "고급 신 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 강인함을 3 증가시킨다",
                 "conditionBoost": { "strength": 3 },
                 "spriteUrl": "/img/items/oranda/sour-oranda-sp.png"
@@ -569,7 +569,7 @@
             ],
             "result": {
                 "name": "고급 신 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 강인함을 3 증가시킨다",
                 "conditionBoost": { "strength": 3 },
                 "spriteUrl": "/img/items/oranda/sour-oranda-sp.png"
@@ -587,7 +587,7 @@
             ],
             "result": {
                 "name": "특제 신 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 강인함을 5 증가시킨다",
                 "conditionBoost": { "strength": 5 },
                 "spriteUrl": "/img/items/oranda/sour-oranda-ss.png"
@@ -945,7 +945,7 @@
             },
             "result": {
                 "name": "특제 매운 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 근사함을 5 증가시킨다",
                 "conditionBoost": {
                     "elegance": 5
@@ -963,7 +963,7 @@
             },
             "result": {
                 "name": "고급 매운 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 근사함을 3 증가시킨다",
                 "conditionBoost": {
                     "elegance": 3
@@ -981,7 +981,7 @@
             },
             "result": {
                 "name": "매운 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 근사함을 1 증가시킨다",
                 "conditionBoost": {
                     "elegance": 1
@@ -999,7 +999,7 @@
             },
             "result": {
                 "name": "특제 떫은 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 아름다움을 5 증가시킨다",
                 "conditionBoost": {
                     "beauty": 5
@@ -1017,7 +1017,7 @@
             },
             "result": {
                 "name": "고급 떫은 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 아름다움을 3 증가시킨다",
                 "conditionBoost": {
                     "beauty": 3
@@ -1035,7 +1035,7 @@
             },
             "result": {
                 "name": "떫은 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 아름다움을 1 증가시킨다",
                 "conditionBoost": {
                     "beauty": 1
@@ -1053,7 +1053,7 @@
             },
             "result": {
                 "name": "특제 단 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 귀여움을 5 증가시킨다",
                 "conditionBoost": {
                     "cuteness": 5
@@ -1071,7 +1071,7 @@
             },
             "result": {
                 "name": "고급 단 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 귀여움을 3 증가시킨다",
                 "conditionBoost": {
                     "cuteness": 3
@@ -1089,7 +1089,7 @@
             },
             "result": {
                 "name": "단 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 귀여움을 1 증가시킨다",
                 "conditionBoost": {
                     "cuteness": 1
@@ -1107,7 +1107,7 @@
             },
             "result": {
                 "name": "특제 쓴 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 슬기로움을 5 증가시킨다",
                 "conditionBoost": {
                     "intelligence": 5
@@ -1125,7 +1125,7 @@
             },
             "result": {
                 "name": "고급 쓴 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 슬기로움을 3 증가시킨다",
                 "conditionBoost": {
                     "intelligence": 3
@@ -1143,7 +1143,7 @@
             },
             "result": {
                 "name": "쓴 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 슬기로움을 1 증가시킨다",
                 "conditionBoost": {
                     "intelligence": 1
@@ -1161,7 +1161,7 @@
             },
             "result": {
                 "name": "특제 신 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 강인함을 5 증가시킨다",
                 "conditionBoost": {
                     "strength": 5
@@ -1179,7 +1179,7 @@
             },
             "result": {
                 "name": "고급 신 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 강인함을 3 증가시킨다",
                 "conditionBoost": {
                     "strength": 3
@@ -1197,7 +1197,7 @@
             },
             "result": {
                 "name": "신 오란다",
-                "pocket": "berries",
+                "pocket": "vitamins",
                 "effect": "포켓몬의 강인함을 1 증가시킨다",
                 "conditionBoost": {
                     "strength": 1
