@@ -9,20 +9,28 @@ import useMediaQuery from '../../hooks/useMediaQuery';
 
 const DEFAULT_ITEM_IMAGE = '/pokeball.png';
 
+// 같은 한글 문자열도 입력 경로(모바일 키보드 조합, 복사/붙여넣기 등)에 따라 유니코드 정규화
+// 형태(NFC/NFD)가 달라질 수 있어, 눈으로는 완전히 같아 보이는 이름이 하나는 인벤토리 스냅샷에,
+// 다른 하나는 관리자가 나중에 수정한 커스텀 아이템 카탈로그에 서로 다른 형태로 저장되면
+// 문자열 비교가 조용히 실패한다. 매칭 전에 항상 NFC로 정규화한다.
+function normalizeItemName(name = '') {
+  return String(name).normalize('NFC');
+}
+
 function stripCountSuffix(name = '') {
-  return String(name).replace(/\s*\d+\s*개\s*$/, '').trim();
+  return normalizeItemName(name).replace(/\s*\d+\s*개\s*$/, '').trim();
 }
 
 function findCatalogItem(item = {}, allItems = []) {
   const rawName = stripCountSuffix(item.name || '');
   const itemKeys = [item.itemId, item.id, item.nameEn, rawName]
     .filter((value) => value !== undefined && value !== null && String(value).trim() !== '')
-    .map((value) => String(value).toLowerCase());
+    .map((value) => normalizeItemName(value).toLowerCase());
 
   return allItems.find((candidate) => {
     const candidateKeys = [candidate.id, candidate.itemId, candidate.nameEn, candidate.name]
       .filter((value) => value !== undefined && value !== null && String(value).trim() !== '')
-      .map((value) => String(value).toLowerCase());
+      .map((value) => normalizeItemName(value).toLowerCase());
 
     return candidateKeys.some((key) => itemKeys.includes(key));
   });
@@ -53,11 +61,11 @@ function collectKnownIngredientNames(recipes = [], ingredientStats = []) {
   const names = new Set();
   recipes.forEach(recipe => {
     (recipe?.ingredients || []).forEach(ing => {
-      if (ing?.name) names.add(ing.name);
+      if (ing?.name) names.add(normalizeItemName(ing.name));
     });
   });
   ingredientStats.forEach(stat => {
-    if (stat?.name) names.add(stat.name);
+    if (stat?.name) names.add(normalizeItemName(stat.name));
   });
   return names;
 }
@@ -73,12 +81,16 @@ function isCookingIngredient(item = {}, allItems = [], knownIngredientNames = ne
   // 우연히 다른 레시피의 재료 이름(예: 공식 "오랭열매")과 같더라도 재료 목록에 넣지 않는다.
   // (아래 이름 기반 매칭은 원래 isIngredient 플래그가 없는 아이템을 구제하기 위한 것이라,
   //  명시적 false보다 우선하면 안 됨)
-  if (item.cooking?.isIngredient === false || catalogItem.cooking?.isIngredient === false) {
+  // ⚠️ isCustom인 경우로만 한정한다 - items.json의 공식 아이템은 샌드위치류가 아니면
+  // cooking.isIngredient가 기본값 false로 깔려있을 뿐이라, isCustom 체크 없이 적용하면
+  // 실제로 오란다 레시피 재료로 쓰이는 공식 나무열매(오랭열매 등 67종)까지 전부 목록에서 빠진다.
+  if ((item.isCustom && item.cooking?.isIngredient === false) ||
+      (catalogItem.isCustom && catalogItem.cooking?.isIngredient === false)) {
     return false;
   }
 
   const rawName = stripCountSuffix(item.name || '');
-  const isKnownIngredientName = knownIngredientNames.has(rawName) || knownIngredientNames.has(item.name);
+  const isKnownIngredientName = knownIngredientNames.has(rawName) || knownIngredientNames.has(normalizeItemName(item.name || ''));
 
   // 완성된 요리(오란다 등) 자체는 재료가 아니라 완제품이다. 어떤 레시피가 실제로 그 이름을
   // 재료로 지정해두지 않는 한(예: 오란다를 넣어야 하는 다른 요리가 생기는 경우), 오래된

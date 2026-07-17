@@ -623,13 +623,17 @@ const usePokemonManagement = (
       return false;
     }
 
-    if (isPartnerPokemon) {
-      await updateCurrentUser({ partnerPokemon: { ...pokemon, heldItem: itemName } });
-    } else {
-      const newCaughtPokemon = currentUser.caughtPokemon.map(p =>
-        p && p.uniqueId === pokemonUniqueId ? { ...p, heldItem: itemName } : p
-      );
-      await updateCurrentUser({ caughtPokemon: newCaughtPokemon });
+    // ⭐ 클로저 스냅샷으로 caughtPokemon/partnerPokemon 전체를 덮어쓰지 않고, 트랜잭션으로
+    // Firebase의 최신 포켓몬 데이터 위에 heldItem만 patch한다 (안 그러면 그 사이 다른 곳에서
+    // 바뀐 포켓몬 데이터가 통째로 날아가고, 새로고침하면 방금 지니게 한 아이템도 사라진다).
+    const pokemonResult = await updateOwnedPokemonByUniqueId(pokemonUniqueId, (latestPokemon) => ({
+      ...latestPokemon,
+      heldItem: itemName
+    }));
+
+    if (!pokemonResult.committed) {
+      alert('오류가 발생했습니다. 다시 시도해주세요.');
+      return false;
     }
     alert((pokemon.nickname || pokemon.name) + '에게 ' + itemName + '을(를) 주었습니다.');
     return true;
@@ -672,13 +676,16 @@ const usePokemonManagement = (
       return;
     }
 
-    if (isPartnerPokemon) {
-      await updateCurrentUser({ partnerPokemon: { ...pokemon, heldItem: null } });
-    } else {
-      const newCaughtPokemon = currentUser.caughtPokemon.map(p =>
-        p && p.uniqueId === pokemonUniqueId ? { ...p, heldItem: null } : p
-      );
-      await updateCurrentUser({ caughtPokemon: newCaughtPokemon });
+    // ⭐ 지급 로직과 동일한 이유로, 클로저 스냅샷으로 통째로 덮어쓰지 않고 트랜잭션으로
+    // heldItem만 patch한다.
+    const pokemonResult = await updateOwnedPokemonByUniqueId(pokemonUniqueId, (latestPokemon) => ({
+      ...latestPokemon,
+      heldItem: null
+    }));
+
+    if (!pokemonResult.committed) {
+      alert('오류가 발생했습니다. 다시 시도해주세요.');
+      return;
     }
     alert((pokemon.nickname || pokemon.name) + '에게서 ' + itemName + '을(를) 뺐습니다!');
   };
