@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Save, FileText, BarChart3, Gift, Package, Star, TrendingUp, ChefHat, Layers, Edit2, X, Image, Search } from 'lucide-react';
 import ItemSelectorModal from '../../modals/ItemSelectorModal';
+import { getItemPocket } from '../../../utils/itemUtils';
+
+// 레시피 재료 선택 모달의 기본 포켓 필터. ItemSelectorModal의 `pockets`는 여기 없는 포켓의
+// 아이템을 무조건 제외하는 하드 필터라, 커스텀 아이템 생성 화면의 "🥕 식재료로도 사용 가능"
+// 체크박스(cooking.isIngredient)로 다른 포켓(도구/기타 등)에 있는 아이템을 재료로 지정해도
+// 이 목록에는 절대 뜨지 않았다 - pockets만으로 거르지 않고 isIngredient 플래그도 함께 본다.
+const INGREDIENT_PICKER_POCKETS = ['ingredients', 'berries', 'medicine', 'vitamins'];
+const isIngredientPickerCandidate = (item) => (
+  INGREDIENT_PICKER_POCKETS.includes(getItemPocket(item)) || item?.cooking?.isIngredient === true
+);
 
 // public 폴더 이미지 목록
 const FOOD_IMAGES = [
@@ -994,7 +1004,7 @@ export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDe
         items={allItems}
         title="재료 선택"
         multiSelect={false}
-        pockets={['ingredients', 'berries', 'medicine', 'vitamins']}
+        filterFn={isIngredientPickerCandidate}
       />
 
       {showImagePicker && (

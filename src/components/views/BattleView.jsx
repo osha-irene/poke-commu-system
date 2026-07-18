@@ -681,7 +681,8 @@ export function BattleView() {
       if (!snapshot.exists()) return;
 
       const memberData = snapshot.val();
-      const entryPokemon = getOwnedPokemonList(memberData.caughtPokemon).slice(0, 6);
+      const caughtPokemon = Array.isArray(memberData.caughtPokemon) ? memberData.caughtPokemon : [];
+      const entryPokemon = getOwnedPokemonList(caughtPokemon.slice(0, 6));
 
       setData({
         entryPokemon,

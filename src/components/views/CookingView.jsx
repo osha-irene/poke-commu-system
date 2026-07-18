@@ -21,35 +21,58 @@ function stripCountSuffix(name = '') {
   return normalizeItemName(name).replace(/\s*\d+\s*개\s*$/, '').trim();
 }
 
+const toKeyList = (values) => values
+  .filter((value) => value !== undefined && value !== null && String(value).trim() !== '')
+  .map((value) => normalizeItemName(value).toLowerCase());
+
+// id/itemId, 한글 표시 이름, nameEn을 한 번에 뒤섞어서 찾지 않고 강도 순으로 단계별 매칭한다.
+// nameEn은 커스텀 아이템을 만들 때 실제 포켓몬 아이템 이름을 그대로 흉내내는 일이 흔해서(예:
+// "럭키의알" 커스텀 아이템에 nameEn "lucky-egg"를 넣는 경우) 공식 아이템(행복의알, nameEn도
+// lucky-egg)과 충돌하기 쉽다. allItems는 공식 아이템이 커스텀 아이템보다 앞에 오므로, 모든
+// 키를 동급으로 취급하면 이런 충돌에서 항상 공식 아이템이 먼저 잡혀 엉뚱한 이름/이미지가 뜬다.
+// id → 한글 이름 → nameEn 순으로, 충돌 가능성이 낮은 식별자부터 시도한다.
 function findCatalogItem(item = {}, allItems = []) {
+  const idKeys = toKeyList([item.itemId, item.id]);
+  if (idKeys.length > 0) {
+    const idMatch = allItems.find((candidate) => (
+      toKeyList([candidate.id, candidate.itemId]).some((key) => idKeys.includes(key))
+    ));
+    if (idMatch) return idMatch;
+  }
+
   const rawName = stripCountSuffix(item.name || '');
-  const itemKeys = [item.itemId, item.id, item.nameEn, rawName]
-    .filter((value) => value !== undefined && value !== null && String(value).trim() !== '')
-    .map((value) => normalizeItemName(value).toLowerCase());
+  const nameKeys = toKeyList([rawName]);
+  if (nameKeys.length > 0) {
+    const nameMatch = allItems.find((candidate) => (
+      toKeyList([candidate.name]).some((key) => nameKeys.includes(key))
+    ));
+    if (nameMatch) return nameMatch;
+  }
 
-  return allItems.find((candidate) => {
-    const candidateKeys = [candidate.id, candidate.itemId, candidate.nameEn, candidate.name]
-      .filter((value) => value !== undefined && value !== null && String(value).trim() !== '')
-      .map((value) => normalizeItemName(value).toLowerCase());
+  const nameEnKeys = toKeyList([item.nameEn]);
+  if (nameEnKeys.length > 0) {
+    return allItems.find((candidate) => (
+      toKeyList([candidate.nameEn]).some((key) => nameEnKeys.includes(key))
+    ));
+  }
 
-    return candidateKeys.some((key) => itemKeys.includes(key));
-  });
+  return undefined;
 }
 
+// 인벤토리에 저장된 아이템 스냅샷의 imageUrl은 "지급받던 시점"의 카탈로그를 찍어둔 것이라,
+// 관리자가 나중에 커스텀 아이템의 이미지를 바꿔도(특히 삭제 후 재생성) 갱신되지 않는다.
+// 카탈로그 매칭에 성공했다면(sourceItem) 그 이미지를 항상 우선한다 - 매칭된 카탈로그가
+// 이미지가 비어있다고 해서 스냅샷의 옛 이미지로 조용히 넘어가면, 관리자가 방금 바꾼 이미지가
+// 아니라 예전에 지급됐을 때의 이미지가 뜨는 것처럼 보인다. 카탈로그를 아예 못 찾았을 때만
+// (예: 삭제된 커스텀 아이템) 스냅샷 자체의 이미지로 대체한다.
 function getItemImageUrl(item = {}, allItems = []) {
   const sourceItem = findCatalogItem(item, allItems);
 
-  return (
-    sourceItem?.spriteUrl ||
-    sourceItem?.imageUrl ||
-    sourceItem?.image ||
-    item.spriteUrl ||
-    item.imageUrl ||
-    item.image ||
-    sourceItem?.spriteUrl ||
-    sourceItem?.imageUrl ||
-    DEFAULT_ITEM_IMAGE
-  );
+  if (sourceItem) {
+    return sourceItem.spriteUrl || sourceItem.imageUrl || sourceItem.image || DEFAULT_ITEM_IMAGE;
+  }
+
+  return item.spriteUrl || item.imageUrl || item.image || DEFAULT_ITEM_IMAGE;
 }
 
 // 레시피(관리자가 만든 요리 포함)의 재료 목록에 등장하는 이름들을 모아둔다.
