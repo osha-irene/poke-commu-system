@@ -189,6 +189,21 @@ const getOwnedPokemonList = (value) => {
   return Object.values(value || {}).filter(pokemon => pokemon && pokemon.uniqueId);
 };
 
+// Firebase RTDB drops null entries and returns a sparse array as a plain object
+// (e.g. { "0": {...}, "3": {...} }) whenever indices aren't consecutive from 0.
+// Rebuild the original index positions so slicing party slots (0-5) stays correct.
+const normalizeCaughtPokemonByIndex = (value) => {
+  if (Array.isArray(value)) return value;
+  if (!value || typeof value !== 'object') return [];
+
+  const result = [];
+  Object.entries(value).forEach(([key, pokemon]) => {
+    const index = Number(key);
+    if (Number.isInteger(index) && index >= 0) result[index] = pokemon;
+  });
+  return result;
+};
+
 const pokemonKey = (pokemon, fallback) => pokemon?.uniqueId || pokemon?.id || `${pokemon?.name || 'pokemon'}-${fallback}`;
 
 const getSelectablePokemon = (entryPokemon, partnerPokemon) => {
@@ -681,7 +696,7 @@ export function BattleView() {
       if (!snapshot.exists()) return;
 
       const memberData = snapshot.val();
-      const caughtPokemon = Array.isArray(memberData.caughtPokemon) ? memberData.caughtPokemon : [];
+      const caughtPokemon = normalizeCaughtPokemonByIndex(memberData.caughtPokemon);
       const entryPokemon = getOwnedPokemonList(caughtPokemon.slice(0, 6));
 
       setData({
