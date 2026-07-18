@@ -1169,7 +1169,7 @@ const ballImage = getBallImage();
       {/* 모달들 */}
       {showMoveSelectModal && allMoves && (
         <MoveSelectModal
-          pokemon={pokedexEntry ? { ...pokemon, ...pokedexEntry } : pokemon}
+          pokemon={pokedexEntry ? { ...pokedexEntry, ...pokemon } : pokemon}
           allMoves={allMoves}
           pokemonLearnsets={pokemonLearnsets}
           currentMoves={pokemon.moves || []}

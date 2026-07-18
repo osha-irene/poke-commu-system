@@ -39,6 +39,8 @@ export default function MobilePokemonView() {
     setPartnerPokemon,
     forgetMove,
     learnMove,
+    checkEvolution,
+    manualEvolve,
     currentUser,
     allMoves = [],
     pokemonLearnsets = {},
@@ -92,7 +94,8 @@ export default function MobilePokemonView() {
   };
 
   const handleUseCandy = (uniqueId, onLevelUpCallback, expAmount = 0) => {
-    const pokemon = caughtPokemon.find(p => p && p.uniqueId === uniqueId);
+    const pokemon = caughtPokemon.find(p => p && p.uniqueId === uniqueId) ||
+      (partnerPokemon?.uniqueId === uniqueId ? partnerPokemon : null);
     if (!pokemon) return;
     const requestedExp = Math.floor(Number(expAmount) || 0);
     const availableExp = Number(currentUser?.trainerExp) || 0;
@@ -246,6 +249,8 @@ export default function MobilePokemonView() {
               onForgetMove={forgetMove}
               isAdmin={isAdmin}
               onLearnMove={learnMove}
+              checkEvolution={checkEvolution}
+              manualEvolve={manualEvolve}
               allMoves={allMoves}
               pokemonLearnsets={pokemonLearnsets}
               systemSettings={systemSettings}

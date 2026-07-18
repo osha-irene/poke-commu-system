@@ -2,7 +2,7 @@
 // 선택한 회원 여러 명을 대상으로 파트너 포켓몬 레벨 조정 / 친밀도 증가 / 아이템·돈 지급 / 칭호 부여를 처리하는 모달
 import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { X, CheckSquare, Square, TrendingUp, Heart, Gift, Coins, Award } from 'lucide-react';
+import { X, CheckSquare, Square, TrendingUp, Heart, Gift, Coins, Award, Footprints } from 'lucide-react';
 import { getItemIcon, CATEGORIES, filterItemsByPocket } from '../../../utils/itemUtils';
 import { getButtonClass } from '../../../styles/theme';
 
@@ -11,6 +11,7 @@ const ACTION_TABS = [
   { id: 'friendship', label: '친밀도 증가', icon: Heart },
   { id: 'item', label: '아이템 지급', icon: Gift },
   { id: 'money', label: '돈 지급', icon: Coins },
+  { id: 'walks', label: '산책 횟수 지급', icon: Footprints },
   { id: 'title', label: '칭호 부여', icon: Award },
 ];
 
@@ -24,6 +25,7 @@ export default function BulkMemberActionsModal({
   onBulkIncreaseFriendship,
   onBulkGiveItem,
   onBulkGiveMoney,
+  onBulkAddWalks,
   onBulkGrantTitle,
 }) {
   const [actionTab, setActionTab] = useState('level');
@@ -36,6 +38,7 @@ export default function BulkMemberActionsModal({
   const [selectedItem, setSelectedItem] = useState(null);
   const [itemCount, setItemCount] = useState(1);
   const [moneyAmount, setMoneyAmount] = useState(1000);
+  const [walksAmount, setWalksAmount] = useState(10);
   const [selectedTitleId, setSelectedTitleId] = useState('');
 
   const memberList = useMemo(() => {
@@ -75,6 +78,7 @@ export default function BulkMemberActionsModal({
     setLevelDelta(1);
     setFriendshipAmount(1);
     setMoneyAmount(1000);
+    setWalksAmount(10);
     setSelectedTitleId('');
   };
 
@@ -118,6 +122,14 @@ export default function BulkMemberActionsModal({
     onBulkGiveMoney?.(selectedIds, amount);
   };
 
+  const handleAddWalks = () => {
+    if (selectedIds.length === 0) { alert('회원을 선택해주세요.'); return; }
+    const amount = Number(walksAmount);
+    if (!Number.isFinite(amount) || amount === 0) { alert('지급할 산책 횟수를 입력해주세요.'); return; }
+    if (!window.confirm(`선택한 ${selectedIds.length}명의 산책 횟수를 ${amount > 0 ? '+' : ''}${amount}만큼 지급하시겠습니까?`)) return;
+    onBulkAddWalks?.(selectedIds, amount);
+  };
+
   const handleGrantTitle = () => {
     if (selectedIds.length === 0) { alert('회원을 선택해주세요.'); return; }
     if (!selectedTitleId) { alert('부여할 칭호를 선택해주세요.'); return; }
@@ -133,7 +145,7 @@ export default function BulkMemberActionsModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
           <div>
             <h2 className="text-xl font-bold text-gray-900">일괄 작업</h2>
-            <p className="text-sm text-gray-500 mt-0.5">회원을 선택하고 파트너 포켓몬 레벨 조정 / 친밀도 증가 / 아이템·돈 지급 / 칭호 부여를 한 번에 처리합니다.</p>
+            <p className="text-sm text-gray-500 mt-0.5">회원을 선택하고 파트너 포켓몬 레벨 조정 / 친밀도 증가 / 아이템·돈·산책 횟수 지급 / 칭호 부여를 한 번에 처리합니다.</p>
           </div>
           <button onClick={handleClose} className="text-gray-400 hover:text-gray-700 p-1 rounded"><X size={20} /></button>
         </div>
@@ -323,6 +335,27 @@ export default function BulkMemberActionsModal({
                     />
                   </div>
                   <button onClick={handleGiveMoney} className={getButtonClass('success', 'lg')}>돈 지급 적용</button>
+                </div>
+              )}
+
+              {actionTab === 'walks' && (
+                <div className="space-y-4 max-w-md">
+                  <p className="text-sm text-gray-600">
+                    선택한 회원들의 <b>산책(탐험) 횟수</b>를 한 번에 지급합니다. (기존 횟수에 더해지며, 0 미만으로는 내려가지 않습니다)
+                  </p>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 block mb-1">지급 횟수</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={walksAmount}
+                        onChange={e => setWalksAmount(e.target.value)}
+                        className="w-32 border border-gray-300 rounded-lg px-3 py-2 focus:border-indigo-500 focus:outline-none"
+                      />
+                      <span className="text-sm text-gray-500">(예: -1, +10)</span>
+                    </div>
+                  </div>
+                  <button onClick={handleAddWalks} className={getButtonClass('success', 'lg')}>산책 횟수 지급 적용</button>
                 </div>
               )}
 

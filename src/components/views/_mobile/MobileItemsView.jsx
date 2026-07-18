@@ -6,6 +6,14 @@ import { getItemPocket, canUseItem, CATEGORIES, POCKET_LABELS } from '../../../u
 import { isSoyYYNItem } from '../../../utils/specialItemUtils';
 import { getOwnedPokemonSpriteUrl } from '../../../utils/pokemonImageUtils';
 import { getItemEffectBadges } from '../../../utils/itemEffectBadges';
+import { canUseItemOnPokemonTarget, FORM_CHANGE_ITEM_POKEMON } from '../../../utils/itemUsageRules';
+
+const NECTAR_FORM_MAP = {
+  'red-nectar': 'oricorio-baile',
+  'yellow-nectar': 'oricorio-pom-pom',
+  'pink-nectar': 'oricorio-pau',
+  'purple-nectar': 'oricorio-sensu',
+};
 
 const P = {
   card:     'rgba(255,255,255,0.90)',
@@ -23,6 +31,10 @@ export default function MobileItemsView() {
     allItems = [],
     caughtPokemon = [],
     partnerPokemon = null,
+    allMoves = [],
+    pokemonLearnsets = {},
+    systemSettings = {},
+    getPokemonFormCandidates,
     sellItem: onSellItem,
     useItemOnPokemon: onUseItem,
     currentUser: trainer,
@@ -40,6 +52,7 @@ export default function MobileItemsView() {
   const [actionMode, setActionMode] = useState(null); // null | 'use' | 'sell' | 'trash'
   const [quantity, setQuantity] = useState(1);
   const [selectedPokemon, setSelectedPokemon] = useState(null);
+  const [selectedForm, setSelectedForm] = useState(null);
   const [isNavHidden, setIsNavHidden] = useState(false);
   const lastScrollYRef = useRef(0);
 
@@ -82,6 +95,19 @@ export default function MobileItemsView() {
     };
   };
 
+  const getItemNameEn = (item) => {
+    const details = getItemDetails(item);
+    return details.itemData?.nameEn || item.nameEn || item.name || '';
+  };
+
+  const isFormChangeItem = (item) => Boolean(FORM_CHANGE_ITEM_POKEMON[getItemNameEn(item)]);
+
+  const getAvailableForms = (item, pokemon) => {
+    if (!getPokemonFormCandidates || !pokemon) return [];
+    const forms = getPokemonFormCandidates(pokemon);
+    return forms.filter(f => f.nameEn !== pokemon.nameEn);
+  };
+
   const isSafariBallItem = (item) => {
     const names = [item?.name, item?.nameEn, item?.id, item?.itemId].map(v => String(v || '').toLowerCase().replace(/[\s-_]/g, ''));
     return names.includes('사파리볼') || names.includes('safariball');
@@ -112,8 +138,8 @@ export default function MobileItemsView() {
     setSelectedItem(item);
     setActionMode(null);
   };
-  const closeAll = () => { setSelectedItem(null); setActionMode(null); setQuantity(1); setSelectedPokemon(null); };
-  const closeAction = () => { setActionMode(null); setQuantity(1); setSelectedPokemon(null); };
+  const closeAll = () => { setSelectedItem(null); setActionMode(null); setQuantity(1); setSelectedPokemon(null); setSelectedForm(null); };
+  const closeAction = () => { setActionMode(null); setQuantity(1); setSelectedPokemon(null); setSelectedForm(null); };
 
   const handleUse = () => {
     const details = selectedItem ? getItemDetails(selectedItem) : null;
@@ -127,6 +153,34 @@ export default function MobileItemsView() {
       return;
     }
     if (!selectedPokemon) { alert('포켓몬을 선택해주세요!'); return; }
+
+    const itemNameEn = getItemNameEn(selectedItem);
+    const isFormItem = isFormChangeItem(selectedItem);
+
+    // 폼체인지 아이템: 대상 폼을 targetFormNameEn으로 명시해서 넘겨야 실제로 폼이 바뀐다
+    // (데스크톱 ItemsView.jsx와 동일한 흐름 - 이게 없으면 예전 window.prompt() 폴백으로 빠짐)
+    if (isFormItem) {
+      const nectarForm = NECTAR_FORM_MAP[itemNameEn];
+      if (!nectarForm && !selectedForm) { alert('폼을 선택해주세요!'); return; }
+      const targetFormNameEn = nectarForm || selectedForm.nameEn || selectedForm.id || selectedForm.name;
+      if (onUseItem) {
+        onUseItem(selectedItem, selectedPokemon, targetFormNameEn);
+        closeAll();
+      }
+      return;
+    }
+
+    if (!canUseItemOnPokemonTarget({
+      item: selectedItem,
+      itemData: details.itemData,
+      pokemon: selectedPokemon,
+      allMoves,
+      pokemonLearnsets,
+      systemSettings
+    })) {
+      return;
+    }
+
     if (onUseItem && selectedItem) {
       onUseItem(selectedItem, selectedPokemon);
       closeAll();
@@ -322,31 +376,35 @@ export default function MobileItemsView() {
       )}
 
       {/* 사용 — 포켓몬 선택 바텀시트 (위에서 절반 차지) */}
-      {selectedItem && actionMode === 'use' && selectedDetails && (
-        <>
-          <div style={{ position: 'fixed', inset: 0, zIndex: 250 }} onClick={closeAction} />
-          <div className="item-sheet" style={{ position: 'fixed', bottom: isNavHidden ? 0 : 64, left: 0, right: 0, zIndex: 300, maxHeight: '55vh', display: 'flex', flexDirection: 'column', background: 'rgba(248,254,240,1)', borderTop: `1px solid rgba(90,160,30,0.2)`, borderRadius: '16px 16px 0 0', transition: 'bottom 0.28s ease' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: `1px solid ${P.border}`, flexShrink: 0 }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: P.text }}>
-                {selectedDetails.specialEffect === 'trainerExp' ? '아이템 사용' : '사용할 포켓몬 선택'}
-              </span>
-              <button onClick={closeAction} style={{ background: 'none', border: 'none', cursor: 'pointer', color: P.muted, padding: 4 }}><X size={20} /></button>
-            </div>
-            {selectedDetails.specialEffect === 'trainerExp' ? (
-              <div style={{ padding: 20, textAlign: 'center', color: P.text, fontSize: 13, lineHeight: 1.6 }}>
-                <span style={{ color: '#7020c0', fontWeight: 700 }}>본인의 경험치</span>가 {selectedDetails.boostAmount}점 상승합니다.
-              </div>
+      {selectedItem && actionMode === 'use' && selectedDetails && (() => {
+        const itemNameEn = getItemNameEn(selectedItem);
+        const isNectar = Boolean(NECTAR_FORM_MAP[itemNameEn]);
+        const isFormItem = isFormChangeItem(selectedItem);
+        const eligibleNumbers = FORM_CHANGE_ITEM_POKEMON[itemNameEn] || [];
+        const eligiblePokemon = allPokemonForItem.filter(p =>
+          p && p !== 'null' && p.uniqueId &&
+          eligibleNumbers.includes(Number(p.originalNumber || p.number))
+        );
+
+        let title = '사용할 포켓몬 선택';
+        let showBack = false;
+        let canConfirm = false;
+        let confirmLabel = '사용하기';
+        let body;
+
+        const pokemonGrid = (list, onPick) => (
+          <div style={{ overflowY: 'auto', padding: 12, scrollbarWidth: 'none', flex: 1 }}>
+            {list.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '24px 0', color: P.muted, fontSize: 13 }}>대상 포켓몬이 없습니다</div>
             ) : (
-            <div style={{ overflowY: 'auto', padding: 12, scrollbarWidth: 'none', flex: 1 }}>
-              {allPokemonForItem.filter(p => p && p !== 'null' && p.uniqueId).length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '24px 0', color: P.muted, fontSize: 13 }}>보유한 포켓몬이 없습니다</div>
-              ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 8 }}>
-                  {allPokemonForItem.filter(p => p && p !== 'null' && p.uniqueId).map(pokemon => (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 8 }}>
+                {list.map(pokemon => {
+                  const active = selectedPokemon?.uniqueId === pokemon.uniqueId;
+                  return (
                     <button
                       key={pokemon.uniqueId}
-                      onClick={() => setSelectedPokemon(pokemon)}
-                      style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, padding: '12px', borderRadius: 12, border: `2px solid ${selectedPokemon?.uniqueId === pokemon.uniqueId ? P.accent : P.border}`, background: selectedPokemon?.uniqueId === pokemon.uniqueId ? P.accentBg : P.card, cursor: 'pointer' }}
+                      onClick={() => onPick(pokemon)}
+                      style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, padding: '12px', borderRadius: 12, border: `2px solid ${active ? P.accent : P.border}`, background: active ? P.accentBg : P.card, cursor: 'pointer' }}
                     >
                       <img src={getOwnedPokemonSpriteUrl(pokemon)} alt={pokemon.name} style={{ width: 44, height: 44, imageRendering: 'pixelated', flexShrink: 0 }} />
                       <div style={{ minWidth: 0 }}>
@@ -354,18 +412,146 @@ export default function MobileItemsView() {
                         <div style={{ fontSize: 11, color: P.muted }}>Lv.{pokemon.level}</div>
                       </div>
                     </button>
-                  ))}
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+
+        if (selectedDetails.specialEffect === 'trainerExp') {
+          title = '아이템 사용';
+          canConfirm = true;
+          body = (
+            <div style={{ padding: 20, textAlign: 'center', color: P.text, fontSize: 13, lineHeight: 1.6 }}>
+              <span style={{ color: '#7020c0', fontWeight: 700 }}>본인의 경험치</span>가 {selectedDetails.boostAmount}점 상승합니다.
+            </div>
+          );
+        } else if (isNectar && selectedPokemon) {
+          // 꿀: 대상 폼이 정해져 있어 확인만
+          title = '폼 변경 확인';
+          showBack = eligiblePokemon.length > 1;
+          canConfirm = true;
+          confirmLabel = '변경';
+          const targetFormNameEn = NECTAR_FORM_MAP[itemNameEn];
+          const allForms = getAvailableForms(selectedItem, selectedPokemon);
+          const targetForm = allForms.find(f => f.nameEn === targetFormNameEn);
+          const formLabel = targetForm?.name || targetFormNameEn;
+          body = (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: 20 }}>
+              <img src={getOwnedPokemonSpriteUrl(selectedPokemon)} alt={selectedPokemon.name} style={{ width: 64, height: 64, imageRendering: 'pixelated' }} />
+              <p style={{ margin: 0, textAlign: 'center', fontSize: 13, color: P.text, fontWeight: 700 }}>
+                {selectedPokemon.nickname || selectedPokemon.name}을(를)<br />
+                <span style={{ color: '#0f766e' }}>{formLabel}</span>으로 바꾸겠습니까?
+              </p>
+            </div>
+          );
+        } else if (isNectar && !selectedPokemon) {
+          title = '춤추새 선택';
+          body = pokemonGrid(eligiblePokemon, (pokemon) => setSelectedPokemon(pokemon));
+        } else if (isFormItem && selectedPokemon) {
+          // 일반 폼체인지(로토무 도감 등): 대상 폼을 직접 골라야 함
+          title = `${selectedPokemon.nickname || selectedPokemon.name}의 폼 선택`;
+          showBack = eligiblePokemon.length > 1;
+          canConfirm = Boolean(selectedForm);
+          confirmLabel = '폼 변경';
+          const availableForms = getAvailableForms(selectedItem, selectedPokemon);
+          body = (
+            <div style={{ overflowY: 'auto', padding: 12, scrollbarWidth: 'none', flex: 1 }}>
+              {availableForms.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '24px 0', color: P.muted, fontSize: 13 }}>변경 가능한 폼이 없습니다</div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
+                  {availableForms.map(form => {
+                    const active = selectedForm?.nameEn === form.nameEn;
+                    return (
+                      <button
+                        key={form.id || form.nameEn}
+                        onClick={() => setSelectedForm(form)}
+                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 6px', borderRadius: 12, border: `2px solid ${active ? P.accent : P.border}`, background: active ? P.accentBg : P.card, cursor: 'pointer' }}
+                      >
+                        <img src={form.spriteUrl || form.imageUrl || `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${form.number}.png`} alt={form.name} style={{ width: 44, height: 44, imageRendering: 'pixelated' }} />
+                        <div style={{ fontSize: 10, fontWeight: 700, color: P.text, textAlign: 'center', lineHeight: 1.2 }}>{form.name || form.nameEn}</div>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
-            )}
-            <div style={{ padding: '10px 16px', borderTop: `1px solid ${P.border}`, display: 'flex', gap: 8, flexShrink: 0 }}>
-              <button onClick={closeAction} style={{ flex: 1, padding: '11px', borderRadius: 10, border: `1px solid ${P.border}`, background: 'rgba(245,245,245,0.9)', color: P.muted, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>취소</button>
-              <button onClick={handleUse} disabled={selectedDetails.specialEffect !== 'trainerExp' && !selectedPokemon} style={{ flex: 1, padding: '11px', borderRadius: 10, border: 'none', fontSize: 14, fontWeight: 800, cursor: (selectedDetails.specialEffect === 'trainerExp' || selectedPokemon) ? 'pointer' : 'not-allowed', color: '#fff', background: (selectedDetails.specialEffect === 'trainerExp' || selectedPokemon) ? '#7020c0' : '#ccc' }}>사용하기</button>
+          );
+        } else if (isFormItem && !selectedPokemon) {
+          title = '포켓몬 선택';
+          body = pokemonGrid(eligiblePokemon, (pokemon) => { setSelectedPokemon(pokemon); setSelectedForm(null); });
+        } else {
+          // 일반 아이템: 조건에 안 맞는 포켓몬은 선택 자체를 막는다 (데스크톱과 동일)
+          title = '사용할 포켓몬 선택';
+          canConfirm = Boolean(selectedPokemon);
+          const targets = allPokemonForItem.filter(p => p && p !== 'null' && p.uniqueId);
+          body = (
+            <div style={{ overflowY: 'auto', padding: 12, scrollbarWidth: 'none', flex: 1 }}>
+              {targets.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '24px 0', color: P.muted, fontSize: 13 }}>보유한 포켓몬이 없습니다</div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 8 }}>
+                  {targets.map(pokemon => {
+                    const canUseTarget = canUseItemOnPokemonTarget({
+                      item: selectedItem,
+                      itemData: selectedDetails.itemData,
+                      pokemon,
+                      allMoves,
+                      pokemonLearnsets,
+                      systemSettings,
+                    });
+                    const active = selectedPokemon?.uniqueId === pokemon.uniqueId;
+                    return (
+                      <button
+                        key={pokemon.uniqueId}
+                        onClick={() => { if (canUseTarget) setSelectedPokemon(pokemon); }}
+                        disabled={!canUseTarget}
+                        style={{
+                          display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, padding: '12px', borderRadius: 12,
+                          border: `2px solid ${active ? P.accent : P.border}`,
+                          background: active ? P.accentBg : P.card,
+                          cursor: canUseTarget ? 'pointer' : 'not-allowed',
+                          opacity: canUseTarget ? 1 : 0.45,
+                        }}
+                      >
+                        <img src={getOwnedPokemonSpriteUrl(pokemon)} alt={pokemon.name} style={{ width: 44, height: 44, imageRendering: 'pixelated', flexShrink: 0 }} />
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: P.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pokemon.nickname || pokemon.name}</div>
+                          <div style={{ fontSize: 11, color: P.muted }}>Lv.{pokemon.level}</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          </div>
-        </>
-      )}
+          );
+        }
+
+        return (
+          <>
+            <div style={{ position: 'fixed', inset: 0, zIndex: 250 }} onClick={closeAction} />
+            <div className="item-sheet" style={{ position: 'fixed', bottom: isNavHidden ? 0 : 64, left: 0, right: 0, zIndex: 300, maxHeight: '55vh', display: 'flex', flexDirection: 'column', background: 'rgba(248,254,240,1)', borderTop: `1px solid rgba(90,160,30,0.2)`, borderRadius: '16px 16px 0 0', transition: 'bottom 0.28s ease' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: `1px solid ${P.border}`, flexShrink: 0, gap: 8 }}>
+                {showBack ? (
+                  <button onClick={() => { setSelectedPokemon(null); setSelectedForm(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: P.muted, fontSize: 12, fontWeight: 700, padding: 0, flexShrink: 0 }}>
+                    ← 다시 선택
+                  </button>
+                ) : <span />}
+                <span style={{ fontSize: 14, fontWeight: 700, color: P.text, flex: 1, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</span>
+                <button onClick={closeAction} style={{ background: 'none', border: 'none', cursor: 'pointer', color: P.muted, padding: 4, flexShrink: 0 }}><X size={20} /></button>
+              </div>
+              {body}
+              <div style={{ padding: '10px 16px', borderTop: `1px solid ${P.border}`, display: 'flex', gap: 8, flexShrink: 0 }}>
+                <button onClick={closeAction} style={{ flex: 1, padding: '11px', borderRadius: 10, border: `1px solid ${P.border}`, background: 'rgba(245,245,245,0.9)', color: P.muted, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>취소</button>
+                <button onClick={handleUse} disabled={!canConfirm} style={{ flex: 1, padding: '11px', borderRadius: 10, border: 'none', fontSize: 14, fontWeight: 800, cursor: canConfirm ? 'pointer' : 'not-allowed', color: '#fff', background: canConfirm ? '#7020c0' : '#ccc' }}>{confirmLabel}</button>
+              </div>
+            </div>
+          </>
+        );
+      })()}
 
       {/* 판매/버리기 바텀시트 */}
       {selectedItem && (actionMode === 'sell' || actionMode === 'trash') && selectedDetails && (

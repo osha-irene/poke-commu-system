@@ -17,7 +17,6 @@ function MemberDetailPanel({ member, onClose }) {
     regions,
     systemSettings,
     setMembers,
-    updateCurrentUser,
     giveItemToMember,
     deleteItemFromMember,
     adjustMemberItemCount,
@@ -37,6 +36,8 @@ function MemberDetailPanel({ member, onClose }) {
     updateMemberTrainerId,
     updateMemberMoney,
     updateMemberTrainerExp,
+    updateMemberWalkCount,
+    updateMemberMaxWalkCount,
     grantMemberTitle,
     revokeMemberTitle,
     uploadMemberImage,
@@ -54,25 +55,11 @@ function MemberDetailPanel({ member, onClose }) {
   };
 
   const handleUpdateWalkCount = (memberId, newWalkCount) => {
-    setMembers(prev => ({
-      ...prev,
-      [memberId]: { ...prev[memberId], dailyWalks: newWalkCount }
-    }));
-    
-    if (trainer?.id === memberId) {
-      updateCurrentUser({ dailyWalks: newWalkCount });
-    }
+    updateMemberWalkCount(memberId, newWalkCount);
   };
 
   const handleUpdateMaxWalkCount = (memberId, newMaxWalkCount) => {
-    setMembers(prev => ({
-      ...prev,
-      [memberId]: { ...prev[memberId], maxDailyWalks: newMaxWalkCount }
-    }));
-    
-    if (trainer?.id === memberId) {
-      updateCurrentUser({ maxDailyWalks: newMaxWalkCount });
-    }
+    updateMemberMaxWalkCount(memberId, newMaxWalkCount);
   };
 
   const handleResetWalk = (memberId, memberName) => {

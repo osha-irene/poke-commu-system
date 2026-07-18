@@ -104,16 +104,22 @@ export default function MobileMapView({
 
   const handleExplore = () => {
     if (!onRegionClick) return;
+    const region = selectedArea;
     if (selectedPlace) {
       onRegionClick({
-        ...selectedArea,
-        placeName:    selectedPlace.name,
-        encounterRate: selectedPlace.encounterRate ?? selectedArea.encounterRate,
-        minLevel:     selectedPlace.minLevel ?? selectedArea.minLevel,
-        maxLevel:     selectedPlace.maxLevel ?? selectedArea.maxLevel,
+        ...region, ...selectedPlace,
+        id: `${region.id}__place__${selectedPlace.id}`,
+        baseRegionId: region.id,
+        regionId: region.id,
+        regionName: region.name,
+        regionMaxLevel: region.maxLevel,
+        lootConfig: selectedPlace.lootConfig || region.lootConfig,
+        placeId: selectedPlace.id,
+        placeName: selectedPlace.name,
+        name: `${region.name} - ${selectedPlace.name}`,
       });
     } else {
-      onRegionClick(selectedArea);
+      onRegionClick(region);
     }
   };
 

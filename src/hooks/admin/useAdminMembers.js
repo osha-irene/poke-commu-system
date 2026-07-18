@@ -762,6 +762,55 @@ export const useAdminMembers = (
     }
   };
 
+  // ========== 산책(탐험) 횟수 일괄 지급 (선택 회원 대상) ==========
+  const bulkAddWalks = async (memberIds, amount) => {
+    if (!currentUser?.isAdmin) return;
+
+    const numericAmount = Number(amount);
+    if (!Number.isFinite(numericAmount) || numericAmount === 0) {
+      alert('지급할 산책 횟수를 입력해주세요.');
+      return;
+    }
+
+    const targetIds = (memberIds || []).filter(id => members[id]);
+    if (targetIds.length === 0) {
+      alert('선택한 회원이 없습니다.');
+      return;
+    }
+
+    // dailyWalks도 여러 화면/액션에서 동시에 바뀔 수 있는 누적값이라, 클로저 스냅샷 기준
+    // "기존값 + 변화량"이 아니라 항상 Firebase의 최신 값을 기준으로 트랜잭션으로 더한다.
+    let successCount = 0;
+    const failedNames = [];
+
+    for (const id of targetIds) {
+      const walksRef = ref(database, `members/${id}/dailyWalks`);
+      const result = await runTransaction(walksRef, (currentWalks) => (
+        Math.max(0, (Number(currentWalks) || 0) + numericAmount)
+      ));
+
+      if (result.committed) {
+        successCount += 1;
+        const newWalks = result.snapshot.val();
+        setMembers(prev => (
+          prev[id] ? { ...prev, [id]: { ...prev[id], dailyWalks: newWalks } } : prev
+        ));
+        if (id === currentUser?.id) {
+          updateCurrentUser({ dailyWalks: newWalks });
+        }
+      } else {
+        failedNames.push(members[id]?.name || id);
+      }
+    }
+
+    const sign = numericAmount > 0 ? '+' : '';
+    if (failedNames.length > 0) {
+      alert(`${successCount}명에게 산책 횟수 ${sign}${numericAmount}를 지급했습니다.\n실패: ${failedNames.join(', ')}`);
+    } else {
+      alert(`${successCount}명에게 산책 횟수 ${sign}${numericAmount}를 지급했습니다!`);
+    }
+  };
+
   // ========== 칭호 일괄 부여 (선택 회원 대상) ==========
   const bulkGrantTitle = async (memberIds, titleId) => {
     if (!currentUser?.isAdmin) return;
@@ -1581,6 +1630,70 @@ export const useAdminMembers = (
     }
   };
 
+  // ========== 회원 탐험 횟수 업데이트 ==========
+  const updateMemberWalkCount = async (memberId, amount) => {
+    if (!currentUser?.isAdmin) return;
+
+    const member = members[memberId];
+    if (!member) return;
+    const nextWalkCount = Math.max(0, Number(amount) || 0);
+
+    const updatedMember = {
+      ...member,
+      dailyWalks: nextWalkCount
+    };
+
+    // 자기 자신의 탐험 횟수를 수정할 때는 updateCurrentUser를 통해 currentUser 상태도 동기화
+    if (memberId === currentUser.id) {
+      await updateCurrentUser({ dailyWalks: nextWalkCount });
+      return;
+    }
+
+    try {
+      const memberRef = ref(database, `members/${memberId}`);
+      await update(memberRef, { dailyWalks: nextWalkCount });
+
+      setMembers(prev => ({
+        ...prev,
+        [memberId]: updatedMember
+      }));
+    } catch (error) {
+      console.error('❌ 탐험 횟수 업데이트 실패:', error);
+    }
+  };
+
+  // ========== 회원 최대 탐험 횟수 업데이트 ==========
+  const updateMemberMaxWalkCount = async (memberId, amount) => {
+    if (!currentUser?.isAdmin) return;
+
+    const member = members[memberId];
+    if (!member) return;
+    const nextMaxWalkCount = Math.max(1, Number(amount) || 1);
+
+    const updatedMember = {
+      ...member,
+      maxDailyWalks: nextMaxWalkCount
+    };
+
+    // 자기 자신의 최대 탐험 횟수를 수정할 때는 updateCurrentUser를 통해 currentUser 상태도 동기화
+    if (memberId === currentUser.id) {
+      await updateCurrentUser({ maxDailyWalks: nextMaxWalkCount });
+      return;
+    }
+
+    try {
+      const memberRef = ref(database, `members/${memberId}`);
+      await update(memberRef, { maxDailyWalks: nextMaxWalkCount });
+
+      setMembers(prev => ({
+        ...prev,
+        [memberId]: updatedMember
+      }));
+    } catch (error) {
+      console.error('❌ 최대 탐험 횟수 업데이트 실패:', error);
+    }
+  };
+
   // ========== 칭호 업데이트 ==========
   const updateMemberTitle = async (memberId, titleId) => {
     if (!currentUser?.isAdmin) return;
@@ -1867,6 +1980,7 @@ export const useAdminMembers = (
     bulkAdjustPartnerLevel,
     bulkIncreaseFriendship,
     bulkGiveMoney,
+    bulkAddWalks,
     bulkGrantTitle,
     givePokemonToMember,
     transferMemberPokemon,
@@ -1876,6 +1990,8 @@ export const useAdminMembers = (
     addPokemonToSelf,
     updateMemberMoney,
     updateMemberTrainerExp,
+    updateMemberWalkCount,
+    updateMemberMaxWalkCount,
     updateMemberTitle,
     grantMemberTitle,
     revokeMemberTitle,
