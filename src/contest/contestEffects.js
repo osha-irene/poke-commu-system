@@ -1,7 +1,7 @@
 // 콘테스트 기술 효과 판정기 - src/data/moves.json의 contestEffect(커뮤니티 자체 콘테스트 규칙표
 // "포켓몬 콘테스트 기술 및 콤보" 시트 원문 한국어 설명, 38종 고정)를 키로 사용.
 // 각 handler(ctx) => { appealGain, jamTargets: [{targetId, amount}], flags: {...}, targetFlags: { [participantId]: {...} } }
-// ctx = { actor, move, contestType, turnIndex, order, appealedThisTurn, applause, targetId, targetIds, participants, rng }
+// ctx = { actor, move, contestType, turnIndex, order, appealedThisTurn, targetId, targetIds, participants, rng, diceValue }
 //
 // targetId/targetIds는 GM(진행자)이 advanceTurn 호출 시 넘겨주는 "지정한 포켓몬" 대상이다.
 // (ContestAdminPanel.jsx의 대상 선택 UI 참고)
@@ -23,11 +23,6 @@ export const CONTEST_EFFECT_HANDLERS = {
     appealGain: (ctx.move.contestAppeals || 0) * (ctx.actor.stars > 0 ? 3 : 1),
     flags: { suppressStarBonus: true },
   }),
-
-  '관중들의 흥분도에 따라 하트가 추가': (ctx) => {
-    const value = ctx.applause.value;
-    return { appealGain: value <= 1 ? 1 : value === 2 ? 3 : value === 3 ? 4 : 6 };
-  },
 
   '그 턴 중 1회 방해받지 않음': (ctx) => ({
     appealGain: ctx.move.contestAppeals || 0,
@@ -60,7 +55,7 @@ export const CONTEST_EFFECT_HANDLERS = {
   }),
 
   '무작위로 [1D6]하트가 추가': (ctx) => ({
-    appealGain: ctx.rng([1, 2, 3, 4, 5, 6]),
+    appealGain: ctx.diceValue || ctx.rng([1, 2, 3, 4, 5, 6]),
   }),
 
   '바로 앞에서 어필한 포켓몬이 받은 하트 수에 1/2 추가 획득': (ctx) => {
@@ -82,12 +77,19 @@ export const CONTEST_EFFECT_HANDLERS = {
     };
   },
 
-  '방해받을 경우, 2배로 방해받음': (ctx) => ({
+  '이번 턴에서 방해받을 경우, 2배로 방해받음': (ctx) => ({
     appealGain: ctx.move.contestAppeals || 0,
     flags: { doubleJamIfHitThisTurn: true },
   }),
 
   '부문과 맞는 타입으로 턴의 끝에서 어필하면 하트(♥)2 상승': (ctx) => {
+    const isLast = ctx.turnIndex === ctx.order.length - 1;
+    const isMatch = isMatchingMove(ctx.move.contestType, ctx.contestType);
+    const base = ctx.move.contestAppeals || 0;
+    return { appealGain: isMatch && isLast ? base + 2 : base };
+  },
+
+  '부문과 맞는 타입으로 턴의 끝에서 어필하면 어필(♥)2 상승': (ctx) => {
     const isLast = ctx.turnIndex === ctx.order.length - 1;
     const isMatch = isMatchingMove(ctx.move.contestType, ctx.contestType);
     const base = ctx.move.contestAppeals || 0;
@@ -131,11 +133,6 @@ export const CONTEST_EFFECT_HANDLERS = {
   '연속으로 써도 패널티 없음': (ctx) => ({
     appealGain: ctx.move.contestAppeals || 0,
     flags: { exemptFromRepeatRule: true },
-  }),
-
-  '이번 턴 동안 관중들의 흥분도가 변하지 않게 됨': (ctx) => ({
-    appealGain: ctx.move.contestAppeals || 0,
-    flags: { freezeApplauseRestOfTurn: true },
   }),
 
   '이번 턴에는 방해를 받지 않음': (ctx) => ({
@@ -261,6 +258,10 @@ export const TARGETED_EFFECTS = new Set([
 ]);
 
 export const MULTI_TARGET_EFFECTS = new Set(['지정한 포켓몬들 방해']);
+
+// 다이스 값(1~6) 직접 입력이 가능한 효과 문구 집합 - ContestAdminPanel.jsx가 다이스 입력 UI를 띄울지 판단할 때 사용.
+// 값을 입력하지 않으면 무작위로 굴림(ctx.rng).
+export const DICE_EFFECTS = new Set(['무작위로 [1D6]하트가 추가']);
 
 // 마지막 라운드(6라운드)에는 사용할 수 없는 효과 문구 집합
 export const FINAL_ROUND_RESTRICTED_EFFECTS = new Set([

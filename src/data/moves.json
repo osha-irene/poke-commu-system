@@ -335,7 +335,7 @@
             "priority": 0,
             "description": "긴 몸이나 덩굴 등을 써서 4-5턴 동안 상대를 조여 공격한다.",
             "contestType": "강인함",
-            "contestEffect": "이번 턴 동안 관중들의 흥분도가 변하지 않게 됨",
+            "contestEffect": "지정한 포켓몬의 ☆을 지움",
             "contestAppeals": 3,
             "contestJam": 0,
             "generation": "i"
@@ -437,7 +437,7 @@
             "priority": 0,
             "description": "높이 점프해서 킥으로 상대를 공격한다. 빗나가면 자신이 데미지를 입는다.",
             "contestType": "근사함",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "i"
@@ -590,7 +590,7 @@
             "priority": 0,
             "description": "긴 몸이나 덩굴 등을 사용해 4-5턴 동안 상대를 휘감아 공격한다.",
             "contestType": "강인함",
-            "contestEffect": "이번 턴 동안 관중들의 흥분도가 변하지 않게 됨",
+            "contestEffect": "지정한 포켓몬의 ☆을 지움",
             "contestAppeals": 3,
             "contestJam": 0,
             "generation": "i"
@@ -607,7 +607,7 @@
             "priority": 0,
             "description": "굉장한 기세로 상대에게 부딪쳐 공격한다. 자신도 조금 데미지를 입는다.",
             "contestType": "강인함",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "i"
@@ -624,7 +624,7 @@
             "priority": 0,
             "description": "2-3턴 동안 마구 난동 부려서 상대를 공격한다. 난동 부린 뒤에는 혼란에 빠진다.",
             "contestType": "강인함",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "i"
@@ -641,7 +641,7 @@
             "priority": 0,
             "description": "목숨을 걸고 상대에게 돌진하여 공격을 한다. 자신도 상당한 데미지를 입는다.",
             "contestType": "강인함",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "i"
@@ -1117,7 +1117,7 @@
             "priority": 0,
             "description": "땅에 자신과 함께 상대를 내던져 공격한다. 자신도 조금 데미지를 입는다.",
             "contestType": "근사함",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "i"
@@ -1355,7 +1355,7 @@
             "priority": 0,
             "description": "2-3턴 동안 꽃을 흩뿌려서 상대를 공격한다. 흩뿌린 뒤에는 혼란에 빠진다.",
             "contestType": "아름다움",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "i"
@@ -2171,7 +2171,7 @@
             "priority": 0,
             "description": "매우 튼튼하고 두꺼운 껍질에 4-5턴 동안 상대를 끼워서 공격한다.",
             "contestType": "강인함",
-            "contestEffect": "이번 턴 동안 관중들의 흥분도가 변하지 않게 됨",
+            "contestEffect": "지정한 포켓몬의 ☆을 지움",
             "contestAppeals": 3,
             "contestJam": 0,
             "generation": "i"
@@ -2239,7 +2239,7 @@
             "priority": 0,
             "description": "촉수나 덩굴 등을 휘감아서 공격한다. 상대의 스피드를 떨어뜨릴 때가 있다.",
             "contestType": "강인함",
-            "contestEffect": "앞차례 어필한 포켓몬의 ☆을 지움",
+            "contestEffect": "지정한 포켓몬의 ☆을 지움",
             "contestAppeals": 3,
             "contestJam": 0,
             "generation": "i"
@@ -2307,7 +2307,7 @@
             "priority": 0,
             "description": "점프해서 무릎차기로 상대를 공격한다. 빗나가면 자신이 데미지를 입는다.",
             "contestType": "근사함",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "i"
@@ -3123,7 +3123,7 @@
             "priority": 0,
             "description": "무서운 얼굴로 노려보고 겁주어 상대의 스피드를 크게 떨어뜨린다.",
             "contestType": "강인함",
-            "contestEffect": "앞차례 어필한 포켓몬의 ☆을 지움",
+            "contestEffect": "지정한 포켓몬의 ☆을 지움",
             "contestAppeals": 3,
             "contestJam": 0,
             "generation": "ii"
@@ -3174,7 +3174,7 @@
             "priority": 0,
             "description": "자신의 HP를 최대 HP의 절반만큼 감소시켜 자신의 공격을 최대로 올린다.",
             "contestType": "귀여움",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "ii"
@@ -3395,7 +3395,7 @@
             "priority": 0,
             "description": "2-3턴 동안 마구 난동 부려서 공격한다. 난동 부린 뒤에는 혼란에 빠진다.",
             "contestType": "근사함",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "ii"
@@ -4670,7 +4670,7 @@
             "priority": 0,
             "description": "엄청난 힘을 발휘하여 상대를 공격한다. 자신의 공격과 방어가 떨어진다.",
             "contestType": "강인함",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "iii"
@@ -4806,7 +4806,7 @@
             "priority": 0,
             "description": "분노를 폭발시켜 상대를 공격한다. 자신의 HP가 적을수록 기술의 위력이 떨어진다.",
             "contestType": "아름다움",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "iii"
@@ -5333,7 +5333,7 @@
             "priority": 0,
             "description": "풀 파워로 상대를 공격한다. 쓰면 반동으로 자신의 특수공격이 크게 떨어진다.",
             "contestType": "아름다움",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "iii"
@@ -5469,7 +5469,7 @@
             "priority": 0,
             "description": "바닷물을 내뿜어 공격한다. 자신의 HP가 적을수록 기술의 위력이 떨어진다.",
             "contestType": "아름다움",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "iii"
@@ -5826,7 +5826,7 @@
             "priority": 0,
             "description": "전기를 한데 모아 돌진한다. 자신도 상당한 데미지를 입는다. 마비 상태로 만들 때가 있다.",
             "contestType": "근사함",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "iii"
@@ -5995,7 +5995,7 @@
             "pp": 5,
             "priority": 0,
             "description": "풀 파워로 상대를 공격한다. 쓰면 반동으로 자신의 특수공격이 크게 떨어진다.",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "iii",
@@ -6081,7 +6081,7 @@
             "priority": 0,
             "description": "강하고 무거운 주먹을 휘둘러 데미지를 준다. 자신의 스피드가 떨어진다.",
             "contestType": "강인함",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "iv"
@@ -6267,7 +6267,7 @@
             "pp": 5,
             "priority": 0,
             "description": "방어를 포기하고 상대 깊숙이 돌격한다. 자신의 방어와 특수방어가 떨어진다.",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "iv",
@@ -6438,7 +6438,7 @@
             "priority": 0,
             "description": "상대의 몸에 위액을 내뱉는다. 달라붙은 위액은 상대의 특성 효과를 지운다.",
             "contestType": "강인함",
-            "contestEffect": "앞차례 어필한 포켓몬의 ☆을 지움",
+            "contestEffect": "지정한 포켓몬의 ☆을 지움",
             "contestAppeals": 3,
             "contestJam": 0,
             "generation": "iv"
@@ -6675,7 +6675,7 @@
             "pp": 15,
             "priority": 0,
             "description": "불꽃을 두르고 돌진한다. 자신도 상당한 데미지를 입는다. 화상 상태로 만들 때가 있다.",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "iv",
@@ -6999,7 +6999,7 @@
             "priority": 0,
             "description": "날개를 접어 저공비행으로 돌격한다. 자신도 상당한 데미지를 입는다.",
             "contestType": "근사함",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "iv"
@@ -7355,7 +7355,7 @@
             "pp": 5,
             "priority": 0,
             "description": "천공에서 운석을 상대에게 떨어뜨린다. 사용하면 반동으로 자신의 특수공격이 크게 떨어진다.",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "iv",
@@ -7407,7 +7407,7 @@
             "priority": 0,
             "description": "뾰족한 잎사귀로 상대에게 바람을 일으킨다. 사용하면 반동으로 자신의 특수공격이 크게 떨어진다.",
             "contestType": "아름다움",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "iv"
@@ -7424,7 +7424,7 @@
             "priority": 0,
             "description": "덩굴이나 촉수를 세차게 흔들어 상대를 힘껏 쳐서 공격한다.",
             "contestType": "강인함",
-            "contestEffect": "관중들의 흥분도에 따라 하트가 추가",
+            "contestEffect": "무작위로 [1D6]하트가 추가",
             "contestAppeals": 1,
             "contestJam": 0,
             "generation": "iv"
@@ -7662,7 +7662,7 @@
             "priority": 0,
             "description": "단단한 몸통을 상대에게 부딪쳐서 공격한다. 자신도 상당한 데미지를 입는다.",
             "contestType": "강인함",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "iv"
@@ -7747,7 +7747,7 @@
             "priority": 0,
             "description": "목숨을 걸고 혼신의 힘으로 상대에게 박치기를 한다. 자신도 굉장한 데미지를 입는다.",
             "contestType": "강인함",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "iv"
@@ -7798,7 +7798,7 @@
             "priority": 0,
             "description": "주위의 공간과 더불어 상대를 찢어서 데미지를 준다. 급소에 맞기 쉽다.",
             "contestType": "아름다움",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "iv"
@@ -7849,7 +7849,7 @@
             "priority": 0,
             "description": "세차게 타오르는 불꽃 속에 4-5턴 동안 상대를 가두어 공격한다.",
             "contestType": "강인함",
-            "contestEffect": "이번 턴 동안 관중들의 흥분도가 변하지 않게 됨",
+            "contestEffect": "지정한 포켓몬의 ☆을 지움",
             "contestAppeals": 3,
             "contestJam": 0,
             "generation": "iv"
@@ -7883,7 +7883,7 @@
             "priority": 0,
             "description": "몸속에서 충격파를 발생시킨다. 상대의 특수방어를 크게 떨어뜨릴 때가 있다.",
             "contestType": "아름다움",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "iv"
@@ -8172,7 +8172,7 @@
             "priority": 0,
             "description": "오물 파도로 자신의 주위에 있는 포켓몬을 공격한다. 독 상태로 만들 때가 있다.",
             "contestType": "강인함",
-            "contestEffect": "앞차례 어필한 포켓몬의 ☆을 지움",
+            "contestEffect": "지정한 포켓몬의 ☆을 지움",
             "contestAppeals": 3,
             "contestJam": 0,
             "generation": "v"
@@ -8240,7 +8240,7 @@
             "priority": 0,
             "description": "전기 덩어리를 상대에게 부딪쳐서 공격한다. 상대보다 스피드가 빠를수록 위력이 올라간다.",
             "contestType": "근사함",
-            "contestEffect": "부문과 맞는 타입으로 턴의 끝에서 어필하면 하트(♥)2 상승",
+            "contestEffect": "부문과 맞는 타입으로 턴의 끝에서 어필하면 어필(♥)2 상승",
             "contestAppeals": 3,
             "contestJam": 0,
             "generation": "v"
@@ -8597,7 +8597,7 @@
             "priority": 0,
             "description": "1턴째에 상대를 하늘로 끌고 가서 2턴째에 떨어뜨려 공격한다. 끌려간 상대는 움직일 수 없다.",
             "contestType": "강인함",
-            "contestEffect": "이번 턴 동안 관중들의 흥분도가 변하지 않게 됨",
+            "contestEffect": "지정한 포켓몬의 ☆을 지움",
             "contestAppeals": 3,
             "contestJam": 0,
             "generation": "v"
@@ -8954,7 +8954,7 @@
             "priority": 0,
             "description": "전기를 두르고 상대에게 부딪쳐 공격한다. 자신도 조금 데미지를 입는다.",
             "contestType": "강인함",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "v"
@@ -9209,7 +9209,7 @@
             "priority": 0,
             "description": "굉장한 아프로 머리로 상대에게 돌진하여 공격한다. 자신도 조금 데미지를 입는다.",
             "contestType": "강인함",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "v"
@@ -9447,7 +9447,7 @@
             "priority": 0,
             "description": "작열하는 불꽃을 이마에서 발생시켜 이판사판으로 몸통박치기한다. 방어, 특수방어, 스피드가 떨어진다.",
             "contestType": "근사함",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "v"
@@ -9753,7 +9753,7 @@
             "priority": 0,
             "description": "막말을 내뱉어 상대를 위협하여 공격과 특수공격을 떨어뜨린 후 교대 포켓몬과 교체한다.",
             "contestType": "근사함",
-            "contestEffect": "부문과 맞는 타입으로 턴의 끝에서 어필하면 하트(♥)2 상승",
+            "contestEffect": "부문과 맞는 타입으로 턴의 끝에서 어필하면 어필(♥)2 상승",
             "contestAppeals": 3,
             "contestJam": 0,
             "generation": "vi"
@@ -10433,7 +10433,7 @@
             "priority": 0,
             "description": "땅 위를 뻗어 나가는 파도로 공격한다. 파도에 휩쓸린 상대는 전투에서 도망칠 수 없게 된다.",
             "contestType": "강인함",
-            "contestEffect": "앞차례 어필한 포켓몬의 ☆을 지움",
+            "contestEffect": "지정한 포켓몬의 ☆을 지움",
             "contestAppeals": 3,
             "contestJam": 0,
             "generation": "vi"
@@ -10467,7 +10467,7 @@
             "priority": 0,
             "description": "영원의 꽃의 파워를 빌려서 강력한 광선을 쏜다. 자신도 상당한 데미지를 입는다.",
             "contestType": "아름다움",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "vi"
@@ -10501,7 +10501,7 @@
             "priority": 0,
             "description": "대지의 힘을 칼날로 바꿔 상대를 공격한다.",
             "contestType": "근사함",
-            "contestEffect": "부문과 맞는 타입으로 턴의 끝에서 어필하면 하트(♥)2 상승",
+            "contestEffect": "부문과 맞는 타입으로 턴의 끝에서 어필하면 어필(♥)2 상승",
             "contestAppeals": 3,
             "contestJam": 0,
             "generation": "vi"
@@ -10518,7 +10518,7 @@
             "priority": 0,
             "description": "넓은 하늘에서 급속으로 강하하여 상대를 공격한다. 자신의 방어와 특수방어가 떨어진다.",
             "contestType": "아름다움",
-            "contestEffect": "방해받을 경우, 2배로 방해받음",
+            "contestEffect": "이번 턴에서 방해받을 경우, 2배로 방해받음",
             "contestAppeals": 6,
             "contestJam": 0,
             "generation": "vi"

@@ -25,11 +25,6 @@ const CONTEST_EFFECT_HANDLERS = {
     flags: { forceApplauseRise: true },
   }),
 
-  '관중들의 흥분도에 따라 하트가 추가': (ctx) => {
-    const value = ctx.applause.value;
-    return { appealGain: value <= 1 ? 1 : value === 2 ? 3 : value === 3 ? 4 : 6 };
-  },
-
   '그 턴 중 1회 방해받지 않음': (ctx) => ({
     appealGain: ctx.move.contestAppeals || 0,
     flags: { noJamRestOfTurn: true },
@@ -88,7 +83,7 @@ const CONTEST_EFFECT_HANDLERS = {
     };
   },
 
-  '방해받을 경우, 2배로 방해받음': (ctx) => ({
+  '이번 턴에서 방해받을 경우, 2배로 방해받음': (ctx) => ({
     appealGain: ctx.move.contestAppeals || 0,
     flags: { doubleJamIfHitThisTurn: true },
   }),

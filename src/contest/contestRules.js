@@ -24,7 +24,6 @@ export const CONDITION_KEY_BY_CONTEST_TYPE = {
 };
 
 export const MAX_STARS = 3;
-export const MAX_APPLAUSE = 4;
 
 export const rollDie = (sides = 6) => 1 + Math.floor(Math.random() * sides);
 export const roll2d6 = () => rollDie(6) + rollDie(6);

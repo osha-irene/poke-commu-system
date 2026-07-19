@@ -10,6 +10,7 @@ import movesData from '../../../data/moves.json';
 import {
   CONTEST_TYPES,
   CONDITION_KEY_BY_CONTEST_TYPE,
+  calcNervousChance,
 } from '../../../contest/contestRules';
 import {
   createContestState,
@@ -21,7 +22,7 @@ import {
   canUseMove,
 } from '../../../contest/ContestEngine';
 import { isValidComboFollowUp } from '../../../contest/comboChart';
-import { TARGETED_EFFECTS } from '../../../contest/contestEffects';
+import { TARGETED_EFFECTS, DICE_EFFECTS } from '../../../contest/contestEffects';
 import { getContestTypeColor, getContestEffectKo } from '../../../utils/contestMoveData';
 import { formatOwnedPokemonName } from '../../../utils/ownedPokemonDisplay';
 
@@ -200,6 +201,9 @@ export default function ContestAdminPanel() {
   const [state, setState] = useState(null);
   const [error, setError] = useState('');
   const [selectedTargetIds, setSelectedTargetIds] = useState([]);
+  const [diceValueInput, setDiceValueInput] = useState('');
+  const [firstJudgingRolls, setFirstJudgingRolls] = useState({});
+  const [forceNervousResult, setForceNervousResult] = useState(undefined);
 
   const participantsById = useMemo(() => {
     const source = state ? state.participants : draftParticipants;
@@ -209,13 +213,21 @@ export default function ContestAdminPanel() {
   const startContest = () => {
     if (draftParticipants.length < 2) return;
     const s0 = createContestState(contestType, draftParticipants);
-    setState(runFirstJudging(s0));
+    const rolls = Object.fromEntries(
+      Object.entries(firstJudgingRolls)
+        .map(([id, v]) => [id, Number(v)])
+        .filter(([, v]) => Number.isInteger(v) && v >= 2 && v <= 12)
+    );
+    setState(runFirstJudging(s0, { rolls }));
   };
 
   const resetContest = () => {
     setState(null);
     setError('');
     setSelectedTargetIds([]);
+    setDiceValueInput('');
+    setFirstJudgingRolls({});
+    setForceNervousResult(undefined);
   };
 
   const actor = state ? getCurrentActor(state) : null;
@@ -230,13 +242,18 @@ export default function ContestAdminPanel() {
     if (!actor) return;
     setError('');
     try {
+      const diceValue = Number(diceValueInput);
       const next = advanceTurn(state, {
         moveId: move.id,
         targetId: selectedTargetIds[0],
         targetIds: selectedTargetIds,
+        diceValue: diceValueInput && diceValue >= 1 && diceValue <= 6 ? diceValue : undefined,
+        forceNervousResult,
       });
       setState(next);
       setSelectedTargetIds([]);
+      setDiceValueInput('');
+      setForceNervousResult(undefined);
     } catch (e) {
       setError(e.message);
     }
@@ -244,6 +261,12 @@ export default function ContestAdminPanel() {
 
   const standings = state ? getStandings(state) : [];
   const done = state ? isContestDone(state) : false;
+  const nervousChance = actor ? calcNervousChance({
+    position: state.turnPointer,
+    totalParticipants: state.order.length,
+    conditionValue: actor.conditionValue,
+    stars: actor.stars,
+  }) : 0;
   const contestMoves = useMemo(() => (
     (allMoves.length ? allMoves : movesData.moves)
       .filter((m) => !!m.contestType && !!m.contestEffect)
@@ -275,12 +298,26 @@ export default function ContestAdminPanel() {
           {draftParticipants.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-sm font-semibold text-gray-700">참가자 ({draftParticipants.length}명)</h4>
+              <p className="text-xs text-gray-500">
+                1차 심사(2D6) 다이스 값 직접 입력 - 비워두면 무작위로 굴립니다
+              </p>
               {draftParticipants.map((p) => (
                 <div key={p.id} className="flex items-center justify-between bg-white border border-gray-200 rounded px-3 py-2 text-sm">
                   <span><b>{p.name}</b> {p.pokemonName && `(${p.pokemonName})`} · 컨디션 {p.conditionValue} · 기술 {p.moves.length}개</span>
-                  <button onClick={() => setDraftParticipants((prev) => prev.filter((x) => x.id !== p.id))} className="text-gray-400 hover:text-red-500">
-                    <X size={14} />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={2}
+                      max={12}
+                      value={firstJudgingRolls[p.id] ?? ''}
+                      onChange={(e) => setFirstJudgingRolls((prev) => ({ ...prev, [p.id]: e.target.value }))}
+                      placeholder="2~12"
+                      className="w-16 border border-gray-300 rounded px-2 py-1 text-xs focus:border-indigo-500 focus:outline-none"
+                    />
+                    <button onClick={() => setDraftParticipants((prev) => prev.filter((x) => x.id !== p.id))} className="text-gray-400 hover:text-red-500">
+                      <X size={14} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -296,7 +333,7 @@ export default function ContestAdminPanel() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              콘테스트 타입 <MoveBadge move={{ contestType }} /> · 박수 게이지 {state.applause.value}/4
+              콘테스트 타입 <MoveBadge move={{ contestType }} />
               {!done && <span className="ml-3 font-bold text-indigo-700">{state.round}/6 라운드</span>}
             </div>
             <Button variant="secondary" size="sm" onClick={resetContest}>새로 시작</Button>
@@ -327,6 +364,32 @@ export default function ContestAdminPanel() {
                 )}
               </div>
 
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-indigo-700">
+                  긴장 판정 직접 지정 (현재 확률 {nervousChance}%, 자동으로 두면 이 확률로 무작위 판정)
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { label: '자동', value: undefined },
+                    { label: '긴장', value: true },
+                    { label: '긴장 아님', value: false },
+                  ].map(({ label, value }) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => setForceNervousResult(value)}
+                      className={`rounded-full px-3 py-1 text-xs border ${
+                        forceNervousResult === value
+                          ? 'bg-indigo-600 text-white border-indigo-600'
+                          : 'bg-white text-gray-600 border-gray-300'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {state.participants.length > 1 && (
                 <div className="space-y-1">
                   <p className="text-xs font-semibold text-indigo-700">
@@ -355,11 +418,27 @@ export default function ContestAdminPanel() {
                 </div>
               )}
 
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-indigo-700">
+                  다이스 값 직접 입력 ("무작위로 [1D6]하트가 추가" 효과에 사용, 비워두면 무작위로 굴립니다)
+                </p>
+                <input
+                  type="number"
+                  min={1}
+                  max={6}
+                  value={diceValueInput}
+                  onChange={(e) => setDiceValueInput(e.target.value)}
+                  placeholder="1~6"
+                  className="w-20 border border-gray-300 rounded px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+                />
+              </div>
+
               <div className="flex flex-wrap gap-2">
                 {actor.moves.map((m) => {
                   const usable = canUseMove(state, actor.id, m.id, allMoves.length ? allMoves : movesData.moves);
                   const isComboFollowUp = actor.comboWaiting && isValidComboFollowUp(actor.comboWaiting.moveId, m.id);
                   const needsTarget = TARGETED_EFFECTS.has(m.contestEffect);
+                  const needsDice = DICE_EFFECTS.has(m.contestEffect);
                   return (
                     <button
                       key={m.id}
@@ -381,6 +460,14 @@ export default function ContestAdminPanel() {
                             title="대상 지정 필요"
                           >
                             🎯{selectedTargetIds.length ? '' : '!'}
+                          </span>
+                        )}
+                        {needsDice && (
+                          <span
+                            className={`text-[10px] font-semibold ${diceValueInput ? 'text-indigo-500' : 'text-gray-400'}`}
+                            title="다이스 값 직접 입력 가능 (비워두면 무작위)"
+                          >
+                            🎲{diceValueInput || ''}
                           </span>
                         )}
                       </span>

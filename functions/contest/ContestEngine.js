@@ -60,10 +60,12 @@ const sortByAppealDesc = (participants, key = 'totalAppeal') => {
   return withTiebreak.map((x) => x.p.id);
 };
 
-const runFirstJudging = (stateIn) => {
+const runFirstJudging = (stateIn, options = {}) => {
   const state = clone(stateIn);
+  const manualRolls = options.rolls || {};
   state.participants.forEach((p) => {
-    const roll = roll2d6();
+    const manual = manualRolls[p.id];
+    const roll = Number.isInteger(manual) && manual >= 2 && manual <= 12 ? manual : roll2d6();
     p.appeal1 = roll;
     p.totalAppeal = roll;
     state.log.push({ type: 'firstJudging', participantId: p.id, roll });
@@ -157,9 +159,11 @@ const advanceTurn = (stateIn, options = {}) => {
     conditionValue: actor.conditionValue,
     stars: actor.stars,
   });
-  const isNervous = rollNervous(nervousChance);
+  const isNervous = typeof options.forceNervousResult === 'boolean'
+    ? options.forceNervousResult
+    : rollNervous(nervousChance);
   if (isNervous) {
-    state.log.push({ type: 'nervous', participantId: actorId, chance: nervousChance });
+    state.log.push({ type: 'nervous', participantId: actorId, chance: nervousChance, manual: typeof options.forceNervousResult === 'boolean' });
     state.appealedThisTurn.push({ id: actorId, gainedAppeal: 0, moveContestType: null, comboStandby: false });
     return finishTurn();
   }
@@ -183,6 +187,9 @@ const advanceTurn = (stateIn, options = {}) => {
     applause: state.applause,
     targetId: options.targetId,
     rng: options.rng || randomPick,
+    diceValue: Number.isInteger(options.diceValue) && options.diceValue >= 1 && options.diceValue <= 6
+      ? options.diceValue
+      : undefined,
   };
   const result = handler ? handler(ctx) : { appealGain: move.contestAppeals || 0 };
   const flags = result.flags || {};

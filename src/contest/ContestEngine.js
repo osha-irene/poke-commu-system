@@ -3,7 +3,6 @@
 // UI(React)는 이 상태를 그대로 useState로 들고 있으면 됨.
 import {
   MAX_STARS,
-  MAX_APPLAUSE,
   roll2d6,
   roll1d100,
   calcNervousChance,
@@ -31,7 +30,6 @@ export const createContestState = (contestType, participantsInput) => ({
   order: [],
   turnPointer: 0,
   appealedThisTurn: [],
-  applause: { value: 0 },
   pendingOverrides: { goFirstIds: [], goLastIds: [], shuffleNext: false, reverseNext: false },
   globalPreventNextJam: false,
   log: [],
@@ -63,10 +61,12 @@ const sortByAppealDesc = (participants, key = 'totalAppeal') => {
   return withTiebreak.map((x) => x.p.id);
 };
 
-export const runFirstJudging = (stateIn) => {
+export const runFirstJudging = (stateIn, options = {}) => {
   const state = clone(stateIn);
+  const manualRolls = options.rolls || {};
   state.participants.forEach((p) => {
-    const roll = roll2d6();
+    const manual = manualRolls[p.id];
+    const roll = Number.isInteger(manual) && manual >= 2 && manual <= 12 ? manual : roll2d6();
     p.appeal1 = roll;
     p.totalAppeal = roll;
     state.log.push({ type: 'firstJudging', participantId: p.id, roll });
@@ -117,7 +117,8 @@ const applyJam = (state, targetId, amount) => {
 
 /**
  * 현재 턴 진행: 긴장 판정 → (긴장 아니면) 기술 효과 계산 → 결과 반영 → 다음 턴/라운드로 이동.
- * options: { moveId, targetId, declareCombo, comboSuccessBonus, rng }
+ * options: { moveId, targetId, declareCombo, comboSuccessBonus, rng, diceValue, forceNervousResult }
+ * forceNervousResult: true/false를 넘기면 긴장 판정을 굴리지 않고 GM이 지정한 결과를 그대로 사용한다.
  */
 export const advanceTurn = (stateIn, options = {}) => {
   const state = clone(stateIn);
@@ -161,9 +162,11 @@ export const advanceTurn = (stateIn, options = {}) => {
     conditionValue: actor.conditionValue,
     stars: actor.stars,
   });
-  const isNervous = rollNervous(nervousChance);
+  const isNervous = typeof options.forceNervousResult === 'boolean'
+    ? options.forceNervousResult
+    : rollNervous(nervousChance);
   if (isNervous) {
-    state.log.push({ type: 'nervous', participantId: actorId, chance: nervousChance });
+    state.log.push({ type: 'nervous', participantId: actorId, chance: nervousChance, manual: typeof options.forceNervousResult === 'boolean' });
     state.appealedThisTurn.push({ id: actorId, gainedAppeal: 0, moveContestType: null, comboStandby: false });
     return finishTurn();
   }
@@ -184,11 +187,13 @@ export const advanceTurn = (stateIn, options = {}) => {
     turnIndex: position,
     order: state.order,
     appealedThisTurn: state.appealedThisTurn,
-    applause: state.applause,
     targetId: options.targetId,
     targetIds: options.targetIds,
     participants: state.participants,
     rng: options.rng || randomPick,
+    diceValue: Number.isInteger(options.diceValue) && options.diceValue >= 1 && options.diceValue <= 6
+      ? options.diceValue
+      : undefined,
   };
   const result = handler ? handler(ctx) : { appealGain: move.contestAppeals || 0 };
   const flags = result.flags || {};
@@ -216,19 +221,6 @@ export const advanceTurn = (stateIn, options = {}) => {
   }
 
   actor.totalAppeal += finalAppeal;
-
-  // 박수(흥분도) 게이지: 일치 타입 어필 성공 시 상승, 패널티 타입 사용 시 하락 (podic.kr 페이지 상단 공통 규칙)
-  if (!state.applause.freezeThisTurn) {
-    const isLast = position === total - 1;
-    const isFirst = position === 0;
-    if (flags.forceApplauseRise || (isMatch && finalAppeal > 0)) {
-      const rise = (isLast && flags.applauseBonusIfLast) || (isFirst && flags.applauseBonusIfFirst) || 1;
-      state.applause.value = Math.min(MAX_APPLAUSE, state.applause.value + rise);
-    } else if (multiplier < 1) {
-      state.applause.value = Math.max(0, state.applause.value - 1);
-    }
-  }
-  if (flags.freezeApplauseRestOfTurn) state.applause.freezeThisTurn = true;
 
   // 라이브 어필 (일치 타입으로 5회 성공 시 +5)
   if (isMatch && finalAppeal > 0) {
@@ -325,7 +317,6 @@ const endRound = (state) => {
     p.doubleJamIfHitThisTurn = false;
     p.appealHalvedThisTurn = false;
   });
-  state.applause.freezeThisTurn = false;
   state.globalPreventNextJam = false;
 
   state.log.push({ type: 'roundEnd', round: state.round, standings: state.participants.map(p => ({ id: p.id, totalAppeal: p.totalAppeal })) });
