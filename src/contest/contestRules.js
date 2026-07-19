@@ -40,11 +40,11 @@ export const getPenaltyMultiplier = (moveContestType, contestType) =>
 
 /**
  * 긴장 확률(%) 계산.
- * 기본 10% + 순서(0-index)당 5% + 마지막 순서면 +20% - (일치 컨디션/10)*5% - 보유 ☆*10%
+ * 기본 10% + 순서(0-index)당 5% + 마지막 순서면 +10% - (일치 컨디션/10)*5% - 보유 ☆*10%
  */
 export const calcNervousChance = ({ position, totalParticipants, conditionValue = 0, stars = 0 }) => {
   let chance = 10 + position * 5;
-  if (position === totalParticipants - 1) chance += 20;
+  if (position === totalParticipants - 1) chance += 10;
   chance -= Math.floor(conditionValue / 10) * 5;
   chance -= stars * 10;
   return Math.max(0, Math.min(100, chance));

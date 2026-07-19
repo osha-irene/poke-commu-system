@@ -34,7 +34,7 @@ const getPenaltyMultiplier = (moveContestType, contestType) =>
 
 const calcNervousChance = ({ position, totalParticipants, conditionValue = 0, stars = 0 }) => {
   let chance = 10 + position * 5;
-  if (position === totalParticipants - 1) chance += 20;
+  if (position === totalParticipants - 1) chance += 10;
   chance -= Math.floor(conditionValue / 10) * 5;
   chance -= stars * 10;
   return Math.max(0, Math.min(100, chance));

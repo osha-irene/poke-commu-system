@@ -308,11 +308,21 @@ function getKoreaDateParts(date = new Date()) {
 
 // 숨긴 멤버의 도감 기여를 제거하고 다음 가시적 멤버 데이터로 대체
 function computeEffectivePokedexData(pokedexData, members) {
+  const visibleNames = new Set(
+    Object.values(members)
+      .filter(m => m && !m.hidden)
+      .map(m => m.name)
+      .filter(Boolean)
+  );
+
+  // 이름이 같은 계정이 여러 개일 수 있어(예: 오류로 재생성한 계정), 같은 이름을 쓰는
+  // 멤버가 하나라도 가시 상태면 그 이름은 숨김으로 취급하지 않는다. 안 그러면 동명의
+  // 새 계정으로 갈아탄 경우에도 도감 기여가 통째로 사라져 버린다.
   const hiddenNames = new Set(
     Object.values(members)
       .filter(m => m?.hidden)
       .map(m => m.name)
-      .filter(Boolean)
+      .filter(name => name && !visibleNames.has(name))
   );
 
   if (hiddenNames.size === 0) return pokedexData;
