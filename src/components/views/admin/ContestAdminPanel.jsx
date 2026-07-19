@@ -204,6 +204,7 @@ export default function ContestAdminPanel() {
   const [diceValueInput, setDiceValueInput] = useState('');
   const [firstJudgingRolls, setFirstJudgingRolls] = useState({});
   const [forceNervousResult, setForceNervousResult] = useState(undefined);
+  const [selectedMoveId, setSelectedMoveId] = useState(null);
 
   const participantsById = useMemo(() => {
     const source = state ? state.participants : draftParticipants;
@@ -228,6 +229,7 @@ export default function ContestAdminPanel() {
     setDiceValueInput('');
     setFirstJudgingRolls({});
     setForceNervousResult(undefined);
+    setSelectedMoveId(null);
   };
 
   const actor = state ? getCurrentActor(state) : null;
@@ -254,6 +256,7 @@ export default function ContestAdminPanel() {
       setSelectedTargetIds([]);
       setDiceValueInput('');
       setForceNervousResult(undefined);
+      setSelectedMoveId(null);
     } catch (e) {
       setError(e.message);
     }
@@ -305,6 +308,7 @@ export default function ContestAdminPanel() {
                 <div key={p.id} className="flex items-center justify-between bg-white border border-gray-200 rounded px-3 py-2 text-sm">
                   <span><b>{p.name}</b> {p.pokemonName && `(${p.pokemonName})`} · 컨디션 {p.conditionValue} · 기술 {p.moves.length}개</span>
                   <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">값:</span>
                     <input
                       type="number"
                       min={2}
@@ -422,15 +426,18 @@ export default function ContestAdminPanel() {
                 <p className="text-xs font-semibold text-indigo-700">
                   다이스 값 직접 입력 ("무작위로 [1D6]하트가 추가" 효과에 사용, 비워두면 무작위로 굴립니다)
                 </p>
-                <input
-                  type="number"
-                  min={1}
-                  max={6}
-                  value={diceValueInput}
-                  onChange={(e) => setDiceValueInput(e.target.value)}
-                  placeholder="1~6"
-                  className="w-20 border border-gray-300 rounded px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
-                />
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">값:</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={6}
+                    value={diceValueInput}
+                    onChange={(e) => setDiceValueInput(e.target.value)}
+                    placeholder="1~6"
+                    className="w-20 border border-gray-300 rounded px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none"
+                  />
+                </div>
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -439,17 +446,18 @@ export default function ContestAdminPanel() {
                   const isComboFollowUp = actor.comboWaiting && isValidComboFollowUp(actor.comboWaiting.moveId, m.id);
                   const needsTarget = TARGETED_EFFECTS.has(m.contestEffect);
                   const needsDice = DICE_EFFECTS.has(m.contestEffect);
+                  const isSelected = selectedMoveId === m.id;
                   return (
                     <button
                       key={m.id}
                       disabled={!usable}
-                      onClick={() => handleUseMove(m)}
-                      className={`flex flex-col items-start gap-1 rounded-lg border-2 px-3 py-2 text-left text-xs transition-colors ${
+                      onClick={() => setSelectedMoveId(m.id)}
+                      className={`flex flex-col items-start gap-1 rounded-lg border-2 px-3 py-2 text-left text-xs transition-colors w-48 ${
                         !usable ? 'bg-gray-100 border-gray-200 text-gray-300 cursor-not-allowed' :
+                        isSelected ? 'bg-indigo-50 border-indigo-500 ring-2 ring-indigo-300' :
                         isComboFollowUp ? 'bg-purple-50 border-purple-400 hover:border-purple-500' :
                         'bg-white border-gray-300 hover:border-indigo-400'
                       }`}
-                      title={getContestEffectKo(m.contestEffect)}
                     >
                       <span className="font-bold text-sm flex items-center gap-1">
                         {m.name}
@@ -472,10 +480,22 @@ export default function ContestAdminPanel() {
                         )}
                       </span>
                       <span className="flex items-center gap-1"><MoveBadge move={m} small /> 어필{m.contestAppeals} 방해{m.contestJam}</span>
+                      <span className="text-[10px] text-gray-500 whitespace-normal">{getContestEffectKo(m.contestEffect)}</span>
                     </button>
                   );
                 })}
               </div>
+
+              <Button
+                variant="primary"
+                onClick={() => {
+                  const move = actor.moves.find((m) => m.id === selectedMoveId);
+                  if (move) handleUseMove(move);
+                }}
+                disabled={!selectedMoveId}
+              >
+                확인
+              </Button>
 
               {error && <div className="text-red-500 text-xs">{error}</div>}
             </div>

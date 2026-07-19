@@ -20,6 +20,7 @@ import PokemonView from './components/views/PokemonView';
 import ItemsView from './components/views/ItemsView';
 import ProfileView from './components/views/ProfileView';
 import AdminView from './components/views/AdminView';
+import ContestAdminPanel from './components/views/admin/ContestAdminPanel';
 import EncounterModal from './components/modals/EncounterModal';
 import FirstCatchMemoModal from './components/modals/FirstCatchMemoModal';
 import StatSelectModal from './components/modals/StatSelectModal';
@@ -1967,6 +1968,7 @@ return (
 
           {currentTab === 'admin' && isAdmin && <AdminView />}
           {currentTab === 'battle' && isAdmin && <BattleView />}
+          {currentTab === 'contest' && isAdmin && <ContestAdminPanel />}
         </MobileLayout>
       ) : (
         <div className={`main-shell app-shell-enter ${currentTab === 'home' ? 'main-shell--home' : ''} ${!isMobile && currentTab === 'shop' ? 'main-shell--shop' : ''}`}>
@@ -2099,7 +2101,8 @@ return (
 		  )}
 		  
 		  {currentTab === 'admin' && isAdmin && <AdminView />}
-      {currentTab === 'battle' && isAdmin && <BattleView />} 
+      {currentTab === 'battle' && isAdmin && <BattleView />}
+      {currentTab === 'contest' && isAdmin && <ContestAdminPanel />}
 		</main>
           </div>
         </div>

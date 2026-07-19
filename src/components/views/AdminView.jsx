@@ -18,7 +18,6 @@ import LevelRestrictionPanel from './admin/LevelRestrictionPanel';
 import CampingAdminPanel from './admin/CampingAdminPanel';
 import ScheduleAdminPanel from './admin/ScheduleAdminPanel';
 import MapEditorPanel from './admin/MapEditorPanel';
-import ContestAdminPanel from './admin/ContestAdminPanel';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
@@ -508,7 +507,7 @@ export default function AdminView() {
     <Button
       onClick={onClick}
       variant={active ? 'primary' : 'secondary'}
-      size="md"
+      size="sm"
       className={`whitespace-nowrap ${variant === 'danger' && !active ? 'bg-red-100 text-red-600 hover:bg-red-200' : ''}`}
     >
       {children}
@@ -535,7 +534,6 @@ export default function AdminView() {
     { id: 'shop',     label: '상점',  icon: ShoppingBag },
     { id: 'cooking',  label: '요리',  icon: UtensilsCrossed },
     { id: 'camping',  label: '캠핑',  icon: Tent },
-    { id: 'contest',  label: '콘테스트', icon: Medal },
     { id: 'schedule', label: '일정',  icon: Calendar },
     { id: 'settings', label: '시스템', icon: Settings },
     ...(trainer?.isSuperAdmin ? [{ id: 'danger', label: '위험', icon: AlertTriangle, variant: 'danger' }] : []),
@@ -555,10 +553,10 @@ export default function AdminView() {
               onClick={() => setAdminTab(tab.id)}
               style={{
                 flexShrink: 0,
-                padding: '7px 13px',
+                padding: '7px 12px',
                 borderRadius: 20,
                 border: 'none',
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: 700,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
@@ -580,7 +578,7 @@ export default function AdminView() {
           ))}
         </div>
       ) : (
-        <Card className="p-2 flex gap-2 overflow-x-auto flex-nowrap admin-tab-bar">
+        <Card className="p-2.5 flex gap-2 overflow-x-auto flex-nowrap admin-tab-bar">
           {ADMIN_TABS.map(tab => (
             <TabButton
               key={tab.id}
@@ -1208,8 +1206,6 @@ export default function AdminView() {
 			allItems={allItems}
 		  />
 		)}
-
-      {adminTab === 'contest' && <ContestAdminPanel />}
 
       {adminTab === 'schedule' && <ScheduleAdminPanel />}
 

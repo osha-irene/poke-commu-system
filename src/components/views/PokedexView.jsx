@@ -627,20 +627,73 @@ export default function PokedexView({
                 return (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                     {entry.firstCatcher && (
-                      <div style={{ fontSize: 12, color: '#2a3d1a' }}>
-                        <span style={{ color: '#7a9a50', fontWeight: 700 }}>최초 포획 </span>
-                        <span style={{ fontWeight: 700 }}>{entry.firstCatcher}</span>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ fontSize: 12, color: '#2a3d1a' }}>
+                            <span style={{ color: '#7a9a50', fontWeight: 700 }}>최초 포획 </span>
+                            <span style={{ fontWeight: 700 }}>{entry.firstCatcher}</span>
+                          </div>
+                          {entry.firstCatcher === currentUser?.name && !isEditingMemo && (
+                            <button
+                              onClick={handleEditMemo}
+                              style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', color: '#5f8228', display: 'flex' }}
+                              aria-label="메모 편집"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                          )}
+                        </div>
+
+                        {isEditingMemo ? (
+                          <div style={{ marginTop: 6 }}>
+                            <textarea
+                              value={memoText}
+                              onChange={(e) => setMemoText(e.target.value)}
+                              placeholder="이 포켓몬에 대한 메모를 남겨보세요..."
+                              maxLength="200"
+                              rows="3"
+                              style={{
+                                width: '100%', boxSizing: 'border-box', resize: 'none',
+                                border: '1px solid rgba(120,180,60,0.35)', borderRadius: 8,
+                                background: 'rgba(255,255,255,0.9)', padding: 8,
+                                fontSize: 12, color: '#26351f', outline: 'none',
+                              }}
+                            />
+                            <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                              <button
+                                onClick={handleSaveMemo}
+                                style={{ flex: 1, borderRadius: 8, background: '#4f741f', color: '#fff', border: 'none', padding: '6px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                              >
+                                저장
+                              </button>
+                              <button
+                                onClick={() => { setIsEditingMemo(false); setMemoText(entry?.memo || ''); }}
+                                style={{ flex: 1, borderRadius: 8, background: '#d7e7b8', color: '#2f4a24', border: 'none', padding: '6px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                              >
+                                취소
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            {entry.memo && (
+                              <div style={{ fontSize: 11, color: '#4a6a30', fontStyle: 'italic', borderTop: '1px solid rgba(120,180,60,0.15)', paddingTop: 6, marginTop: 6 }}>
+                                "{entry.memo}"
+                              </div>
+                            )}
+                            {!entry.memo && entry.firstCatcher === currentUser?.name && (
+                              <div style={{ fontSize: 11, fontStyle: 'italic', color: '#6f804f', marginTop: 4 }}>
+                                메모를 남겨보세요
+                              </div>
+                            )}
+                          </>
+                        )}
                       </div>
                     )}
                     {entry.firstEncounter && (
                       <div style={{ fontSize: 12, color: '#2a3d1a' }}>
                         <span style={{ color: '#7a9a50', fontWeight: 700 }}>최초 조우 </span>
                         {entry.firstEncounter}
-                      </div>
-                    )}
-                    {entry.memo && (
-                      <div style={{ fontSize: 11, color: '#4a6a30', fontStyle: 'italic', borderTop: '1px solid rgba(120,180,60,0.15)', paddingTop: 6, marginTop: 2 }}>
-                        "{entry.memo}"
                       </div>
                     )}
                   </div>

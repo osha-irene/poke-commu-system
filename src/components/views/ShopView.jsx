@@ -1360,17 +1360,17 @@ export default function ShopView() {
           const hasGacha = gachaEnabled && gachaBallsAll.length >= 2;
           if (!hasGacha && boxes.length === 0) return null;
           return (
-            <div style={{ margin: '0 12px 14px', display: 'grid', gridTemplateColumns: hasGacha && boxes.length > 0 ? '1fr 1fr' : '1fr', gap: 10 }}>
+            <div style={{ margin: '0 12px 14px', display: 'grid', gridTemplateColumns: hasGacha && boxes.length > 0 ? '1fr 1fr' : '1fr', alignItems: 'stretch', gap: 10 }}>
 
               {/* 규토리볼 가챠 */}
               {hasGacha && (() => {
                 const isSelected = selectedItem?.type === 'gachaball';
                 return (
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                     <div style={{ display: 'inline-flex', alignSelf: 'flex-start', alignItems: 'center', marginBottom: 6, background: '#b05510', borderRadius: 6, padding: '4px 10px' }}>
                       <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>규토리볼 가챠</span>
                     </div>
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: isSelected ? 'rgba(220,185,150,0.97)' : 'rgba(255,250,244,0.97)', border: `2px solid ${isSelected ? '#b05510' : 'rgba(190,110,30,0.3)'}`, borderRadius: 12, padding: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: isSelected ? 'rgba(220,185,150,0.97)' : 'rgba(255,250,244,0.97)', border: `2px solid ${isSelected ? '#b05510' : 'rgba(190,110,30,0.3)'}`, borderRadius: 12, padding: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
                         {gachaBalls.map(ballItem => {
                           const item = allItems.find(i => i.id === ballItem.itemId);
@@ -1399,7 +1399,7 @@ export default function ShopView() {
 
               {/* 랜덤박스 */}
               {boxes.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                   <div style={{ display: 'inline-flex', alignSelf: 'flex-start', alignItems: 'center', marginBottom: 6, background: '#5828a0', borderRadius: 6, padding: '4px 10px' }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>랜덤박스</span>
                   </div>

@@ -5,6 +5,7 @@ import adventureIcon from '../../assets/sidebar/1/advent.png';
 import bagIcon from '../../assets/sidebar/1/bag.png';
 import battleIcon from '../../assets/sidebar/1/battle.png';
 import campingIcon from '../../assets/sidebar/1/camping.png';
+import contestIcon from '../../assets/sidebar/1/contest.png';
 import cookingIcon from '../../assets/sidebar/1/cooking.png';
 import dexIcon from '../../assets/sidebar/1/dex.png';
 import entryIcon from '../../assets/sidebar/1/entry.png';
@@ -30,6 +31,7 @@ const trainerTabs = [
 const adminTabs = [
   { id: 'admin', label: '관리자', icon: adminIcon },
   { id: 'battle', label: '배틀', icon: battleIcon },
+  { id: 'contest', label: '콘테스트', icon: contestIcon },
 ];
 
 const IconImage = ({ src }) => <img src={src} alt="" aria-hidden="true" />;
