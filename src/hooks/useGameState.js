@@ -2,7 +2,7 @@
 // 모든 게임 로직을 통합하는 메인 훅
 
 import { useState, useEffect, useCallback } from 'react';
-import { ref, get, set, update } from 'firebase/database';
+import { ref, get, update, runTransaction } from 'firebase/database';
 import { database } from '../firebase';
 
 // 데이터 (JSON 파일들 먼저)
@@ -339,33 +339,41 @@ export default function useGameState() {
   };
 
   // 매일 자정 산책 횟수 리셋
+  // ⚠️ 여러 클라이언트(접속 중인 모든 유저의 브라우저)가 동시에 이 로직을 실행할 수 있어서,
+  // "오늘 이미 리셋했는지" 체크(get)와 표시(set)를 따로 하면 그 사이에 경합이 생겨
+  // 리셋 여부 플래그가 갱신되지 않은 채로 남을 수 있었다. 그 결과 currentUser가 바뀔 때마다
+  // (탐험 한 번에도 여러 필드가 바뀌어 여러 번 재실행됨) 전체 회원의 dailyWalks가 계속
+  // maxDailyWalks로 되돌아가는 사실상 무한 리셋 버그가 발생했다.
+  // runTransaction으로 lastResetRef를 원자적으로 선점해서, "오늘 값으로 실제로 바꾼" 단
+  // 하나의 실행만 회원 리셋을 수행하도록 한다.
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser?.id) return;
 
     const checkAndResetWalks = async () => {
       try {
         const lastResetRef = ref(database, 'gameData/lastWalkReset');
-        const snapshot = await get(lastResetRef);
-        const lastReset = snapshot.exists() ? snapshot.val() : null;
         const today = new Date().toDateString();
-        
-        if (lastReset !== today) {
-          const membersRef = ref(database, 'members');
-          const membersSnapshot = await get(membersRef);
-          
-          if (membersSnapshot.exists()) {
-            const membersData = membersSnapshot.val();
-            const updates = {};
-            
-            Object.keys(membersData).forEach(id => {
-              updates[`members/${id}/dailyWalks`] = membersData[id].maxDailyWalks;
-            });
-            
-            await update(ref(database), updates);
-            await set(lastResetRef, today);
-            
-            console.log('✅ 모든 회원 산책 횟수 리셋 완료');
-          }
+
+        const { committed } = await runTransaction(lastResetRef, (lastReset) => {
+          if (lastReset === today) return; // 이미 오늘 리셋됨 - 트랜잭션 중단, 아무것도 안 바꿈
+          return today;
+        });
+
+        // committed === true 인 경우는 이 실행이 lastReset을 today로 "처음" 바꾼 경우뿐이다.
+        if (!committed) return;
+
+        const membersSnapshot = await get(ref(database, 'members'));
+        if (membersSnapshot.exists()) {
+          const membersData = membersSnapshot.val();
+          const updates = {};
+
+          Object.keys(membersData).forEach(id => {
+            updates[`members/${id}/dailyWalks`] = membersData[id].maxDailyWalks;
+          });
+
+          await update(ref(database), updates);
+
+          console.log('✅ 모든 회원 산책 횟수 리셋 완료');
         }
       } catch (error) {
         console.error('산책 횟수 리셋 실패:', error);
@@ -375,7 +383,7 @@ export default function useGameState() {
     checkAndResetWalks();
     const interval = setInterval(checkAndResetWalks, 60 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [currentUser]);
+  }, [currentUser?.id]);
 
   // 지역 클릭 핸들러
   const handleRegionClick = (region) => {
