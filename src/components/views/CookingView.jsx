@@ -118,8 +118,11 @@ function isCookingIngredient(item = {}, allItems = [], knownIngredientNames = ne
   // 완성된 요리(오란다 등) 자체는 재료가 아니라 완제품이다. 어떤 레시피가 실제로 그 이름을
   // 재료로 지정해두지 않는 한(예: 오란다를 넣어야 하는 다른 요리가 생기는 경우), 오래된
   // pocket:"berries" 스냅샷이 인벤토리에 남아있어도 재료 목록에 다시 뜨지 않는다.
+  // 단, 관리자가 그 요리 결과물 자체에 cooking.isIngredient: true를 명시했다면(예: 피자를
+  // 다른 요리의 재료로도 쓰게 하는 경우) 그 의사표시가 이 기본 필터보다 우선한다.
+  const isExplicitIngredient = item.cooking?.isIngredient === true || item.isIngredient === true || catalogItem.cooking?.isIngredient === true;
   const isCookedDishResult = item.isCooked === true || catalogItem.isRecipe === true || catalogItem.__customItemSource === 'recipe';
-  if (isCookedDishResult && !isKnownIngredientName) {
+  if (isCookedDishResult && !isKnownIngredientName && !isExplicitIngredient) {
     return false;
   }
 
