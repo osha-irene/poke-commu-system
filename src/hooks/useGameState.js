@@ -102,9 +102,16 @@ export default function useGameState() {
     isLoading: isAuthLoading
   } = useAuth(members, setMembers, allPokemonDataParsed);
 
+  // 관리자여도 실제로 전체 회원 데이터가 필요한 화면(멤버 관리/콘테스트)에 있을 때만
+  // members 전체 리스너를 켠다. 예전에는 관리자가 로그인만 해있으면 무슨 탭을 보든
+  // 계속 구독 상태였는데, RTDB의 onChildChanged는 필드 하나만 바뀌어도 그 멤버의
+  // 전체 레코드(포켓몬 전원의 무브/개체값/노력치, 인벤토리 전체)를 다시 내려보내서,
+  // 관리자 세션이 오래 켜져 있는 동안 다른 회원들의 사소한 행동 하나하나가 전부
+  // 다운로드 대역폭으로 쌓였다 - RTDB 다운로드 사용량 급증의 원인 중 하나였다.
+  const needsFullMembers = (currentTab === 'admin' || currentTab === 'contest');
   useEffect(() => {
-    setLoadFullMembers(Boolean(currentUser?.isAdmin || currentUser?.isSuperAdmin));
-  }, [currentUser?.isAdmin, currentUser?.isSuperAdmin]);
+    setLoadFullMembers(Boolean((currentUser?.isAdmin || currentUser?.isSuperAdmin) && needsFullMembers));
+  }, [currentUser?.isAdmin, currentUser?.isSuperAdmin, needsFullMembers]);
 
   // 레시피 (요리 결과 아이템은 useGameData의 allItems에 파생되어 들어가므로 먼저 로드)
   const recipesHook = useRecipes(currentUser, updateCurrentUser, updateInventory);
