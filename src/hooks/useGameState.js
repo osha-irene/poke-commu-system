@@ -576,6 +576,7 @@ export default function useGameState() {
     bulkGiveItem: adminItems.bulkGiveItem,
     deleteItemFromMember: adminItems.deleteItemFromMember,
     adjustMemberItemCount: adminItems.adjustMemberItemCount,
+    removeItemFromAllInventories: adminItems.removeItemFromAllInventories,
     updateCustomItem: async (itemId, updatedFields) => {
       const ok = await adminItems.updateCustomItem(itemId, updatedFields);
       if (ok) {

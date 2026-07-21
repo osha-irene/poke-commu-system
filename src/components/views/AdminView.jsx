@@ -23,7 +23,7 @@ import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { getItemEffectBadges } from '../../utils/itemEffectBadges';
 
-function CustomItemManageModal({ items, onUpdate, onDelete, onClose }) {
+function CustomItemManageModal({ items, members = {}, onUpdate, onDelete, onRemoveFromAllInventories, onClose }) {
   const [editingItem, setEditingItem] = useState(null);
   const [filter, setFilter] = useState('all'); // all | custom | recipe
 
@@ -32,6 +32,10 @@ function CustomItemManageModal({ items, onUpdate, onDelete, onClose }) {
     if (filter === 'recipe') return !!i.isRecipe;
     return true;
   });
+
+  const countHolders = (item) => Object.values(members || {}).filter(member => (
+    Array.isArray(member?.inventory) && member.inventory.some(i => i.itemId === item.id || i.name === item.name)
+  )).length;
 
   const effectTag = (item) => {
     const tags = getItemEffectBadges(item);
@@ -84,6 +88,19 @@ function CustomItemManageModal({ items, onUpdate, onDelete, onClose }) {
               <div className="flex gap-1 shrink-0">
                 <button className="text-blue-500 text-xs px-2 py-1 rounded hover:bg-blue-50"
                   onClick={e => { e.stopPropagation(); setEditingItem(item); }}>수정</button>
+                <button className="text-orange-500 text-xs px-2 py-1 rounded hover:bg-orange-50"
+                  onClick={async e => {
+                    e.stopPropagation();
+                    const holderCount = countHolders(item);
+                    if (holderCount === 0) { alert(`"${item.name}"을(를) 보유한 회원이 없습니다.`); return; }
+                    if (!window.confirm(`"${item.name}"을(를) 보유한 회원 ${holderCount}명의 인벤토리에서 전부 삭제하시겠습니까?\n(아이템 정의 자체는 삭제되지 않습니다)`)) return;
+                    const result = await onRemoveFromAllInventories(item.id);
+                    if (!result) { alert('전체 삭제 중 오류가 발생했습니다.'); return; }
+                    const { removedCount = 0, failedNames = [] } = result;
+                    alert(failedNames.length > 0
+                      ? `${removedCount}명의 인벤토리에서 삭제했습니다.\n실패: ${failedNames.join(', ')}`
+                      : `${removedCount}명의 인벤토리에서 "${item.name}"을(를) 전부 삭제했습니다.`);
+                  }}>전체삭제</button>
                 <button className="text-red-500 text-xs px-2 py-1 rounded hover:bg-red-50"
                   onClick={async e => {
                     e.stopPropagation();
@@ -217,6 +234,7 @@ export default function AdminView() {
     createCustomItem,
     updateCustomItem,
     deleteCustomItem,
+    removeItemFromAllInventories,
     updateMemberMoney,
     editMemberPokemon,
     deleteMemberPokemon,
@@ -485,6 +503,12 @@ export default function AdminView() {
       return deleteRecipe?.(target.recipeId);
     }
     return deleteCustomItem(itemId);
+  };
+
+  const handleRemoveManagedItemFromAllInventories = async (itemId) => {
+    const target = allItems.find(i => i.id === itemId);
+    if (!target) return { removedCount: 0, failedNames: [] };
+    return removeItemFromAllInventories?.(itemId, target.name);
   };
 
   const handleEscapeModeChange = async (mode) => {
@@ -945,8 +969,10 @@ export default function AdminView() {
           {showCustomItemManage && (
             <CustomItemManageModal
               items={allItems.filter(i => i.__customItemSource === 'database' || i.__customItemSource === 'recipe')}
+              members={members}
               onUpdate={handleUpdateManagedItem}
               onDelete={handleDeleteManagedItem}
+              onRemoveFromAllInventories={handleRemoveManagedItemFromAllInventories}
               onClose={() => setShowCustomItemManage(false)}
             />
           )}
@@ -957,124 +983,132 @@ export default function AdminView() {
               <p className="text-sm text-gray-600 mt-1">탐험, 보유 제한, 레벨 제한, 도망 시스템을 한 곳에서 관리합니다.</p>
             </div>
 
-            <section className="rounded-lg border border-lime-200 bg-white/40 p-5">
-            <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><Settings size={18} strokeWidth={2.5} /> 전체 멤버 탐험 횟수 일괄 설정</h4>
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-4">
-              <p className="text-sm text-blue-800 flex items-center gap-1.5">
-                <Info size={14} strokeWidth={2.5} className="flex-shrink-0" /> 모든 회원의 최대 탐험 횟수를 동일하게 설정합니다. 개별 회원은 "멤버 관리"에서 수정할 수 있습니다.
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <section className="rounded-lg border border-lime-200 bg-white/40 p-4 flex flex-col gap-3">
+            <h4
+              className="text-sm font-bold text-gray-800 flex items-center gap-1.5"
+              title='모든 회원의 최대 탐험 횟수를 동일하게 설정합니다. 개별 회원은 "멤버 관리"에서 수정할 수 있습니다.'
+            >
+              <Settings size={16} strokeWidth={2.5} className="flex-shrink-0" /> 탐험 횟수 일괄 설정
+            </h4>
+            <div className="flex items-center gap-2">
               <input
                 type="number"
                 value={maxWalks}
                 onChange={(e) => setMaxWalks(parseInt(e.target.value) || 0)}
                 min="1"
                 max="999"
-                className="border-2 border-gray-300 rounded-lg px-4 py-3 w-32 text-lg font-semibold focus:border-indigo-500 focus:outline-none"
+                className="border-2 border-gray-300 rounded-lg px-3 py-2 w-full text-base font-semibold focus:border-indigo-500 focus:outline-none"
               />
-              <span className="text-gray-600 font-semibold">회</span>
-              <Button
-                variant="primary"
-                onClick={handleUpdateAllMembersMaxWalks}
-              >
-                전체 적용
-              </Button>
+              <span className="text-gray-600 font-semibold text-sm flex-shrink-0">회</span>
             </div>
-            <div className="mt-3 text-sm text-gray-600">
-              현재 설정: 모든 회원 최대 <strong>{Object.values(members)[0]?.maxDailyWalks || 5}회</strong>
+            <Button
+              variant="primary"
+              size="sm"
+              className="w-full"
+              onClick={handleUpdateAllMembersMaxWalks}
+            >
+              전체 적용
+            </Button>
+            <div className="text-xs text-gray-600">
+              현재: 최대 <strong>{Object.values(members)[0]?.maxDailyWalks || 5}회</strong>
             </div>
             </section>
 
-            <section className="rounded-lg border border-lime-200 bg-white/40 p-5">
-            <h4 className="text-lg font-bold text-gray-800 mb-4">포켓몬 보유 제한</h4>
-            <div className="bg-lime-50 border-2 border-lime-200 rounded-lg p-4 mb-4">
-              <p className="text-sm text-lime-900">
-                회원 1명이 보유할 수 있는 포켓몬 수를 설정합니다. 파트너 포켓몬은 이 제한에 포함되지 않고, 엔트리와 박스의 포켓몬을 합산합니다.
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
+            <section className="rounded-lg border border-lime-200 bg-white/40 p-4 flex flex-col gap-3">
+            <h4
+              className="text-sm font-bold text-gray-800"
+              title="회원 1명이 보유할 수 있는 포켓몬 수를 설정합니다. 파트너 포켓몬은 이 제한에 포함되지 않고, 엔트리와 박스의 포켓몬을 합산합니다."
+            >
+              포켓몬 보유 제한
+            </h4>
+            <div className="flex items-center gap-2">
               <input
                 type="number"
                 value={maxNonPartnerPokemon}
                 onChange={(event) => setMaxNonPartnerPokemon(parseInt(event.target.value, 10) || 0)}
                 min="1"
                 max="999"
-                className="border-2 border-gray-300 rounded-lg px-4 py-3 w-32 text-lg font-semibold focus:border-indigo-500 focus:outline-none"
+                className="border-2 border-gray-300 rounded-lg px-3 py-2 w-full text-base font-semibold focus:border-indigo-500 focus:outline-none"
               />
-              <span className="text-gray-600 font-semibold">마리</span>
-              <Button
-                variant="primary"
-                onClick={handleSavePokemonLimit}
-              >
-                저장
-              </Button>
+              <span className="text-gray-600 font-semibold text-sm flex-shrink-0">마리</span>
             </div>
-            <div className="mt-3 text-sm text-gray-600">
-              현재 설정: 파트너 제외 최대 <strong>{systemSettings.maxNonPartnerPokemon || 18}마리</strong>
+            <Button
+              variant="primary"
+              size="sm"
+              className="w-full"
+              onClick={handleSavePokemonLimit}
+            >
+              저장
+            </Button>
+            <div className="text-xs text-gray-600">
+              현재: 파트너 제외 최대 <strong>{systemSettings.maxNonPartnerPokemon || 18}마리</strong>
             </div>
             </section>
 
-            <section className="rounded-lg border border-lime-200 bg-white/40 p-5">
-            <h4 className="text-lg font-bold text-gray-800 mb-4">컨디션 제한치</h4>
-            <div className="bg-lime-50 border-2 border-lime-200 rounded-lg p-4 mb-4">
-              <p className="text-sm text-lime-900">
-                아이템으로 올릴 수 있는 컨디션 항목별 상한선입니다. 절대 최대치는 100입니다.
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
+            <section className="rounded-lg border border-lime-200 bg-white/40 p-4 flex flex-col gap-3">
+            <h4
+              className="text-sm font-bold text-gray-800"
+              title="아이템으로 올릴 수 있는 컨디션 항목별 상한선입니다. 절대 최대치는 100입니다."
+            >
+              컨디션 제한치
+            </h4>
+            <div className="flex items-center gap-2">
               <input
                 type="number"
                 value={conditionMax}
                 onChange={(e) => setConditionMax(parseInt(e.target.value, 10) || 0)}
                 min="1"
                 max="100"
-                className="border-2 border-gray-300 rounded-lg px-4 py-3 w-32 text-lg font-semibold focus:border-indigo-500 focus:outline-none"
+                className="border-2 border-gray-300 rounded-lg px-3 py-2 w-full text-base font-semibold focus:border-indigo-500 focus:outline-none"
               />
-              <span className="text-gray-500 font-semibold">/ 100</span>
-              <Button
-                variant="primary"
-                onClick={async () => {
-                  const val = Math.min(100, Math.max(1, Math.floor(conditionMax)));
-                  await updateSystemSettings?.({ ...systemSettings, conditionMax: val });
-
-                  // 모든 멤버 포켓몬 컨디션 clamp
-                  const COND_KEYS = ['elegance', 'beauty', 'cuteness', 'intelligence', 'strength'];
-                  const memberEntries = Object.entries(members);
-                  let clampedCount = 0;
-                  await Promise.all(memberEntries.map(async ([memberId, member]) => {
-                    const pokemon = member.caughtPokemon;
-                    if (!Array.isArray(pokemon)) return;
-                    let changed = false;
-                    const updated = pokemon.map(p => {
-                      if (!p?.condition) return p;
-                      const newCond = { ...p.condition };
-                      COND_KEYS.forEach(k => {
-                        if (Number(newCond[k] || 0) > val) {
-                          newCond[k] = val;
-                          changed = true;
-                        }
-                      });
-                      return changed ? { ...p, condition: newCond } : p;
-                    });
-                    if (changed) {
-                      clampedCount++;
-                      await set(dbRef(database, `members/${memberId}/caughtPokemon`), updated);
-                    }
-                  }));
-
-                  alert(`컨디션 제한치가 ${val}로 저장됐습니다.${clampedCount > 0 ? `\n초과 데이터 ${clampedCount}명 포켓몬 정리 완료.` : ''}`);
-                }}
-              >
-                저장
-              </Button>
+              <span className="text-gray-500 font-semibold text-sm flex-shrink-0">/100</span>
             </div>
-            <div className="mt-3 text-sm text-gray-600">
-              현재 제한치: <strong>{systemSettings.conditionMax || 100}</strong> / 100
+            <Button
+              variant="primary"
+              size="sm"
+              className="w-full"
+              onClick={async () => {
+                const val = Math.min(100, Math.max(1, Math.floor(conditionMax)));
+                await updateSystemSettings?.({ ...systemSettings, conditionMax: val });
+
+                // 모든 멤버 포켓몬 컨디션 clamp
+                const COND_KEYS = ['elegance', 'beauty', 'cuteness', 'intelligence', 'strength'];
+                const memberEntries = Object.entries(members);
+                let clampedCount = 0;
+                await Promise.all(memberEntries.map(async ([memberId, member]) => {
+                  const pokemon = member.caughtPokemon;
+                  if (!Array.isArray(pokemon)) return;
+                  let changed = false;
+                  const updated = pokemon.map(p => {
+                    if (!p?.condition) return p;
+                    const newCond = { ...p.condition };
+                    COND_KEYS.forEach(k => {
+                      if (Number(newCond[k] || 0) > val) {
+                        newCond[k] = val;
+                        changed = true;
+                      }
+                    });
+                    return changed ? { ...p, condition: newCond } : p;
+                  });
+                  if (changed) {
+                    clampedCount++;
+                    await set(dbRef(database, `members/${memberId}/caughtPokemon`), updated);
+                  }
+                }));
+
+                alert(`컨디션 제한치가 ${val}로 저장됐습니다.${clampedCount > 0 ? `\n초과 데이터 ${clampedCount}명 포켓몬 정리 완료.` : ''}`);
+              }}
+            >
+              저장
+            </Button>
+            <div className="text-xs text-gray-600">
+              현재: <strong>{systemSettings.conditionMax || 100}</strong> / 100
             </div>
             </section>
 
-            <LevelRestrictionPanel embedded />
+            <LevelRestrictionPanel embedded compact />
+            </div>
 
           {/* 도망 시스템 설정 */}
             <section className="rounded-lg border border-lime-200 bg-white/40 p-5">
