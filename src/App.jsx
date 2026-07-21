@@ -1933,10 +1933,11 @@ return (
                 titles={titles}
                 initialMemberId={initialMemberId}
                 onClearInitialMember={() => setInitialMemberId(null)}
+                allPokemonMaster={allPokemonMaster}
               />
             </div>
           )}
-          {currentTab === 'npcs' && <div key="npcs"><NpcView members={displayMembers} isLoading={isMembersLoading} isAdmin={isAdmin} allMoves={allMoves} npcOnly /></div>}
+          {currentTab === 'npcs' && <div key="npcs"><NpcView members={displayMembers} isLoading={isMembersLoading} isAdmin={isAdmin} allMoves={allMoves} allPokemonMaster={allPokemonMaster} npcOnly /></div>}
           {currentTab === 'pokemon' && <PokemonView />}
           {currentTab === 'items' && <ItemsView />}
           {currentTab === 'shop' && <ShopView />}
@@ -2066,8 +2067,8 @@ return (
 			/>
 		  )}
 		  
-		  {currentTab === 'members' && <div key="members"><MembersView members={displayMembers} isLoading={isMembersLoading} currentUserId={currentUser?.id} isAdmin={isAdmin} titles={titles} onSwitchTab={setCurrentTab} initialMemberId={initialMemberId} onClearInitialMember={() => setInitialMemberId(null)} /></div>}
-		  {currentTab === 'npcs' && <div key="npcs"><NpcView members={displayMembers} isLoading={isMembersLoading} isAdmin={isAdmin} allMoves={allMoves} npcOnly onSwitchTab={setCurrentTab} /></div>}
+		  {currentTab === 'members' && <div key="members"><MembersView members={displayMembers} isLoading={isMembersLoading} currentUserId={currentUser?.id} isAdmin={isAdmin} titles={titles} onSwitchTab={setCurrentTab} initialMemberId={initialMemberId} onClearInitialMember={() => setInitialMemberId(null)} allPokemonMaster={allPokemonMaster} /></div>}
+		  {currentTab === 'npcs' && <div key="npcs"><NpcView members={displayMembers} isLoading={isMembersLoading} isAdmin={isAdmin} allMoves={allMoves} allPokemonMaster={allPokemonMaster} npcOnly onSwitchTab={setCurrentTab} /></div>}
 		  {currentTab === 'pokemon' && <PokemonView />}
 		  {currentTab === 'items' && <ItemsView />}
 		  {currentTab === 'shop' && <ShopView />}

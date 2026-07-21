@@ -7,6 +7,7 @@ import { getTypeColor } from '../../styles/theme';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import { getAbilityKoreanName } from '../../utils/abilityUtils';
 import CachedImage from '../common/CachedImage';
+import { useMemberCaughtPokemon } from '../../hooks/members/useMemberCaughtPokemon';
 
 const npcBadgeImages = require.context('../../assets/members/badge', false, /\.png$/);
 const PLACEHOLDER = 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png';
@@ -479,7 +480,7 @@ function MemberOverlay({ member, onClose, isAdmin, closing, allMoves = [] }) {
 }
 
 /* ── 목록 뷰 ── */
-export default function NpcView({ members = {}, isLoading = false, isAdmin = false, npcOnly = false, onSwitchTab, allMoves = [] }) {
+export default function NpcView({ members = {}, isLoading = false, isAdmin = false, npcOnly = false, onSwitchTab, allMoves = [], allPokemonMaster = [] }) {
   const [activeId, setActiveId] = useState(null);
   const [closing, setClosing]   = useState(false);
   const [returning, setReturning] = useState(false);
@@ -494,7 +495,13 @@ export default function NpcView({ members = {}, isLoading = false, isAdmin = fal
     return [...list, ...mockFill];
   }, [members, npcOnly]);
 
-  const activeMember = activeId ? memberList.find(m => m.id === activeId) : null;
+  const activeMemberBase = activeId ? memberList.find(m => m.id === activeId) : null;
+  // caughtPokemon(포켓몬 전체 상세)은 더 이상 members prop에 항상 실려있지 않다 - 지금 열어본
+  // 이 한 명에 대해서만 온디맨드로 조회한다 (RTDB 다운로드 절감, useMemberCaughtPokemon 참고).
+  const { caughtPokemon: liveCaughtPokemon } = useMemberCaughtPokemon(activeId, allPokemonMaster, !!activeMemberBase);
+  const activeMember = activeMemberBase
+    ? { ...activeMemberBase, caughtPokemon: liveCaughtPokemon || activeMemberBase.caughtPokemon || [] }
+    : null;
 
   const handleClose = useCallback(() => {
     setClosing(true);

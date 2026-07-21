@@ -33,9 +33,11 @@ const normalizePokemonArray = (value) => {
 };
 
 // memberSummary: 이름/프로필/요약 등 가벼운 필드 - 모든 로그인 유저에게 항상 실시간 구독됨.
-// memberParty: caughtPokemon/partnerPokemon(스탯·기술·IV 등 상세) - 용량이 커서
-// 멤버/NPC 탭을 보고 있는 클라이언트만(loadPartyDetails=true) 구독한다. 이렇게 나누지 않으면
-// 누군가 포켓몬을 잡거나 파티를 바꿀 때마다 접속자 전원에게 그 상세 데이터가 재전송된다.
+// memberParty: partnerPokemon(목록 카드 아이콘용) - 멤버/NPC 탭을 보고 있는 클라이언트만
+// (loadPartyDetails=true) 구독한다. caughtPokemon(스탯·기술·IV 등, 용량이 훨씬 큰 상세)은
+// 여기 안 실리고, 상세 카드를 실제로 연 한 명에 대해서만 useMemberCaughtPokemon으로
+// 온디맨드 조회한다 - 안 그러면 누군가 포켓몬을 잡거나 파티를 바꿀 때마다 그 탭을 보고 있는
+// 접속자 전원에게 그 상세 데이터가 재전송된다.
 export const useMembers = (allPokemonData, loadFullMembers = false, loadPartyDetails = false) => {
   const [members, setMembers] = useState({});
   const [memberSummaries, setMemberSummaries] = useState({});
@@ -148,8 +150,18 @@ export const useMembers = (allPokemonData, loadFullMembers = false, loadPartyDet
         [snapshot.key]: normalizedMember
       }));
       try {
-        await set(ref(database, `memberSummary/${snapshot.key}`), toMemberSummary(normalizedMember, snapshot.key));
-        await set(ref(database, `memberParty/${snapshot.key}`), toMemberParty(normalizedMember, snapshot.key));
+        // 관리자가 admin/contest 탭을 보고 있는 동안(loadFullMembers=true)에는 이 리스너가
+        // 다른 회원의 골드/걸음수처럼 summary·party에 안 쓰이는 필드 변경에도 매번 걸리는데,
+        // 그때마다 summary/party 전체를 무조건 다시 쓰면 접속자 전원에게 재전송된다. 실제로
+        // summary/party에 반영되는 값이 바뀐 경우에만 쓴다.
+        const nextSummary = toMemberSummary(normalizedMember, snapshot.key);
+        if (JSON.stringify(memberSummariesRef.current[snapshot.key]) !== JSON.stringify(nextSummary)) {
+          await set(ref(database, `memberSummary/${snapshot.key}`), nextSummary);
+        }
+        const nextParty = toMemberParty(normalizedMember, snapshot.key);
+        if (JSON.stringify(memberPartiesRef.current[snapshot.key]) !== JSON.stringify(nextParty)) {
+          await set(ref(database, `memberParty/${snapshot.key}`), nextParty);
+        }
       } catch (error) {
         console.error('Member view data sync failed:', error);
       }
@@ -269,10 +281,11 @@ export const useMembers = (allPokemonData, loadFullMembers = false, loadPartyDet
     const partyRef = ref(database, 'memberParty');
     let isInitialLoad = true;
 
+    // caughtPokemon은 더 이상 memberParty에 실리지 않는다(useMemberCaughtPokemon으로 온디맨드
+    // 조회) - 여기서는 목록 카드 아이콘에 쓰이는 partnerPokemon만 정규화한다.
     const normalizePartyEntry = (userId, member = {}) => ({
       ...member,
       id: userId,
-      caughtPokemon: normalizePokemonArray(member.caughtPokemon),
       partnerPokemon: withNormalizedIVs(member.partnerPokemon, DEFAULT_IVS)
     });
 

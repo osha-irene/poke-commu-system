@@ -1,6 +1,6 @@
 // src/hooks/pokemon/usePokemonManagement.js - 포켓몬 관리 훅
 
-import { ref, get, update } from 'firebase/database';
+import { ref, get } from 'firebase/database';
 import { database } from '../../firebase';
 import { getPokemonLearnset } from '../../utils/pokemonLearnsets';
 import { getRequiredExpForLevel } from '../../utils/experience';
@@ -24,7 +24,8 @@ const usePokemonManagement = (
   pokemonLearnsets,
   allMoves,
   checkEvolutionOnLevelUp,
-  updateInventory
+  updateInventory,
+  updateCaughtPokemon
 ) => {
   const getPokemonTemplate = (pokemon) => {
     if (!pokemon) return null;
@@ -131,200 +132,215 @@ const usePokemonManagement = (
   };
 
   // 파티로 이동
-  const movePokemonToParty = (uniqueId) => {
-    console.log('movePokemonToParty 호출:', uniqueId);
-    
-    if (!currentUser) {
-      console.error('currentUser가 없습니다!');
+  // ⭐ 클로저에 갇힌 currentUser.caughtPokemon으로 인덱스를 계산해 배열 전체를 덮어쓰면, 그 사이
+  // 다른 곳(포획 등)에서 바뀐 배열을 되돌리거나 엉뚱한 자리에 쓰게 될 수 있다. 항상 Firebase의
+  // 최신 배열을 기준으로 트랜잭션으로 반영한다.
+  const movePokemonToParty = async (uniqueId) => {
+    if (!currentUser) return;
+
+    let failReason = null; // 'not-found' | 'party-full' | null
+
+    const result = await updateCaughtPokemon((currentCaught) => {
+      failReason = null;
+      const pokemonIndex = currentCaught.findIndex(p => p && p.uniqueId === uniqueId);
+      if (pokemonIndex === -1) {
+        failReason = 'not-found';
+        return currentCaught;
+      }
+      if (pokemonIndex < 6) {
+        return currentCaught; // 이미 파티에 있음 - 조용히 무시 (기존 동작)
+      }
+
+      const party = compactPartySlots(currentCaught.slice(0, 6));
+      const box = currentCaught.slice(6);
+
+      const emptySlotIndex = party.findIndex(isEmptyPokemonSlot);
+      if (emptySlotIndex === -1) {
+        failReason = 'party-full';
+        return currentCaught;
+      }
+
+      const boxIndex = pokemonIndex - 6;
+      const pokemon = box[boxIndex];
+
+      party[emptySlotIndex] = pokemon;
+      box.splice(boxIndex, 1);
+      return [...party, ...box];
+    });
+
+    if (!result.committed) {
+      alert('포켓몬 이동 중 오류가 발생했습니다. 다시 시도해주세요.');
       return;
     }
-    
-    console.log('현재 잡은 포켓몬:', currentUser.caughtPokemon.map((p, i) => `[${i}] ${p?.name || 'null'}`));
-    
-    const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === uniqueId);
-    console.log('pokemon index:', pokemonIndex);
-    
-    if (pokemonIndex === -1) { 
-      console.error('포켓몬을 찾을 수 없습니다!');
-      alert('포켓몬을 찾을 수 없습니다!'); 
-      return; 
+
+    if (failReason === 'not-found') {
+      alert('포켓몬을 찾을 수 없습니다!');
+    } else if (failReason === 'party-full') {
+      alert('파티가 가득찼습니다!');
     }
-    
-    if (pokemonIndex < 6) {
-      console.log('이미 파티에 있습니다');
-      return; 
-    }
-    
-    const party = compactPartySlots(currentUser.caughtPokemon.slice(0, 6));
-    const box = currentUser.caughtPokemon.slice(6);
-    
-    let emptySlotIndex = -1;
-    for (let i = 0; i < 6; i++) {
-      if (isEmptyPokemonSlot(party[i])) { 
-        emptySlotIndex = i; 
-        break; 
-      }
-    }
-    
-    console.log('empty slot index:', emptySlotIndex);
-    
-    if (emptySlotIndex === -1) {
-      console.error('파티가 가득찼습니다!');
-      alert('파티가 가득찼습니다!'); 
-      return; 
-    }
-    
-    const boxIndex = pokemonIndex - 6;
-    const pokemon = box[boxIndex];
-    
-    party[emptySlotIndex] = pokemon;
-    box.splice(boxIndex, 1);
-    const finalPokemon = [...party, ...box];
-    
-    updateCurrentUser({ caughtPokemon: finalPokemon });
   };
 
   // 박스로 이동
-  const movePokemonToBox = (uniqueId) => {
+  const movePokemonToBox = async (uniqueId) => {
     if (!currentUser) return;
-    
-    const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === uniqueId);
-    if (pokemonIndex === -1) { 
-      alert('포켓몬을 찾을 수 없습니다!'); 
-      return; 
-    }
-    
-    if (pokemonIndex >= 6) { 
-      return; 
-    }
-    
-    const pokemon = currentUser.caughtPokemon[pokemonIndex];
-    
-    if (pokemon.isPartner) {
-      alert('파트너 포켓몬은 박스로 이동할 수 없습니다!');
+
+    let failReason = null; // 'not-found' | 'partner' | null
+
+    const result = await updateCaughtPokemon((currentCaught) => {
+      failReason = null;
+      const pokemonIndex = currentCaught.findIndex(p => p && p.uniqueId === uniqueId);
+      if (pokemonIndex === -1) {
+        failReason = 'not-found';
+        return currentCaught;
+      }
+      if (pokemonIndex >= 6) {
+        return currentCaught; // 이미 박스에 있음 - 조용히 무시 (기존 동작)
+      }
+
+      const pokemon = currentCaught[pokemonIndex];
+      if (pokemon.isPartner) {
+        failReason = 'partner';
+        return currentCaught;
+      }
+
+      const next = [...currentCaught];
+      next[pokemonIndex] = null;
+
+      const party = compactPartySlots(next.slice(0, 6));
+      const box = next.slice(6);
+      return [...party, ...box, pokemon];
+    });
+
+    if (!result.committed) {
+      alert('포켓몬 이동 중 오류가 발생했습니다. 다시 시도해주세요.');
       return;
     }
-    
-    const newCaughtPokemon = [...currentUser.caughtPokemon];
-    newCaughtPokemon[pokemonIndex] = null;
-    
-    const party = newCaughtPokemon.slice(0, 6);
-    const box = newCaughtPokemon.slice(6);
-    const compactedParty = compactPartySlots(party);
-    const updatedBox = [...box, pokemon];
-    const finalPokemon = [...compactedParty, ...updatedBox];
-    
-    updateCurrentUser({ caughtPokemon: finalPokemon });
+
+    if (failReason === 'not-found') {
+      alert('포켓몬을 찾을 수 없습니다!');
+    } else if (failReason === 'partner') {
+      alert('파트너 포켓몬은 박스로 이동할 수 없습니다!');
+    }
   };
 
   // 방생
-  const releasePokemon = (uniqueId) => {
+  const releasePokemon = async (uniqueId) => {
     if (!currentUser) return;
 
     if (currentUser.partnerPokemon && currentUser.partnerPokemon.uniqueId === uniqueId) {
       alert('파트너 포켓몬은 방생할 수 없습니다!');
       return;
     }
-    
-    const pokemonIndex = currentUser.caughtPokemon.findIndex(p => p && p.uniqueId === uniqueId);
-    if (pokemonIndex === -1) return;
-    
-    const pokemon = currentUser.caughtPokemon[pokemonIndex];
-    if (!pokemon) return;
-    
-    const newCaughtPokemon = [...currentUser.caughtPokemon];
-    
-    if (pokemonIndex < 6) {
-      newCaughtPokemon[pokemonIndex] = null;
-      const party = newCaughtPokemon.slice(0, 6);
-      const box = newCaughtPokemon.slice(6);
-      const compactedParty = compactPartySlots(party);
-      const finalPokemon = [...compactedParty, ...box];
-      updateCurrentUser({ caughtPokemon: finalPokemon });
-    } else {
-      newCaughtPokemon.splice(pokemonIndex, 1);
-      updateCurrentUser({ caughtPokemon: newCaughtPokemon });
+
+    let releasedPokemon = null;
+
+    const result = await updateCaughtPokemon((currentCaught) => {
+      releasedPokemon = null;
+      const pokemonIndex = currentCaught.findIndex(p => p && p.uniqueId === uniqueId);
+      if (pokemonIndex === -1) return currentCaught; // 대상을 못 찾음 - 변경 없이 그대로 둠 (기존 동작)
+
+      const pokemon = currentCaught[pokemonIndex];
+      releasedPokemon = pokemon;
+
+      if (pokemonIndex < 6) {
+        const next = [...currentCaught];
+        next[pokemonIndex] = null;
+        const party = compactPartySlots(next.slice(0, 6));
+        const box = next.slice(6);
+        return [...party, ...box];
+      }
+
+      const next = [...currentCaught];
+      next.splice(pokemonIndex, 1);
+      return next;
+    });
+
+    if (!result.committed) {
+      alert('방생 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+      return;
     }
-    
-    alert((pokemon.nickname || pokemon.name) + '을(를) 방생했습니다.');
+
+    if (releasedPokemon) {
+      alert((releasedPokemon.nickname || releasedPokemon.name) + '을(를) 방생했습니다.');
+    }
   };
 
   // 파트너 설정
-  const setPartnerPokemon = (uniqueId) => {
+  // ⭐ caughtPokemon 배열을 손대는 부분은 클로저 스냅샷 대신 트랜잭션으로 Firebase 최신 배열
+  // 위에서 재구성한다. partnerPokemon 필드는 caughtPokemon과 별개 경로라 이 트랜잭션 대상이
+  // 아니며, 커밋 성공 후 별도로 기록한다(그 사이 partnerPokemon만 따로 바뀌는 경우는 없음).
+  const setPartnerPokemon = async (uniqueId) => {
     if (!currentUser) return;
-    
+
     if (uniqueId === null) {
       if (!currentUser.partnerPokemon) {
         alert('설정된 파트너 포켓몬이 없습니다.');
         return;
       }
-      
+
       const unsetPartner = { ...currentUser.partnerPokemon, isPartner: false };
-      const party = currentUser.caughtPokemon.slice(0, 6);
-      const box = currentUser.caughtPokemon.slice(6);
-      
-      let emptySlotIndex = -1;
-      for (let i = 0; i < 6; i++) {
-        if (isEmptyPokemonSlot(party[i])) {
-          emptySlotIndex = i;
-          break;
+
+      const result = await updateCaughtPokemon((currentCaught) => {
+        const party = compactPartySlots(currentCaught.slice(0, 6));
+        const box = currentCaught.slice(6);
+        const emptySlotIndex = party.findIndex(isEmptyPokemonSlot);
+
+        if (emptySlotIndex !== -1) {
+          const newParty = [...party];
+          newParty[emptySlotIndex] = unsetPartner;
+          return [...newParty, ...box];
         }
-      }
-      
-      let finalCaughtPokemon;
-      if (emptySlotIndex !== -1) {
-        party[emptySlotIndex] = unsetPartner;
-        finalCaughtPokemon = [...party, ...box];
-      } else {
-        finalCaughtPokemon = [...party, ...box, unsetPartner];
-      }
-      
-      updateCurrentUser({ 
-        partnerPokemon: null,
-        caughtPokemon: finalCaughtPokemon
+        return [...party, ...box, unsetPartner];
       });
-      
+
+      if (!result.committed) {
+        alert('파트너 해제 중 오류가 발생했습니다. 다시 시도해주세요.');
+        return;
+      }
+
+      await updateCurrentUser({ partnerPokemon: null });
       alert('파트너 설정이 해제되었습니다.');
       return;
     }
-    
-    const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
-    if (!pokemon) {
+
+    let foundPokemon = null;
+
+    const result = await updateCaughtPokemon((currentCaught) => {
+      foundPokemon = null;
+      const index = currentCaught.findIndex(p => p && p.uniqueId === uniqueId);
+      if (index === -1) return currentCaught;
+
+      foundPokemon = currentCaught[index];
+
+      const withoutTarget = currentCaught.filter((p, i) => i !== index);
+      let party = compactPartySlots(withoutTarget.slice(0, 6));
+      let box = withoutTarget.slice(6);
+
+      if (currentUser.partnerPokemon) {
+        const oldPartner = { ...currentUser.partnerPokemon, isPartner: false };
+        const emptySlotIndex = party.findIndex(isEmptyPokemonSlot);
+        if (emptySlotIndex !== -1) {
+          party = [...party];
+          party[emptySlotIndex] = oldPartner;
+        } else {
+          box = [...box, oldPartner];
+        }
+      }
+
+      return [...party, ...box];
+    });
+
+    if (!result.committed) {
+      alert('파트너 설정 중 오류가 발생했습니다. 다시 시도해주세요.');
+      return;
+    }
+
+    if (!foundPokemon) {
       alert('포켓몬을 찾을 수 없습니다!');
       return;
     }
-    
-    const newPartnerPokemon = { ...pokemon, isPartner: true };
-    const newCaughtPokemon = currentUser.caughtPokemon.filter(p => p && p.uniqueId !== uniqueId);
-    
-    let finalCaughtPokemon = newCaughtPokemon;
-    
-    if (currentUser.partnerPokemon) {
-      const oldPartner = { ...currentUser.partnerPokemon, isPartner: false };
-      const party = finalCaughtPokemon.slice(0, 6);
-      const box = finalCaughtPokemon.slice(6);
-      
-      let emptySlotIndex = -1;
-      for (let i = 0; i < 6; i++) {
-        if (isEmptyPokemonSlot(party[i])) {
-          emptySlotIndex = i;
-          break;
-        }
-      }
-      
-      if (emptySlotIndex !== -1) {
-        party[emptySlotIndex] = oldPartner;
-        finalCaughtPokemon = [...party, ...box];
-      } else {
-        finalCaughtPokemon = [...party, ...box, oldPartner];
-      }
-    }
-    
-    updateCurrentUser({ 
-      partnerPokemon: newPartnerPokemon,
-      caughtPokemon: finalCaughtPokemon
-    });
-    
+
+    await updateCurrentUser({ partnerPokemon: { ...foundPokemon, isPartner: true } });
     alert('파트너 포켓몬으로 설정되었습니다.');
   };
 
@@ -467,7 +483,9 @@ const usePokemonManagement = (
 
     return true;
   };
-  const changePokemonForm = (uniqueId, formId) => {
+  // ⭐ 클로저 스냅샷으로 caughtPokemon 전체를 덮어쓰지 않고, uniqueId로 최신 데이터를 다시 찾아
+  // patch하는 updateOwnedPokemonByUniqueId(파트너/일반 포켓몬 모두 처리)로 통일한다.
+  const changePokemonForm = async (uniqueId, formId) => {
     if (!currentUser) return false;
 
     const targetTemplate = (allPokemonMaster || []).find(template => (
@@ -481,87 +499,61 @@ const usePokemonManagement = (
       return false;
     }
 
-    let changed = false;
-    const updatePokemon = (pokemon) => {
-      if (!pokemon || pokemon.uniqueId !== uniqueId) return pokemon;
-      changed = true;
-      return applyTemplateToOwnedPokemon(pokemon, targetTemplate);
-    };
+    let found = false;
+    const result = await updateOwnedPokemonByUniqueId(uniqueId, (latestPokemon) => {
+      found = true;
+      return applyTemplateToOwnedPokemon(latestPokemon, targetTemplate);
+    });
 
-    const newCaughtPokemon = (currentUser.caughtPokemon || []).map(updatePokemon);
-    const newPartnerPokemon = currentUser.partnerPokemon?.uniqueId === uniqueId
-      ? updatePokemon(currentUser.partnerPokemon)
-      : currentUser.partnerPokemon;
+    if (!result.committed) {
+      alert('폼 변경 중 오류가 발생했습니다. 다시 시도해주세요.');
+      return false;
+    }
 
-    if (!changed) {
+    if (!found) {
       alert('포켓몬을 찾을 수 없습니다.');
       return false;
     }
 
-    updateCurrentUser({
-      caughtPokemon: newCaughtPokemon,
-      partnerPokemon: newPartnerPokemon,
-    });
     alert((targetTemplate.name || targetTemplate.nameEn) + '으로 변경되었습니다.');
     return true;
   };
 
   // 닉네임 변경
+  // ⭐ 예전에는 클로저의 stale index로 `caughtPokemon/{index}/nickname` 경로를 직접 썼는데,
+  // 그 사이 실제 서버 배열이 달라져 있으면(예: 포획이 거의 동시에 일어남) 엉뚱한 자리에
+  // {nickname}만 있는 반쪽짜리 레코드를 만들어버렸다(엔트리페이지 크래시의 원인). uniqueId로
+  // 최신 데이터에서 다시 찾아 patch하는 updateOwnedPokemonByUniqueId로 통일한다.
   const updatePokemonNickname = async (uniqueId, nickname) => {
-    if (!currentUser?.id || !Array.isArray(currentUser.caughtPokemon)) return false;
+    if (!currentUser?.id) return false;
 
-    const pokemonIndex = currentUser.caughtPokemon.findIndex(
-      pokemon => pokemon && String(pokemon.uniqueId) === String(uniqueId)
-    );
-    const isPartner = String(currentUser.partnerPokemon?.uniqueId) === String(uniqueId);
+    const normalizedNickname = String(nickname || '').trim();
+    let found = false;
 
-    if (pokemonIndex < 0 && !isPartner) {
+    const result = await updateOwnedPokemonByUniqueId(uniqueId, (latestPokemon) => {
+      found = true;
+      return { ...latestPokemon, nickname: normalizedNickname };
+    });
+
+    if (!result.committed) {
+      alert('닉네임을 저장하지 못했습니다. 잠시 후 다시 시도해주세요.');
+      return false;
+    }
+
+    if (!found) {
       alert('닉네임을 변경할 포켓몬을 찾을 수 없습니다.');
       return false;
     }
 
-    const normalizedNickname = String(nickname || '').trim();
-    const newCaughtPokemon = pokemonIndex >= 0
-      ? currentUser.caughtPokemon.map((pokemon, index) =>
-          index === pokemonIndex ? { ...pokemon, nickname: normalizedNickname } : pokemon
-        )
-      : currentUser.caughtPokemon;
-    const updatedPartnerPokemon = isPartner
-      ? { ...currentUser.partnerPokemon, nickname: normalizedNickname }
-      : currentUser.partnerPokemon;
-
-    try {
-      await updateCurrentUser({
-        caughtPokemon: newCaughtPokemon,
-        ...(isPartner ? { partnerPokemon: updatedPartnerPokemon } : {}),
-      });
-
-      const firebaseUpdates = {};
-      if (pokemonIndex >= 0) {
-        firebaseUpdates[`members/${currentUser.id}/caughtPokemon/${pokemonIndex}/nickname`] = normalizedNickname;
-      }
-      if (isPartner) {
-        firebaseUpdates[`members/${currentUser.id}/partnerPokemon/nickname`] = normalizedNickname;
-      }
-      await update(ref(database), firebaseUpdates);
-      return true;
-    } catch (error) {
-      console.error('포켓몬 닉네임 저장 실패:', error);
-      alert('닉네임을 저장하지 못했습니다. 잠시 후 다시 시도해주세요.');
-      return false;
-    }
+    return true;
   };
 
-  const updatePokemonMemo = (uniqueId, memo) => {
+  const updatePokemonMemo = async (uniqueId, memo) => {
     if (!currentUser) return;
-    const newCaughtPokemon = currentUser.caughtPokemon.map(p =>
-      p && p.uniqueId === uniqueId ? { ...p, memo } : p
-    );
-    const updates = { caughtPokemon: newCaughtPokemon };
-    if (currentUser.partnerPokemon?.uniqueId === uniqueId) {
-      updates.partnerPokemon = { ...currentUser.partnerPokemon, memo };
-    }
-    updateCurrentUser(updates);
+    await updateOwnedPokemonByUniqueId(uniqueId, (latestPokemon) => ({
+      ...latestPokemon,
+      memo,
+    }));
   };
 
   // 아이템 지급
@@ -691,50 +683,69 @@ const usePokemonManagement = (
   };
 
   // 파티 순서 변경
-  const reorderPartyPokemon = (reorderedParty) => {
+  // ⭐ 박스는 클로저 스냅샷이 아니라 트랜잭션의 최신 값을 쓴다(그 사이 포획 등으로 박스가
+  // 바뀌었으면 되돌리지 않도록). reorderedParty로 넘어온 포켓몬 데이터도 드래그 시점의
+  // 스냅샷일 수 있으므로, 순서(uniqueId)만 취하고 실제 데이터는 최신 파티에서 다시 찾는다.
+  const reorderPartyPokemon = async (reorderedParty) => {
     if (!currentUser) return;
-    
-    const box = currentUser.caughtPokemon.slice(6);
-    const partyWithNulls = [...reorderedParty];
-    while (partyWithNulls.length < 6) {
-      partyWithNulls.push(null);
-    }
-    
-    const finalPokemon = [...partyWithNulls.slice(0, 6), ...box];
-    updateCurrentUser({ caughtPokemon: finalPokemon });
+
+    const orderedIds = reorderedParty.map(p => p?.uniqueId).filter(Boolean);
+
+    await updateCaughtPokemon((currentCaught) => {
+      const currentParty = currentCaught.slice(0, 6);
+      const box = currentCaught.slice(6);
+
+      const byId = new Map(currentParty.filter(Boolean).map(p => [p.uniqueId, p]));
+      const newParty = orderedIds.map(id => byId.get(id)).filter(Boolean);
+
+      // 넘어온 순서에 없는(그 사이 다른 곳에서 파티에 추가/제거된) 포켓몬은 뒤에 그대로 유지
+      currentParty.forEach(p => {
+        if (p && !orderedIds.includes(p.uniqueId)) newParty.push(p);
+      });
+
+      while (newParty.length < 6) newParty.push(null);
+
+      return [...newParty.slice(0, 6), ...box];
+    });
   };
 
   // 노력치 증가
-  const increaseEffort = (uniqueId, stat, amount) => {
+  // ⭐ 클로저 스냅샷의 effort로 "남은 한도"를 계산하면, 그 사이 다른 곳에서 바뀐 노력치가
+  // 통째로 덮어써질 수 있다. updateOwnedPokemonByUniqueId로 항상 최신 effort 기준으로 계산한다.
+  const increaseEffort = async (uniqueId, stat, amount) => {
     if (!currentUser) return;
-    
-    const pokemon = currentUser.caughtPokemon.find(p => p && p.uniqueId === uniqueId);
-    if (!pokemon) return;
-    
-    const currentEffort = pokemon.effort || {
-      hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0
-    };
-    
-    const totalEV = Object.values(currentEffort).reduce((sum, v) => sum + v, 0);
-    const remaining = 510 - totalEV;
-    const maxForStat = 252 - (currentEffort[stat] || 0);
-    const actualIncrease = Math.min(amount, remaining, maxForStat);
-    
-    if (actualIncrease <= 0) {
-      alert('더 이상 노력치를 늘릴 수 없습니다!');
+
+    let actualIncrease = null; // null: 포켓몬을 못 찾음, 0 이하: 더 늘릴 수 없음
+
+    const result = await updateOwnedPokemonByUniqueId(uniqueId, (latestPokemon) => {
+      const currentEffort = latestPokemon.effort || {
+        hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0
+      };
+
+      const totalEV = Object.values(currentEffort).reduce((sum, v) => sum + v, 0);
+      const remaining = 510 - totalEV;
+      const maxForStat = 252 - (currentEffort[stat] || 0);
+      actualIncrease = Math.min(amount, remaining, maxForStat);
+
+      if (actualIncrease <= 0) return latestPokemon;
+
+      return {
+        ...latestPokemon,
+        effort: {
+          ...currentEffort,
+          [stat]: (currentEffort[stat] || 0) + actualIncrease
+        }
+      };
+    });
+
+    if (!result.committed) {
+      alert('노력치 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
       return;
     }
-    
-    const newEffort = {
-      ...currentEffort,
-      [stat]: (currentEffort[stat] || 0) + actualIncrease
-    };
-    
-    const newCaughtPokemon = currentUser.caughtPokemon.map(p =>
-      p && p.uniqueId === uniqueId ? { ...p, effort: newEffort } : p
-    );
-    
-    updateCurrentUser({ caughtPokemon: newCaughtPokemon });
+
+    if (actualIncrease !== null && actualIncrease <= 0) {
+      alert('더 이상 노력치를 늘릴 수 없습니다!');
+    }
   };
 
   return {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { getTypeColor, COLORS } from '../../../styles/theme';
 import { getPokemonLocalIconUrl } from '../../../utils/pokemonIconUtils';
-import { getPokemonDisplayParts } from '../../../utils/pokemonDisplayName';
+import { getPokemonDisplayParts, isMalformedPokemon } from '../../../utils/pokemonDisplayName';
 
 const getBaseName = (pokemon) => getPokemonDisplayParts(pokemon).name;
 
@@ -49,6 +49,22 @@ export default function BoxPokemon({
 }) {
   
   if (!pokemon) return null;
+
+  if (isMalformedPokemon(pokemon)) {
+    return (
+      <div
+        className="relative rounded-lg border-2 border-dashed flex flex-col items-center justify-center text-center p-2"
+        style={{ borderColor: 'rgba(220,38,38,0.5)', background: 'rgba(220,38,38,0.08)', color: '#b91c1c', minHeight: 96 }}
+        title={pokemon.nickname ? `"${pokemon.nickname}" 데이터 손상됨 - 관리자에게 문의해주세요` : '데이터 손상됨 - 관리자에게 문의해주세요'}
+      >
+        <span style={{ fontSize: 20 }}>⚠️</span>
+        <span style={{ fontSize: 11, fontWeight: 700, marginTop: 4 }}>데이터 손상</span>
+        {pokemon.nickname && (
+          <span style={{ fontSize: 10, opacity: 0.85, marginTop: 2 }}>"{pokemon.nickname}"</span>
+        )}
+      </div>
+    );
+  }
 
   // 寃뚯엫 ?꾧컧?먯꽌 ???ъ폆紐ъ쓽 newNumber 李얘린
   const pokedexEntry = gamePokedex?.find(p => 

@@ -608,72 +608,87 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
       return false;
     }
 
-    // 상점 재고 감소 처리
+    // 상점 재고 감소 처리 - CLAUDE.md 재화 갱신 규칙과 같은 이유로, 클로저에 캡처된 로컬
+    // shopData 스냅샷을 기준으로 gameData/shopData 전체를 통째로 덮어쓰지 않는다. 예전엔
+    // 그렇게 했었는데, 두 사람이 거의 동시에 구매하면 나중에 쓰는 쪽이 먼저 깎인 재고를
+    // 통째로 되돌려버릴 수 있었다(재고 유실). 대신 실제로 바뀌는 노드(그 아이템/그 요일/
+    // 그 한정아이템)만 runTransaction으로 원자적으로 갱신한다 - 부수 효과로, 무관한 상점
+    // 데이터(다른 요일/영구템/가챠 설정 등)를 다시 쓰지 않으니 gameData/shopData를 상시
+    // 구독 중인 접속자 전원에게 불필요하게 재전송되는 것도 함께 줄어든다.
     try {
       const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
       const todayName = dayNames[getKoreaDayIndex()];
-      
-      let updatedShopData = JSON.parse(JSON.stringify(shopData));
-      let needShopUpdate = false;
-      
-      if (itemType === 'rare' && updatedShopData.rareDailyItem?.itemId === itemId) {
-        const purchaseHistory = currentUser.purchaseHistory || {};
-        const todayStr = getKoreaDateKey();
-        const todayPurchases = purchaseHistory[todayStr] || {};
-        todayPurchases[itemId] = (todayPurchases[itemId] || 0) + quantity;
-        purchaseHistory[todayStr] = todayPurchases;
-        
-        if (updatedShopData.rareDailyItem.stock !== 99) {
-          updatedShopData.rareDailyItem = {
-            ...updatedShopData.rareDailyItem,
-            stock: Math.max(0, updatedShopData.rareDailyItem.stock - quantity)
-          };
-          needShopUpdate = true;
-        }
-        
-        await adjustMoney(-totalCost);
-        updateCurrentUser({
-          purchaseHistory: purchaseHistory
+
+      if (itemType === 'rare') {
+        // 한정 아이템은 원래도 "지금 로테이션 중인 그 아이템이 맞는지"를 확인한 뒤에만
+        // 재고/과금/구매이력을 반영했다 - 트랜잭션 안에서 실제 서버 최신값 기준으로 그 확인을
+        // 하고, 안 맞으면(undefined 반환) 트랜잭션 자체를 중단시켜 이후 과금/이력 갱신도
+        // 건너뛴다(기존 동작과 동일).
+        const rareResult = await runTransaction(ref(database, 'gameData/shopData/rareDailyItem'), (current) => {
+          if (!current || current.itemId !== itemId) return undefined;
+          if (current.stock === 99) return current;
+          return { ...current, stock: Math.max(0, current.stock - quantity) };
         });
 
+        if (rareResult.committed) {
+          const todayStr = getKoreaDateKey();
+          const historyResult = await runTransaction(
+            ref(database, `members/${currentUser.id}/purchaseHistory/${todayStr}`),
+            (currentDay) => ({
+              ...(currentDay || {}),
+              [itemId]: (Number((currentDay || {})[itemId]) || 0) + quantity
+            })
+          );
+          // 로컬 currentUser.purchaseHistory도 즉시 갱신 - 이게 없으면 같은 세션에서 바로
+          // 같은 한정 아이템을 다시 사려 할 때, 위쪽의 "이미 구매했는지" 체크가 오래된 로컬
+          // 값을 봐서 하루 1개 제한을 우회하게 된다.
+          if (historyResult.committed) {
+            updateCurrentUser({
+              purchaseHistory: {
+                ...(currentUser.purchaseHistory || {}),
+                [todayStr]: historyResult.snapshot.val()
+              }
+            });
+          }
+          await adjustMoney(-totalCost);
+        }
+
       } else if (itemType === 'daily') {
-        const dailyItems = updatedShopData.dailyItems?.[todayName] || [];
-        updatedShopData.dailyItems[todayName] = dailyItems.map(i =>
-          i.itemId === itemId && i.stock !== 99
-            ? { ...i, stock: Math.max(0, i.stock - quantity) }
-            : i
-        );
-        needShopUpdate = true;
+        await runTransaction(ref(database, `gameData/shopData/dailyItems/${todayName}`), (current) => {
+          const list = Array.isArray(current) ? current : [];
+          return list.map(i =>
+            i.itemId === itemId && i.stock !== 99
+              ? { ...i, stock: Math.max(0, i.stock - quantity) }
+              : i
+          );
+        });
+        await adjustMoney(-totalCost);
 
       } else if (itemType === 'permanent') {
-        updatedShopData.permanentItems = (updatedShopData.permanentItems || []).map(i =>
-          i.itemId === itemId && i.stock !== 99
-            ? { ...i, stock: Math.max(0, i.stock - quantity) }
-            : i
-        );
-        needShopUpdate = true;
+        await runTransaction(ref(database, 'gameData/shopData/permanentItems'), (current) => {
+          const list = Array.isArray(current) ? current : [];
+          return list.map(i =>
+            i.itemId === itemId && i.stock !== 99
+              ? { ...i, stock: Math.max(0, i.stock - quantity) }
+              : i
+          );
+        });
+        await adjustMoney(-totalCost);
 
-      } else if (itemType === 'period' && updatedShopData.periodItem?.itemId === itemId) {
-        if (updatedShopData.periodItem.stock !== 99) {
-          updatedShopData.periodItem = {
-            ...updatedShopData.periodItem,
-            stock: Math.max(0, updatedShopData.periodItem.stock - quantity)
-          };
-          needShopUpdate = true;
-        }
-      }
+      } else if (itemType === 'period') {
+        await runTransaction(ref(database, 'gameData/shopData/periodItem'), (current) => {
+          if (!current || current.itemId !== itemId || current.stock === 99) return current;
+          return { ...current, stock: Math.max(0, current.stock - quantity) };
+        });
+        await adjustMoney(-totalCost);
 
-      if (needShopUpdate) {
-        await updateShopData(updatedShopData);
-      }
-
-      if (itemType !== 'rare') {
+      } else {
         await adjustMoney(-totalCost);
       }
 
       const premierMsg = premierBallCount > 0 ? `프레미어볼 ${premierBallCount}개를 증정 받았다!` : '';
       return { success: true, premierMsg };
-      
+
     } catch (error) {
       console.error('❌ 재고 업데이트 실패:', error);
       alert('구매 처리 중 오류가 발생했습니다. 다시 시도해주세요.');

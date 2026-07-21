@@ -5,6 +5,7 @@ import PartySlot, { PartnerSlot } from '../pokemon/PartySlot';
 import BoxPokemon from '../pokemon/BoxPokemon';
 import PokemonDetailPanel from '../pokemon/PokemonDetailPanel';
 import { getRequiredExpForLevel } from '../../../utils/experience';
+import { isMalformedPokemon } from '../../../utils/pokemonDisplayName';
 
 const isEmptyPokemonSlot = (pokemon) => (
   pokemon === null || pokemon === undefined || pokemon === 'null'
@@ -62,6 +63,9 @@ export default function MobilePokemonView() {
 
   const partyCount = partySlots.filter(pokemon => !isEmptyPokemonSlot(pokemon)).length;
   const box = caughtPokemon.slice(6).filter(pokemon => !isEmptyPokemonSlot(pokemon));
+
+  const malformedCount = caughtPokemon.filter(isMalformedPokemon).length
+    + (isMalformedPokemon(partnerPokemon) ? 1 : 0);
 
   const rareCandy = items?.find(item =>
     item.name === '이상한사탕' ||
@@ -124,6 +128,21 @@ export default function MobilePokemonView() {
 
   return (
     <div style={{ paddingTop: 14, paddingBottom: 88, minHeight: '100%' }}>
+
+      {malformedCount > 0 && (
+        <div style={S.section}>
+          <div
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '10px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700,
+              background: 'rgba(220,38,38,0.12)', border: '1px solid rgba(220,38,38,0.4)', color: '#b91c1c',
+            }}
+          >
+            <span>⚠️</span>
+            <span>손상된 포켓몬 데이터가 {malformedCount}개 있습니다. 관리자에게 문의해주세요.</span>
+          </div>
+        </div>
+      )}
 
       {/* 파트너 */}
       <div style={S.section}>

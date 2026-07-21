@@ -48,6 +48,12 @@ function getFormVariantLabel(pokemon = {}) {
   return matched?.[1] || '';
 }
 
+// number/originalNumber가 둘 다 없으면 도감 번호를 표시할 수 없는 손상된 레코드로 간주한다.
+// (예: 닉네임 변경 등에서 잘못된 배열 인덱스에 필드 하나만 쓰여 생기는 부분 기록)
+export function isMalformedPokemon(pokemon) {
+  return !!pokemon && !pokemon.number && !pokemon.originalNumber;
+}
+
 export function getPokemonDisplayParts(pokemon = {}) {
   const rawName = pokemon.name || pokemon.nickname || pokemon.nameEn || '';
   const parenthesized = rawName.match(/^(.*?)\s*\(([^)]+)\)\s*$/);

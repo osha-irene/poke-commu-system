@@ -11,6 +11,7 @@ import { translateMoveName } from '../../battle/utils/move-translations';
 import movesData from '../../data/moves.json';
 import { getAbilityKoreanName } from '../../utils/abilityUtils';
 import CachedImage from '../common/CachedImage';
+import { useMemberCaughtPokemon } from '../../hooks/members/useMemberCaughtPokemon';
 import { useGame } from '../../contexts/GameContext';
 import { loginIcon1, loginIcon2, loginIcon3, loginIcon4 } from '../../assets/images';
 import polaroidListWhite from '../../assets/members/polaroid-list-white.png';
@@ -2956,13 +2957,17 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
 }
 
 /* ── 메인 ── */
-export default function MembersView({ members = {}, isLoading, currentUserId, isAdmin = false, titles = [], onSwitchTab, initialMemberId = null, onClearInitialMember }) {
+export default function MembersView({ members = {}, isLoading, currentUserId, isAdmin = false, titles = [], onSwitchTab, initialMemberId = null, onClearInitialMember, allPokemonMaster = [] }) {
   const [selected, setSelected] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
   const [activeTab, setActiveTab] = useState('main');
   const listScrollYRef = useRef(0);
 
   const memberList = useMemo(() => getMemberList(members), [members]);
+
+  // caughtPokemon(포켓몬 전체 상세)은 더 이상 members prop에 항상 실려있지 않다 - 지금 열어본
+  // 이 한 명에 대해서만 온디맨드로 조회한다 (RTDB 다운로드 절감, useMemberCaughtPokemon 참고).
+  const { caughtPokemon: liveCaughtPokemon } = useMemberCaughtPokemon(selected?.id, allPokemonMaster, showDetail);
 
   useEffect(() => {
     if (showDetail) {
@@ -3104,7 +3109,10 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
           }}
         >
           <MemberDetail
-            member={members[selected.id] || selected}
+            member={{
+              ...(members[selected.id] || selected),
+              caughtPokemon: liveCaughtPokemon || (members[selected.id] || selected)?.caughtPokemon || [],
+            }}
             members={members}
             titles={titles}
             onBack={closeMember}

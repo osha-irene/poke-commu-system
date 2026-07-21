@@ -10,6 +10,7 @@ import BoxPokemon from './pokemon/BoxPokemon';
 import PokemonDetailPanel from './pokemon/PokemonDetailPanel';
 import { getButtonClass, getCardClass } from '../../styles/theme';
 import { getRequiredExpForLevel } from '../../utils/experience';
+import { isMalformedPokemon } from '../../utils/pokemonDisplayName';
 
 const isEmptyPokemonSlot = (pokemon) => (
   pokemon === null || pokemon === undefined || pokemon === 'null'
@@ -75,6 +76,9 @@ function DesktopPokemonView() {
   
   const partyCount = partySlots.filter(pokemon => !isEmptyPokemonSlot(pokemon)).length;
   const box = caughtPokemon.slice(6).filter(pokemon => !isEmptyPokemonSlot(pokemon));
+
+  const malformedCount = caughtPokemon.filter(isMalformedPokemon).length
+    + (isMalformedPokemon(partnerPokemon) ? 1 : 0);
   
   // 알 찾기 (임시 데이터)
   const currentEgg = currentUser?.egg || null;
@@ -419,6 +423,15 @@ function DesktopPokemonView() {
 
   return (
     <div className="flex flex-col gap-6 h-full">
+      {malformedCount > 0 && (
+        <div
+          className="rounded-lg px-4 py-3 text-sm font-semibold flex items-center gap-2"
+          style={{ background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.4)', color: '#b91c1c' }}
+        >
+          <span>⚠️</span>
+          <span>손상된 포켓몬 데이터가 {malformedCount}개 있습니다. 관리자에게 문의해주세요.</span>
+        </div>
+      )}
       <div className="grid grid-cols-5 gap-6 flex-1 min-h-0 overflow-hidden">
       <div className="col-span-2 space-y-6 overflow-y-auto">
         {/* 파트너 포켓몬 슬롯 */}

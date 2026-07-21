@@ -8,6 +8,7 @@ import { translateMoveName } from '../../../battle/utils/move-translations';
 import movesData from '../../../data/moves.json';
 import { getAbilityKoreanName } from '../../../utils/abilityUtils';
 import CachedImage from '../../common/CachedImage';
+import { useMemberCaughtPokemon } from '../../../hooks/members/useMemberCaughtPokemon';
 import { useGame } from '../../../contexts/GameContext';
 import badge1Img from '../../../assets/members/badge/badge1.png';
 import badge2Img from '../../../assets/members/badge/badge2.png';
@@ -901,11 +902,15 @@ function MemberDetail({ member, titles, onBack }) {
 }
 
 /* ── 메인 ── */
-export default function MobileMembersView({ members = {}, titles = [], initialMemberId = null, onClearInitialMember }) {
+export default function MobileMembersView({ members = {}, titles = [], initialMemberId = null, onClearInitialMember, allPokemonMaster = [] }) {
   const [selected, setSelected] = useState(null);
   const [revealedId, setRevealedId] = useState(null);
   const revealTimer = useRef(null);
   const list = getMemberList(members);
+
+  // caughtPokemon(포켓몬 전체 상세)은 더 이상 members prop에 항상 실려있지 않다 - 지금 열어본
+  // 이 한 명에 대해서만 온디맨드로 조회한다 (RTDB 다운로드 절감, useMemberCaughtPokemon 참고).
+  const { caughtPokemon: liveCaughtPokemon } = useMemberCaughtPokemon(selected?.id, allPokemonMaster, !!selected);
 
   useEffect(() => () => clearTimeout(revealTimer.current), []);
 
@@ -982,7 +987,13 @@ export default function MobileMembersView({ members = {}, titles = [], initialMe
 
   if (selected) {
     const m = members[selected.id] || selected;
-    return <MemberDetail member={m} titles={titles} onBack={handleDetailBack} />;
+    return (
+      <MemberDetail
+        member={{ ...m, caughtPokemon: liveCaughtPokemon || m?.caughtPokemon || [] }}
+        titles={titles}
+        onBack={handleDetailBack}
+      />
+    );
   }
 
   return (

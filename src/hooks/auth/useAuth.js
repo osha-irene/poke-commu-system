@@ -228,8 +228,10 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
     // updates만 얹는다. 그렇지 않으면 예: 요리 후 재료 차감(updateInventory)이 반영된 직후 이 함수가
     // 오래된 인벤토리를 통째로 되살려버린다.
     let updatedUser;
+    let prevUser;
     setCurrentUser(prev => {
       const latestUser = prev || members[currentUser.id] || currentUser;
+      prevUser = latestUser;
 
       updatedUser = {
         ...latestUser,
@@ -280,10 +282,20 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
       
       const memberRef = ref(database, `members/${currentUser.id}`);
       await update(memberRef, cleanData);
-      await update(ref(database, `memberSummary/${currentUser.id}`), toMemberSummary(updatedUser, currentUser.id));
-      // caughtPokemon/partnerPokemon(용량 큰 상세)은 실제로 바뀐 경우에만 기록 - 그래야 무관한
-      // 업데이트(출석/구매 등)마다 접속자 전원에게 파티 상세가 재전송되는 걸 막을 수 있다.
-      if (updates.caughtPokemon !== undefined || updates.partnerPokemon !== undefined) {
+
+      // memberSummary는 로그인한 모든 유저가 항상 구독하므로, summary에 실제로 반영되는 값
+      // (이름/칭호/프로필/캐치넘버 등)이 안 바뀌었으면 재전송하지 않는다 - 그래야 골드/걸음수/
+      // 경험치처럼 summary에 안 쓰이는 값만 바뀌는 흔한 액션마다 접속자 전원에게 summary
+      // 전체가 재전송되는(다운로드 = 액션 수 × 동시접속자 수로 곱해지는) 걸 막을 수 있다.
+      const nextSummary = toMemberSummary(updatedUser, currentUser.id);
+      const prevSummary = toMemberSummary(prevUser, currentUser.id);
+      if (JSON.stringify(prevSummary) !== JSON.stringify(nextSummary)) {
+        await update(ref(database, `memberSummary/${currentUser.id}`), nextSummary);
+      }
+      // memberParty엔 partnerPokemon만 실린다(caughtPokemon은 useMemberCaughtPokemon으로
+      // 온디맨드 조회 - toMemberParty 참고) - partnerPokemon이 실제로 바뀐 경우에만 기록해서
+      // 무관한 업데이트(출석/구매/포획 등)마다 멤버·NPC 탭을 보는 사람 전원에게 재전송되는 걸 막는다.
+      if (updates.partnerPokemon !== undefined) {
         await update(ref(database, `memberParty/${currentUser.id}`), toMemberParty(updatedUser, currentUser.id));
       }
       console.log('✅ Firebase 저장 완료');
@@ -347,10 +359,8 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
           ? { ...prevMembers, [currentUser.id]: { ...prevMembers[currentUser.id], caughtPokemon: newCaughtPokemon } }
           : prevMembers
       ));
-      await update(
-        ref(database, `memberParty/${currentUser.id}`),
-        toMemberParty({ ...currentUser, caughtPokemon: newCaughtPokemon }, currentUser.id)
-      );
+      // memberParty엔 partnerPokemon만 실린다(caughtPokemon은 useMemberCaughtPokemon으로
+      // 온디맨드 조회) - caughtPokemon만 바뀐 경우 memberParty를 다시 쓸 이유가 없다.
     }
 
     return result;

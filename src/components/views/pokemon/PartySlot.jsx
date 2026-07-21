@@ -2,9 +2,34 @@ import React from 'react';
 import { Heart, Egg } from 'lucide-react';
 import { POKEBALL_LIST } from '../../../styles/theme';
 import { getPokemonLocalIconUrl } from '../../../utils/pokemonIconUtils';
-import { getPokemonDisplayParts } from '../../../utils/pokemonDisplayName';
+import { getPokemonDisplayParts, isMalformedPokemon } from '../../../utils/pokemonDisplayName';
 
 const getBaseName = (pokemon) => getPokemonDisplayParts(pokemon).name;
+
+// 손상된 레코드(도감 번호 없음)용 경고 카드 - 정상 카드 렌더링(number.toString() 등)으로
+// 들어가면 크래시하므로, 여기서 먼저 걸러 안전한 경고 UI로 대체한다.
+function MalformedSlotWarning({ label, nickname, className, style }) {
+  return (
+    <div
+      className={className}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: '12px 14px', borderRadius: 12,
+        background: 'rgba(220,38,38,0.08)', border: '1px dashed rgba(220,38,38,0.5)',
+        color: '#b91c1c',
+        ...style,
+      }}
+    >
+      <span style={{ fontSize: 20, flexShrink: 0 }}>⚠️</span>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontWeight: 700, fontSize: 13 }}>{label}</div>
+        <div style={{ fontSize: 12, opacity: 0.85 }}>
+          {nickname ? `"${nickname}" 데이터 손상됨 - 관리자에게 문의해주세요` : '데이터 손상됨 - 관리자에게 문의해주세요'}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const PARTNER_WALK_STYLE = `
 @keyframes partnerWalk {
@@ -139,12 +164,16 @@ export function PartnerSlot({
     );
   }
 
+  if (isMalformedPokemon(pokemon)) {
+    return <MalformedSlotWarning label="파트너 포켓몬" nickname={pokemon.nickname} />;
+  }
+
   const pokedexEntry = gamePokedex?.find(p =>
     p.number === pokemon.number || p.originalNumber === pokemon.number
   );
   const displayNumber = pokedexEntry?.newNumber || pokemon.originalNumber || pokemon.number;
 
-  
+
   const imageUrl = getLocalIconUrl(pokemon, allPokemonMaster);
   const ballImage = getBallImageUrl(pokemon, allItems);  // ⭐ 함수 호출
 
@@ -313,13 +342,17 @@ export default function PartySlot({
     );
   }
 
+  if (isMalformedPokemon(pokemon)) {
+    return <MalformedSlotWarning label={`엔트리 ${index + 1}번`} nickname={pokemon.nickname} />;
+  }
+
   const pokedexEntry = gamePokedex?.find(p =>
     p.number === pokemon.number || p.originalNumber === pokemon.number
   );
   const displayNumber = pokedexEntry?.newNumber || pokemon.originalNumber || pokemon.number;
 
 
-  
+
   const imageUrl = getLocalIconUrl(pokemon, allPokemonMaster);
   const ballImage = getBallImageUrl(pokemon, allItems);  // ⭐ 함수 호출
 

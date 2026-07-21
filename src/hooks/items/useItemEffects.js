@@ -521,7 +521,7 @@ export const useItemEffects = (
       // UI에서 이미 폼이 선택된 경우 (selectedFormNameEn 전달됨)
       const targetFormNameEn = selectedFormNameEn || nectarFormNameEn;
       if (targetFormNameEn) {
-        const success = changePokemonForm(pokemon.uniqueId, targetFormNameEn);
+        const success = await changePokemonForm(pokemon.uniqueId, targetFormNameEn);
         if (success) {
           if (isNectar) consumeItem(item);
         }
@@ -551,7 +551,7 @@ export const useItemEffects = (
           releaseItemUseLock();
           return;
         }
-        changePokemonForm(pokemon.uniqueId, otherForms[idx].id || otherForms[idx].nameEn || otherForms[idx].name);
+        await changePokemonForm(pokemon.uniqueId, otherForms[idx].id || otherForms[idx].nameEn || otherForms[idx].name);
       }
       return;
     }

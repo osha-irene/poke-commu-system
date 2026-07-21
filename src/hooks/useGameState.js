@@ -168,7 +168,8 @@ export default function useGameState() {
     pokemonLearnsets,
     allMoves,
     evolutionHook.checkEvolutionOnLevelUp,
-    updateInventory
+    updateInventory,
+    updateCaughtPokemon
   );
   
   // 캠핑 기능
