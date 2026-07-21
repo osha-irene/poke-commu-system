@@ -117,7 +117,11 @@ export default function RegionManagementPanel({
     };
   };
 
-  const getPlaceEditTarget = () => {
+  // useMemo로 selectedRegion/selectedPlace가 실제로 바뀔 때만 새 객체를 만든다.
+  // 매 렌더마다 새 객체(+ 새 pokemons 배열 레퍼런스)를 반환하면, 이걸 region prop으로 받는
+  // PokemonSettingsPanel의 동기화 useEffect가 참조 변경만으로도 매번 로컬 선택 상태를
+  // 저장된 값으로 리셋해버려서 "장소에 포켓몬을 여러 개 선택할 수 없는" 문제가 생긴다.
+  const placeEditTarget = useMemo(() => {
     if (!selectedRegion || !selectedPlace) return null;
 
     return {
@@ -132,7 +136,7 @@ export default function RegionManagementPanel({
       pokemons: Array.isArray(selectedPlace.pokemons) ? selectedPlace.pokemons : [],
       pokemonRates: selectedPlace.pokemonRates || {}
     };
-  };
+  }, [selectedRegion, selectedPlace]);
 
   const updateSelectedRegionPlaces = async (nextPlaces) => {
     if (!selectedRegion) return false;
@@ -1073,7 +1077,7 @@ export default function RegionManagementPanel({
                   selectedRegionPlaces.length > 0 ? (
                     selectedPlace ? (
                     <PokemonSettingsPanel
-                      region={getPlaceEditTarget()}
+                      region={placeEditTarget}
                       parentRegion={selectedRegion}
                       mode="place"
                       onUpdateRegion={handleUpdateSelectedPlacePokemon}
@@ -1111,7 +1115,7 @@ export default function RegionManagementPanel({
                     {selectedRegionPlaces.length > 0 ? (
                       selectedPlace ? (
                       <LootSettingsPanel
-                        region={getPlaceEditTarget()}
+                        region={placeEditTarget}
                         parentRegion={selectedRegion}
                         mode="place"
                         allItems={allItems}

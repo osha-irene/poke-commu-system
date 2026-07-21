@@ -9,6 +9,17 @@ import { toMemberSummary, toMemberSummaryMap, toMemberParty, toMemberPartyMap } 
 import { DEFAULT_IVS, withNormalizedIVs } from '../../utils/pokemonIndividualValues';
 import { fillMissingBaseStats, findPokemonTemplate } from '../../utils/pokemonBaseStats';
 
+// 임시 RTDB 다운로드 측정용 로그. 6GB/일 다운로드 원인을 경로별로 확인하려는 목적이라
+// 원인 파악이 끝나면 이 함수와 호출부는 지워도 된다.
+const logRtdbDownload = (label, val) => {
+  try {
+    const bytes = new Blob([JSON.stringify(val ?? null)]).size;
+    console.log(`[RTDB 다운로드 측정] ${label}: ${(bytes / 1024).toFixed(1)}KB`);
+  } catch {
+    // 측정 실패는 무시 - 로깅이 실제 기능에 영향을 주면 안 됨
+  }
+};
+
 const normalizePokemonArray = (value) => {
   if (!value) return [null, null, null, null, null, null];
   if (Array.isArray(value)) return value;
@@ -93,6 +104,7 @@ export const useMembers = (allPokemonData, loadFullMembers = false, loadPartyDet
         }
 
         const normalized = normalizeMembers(snapshot.val());
+        logRtdbDownload('members (전체 최초 로드)', snapshot.val());
         Object.values(normalized).forEach((member) => {
           preloadDecodedImage(member?.profileImageThumb);
           preloadDecodedImage(member?.profileImage);
@@ -125,6 +137,7 @@ export const useMembers = (allPokemonData, loadFullMembers = false, loadPartyDet
 
     const upsertMember = async (snapshot) => {
       if (isInitialLoad || !snapshot.exists()) return;
+      logRtdbDownload(`members/${snapshot.key} (변경분 재전송)`, snapshot.val());
       const normalizedMember = normalizeMemberEntry(snapshot.key, snapshot.val() || {});
       preloadDecodedImage(normalizedMember?.profileImageThumb);
       preloadDecodedImage(normalizedMember?.profileImage);
@@ -200,6 +213,7 @@ export const useMembers = (allPokemonData, loadFullMembers = false, loadPartyDet
         }
 
         const data = snapshot.val();
+        logRtdbDownload('memberSummary (전체 최초 로드)', data);
         const normalized = {};
         Object.keys(data).forEach((userId) => {
           normalized[userId] = normalizeSummaryEntry(userId, data[userId] || {});
@@ -219,6 +233,7 @@ export const useMembers = (allPokemonData, loadFullMembers = false, loadPartyDet
 
     const upsertSummary = (snapshot) => {
       if (isInitialLoad || !snapshot.exists()) return;
+      logRtdbDownload(`memberSummary/${snapshot.key} (변경분 재전송)`, snapshot.val());
       const nextMember = normalizeSummaryEntry(snapshot.key, snapshot.val() || {});
       setMemberSummaries(prev => ({
         ...prev,
@@ -269,6 +284,7 @@ export const useMembers = (allPokemonData, loadFullMembers = false, loadPartyDet
         }
 
         const data = snapshot.val();
+        logRtdbDownload('memberParty (전체 최초 로드)', data);
         const normalized = {};
         Object.keys(data).forEach((userId) => {
           normalized[userId] = normalizePartyEntry(userId, data[userId] || {});
@@ -286,6 +302,7 @@ export const useMembers = (allPokemonData, loadFullMembers = false, loadPartyDet
 
     const upsertParty = (snapshot) => {
       if (isInitialLoad || !snapshot.exists()) return;
+      logRtdbDownload(`memberParty/${snapshot.key} (변경분 재전송)`, snapshot.val());
       const nextMember = normalizePartyEntry(snapshot.key, snapshot.val() || {});
       setMemberParties(prev => ({
         ...prev,

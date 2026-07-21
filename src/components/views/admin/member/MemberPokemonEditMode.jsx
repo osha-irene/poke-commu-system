@@ -242,7 +242,21 @@ export default function MemberPokemonEditMode({
               <Field label="포획볼">
                 <select
                   value={editData.caughtWithBall || '몬스터볼'}
-                  onChange={e => setEditData(p => ({ ...p, caughtWithBall: e.target.value }))}
+                  onChange={e => {
+                    const name = e.target.value;
+                    // caughtWithBall만 바꾸고 ballImage(스프라이트 URL)를 그대로 두면, 이후
+                    // 화면 목록에서 "이름은 새 볼인데 아이콘은 예전 볼" 상태로 어긋나게 저장된다
+                    // (useAdminMembers.js의 저장 로직은 ballImage가 없으면 기존 값을 그대로 씀).
+                    // "기타"는 아래 커스텀 URL 입력으로 별도 지정하므로 여기서는 건드리지 않는다.
+                    const ballInfo = name !== '기타' ? POKEBALL_LIST.find(b => b.name === name) : null;
+                    setEditData(p => ({
+                      ...p,
+                      caughtWithBall: name,
+                      ballImage: ballInfo
+                        ? `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/${ballInfo.nameEn}.png`
+                        : p.ballImage,
+                    }));
+                  }}
                   className={inputCls}
                 >
                   {POKEBALL_LIST.map(ball => (

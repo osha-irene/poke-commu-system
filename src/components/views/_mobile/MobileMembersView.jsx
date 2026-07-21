@@ -127,6 +127,10 @@ const getPokemonDbSprite = p => {
 const getEntryPokemonSprite = p => getOwnedPokemonSpriteUrl(p) || getPokemonLocalIconUrl(p);
 
 const getBallUrl = (p, allItems = []) => {
+  // caughtWithBall(볼 이름)이 최신/권위있는 값이고, ballImageUrl은 캐치/수정 시점에 찍어둔
+  // 스냅샷일 뿐이라 어긋날 수 있다(예: 관리자가 "포획볼"을 바꿔도 ballImageUrl은 재계산되지
+  // 않아 예전 볼 스프라이트로 남는 케이스 - MemberPokemonEditMode.jsx 참고). 그래서 매번
+  // caughtWithBall로 실제 볼을 다시 찾고, 그마저 못 찾을 때만 캐시된 ballImageUrl로 보완한다.
   if (p?.caughtWithBall && allItems.length > 0) {
     const ballName = p.caughtWithBall.toLowerCase();
     const item = allItems.find(it => {
@@ -136,7 +140,6 @@ const getBallUrl = (p, allItems = []) => {
     });
     if (item?.spriteUrl || item?.imageUrl) return item.spriteUrl || item.imageUrl;
   }
-  if (p?.ballImageUrl) return p.ballImageUrl;
   if (p?.caughtWithBall) {
     const s = p.caughtWithBall.toLowerCase();
     const info = POKEBALL_LIST.find(b =>
@@ -144,6 +147,7 @@ const getBallUrl = (p, allItems = []) => {
     );
     if (info) return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/${info.nameEn}.png`;
   }
+  if (p?.ballImageUrl) return p.ballImageUrl;
   return 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png';
 };
 

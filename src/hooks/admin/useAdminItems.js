@@ -230,6 +230,32 @@ export const useAdminItems = (
     }
   };
 
+  // ========== 아이템 보유자 전원 인벤토리에서 일괄 삭제 ==========
+  const removeItemFromAllInventories = async (itemId, itemName) => {
+    if (!canManageItems()) return { removedCount: 0, failedNames: [] };
+
+    const holderIds = Object.keys(members || {}).filter(memberId => {
+      const inventory = members[memberId]?.inventory;
+      return Array.isArray(inventory) && inventory.some(i => i.itemId === itemId || i.name === itemName);
+    });
+
+    let removedCount = 0;
+    const failedNames = [];
+
+    for (const memberId of holderIds) {
+      const result = await applyInventoryMutation(memberId, (inventory) => (
+        (inventory || []).filter(i => !(i.itemId === itemId || i.name === itemName))
+      ));
+      if (result.committed) {
+        removedCount += 1;
+      } else {
+        failedNames.push(members[memberId]?.name || memberId);
+      }
+    }
+
+    return { removedCount, failedNames };
+  };
+
   // ========== 회원 아이템 갯수 조정 ==========
   const adjustMemberItemCount = async (memberId, itemName, newCount) => {
     if (!canManageItems()) return;
@@ -253,6 +279,7 @@ export const useAdminItems = (
     bulkGiveItem,
     deleteItemFromMember,
     adjustMemberItemCount,
+    removeItemFromAllInventories,
     createCustomItem,
     updateCustomItem,
     deleteCustomItem,

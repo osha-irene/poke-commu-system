@@ -3,7 +3,7 @@ import { Lock, Unlock } from 'lucide-react';
 import { ref, set, get } from 'firebase/database';
 import { database } from '../../../firebase';
 
-export default function LevelRestrictionPanel({ embedded = false }) {
+export default function LevelRestrictionPanel({ embedded = false, compact = false }) {
   const [isEnabled, setIsEnabled] = useState(false);
   const [minLevel, setMinLevel] = useState(1);
   const [maxLevel, setMaxLevel] = useState(100);
@@ -53,15 +53,92 @@ export default function LevelRestrictionPanel({ embedded = false }) {
     }
   };
 
-  const containerClass = embedded
-    ? 'rounded-lg border border-lime-200 bg-white/40 p-5'
-    : 'bg-white rounded-lg border-2 border-gray-200 p-6';
+  const containerClass = compact
+    ? 'rounded-lg border border-lime-200 bg-white/40 p-4 flex flex-col gap-3'
+    : embedded
+      ? 'rounded-lg border border-lime-200 bg-white/40 p-5'
+      : 'bg-white rounded-lg border-2 border-gray-200 p-6';
 
   if (loading) {
     return (
       <div className={containerClass}>
         <div className="text-center text-gray-500">로딩 중...</div>
       </div>
+    );
+  }
+
+  if (compact) {
+    return (
+      <section className={containerClass}>
+        <div className="flex items-center justify-between">
+          <h4
+            className="text-sm font-bold text-gray-800 flex items-center gap-1.5"
+            title="모든 유저의 포켓몬 레벨 범위를 설정합니다"
+          >
+            {isEnabled ? (
+              <Lock className="text-red-600 flex-shrink-0" size={16} />
+            ) : (
+              <Unlock className="text-gray-400 flex-shrink-0" size={16} />
+            )}
+            포켓몬 레벨 제한
+          </h4>
+          <button
+            onClick={() => setIsEnabled(!isEnabled)}
+            className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors ${
+              isEnabled ? 'bg-red-500' : 'bg-gray-300'
+            }`}
+          >
+            <span
+              className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                isEnabled ? 'translate-x-5' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <input
+            type="number"
+            value={minLevel}
+            onChange={(e) => setMinLevel(Math.max(1, Math.min(100, parseInt(e.target.value) || 1)))}
+            disabled={!isEnabled}
+            min="1"
+            max="100"
+            className={`w-full min-w-0 px-2 py-2 text-center text-base font-semibold border-2 rounded-lg focus:outline-none ${
+              isEnabled
+                ? 'border-gray-300 focus:border-indigo-500 bg-white'
+                : 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+            }`}
+          />
+          <span className="text-gray-400 flex-shrink-0">~</span>
+          <input
+            type="number"
+            value={maxLevel}
+            onChange={(e) => setMaxLevel(Math.max(1, Math.min(100, parseInt(e.target.value) || 100)))}
+            disabled={!isEnabled}
+            min="1"
+            max="100"
+            className={`w-full min-w-0 px-2 py-2 text-center text-base font-semibold border-2 rounded-lg focus:outline-none ${
+              isEnabled
+                ? 'border-gray-300 focus:border-indigo-500 bg-white'
+                : 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+            }`}
+          />
+        </div>
+
+        <button
+          onClick={handleSave}
+          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm"
+        >
+          저장
+        </button>
+
+        <div className="text-xs text-gray-600">
+          {isEnabled
+            ? <>Lv.{minLevel} ~ Lv.{maxLevel} <span className="text-gray-400">({maxLevel - minLevel + 1}개)</span></>
+            : '제한 없음'}
+        </div>
+      </section>
     );
   }
 
