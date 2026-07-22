@@ -3368,9 +3368,9 @@
       "shortEffect": "Raises highest stat in harsh sunlight, or if holding Booster Energy.",
       "generation": "generation-ix",
       "pokemon": 10,
-      "effectKo": null,
-      "shortEffectKo": null,
-      "flavorTextKo": null
+      "effectKo": "부스트에너지를 지니고 있거나 날씨가 맑을 때 가장 높은 능력이 올라간다.",
+      "shortEffectKo": "부스트에너지를 지니고 있거나 날씨가 맑을 때 가장 높은 능력이 올라간다.",
+      "flavorTextKo": "부스트에너지를 지니고 있거나 날씨가 맑을 때 가장 높은 능력이 올라간다."
     },
     {
       "id": 282,
@@ -4403,6 +4403,18 @@
       "effectKo": null,
       "shortEffectKo": null,
       "flavorTextKo": null
+    },
+    {
+      "id": 90001,
+      "name": "적토성산",
+      "nameEn": "toxic-buildup",
+      "effect": "Each time this Pokemon is hit by an attack, the power of its next Poison-type move increases by 30 (max +300). The boost resets when this Pokemon switches out.",
+      "shortEffect": "Boosts the next Poison move's power by 30 per hit taken (max +300); resets on switch-out.",
+      "generation": "custom",
+      "pokemon": 0,
+      "effectKo": "공격을 받을 때마다 다음 독타입 기술의 위력이 30씩 증가한다(최대 300). 교체되어 볼로 돌아가면 초기화된다.",
+      "shortEffectKo": "받은 공격 횟수만큼 다음 독타입 기술의 위력이 증가한다(최대 +300, 교체 시 초기화).",
+      "flavorTextKo": "트레이너와의 신뢰와 유대가 공명하여 담대함과 진솔한 마음이 한층 더 크게 개화했다. 계속 공격받으면 등에 지고 있는 소중한 습지를 지키기 위해 쌓여있는 독소를 단번에 방출한다."
     }
   ]
 }

@@ -105,6 +105,11 @@ const registerCustomBattleData = () => {
   const { Dex } = getPokemonSim();
   const customBattleData = getCustomBattleData();
 
+  const customAbilities = require('./data/customAbilities');
+  Object.entries(customAbilities).forEach(([abilityId, ability]) => {
+    Dex.data.Abilities[abilityId] = { id: abilityId, ...ability };
+  });
+
   (customBattleData.customMegaEvolutions || []).forEach((mega) => {
     Dex.data.Species[normalizeId(mega.name)] = {
       num: 350,
