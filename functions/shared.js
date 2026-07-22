@@ -132,6 +132,14 @@ const getMembers = async (db) => {
   return snapshot.val() || {};
 };
 
+// 계정 매칭(마스토돈 handle -> 회원)만 필요한 곳에서는 members 전체(캐치몬/인벤토리 포함,
+// 회원당 수십KB)를 읽을 필요가 없다 - 매칭에 쓰는 필드(mastodonAccount/name/nickname 등)는
+// 전부 memberSummary에도 그대로 있다. members는 실제 명령을 처리할 때만(getMembers) 쓴다.
+const getMemberSummaries = async (db) => {
+  const snapshot = await db.ref('memberSummary').once('value');
+  return snapshot.val() || {};
+};
+
 const memberMatchesAccount = (member, account, host) => {
   const target = parseAccount(account, host);
   if (!target) return false;
@@ -339,6 +347,7 @@ module.exports = {
   getAuthorAccountCandidates,
   extractMentionAccounts,
   getMembers,
+  getMemberSummaries,
   findMemberByAccount,
   isFromBotAccount,
   isBotMentioned,

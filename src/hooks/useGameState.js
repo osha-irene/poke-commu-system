@@ -2,7 +2,7 @@
 // 모든 게임 로직을 통합하는 메인 훅
 
 import { useState, useEffect, useCallback } from 'react';
-import { ref, get, update, runTransaction, onValue } from 'firebase/database';
+import { ref, update, onValue } from 'firebase/database';
 import { database } from '../firebase';
 
 // 데이터 (JSON 파일들 먼저)
@@ -368,61 +368,13 @@ export default function useGameState() {
     });
   };
 
-  // 매일 자정 산책 횟수 리셋
-  // ⚠️ 여러 클라이언트(접속 중인 모든 유저의 브라우저)가 동시에 이 로직을 실행할 수 있어서,
-  // "오늘 이미 리셋했는지" 체크(get)와 표시(set)를 따로 하면 그 사이에 경합이 생겨
-  // 리셋 여부 플래그가 갱신되지 않은 채로 남을 수 있었다. 그 결과 currentUser가 바뀔 때마다
-  // (탐험 한 번에도 여러 필드가 바뀌어 여러 번 재실행됨) 전체 회원의 dailyWalks가 계속
-  // maxDailyWalks로 되돌아가는 사실상 무한 리셋 버그가 발생했다.
-  // runTransaction으로 lastResetRef를 원자적으로 선점해서, "오늘 값으로 실제로 바꾼" 단
-  // 하나의 실행만 회원 리셋을 수행하도록 한다.
-  //
-  // ⚠️ "오늘" 판정은 반드시 고정된 한국 시간(Asia/Seoul) 기준으로 해야 한다 - 기기 로컬
-  // 시간대(new Date().toDateString())를 쓰면, 시간대가 다르거나(해외 로밍 등) 시계가 어긋난
-  // 기기 단 하나가 "벌써 다음 날"이라고 잘못 판단해서 그 기기가 트랜잭션을 선점, 아직 KST로는
-  // 같은 날인데도 전체 회원의 dailyWalks가 다시 maxDailyWalks로 조기 리셋되는 사고가 생긴다.
-  const getKoreaDateKey = () => (
-    new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
-  );
-
-  useEffect(() => {
-    if (!currentUser?.id) return;
-
-    const checkAndResetWalks = async () => {
-      try {
-        const lastResetRef = ref(database, 'gameData/lastWalkReset');
-        const today = getKoreaDateKey();
-
-        const { committed } = await runTransaction(lastResetRef, (lastReset) => {
-          if (lastReset === today) return; // 이미 오늘 리셋됨 - 트랜잭션 중단, 아무것도 안 바꿈
-          return today;
-        });
-
-        // committed === true 인 경우는 이 실행이 lastReset을 today로 "처음" 바꾼 경우뿐이다.
-        if (!committed) return;
-
-        const membersSnapshot = await get(ref(database, 'members'));
-        if (membersSnapshot.exists()) {
-          const membersData = membersSnapshot.val();
-          const updates = {};
-
-          Object.keys(membersData).forEach(id => {
-            updates[`members/${id}/dailyWalks`] = membersData[id].maxDailyWalks;
-          });
-
-          await update(ref(database), updates);
-
-          console.log('✅ 모든 회원 산책 횟수 리셋 완료');
-        }
-      } catch (error) {
-        console.error('산책 횟수 리셋 실패:', error);
-      }
-    };
-
-    checkAndResetWalks();
-    const interval = setInterval(checkAndResetWalks, 60 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [currentUser?.id]);
+  // 매일 자정 산책 횟수 리셋은 functions/index.js의 resetDailyWalks(pubsub.schedule,
+  // Asia/Seoul 00:00)가 서버에서 단독으로 수행한다. 예전에는 여기서 클라이언트마다
+  // runTransaction으로 경쟁하는 방식을 썼는데, 리셋 가드 값(gameData/lastWalkReset)의
+  // 날짜 포맷을 바꾸는 배포가 나가면 아직 새로고침 안 한 구버전 탭이 예전 포맷으로 그
+  // 값을 계속 덮어써서 신/구 포맷이 어긋날 때마다 전체 회원이 매번 다시 리셋되는 사고가
+  // 있었다 (2026-07-23). 서버 스케줄러 하나만 리셋을 수행하면 클라이언트 캐시/배포 시점과
+  // 무관해진다.
 
   // 지역 클릭 핸들러
   const handleRegionClick = (region) => {

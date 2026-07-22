@@ -14,7 +14,6 @@ import { normalizePokemonGender } from '../../utils/pokemonGender';
 import { DEFAULT_IVS, generateRandomIVs, normalizeIVs } from '../../utils/pokemonIndividualValues';
 import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
 import { withWurmpleEvolutionId } from '../../utils/wurmpleEvolution';
-import { toMemberSummary, toMemberParty } from '../../utils/memberViewData';
 import movesData from '../../data/moves.json';
 import evolutionsData from '../../data/evolutions.json';
 
@@ -39,26 +38,10 @@ export const useAdminMembers = (
     return snapshot.exists() ? { ...snapshot.val(), id: memberId } : null;
   };
 
-  // 관리자가 다른 회원의 데이터를 고치면 그 변경은 본인 클라이언트발이 아니라서 useAuth.js의
-  // 자체 memberSummary/memberParty 동기화를 타지 않는다 - 그래서 여기서 명시적으로 갱신한다.
-  // (실제로 summary/party에 반영되는 값이 바뀐 경우에만 써서 무관한 필드 변경마다 접속자
-  // 전원에게 재전송되는 걸 막는다.)
-  const syncMemberViewData = async (memberId, beforeMember, afterMember) => {
-    try {
-      const nextSummary = toMemberSummary(afterMember, memberId);
-      const prevSummary = toMemberSummary(beforeMember || {}, memberId);
-      if (JSON.stringify(prevSummary) !== JSON.stringify(nextSummary)) {
-        await update(ref(database, `memberSummary/${memberId}`), nextSummary);
-      }
-      const nextParty = toMemberParty(afterMember, memberId);
-      const prevParty = toMemberParty(beforeMember || {}, memberId);
-      if (JSON.stringify(prevParty) !== JSON.stringify(nextParty)) {
-        await update(ref(database, `memberParty/${memberId}`), nextParty);
-      }
-    } catch (error) {
-      console.error('Member view data sync failed:', error);
-    }
-  };
+  // memberSummary/memberParty 동기화는 여기서 직접 하지 않는다 - functions/index.js의
+  // syncMemberViewData가 members/{memberId} 밑에 뭐가 바뀌든(이 훅의 쓰기 포함) 자동으로
+  // 감지해서 실제로 반영값이 바뀐 경우에만 갱신한다. 여기서 또 호출하면 매 액션마다
+  // 서버 트리거와 중복으로 두 번씩 쓰게 된다.
 
   const isEmptyPokemonSlot = (pokemon) => (
     pokemon === null || pokemon === undefined || pokemon === 'null'
@@ -655,7 +638,6 @@ export const useAdminMembers = (
         const updatedPartner = { ...freshMember.partnerPokemon, level: newLevel };
 
         await update(ref(database, `members/${id}/partnerPokemon`), { level: newLevel });
-        await syncMemberViewData(id, freshMember, { ...freshMember, partnerPokemon: updatedPartner });
 
         updates[id] = { ...freshMember, partnerPokemon: updatedPartner };
       }
@@ -728,7 +710,6 @@ export const useAdminMembers = (
         await update(ref(database, `members/${id}`), cleanUpdates);
 
         const afterMember = { ...members[id], ...latestMember, id, caughtPokemon: updatedCaught, ...(updatedPartner ? { partnerPokemon: updatedPartner } : {}) };
-        await syncMemberViewData(id, latestMember, afterMember);
         updates[id] = afterMember;
       }
 
@@ -1128,9 +1109,6 @@ export const useAdminMembers = (
       const memberRef = ref(database, `members/${memberId}`);
       await update(memberRef, cleanUpdates);
 
-      const afterMember = { ...member, ...fieldUpdates };
-      await syncMemberViewData(memberId, member, afterMember);
-
       setMembers(prev => ({
         ...prev,
         [memberId]: { ...prev[memberId], ...fieldUpdates }
@@ -1258,8 +1236,6 @@ export const useAdminMembers = (
 
       await update(ref(database, `members/${fromMemberId}`), cleanForUpdate(fromFieldUpdates));
       await update(ref(database, `members/${toMemberId}`), cleanForUpdate(toFieldUpdates));
-      await syncMemberViewData(fromMemberId, fromMember, updatedFromMember);
-      await syncMemberViewData(toMemberId, toMember, updatedToMember);
 
       setMembers(prev => ({
         ...prev,
@@ -1325,9 +1301,6 @@ export const useAdminMembers = (
       // caughtPokemon/partnerPokemon 2개 필드만 update() - 예전엔 set()으로 전체를
       // 덮어써서 그 사이 바뀐 다른 필드(돈/산책 등)가 사라질 수 있었다.
       await update(memberRef, cleanUpdates);
-
-      const afterMember = { ...member, ...fieldUpdates };
-      await syncMemberViewData(memberId, member, afterMember);
 
       setMembers(prev => ({
         ...prev,
@@ -1509,9 +1482,6 @@ export const useAdminMembers = (
 
       console.log('Firebase 저장 완료');
 
-      const afterMember = { ...member, ...fieldUpdates };
-      await syncMemberViewData(memberId, member, afterMember);
-
       setMembers(prev => {
         const newMembers = {
           ...prev,
@@ -1561,9 +1531,6 @@ export const useAdminMembers = (
       await update(ref(database, `members/${memberId}`), JSON.parse(JSON.stringify(fieldUpdates, (key, value) => (
         value === undefined ? null : value
       ))));
-
-      const afterMember = { ...member, ...fieldUpdates };
-      await syncMemberViewData(memberId, member, afterMember);
 
       setMembers(prev => ({
         ...prev,
@@ -1738,7 +1705,6 @@ export const useAdminMembers = (
     try {
       const memberRef = ref(database, `members/${memberId}`);
       await update(memberRef, { title: updatedMember.title ?? null });
-      await syncMemberViewData(memberId, member, updatedMember);
 
       setMembers(prev => ({ ...prev, [memberId]: updatedMember }));
 
@@ -1785,7 +1751,6 @@ export const useAdminMembers = (
 
     try {
       await update(ref(database, `members/${memberId}`), { assignedTitles: newAssigned, title: newTitle });
-      await syncMemberViewData(memberId, member, { ...member, assignedTitles: newAssigned, title: newTitle });
       setMembers(prev => ({ ...prev, [memberId]: { ...prev[memberId], assignedTitles: newAssigned, title: newTitle } }));
       if (memberId === currentUser?.id) updateCurrentUser({ assignedTitles: newAssigned, title: newTitle });
     } catch (error) {
@@ -1904,8 +1869,6 @@ export const useAdminMembers = (
     try {
       const memberRef = ref(database, `members/${memberId}`);
       await update(memberRef, fieldUpdates);
-      const afterMember = { ...member, ...fieldUpdates };
-      await syncMemberViewData(memberId, member, afterMember);
       setMembers(prev => ({ ...prev, [memberId]: { ...prev[memberId], ...fieldUpdates } }));
     } catch (error) {
       console.error('❌ NPC 토글 실패:', error);
@@ -1925,7 +1888,6 @@ export const useAdminMembers = (
     try {
       const memberRef = ref(database, `members/${memberId}`);
       await update(memberRef, { hidden: nextHidden });
-      await syncMemberViewData(memberId, member, updatedMember);
 
       setMembers(prev => ({ ...prev, [memberId]: updatedMember }));
       if (currentUser?.id === memberId) {
@@ -1956,7 +1918,6 @@ export const useAdminMembers = (
     try {
       const memberRef = ref(database, `members/${memberId}`);
       await update(memberRef, nextSettings);
-      await syncMemberViewData(memberId, member, updatedMember);
       setMembers(prev => ({ ...prev, [memberId]: updatedMember }));
 
       if (currentUser?.id === memberId) {

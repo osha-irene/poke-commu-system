@@ -1,6 +1,6 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-const { createBotContext, stripHtml, getMembers, normalizeCaughtPokemon } = require('./shared');
+const { createBotContext, stripHtml, getMembers, getMemberSummaries, normalizeCaughtPokemon } = require('./shared');
 const { createCampBot, getCommand: getCampCommand } = require('./campBot');
 const { createTradeBot, getTradeCommand, extractTradePokemonName } = require('./tradeBot');
 const { createNotifyBot } = require('./notifyBot');
@@ -190,7 +190,11 @@ const markProcessingFailed = async (db, statusId, prefix, error, source) => {
 const markIgnoredBattleCandidate = async (status, source, reason, content = '') => {
   if (!status?.id) return false;
   try {
-    const members = await getMembers(db);
+    // 봇을 명시적으로 멘션하지 않은 상태(=배틀과 무관한 답글)에서도 매번 호출되는 경로라
+    // 하루 수천 번 실행된다. 여기서는 계정 매칭용 이름/마스토돈 필드만 있으면 되므로,
+    // 캐치몬/인벤토리까지 포함된 members 전체(회원당 수십KB) 대신 memberSummary(훨씬 작음)를
+    // 쓴다 - 이 경로가 하루 RTDB 다운로드량의 절반 이상을 차지하던 원인이었다.
+    const members = await getMemberSummaries(db);
     const { author, authorAccount } = await findAuthorForStatus(battleCtx, members, status);
     if (!author) return false;
 
@@ -614,6 +618,33 @@ exports.checkContestMentions = functions.region(region.region).runWith(scheduleO
       const timeout = await closeTimedOutContestTurn();
       return { mentions, timeout };
     } catch (e) { console.error(e); return null; }
+  });
+
+// 매일 자정(KST) 전체 회원 산책/탐험 횟수 리셋
+// 예전에는 클라이언트가 gameData/lastWalkReset을 runTransaction으로 선점해서 리셋을
+// 수행했는데, 그 가드 값의 날짜 포맷을 바꾸는 배포가 나가면 아직 새로고침 안 한 구버전
+// 탭이 옛 포맷으로 값을 계속 덮어써서 신/구 포맷이 어긋날 때마다 전체 회원이 매번 다시
+// 리셋되는 사고가 있었다 (2026-07-23). 서버 스케줄러 하나만 리셋을 수행하면 클라이언트
+// 캐시/배포 시점과 무관해지고, 매일 정확히 한 번만 실행된다.
+exports.resetDailyWalks = functions.region(region.region).runWith(scheduleOpts)
+  .pubsub.schedule('every day 00:00').timeZone('Asia/Seoul')
+  .onRun(async () => {
+    try {
+      const membersSnapshot = await db.ref('members').once('value');
+      if (!membersSnapshot.exists()) return { count: 0 };
+
+      const membersData = membersSnapshot.val();
+      const updates = {};
+      Object.keys(membersData).forEach((id) => {
+        updates[`members/${id}/dailyWalks`] = membersData[id].maxDailyWalks;
+      });
+
+      await db.ref().update(updates);
+      return { count: Object.keys(updates).length };
+    } catch (e) {
+      console.error('산책 횟수 리셋 실패:', e);
+      return null;
+    }
   });
 
 // 알림 봇 — HTTP 트리거로 외부에서 호출 (관리자용)
