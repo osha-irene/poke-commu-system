@@ -31,29 +31,63 @@
       "weightkg": 162,
       "color": "Pink",
       "eggGroups": ["Water 1", "Dragon"]
+    },
+    {
+      "id": "clodsiremega",
+      "name": "Clodsire-Mega",
+      "displayName": "메가토오",
+      "baseSpecies": "Clodsire",
+      "baseSpeciesKo": "토오",
+      "forme": "Mega",
+      "types": ["Poison", "Ground"],
+      "typesKo": ["독", "땅"],
+      "ability": "Toxic Buildup",
+      "abilityKo": "적토성산",
+      "item": "Clodite",
+      "itemKo": "토오나이트",
+      "baseStats": {
+        "hp": 140,
+        "atk": 105,
+        "def": 100,
+        "spa": 45,
+        "spd": 120,
+        "spe": 20
+      },
+      "heightm": 2.2,
+      "weightkg": 260,
+      "color": "Purple",
+      "eggGroups": ["Water 1", "Field"]
     }
   ],
   "aliases": {
     "abilities": {
       "쾌청": "Drought",
       "가뭄": "Drought",
-      "매직미러": "Magic Bounce"
+      "매직미러": "Magic Bounce",
+      "적토성산": "Toxic Buildup"
     },
     "abilityLabels": {
       "Drought": "쾌청",
       "drought": "쾌청",
       "Magic Bounce": "매직미러",
-      "magic-bounce": "매직미러"
+      "magic-bounce": "매직미러",
+      "Toxic Buildup": "적토성산",
+      "toxic buildup": "적토성산"
     },
     "items": {
       "밀로틱나이트": "Milotite",
       "밀로틱이트": "Milotite",
       "Milotite": "Milotite",
-      "디안시나이트": "Diancite"
+      "디안시나이트": "Diancite",
+      "토오나이트": "Clodite",
+      "클로다이트": "Clodite",
+      "Clodite": "Clodite"
     },
     "speciesLabels": {
       "Milotic-Mega": "메가밀로틱",
       "메가밀로틱": "메가밀로틱",
+      "Clodsire-Mega": "메가토오",
+      "메가토오": "메가토오",
       "Castform-Sunny": "태양의 모습",
       "Castform-Rainy": "빗방울의 모",
       "Castform-Snowy": "설운의 모습",

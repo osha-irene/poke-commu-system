@@ -4,6 +4,7 @@ import showdownIntegration from '../utils/ShowdownIntegration';
 import fieldEffectsManager from '../utils/FieldEffectsManager';
 import statusManager from '../utils/StatusManager';
 import customBattleData from '../../data/customBattleData.json';
+import customAbilities from '../data/customAbilities';
 import { toCalcAbilityName } from '../../utils/abilityUtils';
 import { getOwnedPokemonDisplayParts } from '../../utils/ownedPokemonDisplay';
 import {
@@ -28,6 +29,10 @@ Battle.prototype.calculatePP = (move) => move.pp;
 const FORMAT_ID = 'gen9customgame';
 
 const registerCustomBattleData = () => {
+  Object.entries(customAbilities).forEach(([abilityId, ability]) => {
+    Dex.data.Abilities[abilityId] = { id: abilityId, ...ability };
+  });
+
   (customBattleData.customMegaEvolutions || []).forEach((mega) => {
     const speciesId = normalizeBattleKey(mega.name);
     const itemId = normalizeBattleKey(mega.item);
@@ -53,7 +58,10 @@ const registerCustomBattleData = () => {
     Dex.data.Items[itemId] = {
       name: mega.item,
       spritenum: 0,
-      megaStone: mega.name,
+      // battle-actions.js의 canMegaEvo()는 item.megaStone[species.name]으로 조회하므로
+      // { baseSpecies: megaFormeName } 형태의 객체여야 한다. 문자열이면 실제 메가진화
+      // 선택(choose 'move X mega')이 항상 조용히 실패한다.
+      megaStone: { [mega.baseSpecies]: mega.name },
       megaEvolves: mega.baseSpecies,
       itemUser: [mega.baseSpecies],
       onTakeItem: false,
@@ -374,8 +382,13 @@ const protocolToLog = (line) => {
       return { message: '\uae09\uc18c\uc5d0 \ub9de\uc558\ub2e4!', type: 'critical' };
     case '-ability':
       return { message: `${extractName(parts[2])}\uc758 \ud2b9\uc131 ${translateAbilityName(parts[3])}!`, type: 'ability' };
-    case '-activate':
-      return { message: `${extractName(parts[2])}\uc758 ${translateEffectName(parts[3])} \ubc1c\ub3d9!`, type: 'ability' };
+    case '-activate': {
+      const powerArg = parts.slice(4).find(part => part?.startsWith('[power]'));
+      const powerSuffix = powerArg
+        ? ` (\ub2e4\uc74c \ub3c5\ud0c0\uc785 \uae30\uc220 \uc704\ub825 +${powerArg.replace('[power]', '').trim()})`
+        : '';
+      return { message: `${extractName(parts[2])}\uc758 ${translateEffectName(parts[3])} \ubc1c\ub3d9!${powerSuffix}`, type: 'ability' };
+    }
     case '-item':
       return { message: `${extractName(parts[2])}\uc758 ${translateItemName(parts[3])} \ubc1c\ub3d9!`, type: 'item' };
     case '-enditem':
@@ -394,13 +407,48 @@ const protocolToLog = (line) => {
       return null;
   }
 };
+// @pkmn/sim은 메가진화 시 detailschange(폼 변경) -> updateMaxHp(내부용 [silent] -heal) -> -mega(스톤 발광)
+// 순서로 로그를 기록한다(pokemon.js의 formeChange 참고). 실제 게임에서는 스톤이 먼저 빛나고 그 다음
+// 폼이 바뀌는 것처럼 보이므로, 표시용으로 -mega 줄을 detailschange 줄 앞으로 옮겨준다.
+const reorderMegaEvolutionLines = (lines) => {
+  const result = [...lines];
+  for (let i = 0; i < result.length; i++) {
+    const parts = result[i]?.split('|') || [];
+    if (parts[1] !== 'detailschange') continue;
+    if (!/-Mega(?:-[XY])?$/i.test(formatSpeciesDetails(parts[3]))) continue;
+
+    const slot = parts[2];
+    let j = i + 1;
+    while (j < result.length) {
+      const nextParts = result[j]?.split('|') || [];
+      // '|split|pX' 줄(관전자/본인 시야 분기 마커)과 그 뒤에 오는 [silent] -heal은 건너뛴다
+      if (nextParts[1] === 'split') {
+        j += 1;
+        continue;
+      }
+      if (nextParts[1] === '-heal' && nextParts[2] === slot && nextParts.includes('[silent]')) {
+        j += 1;
+        continue;
+      }
+      break;
+    }
+
+    const megaParts = result[j]?.split('|') || [];
+    if (megaParts[1] === '-mega' && megaParts[2] === slot) {
+      const [megaLine] = result.splice(j, 1);
+      result.splice(i, 0, megaLine);
+      i += 1;
+    }
+  }
+  return result;
+};
+
 const collectLogs = (battle, fromIndex = 0, teams = []) => {
   const seenInBatch = new Set();
   const nickMap = buildNickMap(battle, teams);
   const displayNames = initialDisplayNames(battle, nickMap);
 
-  return battle.log
-    .slice(fromIndex)
+  return reorderMegaEvolutionLines(battle.log.slice(fromIndex))
     .flatMap((line) => {
       const rawParts = line?.split('|') || [];
       const slot = battleSlotKey(rawParts[2] || '');
