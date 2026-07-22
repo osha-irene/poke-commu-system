@@ -356,13 +356,22 @@ export default function useGameState() {
   // maxDailyWalks로 되돌아가는 사실상 무한 리셋 버그가 발생했다.
   // runTransaction으로 lastResetRef를 원자적으로 선점해서, "오늘 값으로 실제로 바꾼" 단
   // 하나의 실행만 회원 리셋을 수행하도록 한다.
+  //
+  // ⚠️ "오늘" 판정은 반드시 고정된 한국 시간(Asia/Seoul) 기준으로 해야 한다 - 기기 로컬
+  // 시간대(new Date().toDateString())를 쓰면, 시간대가 다르거나(해외 로밍 등) 시계가 어긋난
+  // 기기 단 하나가 "벌써 다음 날"이라고 잘못 판단해서 그 기기가 트랜잭션을 선점, 아직 KST로는
+  // 같은 날인데도 전체 회원의 dailyWalks가 다시 maxDailyWalks로 조기 리셋되는 사고가 생긴다.
+  const getKoreaDateKey = () => (
+    new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
+  );
+
   useEffect(() => {
     if (!currentUser?.id) return;
 
     const checkAndResetWalks = async () => {
       try {
         const lastResetRef = ref(database, 'gameData/lastWalkReset');
-        const today = new Date().toDateString();
+        const today = getKoreaDateKey();
 
         const { committed } = await runTransaction(lastResetRef, (lastReset) => {
           if (lastReset === today) return; // 이미 오늘 리셋됨 - 트랜잭션 중단, 아무것도 안 바꿈

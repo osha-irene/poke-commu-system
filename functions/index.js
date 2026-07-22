@@ -641,10 +641,16 @@ exports.sendNotify = functions.region(region.region).runWith(webhookOpts).https.
 // RTDB 다운로드 사용량이 크게 늘어난다. 그래서 가벼운 요약(memberSummary, 항상 구독)과
 // 무거운 파티 상세(memberParty, 멤버/NPC 탭을 보는 클라이언트만 구독)로 분리하고,
 // 파티 상세는 실제로 caughtPokemon/partnerPokemon이 바뀐 경우에만 쓴다.
+// src/utils/memberViewData.js의 MEMBER_VIEW_OMIT_KEYS와 반드시 동일하게 유지할 것 - 여기 목록이
+// 뒤처지면(예: totalExploreCount/cookingHistory처럼 클라이언트가 "너무 자주 바뀌어서" 뺀 필드가
+// 여기 남아있으면), 아래 트리거가 explore 클릭 등 흔한 행동마다 "요약이 바뀜"으로 오판해서
+// 로그인한 전원에게 memberSummary를 재전송하게 된다 - 클라이언트 쪽 diff 체크를 서버가 무력화.
 const MEMBER_VIEW_OMIT_KEYS = new Set([
   'auth', 'authUid', 'email', 'password', 'forcePasswordChange',
   'inventory', 'money', 'purchaseHistory', 'dailyWalks', 'maxDailyWalks',
   'lastAttendanceDate', 'trainerExp', 'canManageItems', 'isAdmin', 'isSuperAdmin', 'egg',
+  'characterExp', 'totalExploreCount', 'cookingHistory', 'evolutionHistory',
+  'assignedTitles', 'trainerId', 'cramorantBeakClaimed',
 ]);
 
 const HEAVY_MEMBER_VIEW_KEYS = ['caughtPokemon', 'partnerPokemon'];
@@ -675,13 +681,23 @@ const toMemberSummary = (member = {}, id) => {
   return summary;
 };
 
-const toMemberParty = (member = {}, id) => ({
-  id,
-  name: member.name ?? null,
-  hidden: member.hidden ?? false,
-  caughtPokemon: member.caughtPokemon ?? null,
-  partnerPokemon: member.partnerPokemon ?? null,
-});
+// caughtPokemon(회원당 최대 수십 마리, 각자 무브/IV/EV 포함) 전체는 여기 담지 않는다 -
+// 멤버/NPC 탭을 보는 접속자 전원에게 재전송되는 값이라, src/utils/memberViewData.js의
+// toMemberParty와 마찬가지로 목록 카드 아이콘에 필요한 partnerPokemon 하나만 넣는다.
+const toMemberParty = (member = {}, id) => {
+  const caughtPokemon = Array.isArray(member.caughtPokemon) ? member.caughtPokemon.filter(Boolean) : [];
+  const effectivePartner = member.partnerPokemon
+    ?? caughtPokemon.find((p) => p?.isPartner)
+    ?? caughtPokemon[0]
+    ?? null;
+
+  return {
+    id,
+    name: member.name ?? null,
+    hidden: member.hidden ?? false,
+    partnerPokemon: effectivePartner,
+  };
+};
 
 exports.syncMemberViewData = functions
   .region('us-central1')
@@ -699,7 +715,17 @@ exports.syncMemberViewData = functions
     const before = change.before.exists() ? change.before.val() : null;
     const after = change.after.val();
 
-    const writes = [db.ref(`memberSummary/${memberId}`).set(toMemberSummary(after, memberId))];
+    const writes = [];
+
+    // memberSummary도 파티처럼 "실제로 반영되는 값이 바뀐 경우에만" 쓴다 - 이 체크가 없으면
+    // 돈/산책 횟수처럼 요약에 안 쓰이는 필드가 바뀔 때도 무조건 재전송돼서, 클라이언트가
+    // useAuth.js/useAdminMembers.js에서 이미 하고 있는 "바뀐 경우에만 쓰기" 최적화가
+    // 서버 트리거 때문에 무의미해진다.
+    const nextSummary = toMemberSummary(after, memberId);
+    const summaryChanged = !before || JSON.stringify(toMemberSummary(before, memberId)) !== JSON.stringify(nextSummary);
+    if (summaryChanged) {
+      writes.push(db.ref(`memberSummary/${memberId}`).set(nextSummary));
+    }
 
     const partyChanged = !before || HEAVY_MEMBER_VIEW_KEYS.some(
       (key) => JSON.stringify(before[key] ?? null) !== JSON.stringify(after[key] ?? null)
