@@ -2,7 +2,7 @@
 // 모든 게임 로직을 통합하는 메인 훅
 
 import { useState, useEffect, useCallback } from 'react';
-import { ref, get, update, runTransaction } from 'firebase/database';
+import { ref, get, update, runTransaction, onValue } from 'firebase/database';
 import { database } from '../firebase';
 
 // 데이터 (JSON 파일들 먼저)
@@ -102,6 +102,26 @@ export default function useGameState() {
     changeCurrentUserPassword,
     isLoading: isAuthLoading
   } = useAuth(members, setMembers, allPokemonDataParsed);
+
+  // 홈 화면 "오늘의 요리"/"오늘의 진화" - cookingHistory/evolutionHistory는 memberSummary에서
+  // 빠져 있어(요리·진화처럼 잦은 액션마다 전체 요약이 재전송되는 걸 막기 위한 의도적 설계,
+  // src/utils/memberViewData.js 참고) 전체 회원을 훑어서는 만들 수 없다. 대신 useRecipes.js/
+  // useEvolution.js(트레이드 진화는 functions/tradeBot.js)가 요리·진화 성공 시 "가장 최근 1건"만
+  // homeFeed/cooking, homeFeed/evolution에 덮어써서 기록하고, 여기서는 그 작은 노드 두 개만
+  // 구독한다 - 다른 회원의 사소한 행동에 memberSummary 전체가 딸려오지 않는다.
+  const [homeFeed, setHomeFeed] = useState({ cooking: null, evolution: null });
+  useEffect(() => {
+    const unsubCooking = onValue(ref(database, 'homeFeed/cooking'), (snapshot) => {
+      setHomeFeed((prev) => ({ ...prev, cooking: snapshot.val() }));
+    });
+    const unsubEvolution = onValue(ref(database, 'homeFeed/evolution'), (snapshot) => {
+      setHomeFeed((prev) => ({ ...prev, evolution: snapshot.val() }));
+    });
+    return () => {
+      unsubCooking();
+      unsubEvolution();
+    };
+  }, []);
 
   // 관리자여도 실제로 전체 회원 데이터가 필요한 화면(멤버 관리/콘테스트)에 있을 때만
   // members 전체 리스너를 켠다. 예전에는 관리자가 로그인만 해있으면 무슨 탭을 보든
@@ -500,6 +520,7 @@ export default function useGameState() {
     allItems,
     members,
     memberViewMembers,
+    homeFeed,
     gamePokedex,
     sharedPokedexData,
     shopData,

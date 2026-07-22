@@ -570,64 +570,38 @@ function isLocalRuntime() {
   );
 }
 
-function getHomeFeeds(members = {}) {
+// cookingHistory/evolutionHistory는 memberSummary에서 빠져 있어(useMembers.js/functions의
+// MEMBER_VIEW_OMIT_KEYS 참고 - 요리/진화처럼 잦은 액션마다 전체 요약이 재전송되는 걸 막기 위함)
+// 더 이상 회원 목록을 훑어서 홈 피드를 만들 수 없다. 대신 요리/진화가 성공할 때마다
+// useRecipes.js/useEvolution.js(그리고 트레이드 진화의 경우 functions/tradeBot.js)가
+// homeFeed/cooking, homeFeed/evolution에 "가장 최근 1건"만 덮어써서 기록하고, 여기서는
+// 그 값을 오늘 날짜인지만 확인해서 그대로 사용한다.
+function getHomeFeeds(homeFeed = {}) {
   const todayKey = getKoreaDateKey();
-  const getEventTime = (value, fallbackIndex = 0) => {
-    const parsed = Date.parse(value || '');
-    if (!Number.isNaN(parsed)) return parsed;
-
-    const numeric = Number(value);
-    return Number.isFinite(numeric) && numeric > 0 ? numeric : fallbackIndex;
-  };
   const shouldFilterDeployedFeed = !isLocalRuntime();
   const isAllowedHomeFeedEntry = (entry) => (
+    !!entry && Number.isFinite(entry.eventTime) &&
     (!shouldFilterDeployedFeed || entry.eventTime >= DEPLOYED_HOME_FEED_START_TIME) &&
     getKoreaDateKey(new Date(entry.eventTime)) === todayKey
   );
 
-  const cookingFeed = Object.values(members || {})
-    .filter((member) => !member?.hidden)
-    .flatMap((member) => {
-      const trainerName = member?.name || member?.nickname || '누군가';
-      const historyEntries = (member?.cookingHistory || []).filter(Boolean).map((entry, index) => ({
-        id: entry.id || `cooking-${member?.id || trainerName}-${index}`,
-        trainerName,
-        itemName: entry.itemName || entry.recipeName || '요리',
-        image: entry.imageUrl || entry.image || '',
-        eventTime: getEventTime(entry.cookedAt || entry.createdAt, index)
-      })).filter((entry) => !entry.itemName.includes('오란다'));
+  const cookingEntry = homeFeed?.cooking;
+  const cookingFeed = isAllowedHomeFeedEntry(cookingEntry) ? [{
+    id: cookingEntry.id || 'cooking-latest',
+    trainerName: cookingEntry.trainerName || '누군가',
+    itemName: cookingEntry.itemName || '요리',
+    image: cookingEntry.image || '',
+    eventTime: cookingEntry.eventTime
+  }] : [];
 
-      if (historyEntries.length > 0) return historyEntries;
-
-      return (member?.inventory || [])
-        .filter((item) => item?.isCooked && !String(item?.name || '').includes('오란다'))
-        .map((item, index) => ({
-          id: item.itemId || `cooked-item-${member?.id || trainerName}-${index}`,
-          trainerName,
-          itemName: item.name || '요리',
-          image: item.imageUrl || item.image || '',
-          eventTime: getEventTime(String(item.itemId || '').replace('cooked_', ''), index)
-        }));
-    })
-    .filter(isAllowedHomeFeedEntry)
-    .sort((a, b) => b.eventTime - a.eventTime)
-    .slice(0, 1);
-
-  const evolutionFeed = Object.values(members || {})
-    .filter((member) => !member?.hidden)
-    .flatMap((member) => {
-      const trainerName = member?.name || member?.nickname || '누군가';
-      return (member?.evolutionHistory || []).filter(Boolean).map((entry, index) => ({
-        id: entry.id || `evolution-${member?.id || trainerName}-${index}`,
-        trainerName,
-        pokemonName: entry.toName || entry.pokemonName || '포켓몬',
-        spriteUrl: getPokemonLocalIconUrl({ nameEn: entry.toNameEn }) || entry.imageUrl || '',
-        eventTime: getEventTime(entry.evolvedAt || entry.createdAt, index)
-      }));
-    })
-    .filter(isAllowedHomeFeedEntry)
-    .sort((a, b) => b.eventTime - a.eventTime)
-    .slice(0, 1);
+  const evolutionEntry = homeFeed?.evolution;
+  const evolutionFeed = isAllowedHomeFeedEntry(evolutionEntry) ? [{
+    id: evolutionEntry.id || 'evolution-latest',
+    trainerName: evolutionEntry.trainerName || '누군가',
+    pokemonName: evolutionEntry.toName || '포켓몬',
+    spriteUrl: getPokemonLocalIconUrl({ nameEn: evolutionEntry.toNameEn }) || evolutionEntry.imageUrl || '',
+    eventTime: evolutionEntry.eventTime
+  }] : [];
 
   return { cookingFeed, evolutionFeed };
 }
@@ -642,7 +616,7 @@ function HomeDashboard({
   onClaimAttendance,
   attendanceClaimed = false,
   isClaimingAttendance = false,
-  members = {},
+  homeFeed = {},
   scheduleEvents = [],
   titles = [],
   onUpdateTitle,
@@ -670,7 +644,7 @@ function HomeDashboard({
     return () => window.clearInterval(timer);
   }, []);
 
-  const { cookingFeed, evolutionFeed } = getHomeFeeds(members);
+  const { cookingFeed, evolutionFeed } = getHomeFeeds(homeFeed);
 
   const handleNewsClick = () => {
     const newsUrl = '';
@@ -929,7 +903,7 @@ function HomeDashboard({
 
 function MobileHomeDashboard({
   trainer,
-  members = {},
+  homeFeed = {},
   scheduleEvents = [],
   onCookingClick,
   onPokemonClick
@@ -937,7 +911,7 @@ function MobileHomeDashboard({
   const [koreaToday, setKoreaToday] = useState(() => getKoreaDateParts());
   const [calPopup, setCalPopup] = useState(null); // { events, dateLabel }
   const calendarDays = getCalendarDays(koreaToday.year, koreaToday.month);
-  const { cookingFeed, evolutionFeed } = getHomeFeeds(members);
+  const { cookingFeed, evolutionFeed } = getHomeFeeds(homeFeed);
   const calendarLabel = `${koreaToday.year}.${String(koreaToday.month).padStart(2, '0')}`;
   const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -1381,8 +1355,8 @@ export default function App() {
     handleAbilitySelectComplete,
     regions,
     allPokemonMaster,
-    members,
     memberViewMembers,
+    homeFeed,
     gamePokedex,
     sharedPokedexData,
     handleLogin,
@@ -1892,7 +1866,7 @@ return (
           {currentTab === 'home' && (
             <MobileHomeDashboard
               trainer={trainer}
-              members={displayMembers}
+              homeFeed={homeFeed}
               scheduleEvents={scheduleEvents}
               onCookingClick={() => setCurrentTab('cooking')}
               onPokemonClick={() => setCurrentTab('pokemon')}
@@ -2008,7 +1982,7 @@ return (
           onClaimAttendance={handleClaimAttendance}
           attendanceClaimed={attendanceClaimed || attendanceLocked}
           isClaimingAttendance={isClaimingAttendance}
-          members={displayMembers}
+          homeFeed={homeFeed}
           scheduleEvents={scheduleEvents}
           titles={titles || []}
           onUpdateTitle={updateSelfTitle}

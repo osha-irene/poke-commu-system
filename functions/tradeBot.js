@@ -259,6 +259,31 @@ const createTradeBot = ({ db, pokemonData, findMemberByAccount, extractMentionAc
         [tEvoEntry, ...(Array.isArray(hist) ? hist : [])].slice(0, 10));
     }
 
+    // 홈 화면 "오늘의 진화" - evolutionHistory는 memberSummary에서 빠져 있어 전체 회원을
+    // 훑어서는 만들 수 없다(src/App.jsx getHomeFeeds 참고). 트레이드로 인한 진화도 클라이언트
+    // 쪽 진화(useEvolution.js)와 동일하게 "가장 최근 1건"을 homeFeed/evolution에 덮어쓴다.
+    // 둘 다 진화하면 나중에 쓴 쪽(target)이 "최근"으로 보인다.
+    if (rEvoEntry) {
+      await db.ref('homeFeed/evolution').set({
+        id: rEvoEntry.id,
+        trainerName: trade.requesterName || '신청자',
+        toName: rEvoEntry.toName,
+        toNameEn: rEvoEntry.toNameEn,
+        imageUrl: rEvoEntry.imageUrl,
+        eventTime: rEvoEntry.evolvedAt,
+      }).catch((error) => console.error('홈 피드(진화) 갱신 실패:', error));
+    }
+    if (tEvoEntry) {
+      await db.ref('homeFeed/evolution').set({
+        id: tEvoEntry.id,
+        trainerName: trade.targetName || '상대',
+        toName: tEvoEntry.toName,
+        toNameEn: tEvoEntry.toNameEn,
+        imageUrl: tEvoEntry.imageUrl,
+        eventTime: tEvoEntry.evolvedAt,
+      }).catch((error) => console.error('홈 피드(진화) 갱신 실패:', error));
+    }
+
     await db.ref(`gameData/tradeRequests/${tradeKey}`).update({ status: 'completed', targetPokemonKey: getTradePokemonKey(tPokemon), targetPokemonName: tradePokemonLabel(tPokemon), completedAt: Date.now(), updatedAt: Date.now() });
     return [[accountMention(trade.requesterAccount), accountMention(trade.targetAccount)].filter(Boolean).join(' '), '교환 완료!', `${trade.requesterName || '신청자'}의 ${tradePokemonLabel(rPokemon)} ↔ ${trade.targetName || '상대'}의 ${tradePokemonLabel(tPokemon)}`, ...evoMessages].filter(Boolean).join('\n');
   };

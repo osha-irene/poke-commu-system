@@ -275,6 +275,19 @@ export const useRecipes = (currentUser, updateCurrentUser, updateInventory, upda
       alert(isFirstDiscovery
         ? `${trainerName}가 처음으로 ${resultItem.name}을(를) 만들었다!`
         : `${resultItem.name}을(를) 만들었습니다!`);
+
+      // 홈 화면 "오늘의 요리" - cookingHistory는 memberSummary에서 빠져 있어(잦은 액션마다
+      // 전체 요약이 재전송되는 걸 막기 위함) 전체 회원을 훑어서는 만들 수 없다. 그래서 성공한
+      // 요리마다 "가장 최근 1건"만 이 작은 노드에 덮어써서 모든 접속자가 가볍게 구독한다.
+      if (!String(resultItem.name || '').includes('오란다')) {
+        set(ref(database, 'homeFeed/cooking'), {
+          id: cookingHistoryEntry.id,
+          trainerName,
+          itemName: resultItem.name,
+          image: resultItem.spriteUrl || '/images/items/default.png',
+          eventTime: cookedAt
+        }).catch((error) => console.error('❌ 홈 피드(요리) 갱신 실패:', error));
+      }
     }
 
     return {

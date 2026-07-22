@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { ref, set } from 'firebase/database';
+import { database } from '../../firebase';
 import evolutionsData from '../../data/evolutions.json';
 import movesDataRaw from '../../data/moves.json';
 import { getBaseStatPatch } from '../../utils/pokemonBaseStats';
@@ -465,6 +467,19 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster, u
 
     updateCurrentUser(updates);
     updateHistoryField('evolutionHistory', evolutionHistoryEntry);
+
+    // 홈 화면 "오늘의 진화" - evolutionHistory는 memberSummary에서 빠져 있어(잦은 액션마다
+    // 전체 요약이 재전송되는 걸 막기 위함) 전체 회원을 훑어서는 만들 수 없다. 그래서 진화마다
+    // "가장 최근 1건"만 이 작은 노드에 덮어써서 모든 접속자가 가볍게 구독한다. 스프라이트는
+    // App.jsx가 toNameEn으로 로컬 아이콘을 찾아 렌더링 시점에 계산하므로 원본 필드만 담는다.
+    set(ref(database, 'homeFeed/evolution'), {
+      id: evolutionHistoryEntry.id,
+      trainerName: currentUser.name || currentUser.nickname || '누군가',
+      toName: evolutionHistoryEntry.toName,
+      toNameEn: evolutionHistoryEntry.toNameEn,
+      imageUrl: evolutionHistoryEntry.imageUrl,
+      eventTime: evolvedAt
+    }).catch((error) => console.error('❌ 홈 피드(진화) 갱신 실패:', error));
     return true;
   };
 
