@@ -14,7 +14,7 @@ const normalizeDiscoveredRecipes = (value) => (
   Array.isArray(value) ? value : Object.values(value || {}).flat()
 );
 
-export const useRecipes = (currentUser, updateCurrentUser, updateInventory) => {
+export const useRecipes = (currentUser, updateCurrentUser, updateInventory, updateHistoryField) => {
   const [recipes, setRecipes] = useState([]);
   const [discoveredRecipes, setDiscoveredRecipes] = useState([]);
   const [recipeMemos, setRecipeMemos] = useState({});
@@ -268,12 +268,7 @@ export const useRecipes = (currentUser, updateCurrentUser, updateInventory) => {
       isFirstDiscovery
     };
 
-    await updateCurrentUser({
-      cookingHistory: [
-        cookingHistoryEntry,
-        ...((currentUser.cookingHistory || []).filter(Boolean))
-      ].slice(0, 10)
-    });
+    await updateHistoryField('cookingHistory', cookingHistoryEntry);
 
     if (!isFailure) {
       const trainerName = currentUser.name || currentUser.nickname || '트레이너';

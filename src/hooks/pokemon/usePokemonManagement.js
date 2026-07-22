@@ -27,14 +27,48 @@ const usePokemonManagement = (
   updateInventory,
   updateCaughtPokemon
 ) => {
+  // ⭐ 리전폼은 표시용 name이 원종과 동일하게 저장된다(getPokemonDisplayParts가
+  // "(가라르의 모습)" 같은 접미사를 떼어내기 때문). 예전에는 number/nameEn/name을 단순 OR로
+  // find()했는데, allPokemonMaster에서 원종이 리전폼보다 배열 앞쪽에 있어서 name만 일치해도
+  // 원종 템플릿이 먼저 매칭되어버렸다 — 그 결과 갈라르 파오리가 레벨업할 때 원종 파오리의
+  // 기술 배움표(에어커터 등)를 참조하는 회귀가 있었다. formVariant/nameEn/number처럼 더 구체적인
+  // 필드에 높은 가중치를 주는 스코어링 방식(관리자 패널의 getPokemonTemplate과 동일)으로 교체.
+  const normalizeKey = (value) => String(value || '').toLowerCase();
+
   const getPokemonTemplate = (pokemon) => {
     if (!pokemon) return null;
-    return (allPokemonMaster || []).find(template =>
-      template.number === pokemon.number ||
-      template.id === pokemon.pokemonId ||
-      template.nameEn === pokemon.nameEn ||
-      template.name === pokemon.name
-    ) || null;
+    const pokemonFormVariant = normalizeKey(pokemon.formVariant);
+    const pokemonNameEn = normalizeKey(pokemon.nameEn);
+    const pokemonRegionalForm = normalizeKey(pokemon.regionalForm);
+    const pokemonNumber = Number(pokemon.number);
+    const pokemonOriginalNumber = Number(pokemon.originalNumber || pokemon.number);
+    const pokemonId = Number(pokemon.pokemonId || pokemon.id);
+
+    const candidates = (allPokemonMaster || [])
+      .map(template => {
+        const templateFormVariant = normalizeKey(template.formVariant);
+        const templateNameEn = normalizeKey(template.nameEn);
+        const templateRegionalForm = normalizeKey(template.regionalForm);
+        const templateNumber = Number(template.number);
+        const templateOriginalNumber = Number(template.originalNumber || template.number);
+        const templateId = Number(template.id);
+        let score = 0;
+
+        if (pokemonFormVariant && templateFormVariant === pokemonFormVariant) score += 100;
+        if (pokemonNameEn && templateNameEn === pokemonNameEn) score += 90;
+        if (pokemonId && templateId === pokemonId) score += 80;
+        if (pokemonRegionalForm && templateRegionalForm === pokemonRegionalForm) score += 40;
+        if (pokemonNumber && templateNumber === pokemonNumber) score += 20;
+        if (pokemonOriginalNumber && templateOriginalNumber === pokemonOriginalNumber) score += 10;
+        if (!pokemonRegionalForm && !templateRegionalForm && pokemonNumber && templateNumber === pokemonNumber) score += 30;
+        if (template.name === pokemon.name) score += 5;
+
+        return { template, score };
+      })
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score);
+
+    return candidates[0]?.template || null;
   };
 
   const withPokemonTemplateData = (pokemon) => {

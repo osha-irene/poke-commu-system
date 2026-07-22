@@ -334,6 +334,36 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
     return result;
   };
 
+  // ⭐ cookingHistory/evolutionHistory 같은 "누적 기록" 배열 전용 트랜잭션 업데이트 - 항상
+  // Firebase의 최신 배열을 기준으로 맨 앞에 새 항목을 추가하므로, 짧은 시간 안에 여러 번
+  // 기록해도(요리를 연달아 하거나, 트레이드봇 등 다른 경로와 겹쳐도) 클로저에 갇힌 옛 배열로
+  // 덮어써서 방금 추가된 항목이 사라지는 문제가 없다.
+  const updateHistoryField = async (fieldName, newEntry, maxLength = 10) => {
+    if (!currentUser) {
+      console.error('❌ currentUser가 없음!');
+      return { committed: false };
+    }
+
+    const historyRef = ref(database, `members/${currentUser.id}/${fieldName}`);
+    const result = await runTransaction(historyRef, (currentHistory) => {
+      const next = [newEntry, ...((Array.isArray(currentHistory) ? currentHistory : []).filter(Boolean))]
+        .slice(0, maxLength);
+      return JSON.parse(JSON.stringify(next, (key, value) => (value === undefined ? null : value)));
+    });
+
+    if (result.committed) {
+      const newHistory = result.snapshot.val() || [];
+      setCurrentUser(prev => (prev ? { ...prev, [fieldName]: newHistory } : prev));
+      setMembers(prevMembers => (
+        prevMembers[currentUser.id]
+          ? { ...prevMembers, [currentUser.id]: { ...prevMembers[currentUser.id], [fieldName]: newHistory } }
+          : prevMembers
+      ));
+    }
+
+    return result;
+  };
+
   // ⭐ 보유 포켓몬(caughtPokemon) 전용 트랜잭션 업데이트 - 항상 Firebase의 최신 배열을 기준으로
   // 병합되므로, 짧은 시간 안에 여러 마리를 연달아 잡아도(각 호출이 클로저에 갇힌 옛 배열을 기준으로
   // 통째로 덮어써서) 먼저 잡은 포켓몬이 사라지는 문제가 없다.
@@ -453,6 +483,7 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
     updateInventory,
     updateCaughtPokemon,
     updateOwnedPokemonByUniqueId,
+    updateHistoryField,
     changeCurrentUserPassword,
     isLoading: isAuthLoading
   };

@@ -15,7 +15,7 @@ const allMovesData = Array.isArray(movesDataRaw) ? movesDataRaw : movesDataRaw.m
 
 const getBaseName = (pokemon) => getPokemonDisplayParts(pokemon).name;
 
-export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) => {
+export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster, updateHistoryField) => {
   const [evolutionModal, setEvolutionModal] = useState(null);
   // 마빌크 → 마휘핑: 어떤 맛(크림)으로 진화할지 고르는 중일 때 {pokemon, evolution, shapeId}
   const [alcremieFlavorPending, setAlcremieFlavorPending] = useState(null);
@@ -463,13 +463,8 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster) =
       evolvedAt
     };
 
-    updateCurrentUser({
-      ...updates,
-      evolutionHistory: [
-        evolutionHistoryEntry,
-        ...((currentUser.evolutionHistory || []).filter(Boolean))
-      ].slice(0, 10)
-    });
+    updateCurrentUser(updates);
+    updateHistoryField('evolutionHistory', evolutionHistoryEntry);
     return true;
   };
 

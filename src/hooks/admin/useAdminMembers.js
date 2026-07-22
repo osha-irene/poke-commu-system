@@ -14,6 +14,7 @@ import { normalizePokemonGender } from '../../utils/pokemonGender';
 import { DEFAULT_IVS, generateRandomIVs, normalizeIVs } from '../../utils/pokemonIndividualValues';
 import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
 import { withWurmpleEvolutionId } from '../../utils/wurmpleEvolution';
+import { toMemberSummary, toMemberParty } from '../../utils/memberViewData';
 import movesData from '../../data/moves.json';
 import evolutionsData from '../../data/evolutions.json';
 
@@ -29,6 +30,35 @@ export const useAdminMembers = (
   const currentMember = currentUser?.id ? members?.[currentUser.id] : null;
   const hasAdminPermission = Boolean(currentUser?.isAdmin || currentUser?.isSuperAdmin || currentMember?.isAdmin || currentMember?.isSuperAdmin);
   const hasSuperAdminPermission = Boolean(currentUser?.isSuperAdmin || currentMember?.isSuperAdmin);
+
+  // 관리자가 다른 회원의 데이터를 고칠 때는 로컬 members 스냅샷(오래됐을 수 있음)이 아니라
+  // 항상 Firebase의 최신 값을 기준으로 계산한다 - 그래야 그 사이 본인이 직접 플레이해서
+  // 바뀐 값(돈/산책/포켓몬 등)을 관리자 액션이 통째로 덮어써서 날리는 일이 없다.
+  const fetchFreshMember = async (memberId) => {
+    const snapshot = await get(ref(database, `members/${memberId}`));
+    return snapshot.exists() ? { ...snapshot.val(), id: memberId } : null;
+  };
+
+  // 관리자가 다른 회원의 데이터를 고치면 그 변경은 본인 클라이언트발이 아니라서 useAuth.js의
+  // 자체 memberSummary/memberParty 동기화를 타지 않는다 - 그래서 여기서 명시적으로 갱신한다.
+  // (실제로 summary/party에 반영되는 값이 바뀐 경우에만 써서 무관한 필드 변경마다 접속자
+  // 전원에게 재전송되는 걸 막는다.)
+  const syncMemberViewData = async (memberId, beforeMember, afterMember) => {
+    try {
+      const nextSummary = toMemberSummary(afterMember, memberId);
+      const prevSummary = toMemberSummary(beforeMember || {}, memberId);
+      if (JSON.stringify(prevSummary) !== JSON.stringify(nextSummary)) {
+        await update(ref(database, `memberSummary/${memberId}`), nextSummary);
+      }
+      const nextParty = toMemberParty(afterMember, memberId);
+      const prevParty = toMemberParty(beforeMember || {}, memberId);
+      if (JSON.stringify(prevParty) !== JSON.stringify(nextParty)) {
+        await update(ref(database, `memberParty/${memberId}`), nextParty);
+      }
+    } catch (error) {
+      console.error('Member view data sync failed:', error);
+    }
+  };
 
   const isEmptyPokemonSlot = (pokemon) => (
     pokemon === null || pokemon === undefined || pokemon === 'null'
@@ -541,23 +571,21 @@ export const useAdminMembers = (
     if (!currentUser?.isAdmin) return;
     const member = members[memberId];
     if (!member) return;
-    
-    const updatedMember = {
-      ...member,
+
+    const fieldUpdates = {
       dailyWalks: member.maxDailyWalks,
       lastSafariBallRewardDate: null
     };
 
     try {
-      const { id, ...rest } = updatedMember;
-      // Firebase set()은 undefined 값을 허용하지 않으므로 null로 치환
-      const dataToSave = JSON.parse(JSON.stringify(rest, (key, value) => (value === undefined ? null : value)));
       const memberRef = ref(database, `members/${memberId}`);
-      await set(memberRef, dataToSave);
+      // 산책 횟수/보상일자 2개 필드만 건드린다 - 예전엔 로컬 스냅샷 전체를 set()으로
+      // 덮어써서, 그 사이 본인이 바꾼 다른 필드(돈/포켓몬 등)가 통째로 사라질 수 있었다.
+      await update(memberRef, fieldUpdates);
 
       setMembers(prev => ({
         ...prev,
-        [memberId]: updatedMember
+        [memberId]: { ...prev[memberId], ...fieldUpdates }
       }));
 
       alert(`${member.name}님의 산책 횟수가 초기화되었습니다!`);
@@ -570,26 +598,29 @@ export const useAdminMembers = (
   // ========== 전체 산책 횟수 초기화 ==========
   const resetAllWalkCounts = async () => {
     if (!currentUser?.isAdmin) return;
-    
+
     try {
       const updates = {};
       for (const [id, member] of Object.entries(members)) {
-        const updatedMember = {
-          ...member,
+        const fieldUpdates = {
           dailyWalks: member.maxDailyWalks,
           lastSafariBallRewardDate: null
         };
 
-        const { id: _, ...rest } = updatedMember;
-        // Firebase set()은 undefined 값을 허용하지 않으므로 null로 치환
-        const dataToSave = JSON.parse(JSON.stringify(rest, (key, value) => (value === undefined ? null : value)));
+        // 위와 같은 이유로 필드 2개만 update() - 전체를 set()으로 덮어쓰지 않는다.
         const memberRef = ref(database, `members/${id}`);
-        await set(memberRef, dataToSave);
+        await update(memberRef, fieldUpdates);
 
-        updates[id] = updatedMember;
+        updates[id] = { ...member, ...fieldUpdates };
       }
 
-      setMembers(updates);
+      setMembers(prev => {
+        const next = { ...prev };
+        Object.entries(updates).forEach(([id, member]) => {
+          next[id] = { ...next[id], ...member };
+        });
+        return next;
+      });
       alert('모든 회원의 산책 횟수가 초기화되었습니다!');
     } catch (error) {
       console.error('❌ 전체 산책 횟수 초기화 실패:', error);
@@ -616,14 +647,17 @@ export const useAdminMembers = (
     try {
       const updates = {};
       for (const id of targetIds) {
-        const member = members[id];
-        const currentLevel = member.partnerPokemon.level || 1;
+        // 레벨도 여러 액션에서 동시에 바뀔 수 있는 값이라, 클로저 스냅샷 기준
+        // "기존값 + 변화량"이 아니라 항상 Firebase 최신 값을 다시 읽어서 계산한다.
+        const freshMember = await fetchFreshMember(id) || members[id];
+        const currentLevel = freshMember.partnerPokemon?.level || 1;
         const newLevel = Math.max(1, Math.min(100, currentLevel + numericDelta));
-        const updatedPartner = { ...member.partnerPokemon, level: newLevel };
+        const updatedPartner = { ...freshMember.partnerPokemon, level: newLevel };
 
         await update(ref(database, `members/${id}/partnerPokemon`), { level: newLevel });
+        await syncMemberViewData(id, freshMember, { ...freshMember, partnerPokemon: updatedPartner });
 
-        updates[id] = { ...member, partnerPokemon: updatedPartner };
+        updates[id] = { ...freshMember, partnerPokemon: updatedPartner };
       }
 
       setMembers(prev => ({ ...prev, ...updates }));
@@ -693,7 +727,9 @@ export const useAdminMembers = (
         );
         await update(ref(database, `members/${id}`), cleanUpdates);
 
-        updates[id] = { ...members[id], ...latestMember, id, caughtPokemon: updatedCaught, ...(updatedPartner ? { partnerPokemon: updatedPartner } : {}) };
+        const afterMember = { ...members[id], ...latestMember, id, caughtPokemon: updatedCaught, ...(updatedPartner ? { partnerPokemon: updatedPartner } : {}) };
+        await syncMemberViewData(id, latestMember, afterMember);
+        updates[id] = afterMember;
       }
 
       setMembers(prev => ({ ...prev, ...updates }));
@@ -846,7 +882,9 @@ export const useAdminMembers = (
   const givePokemonToMember = async (memberId, pokemonTemplate, options = {}) => {
     if (!currentUser?.isAdmin) return;
 
-    const member = members[memberId];
+    // 로컬 스냅샷이 아니라 최신 값을 기준으로 계산 - 그래야 그 사이 본인이 직접 잡거나
+    // 파티를 바꾼 내역을 관리자의 지급 액션이 덮어써서 날리지 않는다.
+    const member = await fetchFreshMember(memberId);
     if (!member) {
       alert('회원을 찾을 수 없습니다!');
       return;
@@ -1072,50 +1110,32 @@ export const useAdminMembers = (
       }
     }
 
-    // Firebase 저장
-    // givePokemonToMember 함수의 끝 부분 (Line 450-490)
-
-    // Firebase 저장
+    // Firebase 저장 - caughtPokemon(+ 바뀐 경우 partnerPokemon)만 update()로 건드린다.
+    // 예전엔 로컬 스냅샷 전체를 set()으로 덮어써서, 그 사이 본인이 바꾼 다른 필드(돈/산책
+    // 횟수/인벤토리 등)가 통째로 사라질 수 있었다.
     try {
-      // 저장할 데이터 준비
-      const memberDataToSave = { 
-        ...member, 
-        caughtPokemon: updatedPokemonList
-      };
-
-      // 파트너 포켓몬 처리 (undefined 방지)
+      const fieldUpdates = { caughtPokemon: updatedPokemonList };
       if (newPartnerPokemon !== undefined && newPartnerPokemon !== null) {
-        memberDataToSave.partnerPokemon = newPartnerPokemon;
-      } else if (member.partnerPokemon !== undefined) {
-        // 기존 파트너 포켓몬 유지
-        memberDataToSave.partnerPokemon = member.partnerPokemon;
+        fieldUpdates.partnerPokemon = newPartnerPokemon;
       }
-      // partnerPokemon이 없으면 필드 자체를 포함하지 않음
 
-      // id 제거
-      const { id, ...dataToSave } = memberDataToSave;
-      
-      // undefined 값을 null로 변환 (Firebase 안전성)
-      const cleanData = JSON.parse(
-        JSON.stringify(dataToSave, (key, value) => 
+      const cleanUpdates = JSON.parse(
+        JSON.stringify(fieldUpdates, (key, value) =>
           value === undefined ? null : value
         )
       );
-      
+
       const memberRef = ref(database, `members/${memberId}`);
-      await set(memberRef, cleanData);
-      
+      await update(memberRef, cleanUpdates);
+
+      const afterMember = { ...member, ...fieldUpdates };
+      await syncMemberViewData(memberId, member, afterMember);
+
       setMembers(prev => ({
         ...prev,
-        [memberId]: { 
-          ...prev[memberId], 
-          caughtPokemon: updatedPokemonList,
-          ...(newPartnerPokemon !== undefined && newPartnerPokemon !== null 
-            ? { partnerPokemon: newPartnerPokemon } 
-            : {})
-        }
+        [memberId]: { ...prev[memberId], ...fieldUpdates }
       }));
-        
+
       if (memberId === currentUser.id) {
         console.log('✅ 본인에게 지급 - updateCurrentUser 호출');
         const currentUserUpdate = { 
@@ -1146,8 +1166,12 @@ export const useAdminMembers = (
       return false;
     }
 
-    const fromMember = members[fromMemberId];
-    const toMember = members[toMemberId];
+    // 로컬 스냅샷이 아니라 최신 값을 기준으로 계산 - 두 회원 모두 그 사이 직접 플레이해서
+    // 바뀐 내역이 있을 수 있으니 이전 액션이 그걸 덮어쓰지 않게 한다.
+    const [fromMember, toMember] = await Promise.all([
+      fetchFreshMember(fromMemberId),
+      fetchFreshMember(toMemberId)
+    ]);
 
     if (!fromMember || !toMember) {
       alert('멤버 정보를 찾을 수 없습니다.');
@@ -1160,6 +1184,8 @@ export const useAdminMembers = (
     try {
       let updatedFromMember = { ...fromMember };
       let updatedToMember = { ...toMember };
+      let fromFieldUpdates = {};
+      let toFieldUpdates = {};
       let transferredName = '';
 
       if (transferEgg) {
@@ -1178,14 +1204,10 @@ export const useAdminMembers = (
           transferredAt: new Date().toISOString()
         };
 
-        updatedFromMember = {
-          ...fromMember,
-          egg: null
-        };
-        updatedToMember = {
-          ...toMember,
-          egg: movedEgg
-        };
+        fromFieldUpdates = { egg: null };
+        toFieldUpdates = { egg: movedEgg };
+        updatedFromMember = { ...fromMember, ...fromFieldUpdates };
+        updatedToMember = { ...toMember, ...toFieldUpdates };
         transferredName = `${movedEgg.species || movedEgg.name || '알'} 알`;
       } else {
         if (!pokemonUniqueId) {
@@ -1221,31 +1243,28 @@ export const useAdminMembers = (
         );
         const placement = addPokemonToAvailableSlot(toMember.caughtPokemon || [], movedPokemon);
 
-        updatedFromMember = {
-          ...fromMember,
-          caughtPokemon: updatedSourcePokemon
-        };
-        updatedToMember = {
-          ...toMember,
-          caughtPokemon: placement.caughtPokemon
-        };
+        fromFieldUpdates = { caughtPokemon: updatedSourcePokemon };
+        toFieldUpdates = { caughtPokemon: placement.caughtPokemon };
+        updatedFromMember = { ...fromMember, ...fromFieldUpdates };
+        updatedToMember = { ...toMember, ...toFieldUpdates };
         transferredName = movedPokemon.nickname || movedPokemon.name || '포켓몬';
       }
 
-      const cleanForSave = (memberData) => {
-        const { id, ...dataToSave } = memberData;
-        return JSON.parse(JSON.stringify(dataToSave, (key, value) => (
-          value === undefined ? null : value
-        )));
-      };
+      // 바뀐 필드만 update()로 건드린다 - 두 회원 모두 로컬 스냅샷 전체를 set()으로
+      // 덮어쓰면 그 사이 각자 직접 플레이해서 바뀐 다른 필드가 사라질 수 있었다.
+      const cleanForUpdate = (fieldUpdates) => JSON.parse(JSON.stringify(fieldUpdates, (key, value) => (
+        value === undefined ? null : value
+      )));
 
-      await set(ref(database, `members/${fromMemberId}`), cleanForSave(updatedFromMember));
-      await set(ref(database, `members/${toMemberId}`), cleanForSave(updatedToMember));
+      await update(ref(database, `members/${fromMemberId}`), cleanForUpdate(fromFieldUpdates));
+      await update(ref(database, `members/${toMemberId}`), cleanForUpdate(toFieldUpdates));
+      await syncMemberViewData(fromMemberId, fromMember, updatedFromMember);
+      await syncMemberViewData(toMemberId, toMember, updatedToMember);
 
       setMembers(prev => ({
         ...prev,
-        [fromMemberId]: updatedFromMember,
-        [toMemberId]: updatedToMember
+        [fromMemberId]: { ...prev[fromMemberId], ...fromFieldUpdates },
+        [toMemberId]: { ...prev[toMemberId], ...toFieldUpdates }
       }));
 
       if (fromMemberId === currentUser?.id) {
@@ -1274,7 +1293,8 @@ export const useAdminMembers = (
   const deleteMemberPokemon = async (memberId, pokemonUniqueId) => {
     if (!currentUser?.isAdmin) return;
 
-    const member = members[memberId];
+    // 로컬 스냅샷이 아니라 최신 값을 기준으로 계산한다.
+    const member = await fetchFreshMember(memberId);
     if (!member) {
       console.error('삭제 실패: 멤버를 찾을 수 없음', memberId);
       return;
@@ -1287,28 +1307,31 @@ export const useAdminMembers = (
     const updatedPokemon = (member.caughtPokemon || []).filter(
       p => p && String(p.uniqueId) !== String(pokemonUniqueId)
     );
-    
+
     const updatedPartnerPokemon = member.partnerPokemon?.uniqueId === pokemonUniqueId
       ? null
       : member.partnerPokemon;
 
-    const updatedMember = {
-      ...member,
+    const fieldUpdates = {
       caughtPokemon: updatedPokemon,
       partnerPokemon: updatedPartnerPokemon
     };
-    
+
     try {
-      const { id, ...dataToSave } = updatedMember;
-      const cleanData = JSON.parse(
-        JSON.stringify(dataToSave, (key, value) => value === undefined ? null : value)
+      const cleanUpdates = JSON.parse(
+        JSON.stringify(fieldUpdates, (key, value) => value === undefined ? null : value)
       );
       const memberRef = ref(database, `members/${memberId}`);
-      await set(memberRef, cleanData);
+      // caughtPokemon/partnerPokemon 2개 필드만 update() - 예전엔 set()으로 전체를
+      // 덮어써서 그 사이 바뀐 다른 필드(돈/산책 등)가 사라질 수 있었다.
+      await update(memberRef, cleanUpdates);
+
+      const afterMember = { ...member, ...fieldUpdates };
+      await syncMemberViewData(memberId, member, afterMember);
 
       setMembers(prev => ({
         ...prev,
-        [memberId]: updatedMember
+        [memberId]: { ...prev[memberId], ...fieldUpdates }
       }));
 
       if (memberId === currentUser?.id) {
@@ -1329,7 +1352,8 @@ export const useAdminMembers = (
       return;
     }
     
-    const member = members[memberId];
+    // 로컬 스냅샷이 아니라 최신 값을 기준으로 계산한다.
+    const member = await fetchFreshMember(memberId);
     if (!member) {
       console.error('멤버를 찾을 수 없습니다:', memberId);
       return;
@@ -1466,35 +1490,37 @@ export const useAdminMembers = (
         }
       : member.partnerPokemon;
 
-    const updatedMember = {
-      ...member,
+    const fieldUpdates = {
       caughtPokemon: updatedPokemon,
       partnerPokemon: updatedPartnerPokemon
     };
-    
+
     try {
-      const { id, ...dataToSave } = updatedMember;
-      
-      const cleanData = JSON.parse(
-        JSON.stringify(dataToSave, (key, value) => 
+      const cleanUpdates = JSON.parse(
+        JSON.stringify(fieldUpdates, (key, value) =>
           value === undefined ? null : value
         )
       );
-      
+
       const memberRef = ref(database, `members/${memberId}`);
-      await set(memberRef, cleanData);
-      
+      // caughtPokemon/partnerPokemon 2개 필드만 update() - set() 전체 덮어쓰기였을 때는
+      // 그 사이 바뀐 다른 필드(돈/산책 등)가 사라질 수 있었다.
+      await update(memberRef, cleanUpdates);
+
       console.log('Firebase 저장 완료');
-      
+
+      const afterMember = { ...member, ...fieldUpdates };
+      await syncMemberViewData(memberId, member, afterMember);
+
       setMembers(prev => {
         const newMembers = {
           ...prev,
-          [memberId]: updatedMember
+          [memberId]: { ...prev[memberId], ...fieldUpdates }
         };
         console.log('setMembers 호출:', newMembers[memberId].caughtPokemon.find(p => p?.uniqueId === pokemonUniqueId));
         return newMembers;
       });
-      
+
       if (memberId === currentUser?.id) {
         console.log('본인 포켓몬 수정 - currentUser 업데이트');
         updateCurrentUser({ 
@@ -1515,7 +1541,8 @@ export const useAdminMembers = (
   const hatchMemberEgg = async (memberId) => {
     if (!currentUser?.isAdmin) return false;
 
-    const member = members[memberId];
+    // 로컬 스냅샷이 아니라 최신 값을 기준으로 계산한다.
+    const member = await fetchFreshMember(memberId);
     if (!member?.egg) {
       alert('부화할 알이 없습니다.');
       return false;
@@ -1524,18 +1551,23 @@ export const useAdminMembers = (
     try {
       const hatchedPokemon = createPokemonFromEgg(member.egg);
       const placement = addPokemonToAvailableSlot(member.caughtPokemon || [], hatchedPokemon);
-      const updatedMember = {
-        ...member,
+      const fieldUpdates = {
         caughtPokemon: placement.caughtPokemon,
         egg: null
       };
 
-      const { id, ...dataToSave } = updatedMember;
-      await set(ref(database, `members/${memberId}`), JSON.parse(JSON.stringify(dataToSave)));
+      // caughtPokemon/egg 2개 필드만 update() - set() 전체 덮어쓰기였을 때는 그 사이
+      // 바뀐 다른 필드(돈/산책 등)가 사라질 수 있었다.
+      await update(ref(database, `members/${memberId}`), JSON.parse(JSON.stringify(fieldUpdates, (key, value) => (
+        value === undefined ? null : value
+      ))));
+
+      const afterMember = { ...member, ...fieldUpdates };
+      await syncMemberViewData(memberId, member, afterMember);
 
       setMembers(prev => ({
         ...prev,
-        [memberId]: updatedMember
+        [memberId]: { ...prev[memberId], ...fieldUpdates }
       }));
 
       if (memberId === currentUser?.id) {
@@ -1706,6 +1738,7 @@ export const useAdminMembers = (
     try {
       const memberRef = ref(database, `members/${memberId}`);
       await update(memberRef, { title: updatedMember.title ?? null });
+      await syncMemberViewData(memberId, member, updatedMember);
 
       setMembers(prev => ({ ...prev, [memberId]: updatedMember }));
 
@@ -1721,7 +1754,9 @@ export const useAdminMembers = (
   // ========== 칭호 부여 ==========
   const grantMemberTitle = async (memberId, titleId) => {
     if (!currentUser?.isAdmin) return;
-    const member = members[memberId];
+    // assignedTitles도 여러 액션에서 동시에 바뀔 수 있는 배열이라, 클로저 스냅샷이 아니라
+    // 최신 값을 다시 읽어서 append한다.
+    const member = await fetchFreshMember(memberId) || members[memberId];
     if (!member) return;
 
     const assigned = Array.isArray(member.assignedTitles) ? member.assignedTitles : [];
@@ -1741,7 +1776,7 @@ export const useAdminMembers = (
   // ========== 칭호 회수 ==========
   const revokeMemberTitle = async (memberId, titleId) => {
     if (!currentUser?.isAdmin) return;
-    const member = members[memberId];
+    const member = await fetchFreshMember(memberId) || members[memberId];
     if (!member) return;
 
     const assigned = Array.isArray(member.assignedTitles) ? member.assignedTitles : [];
@@ -1750,6 +1785,7 @@ export const useAdminMembers = (
 
     try {
       await update(ref(database, `members/${memberId}`), { assignedTitles: newAssigned, title: newTitle });
+      await syncMemberViewData(memberId, member, { ...member, assignedTitles: newAssigned, title: newTitle });
       setMembers(prev => ({ ...prev, [memberId]: { ...prev[memberId], assignedTitles: newAssigned, title: newTitle } }));
       if (memberId === currentUser?.id) updateCurrentUser({ assignedTitles: newAssigned, title: newTitle });
     } catch (error) {
@@ -1864,13 +1900,13 @@ export const useAdminMembers = (
     if (!currentUser?.isAdmin) return;
     const member = members[memberId];
     if (!member) return;
-    const updatedMember = { ...member, isNPC: !member.isNPC };
+    const fieldUpdates = { isNPC: !member.isNPC };
     try {
-      const { id, ...raw } = updatedMember;
-      const dataToSave = JSON.parse(JSON.stringify(raw, (_, v) => v === undefined ? null : v));
       const memberRef = ref(database, `members/${memberId}`);
-      await set(memberRef, dataToSave);
-      setMembers(prev => ({ ...prev, [memberId]: updatedMember }));
+      await update(memberRef, fieldUpdates);
+      const afterMember = { ...member, ...fieldUpdates };
+      await syncMemberViewData(memberId, member, afterMember);
+      setMembers(prev => ({ ...prev, [memberId]: { ...prev[memberId], ...fieldUpdates } }));
     } catch (error) {
       console.error('❌ NPC 토글 실패:', error);
     }
@@ -1889,6 +1925,7 @@ export const useAdminMembers = (
     try {
       const memberRef = ref(database, `members/${memberId}`);
       await update(memberRef, { hidden: nextHidden });
+      await syncMemberViewData(memberId, member, updatedMember);
 
       setMembers(prev => ({ ...prev, [memberId]: updatedMember }));
       if (currentUser?.id === memberId) {
@@ -1919,6 +1956,7 @@ export const useAdminMembers = (
     try {
       const memberRef = ref(database, `members/${memberId}`);
       await update(memberRef, nextSettings);
+      await syncMemberViewData(memberId, member, updatedMember);
       setMembers(prev => ({ ...prev, [memberId]: updatedMember }));
 
       if (currentUser?.id === memberId) {

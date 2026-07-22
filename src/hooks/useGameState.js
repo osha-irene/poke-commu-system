@@ -98,6 +98,7 @@ export default function useGameState() {
     updateInventory,
     updateCaughtPokemon,
     updateOwnedPokemonByUniqueId,
+    updateHistoryField,
     changeCurrentUserPassword,
     isLoading: isAuthLoading
   } = useAuth(members, setMembers, allPokemonDataParsed);
@@ -114,7 +115,7 @@ export default function useGameState() {
   }, [currentUser?.isAdmin, currentUser?.isSuperAdmin, needsFullMembers]);
 
   // 레시피 (요리 결과 아이템은 useGameData의 allItems에 파생되어 들어가므로 먼저 로드)
-  const recipesHook = useRecipes(currentUser, updateCurrentUser, updateInventory);
+  const recipesHook = useRecipes(currentUser, updateCurrentUser, updateInventory, updateHistoryField);
 
   // 기본 데이터
   const {
@@ -154,7 +155,8 @@ export default function useGameState() {
   const evolutionHook = useEvolution(
     currentUser,
     updateCurrentUser,
-    allPokemonMaster
+    allPokemonMaster,
+    updateHistoryField
   );
 
   // 포켓몬 관리

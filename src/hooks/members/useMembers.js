@@ -5,7 +5,7 @@ import { auth, database } from '../../firebase';
 import itemsData from '../../data/items.json';
 import { getAbilityEnglishName } from '../../utils/abilityUtils';
 import { preloadDecodedImage } from '../../utils/imageCache';
-import { toMemberSummary, toMemberSummaryMap, toMemberParty, toMemberPartyMap } from '../../utils/memberViewData';
+import { toMemberSummaryMap, toMemberPartyMap } from '../../utils/memberViewData';
 import { DEFAULT_IVS, withNormalizedIVs } from '../../utils/pokemonIndividualValues';
 import { fillMissingBaseStats, findPokemonTemplate } from '../../utils/pokemonBaseStats';
 
@@ -46,6 +46,10 @@ export const useMembers = (allPokemonData, loadFullMembers = false, loadPartyDet
   const seededMemberViewDataRef = useRef(false);
   const memberSummariesRef = useRef({});
   const memberPartiesRef = useRef({});
+  // members(전체 상세)는 세션당 딱 한 번만 get()으로 읽는다(실시간 리스너 없음 - 아래 이펙트
+  // 참고). memberParty는 실시간 구독하되, 한 번 붙으면 탭을 나가도 해제하지 않는다.
+  const fullMembersLoadedRef = useRef(false);
+  const partyUnsubRef = useRef(null);
 
   useEffect(() => {
     memberSummariesRef.current = memberSummaries;
@@ -56,9 +60,18 @@ export const useMembers = (allPokemonData, loadFullMembers = false, loadPartyDet
   }, [memberParties]);
 
   useEffect(() => {
-    if (!loadFullMembers) {
+    // admin/contest 탭에서만 필요한, 전 회원의 무거운 상세(포켓몬 전원의 무브/IV/EV/인벤토리)다.
+    // 예전엔 여기에 onChildChanged 실시간 리스너를 붙여뒀는데, RTDB의 onChildChanged는 필드
+    // 하나만 바뀌어도 그 멤버의 레코드 전체를 다시 내려보낸다 - 그래서 관리자가 admin/contest
+    // 탭에 있는 동안 다른 회원이 무슨 사소한 행동을 하든(산책/구매/포획 등) 그때마다 그 회원의
+    // 전체 레코드(수십KB)가 반복 다운로드됐다. 관리자 화면(useAdminMembers)의 쓰기 함수들은
+    // 이제 실행 시점에 항상 최신 값을 다시 읽고(get) memberSummary/party도 직접 동기화하므로,
+    // 여기서는 세션당 한 번만 전체를 읽어 목록 표시용으로 쓰고 실시간 리스너는 붙이지 않는다
+    // (탭을 나갔다 들어와도 재구독하지 않으므로 재다운로드도 없다 - 아래 ref로 1회만 실행 보장).
+    if (!loadFullMembers || fullMembersLoadedRef.current) {
       return undefined;
     }
+    fullMembersLoadedRef.current = true;
 
     const normalizeMemberEntry = (userId, member = {}) => {
       const caughtPokemon = normalizePokemonArray(member.caughtPokemon).map((pokemon) => {
@@ -93,7 +106,6 @@ export const useMembers = (allPokemonData, loadFullMembers = false, loadPartyDet
     };
 
     const membersRef = ref(database, 'members');
-    let isInitialLoad = true;
 
     get(membersRef)
       .then(async (snapshot) => {
@@ -130,65 +142,12 @@ export const useMembers = (allPokemonData, loadFullMembers = false, loadPartyDet
       })
       .catch((error) => {
         console.error('Member data load failed:', error);
+        fullMembersLoadedRef.current = false;
         setMembers({});
       })
       .finally(() => {
-        isInitialLoad = false;
         setIsLoading(false);
       });
-
-    const upsertMember = async (snapshot) => {
-      if (isInitialLoad || !snapshot.exists()) return;
-      logRtdbDownload(`members/${snapshot.key} (변경분 재전송)`, snapshot.val());
-      const normalizedMember = normalizeMemberEntry(snapshot.key, snapshot.val() || {});
-      preloadDecodedImage(normalizedMember?.profileImageThumb);
-      preloadDecodedImage(normalizedMember?.profileImage);
-      preloadDecodedImage(normalizedMember?.profileImageFull);
-      preloadDecodedImage(normalizedMember?.profileImageUrl);
-      setMembers(prev => ({
-        ...prev,
-        [snapshot.key]: normalizedMember
-      }));
-      try {
-        // 관리자가 admin/contest 탭을 보고 있는 동안(loadFullMembers=true)에는 이 리스너가
-        // 다른 회원의 골드/걸음수처럼 summary·party에 안 쓰이는 필드 변경에도 매번 걸리는데,
-        // 그때마다 summary/party 전체를 무조건 다시 쓰면 접속자 전원에게 재전송된다. 실제로
-        // summary/party에 반영되는 값이 바뀐 경우에만 쓴다.
-        const nextSummary = toMemberSummary(normalizedMember, snapshot.key);
-        if (JSON.stringify(memberSummariesRef.current[snapshot.key]) !== JSON.stringify(nextSummary)) {
-          await set(ref(database, `memberSummary/${snapshot.key}`), nextSummary);
-        }
-        const nextParty = toMemberParty(normalizedMember, snapshot.key);
-        if (JSON.stringify(memberPartiesRef.current[snapshot.key]) !== JSON.stringify(nextParty)) {
-          await set(ref(database, `memberParty/${snapshot.key}`), nextParty);
-        }
-      } catch (error) {
-        console.error('Member view data sync failed:', error);
-      }
-    };
-
-    const unsubAdded = onChildAdded(membersRef, upsertMember);
-    const unsubChanged = onChildChanged(membersRef, upsertMember);
-    const unsubRemoved = onChildRemoved(membersRef, async (snapshot) => {
-      if (isInitialLoad) return;
-      setMembers(prev => {
-        const next = { ...prev };
-        delete next[snapshot.key];
-        return next;
-      });
-      try {
-        await set(ref(database, `memberSummary/${snapshot.key}`), null);
-        await set(ref(database, `memberParty/${snapshot.key}`), null);
-      } catch (error) {
-        console.error('Member view data remove failed:', error);
-      }
-    });
-
-    return () => {
-      unsubAdded();
-      unsubChanged();
-      unsubRemoved();
-    };
   }, [allPokemonData, loadFullMembers]);
 
   // 가벼운 요약 - 모든 로그인 유저에게 항상 구독
@@ -273,8 +232,11 @@ export const useMembers = (allPokemonData, loadFullMembers = false, loadPartyDet
 
   // 무거운 파티 상세 - 멤버/NPC 탭을 보고 있을 때만(loadPartyDetails=true) 구독
   useEffect(() => {
-    if (!loadPartyDetails) {
-      setMemberParties({});
+    // members 전체 이펙트와 같은 이유 - 탭을 나갈 때 정리했다가 다시 구독하면 memberParty
+    // 전체가 매번 재전송된다. 한 번 구독하면 탭을 나가도 유지한다(loadPartyDetails가 false일
+    // 때는 effectiveMemberParties가 어차피 {}를 반환하므로 내부적으로 최신 상태를 들고 있어도
+    // 화면에 새지 않는다).
+    if (!loadPartyDetails || partyUnsubRef.current) {
       return undefined;
     }
 
@@ -334,12 +296,19 @@ export const useMembers = (allPokemonData, loadFullMembers = false, loadPartyDet
       });
     });
 
-    return () => {
+    partyUnsubRef.current = () => {
       unsubAdded();
       unsubChanged();
       unsubRemoved();
     };
   }, [loadPartyDetails]);
+
+  // 훅이 완전히 언마운트될 때(로그아웃 등)만 memberParty 구독을 해제한다.
+  useEffect(() => {
+    return () => {
+      partyUnsubRef.current?.();
+    };
+  }, []);
 
   useEffect(() => {
     if (!loadFullMembers) return;
