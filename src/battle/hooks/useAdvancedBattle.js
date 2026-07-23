@@ -5,6 +5,7 @@ import fieldEffectsManager from '../utils/FieldEffectsManager';
 import statusManager from '../utils/StatusManager';
 import customBattleData from '../../data/customBattleData.json';
 import customAbilities from '../data/customAbilities';
+import { DEFAULT_BATTLE_RULE_ID, getBattleRule } from '../data/battleRules';
 import { toCalcAbilityName } from '../../utils/abilityUtils';
 import { getOwnedPokemonDisplayParts } from '../../utils/ownedPokemonDisplay';
 import {
@@ -27,6 +28,12 @@ import {
 Battle.prototype.calculatePP = (move) => move.pp;
 
 const FORMAT_ID = 'gen9customgame';
+
+const buildBattleFormat = (ruleId) => {
+  const rule = getBattleRule(ruleId);
+  const baseFormat = Dex.formats.get(rule.baseFormatId || FORMAT_ID);
+  return rule.buildFormat(baseFormat);
+};
 
 const registerCustomBattleData = () => {
   Object.entries(customAbilities).forEach(([abilityId, ability]) => {
@@ -103,6 +110,10 @@ const emptyBattleState = (player1Team = [], player2Team = []) => ({
   pendingChoices: {
     player1: null,
     player2: null,
+  },
+  pendingSlotChoices: {
+    player1: {},
+    player2: {},
   },
   log: [],
 });
@@ -560,6 +571,57 @@ const emptyPendingChoices = () => ({
   player2: null,
 });
 
+const emptySlotChoices = () => ({
+  player1: {},
+  player2: {},
+});
+
+// 이번 요청에서 실제로 선택이 필요한 활성 슬롯 인덱스 목록.
+// (더블배틀에서 한쪽이 기절해도 요청 객체 자체는 항상 활성 인원 수만큼의 항목을 유지하므로,
+// 실제로 선택을 보내야 하는 슬롯은 여기서 직접 걸러야 한다 — @pkmn/sim의 Side#getChoiceIndex가
+// 기절한 슬롯/스위치 불필요한 슬롯을 자동으로 건너뛰므로, 살아있는 슬롯 순서대로만 보내면 된다.)
+const getRequiredSlotIndices = (battle, side) => {
+  const request = getSideRequest(battle, side);
+  if (!request) return [];
+  if (request.forceSwitch) {
+    return request.forceSwitch
+      .map((flag, index) => (flag ? index : null))
+      .filter(index => index !== null);
+  }
+  if (request.active) {
+    return (side.active || [])
+      .map((pokemon, index) => (pokemon && !pokemon.fainted ? index : null))
+      .filter(index => index !== null);
+  }
+  return [];
+};
+
+// 한 플레이어의 슬롯별 선택(slotChoices)을 하나의 battle.choose() 문자열로 합친다.
+// 필요한 슬롯이 모두 채워지기 전까지는 null을 반환한다.
+const composeSlotChoice = (battle, side, slotChoices = {}) => {
+  const requiredIndices = getRequiredSlotIndices(battle, side);
+  if (requiredIndices.length === 0) return null;
+  if (!requiredIndices.every(index => slotChoices[index])) return null;
+  return {
+    type: 'composite',
+    choice: requiredIndices.map(index => slotChoices[index].choice).join(', '),
+  };
+};
+
+// 특정 플레이어의 특정 활성 슬롯에 대한 선택을 토글(같은 선택 재클릭 시 취소)한다.
+const toggleSlotChoice = (currentSlots, player, activeIndex, slotChoice) => {
+  const currentPlayerSlots = currentSlots[player] || {};
+  const existing = currentPlayerSlots[activeIndex];
+  const isSame = existing && existing.type === slotChoice.type && existing.choice === slotChoice.choice;
+  const nextPlayerSlots = { ...currentPlayerSlots };
+  if (isSame) {
+    delete nextPlayerSlots[activeIndex];
+  } else {
+    nextPlayerSlots[activeIndex] = slotChoice;
+  }
+  return { ...currentSlots, [player]: nextPlayerSlots };
+};
+
 const playerToSideId = player => (player === 'player1' ? 'p1' : 'p2');
 
 const sideIdToPlayer = sideId => (sideId === 'p1' ? 'player1' : 'player2');
@@ -574,12 +636,6 @@ const getRequiredChoicePlayers = (battle) => {
     .filter(([, side]) => isSideWaiting(getSideRequest(battle, side), side))
     .map(([sideId]) => sideIdToPlayer(sideId));
 };
-
-const samePendingChoice = (choiceA, choiceB) => (
-  Boolean(choiceA && choiceB)
-  && choiceA.choice === choiceB.choice
-  && choiceA.type === choiceB.type
-);
 
 // 노말 타입을 다른 타입으로 변환하는 특성 (데미지 보정 포함)
 const TYPE_OVERRIDE_ABILITIES = {
@@ -630,6 +686,8 @@ const getMoveData = (battle, moveSlot, requestMove = null, abilityName = '', spe
     typeChanged,
     category: translateCategoryName(moveData?.category || 'Status'),
     categoryEn: moveData?.category || 'Status',
+    // 더블배틀 타겟 선택에 사용 (예: 'normal', 'adjacentAlly', 'allAdjacent', 'self' 등)
+    targetType: requestMove?.target || moveData?.target || 'normal',
     basePower: moveData?.basePower || 0,
     accuracy: moveData?.accuracy === true ? 100 : (moveData?.accuracy ?? true),
     pp: moveData?.pp ?? null,
@@ -878,10 +936,12 @@ export function useAdvancedBattle(initialOptions = {}) {
   const {
     player1Team = [],
     player2Team = [],
+    ruleId = DEFAULT_BATTLE_RULE_ID,
   } = initialOptions;
 
   const battleRef = useRef(null);
   const pendingChoicesRef = useRef(emptyPendingChoices());
+  const slotChoicesRef = useRef(emptySlotChoices());
   const logFromRef = useRef(0);
   const teamsRef = useRef([player1Team, player2Team]);
   teamsRef.current = [player1Team, player2Team];
@@ -889,16 +949,21 @@ export function useAdvancedBattle(initialOptions = {}) {
 
   useEffect(() => {
     pendingChoicesRef.current = emptyPendingChoices();
+    slotChoicesRef.current = emptySlotChoices();
     logFromRef.current = 0;
     setBattleState(emptyBattleState(player1Team, player2Team));
     battleRef.current = null;
   }, [player1Team, player2Team]);
 
+  // pendingChoices(제출 준비 완료된 조합 선택)를 갱신하면서, 그 시점의 슬롯별 선택 상태
+  // (pendingSlotChoices)도 함께 노출한다. 더블배틀에서 UI가 활성 슬롯별로 "이미 골랐는지"를
+  // 판단하려면 슬롯 단위 상태가 필요하기 때문.
   const setPendingChoices = useCallback((nextPending) => {
     pendingChoicesRef.current = nextPending;
     setBattleState(prev => ({
       ...prev,
       pendingChoices: nextPending,
+      pendingSlotChoices: slotChoicesRef.current,
     }));
   }, []);
 
@@ -928,21 +993,26 @@ export function useAdvancedBattle(initialOptions = {}) {
     } catch (error) {
       console.error('배틀 선택 제출 실패:', error);
       const clearedPending = emptyPendingChoices();
+      const clearedSlots = emptySlotChoices();
       pendingChoicesRef.current = clearedPending;
+      slotChoicesRef.current = clearedSlots;
       logFromRef.current = 0;
       setBattleState(prev => ({
         ...prev,
         pendingChoices: clearedPending,
+        pendingSlotChoices: clearedSlots,
         log: [...prev.log, { message: '선택 처리 중 오류가 발생했습니다.', type: 'fail' }],
       }));
       return;
     }
 
     const clearedPending = emptyPendingChoices();
+    const clearedSlots = emptySlotChoices();
     pendingChoicesRef.current = clearedPending;
+    slotChoicesRef.current = clearedSlots;
     logFromRef.current = 0;
     const autoLogs = applyAutomaticChoices(battle);
-    setBattleState(prev => stateFromBattle(battle, { ...prev, pendingChoices: clearedPending }, logFrom, autoLogs, teamsRef.current));
+    setBattleState(prev => stateFromBattle(battle, { ...prev, pendingChoices: clearedPending, pendingSlotChoices: clearedSlots }, logFrom, autoLogs, teamsRef.current));
   }, []);
 
   const commitPendingChoicesIfReady = useCallback((nextPending, logFrom) => {
@@ -984,7 +1054,7 @@ export function useAdvancedBattle(initialOptions = {}) {
   }, [submitChoices]);
 
   const startBattle = useCallback((p1ActiveIndices, p2ActiveIndices) => {
-    const battle = new Battle({ formatid: FORMAT_ID });
+    const battle = new Battle({ format: buildBattleFormat(ruleId) });
     battle.setPlayer('p1', { name: 'Player 1', team: packTeam(player1Team) });
     battle.setPlayer('p2', { name: 'Player 2', team: packTeam(player2Team) });
 
@@ -993,10 +1063,12 @@ export function useAdvancedBattle(initialOptions = {}) {
 
     battleRef.current = battle;
     pendingChoicesRef.current = emptyPendingChoices();
+    slotChoicesRef.current = emptySlotChoices();
 
     const initialState = {
       ...emptyBattleState(player1Team, player2Team),
       pendingChoices: emptyPendingChoices(),
+      pendingSlotChoices: emptySlotChoices(),
       log: [
         { message: '\ubc30\ud2c0 \uc2dc\uc791!', type: 'system' },
       ],
@@ -1004,23 +1076,32 @@ export function useAdvancedBattle(initialOptions = {}) {
 
     const autoLogs = applyAutomaticChoices(battle);
     setBattleState(stateFromBattle(battle, initialState, 0, autoLogs, teamsRef.current));
-  }, [player1Team, player2Team]);
+  }, [player1Team, player2Team, ruleId]);
 
+  // options.target: 더블배틀 등 대상 지정이 필요한 기술에 쓰는 숫자.
+  // 양수 = 상대 슬롯(1/2), 음수 = 아군 슬롯(-1/-2). 싱글배틀에서는 생략.
   const selectMove = useCallback((player, activeIndex, moveIndex, options = {}) => {
     const battle = battleRef.current;
     if (!battle || battle.ended) return;
 
-    const choice = {
+    const target = options.target;
+    const slotChoice = {
       type: 'move',
       activeIndex,
       moveIndex,
-      choice: `move ${moveIndex + 1}${options.mega ? ' mega' : ''}`,
+      target: target ?? null,
+      choice: `move ${moveIndex + 1}${target != null ? ` ${target}` : ''}${options.mega ? ' mega' : ''}`,
       mega: Boolean(options.mega),
     };
-    const currentPending = pendingChoicesRef.current;
-    const nextPending = samePendingChoice(currentPending[player], choice)
-      ? { ...currentPending, [player]: null }
-      : { ...currentPending, [player]: choice };
+
+    const nextSlots = toggleSlotChoice(slotChoicesRef.current, player, activeIndex, slotChoice);
+    slotChoicesRef.current = nextSlots;
+
+    const side = player === 'player1' ? battle.p1 : battle.p2;
+    const nextPending = {
+      ...pendingChoicesRef.current,
+      [player]: composeSlotChoice(battle, side, nextSlots[player]),
+    };
     const logFrom = battle.log.length;
     commitPendingChoicesIfReady(nextPending, logFrom);
   }, [commitPendingChoicesIfReady]);
@@ -1035,16 +1116,20 @@ export function useAdvancedBattle(initialOptions = {}) {
     if (!target) return;
 
     const teamSlot = side.pokemon.indexOf(target) + 1;
-    const choice = {
+    const slotChoice = {
       type: 'switch',
       activeIndex,
       slot: slotOrBenchIndex,
       choice: `switch ${teamSlot}`,
     };
-    const currentPending = pendingChoicesRef.current;
-    const nextPending = samePendingChoice(currentPending[player], choice)
-      ? { ...currentPending, [player]: null }
-      : { ...currentPending, [player]: choice };
+
+    const nextSlots = toggleSlotChoice(slotChoicesRef.current, player, activeIndex, slotChoice);
+    slotChoicesRef.current = nextSlots;
+
+    const nextPending = {
+      ...pendingChoicesRef.current,
+      [player]: composeSlotChoice(battle, side, nextSlots[player]),
+    };
     const logFrom = battle.log.length;
     commitPendingChoicesIfReady(nextPending, logFrom);
   }, [commitPendingChoicesIfReady]);
@@ -1063,12 +1148,14 @@ export function useAdvancedBattle(initialOptions = {}) {
 
   const clearPendingChoices = useCallback(() => {
     logFromRef.current = 0;
+    slotChoicesRef.current = emptySlotChoices();
     setPendingChoices(emptyPendingChoices());
   }, [setPendingChoices]);
 
   const resetBattle = useCallback(() => {
     battleRef.current = null;
     pendingChoicesRef.current = emptyPendingChoices();
+    slotChoicesRef.current = emptySlotChoices();
     logFromRef.current = 0;
     setBattleState(emptyBattleState(player1Team, player2Team));
   }, [player1Team, player2Team]);

@@ -8,6 +8,7 @@ import { toCalcAbilityName } from '../../utils/abilityUtils';
 import { getOwnedPokemonDisplayParts } from '../../utils/ownedPokemonDisplay';
 import allPokemonMaster from '../../data/allPokemon.json';
 import customBattleData from '../../data/customBattleData.json';
+import { BATTLE_RULES, DEFAULT_BATTLE_RULE_ID, getBattleRule } from '../../battle/data/battleRules';
 
 const BATTLE_LOG_ARCHIVE_KEY = 'poke-commu-battle-log-archive';
 const MAX_BATTLE_LOG_ARCHIVE = 50;
@@ -267,7 +268,7 @@ const PartnerCard = ({ canSelect, onClick, order, pokemon, selected }) => (
   </button>
 );
 
-const BattleSizePicker = ({ accent, size, onChange }) => {
+const BattleSizePicker = ({ accent, size, onChange, min = 1 }) => {
   const activeClass = accent === 'blue' ? 'bg-blue-600 text-white' : 'bg-red-600 text-white';
   return (
     <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1">
@@ -276,7 +277,11 @@ const BattleSizePicker = ({ accent, size, onChange }) => {
           key={n}
           type="button"
           onClick={() => onChange(n)}
-          className={`rounded-md px-2.5 py-1 text-xs font-bold ${size === n ? activeClass : 'text-gray-700 hover:bg-gray-100'}`}
+          disabled={n < min}
+          title={n < min ? `이 룰은 최소 ${min}마리가 필요합니다` : undefined}
+          className={`rounded-md px-2.5 py-1 text-xs font-bold ${
+            size === n ? activeClass : n < min ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'
+          }`}
         >
           {n}
         </button>
@@ -621,6 +626,7 @@ const BattleLogArchiveModal = ({ logs, onClose, onDelete, loading }) => {
 export function BattleView() {
   const { checkEvolutionOnLevelUp } = useGame();
   const [battleItemsEnabled, setBattleItemsEnabled] = useState(false);
+  const [battleRuleId, setBattleRuleId] = useState(DEFAULT_BATTLE_RULE_ID);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [loadingPokemon, setLoadingPokemon] = useState({ player1: false, player2: false });
   const [members, setMembers] = useState([]);
@@ -721,10 +727,20 @@ export function BattleView() {
     setSelectedP2Ids(prev => prev.filter(id => p2SelectableIds.includes(id)).slice(0, Math.min(battleSizeP2, p2SelectableIds.length)));
   }, [battleSizeP1, battleSizeP2, player1Data.entryPokemon, player1Data.partnerPokemon, player2Data.entryPokemon, player2Data.partnerPokemon]);
 
+  // 더블배틀 등 동시 출전 마리 수(activeCount)가 2 이상인 룰은 양쪽 모두 최소 그만큼
+  // 엔트리가 있어야 한다 — 부족한 채로 시작하면 배틀 엔진이 그대로 죽는다.
+  const requiredActiveCount = getBattleRule(battleRuleId).activeCount || 1;
+
+  useEffect(() => {
+    if (requiredActiveCount <= 1) return;
+    setBattleSizeP1(prev => Math.max(prev, requiredActiveCount));
+    setBattleSizeP2(prev => Math.max(prev, requiredActiveCount));
+  }, [requiredActiveCount]);
+
   const p1RequiredCount = Math.min(battleSizeP1, getSelectablePokemon(player1Data.entryPokemon, player1Data.partnerPokemon).length);
   const p2RequiredCount = Math.min(battleSizeP2, getSelectablePokemon(player2Data.entryPokemon, player2Data.partnerPokemon).length);
-  const canStart = p1RequiredCount > 0
-    && p2RequiredCount > 0
+  const canStart = p1RequiredCount >= requiredActiveCount
+    && p2RequiredCount >= requiredActiveCount
     && selectedP1Ids.length === p1RequiredCount
     && selectedP2Ids.length === p2RequiredCount;
 
@@ -988,6 +1004,7 @@ export function BattleView() {
         <AdvancedBattleSimulator
           player1Team={player1Team}
           player2Team={player2Team}
+          ruleId={battleRuleId}
           autoStart
           onBattleFinished={handleBattleFinished}
           onExit={() => setBattleStarted(false)}
@@ -1010,20 +1027,43 @@ export function BattleView() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">포켓몬 배틀</h1>
           <p className="mt-1 text-sm text-gray-600">파트너는 별도 표시하고, 배틀에는 각 트레이너의 엔트리 앞 6마리 중 선택한 포켓몬만 참가합니다.</p>
+          {battleRuleId !== DEFAULT_BATTLE_RULE_ID && (
+            <p className="mt-1 text-sm font-semibold text-purple-700">
+              {BATTLE_RULES.find(rule => rule.id === battleRuleId)?.name}: {BATTLE_RULES.find(rule => rule.id === battleRuleId)?.description}
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {renderBattleLogArchiveButton()}
-          {/* 배틀 아이템 토글 */}
+          {/* 배틀 룰 선택 */}
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+            룰
+            <select
+              value={battleRuleId}
+              onChange={event => setBattleRuleId(event.target.value)}
+              title={BATTLE_RULES.find(rule => rule.id === battleRuleId)?.description}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-800 shadow-sm"
+            >
+              {BATTLE_RULES.map(rule => (
+                <option key={rule.id} value={rule.id}>{rule.name}</option>
+              ))}
+            </select>
+          </label>
+          {/* 배틀 아이템 토글 (더블배틀은 아직 미지원) */}
           <button
             type="button"
             onClick={() => setBattleItemsEnabled(prev => !prev)}
+            disabled={requiredActiveCount > 1}
+            title={requiredActiveCount > 1 ? '더블배틀에서는 아직 배틀 아이템을 지원하지 않습니다.' : undefined}
             className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
-              battleItemsEnabled
-                ? 'border-indigo-400 bg-indigo-600 text-white hover:bg-indigo-700'
-                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+              requiredActiveCount > 1
+                ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400'
+                : battleItemsEnabled
+                  ? 'border-indigo-400 bg-indigo-600 text-white hover:bg-indigo-700'
+                  : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
             }`}
           >
-            🎒 아이템 사용 {battleItemsEnabled ? 'ON' : 'OFF'}
+            🎒 아이템 사용 {requiredActiveCount > 1 ? '(더블 미지원)' : battleItemsEnabled ? 'ON' : 'OFF'}
           </button>
         </div>
       </div>
@@ -1051,7 +1091,7 @@ export function BattleView() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-gray-600">참가 마리 수</span>
-                <BattleSizePicker accent="blue" size={battleSizeP1} onChange={setBattleSizeP1} />
+                <BattleSizePicker accent="blue" size={battleSizeP1} onChange={setBattleSizeP1} min={requiredActiveCount} />
               </div>
               {selectedUser1 && (
                 <EntrySelector
@@ -1082,7 +1122,7 @@ export function BattleView() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-gray-600">참가 마리 수</span>
-                <BattleSizePicker accent="red" size={battleSizeP2} onChange={setBattleSizeP2} />
+                <BattleSizePicker accent="red" size={battleSizeP2} onChange={setBattleSizeP2} min={requiredActiveCount} />
               </div>
               {selectedUser2 && (
                 <EntrySelector
@@ -1101,15 +1141,19 @@ export function BattleView() {
           <div className="mt-8 rounded-lg bg-gray-50 p-4">
             <div className="grid gap-3 md:grid-cols-2">
               <div>
-                <div className="text-sm font-semibold text-gray-600">Player 1 선봉</div>
-                <div className="mt-1 text-gray-900">
-                  <PokemonName pokemon={getSelectedPokemon(player1Data.entryPokemon, player1Data.partnerPokemon, selectedP1Ids)[0]} />
+                <div className="text-sm font-semibold text-gray-600">Player 1 선봉{requiredActiveCount > 1 ? ` (${requiredActiveCount}마리)` : ''}</div>
+                <div className="mt-1 flex flex-wrap gap-x-2 text-gray-900">
+                  {getSelectedPokemon(player1Data.entryPokemon, player1Data.partnerPokemon, selectedP1Ids)
+                    .slice(0, requiredActiveCount)
+                    .map((pokemon, idx) => <PokemonName key={pokemon?.uniqueId || idx} pokemon={pokemon} />)}
                 </div>
               </div>
               <div>
-                <div className="text-sm font-semibold text-gray-600">Player 2 선봉</div>
-                <div className="mt-1 text-gray-900">
-                  <PokemonName pokemon={getSelectedPokemon(player2Data.entryPokemon, player2Data.partnerPokemon, selectedP2Ids)[0]} />
+                <div className="text-sm font-semibold text-gray-600">Player 2 선봉{requiredActiveCount > 1 ? ` (${requiredActiveCount}마리)` : ''}</div>
+                <div className="mt-1 flex flex-wrap gap-x-2 text-gray-900">
+                  {getSelectedPokemon(player2Data.entryPokemon, player2Data.partnerPokemon, selectedP2Ids)
+                    .slice(0, requiredActiveCount)
+                    .map((pokemon, idx) => <PokemonName key={pokemon?.uniqueId || idx} pokemon={pokemon} />)}
                 </div>
               </div>
             </div>
@@ -1130,7 +1174,9 @@ export function BattleView() {
             </button>
             {!canStart && (
               <p className="mt-2 text-sm text-gray-500">
-                양쪽 모두 필요한 엔트리 수만큼 선택해야 합니다.
+                {requiredActiveCount > 1 && (p1RequiredCount < requiredActiveCount || p2RequiredCount < requiredActiveCount)
+                  ? `더블배틀은 양쪽 모두 최소 ${requiredActiveCount}마리 엔트리가 필요합니다.`
+                  : '양쪽 모두 필요한 엔트리 수만큼 선택해야 합니다.'}
               </p>
             )}
           </div>

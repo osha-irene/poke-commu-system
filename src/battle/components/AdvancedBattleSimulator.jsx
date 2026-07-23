@@ -18,6 +18,7 @@ import {
 import useAdvancedBattle from '../hooks/useAdvancedBattle';
 import { getOwnedPokemonDisplayParts } from '../../utils/ownedPokemonDisplay';
 import { filterBattleItems } from '../../data/battleItemEffects';
+import { DEFAULT_BATTLE_RULE_ID, getBattleRule } from '../data/battleRules';
 
 const TYPE_BADGE_COLORS = {
   '노말':    'bg-gray-400 text-white',
@@ -82,6 +83,10 @@ const PokemonNameText = ({ pokemon, className = '', speciesClassName = '' }) => 
     </span>
   );
 };
+
+// 더블배틀에서 대상 지정이 필요한 기술 target 종류
+const NEEDS_FOE_TARGET = new Set(['normal', 'any', 'adjacentFoe']);
+const NEEDS_ALLY_TARGET = new Set(['adjacentAlly', 'adjacentAllyOrSelf']);
 
 const requestLabel = {
   move: '기술 선택',
@@ -208,6 +213,7 @@ export function AdvancedBattleSimulator({
   player2Inventory = [],
   onConsumeItem,
   onReturnItem,
+  ruleId = DEFAULT_BATTLE_RULE_ID,
 }) {
   const {
     battleState,
@@ -227,21 +233,31 @@ export function AdvancedBattleSimulator({
     player2Team,
     battleFormat: 'Singles',
     generation: 9,
+    ruleId,
   });
 
   const [selectedP1Pokemon, setSelectedP1Pokemon] = useState([0]);
   const [selectedP2Pokemon, setSelectedP2Pokemon] = useState([0]);
   const [showDamagePreview, setShowDamagePreview] = useState(null);
-  const [megaIntent, setMegaIntent] = useState({ player1: false, player2: false });
-  const megaIntentRef = useRef({ player1: false, player2: false });
+  // 메가진화는 배틀당 팀 전체에서 1마리만 가능하므로, 플레이어당 "어느 활성 슬롯이
+  // 메가진화를 의도하는지"(activeIndex, 없으면 null)만 저장한다.
+  const [megaIntent, setMegaIntent] = useState({ player1: null, player2: null });
+  const megaIntentRef = useRef({ player1: null, player2: null });
   const [itemPanelOpen, setItemPanelOpen] = useState({ player1: false, player2: false });
   const [revivePending, setRevivePending] = useState({ player1: null, player2: null });
   const [targetPending, setTargetPending] = useState({ player1: null, player2: null });
+  // 더블배틀에서 대상 지정이 필요한 기술 선택 시 대기 상태: { activeIndex, moveIndex, mega, moveName, options }
+  const [pendingMoveTarget, setPendingMoveTarget] = useState({ player1: null, player2: null });
   // 아이템 사용 후 롤백용: { player: snapshot, item }
   const [itemSnapshots, setItemSnapshots] = useState({ player1: null, player2: null });
   const [showBattleInfo, setShowBattleInfo] = useState(false);
   const autoStartedRef = useRef(false);
   const finishedNotifiedRef = useRef(false);
+
+  // 실제 배틀에서 한쪽당 동시 출전 마리 수 (싱글 1 / 더블 2)
+  const activeCount = Math.max(battleState.player1.active.length, battleState.player2.active.length, 1);
+  // 아이템 사용 흐름은 슬롯 0 하나만 가정하고 만들어져 있어, 더블배틀에서는 비활성화한다.
+  const itemsEnabled = battleItemsEnabled && activeCount === 1;
 
   const toggleSelection = (index, setter) => {
     setter((prev) => {
@@ -259,19 +275,18 @@ export function AdvancedBattleSimulator({
     });
   };
 
-  const toggleMegaIntent = (player) => {
-    const nextValue = !megaIntentRef.current[player];
+  const toggleMegaIntent = (player, activeIndex) => {
+    const nextValue = megaIntentRef.current[player] === activeIndex ? null : activeIndex;
     setMegaIntentForPlayer(player, nextValue);
   };
 
   useEffect(() => {
-    const p1CanMega = battleState.player1.active[0]?.canMegaEvolve;
-    const p2CanMega = battleState.player2.active[0]?.canMegaEvolve;
+    const canMegaAt = (activeList, index) => index != null && Boolean(activeList[index]?.canMegaEvolve);
 
     setMegaIntent((prev) => {
       const next = {
-        player1: p1CanMega ? prev.player1 : false,
-        player2: p2CanMega ? prev.player2 : false,
+        player1: canMegaAt(battleState.player1.active, prev.player1) ? prev.player1 : null,
+        player2: canMegaAt(battleState.player2.active, prev.player2) ? prev.player2 : null,
       };
       megaIntentRef.current = next;
       return next.player1 === prev.player1 && next.player2 === prev.player2 ? prev : next;
@@ -354,6 +369,11 @@ export function AdvancedBattleSimulator({
               <Users className="text-red-600" size={36} />
             </h1>
             <p className="text-gray-600">각 플레이어의 엔트리 순서를 선택하세요. 첫 번째 선택 포켓몬이 선봉으로 나옵니다.</p>
+            {ruleId !== DEFAULT_BATTLE_RULE_ID && (
+              <span className="mt-2 inline-block rounded-full bg-purple-600 px-3 py-1 text-sm font-bold text-white">
+                {getBattleRule(ruleId).name} 적용 중
+              </span>
+            )}
           </div>
 
           <div className="mb-8 grid grid-cols-1 gap-8 md:grid-cols-2">
@@ -461,17 +481,21 @@ export function AdvancedBattleSimulator({
     );
   }
 
-  const renderPokemonPanel = (player, active, opponent, color) => {
+  const renderPokemonPanel = (player, activeIndex, active, opponentActives, color) => {
     const waiting = player === 'player1' ? battleState.waitingForP1 : battleState.waitingForP2;
     const side = player === 'player1' ? battleState.player1 : battleState.player2;
     const borderClass = color === 'blue' ? 'border-blue-200 bg-white' : 'border-red-200 bg-white';
     const titleClass = color === 'blue' ? 'text-blue-900' : 'text-red-900';
     const buttonClass = color === 'blue' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700';
-    const megaSelected = Boolean(megaIntent[player]);
-    const pendingChoice = battleState.pendingChoices?.[player];
-    const hasItemPass = pendingChoice?.type === 'item-pass';
-    const canChooseMove = waiting && side.requestType === 'move' && !pendingChoice;
-    const canSwitch = waiting && side.canSwitch && side.bench.length > 0 && !pendingChoice;
+    const megaSelected = megaIntent[player] === activeIndex;
+    // slotChoice: 이 슬롯(활성 포켓몬)에 실제로 고른 기술/교체 원본 선택.
+    // pendingComposite: 아이템 사용으로 이번 턴 전체를 패스했는지 여부(플레이어 단위) 확인용.
+    const slotChoice = battleState.pendingSlotChoices?.[player]?.[activeIndex] || null;
+    const pendingComposite = battleState.pendingChoices?.[player];
+    const hasItemPass = pendingComposite?.type === 'item-pass';
+    const movePicking = pendingMoveTarget[player]?.activeIndex === activeIndex;
+    const canChooseMove = waiting && side.requestType === 'move' && !slotChoice && !hasItemPass && !movePicking;
+    const canSwitch = waiting && side.canSwitch && side.bench.length > 0 && !slotChoice && !hasItemPass;
     const switchBlockedReason = active.request?.trapped
       ? '교체할 수 없는 상태입니다.'
       : active.request?.maybeTrapped
@@ -479,12 +503,93 @@ export function AdvancedBattleSimulator({
         : '';
 
     const handleMoveSelect = (moveIndex) => {
-      selectMove(player, 0, moveIndex, { mega: megaIntentRef.current[player] && active.canMegaEvolve });
+      const move = active.moves?.[moveIndex];
+      const mega = megaIntentRef.current[player] === activeIndex && active.canMegaEvolve;
+
+      if (activeCount < 2) {
+        selectMove(player, activeIndex, moveIndex, { mega });
+        return;
+      }
+
+      const targetType = move?.targetType;
+      if (NEEDS_FOE_TARGET.has(targetType)) {
+        const livingFoes = (opponentActives || [])
+          .filter(poke => poke && !poke.fainted);
+        // 대상이 1마리뿐이어도 자동 선택하지 않고 항상 직접 고르게 한다.
+        if (livingFoes.length === 0) {
+          selectMove(player, activeIndex, moveIndex, { mega });
+          return;
+        }
+        setPendingMoveTarget(prev => ({
+          ...prev,
+          [player]: {
+            activeIndex,
+            moveIndex,
+            mega,
+            moveName: move.name || move.id,
+            options: livingFoes.map(poke => ({
+              value: poke.slot,
+              label: poke.name || poke.speciesName,
+              hp: poke.currentHP,
+              maxHp: poke.maxHP,
+            })),
+          },
+        }));
+        return;
+      }
+
+      if (NEEDS_ALLY_TARGET.has(targetType)) {
+        const ally = (side.active || []).find((poke, index) => index !== activeIndex && poke && !poke.fainted);
+        const options = [];
+        if (ally) {
+          options.push({
+            value: -ally.slot,
+            label: `${ally.name || ally.speciesName} (아군)`,
+            hp: ally.currentHP,
+            maxHp: ally.maxHP,
+          });
+        }
+        if (targetType === 'adjacentAllyOrSelf') {
+          options.push({
+            value: null,
+            label: `${active.name || active.speciesName} (자신)`,
+            hp: active.currentHP,
+            maxHp: active.maxHP,
+          });
+        }
+        // 고를 대상이 아예 없을 때만(아군도 없고 자신 지정도 불가능) 대상 없이 그대로 사용한다.
+        if (options.length === 0) {
+          selectMove(player, activeIndex, moveIndex, { mega });
+          return;
+        }
+        setPendingMoveTarget(prev => ({
+          ...prev,
+          [player]: {
+            activeIndex,
+            moveIndex,
+            mega,
+            moveName: move.name || move.id,
+            options,
+          },
+        }));
+        return;
+      }
+
+      selectMove(player, activeIndex, moveIndex, { mega });
     };
 
+    const handleMoveTargetPick = (targetValue) => {
+      const pending = pendingMoveTarget[player];
+      if (!pending) return;
+      selectMove(player, pending.activeIndex, pending.moveIndex, { mega: pending.mega, target: targetValue });
+      setPendingMoveTarget(prev => ({ ...prev, [player]: null }));
+    };
+
+    const cancelMoveTargetPick = () => setPendingMoveTarget(prev => ({ ...prev, [player]: null }));
+
     const inventory = player === 'player1' ? player1Inventory : player2Inventory;
-    const battleItems = battleItemsEnabled ? filterBattleItems(inventory) : [];
-    const showItemPanel = itemPanelOpen[player];
+    const battleItems = itemsEnabled ? filterBattleItems(inventory) : [];
+    const showItemPanel = itemsEnabled && itemPanelOpen[player];
 
     const faintedPokemon = side.fainted || [];
 
@@ -672,7 +777,7 @@ export function AdvancedBattleSimulator({
         )}
 
         {/* 탭: 기술 / 아이템 */}
-        {battleItemsEnabled && !hasItemPass && (
+        {itemsEnabled && !hasItemPass && (
           <div className="flex gap-2 mb-3">
             <button
               type="button"
@@ -688,11 +793,11 @@ export function AdvancedBattleSimulator({
             <button
               type="button"
               onClick={() => setItemPanelOpen(prev => ({ ...prev, [player]: true }))}
-              disabled={!waiting || !!pendingChoice}
+              disabled={!waiting || !!slotChoice || hasItemPass}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-bold transition-colors ${
                 showItemPanel
                   ? (color === 'blue' ? 'bg-blue-600 text-white' : 'bg-red-600 text-white')
-                  : (waiting && !pendingChoice)
+                  : (waiting && !slotChoice && !hasItemPass)
                     ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     : 'bg-gray-50 text-gray-300 cursor-not-allowed'
               }`}
@@ -703,7 +808,7 @@ export function AdvancedBattleSimulator({
         )}
 
         {/* 일반 아이템 대상 선택 패널 */}
-        {battleItemsEnabled && showItemPanel && targetPending[player] && (
+        {itemsEnabled && showItemPanel && targetPending[player] && (
           <div className="mb-3">
             <div className={`mb-2 flex items-center justify-between rounded-lg px-3 py-2 text-sm font-bold ${
               color === 'blue' ? 'bg-blue-50 text-blue-800 border border-blue-200' : 'bg-red-50 text-red-800 border border-red-200'
@@ -756,7 +861,7 @@ export function AdvancedBattleSimulator({
         )}
 
         {/* 부활 대상 선택 패널 */}
-        {battleItemsEnabled && showItemPanel && revivePending[player] && (
+        {itemsEnabled && showItemPanel && revivePending[player] && (
           <div className="mb-3">
             <div className={`mb-2 flex items-center justify-between rounded-lg px-3 py-2 text-sm font-bold ${
               color === 'blue' ? 'bg-blue-50 text-blue-800 border border-blue-200' : 'bg-red-50 text-red-800 border border-red-200'
@@ -791,7 +896,7 @@ export function AdvancedBattleSimulator({
         )}
 
         {/* 아이템 패널 */}
-        {battleItemsEnabled && showItemPanel && !revivePending[player] && !targetPending[player] && (
+        {itemsEnabled && showItemPanel && !revivePending[player] && !targetPending[player] && (
           <div className="space-y-2 mb-3">
             {battleItems.length === 0 ? (
               <div className="text-sm text-gray-400 text-center py-4">사용 가능한 배틀 아이템이 없습니다.</div>
@@ -832,84 +937,115 @@ export function AdvancedBattleSimulator({
         )}
 
         {/* 기술 패널 */}
-        <div className={`space-y-2 ${battleItemsEnabled && showItemPanel ? 'hidden' : ''}`}>
-          <h3 className={`mb-3 flex items-center gap-2 font-bold ${titleClass}`}>
-            <Swords size={20} />
-            기술 선택
-          </h3>
-          {active.request?.maybeLocked && (
-            <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-900">
-              연속 기술 진행 중입니다. 시뮬레이터가 가능한 선택만 보여줍니다.
-            </div>
-          )}
-          {active.canMegaEvolve && (
-            <button
-              type="button"
-              onClick={() => toggleMegaIntent(player)}
-              disabled={!canChooseMove}
-              className={`w-full rounded-lg border px-4 py-2 font-semibold transition-all ${
-                megaSelected
-                  ? 'border-fuchsia-700 bg-fuchsia-600 text-white shadow-md'
-                  : canChooseMove
-                    ? 'border-fuchsia-300 bg-white text-fuchsia-700 hover:bg-fuchsia-50'
-                    : 'cursor-not-allowed border-gray-300 bg-gray-200 text-gray-500'
-              }`}
-              >
-                메가진화{active.megaSpecies ? ` -> ${active.megaSpecies}` : ''} {megaSelected ? 'ON' : 'OFF'}
-              </button>
-            )}
-          {active.moves?.map((move, i) => {
-            const isSelected = pendingChoice?.type === 'move' && pendingChoice.moveIndex === i;
-            return (
-              <button
-                key={`${move.id}-${i}`}
-                type="button"
-                onClick={() => handleMoveSelect(i)}
-                onMouseEnter={() => {
-                  const preview = previewDamage(active, opponent, move.nameEn || move.id || move.name);
-                  setShowDamagePreview({ player, move: move.name || move.id, preview });
-                }}
-                onMouseLeave={() => setShowDamagePreview(null)}
-                disabled={!canChooseMove || move.disabled}
-                className={`w-full rounded-lg px-4 py-3 font-semibold transition-all ${
-                  isSelected
-                    ? 'bg-gray-950 text-white shadow-lg ring-4 ring-yellow-300'
-                    : canChooseMove && !move.disabled
-                      ? `${buttonClass} text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg`
-                      : 'cursor-not-allowed bg-gray-300 text-gray-500'
-                }`}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <span>{move.name || move.id}</span>
-                  <span className="flex items-center gap-1.5">
-                    {isSelected ? (
-                      <span className="text-xs opacity-80">선택됨</span>
-                    ) : move.disabled ? (
-                      <span className="text-xs opacity-80">사용 불가{move.disabledSource ? ` (${move.disabledSource})` : ''}</span>
-                    ) : (
-                      <>
-                        <TypeBadge
-                          type={move.type}
-                          baseType={move.baseType}
-                          typeChanged={move.typeChanged}
-                        />
-                        <span className="text-xs opacity-80">| {move.category}</span>
-                      </>
-                    )}
-                    {move.currentPP != null && move.pp != null && (
-                      <span className={`text-sm font-mono ml-1 font-bold ${
-                        move.currentPP === 0 ? 'text-red-300' :
-                        move.currentPP <= move.pp / 4 ? 'text-orange-300' :
-                        'text-white'
-                      }`}>
-                        {move.currentPP}/{move.pp}
-                      </span>
-                    )}
-                  </span>
+        <div className={`space-y-2 ${itemsEnabled && showItemPanel ? 'hidden' : ''}`}>
+          {movePicking ? (
+            <>
+              <div className={`mb-2 flex items-center justify-between rounded-lg px-3 py-2 text-sm font-bold ${
+                color === 'blue' ? 'bg-blue-50 text-blue-800 border border-blue-200' : 'bg-red-50 text-red-800 border border-red-200'
+              }`}>
+                <span>{pendingMoveTarget[player].moveName} — 대상 선택</span>
+                <button
+                  type="button"
+                  onClick={cancelMoveTargetPick}
+                  className="text-gray-400 hover:text-gray-600 text-lg leading-none"
+                >×</button>
+              </div>
+              {pendingMoveTarget[player].options.map(opt => (
+                <button
+                  key={opt.value ?? `self-${opt.label}`}
+                  type="button"
+                  onClick={() => handleMoveTargetPick(opt.value)}
+                  className={`w-full rounded-lg px-4 py-3 font-semibold text-left text-white shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg ${buttonClass}`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span>{opt.label}</span>
+                    <span className="text-xs opacity-80">HP {formatHpPercent(opt.hp, opt.maxHp)}</span>
+                  </div>
+                </button>
+              ))}
+            </>
+          ) : (
+            <>
+              <h3 className={`mb-3 flex items-center gap-2 font-bold ${titleClass}`}>
+                <Swords size={20} />
+                기술 선택
+              </h3>
+              {active.request?.maybeLocked && (
+                <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-900">
+                  연속 기술 진행 중입니다. 시뮬레이터가 가능한 선택만 보여줍니다.
                 </div>
-              </button>
-            );
-          })}
+              )}
+              {active.canMegaEvolve && (
+                <button
+                  type="button"
+                  onClick={() => toggleMegaIntent(player, activeIndex)}
+                  disabled={!canChooseMove}
+                  className={`w-full rounded-lg border px-4 py-2 font-semibold transition-all ${
+                    megaSelected
+                      ? 'border-fuchsia-700 bg-fuchsia-600 text-white shadow-md'
+                      : canChooseMove
+                        ? 'border-fuchsia-300 bg-white text-fuchsia-700 hover:bg-fuchsia-50'
+                        : 'cursor-not-allowed border-gray-300 bg-gray-200 text-gray-500'
+                  }`}
+                  >
+                    메가진화{active.megaSpecies ? ` -> ${active.megaSpecies}` : ''} {megaSelected ? 'ON' : 'OFF'}
+                  </button>
+                )}
+              {active.moves?.map((move, i) => {
+                const isSelected = slotChoice?.type === 'move' && slotChoice.moveIndex === i;
+                return (
+                  <button
+                    key={`${move.id}-${i}`}
+                    type="button"
+                    onClick={() => handleMoveSelect(i)}
+                    onMouseEnter={() => {
+                      const previewTarget = (opponentActives || []).find(poke => poke && !poke.fainted) || opponentActives?.[0];
+                      const preview = previewDamage(active, previewTarget, move.nameEn || move.id || move.name);
+                      setShowDamagePreview({ player, move: move.name || move.id, preview });
+                    }}
+                    onMouseLeave={() => setShowDamagePreview(null)}
+                    disabled={!canChooseMove || move.disabled}
+                    className={`w-full rounded-lg px-4 py-3 font-semibold transition-all ${
+                      isSelected
+                        ? 'bg-gray-950 text-white shadow-lg ring-4 ring-yellow-300'
+                        : canChooseMove && !move.disabled
+                          ? `${buttonClass} text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg`
+                          : 'cursor-not-allowed bg-gray-300 text-gray-500'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span>{move.name || move.id}</span>
+                      <span className="flex items-center gap-1.5">
+                        {isSelected ? (
+                          <span className="text-xs opacity-80">선택됨</span>
+                        ) : move.disabled ? (
+                          <span className="text-xs opacity-80">사용 불가{move.disabledSource ? ` (${move.disabledSource})` : ''}</span>
+                        ) : (
+                          <>
+                            <TypeBadge
+                              type={move.type}
+                              baseType={move.baseType}
+                              typeChanged={move.typeChanged}
+                            />
+                            <span className="text-xs opacity-80">| {move.category}</span>
+                          </>
+                        )}
+                        {move.currentPP != null && move.pp != null && (
+                          <span className={`text-sm font-mono ml-1 font-bold ${
+                            move.currentPP === 0 ? 'text-red-300' :
+                            move.currentPP <= move.pp / 4 ? 'text-orange-300' :
+                            'text-white'
+                          }`}>
+                            {move.currentPP}/{move.pp}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </>
+          )}
         </div>
 
         <div className="mt-5">
@@ -923,12 +1059,12 @@ export function AdvancedBattleSimulator({
           {side.bench.length > 0 ? (
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {side.bench.map(pokemon => {
-                const isSelected = pendingChoice?.type === 'switch' && pendingChoice.slot === pokemon.slot;
+                const isSelected = slotChoice?.type === 'switch' && slotChoice.slot === pokemon.slot;
                 return (
                   <button
                     key={pokemon.slot}
                     type="button"
-                    onClick={() => selectSwitch(player, 0, pokemon.slot)}
+                    onClick={() => selectSwitch(player, activeIndex, pokemon.slot)}
                     disabled={!canSwitch}
                     className={`rounded-lg border p-3 text-left text-sm transition-all ${
                       isSelected
@@ -977,6 +1113,11 @@ export function AdvancedBattleSimulator({
           </h1>
           <div className="flex flex-wrap items-center justify-center gap-3 text-xl font-semibold text-gray-600">
             <span>{battleState.turn}턴</span>
+            {ruleId !== DEFAULT_BATTLE_RULE_ID && (
+              <span className="rounded-full bg-purple-600 px-3 py-1 text-sm font-bold text-white">
+                {getBattleRule(ruleId).name}
+              </span>
+            )}
             {battleState.field.weather && (
               <span className="rounded-full bg-yellow-100 px-3 py-1 text-sm">날씨: {battleState.field.weather}</span>
             )}
@@ -1002,8 +1143,20 @@ export function AdvancedBattleSimulator({
         )}
 
         <div className="mb-6 grid grid-cols-1 gap-8 md:grid-cols-2">
-          {renderPokemonPanel('player1', p1Active, p2Active, 'blue')}
-          {renderPokemonPanel('player2', p2Active, p1Active, 'red')}
+          <div className="space-y-6">
+            {battleState.player1.active.map((poke, idx) => (
+              <React.Fragment key={`p1-slot-${idx}`}>
+                {renderPokemonPanel('player1', idx, poke, battleState.player2.active, 'blue')}
+              </React.Fragment>
+            ))}
+          </div>
+          <div className="space-y-6">
+            {battleState.player2.active.map((poke, idx) => (
+              <React.Fragment key={`p2-slot-${idx}`}>
+                {renderPokemonPanel('player2', idx, poke, battleState.player1.active, 'red')}
+              </React.Fragment>
+            ))}
+          </div>
         </div>
 
         {bothPlayersChosen && battleState.phase === 'battle' && (
