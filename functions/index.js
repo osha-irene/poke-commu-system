@@ -865,6 +865,63 @@ exports.onCookingHistory = functions
     return null;
   });
 
+// ── DB 트리거: 배틀 세션 색인 ──────────────────────────────────────
+// battleBot.js의 findActiveBattle/findSelectingBattle/findPendingChallenge/
+// findFinishedBattle/closeTimedOutBattles/expireStalePendingChallenges가
+// gameData/battleSessions 전체(삭제 없이 계속 쌓이는 컬렉션, 배틀마다 양쪽 6마리 팀 전체
+// 포함)를 매번 통째로 읽던 문제 - markIgnoredBattleCandidate(거의 모든 답글마다 호출)와
+// checkBattleMentions(매분 스케줄러) 양쪽에서 반복 호출돼 7/11 members 전체 다운로드
+// 버그와 동일한 구조로 다운로드량을 불렸다(2026-07-23).
+// 세션이 쓰일 때마다 가벼운 색인 두 개를 유지해서, 위 함수들이 전체 컬렉션 대신
+// 이 작은 노드만 읽고 실제로 필요한 세션 하나만 개별 조회하도록 한다.
+// - memberBattleSessions/{memberId}/{sessionKey}: 그 회원이 참가한 세션의 상태만 담은 포인터
+// - openBattleSessions/{sessionKey}: status가 pending/active인 세션만 담기는(끝나면 자동
+//   제거되는) 색인 - 스케줄러가 타임아웃/만료를 검사할 때 전체 이력이 아니라 "지금 열려있는
+//   세션"만 보면 되도록 한다.
+exports.syncBattleSessionIndex = functions
+  .region('us-central1')
+  .database.ref('gameData/battleSessions/{sessionKey}')
+  .onWrite(async (change, context) => {
+    const { sessionKey } = context.params;
+
+    if (!change.after.exists()) {
+      const before = change.before.val() || {};
+      const writes = [db.ref(`gameData/openBattleSessions/${sessionKey}`).set(null)];
+      if (before.player1Id) writes.push(db.ref(`gameData/memberBattleSessions/${before.player1Id}/${sessionKey}`).set(null));
+      if (before.player2Id) writes.push(db.ref(`gameData/memberBattleSessions/${before.player2Id}/${sessionKey}`).set(null));
+      await Promise.all(writes);
+      return null;
+    }
+
+    const after = change.after.val();
+    const pointer = (role) => ({
+      status: after.status || null,
+      role,
+      createdAt: after.createdAt || null,
+      updatedAt: after.updatedAt || after.createdAt || null,
+      completedAt: after.completedAt || null,
+    });
+
+    const writes = [];
+    if (after.player1Id) {
+      writes.push(db.ref(`gameData/memberBattleSessions/${after.player1Id}/${sessionKey}`).set(pointer('player1')));
+    }
+    if (after.player2Id) {
+      writes.push(db.ref(`gameData/memberBattleSessions/${after.player2Id}/${sessionKey}`).set(pointer('player2')));
+    }
+
+    const isOpen = after.status === 'pending' || after.status === 'active';
+    writes.push(db.ref(`gameData/openBattleSessions/${sessionKey}`).set(isOpen ? {
+      status: after.status,
+      createdAt: after.createdAt || null,
+      updatedAt: after.updatedAt || after.createdAt || null,
+      startedAt: after.startedAt || null,
+    } : null));
+
+    await Promise.all(writes);
+    return null;
+  });
+
 // 테스트 / 진단
 exports.testNetwork = functions.region(region.region).https.onRequest(async (req, res) => {
   try {

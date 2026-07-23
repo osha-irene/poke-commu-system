@@ -1211,64 +1211,64 @@ const createBattleBot = ({
     return null;
   };
 
-  const findPendingChallenge = async (memberId) => {
-    const snapshot = await db.ref('gameData/battleSessions').once('value');
-    const sessions = snapshot.val() || {};
-    const pending = Object.entries(sessions)
-      .filter(([, session]) => session.status === 'pending' && session.player2Id === memberId)
-      .sort((a, b) => String(b[1].createdAt || '').localeCompare(String(a[1].createdAt || '')));
-    if (!pending.length) return null;
-    return { sessionKey: pending[0][0], session: pending[0][1] };
-  };
-
-  const findSelectingBattle = async (memberId) => {
-    const snapshot = await db.ref('gameData/battleSessions').once('value');
-    const sessions = snapshot.val() || {};
-    const selecting = Object.entries(sessions)
-      .filter(([, session]) =>
-        session.status === 'selecting' &&
-        (session.player1Id === memberId || session.player2Id === memberId)
-      )
+  // gameData/battleSessions 전체(삭제 없이 계속 쌓이는 컬렉션)를 매번 통째로 읽는 대신,
+  // functions/index.js의 syncBattleSessionIndex 트리거가 유지하는 회원별 포인터 색인
+  // (gameData/memberBattleSessions/{memberId} - 그 회원이 참가한 세션만, 아주 작음)에서
+  // 조건에 맞는 세션 키를 찾고, 실제로 필요한 세션 하나만 개별 조회한다.
+  // markIgnoredBattleCandidate가 거의 모든 답글마다 findSessionByMember를 호출하는데,
+  // 예전엔 이게 매번 전체 세션 컬렉션을 3번씩 읽어서(7/11 members 전체 버그와 동일한 구조로)
+  // RTDB 다운로드를 불렸다(2026-07-23).
+  const findMemberSessionPointer = async (memberId, matches) => {
+    const snapshot = await db.ref(`gameData/memberBattleSessions/${memberId}`).once('value');
+    const pointers = snapshot.val() || {};
+    const candidates = Object.entries(pointers)
+      .filter(([, pointer]) => matches(pointer))
       .sort((a, b) => String(b[1].updatedAt || b[1].createdAt || '').localeCompare(String(a[1].updatedAt || a[1].createdAt || '')));
-    if (!selecting.length) return null;
-    return { sessionKey: selecting[0][0], session: selecting[0][1] };
+    if (!candidates.length) return null;
+
+    const [sessionKey] = candidates[0];
+    const sessionSnap = await db.ref(`gameData/battleSessions/${sessionKey}`).once('value');
+    const session = sessionSnap.val();
+    return session ? { sessionKey, session } : null;
   };
 
-  const findActiveBattle = async (memberId) => {
-    const snapshot = await db.ref('gameData/battleSessions').once('value');
-    const sessions = snapshot.val() || {};
-    const active = Object.entries(sessions)
-      .filter(([, session]) =>
-        session.status === 'active' &&
-        (session.player1Id === memberId || session.player2Id === memberId)
-      )
-      .sort((a, b) => String(b[1].updatedAt || b[1].createdAt || '').localeCompare(String(a[1].updatedAt || a[1].createdAt || '')));
-    if (!active.length) return null;
-    return { sessionKey: active[0][0], session: active[0][1] };
-  };
+  const findPendingChallenge = (memberId) => findMemberSessionPointer(
+    memberId,
+    (pointer) => pointer.status === 'pending' && pointer.role === 'player2'
+  );
 
-  const findFinishedBattle = async (memberId) => {
-    const snapshot = await db.ref('gameData/battleSessions').once('value');
-    const sessions = snapshot.val() || {};
-    const finished = Object.entries(sessions)
-      .filter(([, session]) =>
-        ['completed', 'forfeited'].includes(session.status) &&
-        (session.player1Id === memberId || session.player2Id === memberId)
-      )
-      .sort((a, b) => String(b[1].completedAt || b[1].updatedAt || b[1].createdAt || '').localeCompare(String(a[1].completedAt || a[1].updatedAt || a[1].createdAt || '')));
-    if (!finished.length) return null;
-    return { sessionKey: finished[0][0], session: finished[0][1] };
-  };
+  const findSelectingBattle = (memberId) => findMemberSessionPointer(
+    memberId,
+    (pointer) => pointer.status === 'selecting'
+  );
 
+  const findActiveBattle = (memberId) => findMemberSessionPointer(
+    memberId,
+    (pointer) => pointer.status === 'active'
+  );
+
+  const findFinishedBattle = (memberId) => findMemberSessionPointer(
+    memberId,
+    (pointer) => pointer.status === 'completed' || pointer.status === 'forfeited'
+  );
+
+  // gameData/openBattleSessions는 syncBattleSessionIndex 트리거가 status가 pending/active인
+  // 세션만 담아두고 끝나면 자동으로 지우는 색인이라, 전체 이력이 아니라 "지금 열려있는 세션"만
+  // 스캔하면 된다 - checkBattleMentions가 매분 이 함수들을 호출하므로 여기가 하루 1,440번
+  // 반복되는 전체 컬렉션 스캔의 원인이었다(2026-07-23).
   const closeTimedOutBattles = async (now = Date.now()) => {
-    const snapshot = await db.ref('gameData/battleSessions').once('value');
-    const sessions = snapshot.val() || {};
+    const snapshot = await db.ref('gameData/openBattleSessions').once('value');
+    const openSessions = snapshot.val() || {};
     const closed = [];
 
-    for (const [sessionKey, session] of Object.entries(sessions)) {
-      if (session.status !== 'active') continue;
-      const lastUpdated = Date.parse(session.updatedAt || session.startedAt || session.createdAt || '');
+    for (const [sessionKey, meta] of Object.entries(openSessions)) {
+      if (meta.status !== 'active') continue;
+      const lastUpdated = Date.parse(meta.updatedAt || meta.startedAt || meta.createdAt || '');
       if (!Number.isFinite(lastUpdated) || now - lastUpdated < BATTLE_CHOICE_TIMEOUT_MS) continue;
+
+      const sessionSnap = await db.ref(`gameData/battleSessions/${sessionKey}`).once('value');
+      const session = sessionSnap.val();
+      if (!session || session.status !== 'active') continue;
 
       const timeoutResult = timeoutResultForSession(session);
       const completedAt = new Date(now).toISOString();
@@ -1308,13 +1308,13 @@ const createBattleBot = ({
   // 24시간 넘게 수락되지 않은 배틀 신청은 알림 없이 조용히 만료 처리한다.
   // (신청이 계속 쌓이기만 하고 정리가 안 되던 문제)
   const expireStalePendingChallenges = async (now = Date.now()) => {
-    const snapshot = await db.ref('gameData/battleSessions').once('value');
-    const sessions = snapshot.val() || {};
+    const snapshot = await db.ref('gameData/openBattleSessions').once('value');
+    const openSessions = snapshot.val() || {};
     let expiredCount = 0;
 
-    for (const [sessionKey, session] of Object.entries(sessions)) {
-      if (session.status !== 'pending') continue;
-      const createdAt = Date.parse(session.createdAt || '');
+    for (const [sessionKey, meta] of Object.entries(openSessions)) {
+      if (meta.status !== 'pending') continue;
+      const createdAt = Date.parse(meta.createdAt || '');
       if (!Number.isFinite(createdAt) || now - createdAt < BATTLE_PENDING_EXPIRATION_MS) continue;
 
       const ref = db.ref(`gameData/battleSessions/${sessionKey}`);

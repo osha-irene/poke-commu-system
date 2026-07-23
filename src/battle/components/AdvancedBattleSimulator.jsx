@@ -494,13 +494,35 @@ export function AdvancedBattleSimulator({
     const pendingComposite = battleState.pendingChoices?.[player];
     const hasItemPass = pendingComposite?.type === 'item-pass';
     const movePicking = pendingMoveTarget[player]?.activeIndex === activeIndex;
+    // 이 슬롯이 지금 실제로 교체(부활/강제 교체)가 필요한지. 더블배틀에서 다른 슬롯이
+    // 기절해서 side 전체가 'switch' 요청 상태여도, 이 슬롯 자체는 교체가 필요 없을 수 있다.
+    const needsForceSwitch = Boolean(active.request?.forcedSwitch);
     const canChooseMove = waiting && side.requestType === 'move' && !slotChoice && !hasItemPass && !movePicking;
-    const canSwitch = waiting && side.canSwitch && side.bench.length > 0 && !slotChoice && !hasItemPass;
+    const canSwitch = waiting && side.canSwitch && side.bench.length > 0 && !slotChoice && !hasItemPass
+      && (side.requestType !== 'switch' || needsForceSwitch);
     const switchBlockedReason = active.request?.trapped
       ? '교체할 수 없는 상태입니다.'
       : active.request?.maybeTrapped
         ? '교체가 막힐 수 있습니다.'
         : '';
+
+    // 벤치가 없으면(더블배틀에서 아군 한쪽이 전멸) 기절한 슬롯은 아무 선택 없이 이번 턴이
+    // 그대로 진행되므로, 빈 자리처럼 안내만 하고 기술/교체 UI는 아예 띄우지 않는다.
+    if (active.fainted && !needsForceSwitch) {
+      return (
+        <div className={`${borderClass} rounded-lg border p-6 opacity-60 shadow-sm`}>
+          <div className="text-center">
+            <h2 className={`mb-2 text-xl font-bold ${titleClass}`}>
+              {player === 'player1' ? 'Player 1' : 'Player 2'}: <PokemonNameText pokemon={active} />
+            </h2>
+            <div className="mb-3 text-sm text-gray-600">Lv.{active.level} | {active.types?.join('/')}</div>
+            <div className="rounded-lg bg-gray-100 px-4 py-3 text-sm font-semibold text-gray-500">
+              기절했습니다. 선택 없이 이번 턴이 자동으로 진행됩니다.
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     const handleMoveSelect = (moveIndex) => {
       const move = active.moves?.[moveIndex];
@@ -1094,7 +1116,9 @@ export function AdvancedBattleSimulator({
         {waiting && (
           <div className={`mt-4 rounded-lg border-2 p-3 text-center ${color === 'blue' ? 'border-blue-300 bg-blue-100' : 'border-red-300 bg-red-100'}`}>
             <div className={`${color === 'blue' ? 'text-blue-800' : 'text-red-800'} font-semibold`}>
-              {side.requestType === 'switch' ? '교체할 포켓몬을 선택하세요.' : side.requestType === 'move' ? '기술 또는 교체를 선택하세요.' : '상대 선택을 기다리는 중입니다.'}
+              {side.requestType === 'switch'
+                ? (needsForceSwitch ? '교체할 포켓몬을 선택하세요.' : '다른 포켓몬의 교체를 기다리는 중입니다.')
+                : side.requestType === 'move' ? '기술 또는 교체를 선택하세요.' : '상대 선택을 기다리는 중입니다.'}
             </div>
           </div>
         )}
