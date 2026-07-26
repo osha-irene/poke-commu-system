@@ -357,7 +357,9 @@ function SessionCard({ session, onDelete }) {
               {reward.friendshipBonus > 0 && <span>친밀도 +{reward.friendshipBonus}</span>}
               {reward.expBonus > 0 && <span>경험치 +{reward.expBonus}</span>}
               {reward.dishItem && <span className="inline-flex items-center gap-1 text-amber-600 font-semibold"><Gift size={12} />{reward.dishItem.name}</span>}
-              {reward.bonusItem && <span className="inline-flex items-center gap-1 text-amber-600 font-semibold"><Gift size={12} />{reward.bonusItem.name}</span>}
+              {reward.bonusItems?.map((item, i) => (
+                <span key={item.itemId ?? i} className="inline-flex items-center gap-1 text-amber-600 font-semibold"><Gift size={12} />{item.name}</span>
+              ))}
               {reward.egg && <span className="text-purple-600 font-semibold">🥚 알 획득</span>}
             </div>
           )}

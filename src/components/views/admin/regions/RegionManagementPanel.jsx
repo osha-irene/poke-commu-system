@@ -777,7 +777,7 @@ export default function RegionManagementPanel({
               </div>
             </div>
 
-            <div className="divide-y divide-gray-200 max-h-[600px] overflow-y-auto">
+            <div className="divide-y divide-gray-200">
               {townGroups.map(({ town, regions: townRegions }, townIndex) => {
                 const isExpanded = expandedGroups[town.groupId] === true;
 

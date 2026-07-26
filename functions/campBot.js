@@ -45,7 +45,7 @@ const isTerminalCampingStatus = status =>
 const getCampingDishChoice = content => {
   const normalized = String(content || '').toLowerCase();
   return CAMPING_DISH_CHOICES.find(choice =>
-    choice.aliases.some(alias => new RegExp(`(^|\\s|\\[|\\])${alias.toLowerCase()}($|\\s|\\[|\\])`, 'i').test(normalized))
+    choice.aliases.some(alias => new RegExp(`\\[\\s*${alias.toLowerCase()}\\s*\\]`, 'i').test(normalized))
   ) || null;
 };
 
@@ -235,16 +235,12 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
     };
   };
 
-  const rollBonusItem = (settings, currentStage) => {
+  const rollBonusItems = (settings, currentStage) => {
     const idx = typeof currentStage === 'number' ? currentStage - 1 : -1;
     const stageItems = idx >= 0 ? settings.stages?.[idx]?.bonusItems : null;
     const pool = Array.isArray(stageItems) && stageItems.length > 0 ? stageItems : settings.bonusItems;
-    const items = (pool || []).filter(item => Number(item.weight) > 0);
-    const total = items.reduce((s, item) => s + Number(item.weight), 0);
-    if (!total) return null;
-    let roll = Math.random() * total;
-    for (const item of items) { roll -= Number(item.weight); if (roll <= 0) return item; }
-    return null;
+    const items = (pool || []).filter(item => Number(item.chance ?? item.weight) > 0);
+    return items.filter(item => Math.random() < toProbability(item.chance ?? item.weight, 0));
   };
 
   const addInventoryItem = (inventory = [], item, count = 1) => {
@@ -402,10 +398,12 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
     for (const reward of failRewards) {
       inventory = addInventoryItem(inventory, reward, reward.count || 1);
     }
-    let bonusItem = null;
+    let bonusItems = [];
     if (success && highFriendship) {
-      bonusItem = rollBonusItem(settings, session.currentStage);
-      inventory = addInventoryItem(inventory, bonusItem);
+      bonusItems = rollBonusItems(settings, session.currentStage);
+      for (const item of bonusItems) {
+        inventory = addInventoryItem(inventory, item);
+      }
     }
 
     let egg = null;
@@ -442,9 +440,9 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
       appliedAt: success ? new Date().toISOString() : null,
       failedAt: success ? null : new Date().toISOString(),
       success,
-      reward: { stage: session.currentStage, friendshipBonus, expBonus, dishItem: dishItem || null, bonusItem: bonusItem || null, failRewards, egg: egg || null },
+      reward: { stage: session.currentStage, friendshipBonus, expBonus, dishItem: dishItem || null, bonusItems, failRewards, egg: egg || null },
     });
-    return { stageSettings, friendshipBonus, expBonus, dishItem, bonusItem, failRewards, egg };
+    return { stageSettings, friendshipBonus, expBonus, dishItem, bonusItems, failRewards, egg };
   };
 
   const finishSession = async ({ sessionKey, session, settings, success, prefixLines = [] }) => {
@@ -479,7 +477,7 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
       `친밀도 +${rewards.friendshipBonus}`, `경험치 +${rewards.expBonus}`,
     ];
     if (rewards.dishItem) lines.push(`떡볶이 아이템: ${rewards.dishItem.name || rewards.dishItem.nameEn}`);
-    if (rewards.bonusItem) lines.push(`보너스 아이템: ${rewards.bonusItem.name}`);
+    if (rewards.bonusItems?.length) lines.push(`보너스 아이템: ${rewards.bonusItems.map(item => item.name).join(', ')}`);
     if (rewards.failRewards?.length) lines.push(`실패 보상: ${rewards.failRewards.map(item => `${item.name || item.nameKo || item.nameEn || item.itemId} x${item.count || 1}`).join(', ')}`);
     if (rewards.egg) lines.push('알을 발견했어요!');
     return lines.join('\n');

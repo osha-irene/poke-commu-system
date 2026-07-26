@@ -187,12 +187,12 @@ export default function CampingView({ trainer, campingSessions = [] }) {
                                 {reward.dishItem.name}
                               </span>
                             )}
-                            {reward.bonusItem && (
-                              <span style={{ color: '#b07800', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3 }}>
+                            {reward.bonusItems?.map((item, i) => (
+                              <span key={item.itemId ?? i} style={{ color: '#b07800', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3 }}>
                                 <Gift size={10} />
-                                {reward.bonusItem.name}
+                                {item.name}
                               </span>
-                            )}
+                            ))}
                             {reward.egg && <span style={{ color: '#7c3aed', fontWeight: 600 }}>🥚 알 획득</span>}
                           </div>
                         )}
