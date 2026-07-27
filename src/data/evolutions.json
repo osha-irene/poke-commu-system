@@ -4190,26 +4190,6 @@
       }
     },
     {
-      "from": 854,
-      "to": 855,
-      "fromName": "sinistea",
-      "toName": "polteageist",
-      "condition": {
-        "type": "item",
-        "item": "masterpiece-mug"
-      }
-    },
-    {
-      "from": 854,
-      "to": 855,
-      "fromName": "sinistea",
-      "toName": "polteageist",
-      "condition": {
-        "type": "item",
-        "item": "unremarkable-teacup"
-      }
-    },
-    {
       "from": 856,
       "to": 857,
       "fromName": "hatenna",
@@ -4988,26 +4968,6 @@
       "condition": {
         "type": "item",
         "item": "unremarkable-teacup"
-      }
-    },
-    {
-      "from": 1012,
-      "to": 1013,
-      "fromName": "poltchageist",
-      "toName": "sinistcha",
-      "condition": {
-        "type": "item",
-        "item": "cracked-pot"
-      }
-    },
-    {
-      "from": 1012,
-      "to": 1013,
-      "fromName": "poltchageist",
-      "toName": "sinistcha",
-      "condition": {
-        "type": "item",
-        "item": "chipped-pot"
       }
     },
     {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import { Trees, Mountain, Waves } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
+import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
 import mapBg from '../../assets/map/map.png';
 import pokeballImg from '../../assets/map/pokeball.png';
 import deviceTop from '../../assets/map/device-top.png';
@@ -599,6 +600,10 @@ export default function MapView({
                   const caught = caughtNumbers.has(Number(p.number));
                   const known = caught || isPokemonUnlocked(p);
                   const iconUrl = known ? getPokemonLocalIconUrl({ ...p, nameEn: p.nameEn || p.name || 'UNKNOWN' }) : null;
+                  // "이름 (폼 설명)" 형태는 뒤 괄호를 떼고, 리전 폼(알로라/가라르/히스이/팔데아)만
+                  // 이름 아래에 작게 리전 이름을 따로 표시한다.
+                  const { name: displayName, formLabel } = getPokemonDisplayParts(p);
+                  const isRegionalLabel = !!p.regionalForm;
                   return (
                     <div key={p.id || p.number} style={{
                       position: 'relative',
@@ -622,8 +627,13 @@ export default function MapView({
                         )}
                       </div>
                       <div style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 10, fontWeight: 700, color: known ? '#1a2e10' : '#bbb', textAlign: 'center', lineHeight: 1.3, position: 'relative', zIndex: 1 }}>
-                        {known ? p.name : '???'}
+                        {known ? displayName : '???'}
                       </div>
+                      {known && isRegionalLabel && formLabel && (
+                        <div style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 7, fontWeight: 600, color: 'rgba(26,46,16,0.55)', textAlign: 'center', lineHeight: 1, marginTop: -2, position: 'relative', zIndex: 1 }}>
+                          {formLabel}
+                        </div>
+                      )}
                     </div>
                   );
                 })}

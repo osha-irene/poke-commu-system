@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, ChevronLeft, MapPin, Footprints, Trees, Mountain, Waves } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../../utils/pokemonIconUtils';
+import { getPokemonDisplayParts } from '../../../utils/pokemonDisplayName';
 
 const P = {
   bg:      'rgba(255,255,255,0.92)',
@@ -83,12 +84,6 @@ export default function MobileMapView({
       if (placeIds.length > 0) return getPokemon(placeIds, area.allowNationalPokedex);
     }
     return getPokemon(area.pokemons || [], area.allowNationalPokedex);
-  };
-
-  const splitName = (name = '') => {
-    const m = name.match(/^(.+?)(\(.+?\))$/);
-    if (m) return { main: m[1].trim(), sub: m[2] };
-    return { main: name, sub: null };
   };
 
   const handleSelectArea = (area) => {
@@ -236,7 +231,10 @@ export default function MobileMapView({
                 const caught = caughtNumbers.has(num);
                 const known  = caught || seenNumbers.has(num);
                 const iconUrl = known ? getPokemonLocalIconUrl({ ...p, nameEn: p.nameEn || p.name || 'UNKNOWN' }) : null;
-                const { main, sub } = splitName(known ? p.name : '???');
+                // 이름 뒷부분 괄호(폼 설명)는 떼고, 리전 폼만 이름 아래에 작게 리전 이름을 보여준다.
+                const { name: displayName, formLabel } = getPokemonDisplayParts(p);
+                const main = known ? displayName : '???';
+                const sub = known && p.regionalForm && formLabel ? formLabel : null;
 
                 return (
                   <div key={p.id || p.number} style={{
