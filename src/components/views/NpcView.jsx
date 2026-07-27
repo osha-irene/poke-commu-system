@@ -283,18 +283,22 @@ function MemberOverlay({ member, onClose, isAdmin, closing, allMoves = [] }) {
   });
   const imgRef = useRef(null);
 
-  const party      = getParty(member);
   const partner    = getPartner(member);
-  const nonPartner = party.filter(p => !isSamePokemon(p, partner));
-  const entryPokemonAll = partner ? [partner, ...nonPartner].slice(0, 6) : nonPartner.slice(0, 6);
 
   // 파트너는 caughtPokemon 배열이 아니라 별도 partnerPokemon 필드에 저장될 수 있어서,
-  // 그룹 필터링 대상 풀에도 명시적으로 합쳐야 한다 (안 그러면 파트너에 붙인 오리진/비욘드
+  // 후보 풀에도 명시적으로 합쳐야 한다 (안 그러면 파트너에 붙인 오리진/비욘드
   // 태그가 무시되고 그 포켓몬이 탭에서 사라진다).
   const rawCaught = (member?.caughtPokemon || []).filter(Boolean);
   const candidatePool = partner && !rawCaught.some(p => isSamePokemon(p, partner))
     ? [partner, ...rawCaught]
     : rawCaught;
+
+  // 오리진/비욘드 분류를 아무도 안 했으면(=그냥 "엔트리" 텍스트로 노출되는 경우) 6마리로
+  // 자르지 않고 엔트리에 들어있는 포켓몬을 전부 보여준다.
+  const nonPartnerAll = candidatePool.filter(p => !isSamePokemon(p, partner));
+  const partnerIncludedAll = partner && candidatePool.some(p => isSamePokemon(p, partner));
+  const entryPokemonAll = partnerIncludedAll ? [partner, ...nonPartnerAll] : nonPartnerAll;
+
   const hasEntryGroups = candidatePool.some(p => p?.entryGroup === 'origin' || p?.entryGroup === 'beyond');
   let entryPokemon = entryPokemonAll;
   if (hasEntryGroups) {
