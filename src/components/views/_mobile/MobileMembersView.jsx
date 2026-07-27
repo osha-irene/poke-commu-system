@@ -358,11 +358,16 @@ function MainTab({ member, title, partner }) {
                   {partner.nickname && partner.nameKo && (
                     <div style={{ fontSize: '0.72rem', color: '#888', marginTop: 1 }}>{partner.nameKo}</div>
                   )}
-                  {(partner.types || []).length > 0 && (
-                    <div style={{ display: 'flex', gap: 3, marginTop: 5, flexWrap: 'wrap' }}>
-                      {partner.types.map(t => <TypeBadge key={t} type={t} />)}
-                    </div>
-                  )}
+                  {(() => {
+                    const partnerTypes = Array.from(new Set(
+                      [...(Array.isArray(partner.types) ? partner.types : []), partner.type, partner.type2].filter(Boolean)
+                    ));
+                    return partnerTypes.length > 0 && (
+                      <div style={{ display: 'flex', gap: 3, marginTop: 5, flexWrap: 'wrap' }}>
+                        {partnerTypes.map(t => <TypeBadge key={t} type={t} />)}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             );

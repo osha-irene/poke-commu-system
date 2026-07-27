@@ -56,6 +56,17 @@ export function isMalformedPokemon(pokemon) {
 
 export function getPokemonDisplayParts(pokemon = {}) {
   const rawName = pokemon.name || pokemon.nickname || pokemon.nameEn || '';
+
+  // 모르페코는 배부른/배고픈 모습이 배틀 중 특성으로 자동 전환되는 것이라, 다른 폼체인지
+  // 포켓몬과 달리 "(배부른 모양)" 같은 폼 라벨을 붙이지 않고 그냥 "모르페코"로만 표시한다.
+  const baseSpeciesEn = String(pokemon.baseSpeciesEn || '').toLowerCase();
+  if (baseSpeciesEn === 'morpeko' || String(pokemon.nameEn || '').toLowerCase().startsWith('morpeko')) {
+    return {
+      name: pokemon.baseSpecies || '모르페코',
+      formLabel: '',
+    };
+  }
+
   const parenthesized = rawName.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
   const variantSource = `${pokemon.regionalForm || ''} ${pokemon.formVariant || ''} ${pokemon.nameEn || ''}`.toLowerCase();
   const regionKey = Object.keys(REGIONAL_FORM_LABELS).find(region => (

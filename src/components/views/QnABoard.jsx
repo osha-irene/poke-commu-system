@@ -52,6 +52,14 @@ export default function QnABoard({
     });
   const totalPages = Math.max(1, Math.ceil(allVisiblePosts.length / PAGE_SIZE));
   const visiblePosts = allVisiblePosts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // 하단 페이지 번호 목록은 한 번에 10개 단위로만 보여준다 (현재 페이지가 속한 구간만 표시)
+  const PAGE_GROUP_SIZE = 10;
+  const pageGroupStart = Math.floor((page - 1) / PAGE_GROUP_SIZE) * PAGE_GROUP_SIZE + 1;
+  const pageGroupEnd = Math.min(pageGroupStart + PAGE_GROUP_SIZE - 1, totalPages);
+  const visiblePageNumbers = Array.from(
+    { length: pageGroupEnd - pageGroupStart + 1 },
+    (_, i) => pageGroupStart + i
+  );
   const selectedPost = posts.find(post => post.id === selectedPostId) || null;
 
   const formatDate = (dateString) => {
@@ -246,7 +254,7 @@ export default function QnABoard({
             className="qna-page-arrow qna-page-arrow--mobile rounded px-2 py-1 transition"
             style={{ background: 'transparent' }}
           ><ChevronLeft size={22} color="#fff" strokeWidth={2.5} /></button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
+          {visiblePageNumbers.map(n => (
             <button
               key={n}
               type="button"

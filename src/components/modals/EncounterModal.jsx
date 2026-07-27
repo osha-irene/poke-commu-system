@@ -13,6 +13,7 @@ import encounterRunImg from '../../assets/map/encounter-run.png';
 import encounterPokemonImg from '../../assets/map/encounter-pokemon.png';
 import { getEncounterBackground, isNoBaseBackground } from '../../utils/encounterBackground';
 import { getEncounterBgBase } from '../../utils/encounterBgBase';
+import { getGenderedSpriteUrl } from '../../utils/pokemonImageUtils';
 
 const getBaseName = (name) => name?.replace(/\s*\(.*?\)\s*/g, '').trim() || name;
 
@@ -144,10 +145,12 @@ export default function EncounterModal({
       };
     });
 
-  // 포켓몬 스프라이트 URL
-  const pokemonSpriteUrl = pokemon.isShiny
+  // 포켓몬 스프라이트 URL - 암수 모습이 다른 종(탱그릴, 피카츄 등)은 조우 시 뽑힌 성별에
+  // 맞는 스프라이트를 써야 한다. 안 그러면 내부적으로는 암컷으로 뽑혔어도 조우 화면에는
+  // 항상 기본(수컷 모습) 스프라이트만 나온다.
+  const pokemonSpriteUrl = getGenderedSpriteUrl(pokemon, pokemon) || (pokemon.isShiny
     ? `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/${pokemon.number}.png`
-    : (pokemon.spriteUrl || `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pokemon.number}.png`);
+    : (pokemon.spriteUrl || `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pokemon.number}.png`));
 
   // 스프라이트 하단 투명 여백 측정 후 translateY 계산
   useEffect(() => {

@@ -130,9 +130,16 @@ const getFullImg     = m => m?.profileImageFull || m?.profileImage || m?.profile
 const getListImg     = m => m?.profileImage || m?.profileImageFull || m?.profileImageUrl || '';
 const getParty       = m => (m?.caughtPokemon || []).filter(Boolean).slice(0, 6);
 const getPartner     = m => {
-  if (m?.partnerPokemon) return m.partnerPokemon;
+  // 어드민 포켓몬 편집화면에서 체크한 "파트너 여부"(캐릭터 배열의 isPartner)가 최신/권위
+  // 있는 값이다. partnerPokemon 필드는 예전 방식(포켓몬 지급 시점에 고정)으로 남아있을 수
+  // 있어서, 그게 있어도 isPartner로 체크된 포켓몬이 있으면 그쪽을 우선한다 - 안 그러면
+  // 편집화면에서 체크해도 반영이 안 되고 그냥 배열 맨 앞 포켓몬(또는 예전 partnerPokemon)이
+  // 계속 파트너로 뜬다.
   const p = getParty(m);
-  return p.find(x => x.isPartner) || p[0] || null;
+  const flagged = p.find(x => x?.isPartner);
+  if (flagged) return flagged;
+  if (m?.partnerPokemon) return m.partnerPokemon;
+  return p[0] || null;
 };
 const getPokemonIdentity = p => p?.uniqueId || p?.id || p?.pokemonId || null;
 const isSamePokemon = (a, b) => {

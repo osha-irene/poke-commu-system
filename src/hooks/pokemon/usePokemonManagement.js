@@ -1,6 +1,6 @@
 // src/hooks/pokemon/usePokemonManagement.js - 포켓몬 관리 훅
 
-import { ref, get } from 'firebase/database';
+import { ref, get, runTransaction } from 'firebase/database';
 import { database } from '../../firebase';
 import { getPokemonLearnset } from '../../utils/pokemonLearnsets';
 import { getRequiredExpForLevel } from '../../utils/experience';
@@ -416,54 +416,88 @@ const usePokemonManagement = (
 
     const oldLevel = Number(pokemon.level) || 1;
 
-    // 기존 누적 exp + 이번에 배분할 exp 합산
-    let currentLevel = oldLevel;
-    let accExp = (Number(pokemon.exp) || 0) + (Number(expAmount) || 0);
-    const learnedLevels = [];
-
-    if (Number(expAmount) > 0) {
-      while (currentLevel < maxAllowedLevel) {
-        const required = getRequiredExpForLevel(currentLevel);
-        if (required === null || accExp < required) break;
-        accExp -= required;
-        currentLevel++;
-        learnedLevels.push(currentLevel);
-      }
-    } else {
-      // expAmount 없이 호출된 경우 (이상한사탕 단독) — 기존 +1 동작
-      currentLevel = Math.min(oldLevel + 1, maxAllowedLevel);
-      learnedLevels.push(currentLevel);
-      accExp = 0;
-    }
-
-    const newLevel = currentLevel;
-    if (newLevel === oldLevel && accExp === (Number(pokemon.exp) || 0)) return false;
-
     const isPartnerPokemon = currentUser.partnerPokemon?.uniqueId === uniqueId;
 
-    // ⭐ 클로저/한 번의 get() 스냅샷이 아니라 트랜잭션으로 Firebase의 최신 데이터 위에 레벨/exp만
-    // 패치한다 (moveUsage 등 다른 곳에서 직접 기록된 필드도 자연히 보존됨). 이상한사탕을 여러
-    // 포켓몬에게 빠르게 연달아 먹일 때 앞선 변경이 사라지는 문제를 막기 위함.
-    const result = await updateOwnedPokemonByUniqueId(uniqueId, (latestPokemon) => ({
-      ...latestPokemon,
-      level: newLevel,
-      exp: accExp
-    }));
+    // ⭐ 레벨/exp 계산 자체를 클로저로 캡처한 로컬 스냅샷(pokemon.level/pokemon.exp)이 아니라,
+    // 트랜잭션이 넘겨주는 Firebase의 실제 최신 값(latestPokemon) 기준으로 해야 한다. 예전엔
+    // 바깥에서 미리 newLevel/accExp를 계산해두고 트랜잭션 안에서는 그 값을 그대로 덮어쓰기만
+    // 했는데, 그 사이 로컬 상태가 최신이 아니면(연속 배분, 다른 화면에서의 갱신 지연 등)
+    // "이미 반영된 exp/레벨" 위에 또 배분량을 더해 계산해서 레벨이 갑자기 몇 단계씩 뛰거나
+    // 반영이 안 된 것처럼 보이는 문제가 있었다.
+    let newLevel = oldLevel;
+    let finalAccExp = Number(pokemon.exp) || 0;
+    // 레벨 제한에 걸려서 실제로 못 쓴 만큼은 트레이너에게 청구하지 않는다 (아래에서 계산)
+    let usedExpFromAllocation = Number(expAmount) || 0;
+    const learnedLevels = [];
+
+    const result = await updateOwnedPokemonByUniqueId(uniqueId, (latestPokemon) => {
+      const startLevel = Number(latestPokemon.level) || 1;
+      let currentLevel = startLevel;
+      let accExp = (Number(latestPokemon.exp) || 0) + (Number(expAmount) || 0);
+      let hitLevelCap = false;
+      learnedLevels.length = 0;
+
+      if (Number(expAmount) > 0) {
+        while (true) {
+          if (currentLevel >= maxAllowedLevel) { hitLevelCap = true; break; }
+          const required = getRequiredExpForLevel(currentLevel);
+          if (required === null || accExp < required) break;
+          accExp -= required;
+          currentLevel++;
+          learnedLevels.push(currentLevel);
+        }
+      } else {
+        // expAmount 없이 호출된 경우 (이상한사탕 단독) — 기존 +1 동작
+        currentLevel = Math.min(startLevel + 1, maxAllowedLevel);
+        learnedLevels.push(currentLevel);
+        accExp = 0;
+      }
+
+      newLevel = currentLevel;
+
+      if (hitLevelCap) {
+        // 제한 레벨에 걸려 더는 못 쓰는 초과 경험치는 포켓몬에 남기지 않고(exp 0),
+        // 그만큼은 트레이너에게도 청구하지 않는다 - 배분한 exp 중 실제로 레벨업에 쓰인
+        // 만큼만 소모 처리한다.
+        usedExpFromAllocation = Math.max(0, (Number(expAmount) || 0) - accExp);
+        accExp = 0;
+      } else {
+        usedExpFromAllocation = Number(expAmount) || 0;
+      }
+      finalAccExp = accExp;
+
+      return {
+        ...latestPokemon,
+        level: newLevel,
+        exp: accExp
+      };
+    });
 
     if (!result.committed) {
       alert('레벨업 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
       return false;
     }
 
-    // trainerExp에서 배분한 만큼만 차감
-    const newTrainerExp = Math.max(0, (Number(currentUser.trainerExp) || 0) - (Number(expAmount) || 0));
-    updateCurrentUser({ trainerExp: newTrainerExp });
+    // trainerExp 차감도 "기존값(클로저 스냅샷) - 배분량"으로 덮어쓰지 않고, runTransaction으로
+    // 실제 최신 값 위에서 원자적으로 차감한다 - 안 그러면 그 사이 다른 경로(출석 보상 등)로
+    // 늘어난 경험치를 통째로 덮어써서 사라진 것처럼 보일 수 있다.
+    const trainerExpRef = ref(database, `members/${currentUser.id}/trainerExp`);
+    const trainerExpResult = await runTransaction(
+      trainerExpRef,
+      (current) => Math.max(0, (Number(current) || 0) - usedExpFromAllocation)
+    );
+    if (trainerExpResult.committed) {
+      updateCurrentUser({ trainerExp: trainerExpResult.snapshot.val() });
+    }
 
     if (newLevel > oldLevel) {
+      const cappedMsg = usedExpFromAllocation < (Number(expAmount) || 0)
+        ? `\n(레벨 제한에 걸려 ${(Number(expAmount) || 0) - usedExpFromAllocation} 경험치는 사용되지 않았습니다)`
+        : '';
       const levelMsg = newLevel > oldLevel + 1
         ? `Lv.${oldLevel} → Lv.${newLevel} (${newLevel - oldLevel}레벨 상승!)`
         : `Lv.${oldLevel} → Lv.${newLevel}`;
-      alert(`${pokemon.nickname || pokemon.name}의 레벨이 올랐다!\n${levelMsg}`);
+      alert(`${pokemon.nickname || pokemon.name}의 레벨이 올랐다!\n${levelMsg}${cappedMsg}`);
     }
 
     setTimeout(async () => {

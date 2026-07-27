@@ -2555,7 +2555,10 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
           {party.length === 0
             ? <span style={{ fontSize: 14, color: 'rgba(0,0,0,0.3)' }}>엔트리가 비어있어요</span>
             : party.map((p, i) => {
-              const types = (Array.isArray(p.types) ? p.types : [p.type]).filter(Boolean);
+              // type2(복합 타입)를 안 읽으면 두 가지 타입인 포켓몬도 하나만 보인다.
+              const types = Array.from(new Set(
+                [...(Array.isArray(p.types) ? p.types : []), p.type, p.type2].filter(Boolean)
+              ));
               const moves = (p.moves || []).slice(0, 4);
               const baseName = p.nameKo || p.name || '';
               const nickname = p.nickname && p.nickname !== baseName ? p.nickname : null;

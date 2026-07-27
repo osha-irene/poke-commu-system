@@ -1376,6 +1376,7 @@ export const useAdminMembers = (
           hiddenAbility: safeValue(updates.hiddenAbility, p.hiddenAbility),
           hiddenAbilityEn: safeValue(updates.hiddenAbilityEn, p.hiddenAbilityEn),
           isHiddenAbility: safeValue(updates.isHiddenAbility, p.isHiddenAbility || false),
+          isPartner: safeValue(updates.isPartner, p.isPartner || false),
           baseHp: safeValue(updates.baseHp, p.baseHp),
           baseAttack: safeValue(updates.baseAttack, p.baseAttack),
           baseDefense: safeValue(updates.baseDefense, p.baseDefense),

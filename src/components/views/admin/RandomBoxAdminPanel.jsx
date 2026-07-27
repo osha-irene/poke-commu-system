@@ -2,10 +2,27 @@ import React, { useState } from 'react';
 import { Gift, Plus, Trash2, ChevronDown, ChevronUp, Loader } from 'lucide-react';
 import ItemSelectorModal from '../../modals/ItemSelectorModal';
 
+// 확률 분포 바 색상 - 인접한 슬롯끼리 색이 뭉쳐 보이지 않도록(예: blue/indigo/violet처럼
+// 색상군이 겹치는 팔레트 대신) 색상 간 구분이 검증된 고정 순서 팔레트를 쓴다.
+// (dataviz 스킬 references/palette.md의 카테고리 팔레트, validate_palette.js로 인접쌍 통과 확인됨)
+const PROBABILITY_BAR_COLORS = [
+  '#2a78d6', // blue
+  '#eb6834', // orange
+  '#1baf7a', // aqua
+  '#eda100', // yellow
+  '#e87ba4', // magenta
+  '#008300', // green
+  '#4a3aa7', // violet
+  '#e34948', // red
+];
+
 export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }) {
   const [expandedBox, setExpandedBox] = useState(null);
   const [showItemSelector, setShowItemSelector] = useState(false);
   const [selectedBoxId, setSelectedBoxId] = useState(null);
+  // 확률 바 조각이 너무 작아 이름이 안 보일 때, 마우스오버로 뜨는 커스텀 툴팁이 어떤 조각
+  // 위에 떠야 하는지 저장한다. `${box.id}-${item.itemId}` 키로 박스/조각을 함께 식별한다.
+  const [hoveredBarKey, setHoveredBarKey] = useState(null);
   
   // ⭐ 안전한 데이터 초기화
   const getDefaultRandomBoxes = () => [
@@ -419,36 +436,64 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
                     </div>
                     
                     {/* 통합 확률 바 */}
-                    <div className="mb-4">
-                      <div className="w-full bg-gray-200 rounded-full h-6 overflow-hidden flex">
-                        {boxItems.map((item, index) => {
+                    <div className="mb-4 relative">
+                      {(() => {
+                        let cumulative = 0;
+                        const segments = boxItems.map((item, index) => {
                           const probability = parseFloat(getItemProbability(item.weight, totalWeight));
-                          const colors = [
-                            'bg-blue-500',
-                            'bg-purple-500',
-                            'bg-pink-500',
-                            'bg-indigo-500',
-                            'bg-violet-500',
-                            'bg-fuchsia-500',
-                            'bg-cyan-500',
-                            'bg-teal-500'
-                          ];
-                          const color = colors[index % colors.length];
-                          
-                          return (
-                            <div
-                              key={`bar-${box.id}-${item.itemId}`}
-                              className={`${color} flex items-center justify-center text-white text-xs font-bold transition-all duration-300 hover:brightness-110 px-1`}
-                              style={{ width: `${probability}%` }}
-                              title={`${item.name}: ${probability.toFixed(2)}%`}
-                            >
-                              {probability >= 8 && (
-                                <span className="truncate">{item.name}</span>
-                              )}
+                          const startPercent = cumulative;
+                          cumulative += probability;
+                          return { item, index, probability, startPercent };
+                        });
+
+                        return (
+                          <>
+                            <div className="w-full bg-gray-200 rounded-full h-6 overflow-hidden flex">
+                              {segments.map(({ item, index, probability }) => {
+                                const color = PROBABILITY_BAR_COLORS[index % PROBABILITY_BAR_COLORS.length];
+                                const isLast = index === boxItems.length - 1;
+                                const barKey = `${box.id}-${item.itemId}`;
+
+                                return (
+                                  <div
+                                    key={`bar-${box.id}-${item.itemId}`}
+                                    className="flex items-center justify-center text-white text-xs font-bold transition-all duration-300 hover:brightness-110 px-1"
+                                    style={{
+                                      width: `${probability}%`,
+                                      backgroundColor: color,
+                                      // 인접한 조각이 같은 색 계열이어도 뭉쳐 보이지 않도록 트랙 색으로 얇은 틈을 준다.
+                                      borderRight: isLast ? 'none' : '2px solid #e5e7eb',
+                                      boxSizing: 'border-box',
+                                    }}
+                                    onMouseEnter={() => setHoveredBarKey(barKey)}
+                                    onMouseLeave={() => setHoveredBarKey(null)}
+                                  >
+                                    {probability >= 8 && (
+                                      <span className="truncate">{item.name}</span>
+                                    )}
+                                  </div>
+                                );
+                              })}
                             </div>
-                          );
-                        })}
-                      </div>
+                            {/* 조각이 작아서 이름이 안 보이는 경우, 마우스오버 시 트랙 밖(위)에 커스텀 툴팁으로 띄운다 */}
+                            {segments.map(({ item, probability, startPercent }) => {
+                              const barKey = `${box.id}-${item.itemId}`;
+                              if (probability >= 8 || hoveredBarKey !== barKey) return null;
+                              const centerPercent = startPercent + probability / 2;
+
+                              return (
+                                <div
+                                  key={`tooltip-${barKey}`}
+                                  className="absolute bottom-full mb-1.5 -translate-x-1/2 whitespace-nowrap bg-gray-900 text-white text-xs font-semibold px-2 py-1 rounded shadow-lg pointer-events-none z-10"
+                                  style={{ left: `${centerPercent}%` }}
+                                >
+                                  {item.name}: {probability.toFixed(2)}%
+                                </div>
+                              );
+                            })}
+                          </>
+                        );
+                      })()}
                     </div>
                     
                     {/* 아이템 목록 */}
@@ -456,24 +501,14 @@ export default function RandomBoxAdminPanel({ shopData, allItems, onUpdateShop }
                       {boxItems.map((item, index) => {
                         const probability = getItemProbability(item.weight, totalWeight);
                         const itemData = allItems.find(i => i.id === item.itemId);
-                        const colors = [
-                          'bg-blue-500',
-                          'bg-purple-500',
-                          'bg-pink-500',
-                          'bg-indigo-500',
-                          'bg-violet-500',
-                          'bg-fuchsia-500',
-                          'bg-cyan-500',
-                          'bg-teal-500'
-                        ];
-                        const color = colors[index % colors.length];
-                        
+                        const color = PROBABILITY_BAR_COLORS[index % PROBABILITY_BAR_COLORS.length];
+
                         return (
-                          <div 
+                          <div
                             key={`summary-${box.id}-${item.itemId}`}
                             className="flex items-center gap-2 bg-white rounded-lg p-2 border border-gray-200"
                           >
-                            <div className={`w-3 h-3 rounded-full ${color} flex-shrink-0`}></div>
+                            <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: color }}></div>
                             <img 
                               src={itemData?.spriteUrl || itemData?.imageUrl || '/images/items/default.png'}
                               alt={item.name || '아이템'}
