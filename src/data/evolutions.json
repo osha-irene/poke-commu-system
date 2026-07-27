@@ -4611,16 +4611,6 @@
             }
         },
         {
-            "from": 962,
-            "to": 963,
-            "fromName": "bombirdier",
-            "toName": "finizen",
-            "condition": {
-                "type": "level",
-                "level": 38
-            }
-        },
-        {
             "from": 963,
             "to": 964,
             "fromName": "finizen",
