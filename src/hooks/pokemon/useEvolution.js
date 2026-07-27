@@ -317,9 +317,13 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster, u
         const evolItem = normalizeItemName(evo.condition.item || '');
         return evolItem === normalizedItemName;
       }
-      // 교환 진화는 파트너만 아이템으로 대체 가능
+      // 지닌 물건 없이 그냥 교환만 하면 되는 진화는, 링킹코드로 파트너 여부와 상관없이
+      // 누구나 대체 가능하다.
+      if (isLinkingCord && evo.condition.type === 'trade' && !evo.condition.heldItem) {
+        return true;
+      }
+      // 지닌 물건이 필요한 교환 진화는 파트너만 아이템으로 대체 가능
       if (!isPartner) return false;
-      if (isLinkingCord) return evo.condition.type === 'trade' && !evo.condition.heldItem;
       if (evo.condition.type === 'trade' && evo.condition.heldItem) {
         const evolItem = normalizeItemName(evo.condition.heldItem || '');
         return evolItem === normalizedItemName;

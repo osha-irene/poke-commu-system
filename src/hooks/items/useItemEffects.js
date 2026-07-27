@@ -22,6 +22,11 @@ const FORM_CHANGE_ITEMS = {
 // 트리미앙 컷트 이용권은 "이용권"이라 1회 사용 후 소모되어야 한다.
 const CONSUMABLE_FORM_CHANGE_ITEMS = new Set(['furfrou-trim-ticket']);
 
+// category가 "evolution"이 아니어도 진화 체크를 같이 태워야 하는 예외 아이템.
+// "고래왕급 고추장 떡볶이"(spicy_wailord, 관리자가 vitamins 카테고리의 친밀도 아이템으로
+// 만들어서 진화 아이템 분기를 안 타던 커스텀 아이템)만 예외로 처리한다.
+const EVOLUTION_CHECK_EXCEPTION_ITEMS = new Set(['spicy_wailord']);
+
 // 꿀 아이템 → 오리코리오 특정 폼 nameEn 직접 매핑
 const NECTAR_FORM_MAP = {
   'red-nectar': 'oricorio-baile',
@@ -561,9 +566,11 @@ export const useItemEffects = (
       return;
     }
 
-    // 진화 아이템
-    if (itemData?.category?.includes('evolution')) {
-      const success = evolutionHook.evolveWithItem(pokemon, itemData.nameEn || itemData.name);
+    // 진화 아이템 (category가 evolution인 경우 + 예외 아이템)
+    // updatedPokemon을 넘겨야 위의 친밀도 보너스(예: spicy_wailord)가 진화 후 결과에도
+    // 반영된다 - 원본 pokemon을 넘기면 이번에 오른 친밀도가 저장 없이 사라진다.
+    if (itemData?.category?.includes('evolution') || EVOLUTION_CHECK_EXCEPTION_ITEMS.has(itemData?.nameEn)) {
+      const success = evolutionHook.evolveWithItem(updatedPokemon, itemData.nameEn || itemData.name);
       if (success) {
         consumeItem(item);
       }
