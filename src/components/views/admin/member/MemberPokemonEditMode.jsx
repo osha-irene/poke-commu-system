@@ -67,9 +67,15 @@ function buildAbilityOptions(pokemonTemplate, currentAbility) {
   return options;
 }
 
+const ENTRY_GROUPS = [
+  { key: 'origin', label: '오리진' },
+  { key: 'beyond', label: '비욘드' },
+];
+
 export default function MemberPokemonEditMode({
   pokemon,
   pokemonTemplate,
+  isNPC = false,
   editData,
   setEditData,
   allMoves,
@@ -312,6 +318,27 @@ export default function MemberPokemonEditMode({
                 <span className="text-base font-semibold text-gray-700">파트너</span>
               </label>
             </div>
+
+            {isNPC && (
+              <Field label="엔트리 분류 (NPC)">
+                <div className="flex gap-1">
+                  {ENTRY_GROUPS.map(({ key, label }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setEditData(p => ({ ...p, entryGroup: p.entryGroup === key ? null : key }))}
+                      className={`flex-1 px-2 py-1.5 rounded text-sm font-bold transition-all ${
+                        editData.entryGroup === key
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </Field>
+            )}
 
             <Field label="체구">
               <div className="flex flex-wrap gap-1">

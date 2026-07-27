@@ -3,7 +3,7 @@ import { Heart, ChevronLeft, ChevronRight, Shield, User } from 'lucide-react';
 import memberButtonImg from '../../assets/members/member-button.png';
 import npcBg from '../../assets/members/npcbg.png';
 import { TYPE_COLORS, getTypeColorByEn } from '../../constants/pokemon';
-import { getTypeColor } from '../../styles/theme';
+import { getTypeColor, POKEBALL_LIST } from '../../styles/theme';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import { getAbilityKoreanName } from '../../utils/abilityUtils';
 import CachedImage from '../common/CachedImage';
@@ -112,6 +112,20 @@ function getMemberList(members, npcOnly = false) {
 const getPokemonName = p => p?.nickname || p?.name || p?.nameKo || p?.nameEn || '?';
 const getPokemonImg  = p => p?.sprite || p?.spriteUrl || p?.imageUrl || p?.iconUrl || p?.frontSprite || PLACEHOLDER;
 const getPokemonIcon = p => getPokemonLocalIconUrl(p) || PLACEHOLDER;
+const getBallImageUrl = p => {
+  if (p?.caughtWithBall) {
+    const search = p.caughtWithBall;
+    const searchLower = search.toLowerCase();
+    const ballInfo = POKEBALL_LIST.find(b =>
+      b.name === search ||
+      b.nameEn === searchLower.replace(/\s/g, '-') ||
+      b.name.toLowerCase() === searchLower
+    );
+    if (ballInfo) return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/${ballInfo.nameEn}.png`;
+  }
+  if (p?.ballImageUrl) return p.ballImageUrl;
+  return 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png';
+};
 const getFullImg     = m => m?.profileImageFull || m?.profileImage || m?.profileImageUrl || '';
 const getListImg     = m => m?.profileImage || m?.profileImageFull || m?.profileImageUrl || '';
 const getParty       = m => (m?.caughtPokemon || []).filter(Boolean).slice(0, 6);
@@ -192,15 +206,33 @@ function PkDetailCard({ pokemon, large, isPartner = false, showPartyDetails = fa
       </div>
       <div className="mbr-pk-info">
         <div className="mbr-pk-title">
-          <span className="mbr-pk-name">{getPokemonName(pokemon)}</span>
+          <span
+            className="mbr-pk-ball"
+            role="img"
+            aria-label=""
+            style={{
+              flexShrink: 0,
+              alignSelf: 'center',
+              width: 32,
+              height: 32,
+              marginTop: -5,
+              transform: 'translate(-3px, -1px)',
+              backgroundImage: `url(${getBallImageUrl(pokemon)})`,
+              backgroundSize: 'contain',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              imageRendering: 'pixelated',
+            }}
+          />
+          <span className="mbr-pk-name" style={{ marginLeft: -8 }}>{getPokemonName(pokemon)}</span>
           <span className="mbr-pk-lv">Lv.{pokemon?.level || 1}</span>
         </div>
         {types.length > 0 && (
-          <div className="mbr-pk-types">
+          <div className="mbr-pk-types" style={{ marginLeft: 3, marginTop: -2 }}>
             {types.map((t,i) => {
               const colors = TYPE_COLORS[t] || getTypeColor(t) || { bg: '#888', text: '#fff' };
               return (
-                <span key={`${t}-${i}`} className="mbr-pk-type" style={{ background: colors.bg, color: colors.text }}>
+                <span key={`${t}-${i}`} className="mbr-pk-type" style={{ background: colors.bg, color: colors.text, position: 'relative', top: 3 }}>
                   {t}
                 </span>
               );
@@ -208,7 +240,7 @@ function PkDetailCard({ pokemon, large, isPartner = false, showPartyDetails = fa
           </div>
         )}
         {(ability || (showPartyDetails && pokemon?.heldItem)) && (
-          <div className="mbr-pk-ability-row">
+          <div className="mbr-pk-ability-row" style={{ marginLeft: 4 }}>
             {ability && <span className="mbr-pk-ability">{ability}</span>}
             {showPartyDetails && pokemon?.heldItem && (
               <span className="mbr-pk-item">{pokemon.heldItem}</span>
@@ -242,6 +274,7 @@ function MemberOverlay({ member, onClose, isAdmin, closing, allMoves = [] }) {
   const [introVisible, setIntroVisible] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
   const [charLoaded, setCharLoaded] = useState(false);
+  const [activeEntryTab, setActiveEntryTab] = useState('origin');
   const [accent, setAccent] = useState(() => {
     const hex = member.accentColor?.replace('#', '');
     if (hex?.length === 6) return [parseInt(hex.slice(0,2),16), parseInt(hex.slice(2,4),16), parseInt(hex.slice(4,6),16)];
@@ -253,7 +286,25 @@ function MemberOverlay({ member, onClose, isAdmin, closing, allMoves = [] }) {
   const party      = getParty(member);
   const partner    = getPartner(member);
   const nonPartner = party.filter(p => !isSamePokemon(p, partner));
-  const entryPokemon = partner ? [partner, ...nonPartner].slice(0, 6) : nonPartner.slice(0, 6);
+  const entryPokemonAll = partner ? [partner, ...nonPartner].slice(0, 6) : nonPartner.slice(0, 6);
+
+  // 파트너는 caughtPokemon 배열이 아니라 별도 partnerPokemon 필드에 저장될 수 있어서,
+  // 그룹 필터링 대상 풀에도 명시적으로 합쳐야 한다 (안 그러면 파트너에 붙인 오리진/비욘드
+  // 태그가 무시되고 그 포켓몬이 탭에서 사라진다).
+  const rawCaught = (member?.caughtPokemon || []).filter(Boolean);
+  const candidatePool = partner && !rawCaught.some(p => isSamePokemon(p, partner))
+    ? [partner, ...rawCaught]
+    : rawCaught;
+  const hasEntryGroups = candidatePool.some(p => p?.entryGroup === 'origin' || p?.entryGroup === 'beyond');
+  let entryPokemon = entryPokemonAll;
+  if (hasEntryGroups) {
+    // 선택한 탭으로 명시적으로 분류된 엔트리만 보여준다 (분류 안 한 엔트리는 노출 안 됨).
+    const filteredPool = candidatePool.filter(p => p?.entryGroup === activeEntryTab);
+    const nonPartnerFiltered = filteredPool.filter(p => !isSamePokemon(p, partner));
+    const partnerIncluded = partner && filteredPool.some(p => isSamePokemon(p, partner));
+    entryPokemon = (partnerIncluded ? [partner, ...nonPartnerFiltered] : nonPartnerFiltered).slice(0, 6);
+  }
+
   const badges     = getBadges(member);
   const fullImg    = getFullImg(member);
   const catchphrase = member.catchphrase || member.bio || member.quote || '罹먯튂?꾨젅?댁쫰';
@@ -434,12 +485,41 @@ function MemberOverlay({ member, onClose, isAdmin, closing, allMoves = [] }) {
               )}
 
               {/* 파트너 + 엔트리 */}
-              {entryPokemon.length > 0 && (
+              {entryPokemonAll.length > 0 && (
                 <div className="mbr-entry-section">
                 <Reveal delay={180}>
                   <div className="mbr-data-section-label mbr-data-section-label--entry" style={{ color: `rgb(${accentRgb})` }}>
                     <span className="mbr-entry-icon" style={{ '--entry-icon-color': `rgb(${accentRgb})` }} aria-hidden="true" />
-                    엔트리</div>
+                    {hasEntryGroups ? (
+                      <div style={{ display: 'flex', gap: 16 }}>
+                        {[{ key: 'origin', label: '오리진' }, { key: 'beyond', label: '비욘드' }].map(({ key, label }) => (
+                          <button
+                            key={key}
+                            onClick={() => setActiveEntryTab(key)}
+                            style={{
+                              padding: 0,
+                              fontSize: '0.95rem',
+                              fontWeight: 800,
+                              letterSpacing: 'normal',
+                              textTransform: 'none',
+                              cursor: 'pointer',
+                              border: 'none',
+                              background: 'transparent',
+                              color: activeEntryTab === key ? `rgb(${accentRgb})` : 'rgba(148,163,184,0.7)',
+                              transition: 'color 0.15s',
+                            }}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    ) : '엔트리'}
+                  </div>
+                    {entryPokemon.length === 0 ? (
+                      <p style={{ fontSize: '0.85rem', color: 'rgba(60,60,80,0.5)', padding: '8px 0' }}>
+                        해당 분류의 엔트리가 없습니다
+                      </p>
+                    ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                       {entryPokemon.map((p, i) => (
                         <Reveal key={p.uniqueId || i} delay={i * 40}>
@@ -447,6 +527,7 @@ function MemberOverlay({ member, onClose, isAdmin, closing, allMoves = [] }) {
                         </Reveal>
                       ))}
                     </div>
+                    )}
                 </Reveal>
                 </div>
               )}

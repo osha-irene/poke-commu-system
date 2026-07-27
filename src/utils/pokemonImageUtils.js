@@ -74,6 +74,19 @@ export const getOwnedPokemonSpriteUrl = (pokemon, pokemonData = pokemon) => {
   const genderedSprite = getGenderedSpriteUrl(pokemon, pokemonData);
   if (genderedSprite) return genderedSprite;
 
+  // 폼체인지 아이템(로토무카탈로그, 트리미앙 컷트 이용권 등)으로 바뀐 폼은 도감번호 기반
+  // CDN에 개별 스프라이트가 없는 경우가 많고, formVariant 템플릿의 number 필드도
+  // "pokemon-form-10120" 같은 비숫자 문자열이라 아래 CDN 번호 조합이 깨진 URL이 된다.
+  // formVariant가 있으면 템플릿에 저장된 spriteUrl/imageUrl(로컬 에셋 포함)을 그대로 쓴다.
+  if (pokemon.formVariant) {
+    if (pokemon.isShiny && (pokemon.shinySprite || pokemon.shinySpriteUrl)) {
+      return pokemon.shinySprite || pokemon.shinySpriteUrl;
+    }
+    if (pokemon.spriteUrl || pokemon.imageUrl || pokemon.sprite) {
+      return pokemon.spriteUrl || pokemon.imageUrl || pokemon.sprite;
+    }
+  }
+
   const number = pokemon.number || pokemon.dexId || pokemon.pokemonId || pokemon.id || pokemon.originalNumber;
 
   if (pokemon.isShiny) {

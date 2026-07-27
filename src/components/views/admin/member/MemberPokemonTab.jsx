@@ -61,6 +61,7 @@ function MemberPokemonTab({
     heldItem: null,
     ability: '',
     isHiddenAbility: false,
+    entryGroup: null,
     moves: [],
     ivs: DEFAULT_IVS,
     effort: emptyEffort,
@@ -250,6 +251,7 @@ function MemberPokemonTab({
       heldItem: pokemon.heldItem || null,
       ability: abilityEn,
       isHiddenAbility: pokemon.isHiddenAbility || false,
+      entryGroup: pokemon.entryGroup || null,
       friendship: pokemon.friendship || 0,
      gender: pokemon.gender || 'random', 
     sizeRank: pokemon.sizeRank || 'M', 
@@ -292,6 +294,7 @@ function MemberPokemonTab({
       ability: finalAbility,
       abilityEn: finalAbilityEn,
       isHiddenAbility: Boolean(pokemonTemplate?.hiddenAbilityEn && finalAbilityEn === pokemonTemplate.hiddenAbilityEn),
+      entryGroup: editData.entryGroup || null,
       friendship: editData.friendship,
        gender: editData.gender, 
     sizeRank: editData.sizeRank,  
@@ -721,6 +724,7 @@ function MemberPokemonTab({
         <MemberPokemonEditMode
           pokemon={selectedPokemon}
           pokemonTemplate={getPokemonTemplate(selectedPokemon)}
+          isNPC={!!member.isNPC}
           editData={editData}
           setEditData={setEditData}
           allMoves={allMoves}

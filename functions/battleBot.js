@@ -1620,7 +1620,14 @@ const createBattleBot = ({
     if (command === 'decline') return declineChallenge({ author });
     if (command === 'forfeit') return forfeit({ author });
     if (command === 'endByHp') return endByHp({ author });
-    if (command === 'move') return chooseMove({ author, content });
+    if (command === 'move') {
+      // 엔트리 닉네임이 실제 기술명과 같으면(예: "플래시") getBattleCommand가 기술 선택으로
+      // 오인식한다. selecting 단계에서는 기술 선택이 성립할 수 없으니, 그 단계라면
+      // 엔트리 선택으로 취급한다. (2026-07-27 선/비비 배틀이 "이미 종료됨"으로 잘못 뜨던 버그)
+      const selecting = await findSelectingBattle(author.id);
+      if (selecting) return selectPokemon({ author, content });
+      return chooseMove({ author, content });
+    }
     return formatHelp();
   };
 

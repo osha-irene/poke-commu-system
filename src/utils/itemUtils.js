@@ -231,6 +231,7 @@ const FORM_CHANGE_ITEM_NAMES = new Set([
   'rotom-catalog', 'gracidea',
   'meteorite', 'meteorite--2', 'meteorite--3', 'meteorite--4',
   'red-nectar', 'yellow-nectar', 'pink-nectar', 'purple-nectar',
+  'furfrou-trim-ticket',
 ]);
 
 export const canUseItem = (item) => {

@@ -1391,6 +1391,8 @@ export const useAdminMembers = (
           baseSpeciesEn: safeValue(updates.baseSpeciesEn, p.baseSpeciesEn),
           alcremieFlavor: safeValue(updates.alcremieFlavor, p.alcremieFlavor),
           alcremieShape: safeValue(updates.alcremieShape, p.alcremieShape),
+          // NPC 엔트리 전용: 오리진/비욘드 분류 (미지정이면 null - 기존처럼 구분 없이 노출)
+          entryGroup: safeValue(updates.entryGroup, p.entryGroup || null),
           sizeRank: safeValue(updates.sizeRank, p.sizeRank),
           heightVariation: updates.heightVariation !== undefined 
             ? parseFloat(updates.heightVariation) 

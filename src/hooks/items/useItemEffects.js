@@ -15,7 +15,12 @@ const FORM_CHANGE_ITEMS = {
   'meteorite--2': [386],
   'meteorite--3': [386],
   'meteorite--4': [386],
+  'furfrou-trim-ticket': [676],
 };
+
+// 로토무 카탈로그 등은 여러 번 재사용 가능한 카탈로그라 소모되지 않는다.
+// 트리미앙 컷트 이용권은 "이용권"이라 1회 사용 후 소모되어야 한다.
+const CONSUMABLE_FORM_CHANGE_ITEMS = new Set(['furfrou-trim-ticket']);
 
 // 꿀 아이템 → 오리코리오 특정 폼 nameEn 직접 매핑
 const NECTAR_FORM_MAP = {
@@ -523,7 +528,7 @@ export const useItemEffects = (
       if (targetFormNameEn) {
         const success = await changePokemonForm(pokemon.uniqueId, targetFormNameEn);
         if (success) {
-          if (isNectar) consumeItem(item);
+          if (isNectar || CONSUMABLE_FORM_CHANGE_ITEMS.has(itemData?.nameEn)) consumeItem(item);
         }
         return;
       }

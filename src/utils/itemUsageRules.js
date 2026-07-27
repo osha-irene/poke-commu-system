@@ -8,6 +8,7 @@ export const FORM_CHANGE_ITEM_POKEMON = {
   'gracidea': [492],
   'meteorite': [386], 'meteorite--2': [386], 'meteorite--3': [386], 'meteorite--4': [386],
   'red-nectar': [741], 'yellow-nectar': [741], 'pink-nectar': [741], 'purple-nectar': [741],
+  'furfrou-trim-ticket': [676],
 };
 
 const FORM_CHANGE_ITEM_NAMES = new Set(Object.keys(FORM_CHANGE_ITEM_POKEMON));

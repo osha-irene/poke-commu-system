@@ -4175,6 +4175,42 @@
             "onUse": null
         },
         {
+            "id": 9018,
+            "name": "트리미앙 컷트 이용권",
+            "nameEn": "furfrou-trim-ticket",
+            "category": "event-items",
+            "categoryData": {
+                "id": "event-items",
+                "nameEn": "event-items",
+                "name": "event-items",
+                "pocket": "key"
+            },
+            "cost": 0,
+            "sellPrice": 0,
+            "canSell": false,
+            "effect": "트리미앙에게 사용하면 원하는 컷트 폼으로 바꿀 수 있다.",
+            "description": "트리미앙에게 사용하면 원하는 컷트 폼으로 바꿀 수 있다.",
+            "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/pair-of-tickets.png",
+            "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/pair-of-tickets.png",
+            "attributes": [],
+            "flingPower": 0,
+            "flingEffect": null,
+            "isCustom": true,
+            "isOfficial": false,
+            "createdBy": "admin",
+            "createdAt": null,
+            "cooking": {
+                "isIngredient": false,
+                "isCookable": false,
+                "resultItem": null,
+                "requiredItems": [],
+                "cookingTime": 0,
+                "difficulty": "easy",
+                "quality": "normal"
+            },
+            "onUse": null
+        },
+        {
             "id": 94,
             "name": "달콤한꿀",
             "nameEn": "honey",
