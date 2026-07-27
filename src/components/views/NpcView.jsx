@@ -296,24 +296,21 @@ function MemberOverlay({ member, onClose, isAdmin, closing, allMoves = [] }) {
   // 후보 풀에도 명시적으로 합쳐야 한다 (안 그러면 파트너에 붙인 오리진/비욘드
   // 태그가 무시되고 그 포켓몬이 탭에서 사라진다).
   const rawCaught = (member?.caughtPokemon || []).filter(Boolean);
+  // 파트너가 caughtPokemon 배열에 없는(별도 partnerPokemon 필드뿐인) 경우에만 목록에 끼워
+  // 넣는다 - 맨 앞으로 끌어오지 않고, 원래 저장된 순서를 그대로 유지하기 위해 뒤에 덧붙인다.
   const candidatePool = partner && !rawCaught.some(p => isSamePokemon(p, partner))
-    ? [partner, ...rawCaught]
+    ? [...rawCaught, partner]
     : rawCaught;
 
   // 오리진/비욘드 분류를 아무도 안 했으면(=그냥 "엔트리" 텍스트로 노출되는 경우) 6마리로
-  // 자르지 않고 엔트리에 들어있는 포켓몬을 전부 보여준다.
-  const nonPartnerAll = candidatePool.filter(p => !isSamePokemon(p, partner));
-  const partnerIncludedAll = partner && candidatePool.some(p => isSamePokemon(p, partner));
-  const entryPokemonAll = partnerIncludedAll ? [partner, ...nonPartnerAll] : nonPartnerAll;
+  // 자르지 않고 엔트리에 들어있는 포켓몬을 순서 그대로 전부 보여준다.
+  const entryPokemonAll = candidatePool;
 
   const hasEntryGroups = candidatePool.some(p => p?.entryGroup === 'origin' || p?.entryGroup === 'beyond');
   let entryPokemon = entryPokemonAll;
   if (hasEntryGroups) {
-    // 선택한 탭으로 명시적으로 분류된 엔트리만 보여준다 (분류 안 한 엔트리는 노출 안 됨).
-    const filteredPool = candidatePool.filter(p => p?.entryGroup === activeEntryTab);
-    const nonPartnerFiltered = filteredPool.filter(p => !isSamePokemon(p, partner));
-    const partnerIncluded = partner && filteredPool.some(p => isSamePokemon(p, partner));
-    entryPokemon = (partnerIncluded ? [partner, ...nonPartnerFiltered] : nonPartnerFiltered).slice(0, 6);
+    // 선택한 탭으로 명시적으로 분류된 엔트리만, 저장된 순서 그대로 보여준다.
+    entryPokemon = candidatePool.filter(p => p?.entryGroup === activeEntryTab).slice(0, 6);
   }
 
   const badges     = getBadges(member);
