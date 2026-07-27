@@ -176,7 +176,8 @@ export default function useGameState() {
     currentUser,
     updateCurrentUser,
     allPokemonMaster,
-    updateHistoryField
+    updateHistoryField,
+    updateOwnedPokemonByUniqueId
   );
 
   // 포켓몬 관리

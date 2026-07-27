@@ -17,7 +17,7 @@ const allMovesData = Array.isArray(movesDataRaw) ? movesDataRaw : movesDataRaw.m
 
 const getBaseName = (pokemon) => getPokemonDisplayParts(pokemon).name;
 
-export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster, updateHistoryField) => {
+export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster, updateHistoryField, updateOwnedPokemonByUniqueId) => {
   const [evolutionModal, setEvolutionModal] = useState(null);
   // 마빌크 → 마휘핑: 어떤 맛(크림)으로 진화할지 고르는 중일 때 {pokemon, evolution, shapeId}
   const [alcremieFlavorPending, setAlcremieFlavorPending] = useState(null);
@@ -410,7 +410,7 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster, u
   };
 
   // 진화 실행 (imageOverrides: 마휘핑 맛처럼 진화 결과 이미지를 직접 지정해야 할 때 사용)
-  const performEvolution = (pokemon, evolution, imageOverrides = {}) => {
+  const performEvolution = async (pokemon, evolution, imageOverrides = {}) => {
     const evolvedTemplate = findPokemonTemplateByNumber(evolution.to);
 
     if (!evolvedTemplate) {
@@ -446,15 +446,20 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster, u
       ...imageOverrides
     });
 
-    const updatedPokemon = currentUser.caughtPokemon.map(p => (
-      p && p.uniqueId === pokemon.uniqueId ? evolvePokemonObject(p) : p
-    ));
+    // ⭐ 클로저 스냅샷(currentUser.caughtPokemon)을 통째로 덮어쓰지 않고, updateOwnedPokemonByUniqueId로
+    // Firebase의 실제 최신 데이터 위에서 진화를 적용한다. 안 그러면 (1) 아이템 사용으로 방금
+    // 로컬에만 반영된 변경(예: 친밀도 보너스)이 진화 결과에서 사라지고, (2) 그 사이 다른 경로로
+    // 바뀐 최신 데이터를 이 함수가 들고 있던 스냅샷으로 덮어써서 진화 자체가 되돌아갈 수 있다.
+    const result = await updateOwnedPokemonByUniqueId(pokemon.uniqueId, (latestPokemon) => {
+      if (!latestPokemon) return latestPokemon;
+      // pokemon(모달을 띄운 시점의 로컬 객체)에만 반영돼있던 친밀도 등을 최신 데이터에 병합
+      const merged = { ...latestPokemon, friendship: pokemon.friendship ?? latestPokemon.friendship };
+      return evolvePokemonObject(merged);
+    });
 
-    // 파트너 포켓몬은 caughtPokemon 배열이 아니라 별도 필드에 저장되므로 따로 갱신해야 한다.
-    // (안 그러면 파트너로 지정된 포켓몬은 진화 조건을 통과하고 알림까지 떠도 실제로는 진화하지 않음)
-    const updates = { caughtPokemon: updatedPokemon };
-    if (currentUser.partnerPokemon?.uniqueId === pokemon.uniqueId) {
-      updates.partnerPokemon = evolvePokemonObject(currentUser.partnerPokemon);
+    if (!result.committed) {
+      alert('❌ 진화 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+      return false;
     }
 
     const evolvedAt = Date.now();
@@ -469,7 +474,6 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster, u
       evolvedAt
     };
 
-    updateCurrentUser(updates);
     updateHistoryField('evolutionHistory', evolutionHistoryEntry);
 
     // 홈 화면 "오늘의 진화" - evolutionHistory는 memberSummary에서 빠져 있어(잦은 액션마다
@@ -488,14 +492,14 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster, u
   };
 
   // 진화 수락
-  const acceptEvolution = () => {
+  const acceptEvolution = async () => {
     if (!evolutionModal || !evolutionModal.pokemon || !evolutionModal.evolution) {
       console.log('❌ 진화 모달 정보 없음');
       return;
     }
 
     const { pokemon, evolution } = evolutionModal;
-    const success = performEvolution(pokemon, evolution);
+    const success = await performEvolution(pokemon, evolution);
 
     if (success) {
       const evolvedTemplate = findPokemonTemplateByNumber(evolution.to);
@@ -578,12 +582,12 @@ const manualEvolve = (pokemon) => {
   };
 
   // 마휘핑 맛 선택 완료 → 선택한 맛의 이미지로 바로 진화
-  const chooseAlcremieFlavor = (flavor) => {
+  const chooseAlcremieFlavor = async (flavor) => {
     if (!alcremieFlavorPending || !flavor) return false;
     const { pokemon, evolution, shapeId } = alcremieFlavorPending;
     const image = getAlcremieImage(flavor.id, shapeId);
 
-    const success = performEvolution(pokemon, evolution, image ? {
+    const success = await performEvolution(pokemon, evolution, image ? {
       imageUrl: image,
       spriteUrl: image,
       iconUrl: image,

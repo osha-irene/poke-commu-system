@@ -486,6 +486,18 @@ export const useItemEffects = (
       itemUsed = true;
     }
 
+    // 진화 아이템(category가 evolution인 경우 + 예외 아이템)은 아래 itemUsed 얼리리턴보다
+    // 먼저 체크해야 한다 - 안 그러면 spicy_wailord처럼 친밀도 등 다른 효과가 같이 붙은
+    // 진화 아이템은 그 효과 처리에서 먼저 return돼버려 진화 체크에 영영 도달하지 못한다.
+    // updatedPokemon을 넘겨서 여기서 오른 친밀도 등이 진화 결과에도 반영되게 한다.
+    if (itemData?.category?.includes('evolution') || EVOLUTION_CHECK_EXCEPTION_ITEMS.has(itemData?.nameEn)) {
+      const success = evolutionHook.evolveWithItem(updatedPokemon, itemData.nameEn || itemData.name);
+      if (success) {
+        consumeItem(item);
+        return;
+      }
+    }
+
     if (itemUsed) {
       updatePokemonInUser(updatedPokemon);
       const name = pokemon.nickname || pokemon.name;
@@ -562,17 +574,6 @@ export const useItemEffects = (
           return;
         }
         await changePokemonForm(pokemon.uniqueId, otherForms[idx].id || otherForms[idx].nameEn || otherForms[idx].name);
-      }
-      return;
-    }
-
-    // 진화 아이템 (category가 evolution인 경우 + 예외 아이템)
-    // updatedPokemon을 넘겨야 위의 친밀도 보너스(예: spicy_wailord)가 진화 후 결과에도
-    // 반영된다 - 원본 pokemon을 넘기면 이번에 오른 친밀도가 저장 없이 사라진다.
-    if (itemData?.category?.includes('evolution') || EVOLUTION_CHECK_EXCEPTION_ITEMS.has(itemData?.nameEn)) {
-      const success = evolutionHook.evolveWithItem(updatedPokemon, itemData.nameEn || itemData.name);
-      if (success) {
-        consumeItem(item);
       }
       return;
     }
