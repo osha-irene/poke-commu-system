@@ -20,6 +20,7 @@ import {
   getStandings,
   isContestDone,
   canUseMove,
+  MAX_ROUND,
 } from '../../../contest/ContestEngine';
 import { isValidComboFollowUp } from '../../../contest/comboChart';
 import { TARGETED_EFFECTS, DICE_EFFECTS } from '../../../contest/contestEffects';
@@ -180,6 +181,8 @@ function LogLine({ entry, participantsById }) {
       );
     case 'jam':
       return <div className="text-indigo-300">💥 {nameOf(entry.targetId)} 방해 -{entry.amount}</div>;
+    case 'jamFail':
+      return <div className="text-gray-500">⚔️ {nameOf(entry.participantId)}: {entry.moveName} 사용 → 앞 순서가 없어 방해에 실패했다!</div>;
     case 'liveAppeal':
       return <div className="text-yellow-400 font-bold">🌟 {nameOf(entry.participantId)} 라이브 어필 발동! +5</div>;
     case 'combo':
@@ -338,7 +341,7 @@ export default function ContestAdminPanel() {
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
               콘테스트 타입 <MoveBadge move={{ contestType }} />
-              {!done && <span className="ml-3 font-bold text-indigo-700">{state.round}/6 라운드</span>}
+              {!done && <span className="ml-3 font-bold text-indigo-700">{state.round}/{MAX_ROUND} 라운드</span>}
             </div>
             <Button variant="secondary" size="sm" onClick={resetContest}>새로 시작</Button>
           </div>

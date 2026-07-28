@@ -13,7 +13,6 @@ const {
 const {
   createContestState,
   runFirstJudging,
-  getCurrentActor,
   advanceTurn,
   forceSkipTurn,
   getStandings,
@@ -68,7 +67,35 @@ const extractBracketText = (content) => {
   return matches.length ? matches[matches.length - 1] : text.trim();
 };
 
-const getBaseName = (pokemon) => (pokemon?.nickname || pokemon?.name || pokemon?.nameEn || '포켓몬');
+const normalizeDisplayName = (value = '') => String(value || '').trim().toLowerCase().replace(/\s+/g, '');
+
+// battleBot.js의 formatPokemonName과 동일한 표시 방식 - 닉네임과 종족명이 다르면 "닉네임 (종족명)"
+// 형태로 보여줘서, 선택 시 닉네임/종족명 둘 중 어느 쪽으로 입력해도 되는지 알 수 있게 한다.
+const formatDisplayName = (pokemon) => {
+  const species = pokemon?.name || pokemon?.species || pokemon?.nameEn || `No.${pokemon?.number || '?'}`;
+  const nickname = String(pokemon?.nickname || '').trim();
+  return nickname && normalizeDisplayName(nickname) !== normalizeDisplayName(species)
+    ? `${nickname} (${species})`
+    : species;
+};
+// 경기 중 로그(결과)에서는 "닉네임 (종족명)"처럼 매번 종족명까지 반복해서 보여줄 필요가 없다.
+// 닉네임이 있으면 닉네임만, 없으면 종족명만 쓴다. (엔트리 선택 화면은 formatDisplayName을 그대로 써서
+// 종족명으로도 선택 가능하다는 걸 계속 보여준다.)
+const shortDisplayName = (pokemon) => {
+  const nickname = String(pokemon?.nickname || '').trim();
+  return nickname || pokemon?.name || pokemon?.species || pokemon?.nameEn || `No.${pokemon?.number || '?'}`;
+};
+
+// 한글 완성형 음절의 마지막 글자에 받침이 있는지 판정 (조사 은/는, 이/가 선택용).
+// 한글이 아닌 문자로 끝나면(영문/숫자 등) 받침 없는 쪽 조사를 기본값으로 쓴다.
+const hasBatchim = (value) => {
+  const lastChar = String(value || '').trim().slice(-1);
+  const code = lastChar.charCodeAt(0);
+  if (Number.isNaN(code) || code < 0xac00 || code > 0xd7a3) return false;
+  return (code - 0xac00) % 28 !== 0;
+};
+const withSubjectParticle = (name) => `${name}${hasBatchim(name) ? '이' : '가'}`;
+
 const getMemberDisplayName = (member, id) => member?.name || member?.nickname || id;
 
 const entryChoiceFromText = (content) => {
@@ -78,7 +105,7 @@ const entryChoiceFromText = (content) => {
   // 대괄호로 감싼 이름만 "이름으로 선택"으로 인정한다 (battleBot.js와 동일한 이유 -
   // 대괄호가 없으면 잡담까지 엔트리 선택으로 오인식될 수 있다).
   const hasBracket = /\[[^\]]+\]/.test(stripCommandText(content));
-  if (hasBracket && text && !/^(콘테스트|기권)/i.test(text)) return { type: 'name', value: text };
+  if (hasBracket && text && !/^(콘테스트|종료)/i.test(text)) return { type: 'name', value: text };
   return null;
 };
 
@@ -124,7 +151,7 @@ const isKnownContestMoveText = (content) => {
 const isContestMoveLikeText = (content) => {
   const text = extractBracketText(content);
   if (!text) return false;
-  if (/^(콘테스트\s*(신청|수락|거절|기권|도움말|help)|기권)/i.test(text)) return false;
+  if (/^(콘테스트\s*(신청|수락|거절|종료|도움말|help)|종료)/i.test(text)) return false;
   if (/^(포켓몬|엔트리|선택)\s*[1-6]$/i.test(text)) return false;
   return isExplicitMoveText(content) || isKnownContestMoveText(content);
 };
@@ -133,7 +160,7 @@ const getContestCommand = (content) => {
   if (/\[\s*콘테스트\s*신청\s*\]/i.test(content)) return 'challenge';
   if (/\[\s*콘테스트\s*수락\s*\]/i.test(content)) return 'accept';
   if (/\[\s*콘테스트\s*거절\s*\]/i.test(content)) return 'decline';
-  if (/\[\s*콘테스트\s*기권\s*\]|\[\s*기권\s*\]/i.test(content)) return 'forfeit';
+  if (/\[\s*콘테스트\s*종료\s*\]|\[\s*종료\s*\]/i.test(content)) return 'forfeit';
   if (/\[\s*콘테스트\s*(?:도움말|help)\s*\]/i.test(content)) return 'help';
   if (isContestMoveLikeText(content)) return 'move';
   if (entryChoiceFromText(content) !== null) return 'selectPokemon';
@@ -180,7 +207,7 @@ const buildContestEntry = (pokemon, contestType) => {
   if (!moves.length) return null;
   return {
     key: pokemon.uniqueId || pokemon.id || pokemon.pokemonId || `${pokemon.number}_${pokemon.name}`,
-    name: getBaseName(pokemon),
+    name: formatDisplayName(pokemon),
     nickname: (pokemon.nickname || '').trim() || null,
     species: pokemon.name || pokemon.species || '',
     conditionValue,
@@ -197,9 +224,9 @@ const formatHelp = () => [
   '[콘테스트] 명령어 (1:1 전용, 최대 4라운드)',
   '[콘테스트 신청] @상대 <타입> - 콘테스트 신청 (귀여움/근사함/강인함/슬기로움/아름다움)',
   '[콘테스트 수락] / [콘테스트 거절]',
-  '[엔트리 1] 또는 [포켓몬 1] - 참가시킬 포켓몬 선택 (파트너 또는 엔트리(파티) 포켓몬만 가능)',
+  '[엔트리 1] 또는 [포켓몬 1] 또는 [닉네임/포켓몬명] - 참가시킬 포켓몬 선택 (파트너 또는 엔트리(파티) 포켓몬만 가능)',
   '[기술 1] 또는 기술 이름 - 그 턴에 사용할 기술 선언',
-  '[콘테스트 기권]',
+  '[콘테스트 종료]',
 ].join('\n');
 
 const formatEntryList = (label, entries = []) => [
@@ -207,45 +234,43 @@ const formatEntryList = (label, entries = []) => [
   ...entries.map((entry, index) => `${index + 1}. ${entry.name}`),
 ].join('\n');
 
-const formatTurnPrompt = (session) => {
-  const actor = getCurrentActor(session.engine);
-  if (!actor) return null;
-  const moveList = actor.moves.map((m, index) => `${index + 1}. ${m.name}`).join(', ');
-  return [
-    `${actor.name}님 차례입니다! (${session.engine.round}/${MAX_ROUNDS} 라운드)`,
-    `사용 가능한 기술: ${moveList}`,
-    `[기술 1] 또는 기술 이름으로 답글을 달아주세요. (${TURN_TIMEOUT_MS / 60000}분 안에)`,
-  ].join('\n');
-};
-
 const summarizeLogSince = (engine, fromIndex) => {
   const nameOf = (id) => engine.participants.find((p) => p.id === id)?.name || id;
+  // 어필/긴장/방해 같은 경기 중 로그는 트레이너가 아니라 그 포켓몬이 하는 행동이므로
+  // 포켓몬명으로 표시한다. (시간 초과 안내만 사람에게 하는 말이라 트레이너명을 그대로 쓴다.)
+  const pokemonNameOf = (id) => engine.participants.find((p) => p.id === id)?.pokemonName || nameOf(id);
   const lines = [];
   for (let i = fromIndex; i < engine.log.length; i += 1) {
     const entry = engine.log[i];
     switch (entry.type) {
       case 'firstJudging':
-        lines.push(`🎲 ${nameOf(entry.participantId)}: 1차 심사 2d6 → ${entry.roll}`);
+        lines.push(`${pokemonNameOf(entry.participantId)}: 1차 심사 2d6 → ${entry.roll}`);
         break;
       case 'nervous':
-        lines.push(`😳 ${nameOf(entry.participantId)} 긴장해서 행동하지 못했습니다.`);
+        lines.push(`${withSubjectParticle(pokemonNameOf(entry.participantId))} 긴장해서 행동하지 못했습니다.`);
         break;
       case 'skip':
         lines.push(entry.reason === 'timeout'
-          ? `⏰ ${nameOf(entry.participantId)}님이 시간 내에 응답하지 않아 이번 턴을 넘어갑니다.`
-          : `⏭ ${nameOf(entry.participantId)} 이번 턴은 행동할 수 없습니다.`);
+          ? `${nameOf(entry.participantId)}님이 시간 내에 응답하지 않아 이번 턴을 넘어갑니다.`
+          : `${withSubjectParticle(pokemonNameOf(entry.participantId))} 이번 턴은 행동할 수 없습니다.`);
         break;
-      case 'appeal':
-        lines.push(`✨ ${nameOf(entry.participantId)}: ${entry.moveName} 사용 → 어필 ${entry.gainedAppeal >= 0 ? '+' : ''}${entry.gainedAppeal}${entry.isPenalty ? ' (패널티 타입 절반)' : ''}`);
+      case 'appeal': {
+        const gained = entry.gainedAppeal || 0;
+        const heartsText = gained > 0 ? `+${formatAppealHearts(gained)}` : formatAppealHearts(gained);
+        lines.push(`${pokemonNameOf(entry.participantId)}: ${entry.moveName} 사용 → 어필 ${heartsText}${entry.isPenalty ? ' (패널티 타입 절반)' : ''}`);
         break;
+      }
       case 'jam':
-        lines.push(`💥 ${nameOf(entry.targetId)} 방해 -${entry.amount}`);
+        lines.push(`${withSubjectParticle(pokemonNameOf(entry.targetId))} 방해 -${entry.amount}`);
+        break;
+      case 'jamFail':
+        lines.push(`${pokemonNameOf(entry.participantId)}: ${entry.moveName} 사용 → 앞 순서가 없어 방해에 실패했다!`);
         break;
       case 'liveAppeal':
-        lines.push(`🌟 ${nameOf(entry.participantId)} 라이브 어필 발동! +5`);
+        lines.push(`${withSubjectParticle(pokemonNameOf(entry.participantId))} 라이브 어필 발동! +5`);
         break;
       case 'combo':
-        lines.push(`🔗 ${nameOf(entry.participantId)} 콤보 성공! +${entry.bonus}`);
+        lines.push(`${withSubjectParticle(pokemonNameOf(entry.participantId))} 콤보 성공! +${entry.bonus}`);
         break;
       default:
         break;
@@ -254,16 +279,61 @@ const summarizeLogSince = (engine, fromIndex) => {
   return lines;
 };
 
+// 어필 수치를 하트로 표시: ♥(큰 하트) 1개 = 10, ♡(작은 하트) 1개 = 1. 예) 11 -> ♥♡, 24 -> ♥♥♡♡♡♡.
+// 0은 그냥 숫자 0으로 표시한다(하트가 하나도 없는 상태를 굳이 기호로 나타내지 않음).
+const formatAppealHearts = (value) => {
+  const n = Math.max(0, Math.round(Number(value) || 0));
+  if (n === 0) return '0';
+  const big = Math.floor(n / 10);
+  const small = n % 10;
+  return '♥'.repeat(big) + '♡'.repeat(small);
+};
+
+const formatAppealSnapshotLine = (p) => `${p.name}: ${p.pokemonName} 어필 ${formatAppealHearts(p.totalAppeal)}`;
+
 const formatStandings = (engine) => getStandings(engine)
-  .map((p) => `${p.rank}위 ${p.name} - 어필 ${p.totalAppeal}`)
+  .map((p) => `${p.rank}위 ${p.name} - 어필 ${formatAppealHearts(p.totalAppeal)}`)
   .join('\n');
 
-const formatResultTail = (engine) => {
-  const lines = ['', '🎀 콘테스트 종료!', formatStandings(engine)];
-  const [winner, runnerUp] = getStandings(engine);
-  if (winner && runnerUp && winner.totalAppeal === runnerUp.totalAppeal) lines.push('무승부!');
-  else if (winner) lines.push(`🎀 우승: ${winner.name} 🎀`);
-  return lines;
+// 다음 라운드 순서는 기본적으로 현재 어필 순이지만, 일부 기술 효과(다음 턴 순서 앞/뒤로 고정,
+// 순서 뒤섞기/뒤집기 등)로 바뀔 수 있어 어필 스냅샷만으로는 예측할 수 없다. 그래서 매번 명시한다.
+const formatOrderLine = (engine) =>
+  `순서: ${engine.order.map((id) => engine.participants.find((p) => p.id === id)?.name || id).join(' → ')}`;
+
+// 배틀봇처럼 "누구 차례" 안내 없이, 양쪽이 각자 원하는 때에 기술을 제출하면(순서 무관) 모이는 대로
+// 라운드 순서(engine.order)에 맞춰 한 번에 처리하고 결과를 로그로 보여준다. 제출하지 않은 쪽은
+// forceSkipTurn으로 처리(타임아웃 스킵과 동일 로직).
+const resolveRound = (engine, choicesByActorId) => {
+  const beforeLog = engine.log.length;
+  const actors = [engine.order[0], engine.order[1]];
+  let nextEngine = engine;
+  for (const actorId of actors) {
+    const moveId = choicesByActorId[actorId];
+    const opponentId = actors.find((id) => id !== actorId);
+    nextEngine = moveId
+      ? advanceTurn(nextEngine, { moveId, targetId: opponentId, targetIds: [opponentId] })
+      : forceSkipTurn(nextEngine, 'timeout');
+  }
+  return { nextEngine, beforeLog };
+};
+
+// battleBot.js의 '결과 로그 + 다음 안내' 형식과 동일하게: 이번 라운드에 벌어진 일을 순서대로
+// 보여주고, 끝나면 양쪽 현재 어필 스냅샷 → (진행 중이면) 다음 라운드 안내, (종료면) 최종 결과.
+const formatRoundResult = (session, nextEngine, beforeLog) => {
+  const lines = ['결과', ...summarizeLogSince(nextEngine, beforeLog)];
+  const done = isContestDone(nextEngine);
+  if (!done) lines.push(`라운드 ${nextEngine.round}/${MAX_ROUNDS}`, formatOrderLine(nextEngine));
+  lines.push('', ...nextEngine.participants.map(formatAppealSnapshotLine));
+  if (done) {
+    lines.push('콘테스트 종료!', formatStandings(nextEngine));
+    const [winner, runnerUp] = getStandings(nextEngine);
+    if (winner && runnerUp && winner.totalAppeal === runnerUp.totalAppeal) lines.push('무승부!');
+    else if (winner) lines.push(`승리: ${winner.name}`);
+  } else {
+    lines.push(`다음 기술을 선택해 주세요. (${TURN_TIMEOUT_MS / 60000}분 안에)`);
+  }
+  // filter(Boolean)을 쓰면 의도적으로 넣은 빈 줄('')까지 지워지므로, null/undefined만 걸러낸다.
+  return withContestMentions(session, lines.filter((line) => line != null).join('\n'));
 };
 
 const createContestBot = ({
@@ -370,6 +440,7 @@ const createContestBot = ({
       player2Account: normalizeAccount(opponent.account || opponent.member?.mastodonAccount || opponent.member?.mastodonId || ''),
       player2Entries,
       pendingTeamChoices: {},
+      pendingMoveChoices: {},
       engine: null,
       lastBotStatusId: null,
       createdAt: new Date().toISOString(),
@@ -399,7 +470,7 @@ const createContestBot = ({
       '콘테스트를 수락했습니다. 참가시킬 포켓몬을 선택해 주세요.',
       formatEntryList(pending.session.player1Name, pending.session.player1Entries),
       formatEntryList(pending.session.player2Name, pending.session.player2Entries),
-      '[엔트리 1] 또는 [포켓몬 1] 형식으로 선택할 수 있습니다.',
+      '[엔트리 1] 또는 [포켓몬 1] 또는 [닉네임/포켓몬명] 형식으로 선택할 수 있습니다.',
     ].join('\n'));
   };
 
@@ -444,71 +515,75 @@ const createContestBot = ({
     }
 
     const { session } = active;
-    const actor = getCurrentActor(session.engine);
-    if (!actor) return null;
-    if (actor.id !== author.id) return `지금은 ${actor.name}님 차례예요. 잠시만 기다려주세요.`;
+    const myParticipant = session.engine.participants.find((p) => p.id === author.id);
+    if (!myParticipant) return null;
 
     const token = moveChoiceFromText(content);
     let matched = null;
-    if (token?.kind === 'index') matched = actor.moves[token.value] || null;
+    if (token?.kind === 'index') matched = myParticipant.moves[token.value] || null;
     else if (token?.kind === 'name') {
       const q = normalizeId(token.value);
-      matched = actor.moves.find((m) => normalizeId(m.name) === q) ||
-        actor.moves.find((m) => normalizeId(m.name).includes(q));
+      matched = myParticipant.moves.find((m) => normalizeId(m.name) === q) ||
+        myParticipant.moves.find((m) => normalizeId(m.name).includes(q));
     }
     if (!matched) {
-      return `가지고 있는 기술 중에서 골라주세요: ${actor.moves.map((m, index) => `${index + 1}. ${m.name}`).join(', ')}`;
+      return `가지고 있는 기술 중에서 골라주세요: ${myParticipant.moves.map((m, index) => `${index + 1}. ${m.name}`).join(', ')}`;
     }
-    if (!canUseMove(session.engine, actor.id, matched.id)) {
+    if (!canUseMove(session.engine, author.id, matched.id)) {
       return `${matched.name}은(는) 전 턴에 사용해서 이번 턴에는 다시 쓸 수 없어요.`;
     }
 
-    // 콘테스트는 한 번에 한 명씩만 행동하므로 배틀처럼 "양쪽 동시 선택"을 병합할 필요는 없지만,
-    // 같은 사람이 응답을 두 번 연달아 보내는 경우(웹훅 재전송 등)에도 턴이 두 번 진행되지
-    // 않도록 트랜잭션 안에서 "지금 이 사람 차례가 맞는지"까지 함께 확인하고 반영한다.
+    // 배틀봇의 chooseMove와 동일한 방식 - "누구 차례"를 따로 안내하지 않고, 양쪽이 각자
+    // 원할 때 기술을 제출하면 pendingMoveChoices에 병합만 한다. 두 사람이 거의 동시에
+    // 제출해도 트랜잭션으로 원자적으로 합쳐지므로, 실제 라운드 처리는 "마지막으로 커밋되어
+    // 양쪽 다 채워진 걸 본" 요청 한 번만 진행한다(battleBot.js와 동일한 안전 패턴).
     const sessionRef = db.ref(`gameData/contestSessions/${active.sessionKey}`);
-    let turnResult = null;
     const txResult = await sessionRef.transaction((current) => {
       if (!current || current.status !== 'active') return current;
-      const currentActor = getCurrentActor(current.engine);
-      if (!currentActor || currentActor.id !== author.id) return current;
-      if (!canUseMove(current.engine, currentActor.id, matched.id)) return current;
-
-      // "지정한 포켓몬" 계열 효과는 원래 GM/진행자가 대상을 고르지만, 1:1 콘테스트는
-      // 상대가 유일한 대상이므로 항상 자동으로 상대를 targetId/targetIds로 넘긴다.
-      const opponentId = current.player1Id === currentActor.id ? current.player2Id : current.player1Id;
-
-      const beforeLog = current.engine.log.length;
-      let nextEngine;
-      try {
-        nextEngine = advanceTurn(current.engine, { moveId: matched.id, targetId: opponentId, targetIds: [opponentId] });
-      } catch (e) {
-        turnResult = { error: e.message };
-        return current;
-      }
-      const done = isContestDone(nextEngine);
-      turnResult = { nextEngine, beforeLog, done };
       return {
         ...current,
-        engine: nextEngine,
-        status: done ? 'completed' : 'active',
-        turnDeadlineAt: done ? current.turnDeadlineAt : new Date(Date.now() + TURN_TIMEOUT_MS).toISOString(),
-        completedAt: done ? new Date().toISOString() : (current.completedAt || null),
+        pendingMoveChoices: { ...(current.pendingMoveChoices || {}), [author.id]: matched.id },
         updatedAt: new Date().toISOString(),
       };
     });
 
-    if (turnResult?.error) return `처리 중 문제가 발생했어요: ${turnResult.error}`;
-    if (!txResult.committed || !turnResult) {
-      return '지금은 그 기술을 선택할 수 없는 상태예요. 잠시 후 다시 시도해 주세요.';
+    if (!txResult.committed || txResult.snapshot.val()?.status !== 'active') {
+      return '지금은 기술을 선택할 수 없는 상태예요.';
     }
 
-    const committedSession = txResult.snapshot.val();
-    const lines = summarizeLogSince(turnResult.nextEngine, turnResult.beforeLog);
-    if (turnResult.done) lines.push(...formatResultTail(turnResult.nextEngine));
-    else lines.push('', formatTurnPrompt(committedSession));
+    const committed = txResult.snapshot.val();
+    const pendingMoveChoices = committed.pendingMoveChoices || {};
+    if (!pendingMoveChoices[committed.player1Id] || !pendingMoveChoices[committed.player2Id]) {
+      return null; // 상대가 아직 제출 전 - 조용히 대기
+    }
 
-    return withContestMentions(committedSession, lines.filter(Boolean).join('\n'));
+    let resolved;
+    try {
+      resolved = resolveRound(committed.engine, pendingMoveChoices);
+    } catch (e) {
+      await db.ref(`gameData/contestSessions/${active.sessionKey}`).update({
+        pendingMoveChoices: {},
+        updatedAt: new Date().toISOString(),
+      });
+      return withContestMentions(committed, `처리 중 문제가 발생했어요: ${e.message}\n다시 기술을 선택해 주세요.`);
+    }
+
+    const { nextEngine, beforeLog } = resolved;
+    const done = isContestDone(nextEngine);
+    const updates = {
+      engine: nextEngine,
+      pendingMoveChoices: {},
+      updatedAt: new Date().toISOString(),
+    };
+    if (done) {
+      updates.status = 'completed';
+      updates.completedAt = new Date().toISOString();
+    } else {
+      updates.turnDeadlineAt = new Date(Date.now() + TURN_TIMEOUT_MS).toISOString();
+    }
+    await db.ref(`gameData/contestSessions/${active.sessionKey}`).update(updates);
+
+    return formatRoundResult({ ...committed, ...updates }, nextEngine, beforeLog);
   };
 
   const selectPokemon = async ({ author, content }) => {
@@ -550,8 +625,8 @@ const createContestBot = ({
     const p2Entry = session.player2Entries[pendingTeamChoices.p2 - 1];
 
     let engine = createContestState(session.contestType, [
-      { id: session.player1Id, name: session.player1Name, pokemonName: p1Entry.name, conditionValue: p1Entry.conditionValue, moves: p1Entry.moves },
-      { id: session.player2Id, name: session.player2Name, pokemonName: p2Entry.name, conditionValue: p2Entry.conditionValue, moves: p2Entry.moves },
+      { id: session.player1Id, name: session.player1Name, pokemonName: shortDisplayName(p1Entry), conditionValue: p1Entry.conditionValue, moves: p1Entry.moves },
+      { id: session.player2Id, name: session.player2Name, pokemonName: shortDisplayName(p2Entry), conditionValue: p2Entry.conditionValue, moves: p2Entry.moves },
     ], { maxRounds: MAX_ROUNDS });
     engine = runFirstJudging(engine);
 
@@ -560,6 +635,7 @@ const createContestBot = ({
       player1Lead: pendingTeamChoices.p1,
       player2Lead: pendingTeamChoices.p2,
       pendingTeamChoices: {},
+      pendingMoveChoices: {},
       engine,
       turnDeadlineAt: new Date(Date.now() + TURN_TIMEOUT_MS).toISOString(),
       updatedAt: new Date().toISOString(),
@@ -569,12 +645,15 @@ const createContestBot = ({
     const updatedSession = { ...session, ...updates };
     return withContestMentions(updatedSession, [
       '콘테스트 시작!',
-      `${session.player1Name}: ${p1Entry.name}`,
-      `${session.player2Name}: ${p2Entry.name}`,
-      ...summarizeLogSince(engine, 0),
+      `${session.player1Name}: ${shortDisplayName(p1Entry)}`,
+      `${session.player2Name}: ${shortDisplayName(p2Entry)}`,
       '',
-      formatTurnPrompt(updatedSession),
-    ].filter(Boolean).join('\n'));
+      ...summarizeLogSince(engine, 0),
+      formatOrderLine(engine),
+      '',
+      ...engine.participants.map(formatAppealSnapshotLine),
+      `다음 기술을 선택해 주세요. (${TURN_TIMEOUT_MS / 60000}분 안에)`,
+    ].filter((line) => line != null).join('\n'));
   };
 
   // gameData/openContestSessions는 status가 pending/active인 세션만 담기는(끝나면 자동
@@ -591,19 +670,20 @@ const createContestBot = ({
       if (!Number.isFinite(deadline) || now < deadline) continue;
 
       const ref = db.ref(`gameData/contestSessions/${sessionKey}`);
-      let turnResult = null;
+      let resolved = null;
       const txResult = await ref.transaction((current) => {
         if (!current || current.status !== 'active') return current;
         const currentDeadline = Date.parse(current.turnDeadlineAt || '');
         if (!Number.isFinite(currentDeadline) || now < currentDeadline) return;
 
-        const beforeLog = current.engine.log.length;
-        const nextEngine = forceSkipTurn(current.engine, 'timeout');
+        // 15분 안에 제출하지 못한 쪽은 forceSkipTurn으로, 제출한 쪽은 그 기술 그대로 반영한다.
+        const { nextEngine, beforeLog } = resolveRound(current.engine, current.pendingMoveChoices || {});
         const done = isContestDone(nextEngine);
-        turnResult = { nextEngine, beforeLog, done };
+        resolved = { nextEngine, beforeLog, done };
         return {
           ...current,
           engine: nextEngine,
+          pendingMoveChoices: {},
           status: done ? 'completed' : 'active',
           turnDeadlineAt: done ? current.turnDeadlineAt : new Date(now + TURN_TIMEOUT_MS).toISOString(),
           completedAt: done ? new Date(now).toISOString() : (current.completedAt || null),
@@ -611,15 +691,11 @@ const createContestBot = ({
         };
       });
 
-      if (txResult.committed && turnResult) {
+      if (txResult.committed && resolved) {
         const committedSession = txResult.snapshot.val();
-        const lines = summarizeLogSince(turnResult.nextEngine, turnResult.beforeLog);
-        if (turnResult.done) lines.push(...formatResultTail(turnResult.nextEngine));
-        else lines.push('', formatTurnPrompt(committedSession));
-
         closed.push({
           sessionKey,
-          message: withContestMentions(committedSession, lines.filter(Boolean).join('\n')),
+          message: formatRoundResult(committedSession, resolved.nextEngine, resolved.beforeLog),
           lastBotStatusId: committedSession.lastBotStatusId || null,
         });
       }

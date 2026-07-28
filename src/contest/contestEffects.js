@@ -74,6 +74,7 @@ export const CONTEST_EFFECT_HANDLERS = {
     return {
       appealGain: ctx.move.contestAppeals || 0,
       jamTargets: prev ? [{ targetId: prev.id, amount: ctx.move.contestJam || 1 }] : [],
+      flags: prev ? {} : { jamFailedNoTarget: true },
     };
   },
 
@@ -111,12 +112,13 @@ export const CONTEST_EFFECT_HANDLERS = {
   '앞차례 어필한 포켓몬들을 방해': (ctx) => ({
     appealGain: ctx.move.contestAppeals || 0,
     jamTargets: jamAllAppealed(ctx.appealedThisTurn, () => ctx.move.contestJam || 1),
+    flags: ctx.appealedThisTurn.length ? {} : { jamFailedNoTarget: true },
   }),
 
   '앞차례 어필한 포켓몬들을 방해하고 다음 턴은 행동불가': (ctx) => ({
     appealGain: ctx.move.contestAppeals || 0,
     jamTargets: jamAllAppealed(ctx.appealedThisTurn, () => ctx.move.contestJam || 1),
-    flags: { cannotAppealNextRound: true },
+    flags: { cannotAppealNextRound: true, ...(ctx.appealedThisTurn.length ? {} : { jamFailedNoTarget: true }) },
   }),
 
   '앞차례 어필한 포켓몬의 ☆을 지움': (ctx) => ({
@@ -192,7 +194,7 @@ export const CONTEST_EFFECT_HANDLERS = {
     const base = ctx.move.contestAppeals || 0;
     if (!ctx.targetId) return { appealGain: base };
     const targetEntry = findAppealedEntry(ctx, ctx.targetId);
-    if (!targetEntry) return { appealGain: base };
+    if (!targetEntry) return { appealGain: base, flags: { jamFailedNoTarget: true } };
     const amount = targetEntry.moveContestType === ctx.move.contestType ? 4 : (ctx.move.contestJam || 1);
     return { appealGain: base, jamTargets: [{ targetId: ctx.targetId, amount }] };
   },
@@ -263,7 +265,7 @@ export const MULTI_TARGET_EFFECTS = new Set(['지정한 포켓몬들 방해']);
 // 값을 입력하지 않으면 무작위로 굴림(ctx.rng).
 export const DICE_EFFECTS = new Set(['무작위로 [1D6]하트가 추가']);
 
-// 마지막 라운드(6라운드)에는 사용할 수 없는 효과 문구 집합
+// 마지막 라운드(4라운드)에는 사용할 수 없는 효과 문구 집합
 export const FINAL_ROUND_RESTRICTED_EFFECTS = new Set([
   '더 이상 어필에 참가불가 (마지막턴 사용불가)',
 ]);

@@ -1,4 +1,4 @@
-// 콘테스트 자동 판정 엔진 (1차 심사 + 2차 심사 6라운드)
+// 콘테스트 자동 판정 엔진 (1차 심사 + 2차 심사 4라운드)
 // 순수 상태 객체(JSON 직렬화 가능)를 입력받아 새 상태를 반환하는 함수형 엔진.
 // UI(React)는 이 상태를 그대로 useState로 들고 있으면 됨.
 import {
@@ -13,9 +13,29 @@ import {
 import { getContestEffectHandler, getRepeatExemptMoveIds, FINAL_ROUND_RESTRICTED_EFFECTS } from './contestEffects';
 import { isComboStarter, getComboBonus } from './comboChart';
 
-export const MAX_ROUND = 6;
+// 2026-07-28: 1:1 콘테스트봇(functions/contestBot.js)과 라운드 수를 통일 - 기존 6라운드에서 4라운드로 변경.
+export const MAX_ROUND = 4;
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
+
+// Firebase RTDB는 빈 배열([])/빈 객체({})를 저장하면 그 키 자체를 지워버려서, 나중에 읽어오면
+// undefined로 돌아온다. appealedThisTurn과 pendingOverrides.goFirstIds/goLastIds는 라운드가
+// 끝날 때마다 []로 리셋되고 그 상태로 DB에 저장되기 때문에, 다음 라운드에서 이 state를 다시
+// 불러와 advanceTurn/forceSkipTurn에 넘기면 정확히 이 문제에 걸린다 - `.push`를 시도하는 순간
+// "Cannot read properties of undefined (reading 'push')"로 터진다. DB를 거쳐 돌아온 state를
+// 쓰기 전에 항상 정규화해서 방어한다. (웹 시뮬레이터는 React state로만 들고 있어 이 경로를
+// 타지 않지만, functions/contest/ContestEngine.js와 로직을 동일하게 유지하기 위해 여기도 맞춘다.)
+const normalizeState = (state) => {
+  if (!state.appealedThisTurn) state.appealedThisTurn = [];
+  if (!state.log) state.log = [];
+  if (!state.pendingOverrides) {
+    state.pendingOverrides = { goFirstIds: [], goLastIds: [], shuffleNext: false, reverseNext: false };
+  } else {
+    if (!state.pendingOverrides.goFirstIds) state.pendingOverrides.goFirstIds = [];
+    if (!state.pendingOverrides.goLastIds) state.pendingOverrides.goLastIds = [];
+  }
+  return state;
+};
 
 const randomPick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
@@ -121,7 +141,7 @@ const applyJam = (state, targetId, amount) => {
  * forceNervousResult: true/false를 넘기면 긴장 판정을 굴리지 않고 GM이 지정한 결과를 그대로 사용한다.
  */
 export const advanceTurn = (stateIn, options = {}) => {
-  const state = clone(stateIn);
+  const state = normalizeState(clone(stateIn));
   if (state.phase !== 'secondJudging') return state;
 
   const actorId = state.order[state.turnPointer];
@@ -236,6 +256,12 @@ export const advanceTurn = (stateIn, options = {}) => {
   (result.jamTargets || []).forEach(({ targetId, amount }) => {
     applyJam(state, targetId, Math.round(amount * multiplier));
   });
+
+  // "앞차례를 방해/참조" 계열 기술인데 그 라운드에 아직 아무도 어필하지 않은 상태(=자신이 선공)라
+  // 방해할 대상 자체가 없었던 경우를 실패로 기록한다 (조용히 무효과로 넘어가지 않도록).
+  if (flags.jamFailedNoTarget) {
+    state.log.push({ type: 'jamFail', participantId: actorId, moveId: move.id, moveName: move.name });
+  }
 
   // 콤보 성공 시 추가 방해(bonusJam)는 GM이 지정한 대상(targetId)에게 그대로 적용
   if (comboSuccess && comboBonus.bonusJam > 0 && options.targetId) {
@@ -357,7 +383,7 @@ const endRound = (state) => {
 
 // 응답 시간 초과 등으로 GM/봇이 강제로 이번 턴을 넘길 때 사용 (긴장 판정 없이 0 어필로 스킵)
 export const forceSkipTurn = (stateIn, reason = 'timeout') => {
-  const state = clone(stateIn);
+  const state = normalizeState(clone(stateIn));
   if (state.phase !== 'secondJudging') return state;
 
   const actorId = state.order[state.turnPointer];

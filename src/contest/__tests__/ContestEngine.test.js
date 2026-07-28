@@ -72,7 +72,7 @@ describe('새 콘테스트 규칙표 반영 검증', () => {
     expect(otherAfter).toBeLessThanOrEqual(otherBefore);
   });
 
-  test('마지막턴 사용불가 기술은 6라운드에서 canUseMove가 false를 반환한다', () => {
+  test('마지막턴 사용불가 기술은 마지막 라운드(4라운드)에서 canUseMove가 false를 반환한다', () => {
     const finisher = movesData.moves.find((m) => m.contestEffect === '더 이상 어필에 참가불가 (마지막턴 사용불가)');
     expect(finisher).toBeTruthy();
 
@@ -82,7 +82,9 @@ describe('새 콘테스트 규칙표 반영 검증', () => {
     ];
     let state = createContestState('귀여움', participants);
     state = runFirstJudging(state);
-    state.round = 6;
+    state.round = 3;
+    expect(canUseMove(state, state.order[0], finisher.id)).toBe(true);
+    state.round = 4;
     expect(canUseMove(state, state.order[0], finisher.id)).toBe(false);
   });
 });

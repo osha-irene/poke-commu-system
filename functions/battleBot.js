@@ -1624,8 +1624,15 @@ const createBattleBot = ({
       // 엔트리 닉네임이 실제 기술명과 같으면(예: "플래시") getBattleCommand가 기술 선택으로
       // 오인식한다. selecting 단계에서는 기술 선택이 성립할 수 없으니, 그 단계라면
       // 엔트리 선택으로 취급한다. (2026-07-27 선/비비 배틀이 "이미 종료됨"으로 잘못 뜨던 버그)
-      const selecting = await findSelectingBattle(author.id);
-      if (selecting) return selectPokemon({ author, content });
+      // 단, selecting 상태는 openBattleSessions 색인/타임아웃 대상이 아니라서 한쪽이
+      // 엔트리를 끝내 안 고르면 영원히 남는다. active 배틀이 이미 있으면 이 방치된 selecting
+      // 세션을 무시하고 항상 진짜 진행 중인 배틀의 기술 선택으로 처리한다. (2026-07-28 방치된
+      // selecting 세션이 다른 active 배틀의 기술 입력까지 엔트리 선택으로 가로채던 버그)
+      const active = await findActiveBattle(author.id);
+      if (!active) {
+        const selecting = await findSelectingBattle(author.id);
+        if (selecting) return selectPokemon({ author, content });
+      }
       return chooseMove({ author, content });
     }
     return formatHelp();
