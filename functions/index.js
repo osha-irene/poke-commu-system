@@ -129,7 +129,10 @@ const getContestBot = () => {
   if (!_contestBot) _contestBot = createContestBot({
     db,
     findMemberByAccount: contestCtx.findMemberByAccount,
+    extractMentionAccounts: contestCtx.extractMentionAccounts,
     normalizeAccount: contestCtx.normalizeAccount,
+    localUsername: contestCtx.localUsername,
+    botAccount: contestCtx.botAccount,
   });
   return _contestBot;
 };
@@ -445,18 +448,28 @@ const processBattleStatus = async (status, source = 'webhook') => {
 };
 
 // ── 콘테스트 봇 처리 ────────────────────────────────────────────
-// 배틀/캠핑/교환과 달리 참가자별 세션이 아니라 gameData/activeContest 하나를 공개 스레드로
-// 계속 이어붙이는 구조라, 매 응답을 항상 lastStatusId(직전 봇 포스트)에 답글로 단다.
+// battleBot.js와 동일한 방식: 참가자별 세션(gameData/contestSessions)을 두고, 세션의
+// lastBotStatusId(직전 봇 포스트) 스레드에 답글을 이어 단다.
 const processContestStatus = async (status, source = 'webhook') => {
   if (!status?.id) return { ignored: true, reason: 'no id' };
   if (await isSelfAuthoredStatus('contest', contestCtx, status)) return { ignored: true, reason: 'self' };
   const content = stripHtml(status.content);
+  if ((tradeCtx.isBotMentioned(status) && getTradeCommand(content)) ||
+      (campCtx.isBotMentioned(status) && getCampCommand(content)) ||
+      (battleCtx.isBotMentioned(status) && getBattleBot().getCommand(content))) {
+    return { ignored: true, reason: 'routed to another bot' };
+  }
+  const command = getContestBot().getCommand(content);
   if (!contestCtx.isBotMentioned(status)) return { ignored: true, reason: 'not mentioned' };
 
   const key = `${status.id}_contest`;
   if (!(await claimProcessing(db, status.id, 'contest'))) return { ignored: true, reason: 'already processed' };
 
-  const command = getContestCommand(content);
+  if (!command) {
+    await markProcessed(db, key, { source, ignored: 'unknown command' });
+    return { ignored: true, reason: 'unknown command' };
+  }
+
   const members = await getMembers(db);
   const { author, authorAccount } = await findAuthorForStatus(contestCtx, members, status);
   if (!author) {
@@ -468,28 +481,55 @@ const processContestStatus = async (status, source = 'webhook') => {
   const response = await getContestBot().handle({ status, content, command, members, author, authorAccount });
   await markProcessed(db, key, { source, command, account: authorAccount });
   if (response) {
-    const contest = await getContestBot().getContest();
-    const lastStatusId = contest?.lastStatusId;
-    const posted = lastStatusId
-      ? await contestCtx.replyToStatusId(lastStatusId, response, 'public')
-      : await contestCtx.replyToStatus(status, response);
-    if (posted?.id) {
-      const patch = { lastStatusId: posted.id };
-      if (!contest?.rootStatusId) patch.rootStatusId = posted.id;
-      await db.ref('gameData/activeContest').update(patch);
+    const isDm = status.visibility === 'direct';
+    const threadReplyCommands = ['move', 'selectPokemon'];
+    if (threadReplyCommands.includes(command)) {
+      // 기술/엔트리 선택 결과는 콘테스트 스레드 마지막 봇 포스트에 달기
+      const sessionSnap = await getContestBot().findSessionByMember?.(author.id);
+      const lastBotStatusId = sessionSnap?.session?.lastBotStatusId;
+      let posted;
+      if (lastBotStatusId) {
+        posted = await contestCtx.replyToStatusId(lastBotStatusId, response, 'public');
+      } else if (!isDm) {
+        posted = await contestCtx.replyToStatus(status, response);
+      } else {
+        posted = await contestCtx.makeMastodonRequest('/api/v1/statuses', 'POST', { status: response, visibility: 'public' });
+      }
+      if (posted?.id && sessionSnap?.sessionKey) {
+        await db.ref(`gameData/contestSessions/${sessionSnap.sessionKey}/lastBotStatusId`).set(posted.id);
+      }
+    } else {
+      const posted = await contestCtx.replyToStatus(status, response);
+      // 콘테스트 신청/수락/안내 등은 해당 포스트 ID를 세션에 저장
+      if (posted?.id) {
+        const sessionSnap = await getContestBot().findSessionByMember?.(author.id);
+        if (sessionSnap?.sessionKey) {
+          await db.ref(`gameData/contestSessions/${sessionSnap.sessionKey}/lastBotStatusId`).set(posted.id);
+        }
+      }
     }
   }
   return { processed: true, command };
 };
 
-const closeTimedOutContestTurn = async () => {
-  const result = await getContestBot().closeTimedOutTurn?.();
-  if (!result?.message) return { closed: false };
-  const posted = result.lastStatusId
-    ? await contestCtx.replyToStatusId(result.lastStatusId, result.message, 'public')
-    : await contestCtx.makeMastodonRequest('/api/v1/statuses', 'POST', { status: result.message, visibility: 'public' });
-  if (posted?.id) await db.ref('gameData/activeContest/lastStatusId').set(posted.id);
-  return { closed: true };
+const closeTimedOutContestSessions = async () => {
+  const closed = await getContestBot().closeTimedOutTurns?.();
+  if (!closed?.length) return { count: 0 };
+
+  for (const entry of closed) {
+    try {
+      const posted = entry.lastBotStatusId
+        ? await contestCtx.replyToStatusId(entry.lastBotStatusId, entry.message, 'public')
+        : await contestCtx.makeMastodonRequest('/api/v1/statuses', 'POST', { status: entry.message, visibility: 'public' });
+      if (posted?.id && entry.sessionKey) {
+        await db.ref(`gameData/contestSessions/${entry.sessionKey}/lastBotStatusId`).set(posted.id);
+      }
+    } catch (e) {
+      console.error(`Contest timeout notification failed [${entry.sessionKey}]:`, e);
+    }
+  }
+
+  return { count: closed.length };
 };
 
 // ── 폴링 헬퍼 ──────────────────────────────────────────────────
@@ -535,10 +575,11 @@ const getBotRoutesForStatus = (status) => {
   if (getCampCommand(content)) {
     return [{ prefix: 'camp', processStatus: processCampStatus }];
   }
-  // 콘테스트 봇의 기술 선언(declareMove)은 이름만으로 배틀 기술 선언과 겹칠 수 있어
-  // 레거시 공용 웹훅에서는 명시적 명령(시작/참가/마감/취소/도움말)만 우선 라우팅한다.
+  // 콘테스트 봇의 기술 선언(move)은 이름만으로 배틀 기술 선언과 겹칠 수 있어
+  // 레거시 공용 웹훅에서는 명시적 명령(신청/수락/거절/기권/도움말/엔트리선택)만 우선 라우팅한다.
   // 기술 선언은 전용 contestWebhook을 통해서만 안전하게 처리된다.
-  if (getContestCommand(content) !== 'declareMove') {
+  const contestCommand = getContestCommand(content);
+  if (contestCommand && contestCommand !== 'move') {
     return [{ prefix: 'contest', processStatus: processContestStatus }];
   }
 
@@ -615,8 +656,9 @@ exports.checkContestMentions = functions.region(region.region).runWith(scheduleO
   .onRun(async () => {
     try {
       const mentions = await pollMentions(contestCtx, processContestStatus, 'lastContestNotificationId', 'contest');
-      const timeout = await closeTimedOutContestTurn();
-      return { mentions, timeout };
+      const timeouts = await closeTimedOutContestSessions();
+      const expired = await getContestBot().expireStalePendingChallenges?.();
+      return { mentions, timeouts, expired };
     } catch (e) { console.error(e); return null; }
   });
 
@@ -916,6 +958,56 @@ exports.syncBattleSessionIndex = functions
       createdAt: after.createdAt || null,
       updatedAt: after.updatedAt || after.createdAt || null,
       startedAt: after.startedAt || null,
+    } : null));
+
+    await Promise.all(writes);
+    return null;
+  });
+
+// ── DB 트리거: 콘테스트 세션 색인 ──────────────────────────────────
+// contestBot.js가 1:1 세션 방식(battleBot.js와 동일 구조)으로 바뀌면서, syncBattleSessionIndex와
+// 똑같은 이유로 gameData/contestSessions 전체를 매번 훑지 않도록 회원별 포인터 색인과
+// "지금 열려있는 세션" 색인을 유지한다.
+exports.syncContestSessionIndex = functions
+  .region('us-central1')
+  .database.ref('gameData/contestSessions/{sessionKey}')
+  .onWrite(async (change, context) => {
+    const { sessionKey } = context.params;
+
+    if (!change.after.exists()) {
+      const before = change.before.val() || {};
+      const writes = [db.ref(`gameData/openContestSessions/${sessionKey}`).set(null)];
+      if (before.player1Id) writes.push(db.ref(`gameData/memberContestSessions/${before.player1Id}/${sessionKey}`).set(null));
+      if (before.player2Id) writes.push(db.ref(`gameData/memberContestSessions/${before.player2Id}/${sessionKey}`).set(null));
+      await Promise.all(writes);
+      return null;
+    }
+
+    const after = change.after.val();
+    const pointer = (role) => ({
+      status: after.status || null,
+      role,
+      createdAt: after.createdAt || null,
+      updatedAt: after.updatedAt || after.createdAt || null,
+      completedAt: after.completedAt || null,
+    });
+
+    const writes = [];
+    if (after.player1Id) {
+      writes.push(db.ref(`gameData/memberContestSessions/${after.player1Id}/${sessionKey}`).set(pointer('player1')));
+    }
+    if (after.player2Id) {
+      writes.push(db.ref(`gameData/memberContestSessions/${after.player2Id}/${sessionKey}`).set(pointer('player2')));
+    }
+
+    // closeTimedOutTurns(active)/expireStalePendingChallenges(pending)만 이 색인을 스캔하므로
+    // (battleBot.js의 openBattleSessions와 동일), 타임아웃이 없는 selecting 단계는 포함하지 않는다.
+    const isOpen = after.status === 'pending' || after.status === 'active';
+    writes.push(db.ref(`gameData/openContestSessions/${sessionKey}`).set(isOpen ? {
+      status: after.status,
+      createdAt: after.createdAt || null,
+      updatedAt: after.updatedAt || after.createdAt || null,
+      turnDeadlineAt: after.turnDeadlineAt || null,
     } : null));
 
     await Promise.all(writes);

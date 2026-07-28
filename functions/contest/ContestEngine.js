@@ -1,9 +1,10 @@
-// 콘테스트 자동 판정 엔진 (1차 심사 + 2차 심사 6라운드)
+// 콘테스트 자동 판정 엔진 - src/contest/ContestEngine.js(웹 관리자 시뮬레이터, ES module)를
+// 기준으로 그대로 포팅한 CommonJS 버전. 로직은 src 쪽과 동일하게 유지한다 (2026-07-28 기준 -
+// 이전에는 이 파일에만 있던 "박수(흥분도) 게이지" 기능이 src에는 없어 두 엔진이 갈라져 있었는데,
+// 흥분도 게이지 자체를 완전히 제거하고 웹 버전 로직으로 통일했다).
 // 순수 상태 객체(JSON 직렬화 가능)를 입력받아 새 상태를 반환하는 함수형 엔진.
-// UI(React)는 이 상태를 그대로 useState로 들고 있으면 됨.
 const {
   MAX_STARS,
-  MAX_APPLAUSE,
   roll2d6,
   roll1d100,
   calcNervousChance,
@@ -11,8 +12,10 @@ const {
   getPenaltyMultiplier,
   isMatchingMove,
 } = require('./contestRules');
-const { getContestEffectHandler, getRepeatExemptMoveIds } = require('./contestEffects');
-const { isComboStarter, isValidComboFollowUp, COMBO_FOLLOWUP_BONUS } = require('./comboChart');
+const { getContestEffectHandler, getRepeatExemptMoveIds, FINAL_ROUND_RESTRICTED_EFFECTS } = require('./contestEffects');
+const { isComboStarter, getComboBonus } = require('./comboChart');
+
+const DEFAULT_MAX_ROUNDS = 6;
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
@@ -21,15 +24,17 @@ const randomPick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 /**
  * participantsInput: [{ id, name, pokemonName, conditionValue, moves: [moveData, ...] }]
  * moveData는 src/data/moves.json의 기술 객체(contestType/contestAppeals/contestJam/contestEffect 포함)를 그대로 사용.
+ * options.maxRounds: 2차 심사를 몇 라운드까지 진행할지 (기본 6 - 웹 시뮬레이터와 동일하게 유지).
+ * 1:1 콘테스트봇처럼 라운드 수를 제한하고 싶을 때만 넘기면 된다.
  */
-const createContestState = (contestType, participantsInput) => ({
+const createContestState = (contestType, participantsInput, options = {}) => ({
   contestType,
   phase: 'setup',
   round: 0,
+  maxRounds: Number.isInteger(options.maxRounds) && options.maxRounds > 0 ? options.maxRounds : DEFAULT_MAX_ROUNDS,
   order: [],
   turnPointer: 0,
   appealedThisTurn: [],
-  applause: { value: 0 },
   pendingOverrides: { goFirstIds: [], goLastIds: [], shuffleNext: false, reverseNext: false },
   globalPreventNextJam: false,
   log: [],
@@ -51,6 +56,7 @@ const createContestState = (contestType, participantsInput) => ({
     forcedNervousThisRound: false,
     noJamRestOfTurn: false,
     doubleJamIfHitThisTurn: false,
+    appealHalvedThisTurn: false,
   })),
 });
 
@@ -90,6 +96,7 @@ const canUseMove = (state, participantId, moveId, allMoves = []) => {
   if (!actor) return false;
   const move = actor.moves.find((m) => m.id === moveId);
   if (!move || !move.contestType) return false;
+  if (FINAL_ROUND_RESTRICTED_EFFECTS.has(move.contestEffect) && state.round >= (state.maxRounds || DEFAULT_MAX_ROUNDS)) return false;
   if (actor.lastMoveId !== moveId) return true;
   const exemptIds = getRepeatExemptMoveIds(allMoves.length ? allMoves : actor.moves);
   return exemptIds.has(moveId);
@@ -115,7 +122,8 @@ const applyJam = (state, targetId, amount) => {
 
 /**
  * 현재 턴 진행: 긴장 판정 → (긴장 아니면) 기술 효과 계산 → 결과 반영 → 다음 턴/라운드로 이동.
- * options: { moveId, targetId, declareCombo, comboSuccessBonus, rng }
+ * options: { moveId, targetId, targetIds, declareCombo, comboSuccessBonus, rng, diceValue, forceNervousResult }
+ * forceNervousResult: true/false를 넘기면 긴장 판정을 굴리지 않고 GM/봇이 지정한 결과를 그대로 사용한다.
  */
 const advanceTurn = (stateIn, options = {}) => {
   const state = clone(stateIn);
@@ -184,8 +192,9 @@ const advanceTurn = (stateIn, options = {}) => {
     turnIndex: position,
     order: state.order,
     appealedThisTurn: state.appealedThisTurn,
-    applause: state.applause,
     targetId: options.targetId,
+    targetIds: options.targetIds,
+    participants: state.participants,
     rng: options.rng || randomPick,
     diceValue: Number.isInteger(options.diceValue) && options.diceValue >= 1 && options.diceValue <= 6
       ? options.diceValue
@@ -198,31 +207,25 @@ const advanceTurn = (stateIn, options = {}) => {
   const isMatch = isMatchingMove(move.contestType, state.contestType);
   let finalAppeal = Math.round((result.appealGain || 0) * multiplier);
 
+  // 지정한 포켓몬이 이번 턴에서 획득하는 어필을 절반으로 줄이는 효과가 먼저 걸려 있었던 경우
+  if (actor.appealHalvedThisTurn) {
+    finalAppeal = Math.floor(finalAppeal / 2);
+    actor.appealHalvedThisTurn = false;
+  }
+
   // ☆ 보유 보너스 (이번 기술 자체가 star 기반 공식일 땐 중복 방지)
   if (finalAppeal > 0 && actor.stars > 0 && !flags.suppressStarBonus) {
     finalAppeal += actor.stars;
   }
 
-  // 콤보 - Bulbapedia "Contest combination"(6세대) 조합표 기준 자동 판정, 성공 시 +3 고정
-  const comboSuccess = !!actor.comboWaiting && isValidComboFollowUp(actor.comboWaiting.moveId, move.id);
+  // 콤보 - 커뮤니티 콤보표 기준 자동 판정, 성공 시 연계 기술별 추가 하트/방해 적용
+  const comboBonus = actor.comboWaiting ? getComboBonus(actor.comboWaiting.moveId, move.id) : null;
+  const comboSuccess = !!comboBonus;
   if (comboSuccess) {
-    finalAppeal += COMBO_FOLLOWUP_BONUS;
+    finalAppeal += comboBonus.bonusAppeal;
   }
 
   actor.totalAppeal += finalAppeal;
-
-  // 박수(흥분도) 게이지: 일치 타입 어필 성공 시 상승, 패널티 타입 사용 시 하락 (podic.kr 페이지 상단 공통 규칙)
-  if (!state.applause.freezeThisTurn) {
-    const isLast = position === total - 1;
-    const isFirst = position === 0;
-    if (flags.forceApplauseRise || (isMatch && finalAppeal > 0)) {
-      const rise = (isLast && flags.applauseBonusIfLast) || (isFirst && flags.applauseBonusIfFirst) || 1;
-      state.applause.value = Math.min(MAX_APPLAUSE, state.applause.value + rise);
-    } else if (multiplier < 1) {
-      state.applause.value = Math.max(0, state.applause.value - 1);
-    }
-  }
-  if (flags.freezeApplauseRestOfTurn) state.applause.freezeThisTurn = true;
 
   // 라이브 어필 (일치 타입으로 5회 성공 시 +5)
   if (isMatch && finalAppeal > 0) {
@@ -238,6 +241,11 @@ const advanceTurn = (stateIn, options = {}) => {
   (result.jamTargets || []).forEach(({ targetId, amount }) => {
     applyJam(state, targetId, Math.round(amount * multiplier));
   });
+
+  // 콤보 성공 시 추가 방해(bonusJam)는 GM/봇이 지정한 대상(targetId)에게 그대로 적용
+  if (comboSuccess && comboBonus.bonusJam > 0 && options.targetId) {
+    applyJam(state, options.targetId, comboBonus.bonusJam);
+  }
 
   // 부가 효과 플래그 반영
   if (flags.gainStar) actor.stars = Math.min(MAX_STARS, actor.stars + 1);
@@ -270,8 +278,18 @@ const advanceTurn = (stateIn, options = {}) => {
     });
   }
 
+  // 대상(targetId) 지정 효과의 타겟 전용 플래그 반영
+  Object.entries(result.targetFlags || {}).forEach(([tid, tflags]) => {
+    const target = state.participants.find((pp) => pp.id === tid);
+    if (!target) return;
+    if (tflags.cannotAppealNextRound) target.cannotAppealNextRound = true;
+    if (tflags.clearStars) target.stars = 0;
+    if (tflags.clearComboWaiting) target.comboWaiting = null;
+    if (tflags.appealHalvedThisTurn) target.appealHalvedThisTurn = true;
+  });
+
   if (comboSuccess) {
-    state.log.push({ type: 'combo', participantId: actorId, bonus: COMBO_FOLLOWUP_BONUS });
+    state.log.push({ type: 'combo', participantId: actorId, bonus: comboBonus.bonusAppeal, bonusJam: comboBonus.bonusJam });
   }
   // 이번 기술이 콤보 선행 기술이면 다음 턴 콤보 대기 상태로 전환(성공 여부와 무관하게 갱신)
   actor.comboWaiting = isComboStarter(move.id) ? { moveId: move.id } : null;
@@ -302,13 +320,13 @@ const endRound = (state) => {
     p.forcedNervousThisRound = false;
     p.noJamRestOfTurn = false;
     p.doubleJamIfHitThisTurn = false;
+    p.appealHalvedThisTurn = false;
   });
-  state.applause.freezeThisTurn = false;
   state.globalPreventNextJam = false;
 
   state.log.push({ type: 'roundEnd', round: state.round, standings: state.participants.map(p => ({ id: p.id, totalAppeal: p.totalAppeal })) });
 
-  if (state.round >= 6) {
+  if (state.round >= (state.maxRounds || DEFAULT_MAX_ROUNDS)) {
     state.phase = 'done';
     return;
   }

@@ -88,5 +88,10 @@
         "id": "hiddenpower",
         "label": "억겹의 시간을 넘어",
         "icon": "/img/titles/hiddenpower.png"
+    },
+      {
+        "id": "human-chatot",
+        "label": "인간 페라페",
+        "icon": "/img/titles/human-chatot.png"
     }
 ]

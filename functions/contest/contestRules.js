@@ -1,4 +1,5 @@
 // 콘테스트 자동 판정 엔진 - 규칙 상수 & 순수 계산 헬퍼 (CommonJS 포팅본, src/contest/contestRules.js와 동일 로직 유지)
+// 근거: 커뮤니티 콘테스트 규칙(오메가루비·알파사파이어 라이브 룰 기반, src/data/communityContent.js "## 콘테스트" 참고)
 const CONTEST_TYPES = ['귀여움', '근사함', '강인함', '슬기로움', '아름다움'];
 
 const CONTEST_PENALTY_TYPES = {
@@ -18,7 +19,6 @@ const CONDITION_KEY_BY_CONTEST_TYPE = {
 };
 
 const MAX_STARS = 3;
-const MAX_APPLAUSE = 4;
 
 const rollDie = (sides = 6) => 1 + Math.floor(Math.random() * sides);
 const roll2d6 = () => rollDie(6) + rollDie(6);
@@ -47,7 +47,6 @@ module.exports = {
   CONTEST_PENALTY_TYPES,
   CONDITION_KEY_BY_CONTEST_TYPE,
   MAX_STARS,
-  MAX_APPLAUSE,
   rollDie,
   roll2d6,
   roll1d100,
