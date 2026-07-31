@@ -1218,7 +1218,13 @@ const createBattleBot = ({
   // markIgnoredBattleCandidate가 거의 모든 답글마다 findSessionByMember를 호출하는데,
   // 예전엔 이게 매번 전체 세션 컬렉션을 3번씩 읽어서(7/11 members 전체 버그와 동일한 구조로)
   // RTDB 다운로드를 불렸다(2026-07-23).
-  const findMemberSessionPointer = async (memberId, matches) => {
+  // createChallenge가 회원당 열린 세션을 최대 1개로 유지하므로(forceCloseOpenSessions 참고)
+  // 후보가 2개 이상 나오는 일은 정상 상황에선 없어야 하지만, 과거에 이미 꼬여 들어간 데이터나
+  // 예외적인 경합을 대비해 replyToId(답글이 달린 스레드 = status.in_reply_to_id)가 주어지면
+  // "가장 최근 갱신된 세션"이 아니라 실제 그 스레드(lastBotStatusId)와 일치하는 세션을 우선한다.
+  // (2026-07-31 금붕어vs빈티나 / 빈티나vs브리 로그가 섞였던 사고 - 최신순으로만 골라서
+  // 엉뚱한 배틀에 기술 선택이 적용됐다)
+  const findMemberSessionPointer = async (memberId, matches, replyToId = null) => {
     const snapshot = await db.ref(`gameData/memberBattleSessions/${memberId}`).once('value');
     const pointers = snapshot.val() || {};
     const candidates = Object.entries(pointers)
@@ -1226,31 +1232,89 @@ const createBattleBot = ({
       .sort((a, b) => String(b[1].updatedAt || b[1].createdAt || '').localeCompare(String(a[1].updatedAt || a[1].createdAt || '')));
     if (!candidates.length) return null;
 
+    if (replyToId && candidates.length > 1) {
+      for (const [sessionKey] of candidates) {
+        const sessionSnap = await db.ref(`gameData/battleSessions/${sessionKey}`).once('value');
+        const session = sessionSnap.val();
+        if (session?.lastBotStatusId === replyToId) return { sessionKey, session };
+      }
+    }
+
     const [sessionKey] = candidates[0];
     const sessionSnap = await db.ref(`gameData/battleSessions/${sessionKey}`).once('value');
     const session = sessionSnap.val();
     return session ? { sessionKey, session } : null;
   };
 
-  const findPendingChallenge = (memberId) => findMemberSessionPointer(
+  const findPendingChallenge = (memberId, replyToId) => findMemberSessionPointer(
     memberId,
-    (pointer) => pointer.status === 'pending' && pointer.role === 'player2'
+    (pointer) => pointer.status === 'pending' && pointer.role === 'player2',
+    replyToId
   );
 
-  const findSelectingBattle = (memberId) => findMemberSessionPointer(
+  const findSelectingBattle = (memberId, replyToId) => findMemberSessionPointer(
     memberId,
-    (pointer) => pointer.status === 'selecting'
+    (pointer) => pointer.status === 'selecting',
+    replyToId
   );
 
-  const findActiveBattle = (memberId) => findMemberSessionPointer(
+  const findActiveBattle = (memberId, replyToId) => findMemberSessionPointer(
     memberId,
-    (pointer) => pointer.status === 'active'
+    (pointer) => pointer.status === 'active',
+    replyToId
   );
 
-  const findFinishedBattle = (memberId) => findMemberSessionPointer(
+  const findFinishedBattle = (memberId, replyToId) => findMemberSessionPointer(
     memberId,
-    (pointer) => pointer.status === 'completed' || pointer.status === 'forfeited'
+    (pointer) => pointer.status === 'completed' || pointer.status === 'forfeited',
+    replyToId
   );
+
+  // 새 배틀 신청이 생성될 때 신청자/상대가 이미 열어둔 배틀(신청 대기·엔트리 선택·진행 중)을
+  // 전부 강제 종료한다. 세션은 createChallenge에서만 새로 생기므로, 여기서 "회원당 열린
+  // 세션은 최대 1개" 불변식을 지키면 다른 곳(수락/기술선택 등)에서 동시 배틀로 인한 세션
+  // 혼선이 애초에 생기지 않는다. tradeBot.js의 교환 신청 시 기존 교환 전부 취소하는 것과
+  // 동일한 패턴이다.
+  const forceCloseOpenSessions = async (memberIds, now = Date.now()) => {
+    const closed = [];
+    const seen = new Set();
+    for (const memberId of memberIds) {
+      const snapshot = await db.ref(`gameData/memberBattleSessions/${memberId}`).once('value');
+      const pointers = snapshot.val() || {};
+      for (const [sessionKey, pointer] of Object.entries(pointers)) {
+        if (seen.has(sessionKey)) continue;
+        if (!['pending', 'selecting', 'active'].includes(pointer.status)) continue;
+        seen.add(sessionKey);
+
+        const completedAt = new Date(now).toISOString();
+        const ref = db.ref(`gameData/battleSessions/${sessionKey}`);
+        const result = await ref.transaction((current) => {
+          if (!current) return current;
+          if (!['pending', 'selecting', 'active'].includes(current.status)) return;
+          return {
+            ...current,
+            status: 'cancelled',
+            result: 'cancelled',
+            pendingChoices: {},
+            pendingTeamChoices: {},
+            completedAt,
+            updatedAt: completedAt,
+          };
+        });
+
+        if (result.committed && result.snapshot.val()) {
+          const session = result.snapshot.val();
+          closed.push({
+            sessionKey,
+            session,
+            message: withBattleMentions(session, '참가자 중 한 명이 다른 배틀을 새로 시작해서 이 배틀은 자동으로 종료되었습니다.'),
+            lastBotStatusId: session.lastBotStatusId || null,
+          });
+        }
+      }
+    }
+    return closed;
+  };
 
   // gameData/openBattleSessions는 syncBattleSessionIndex 트리거가 status가 pending/active인
   // 세션만 담아두고 끝나면 자동으로 지우는 색인이라, 전체 이력이 아니라 "지금 열려있는 세션"만
@@ -1378,16 +1442,21 @@ const createBattleBot = ({
       updatedAt: new Date().toISOString(),
     };
 
+    // 신청자/상대 둘 중 누구라도 이미 열어둔 배틀이 있으면 새 배틀을 시작하기 전에
+    // 강제 종료한다 (동시 배틀로 인한 세션 혼선 방지, forceCloseOpenSessions 참고).
+    const closed = await forceCloseOpenSessions([author.id, opponent.id]);
+
     const ref = db.ref('gameData/battleSessions').push();
     await ref.set(session);
-    return withBattleMentions(session, [
+    const message = withBattleMentions(session, [
       `${session.player2Name}님에게 배틀을 신청했어요.`,
       '상대가 [배틀 수락]을 보내면 엔트리를 선택합니다.',
     ].join('\n'));
+    return { message, closed };
   };
 
-  const acceptChallenge = async ({ author }) => {
-    const pending = await findPendingChallenge(author.id);
+  const acceptChallenge = async ({ author, status }) => {
+    const pending = await findPendingChallenge(author.id, status?.in_reply_to_id);
     if (!pending) return '수락할 배틀 신청이 없어요.';
 
     await db.ref(`gameData/battleSessions/${pending.sessionKey}`).update({
@@ -1405,10 +1474,10 @@ const createBattleBot = ({
     ].join('\n'));
   };
 
-  const selectPokemon = async ({ author, content }) => {
-    const selecting = await findSelectingBattle(author.id);
+  const selectPokemon = async ({ author, content, status }) => {
+    const selecting = await findSelectingBattle(author.id, status?.in_reply_to_id);
     // 포켓몬 선택 단계가 아니면 기술 이름으로 재시도 (예: [리프스톰])
-    if (!selecting) return chooseMove({ author, content });
+    if (!selecting) return chooseMove({ author, content, status });
 
     const { sessionKey, session } = selecting;
     const side = session.player1Id === author.id ? 'p1' : 'p2';
@@ -1465,8 +1534,8 @@ const createBattleBot = ({
     ].filter(Boolean).join('\n'));
   };
 
-  const declineChallenge = async ({ author }) => {
-    const pending = await findPendingChallenge(author.id);
+  const declineChallenge = async ({ author, status }) => {
+    const pending = await findPendingChallenge(author.id, status?.in_reply_to_id);
     if (!pending) return '거절할 배틀 신청이 없어요.';
     await db.ref(`gameData/battleSessions/${pending.sessionKey}`).update({
       status: 'declined',
@@ -1475,8 +1544,8 @@ const createBattleBot = ({
     return withBattleMentions(pending.session, '배틀 신청을 거절했어요.');
   };
 
-  const forfeit = async ({ author }) => {
-    const active = await findActiveBattle(author.id) || await findSelectingBattle(author.id);
+  const forfeit = async ({ author, status }) => {
+    const active = await findActiveBattle(author.id, status?.in_reply_to_id) || await findSelectingBattle(author.id, status?.in_reply_to_id);
     if (!active) return '진행 중인 배틀이 없어요.';
     const winner = active.session.player1Id === author.id ? active.session.player2Name : active.session.player1Name;
     await db.ref(`gameData/battleSessions/${active.sessionKey}`).update({
@@ -1487,8 +1556,8 @@ const createBattleBot = ({
     return withBattleMentions(active.session, `${winner} 승리! 상대가 기권했습니다.`);
   };
 
-  const endByHp = async ({ author }) => {
-    const active = await findActiveBattle(author.id);
+  const endByHp = async ({ author, status }) => {
+    const active = await findActiveBattle(author.id, status?.in_reply_to_id);
     if (!active) return '진행 중인 배틀이 없어요.';
     const { sessionKey, session } = active;
 
@@ -1507,10 +1576,10 @@ const createBattleBot = ({
     return withBattleMentions(session, `${loser}이(가) 먼저 종료를 선언했습니다. ${winner} 승리!`);
   };
 
-  const chooseMove = async ({ author, content }) => {
-    const active = await findActiveBattle(author.id);
+  const chooseMove = async ({ author, content, status }) => {
+    const active = await findActiveBattle(author.id, status?.in_reply_to_id);
     if (!active) {
-      const finished = await findFinishedBattle(author.id);
+      const finished = await findFinishedBattle(author.id, status?.in_reply_to_id);
       if (finished) {
         const winner = finished.session.winner ? ` ${finished.session.winner} 승리!` : '';
         return withBattleMentions(finished.session, `배틀이 이미 종료되었습니다.${winner}`);
@@ -1613,14 +1682,22 @@ const createBattleBot = ({
   };
 
   const handle = async ({ status, content, command, members, author, authorAccount }) => {
-    if (command === 'help') return formatHelp();
-    if (command === 'challenge') return createChallenge({ status, members, author, authorAccount });
-    if (command === 'accept') return acceptChallenge({ author });
-    if (command === 'selectPokemon') return selectPokemon({ author, content });
-    if (command === 'decline') return declineChallenge({ author });
-    if (command === 'forfeit') return forfeit({ author });
-    if (command === 'endByHp') return endByHp({ author });
-    if (command === 'move') {
+    let result;
+    if (command === 'help') {
+      result = formatHelp();
+    } else if (command === 'challenge') {
+      result = await createChallenge({ status, members, author, authorAccount });
+    } else if (command === 'accept') {
+      result = await acceptChallenge({ author, status });
+    } else if (command === 'selectPokemon') {
+      result = await selectPokemon({ author, content, status });
+    } else if (command === 'decline') {
+      result = await declineChallenge({ author, status });
+    } else if (command === 'forfeit') {
+      result = await forfeit({ author, status });
+    } else if (command === 'endByHp') {
+      result = await endByHp({ author, status });
+    } else if (command === 'move') {
       // 엔트리 닉네임이 실제 기술명과 같으면(예: "플래시") getBattleCommand가 기술 선택으로
       // 오인식한다. selecting 단계에서는 기술 선택이 성립할 수 없으니, 그 단계라면
       // 엔트리 선택으로 취급한다. (2026-07-27 선/비비 배틀이 "이미 종료됨"으로 잘못 뜨던 버그)
@@ -1628,22 +1705,29 @@ const createBattleBot = ({
       // 엔트리를 끝내 안 고르면 영원히 남는다. active 배틀이 이미 있으면 이 방치된 selecting
       // 세션을 무시하고 항상 진짜 진행 중인 배틀의 기술 선택으로 처리한다. (2026-07-28 방치된
       // selecting 세션이 다른 active 배틀의 기술 입력까지 엔트리 선택으로 가로채던 버그)
-      const active = await findActiveBattle(author.id);
-      if (!active) {
-        const selecting = await findSelectingBattle(author.id);
-        if (selecting) return selectPokemon({ author, content });
-      }
-      return chooseMove({ author, content });
+      const active = await findActiveBattle(author.id, status?.in_reply_to_id);
+      const selecting = active ? null : await findSelectingBattle(author.id, status?.in_reply_to_id);
+      result = selecting
+        ? await selectPokemon({ author, content, status })
+        : await chooseMove({ author, content, status });
+    } else {
+      result = formatHelp();
     }
-    return formatHelp();
+
+    // createChallenge는 강제 종료된 다른 배틀에 대한 알림({message, closed})을 함께 반환한다.
+    // 그 외 커맨드는 문자열(또는 아직 양쪽 다 선택 안 한 턴처럼 응답 없음을 뜻하는 null)을
+    // 반환하므로, 호출부(index.js)가 한 가지 형태만 다루도록 여기서 통일한다.
+    if (result === null || result === undefined) return null;
+    if (typeof result === 'object') return result;
+    return { message: result, closed: [] };
   };
 
-  const findSessionByMember = async (memberId) => {
-    const active = await findActiveBattle(memberId);
+  const findSessionByMember = async (memberId, replyToId) => {
+    const active = await findActiveBattle(memberId, replyToId);
     if (active) return active;
-    const selecting = await findSelectingBattle(memberId);
+    const selecting = await findSelectingBattle(memberId, replyToId);
     if (selecting) return selecting;
-    const pending = await findPendingChallenge(memberId);
+    const pending = await findPendingChallenge(memberId, replyToId);
     return pending || null;
   };
 

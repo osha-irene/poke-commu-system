@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Award, ChevronLeft, User, Text, Users } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import { getOwnedPokemonSpriteUrl } from '../../utils/pokemonImageUtils';
+import { findPokemonTemplate } from '../../utils/pokemonBaseStats';
 import { getTitleDisplayStyle } from '../../utils/titleDisplay';
 import { getTitleById } from '../../data/titles';
 import { TYPE_COLORS } from '../../constants/pokemon';
@@ -377,7 +378,8 @@ const getPokeApiSprite = p => {
   if (id) return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-ix/scarlet-violet/${id}.png`;
   return null;
 };
-const getEntryPokemonSprite = p => getOwnedPokemonSpriteUrl(p) || getPokemonLocalIconUrl(p);
+const getEntryPokemonSprite = (p, allPokemonMaster = []) =>
+  getOwnedPokemonSpriteUrl(p, findPokemonTemplate(p, allPokemonMaster) || p) || getPokemonLocalIconUrl(p);
 
 const MOVE_TYPE_COLORS = {
   normal: { bg: '#A8A878', text: '#fff' },
@@ -886,7 +888,7 @@ function scheduleIdleTask(callback) {
   return window.setTimeout(callback, 0);
 }
 
-function MemberDetail({ member, members, titles, onBack, onTabChange, currentUserId, isAdmin }) {
+function MemberDetail({ member, members, titles, onBack, onTabChange, currentUserId, isAdmin, allPokemonMaster = [] }) {
   const { allItems = [] } = useGame();
   const isOwner = String(member.id || '') === String(currentUserId || '');
   const canEdit = isAdmin;
@@ -2600,7 +2602,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                           minWidth: 96,
                           minHeight: 96,
                           flexShrink: 0,
-                          backgroundImage: `url(${getEntryPokemonSprite(p)})`,
+                          backgroundImage: `url(${getEntryPokemonSprite(p, allPokemonMaster)})`,
                           backgroundSize: '100%',
                           backgroundPosition: 'center center',
                           backgroundRepeat: 'no-repeat',
@@ -3122,6 +3124,7 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
             onTabChange={setActiveTab}
             currentUserId={currentUserId}
             isAdmin={isAdmin}
+            allPokemonMaster={allPokemonMaster}
           />
         </div>,
         document.body

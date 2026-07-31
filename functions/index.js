@@ -416,28 +416,31 @@ const processBattleStatus = async (status, source = 'webhook') => {
   const response = await getBattleBot().handle({ status, content, command, members, author, authorAccount });
   await markProcessed(db, key, { source, command, account: authorAccount });
   if (response) {
+    // 새 배틀 신청으로 다른 배틀이 강제 종료됐다면, 그 배틀 스레드에도 종료 사실을 알린다.
+    await notifyClosedBattleSessions(response.closed);
+
     const isDm = status.visibility === 'direct';
     const threadReplyCommands = ['move', 'selectPokemon'];
     if (threadReplyCommands.includes(command)) {
       // 기술/포켓몬 선택 결과는 배틀 스레드 마지막 봇 포스트에 달기
-      const sessionSnap = await getBattleBot().findSessionByMember?.(author.id);
+      const sessionSnap = await getBattleBot().findSessionByMember?.(author.id, status.in_reply_to_id);
       const lastBotStatusId = sessionSnap?.session?.lastBotStatusId;
       let posted;
       if (lastBotStatusId) {
-        posted = await battleCtx.replyToStatusId(lastBotStatusId, response, 'public');
+        posted = await battleCtx.replyToStatusId(lastBotStatusId, response.message, 'public');
       } else if (!isDm) {
-        posted = await battleCtx.replyToStatus(status, response);
+        posted = await battleCtx.replyToStatus(status, response.message);
       } else {
-        posted = await battleCtx.makeMastodonRequest('/api/v1/statuses', 'POST', { status: response, visibility: 'public' });
+        posted = await battleCtx.makeMastodonRequest('/api/v1/statuses', 'POST', { status: response.message, visibility: 'public' });
       }
       if (posted?.id && sessionSnap?.sessionKey) {
         await db.ref(`gameData/battleSessions/${sessionSnap.sessionKey}/lastBotStatusId`).set(posted.id);
       }
     } else {
-      const posted = await battleCtx.replyToStatus(status, response);
+      const posted = await battleCtx.replyToStatus(status, response.message);
       // 배틀 신청/수락/안내 등은 해당 포스트 ID를 세션에 저장
       if (posted?.id) {
-        const sessionSnap = await getBattleBot().findSessionByMember?.(author.id);
+        const sessionSnap = await getBattleBot().findSessionByMember?.(author.id, status.in_reply_to_id);
         if (sessionSnap?.sessionKey) {
           await db.ref(`gameData/battleSessions/${sessionSnap.sessionKey}/lastBotStatusId`).set(posted.id);
         }
@@ -591,10 +594,11 @@ const getBotRoutesForStatus = (status) => {
   return routes;
 };
 
-const closeTimedOutBattleSessions = async () => {
-  const closed = await getBattleBot().closeTimedOutBattles?.();
-  if (!closed?.length) return { count: 0 };
-
+// closeTimedOutBattles(타임아웃 강제종료)와 forceCloseOpenSessions(동시 배틀로 인한
+// 강제종료) 둘 다 {sessionKey, session, message, lastBotStatusId} 형태로 종료된 세션을
+// 돌려주므로, 그 배틀 스레드에 종료 사실을 알리는 로직을 공유한다.
+const notifyClosedBattleSessions = async (closed) => {
+  if (!closed?.length) return;
   for (const entry of closed) {
     try {
       const posted = entry.lastBotStatusId
@@ -604,9 +608,15 @@ const closeTimedOutBattleSessions = async () => {
         await db.ref(`gameData/battleSessions/${entry.sessionKey}/lastBotStatusId`).set(posted.id);
       }
     } catch (e) {
-      console.error(`Battle timeout notification failed [${entry.sessionKey}]:`, e);
+      console.error(`Battle session close notification failed [${entry.sessionKey}]:`, e);
     }
   }
+};
+
+const closeTimedOutBattleSessions = async () => {
+  const closed = await getBattleBot().closeTimedOutBattles?.();
+  if (!closed?.length) return { count: 0 };
+  await notifyClosedBattleSessions(closed);
 
   return { count: closed.length };
 };

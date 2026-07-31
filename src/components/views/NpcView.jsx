@@ -109,6 +109,16 @@ function getMemberList(members, npcOnly = false) {
       return (a.name || '').localeCompare(b.name || '', 'ko');
     });
 }
+const GenderMale = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="10" cy="14" r="5"/><line x1="19" y1="5" x2="14.14" y2="9.86"/><polyline points="15 5 19 5 19 9"/>
+  </svg>
+);
+const GenderFemale = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ec4899" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="9" r="5"/><line x1="12" y1="14" x2="12" y2="21"/><line x1="9" y1="18" x2="15" y2="18"/>
+  </svg>
+);
 const getPokemonName = p => p?.nickname || p?.name || p?.nameKo || p?.nameEn || '?';
 const getPokemonImg  = p => p?.sprite || p?.spriteUrl || p?.imageUrl || p?.iconUrl || p?.frontSprite || PLACEHOLDER;
 const getPokemonIcon = p => getPokemonLocalIconUrl(p) || PLACEHOLDER;
@@ -139,7 +149,7 @@ const getPartner     = m => {
   const flagged = p.find(x => x?.isPartner);
   if (flagged) return flagged;
   if (m?.partnerPokemon) return m.partnerPokemon;
-  return p[0] || null;
+  return null;
 };
 const getPokemonIdentity = p => p?.uniqueId || p?.id || p?.pokemonId || null;
 const isSamePokemon = (a, b) => {
@@ -232,6 +242,11 @@ function PkDetailCard({ pokemon, large, isPartner = false, showPartyDetails = fa
             }}
           />
           <span className="mbr-pk-name" style={{ marginLeft: -8 }}>{getPokemonName(pokemon)}</span>
+          {(pokemon?.gender === 'male' || pokemon?.gender === 'female') && (
+            <span style={{ position: 'relative', top: 2, display: 'inline-flex' }}>
+              {pokemon.gender === 'male' ? <GenderMale /> : <GenderFemale />}
+            </span>
+          )}
           <span className="mbr-pk-lv">Lv.{pokemon?.level || 1}</span>
         </div>
         {types.length > 0 && (

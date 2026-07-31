@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../../utils/pokemonIconUtils';
 import { getOwnedPokemonSpriteUrl } from '../../../utils/pokemonImageUtils';
+import { findPokemonTemplate } from '../../../utils/pokemonBaseStats';
 import { getTitleDisplayStyle } from '../../../utils/titleDisplay';
 import { TYPE_COLORS, POKEBALL_LIST } from '../../../constants/pokemon';
 import { translateMoveName } from '../../../battle/utils/move-translations';
@@ -125,7 +126,8 @@ const getPokemonDbSprite = p => {
   return getOwnedPokemonSpriteUrl(p) || getPokemonLocalIconUrl(p);
 };
 
-const getEntryPokemonSprite = p => getOwnedPokemonSpriteUrl(p) || getPokemonLocalIconUrl(p);
+const getEntryPokemonSprite = (p, allPokemonMaster = []) =>
+  getOwnedPokemonSpriteUrl(p, findPokemonTemplate(p, allPokemonMaster) || p) || getPokemonLocalIconUrl(p);
 
 const getBallUrl = (p, allItems = []) => {
   // caughtWithBall(볼 이름)이 최신/권위있는 값이고, ballImageUrl은 캐치/수정 시점에 찍어둔
@@ -473,7 +475,7 @@ function ProfileTab({ member }) {
 }
 
 /* ── 엔트리 탭 ── */
-function EntryTab({ party, allItems = [] }) {
+function EntryTab({ party, allItems = [], allPokemonMaster = [] }) {
   if (!party.length) {
     return <p style={{ color: '#bbb', fontSize: '0.85rem', textAlign: 'center', padding: '40px 0' }}>포켓몬 없음</p>;
   }
@@ -510,7 +512,7 @@ function EntryTab({ party, allItems = [] }) {
                 minWidth: 96,
                 minHeight: 96,
                 flexShrink: 0,
-                backgroundImage: `url(${getEntryPokemonSprite(p)})`,
+                backgroundImage: `url(${getEntryPokemonSprite(p, allPokemonMaster)})`,
                 backgroundSize: '100%',
                 backgroundPosition: 'center center',
                 backgroundRepeat: 'no-repeat',
@@ -736,7 +738,7 @@ const TABS = [
   { key: 'relation', label: 'RELATIONS' },
 ];
 
-function MemberDetail({ member, titles, onBack }) {
+function MemberDetail({ member, titles, onBack, allPokemonMaster = [] }) {
   const [activeTab, setActiveTab] = useState('main');
   const [leaving, setLeaving] = useState(false);
   const { allItems = [], members: allMembers = {} } = useGame();
@@ -760,7 +762,7 @@ function MemberDetail({ member, titles, onBack }) {
     switch (key) {
       case 'main': return <MainTab member={member} title={title} partner={partner} />;
       case 'profile': return <ProfileTab member={member} />;
-      case 'entry': return <EntryTab party={party} allItems={allItems} />;
+      case 'entry': return <EntryTab party={party} allItems={allItems} allPokemonMaster={allPokemonMaster} />;
       case 'achievement': return <AchievementsTab member={member} />;
       case 'relation': return <RelationsTab member={member} allMembers={allMembers} />;
       default: return null;
@@ -997,6 +999,7 @@ export default function MobileMembersView({ members = {}, titles = [], initialMe
         member={{ ...m, caughtPokemon: liveCaughtPokemon || m?.caughtPokemon || [] }}
         titles={titles}
         onBack={handleDetailBack}
+        allPokemonMaster={allPokemonMaster}
       />
     );
   }
