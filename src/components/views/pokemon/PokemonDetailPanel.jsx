@@ -1173,8 +1173,8 @@ const ballImage = getBallImage();
           allMoves={allMoves}
           pokemonLearnsets={pokemonLearnsets}
           currentMoves={pokemon.moves || []}
-          levelUpOnly={!isAdmin}
-          maxLevel={!isAdmin ? (pokemon.level || 100) : undefined}
+          levelUpOnly={true}
+          maxLevel={pokemon.level || 100}
           onSelect={(move) => {
             if (onLearnMove) {
               onLearnMove(pokemon.uniqueId, move);

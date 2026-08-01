@@ -152,6 +152,13 @@ export default function MobileItemsView() {
       }
       return;
     }
+    if (details?.specialEffect === 'maxPokemonSlots') {
+      if (onUseItem && selectedItem) {
+        onUseItem({ ...selectedItem, specialEffect: 'maxPokemonSlots', boostAmount: details.boostAmount }, null);
+        closeAll();
+      }
+      return;
+    }
     if (!selectedPokemon) { alert('포켓몬을 선택해주세요!'); return; }
 
     const itemNameEn = getItemNameEn(selectedItem);
@@ -425,6 +432,14 @@ export default function MobileItemsView() {
           body = (
             <div style={{ padding: 20, textAlign: 'center', color: P.text, fontSize: 13, lineHeight: 1.6 }}>
               <span style={{ color: '#7020c0', fontWeight: 700 }}>본인의 경험치</span>가 {selectedDetails.boostAmount}점 상승합니다.
+            </div>
+          );
+        } else if (selectedDetails.specialEffect === 'maxPokemonSlots') {
+          title = '아이템 사용';
+          canConfirm = true;
+          body = (
+            <div style={{ padding: 20, textAlign: 'center', color: P.text, fontSize: 13, lineHeight: 1.6 }}>
+              <span style={{ color: '#0f766e', fontWeight: 700 }}>{selectedDetails.name}</span>을(를) 사용하시겠습니까?
             </div>
           );
         } else if (isNectar && selectedPokemon) {

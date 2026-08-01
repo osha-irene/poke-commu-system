@@ -61,13 +61,18 @@ const learnableMovesIds = useMemo(() => {
   const learnset = getPokemonLearnset(pokemonLearnsets, pokemon);
   if (!learnset) return [];
 
+  // 기술머신/하트비늘 등으로 예전에 배운 적 있는 기술은 잊었더라도 다시 무료로 재습득할
+  // 수 있어야 하므로, 레벨 제한 모드에서도 항상 후보 풀에 포함시킨다.
+  const unlockedMoveIds = pokemon?.unlockedMoveIds || [];
+
   if (levelUpOnly) {
-    // 레벨업 기술 중 maxLevel 이하만
-    return [...new Set(
-      (learnset.levelUpMoves || [])
+    // 레벨업 기술 중 maxLevel 이하 + 예전에 배운 적 있는 기술
+    return [...new Set([
+      ...(learnset.levelUpMoves || [])
         .filter(lm => maxLevel == null || lm.level <= maxLevel)
-        .map(lm => lm.moveId)
-    )];
+        .map(lm => lm.moveId),
+      ...unlockedMoveIds
+    ])];
   }
 
   // 모든 배울 수 있는 기술 통합
@@ -75,7 +80,8 @@ const learnableMovesIds = useMemo(() => {
     ...(learnset.levelUpMoves?.map(lm => lm.moveId) || []),
     ...getLearnsetTmMoves(learnset),
     ...(learnset.eggMoves || []),
-    ...(learnset.tutorMoves || [])
+    ...(learnset.tutorMoves || []),
+    ...unlockedMoveIds
   ];
 
   // 중복 제거

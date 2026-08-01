@@ -311,6 +311,17 @@ const categories = CATEGORIES.map(cat => {
       return;
     }
 
+    // 최대 포켓몬 슬롯 상승 아이템: 포켓몬 선택 없이 바로 사용
+    if (details.specialEffect === 'maxPokemonSlots') {
+      if (onUseItem && selectedItem) {
+        onUseItem({ ...selectedItem, specialEffect: 'maxPokemonSlots', boostAmount: details.boostAmount }, null);
+        closeModal();
+      } else {
+        alert('아이템 사용 기능이 연결되지 않았습니다.');
+      }
+      return;
+    }
+
     if (!selectedPokemon) {
       alert('포켓몬을 선택해주세요!');
       return;
@@ -666,6 +677,29 @@ const categories = CATEGORIES.map(cat => {
                                 <button
                                   onClick={handleUse}
                                   className="flex-1 bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+                                >
+                                  <Sparkles size={18} />
+                                  사용하기
+                                </button>
+                              </div>
+                            </>
+                          );
+                        }
+
+                        // 최대 포켓몬 슬롯 상승 아이템: 포켓몬 선택 없이 바로 확인만
+                        if (details.specialEffect === 'maxPokemonSlots') {
+                          return (
+                            <>
+                              <p className="text-gray-700 mb-4 text-center">
+                                <span className="text-teal-700 font-semibold">{details.name}</span>을(를) 사용하시겠습니까?
+                              </p>
+                              <div className="flex gap-2">
+                                <button onClick={closeModal} className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+                                  취소
+                                </button>
+                                <button
+                                  onClick={handleUse}
+                                  className="flex-1 bg-teal-600 text-white py-3 rounded-lg font-semibold hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
                                 >
                                   <Sparkles size={18} />
                                   사용하기

@@ -46,8 +46,14 @@ export const useMoves = (currentUser, updateCurrentUser, updateOwnedPokemonByUni
         ];
       }
 
+      // ⭐ 기술머신/하트비늘 등으로 한 번 배운 적 있는 기술은 이 포켓몬에게 영구히 기억해둔다.
+      // 나중에 기술을 잊어도(forgetMove는 moves에서만 지움) unlockedMoveIds는 그대로 남아서,
+      // MoveSelectModal이 레벨 제한 모드에서도 재습득 후보로 다시 보여줄 수 있다 - 기술머신/
+      // 하트비늘을 또 사지 않아도 되게 하기 위함.
+      const unlockedMoveIds = [...new Set([...(pokemon.unlockedMoveIds || []), moveData.id])];
+
       outcome = 'learned';
-      return { ...pokemon, moves: newMoves };
+      return { ...pokemon, moves: newMoves, unlockedMoveIds };
     });
 
     if (outcome === 'already-known') {
