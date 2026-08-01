@@ -36,7 +36,19 @@ const adminTabs = [
 
 const IconImage = ({ src }) => <img src={src} alt="" aria-hidden="true" />;
 
-export default function Sidebar({ currentTab, setCurrentTab, isAdmin, hiddenMenus = [] }) {
+const UPDATE_DOT_STYLE = {
+  position: 'absolute',
+  top: 21,
+  right: 7,
+  width: 8,
+  height: 8,
+  borderRadius: '50%',
+  background: '#ef5e5e',
+  border: '2px solid #fff',
+  pointerEvents: 'none',
+};
+
+export default function Sidebar({ currentTab, setCurrentTab, isAdmin, hiddenMenus = [], hasQnaUpdate = false }) {
   const visible = (id) => isAdmin || !hiddenMenus.includes(id);
 
   const visibleTrainerTabs = trainerTabs.filter(item => visible(item.id));
@@ -133,8 +145,10 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin, hiddenMenu
         onClick={() => setCurrentTab('qna')}
         className={`trainer-nav__social-button ${currentTab === 'qna' ? 'is-active' : ''}`}
         aria-label="Q&A"
+        style={{ position: 'relative' }}
       >
         <IconImage src={qnaIcon} />
+        {hasQnaUpdate && <span aria-hidden="true" style={UPDATE_DOT_STYLE} />}
       </button>
     )}
     <a href="https://x.com/Poke_OriginB" target="_blank" rel="noopener noreferrer" className="trainer-nav__social-button" aria-label="Twitter">

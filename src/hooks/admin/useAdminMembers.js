@@ -1338,7 +1338,7 @@ export const useAdminMembers = (
       return newValue !== undefined ? newValue : oldValue;
     };
 
-    const updatedPokemon = (member.caughtPokemon || []).map(p => {
+    let updatedPokemon = (member.caughtPokemon || []).map(p => {
       if (p && p.uniqueId === pokemonUniqueId) {
         const pokemonTemplate = findPokemonTemplateForOwned(p);
 
@@ -1434,7 +1434,9 @@ export const useAdminMembers = (
       return p;
     });
 
-    const updatedPartnerPokemon = member.partnerPokemon?.uniqueId === pokemonUniqueId
+    const wasPartner = member.partnerPokemon?.uniqueId === pokemonUniqueId;
+
+    const mergedPartnerPokemon = wasPartner
       ? {
           ...member.partnerPokemon,
           ...updates,
@@ -1465,6 +1467,24 @@ export const useAdminMembers = (
           },
         }
       : member.partnerPokemon;
+
+    // 파트너 체크를 해제한 경우: partnerPokemon 필드에 그대로 남아있으면(내부 isPartner만
+    // false로 바뀔 뿐) getPartner()가 여전히 이 필드를 파트너로 읽어버려서 "파트너 없음"
+    // 설정이 반영되지 않는다. 필드를 비우고, 포켓몬 자체는 잃지 않도록 엔트리/박스로
+    // 되돌려준다(기존 파트너 교체 시의 강등 로직과 동일한 방식).
+    const isUnsettingPartner = wasPartner && updates.isPartner === false;
+
+    const updatedPartnerPokemon = isUnsettingPartner ? null : mergedPartnerPokemon;
+
+    if (isUnsettingPartner) {
+      const demoted = { ...mergedPartnerPokemon, isPartner: false };
+      const party = updatedPokemon.slice(0, 6);
+      const box = updatedPokemon.slice(6);
+      const emptySlotIndex = party.findIndex(p => !p);
+      updatedPokemon = emptySlotIndex !== -1
+        ? (() => { party[emptySlotIndex] = demoted; return [...party, ...box]; })()
+        : [...party, ...box, demoted];
+    }
 
     const fieldUpdates = {
       caughtPokemon: updatedPokemon,

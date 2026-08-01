@@ -2371,7 +2371,7 @@ img.emoji {
 .home-calendar__weeks {
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 6px;
 }
 
 .home-calendar__week {
@@ -2379,7 +2379,7 @@ img.emoji {
 }
 
 .home-calendar__weekdays {
-  margin: 22px 0 12px;
+  margin: 16px 0 8px;
   color: rgba(43, 39, 29, 0.72);
   font-size: 12px;
   font-weight: 700;

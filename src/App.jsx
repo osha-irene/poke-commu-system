@@ -522,31 +522,38 @@ function HomeCalendar({ koreaToday, calendarDays, calendarLabel, weekDays, sched
           {todayEvents.length === 0 ? (
             <span className="home-cal-today-events__empty">진행되는 이벤트가 없습니다.</span>
           ) : (
-            todayEvents.map((ev) => (
-              <div key={ev.id} className="home-cal-today-events__item">
-                <span className="home-cal-today-events__title">{ev.title}</span>
-                {ev.desc && <span className="home-cal-today-events__desc">{ev.desc}</span>}
-              </div>
-            ))
+            <div className="home-cal-today-events__item">
+              {todayEvents.map((ev, i) => (
+                <React.Fragment key={ev.id}>
+                  {i > 0 && <span className="home-cal-today-events__sep">·</span>}
+                  <span className="home-cal-today-events__title">{ev.title}</span>
+                  {ev.desc && <span className="home-cal-today-events__desc">{ev.desc}</span>}
+                </React.Fragment>
+              ))}
+            </div>
           )}
         </div>
       </div>
       {tooltip && createPortal(
         <div
-          className="home-cal-tooltip"
-          style={{
-            left: tooltipPos.x,
-            top: tooltipPos.y,
-            '--tip-bg': tooltip[0]?.color ? darkenHex(tooltip[0].color, 45) : 'rgba(15,18,15,0.96)',
-            '--tip-text': '#fff',
-          }}
+          className="home-cal-tooltip-stack"
+          style={{ left: tooltipPos.x, top: tooltipPos.y }}
           onMouseEnter={() => clearTimeout(tooltipTimer.current)}
           onMouseLeave={hideTip}
         >
           {tooltip.map((ev, i) => (
-            <div key={i} className="home-cal-tooltip__item">
-              <strong>{ev.title}</strong>
-              {ev.desc && <p>{ev.desc}</p>}
+            <div
+              key={i}
+              className="home-cal-tooltip"
+              style={{
+                '--tip-bg': ev.color ? darkenHex(ev.color, 45) : 'rgba(15,18,15,0.96)',
+                '--tip-text': '#fff',
+              }}
+            >
+              <div className="home-cal-tooltip__item">
+                <strong>{ev.title}</strong>
+                {ev.desc && <p>{ev.desc}</p>}
+              </div>
             </div>
           ))}
         </div>,
@@ -1601,6 +1608,49 @@ export default function App() {
     };
   }, []);
 
+  // 내 QnA 글에 새 답변이 달렸는지 (사이드바 붉은 닷)
+  const qnaSeenStorageKey = currentUser?.id ? `qnaSeenAnswers:${currentUser.id}` : null;
+  const [seenQnaAnswers, setSeenQnaAnswers] = useState({});
+
+  useEffect(() => {
+    if (!qnaSeenStorageKey) { setSeenQnaAnswers({}); return; }
+    try {
+      setSeenQnaAnswers(JSON.parse(localStorage.getItem(qnaSeenStorageKey) || '{}'));
+    } catch {
+      setSeenQnaAnswers({});
+    }
+  }, [qnaSeenStorageKey]);
+
+  // 내 글에 달린 답변(작성자 본인이 아닌 댓글) 중 가장 최근 것의 id를 글별로 계산
+  const qnaAnswerSignatures = useMemo(() => {
+    if (!currentUser?.id) return {};
+    const signatures = {};
+    (Array.isArray(qnaPosts) ? qnaPosts : []).forEach((post) => {
+      if (!post || post.authorId !== currentUser.id) return;
+      const answerIds = (post.comments || [])
+        .filter((c) => c && c.authorId !== currentUser.id)
+        .map((c) => c.id);
+      if (answerIds.length > 0) signatures[post.id] = Math.max(...answerIds);
+    });
+    return signatures;
+  }, [qnaPosts, currentUser?.id]);
+
+  const hasQnaUpdate = Object.entries(qnaAnswerSignatures).some(
+    ([postId, signature]) => seenQnaAnswers[postId] !== signature
+  );
+
+  const markQnaAnswersSeen = useCallback(() => {
+    if (!qnaSeenStorageKey) return;
+    setSeenQnaAnswers(qnaAnswerSignatures);
+    try {
+      localStorage.setItem(qnaSeenStorageKey, JSON.stringify(qnaAnswerSignatures));
+    } catch {}
+  }, [qnaSeenStorageKey, qnaAnswerSignatures]);
+
+  useEffect(() => {
+    if (currentTab === 'qna') markQnaAnswersSeen();
+  }, [currentTab, markQnaAnswersSeen]);
+
   // 일정 실시간 로드 (App 레벨 — 모바일 공개홈에서도 사용)
   useEffect(() => {
     const eventsRef = ref(database, 'gameData/scheduleEvents');
@@ -1967,6 +2017,7 @@ return (
             onLogout={handleLogout}
             soundEnabled={soundEnabled}
             onToggleSound={() => setSoundEnabled(!soundEnabled)}
+            hasQnaUpdate={hasQnaUpdate}
           />
 
       {hasContentSurface && <span className={`content-stage__surface${currentTab === 'qna' ? ' content-stage__surface--light' : ''}`} aria-hidden="true" />}

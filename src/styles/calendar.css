@@ -73,8 +73,17 @@
 .home-cal-today-events__item {
   display: flex;
   align-items: baseline;
+  flex-wrap: nowrap;
   gap: 6px;
   line-height: 1.3;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.home-cal-today-events__sep {
+  font-size: 10px;
+  color: rgba(60, 40, 10, 0.45);
+  flex-shrink: 0;
 }
 
 .home-cal-today-events__dot {
@@ -105,26 +114,29 @@
   to   { opacity: 1; transform: translate(-50%, calc(-100% - 10px)); }
 }
 
-.home-cal-tooltip {
+.home-cal-tooltip-stack {
   position: fixed;
-  transform: translate(-50%, calc(-100% - 10px));
-  background: var(--tip-bg, rgba(15,18,15,0.96));
-  color: var(--tip-text, #fff);
-  border-radius: 8px;
-  padding: 8px 14px;
-  font-size: 12px;
   z-index: 9999;
   pointer-events: auto;
-  min-width: 80px;
-  max-width: 150px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
   display: flex;
   flex-direction: column;
   gap: 6px;
   animation: tip-in 0.15s ease forwards;
 }
 
-.home-cal-tooltip::after {
+.home-cal-tooltip {
+  position: relative;
+  background: var(--tip-bg, rgba(15,18,15,0.96));
+  color: var(--tip-text, #fff);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  min-width: 80px;
+  max-width: 150px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+
+.home-cal-tooltip:last-child::after {
   content: '';
   position: absolute;
   bottom: -6px;
