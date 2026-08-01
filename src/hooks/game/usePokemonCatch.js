@@ -36,7 +36,8 @@ export const usePokemonCatch = (
     
     const nonPartnerCount = currentUser.caughtPokemon.filter(p => p && !p.isPartner).length;
     
-    const maxNonPartnerPokemon = Number(systemSettings.maxNonPartnerPokemon) || 18;
+    // 포켓몬 슬롯 확장 아이템으로 개인별 +N 보너스가 있으면 전역 한도에 더한다
+    const maxNonPartnerPokemon = (Number(systemSettings.maxNonPartnerPokemon) || 18) + (Number(currentUser.bonusPokemonSlots) || 0);
     if (nonPartnerCount >= maxNonPartnerPokemon) {
       alert(`⚠️ 파트너를 제외한 포켓몬이 ${maxNonPartnerPokemon}마리입니다!\n더 이상 포켓몬을 잡을 수 없습니다.`);
       return;

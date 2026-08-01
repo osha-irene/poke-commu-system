@@ -364,6 +364,31 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
     return result;
   };
 
+  // ⭐ bonusPokemonSlots 같은 "여러 액션에서 동시에 바뀔 수 있는 개인별 누적 수치" 전용
+  // 트랜잭션 업데이트 - 항상 Firebase의 최신 값을 기준으로 delta만큼 더하므로, 같은 아이템을
+  // 연달아 사용하거나 관리자 수정 등 다른 경로와 겹쳐도 먼저 반영된 증가분이 사라지지 않는다.
+  const adjustNumericField = async (fieldName, delta) => {
+    if (!currentUser) {
+      console.error('❌ currentUser가 없음!');
+      return { committed: false };
+    }
+
+    const fieldRef = ref(database, `members/${currentUser.id}/${fieldName}`);
+    const result = await runTransaction(fieldRef, (current) => (Number(current) || 0) + delta);
+
+    if (result.committed) {
+      const newValue = result.snapshot.val() || 0;
+      setCurrentUser(prev => (prev ? { ...prev, [fieldName]: newValue } : prev));
+      setMembers(prevMembers => (
+        prevMembers[currentUser.id]
+          ? { ...prevMembers, [currentUser.id]: { ...prevMembers[currentUser.id], [fieldName]: newValue } }
+          : prevMembers
+      ));
+    }
+
+    return result;
+  };
+
   // ⭐ 보유 포켓몬(caughtPokemon) 전용 트랜잭션 업데이트 - 항상 Firebase의 최신 배열을 기준으로
   // 병합되므로, 짧은 시간 안에 여러 마리를 연달아 잡아도(각 호출이 클로저에 갇힌 옛 배열을 기준으로
   // 통째로 덮어써서) 먼저 잡은 포켓몬이 사라지는 문제가 없다.
@@ -484,6 +509,7 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
     updateCaughtPokemon,
     updateOwnedPokemonByUniqueId,
     updateHistoryField,
+    adjustNumericField,
     changeCurrentUserPassword,
     isLoading: isAuthLoading
   };

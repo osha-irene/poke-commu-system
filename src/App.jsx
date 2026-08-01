@@ -53,7 +53,8 @@ import { getTitleDisplayStyle } from './utils/titleDisplay';
 import CachedImage from './components/common/CachedImage';
 
 const STATIC_TITLE_ICONS = { icon1: loginIcon1, icon2: loginIcon2, icon3: loginIcon3, icon4: loginIcon4 };
-const DAILY_ATTENDANCE_MONEY = 2000;
+// 2026-08-04 00시(KST)부터 기본 용돈(레포트 출석 보상금)이 2000원 -> 3000원으로 인상된다.
+const getDailyAttendanceMoney = (todayKey) => (todayKey >= '2026-08-04' ? 3000 : 2000);
 
 function useTwemoji() {
   useEffect(() => {
@@ -1397,6 +1398,7 @@ export default function App() {
     systemSettings,
     applyLoot,
     updateCurrentUser,
+    adjustNumericField,
     updatePokedexRegions,
     resetPokedex,
     useItemOnPokemon,
@@ -1492,14 +1494,18 @@ export default function App() {
       return;
     }
 
+    const dailyMoney = getDailyAttendanceMoney(todayKey);
+
     setIsClaimingAttendance(true);
     try {
+      // ⭐ money는 CLAUDE.md 재화 갱신 규칙에 따라 클로저 스냅샷("기존값+변화량")이 아니라
+      // runTransaction 기반 adjustNumericField로 원자적으로 반영한다.
+      await adjustNumericField('money', dailyMoney);
       await updateCurrentUser({
-        money: (Number(currentUser.money) || 0) + DAILY_ATTENDANCE_MONEY,
         trainerExp: (Number(currentUser.trainerExp) || 0) + DAILY_ATTENDANCE_EXP,
         lastAttendanceDate: todayKey
       });
-      alert(`출석 보상 지급 완료!\n${DAILY_ATTENDANCE_MONEY.toLocaleString()}원과 경험치 ${DAILY_ATTENDANCE_EXP}을 받았습니다.`);
+      alert(`출석 보상 지급 완료!\n${dailyMoney.toLocaleString()}원과 경험치 ${DAILY_ATTENDANCE_EXP}을 받았습니다.`);
     } finally {
       setIsClaimingAttendance(false);
     }
@@ -2144,7 +2150,7 @@ return (
           onApplyLoot={applyLoot} 
           isSuperAdmin={currentUser?.isSuperAdmin}
           allPokemonMaster={allPokemonMaster} 
-          maxNonPartnerPokemon={systemSettings?.maxNonPartnerPokemon || 18}
+          maxNonPartnerPokemon={(Number(systemSettings?.maxNonPartnerPokemon) || 18) + (Number(currentUser?.bonusPokemonSlots) || 0)}
           escapeMode={systemSettings?.escapeMode || 'none'}
           isCave={encounterPokemon.isCave === true}
           isWaterside={encounterPokemon.isWaterside === true}

@@ -99,6 +99,7 @@ export default function useGameState() {
     updateCaughtPokemon,
     updateOwnedPokemonByUniqueId,
     updateHistoryField,
+    adjustNumericField,
     changeCurrentUserPassword,
     isLoading: isAuthLoading
   } = useAuth(members, setMembers, allPokemonDataParsed);
@@ -289,7 +290,8 @@ export default function useGameState() {
     (item, pokemon, options, kind) => setMoveChoicePending({ item, pokemon, options, kind }),
     (item, permitKind) => setQnaItemWritePending({ item, permitKind }),
     allPokemonMaster,
-    (item, pokemon, options) => setAbilitySelectPending({ item, pokemon, options })
+    (item, pokemon, options) => setAbilitySelectPending({ item, pokemon, options }),
+    adjustNumericField
   );
 
   const handleStatSelectComplete = (statKey) => {
@@ -527,6 +529,7 @@ export default function useGameState() {
       recipesHook.updateRecipeMemo(recipeId, memo, currentUser),
     updateIngredientStats: recipesHook.updateIngredientStats,
     updateCurrentUser,
+    adjustNumericField,
     isAuthLoading,
     updatePokedexMemo: (pokemonNumber, memo) => 
       gameDataUpdatePokedexMemo(pokemonNumber, memo, currentUser),

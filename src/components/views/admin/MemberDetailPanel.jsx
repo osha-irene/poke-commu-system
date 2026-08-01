@@ -223,7 +223,7 @@ function MemberDetailPanel({ member, onClose }) {
               onDeletePokemon={handleDeletePokemon}
               onHatchEgg={hatchMemberEgg}
               onTransferPokemon={transferMemberPokemon}
-              maxNonPartnerPokemon={systemSettings?.maxNonPartnerPokemon || 18}
+              maxNonPartnerPokemon={(Number(systemSettings?.maxNonPartnerPokemon) || 18) + (Number(member?.bonusPokemonSlots) || 0)}
             />
           )}
 

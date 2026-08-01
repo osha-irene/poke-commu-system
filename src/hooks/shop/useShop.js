@@ -537,7 +537,18 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
         return false;
       }
     }
-    
+
+    // 평생 누적 구매 개수 제한 (itemType과 무관하게, maxPurchasePerMember가 설정된 아이템에만 적용)
+    const maxPurchasePerMember = Number(itemData.maxPurchasePerMember) || 0;
+    if (maxPurchasePerMember > 0) {
+      const lifetimePurchases = currentUser.purchaseHistory?.lifetime || {};
+      const alreadyPurchasedLifetime = Number(lifetimePurchases[itemId]) || 0;
+      if (alreadyPurchasedLifetime + quantity > maxPurchasePerMember) {
+        alert(`이 아이템은 1인당 최대 ${maxPurchasePerMember}개까지만 구매할 수 있습니다! (이미 구매: ${alreadyPurchasedLifetime}개)`);
+        return false;
+      }
+    }
+
     // 몬스터볼 10개당 프리미어볼 1개 증정
     const isPokeBall = itemData.nameEn === 'poke-ball' || itemData.name === '몬스터볼';
     const premierBallCount = isPokeBall ? Math.floor(quantity / 10) : 0;
@@ -606,6 +617,28 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
     if (!invTxResult.committed) {
       alert('구매 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
       return false;
+    }
+
+    // 평생 누적 구매 이력 기록 - 날짜 키가 있는 한정 아이템 이력(purchaseHistory/{날짜})과
+    // 별개로, 날짜 없이 계속 누적되는 purchaseHistory/lifetime에 기록한다. 위쪽 제한 체크와
+    // 같은 이유로 runTransaction으로 최신 값 기준 누적하고, 로컬 currentUser도 즉시 갱신해서
+    // 같은 세션에서 바로 다시 구매를 시도해도 오래된 로컬 값으로 제한을 우회하지 못하게 한다.
+    if (maxPurchasePerMember > 0) {
+      const lifetimeResult = await runTransaction(
+        ref(database, `members/${currentUser.id}/purchaseHistory/lifetime`),
+        (currentLifetime) => ({
+          ...(currentLifetime || {}),
+          [itemId]: (Number((currentLifetime || {})[itemId]) || 0) + quantity
+        })
+      );
+      if (lifetimeResult.committed) {
+        updateCurrentUser({
+          purchaseHistory: {
+            ...(currentUser.purchaseHistory || {}),
+            lifetime: lifetimeResult.snapshot.val()
+          }
+        });
+      }
     }
 
     // 상점 재고 감소 처리 - CLAUDE.md 재화 갱신 규칙과 같은 이유로, 클로저에 캡처된 로컬

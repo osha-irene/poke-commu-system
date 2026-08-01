@@ -933,7 +933,7 @@ export const useAdminMembers = (
     // 파트너가 아닌 경우에만 포획 제한 체크
     if (!isPartner) {
       const nonPartnerCount = member.caughtPokemon.filter(p => p && !p.isPartner).length;
-      const maxNonPartnerPokemon = Number(systemSettings.maxNonPartnerPokemon) || 18;
+      const maxNonPartnerPokemon = (Number(systemSettings.maxNonPartnerPokemon) || 18) + (Number(member.bonusPokemonSlots) || 0);
       if (nonPartnerCount >= maxNonPartnerPokemon) {
         alert(`⚠️ ${member.name}님은 이미 파트너를 제외한 포켓몬이 ${maxNonPartnerPokemon}마리입니다!\n더 이상 포켓몬을 지급할 수 없습니다.`);
         return;
@@ -1203,7 +1203,7 @@ export const useAdminMembers = (
         }
 
         const targetNonPartnerCount = (toMember.caughtPokemon || []).filter(p => p && !p.isPartner).length;
-        const maxNonPartnerPokemon = Number(systemSettings.maxNonPartnerPokemon) || 18;
+        const maxNonPartnerPokemon = (Number(systemSettings.maxNonPartnerPokemon) || 18) + (Number(toMember.bonusPokemonSlots) || 0);
         if (targetNonPartnerCount >= maxNonPartnerPokemon) {
           alert(`${toMember.name}님은 파트너를 제외한 포켓몬이 ${maxNonPartnerPokemon}마리입니다.\n더 이상 포켓몬을 받을 수 없습니다.`);
           return false;

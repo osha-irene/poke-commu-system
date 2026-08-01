@@ -21,6 +21,7 @@ const EMPTY_ITEM = {
   conditionTarget: '',
   evTarget: '',
   boostAmount: 0,
+  maxPurchasePerMember: 0,
 };
 
 const CATEGORIES = [
@@ -109,7 +110,7 @@ export function CustomItemModal({ editItem = null, onSubmit, onClose }) {
       ? 'effortEdit'
       : itemData.specialEffect === 'iv' ? null : itemData.specialEffect;
 
-    if (!isFixedSpecialEffect && (itemData.specialEffect === 'conditionSelect' || itemData.specialEffect === 'evSelect' || itemData.specialEffect === 'trainerExp')) {
+    if (!isFixedSpecialEffect && (itemData.specialEffect === 'conditionSelect' || itemData.specialEffect === 'evSelect' || itemData.specialEffect === 'trainerExp' || itemData.specialEffect === 'maxPokemonSlots')) {
       if (!itemData.boostAmount || itemData.boostAmount <= 0) { alert('상승량을 입력해주세요!'); return; }
       finalConditionBoost = {};
       finalEvBoost = {};
@@ -239,6 +240,21 @@ export function CustomItemModal({ editItem = null, onSubmit, onClose }) {
             </div>
           </div>
 
+          {/* 인당 최대 구매 개수 */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              인당 최대 구매 개수 (평생 누적, 0이면 무제한)
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={itemData.maxPurchasePerMember}
+              onChange={e => set({ maxPurchasePerMember: Math.max(0, parseInt(e.target.value) || 0) })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="0 = 무제한"
+            />
+          </div>
+
           {/* 판매 가능 */}
           <div className="flex items-center gap-2">
             <input
@@ -289,6 +305,7 @@ export function CustomItemModal({ editItem = null, onSubmit, onClose }) {
                   <option value="condition">컨디션 상승 (전체 입력)</option>
                   <option value="conditionSelect">컨디션 상승 (항목 선택)</option>
                   <option value="trainerExp">멤버(트레이너) 경험치 상승</option>
+                  <option value="maxPokemonSlots">최대 포켓몬 슬롯 상승</option>
                 </select>
               </>
             )}
@@ -401,6 +418,29 @@ export function CustomItemModal({ editItem = null, onSubmit, onClose }) {
                 </p>
               )}
               <p className="text-xs text-blue-600 mt-1">💡 포켓몬이 아닌 멤버(트레이너)의 경험치에 추가됩니다</p>
+            </div>
+          )}
+
+          {/* 최대 포켓몬 슬롯 */}
+          {itemData.specialEffect === 'maxPokemonSlots' && (
+            <div className="bg-teal-50 rounded-lg p-4 border-2 border-teal-200">
+              <h4 className="font-bold text-teal-800 mb-3">🎒 최대 포켓몬 슬롯 상승량</h4>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">상승량 (N)</label>
+                <input
+                  type="number" min="1"
+                  value={itemData.boostAmount}
+                  onChange={e => set({ boostAmount: Math.max(1, parseInt(e.target.value) || 0) })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  placeholder="예: 3"
+                />
+              </div>
+              {itemData.boostAmount > 0 && (
+                <p className="text-xs text-teal-700 mt-2 font-semibold">
+                  → 사용 시 사용한 멤버 본인의 최대 포켓몬 소지 수가 +{itemData.boostAmount} 됩니다
+                </p>
+              )}
+              <p className="text-xs text-teal-600 mt-1">💡 포켓몬이 아닌 사용한 멤버(트레이너) 개인에게만 누적 적용됩니다</p>
             </div>
           )}
 

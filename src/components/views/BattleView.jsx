@@ -783,7 +783,7 @@ export function BattleView() {
       console.warn('배틀 로그 Firebase 저장 실패:', e);
     }
 
-    // moveUsage / lastBattleCritCount 업데이트
+    // moveUsage / lastBattleCritCount / 지닌 도구(held item) 소모 업데이트
     const rawLog = battleSummary.rawLog || [];
     if (rawLog.length > 0) {
       const normalizeId = v => String(v || '').toLowerCase().replace(/[\s_\-'.:]/g, '').replace(/[^a-z0-9぀-鿿가-힣]/g, '');
@@ -797,6 +797,9 @@ export function BattleView() {
 
       const usage = {};   // { memberId: { key: { moveId: count } } }
       const crits = {};   // { memberId: { key: count } }
+      // 배틀 중 지닌 도구가 소모(-enditem: 나무열매/구슬/랜드코트 등 1회성 도구 소진, 하지만
+      // 인기시코 knock off로 떨어져도 결과는 같이 "더 이상 안 들고 있음"이라 함께 처리)된 포켓몬
+      const heldItemUsed = {}; // { memberId: { key: true } }
       let lastMoveSlot = null;
 
       for (const line of rawLog) {
@@ -822,50 +825,78 @@ export function BattleView() {
           if (!crits[info.memberId]) crits[info.memberId] = {};
           crits[info.memberId][key] = (crits[info.memberId][key] || 0) + 1;
         }
+        if (line.startsWith('|-enditem|')) {
+          const slot = (parts[2] || '').split(':')[0].trim().toLowerCase();
+          const info = slotMap[slot];
+          if (!info?.memberId || !info?.pokemon) continue;
+          const key = pokemonKey(info.pokemon);
+          if (!heldItemUsed[info.memberId]) heldItemUsed[info.memberId] = {};
+          heldItemUsed[info.memberId][key] = true;
+        }
       }
 
-      const memberIds = new Set([...Object.keys(usage), ...Object.keys(crits)]);
+      const clearHeldItem = (p) => ({ ...p, heldItem: null, item: null, heldItemName: null });
+
+      const memberIds = new Set([...Object.keys(usage), ...Object.keys(crits), ...Object.keys(heldItemUsed)]);
       await Promise.all([...memberIds].map(async (memberId) => {
         try {
           const snap = await get(ref(database, `members/${memberId}/caughtPokemon`));
           const rawCaught = snap.val();
-          if (!rawCaught) return;
-          const caught = Array.isArray(rawCaught)
-            ? rawCaught
-            : Object.assign(Array(Math.max(...Object.keys(rawCaught).map(Number)) + 1), rawCaught);
 
-          const updated = caught.map(p => {
-            const key = pokemonKey(p);
-            let next = p;
-            if (usage[memberId]?.[key]) {
-              const merged = { ...(next.moveUsage || {}) };
-              for (const [mid, cnt] of Object.entries(usage[memberId][key])) {
-                merged[mid] = (merged[mid] || 0) + cnt;
-              }
-              next = { ...next, moveUsage: merged };
-            }
-            if (crits[memberId]?.[key]) {
-              next = { ...next, lastBattleCritCount: crits[memberId][key] };
-            } else if (next.lastBattleCritCount !== undefined) {
-              next = { ...next, lastBattleCritCount: 0 };
-            }
-            return next;
-          });
+          if (rawCaught) {
+            const caught = Array.isArray(rawCaught)
+              ? rawCaught
+              : Object.assign(Array(Math.max(...Object.keys(rawCaught).map(Number)) + 1), rawCaught);
 
-          await set(ref(database, `members/${memberId}/caughtPokemon`), updated);
-
-          // 배틀 후 진화 체크 (battleCrit 조건 등)
-          if (checkEvolutionOnLevelUp) {
-            for (const p of updated) {
-              if (!p) continue;
+            const updated = caught.map(p => {
+              if (!p) return p;
               const key = pokemonKey(p);
+              let next = p;
+              if (usage[memberId]?.[key]) {
+                const merged = { ...(next.moveUsage || {}) };
+                for (const [mid, cnt] of Object.entries(usage[memberId][key])) {
+                  merged[mid] = (merged[mid] || 0) + cnt;
+                }
+                next = { ...next, moveUsage: merged };
+              }
               if (crits[memberId]?.[key]) {
-                checkEvolutionOnLevelUp(p);
+                next = { ...next, lastBattleCritCount: crits[memberId][key] };
+              } else if (next.lastBattleCritCount !== undefined) {
+                next = { ...next, lastBattleCritCount: 0 };
+              }
+              if (heldItemUsed[memberId]?.[key] && (next.heldItem || next.item || next.heldItemName)) {
+                next = clearHeldItem(next);
+              }
+              return next;
+            });
+
+            await set(ref(database, `members/${memberId}/caughtPokemon`), updated);
+
+            // 배틀 후 진화 체크 (battleCrit 조건 등)
+            if (checkEvolutionOnLevelUp) {
+              for (const p of updated) {
+                if (!p) continue;
+                const key = pokemonKey(p);
+                if (crits[memberId]?.[key]) {
+                  checkEvolutionOnLevelUp(p);
+                }
+              }
+            }
+          }
+
+          // 파트너 포켓몬은 caughtPokemon 배열이 아니라 별도 경로에 저장되므로 따로 확인한다.
+          if (heldItemUsed[memberId]) {
+            const partnerSnap = await get(ref(database, `members/${memberId}/partnerPokemon`));
+            const partner = partnerSnap.val();
+            if (partner) {
+              const key = pokemonKey(partner);
+              if (heldItemUsed[memberId][key] && (partner.heldItem || partner.item || partner.heldItemName)) {
+                await set(ref(database, `members/${memberId}/partnerPokemon`), clearHeldItem(partner));
               }
             }
           }
         } catch (e) {
-          console.warn('moveUsage 업데이트 실패:', memberId, e);
+          console.warn('moveUsage/지닌도구 업데이트 실패:', memberId, e);
         }
       }));
     }

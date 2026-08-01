@@ -53,7 +53,8 @@ export const useItemEffects = (
   onRequestMoveChoice = null,
   onRequestQnaWrite = null,
   allPokemonMaster = [],
-  onRequestAbilitySelect = null
+  onRequestAbilitySelect = null,
+  adjustNumericField = null
 ) => {
 
   const movesHook = useMoves;
@@ -165,6 +166,26 @@ export const useItemEffects = (
       }
       consumeItem(item, { trainerExp: (Number(currentUser.trainerExp) || 0) + boost });
       alert(`${item.name}을(를) 사용해서 경험치를 ${boost} 얻었습니다!`);
+      return;
+    }
+
+    // 최대 포켓몬 슬롯 +N — 대상 포켓몬 없이도 바로 사용 가능, 사용한 멤버 개인에게만 누적 적용.
+    // bonusPokemonSlots는 같은 아이템을 연달아 사용할 수 있는 누적값이라 trainerExp처럼
+    // consumeItem의 closure 기반 extraUpdates가 아니라 runTransaction 기반 adjustNumericField로
+    // 처리한다 (CLAUDE.md 재화/누적값 갱신 규칙 참고).
+    if (src.specialEffect === 'maxPokemonSlots') {
+      const boost = Math.max(0, Number(src.boostAmount) || 0);
+      if (boost <= 0) {
+        alert('이 아이템은 슬롯 증가량이 설정되어 있지 않습니다!');
+        return;
+      }
+      if (typeof adjustNumericField !== 'function') {
+        alert('현재 이 아이템을 사용할 수 없습니다.');
+        return;
+      }
+      await consumeItem(item);
+      await adjustNumericField('bonusPokemonSlots', boost);
+      alert(`${item.name}을(를) 사용해서 최대 포켓몬 슬롯이 +${boost} 되었습니다!`);
       return;
     }
 
