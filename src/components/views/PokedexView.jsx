@@ -122,22 +122,63 @@ export default function PokedexView({
   });
 
   // 활성 마을에 속한 포켓몬 번호 집합 계산
-  // 숨김(visible === false) 처리된 지역/장소는 아직 공개되지 않은 것이므로 제외한다.
-  // 안 그러면 캐치 안 한 미공개 포켓몬이 "미등장(?)" 카드로 섞여 들어간다.
-  // 단, 관리자가 도감 설정에서 직접 체크해 pokedexActiveTowns에 넣은 마을은 지도에서
-  // 숨김 처리(visible === false)돼 있어도 그 선택을 우선해 도감에는 그대로 표시한다.
+  // pokedexActiveTowns는 "이 마을을 도감에 포함시킬지"만 결정하는 마을 단위 화이트리스트다.
+  // 마을/지역의 눈감기(groupVisible/visible)는 여기서도 무시해 실제 출현 여부와 분리하지만,
+  // 장소(place)의 눈감기는 이 화이트리스트 안에서도 그대로 존중해야 한다 — 안 그러면
+  // "파도" 같은 특정 장소만 숨겨도 소속 마을이 활성 마을이라는 이유로 그대로 새어 나온다.
+  // region.pokemons는 places[]를 합쳐놓은 집계 캐시라 places가 있으면 참조하지 않는다.
   const activeTownPokemonNums = useMemo(() => {
     if (!pokedexActiveTowns || pokedexActiveTowns.length === 0) return null;
     const nums = new Set();
     (regions || []).forEach(region => {
       if (region.isTownMeta || !pokedexActiveTowns.includes(region.groupId)) return;
-      (region.pokemons || []).forEach(n => nums.add(Number(n)));
-      (region.places || []).forEach(place => {
+      const places = Array.isArray(region.places) ? region.places : [];
+
+      if (places.length === 0) {
+        (region.pokemons || []).forEach(n => nums.add(Number(n)));
+        return;
+      }
+
+      places.forEach(place => {
+        if (place.visible === false) return;
         (place.pokemons || []).forEach(n => nums.add(Number(n)));
       });
     });
     return nums;
   }, [pokedexActiveTowns, regions]);
+
+  // pokedexActiveTowns로 오버라이드되지 않는 일반 경로에서는, 장소(place)의 눈(visible)이
+  // 전부 감겨서 어디서도 출현하지 않는 포켓몬은 도감에서 제외한다.
+  // 마을/지역의 눈감기는 실제 출현(탐험/스폰) 여부만 결정할 뿐 도감 노출과는 무관하므로
+  // 여기서는 참조하지 않는다.
+  // 주의: region.pokemons는 독립된 목록이 아니라 소속 places[]의 포켓몬을 합쳐놓은
+  // 집계 캐시 필드라서(장소를 편집하면 지역 쪽에도 그대로 미러링됨) 참조하지 않는다.
+  // places가 없는 지역(옛 목업 시드처럼 관리 UI 밖에 있는 데이터 포함)의 포켓몬은
+  // 장소 단위로 숨길 수 있는 대상이 아니므로 이 계산에서 아예 다루지 않는다 —
+  // hiddenOnly에 안 잡히니 기존과 동일하게 계속 보인다.
+  const hiddenOnlyPokemonNums = useMemo(() => {
+    const visibleNums = new Set();
+    const allNums = new Set();
+
+    (regions || []).forEach(region => {
+      if (region.isTownMeta) return;
+
+      (region.places || []).forEach(place => {
+        const placeVisible = place.visible !== false;
+        (place.pokemons || []).forEach(n => {
+          const num = Number(n);
+          allNums.add(num);
+          if (placeVisible) visibleNums.add(num);
+        });
+      });
+    });
+
+    const hiddenOnly = new Set();
+    allNums.forEach(num => {
+      if (!visibleNums.has(num)) hiddenOnly.add(num);
+    });
+    return hiddenOnly;
+  }, [regions]);
 
   const townFilteredPokedex = activeTownPokemonNums
     ? visiblePokedex.filter(pokemon => {
@@ -145,7 +186,12 @@ export default function PokedexView({
         const orig = toDexNumber(pokemon.originalNumber);
         return (num && activeTownPokemonNums.has(num)) || (orig && activeTownPokemonNums.has(orig));
       })
-    : visiblePokedex;
+    : visiblePokedex.filter(pokemon => {
+        const num = toDexNumber(pokemon.number);
+        const orig = toDexNumber(pokemon.originalNumber);
+        const isHidden = (num && hiddenOnlyPokemonNums.has(num)) || (orig && hiddenOnlyPokemonNums.has(orig));
+        return !isHidden;
+      });
 
   const filteredPokedex = townFilteredPokedex.filter(pokemon => {
     if (!searchTerm) return true;

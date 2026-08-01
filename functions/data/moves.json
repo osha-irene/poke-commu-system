@@ -16301,7 +16301,6 @@
                 "psychic",
                 "double-team",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -16353,7 +16352,6 @@
                 { "moveId": "poison-sting", "level": 1 },
                 { "moveId": "string-shot", "level": 1 },
                 { "moveId": "fury-cutter", "level": 11 },
-                { "moveId": "laser-focus", "level": 14 },
                 { "moveId": "focus-energy", "level": 20 },
                 { "moveId": "venoshock", "level": 23 },
                 { "moveId": "assurance", "level": 26 },
@@ -16370,7 +16368,6 @@
                 "hyper-beam",
                 "solar-beam",
                 "double-team",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -16533,7 +16530,6 @@
                 { "moveId": "quick-attack", "level": 4 },
                 { "moveId": "focus-energy", "level": 7 },
                 { "moveId": "bite", "level": 10 },
-                { "moveId": "laser-focus", "level": 13 },
                 { "moveId": "take-down", "level": 16 },
                 { "moveId": "assurance", "level": 19 },
                 { "moveId": "crunch", "level": 22 },
@@ -16581,7 +16577,6 @@
                 "flame-wheel",
                 "reversal",
                 "uproar",
-                "revenge",
                 "last-resort",
                 "final-gambit"
             ],
@@ -16596,7 +16591,6 @@
                 { "moveId": "tackle", "level": 1 },
                 { "moveId": "tail-whip", "level": 1 },
                 { "moveId": "bite", "level": 10 },
-                { "moveId": "laser-focus", "level": 13 },
                 { "moveId": "take-down", "level": 16 },
                 { "moveId": "assurance", "level": 19 },
                 { "moveId": "crunch", "level": 24 },
@@ -17279,12 +17273,10 @@
                 "disable",
                 "counter",
                 "focus-energy",
-                "skull-bash",
                 "charm",
                 "beat-up",
                 "poison-fang",
-                "poison-tail",
-                "venom-drench"
+                "poison-tail"
             ],
             "tutorMoves": []
         },
@@ -17403,7 +17395,6 @@
                 "giga-impact",
                 "avalanche",
                 "shadow-claw",
-                "rock-climb",
                 "stone-edge",
                 "stealth-rock",
                 "bulldoze"
@@ -17468,8 +17459,7 @@
                 "beat-up",
                 "poison-tail",
                 "sucker-punch",
-                "head-smash",
-                "venom-drench"
+                "head-smash"
             ],
             "tutorMoves": []
         },
@@ -17586,7 +17576,6 @@
                 "giga-impact",
                 "avalanche",
                 "shadow-claw",
-                "rock-climb",
                 "stone-edge",
                 "stealth-rock",
                 "bulldoze"
@@ -18216,8 +18205,7 @@
                 "quick-attack",
                 "curse",
                 "brave-bird",
-                "zen-headbutt",
-                "venom-drench"
+                "zen-headbutt"
             ],
             "tutorMoves": []
         },
@@ -18469,7 +18457,6 @@
                 { "moveId": "slash", "level": 27 },
                 { "moveId": "growth", "level": 33 },
                 { "moveId": "giga-drain", "level": 38 },
-                { "moveId": "aromatherapy", "level": 43 },
                 { "moveId": "rage-powder", "level": 49 },
                 { "moveId": "x-scissor", "level": 54 }
             ],
@@ -18480,7 +18467,6 @@
                 "dig",
                 "double-team",
                 "light-screen",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -18530,7 +18516,6 @@
                 { "moveId": "slash", "level": 29 },
                 { "moveId": "growth", "level": 37 },
                 { "moveId": "giga-drain", "level": 44 },
-                { "moveId": "aromatherapy", "level": 51 },
                 { "moveId": "rage-powder", "level": 59 },
                 { "moveId": "x-scissor", "level": 66 }
             ],
@@ -18542,7 +18527,6 @@
                 "dig",
                 "double-team",
                 "light-screen",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -19704,7 +19688,6 @@
                 "light-screen",
                 "reflect",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -19741,9 +19724,7 @@
                 "thunder-punch",
                 "confusion",
                 "encore",
-                "magic-coat",
                 "knock-off",
-                "psycho-shift",
                 "power-trick",
                 "guard-swap",
                 "guard-split",
@@ -19755,7 +19736,6 @@
             "levelUpMoves": [
                 { "moveId": "confusion", "level": 0 },
                 { "moveId": "disable", "level": 1 },
-                { "moveId": "kinesis", "level": 1 },
                 { "moveId": "teleport", "level": 1 },
                 { "moveId": "psybeam", "level": 5 },
                 { "moveId": "reflect", "level": 10 },
@@ -19775,7 +19755,6 @@
                 "light-screen",
                 "reflect",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -19813,7 +19792,6 @@
             "levelUpMoves": [
                 { "moveId": "confusion", "level": 1 },
                 { "moveId": "disable", "level": 1 },
-                { "moveId": "kinesis", "level": 1 },
                 { "moveId": "teleport", "level": 1 },
                 { "moveId": "psybeam", "level": 5 },
                 { "moveId": "reflect", "level": 10 },
@@ -19834,7 +19812,6 @@
                 "light-screen",
                 "reflect",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -19876,13 +19853,10 @@
                 { "moveId": "leer", "level": 1 },
                 { "moveId": "low-kick", "level": 1 },
                 { "moveId": "focus-energy", "level": 4 },
-                { "moveId": "revenge", "level": 8 },
                 { "moveId": "low-sweep", "level": 12 },
                 { "moveId": "knock-off", "level": 16 },
                 { "moveId": "scary-face", "level": 20 },
-                { "moveId": "vital-throw", "level": 24 },
                 { "moveId": "strength", "level": 29 },
-                { "moveId": "dual-chop", "level": 32 },
                 { "moveId": "bulk-up", "level": 36 },
                 { "moveId": "seismic-toss", "level": 40 },
                 { "moveId": "dynamic-punch", "level": 44 },
@@ -19918,7 +19892,6 @@
                 "fling",
                 "poison-jab",
                 "focus-blast",
-                "rock-climb",
                 "low-sweep",
                 "bulldoze",
                 "work-up"
@@ -19927,7 +19900,6 @@
                 "fire-punch",
                 "ice-punch",
                 "thunder-punch",
-                "submission",
                 "counter",
                 "encore",
                 "knock-off",
@@ -19945,13 +19917,10 @@
                 { "moveId": "focus-energy", "level": 1 },
                 { "moveId": "leer", "level": 1 },
                 { "moveId": "low-kick", "level": 1 },
-                { "moveId": "revenge", "level": 1 },
                 { "moveId": "low-sweep", "level": 12 },
                 { "moveId": "knock-off", "level": 16 },
                 { "moveId": "scary-face", "level": 20 },
-                { "moveId": "vital-throw", "level": 24 },
                 { "moveId": "strength", "level": 31 },
-                { "moveId": "dual-chop", "level": 36 },
                 { "moveId": "bulk-up", "level": 42 },
                 { "moveId": "seismic-toss", "level": 48 },
                 { "moveId": "dynamic-punch", "level": 54 },
@@ -19987,7 +19956,6 @@
                 "fling",
                 "poison-jab",
                 "focus-blast",
-                "rock-climb",
                 "low-sweep",
                 "bulldoze",
                 "work-up"
@@ -20000,14 +19968,11 @@
                 { "moveId": "focus-energy", "level": 1 },
                 { "moveId": "leer", "level": 1 },
                 { "moveId": "low-kick", "level": 1 },
-                { "moveId": "revenge", "level": 1 },
                 { "moveId": "wide-guard", "level": 1 },
                 { "moveId": "low-sweep", "level": 12 },
                 { "moveId": "knock-off", "level": 16 },
                 { "moveId": "scary-face", "level": 20 },
-                { "moveId": "vital-throw", "level": 24 },
                 { "moveId": "strength", "level": 31 },
-                { "moveId": "dual-chop", "level": 36 },
                 { "moveId": "bulk-up", "level": 42 },
                 { "moveId": "seismic-toss", "level": 48 },
                 { "moveId": "dynamic-punch", "level": 54 },
@@ -20045,7 +20010,6 @@
                 "poison-jab",
                 "focus-blast",
                 "giga-impact",
-                "rock-climb",
                 "stone-edge",
                 "low-sweep",
                 "bulldoze",
@@ -21055,7 +21019,6 @@
                 "curse",
                 "flail",
                 "mud-slap",
-                "revenge",
                 "feather-dance",
                 "covet",
                 "leaf-blade",
@@ -21910,7 +21873,6 @@
                 "rock-polish",
                 "dragon-pulse",
                 "flash-cannon",
-                "rock-climb",
                 "stone-edge",
                 "stealth-rock",
                 "bulldoze"
@@ -22497,7 +22459,6 @@
                 { "moveId": "bone-rush", "level": 29 },
                 { "moveId": "focus-energy", "level": 32 },
                 { "moveId": "endeavor", "level": 36 },
-                { "moveId": "bonemerang", "level": 40 },
                 { "moveId": "thrash", "level": 44 },
                 { "moveId": "double-edge", "level": 48 }
             ],
@@ -22531,7 +22492,6 @@
                 "rock-tomb",
                 "aerial-ace",
                 "fling",
-                "rock-climb",
                 "stealth-rock",
                 "bulldoze"
             ],
@@ -22539,7 +22499,6 @@
                 "double-kick",
                 "leer",
                 "screech",
-                "skull-bash",
                 "curse",
                 "belly-drum",
                 "perish-song",
@@ -22562,7 +22521,6 @@
                 { "moveId": "bone-rush", "level": 31 },
                 { "moveId": "focus-energy", "level": 36 },
                 { "moveId": "endeavor", "level": 42 },
-                { "moveId": "bonemerang", "level": 48 },
                 { "moveId": "thrash", "level": 54 },
                 { "moveId": "double-edge", "level": 60 }
             ],
@@ -22599,7 +22557,6 @@
                 "fling",
                 "focus-blast",
                 "giga-impact",
-                "rock-climb",
                 "stone-edge",
                 "stealth-rock",
                 "bulldoze"
@@ -22830,7 +22787,6 @@
                 "water-pulse",
                 "fling",
                 "giga-impact",
-                "rock-climb",
                 "bulldoze",
                 "work-up"
             ],
@@ -23275,7 +23231,6 @@
                 "solar-beam",
                 "double-team",
                 "reflect",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -23302,7 +23257,6 @@
                 "confusion",
                 "amnesia",
                 "flail",
-                "nature-power",
                 "endeavor",
                 "power-swap",
                 "leaf-storm",
@@ -23374,7 +23328,6 @@
                 "giga-impact",
                 "avalanche",
                 "shadow-claw",
-                "rock-climb",
                 "bulldoze",
                 "work-up"
             ],
@@ -23547,7 +23500,6 @@
                 "hydro-pump",
                 "psybeam",
                 "haze",
-                "skull-bash",
                 "mud-slap",
                 "mud-shot",
                 "acupressure",
@@ -23627,7 +23579,6 @@
                 "light-screen",
                 "reflect",
                 "waterfall",
-                "flash",
                 "rest",
                 "substitute",
                 "protect",
@@ -23682,7 +23633,6 @@
                 "reflect",
                 "waterfall",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "protect",
@@ -23744,7 +23694,6 @@
                 "light-screen",
                 "reflect",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -23875,7 +23824,6 @@
                 { "moveId": "fake-tears", "level": 24 },
                 { "moveId": "ice-punch", "level": 28 },
                 { "moveId": "psychic", "level": 34 },
-                { "moveId": "lovely-kiss", "level": 40 },
                 { "moveId": "mean-look", "level": 46 },
                 { "moveId": "perish-song", "level": 52 },
                 { "moveId": "blizzard", "level": 58 }
@@ -23889,7 +23837,6 @@
                 "light-screen",
                 "reflect",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -24086,13 +24033,10 @@
                 { "moveId": "bind", "level": 8 },
                 { "moveId": "seismic-toss", "level": 12 },
                 { "moveId": "bug-bite", "level": 16 },
-                { "moveId": "storm-throw", "level": 20 },
                 { "moveId": "double-hit", "level": 24 },
-                { "moveId": "vital-throw", "level": 28 },
                 { "moveId": "x-scissor", "level": 32 },
                 { "moveId": "strength", "level": 36 },
                 { "moveId": "swords-dance", "level": 40 },
-                { "moveId": "submission", "level": 44 },
                 { "moveId": "guillotine", "level": 48 },
                 { "moveId": "superpower", "level": 52 }
             ],
@@ -24126,7 +24070,6 @@
                 "x-scissor",
                 "focus-blast",
                 "giga-impact",
-                "rock-climb",
                 "stone-edge",
                 "stealth-rock",
                 "bulldoze"
@@ -24846,7 +24789,6 @@
                 "brine",
                 "rock-polish",
                 "giga-impact",
-                "rock-climb",
                 "stone-edge",
                 "stealth-rock",
                 "scald"
@@ -24970,7 +24912,6 @@
                 "rock-polish",
                 "x-scissor",
                 "giga-impact",
-                "rock-climb",
                 "stone-edge",
                 "stealth-rock",
                 "scald"
@@ -26950,7 +26891,6 @@
                 "double-team",
                 "light-screen",
                 "reflect",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -27009,7 +26949,6 @@
                 "double-team",
                 "light-screen",
                 "reflect",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -27594,7 +27533,6 @@
                 "reflect",
                 "fire-blast",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "protect",
@@ -27623,7 +27561,6 @@
                 "morning-sun",
                 "future-sight",
                 "extrasensory",
-                "psycho-shift",
                 "stored-power"
             ],
             "tutorMoves": []
@@ -27659,7 +27596,6 @@
                 "reflect",
                 "fire-blast",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "protect",
@@ -27701,7 +27637,6 @@
                 { "moveId": "teleport", "level": 10 },
                 { "moveId": "confuse-ray", "level": 15 },
                 { "moveId": "night-shade", "level": 20 },
-                { "moveId": "psycho-shift", "level": 26 },
                 { "moveId": "power-swap", "level": 30 },
                 { "moveId": "guard-swap", "level": 35 },
                 { "moveId": "psychic", "level": 35 },
@@ -27716,7 +27651,6 @@
                 "light-screen",
                 "reflect",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -27764,7 +27698,6 @@
                 { "moveId": "teleport", "level": 1 },
                 { "moveId": "confuse-ray", "level": 15 },
                 { "moveId": "night-shade", "level": 20 },
-                { "moveId": "psycho-shift", "level": 28 },
                 { "moveId": "guard-swap", "level": 34 },
                 { "moveId": "power-swap", "level": 34 },
                 { "moveId": "psychic", "level": 41 },
@@ -27781,7 +27714,6 @@
                 "light-screen",
                 "reflect",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -29453,7 +29385,7 @@
             "tutorMoves": []
         },
         "201": {
-            "levelUpMoves": [{ "moveId": "hidden-power", "level": 1 }],
+            "levelUpMoves": [],
             "tmMoves": [],
             "eggMoves": [],
             "tutorMoves": []
@@ -29924,7 +29856,6 @@
                 { "moveId": "tackle", "level": 1 },
                 { "moveId": "thunder-fang", "level": 1 },
                 { "moveId": "smack-down", "level": 4 },
-                { "moveId": "autotomize", "level": 8 },
                 { "moveId": "dragon-breath", "level": 12 },
                 { "moveId": "curse", "level": 16 },
                 { "moveId": "rock-slide", "level": 20 },
@@ -29972,7 +29903,6 @@
                 "dragon-pulse",
                 "giga-impact",
                 "flash-cannon",
-                "rock-climb",
                 "stone-edge",
                 "stealth-rock",
                 "bulldoze"
@@ -30352,7 +30282,6 @@
                 "dig",
                 "toxic",
                 "double-team",
-                "flash",
                 "rest",
                 "rock-slide",
                 "substitute",
@@ -31075,7 +31004,6 @@
                 "confuse-ray",
                 "amnesia",
                 "curse",
-                "nature-power",
                 "ingrain",
                 "icicle-spear",
                 "aqua-ring",
@@ -31136,7 +31064,6 @@
                 "swift",
                 "snore",
                 "flail",
-                "octazooka",
                 "water-spout",
                 "mud-shot",
                 "rock-blast",
@@ -31147,7 +31074,6 @@
         },
         "224": {
             "levelUpMoves": [
-                { "moveId": "octazooka", "level": 0 },
                 { "moveId": "focus-energy", "level": 1 },
                 { "moveId": "gunk-shot", "level": 1 },
                 { "moveId": "helping-hand", "level": 1 },
@@ -32086,7 +32012,6 @@
                 "light-screen",
                 "reflect",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -33061,7 +32986,6 @@
                 "light-screen",
                 "reflect",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "protect",
@@ -34146,7 +34070,6 @@
                 "solar-beam",
                 "psychic",
                 "double-team",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -34205,7 +34128,6 @@
                 "psychic",
                 "double-team",
                 "light-screen",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -35754,7 +35676,6 @@
                 { "moveId": "absorb", "level": 21 },
                 { "moveId": "metal-claw", "level": 25 },
                 { "moveId": "fury-swipes", "level": 30 },
-                { "moveId": "mind-reader", "level": 35 },
                 { "moveId": "dig", "level": 40 }
             ],
             "tmMoves": [
@@ -35762,7 +35683,6 @@
                 "solar-beam",
                 "dig",
                 "double-team",
-                "flash",
                 "rest",
                 "substitute",
                 "protect",
@@ -35806,7 +35726,6 @@
                 { "moveId": "absorb", "level": 23 },
                 { "moveId": "bug-bite", "level": 29 },
                 { "moveId": "fury-swipes", "level": 36 },
-                { "moveId": "mind-reader", "level": 43 },
                 { "moveId": "slash", "level": 50 },
                 { "moveId": "swords-dance", "level": 57 },
                 { "moveId": "x-scissor", "level": 64 }
@@ -35818,7 +35737,6 @@
                 "solar-beam",
                 "dig",
                 "double-team",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -35847,7 +35765,6 @@
             "levelUpMoves": [
                 { "moveId": "dig", "level": 1 },
                 { "moveId": "false-swipe", "level": 1 },
-                { "moveId": "grudge", "level": 1 },
                 { "moveId": "harden", "level": 1 },
                 { "moveId": "metal-claw", "level": 1 },
                 { "moveId": "mud-slap", "level": 1 },
@@ -35858,7 +35775,6 @@
                 { "moveId": "absorb", "level": 23 },
                 { "moveId": "shadow-sneak", "level": 29 },
                 { "moveId": "fury-swipes", "level": 36 },
-                { "moveId": "mind-reader", "level": 43 },
                 { "moveId": "shadow-ball", "level": 50 },
                 { "moveId": "spite", "level": 57 },
                 { "moveId": "phantom-force", "level": 64 }
@@ -35870,7 +35786,6 @@
                 "dig",
                 "double-team",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -36058,7 +35973,6 @@
                 "focus-blast",
                 "giga-impact",
                 "avalanche",
-                "rock-climb",
                 "bulldoze",
                 "work-up"
             ],
@@ -36381,7 +36295,6 @@
                 "dig",
                 "double-team",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "protect",
@@ -36453,7 +36366,6 @@
                 "dig",
                 "double-team",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "protect",
@@ -36658,8 +36570,7 @@
                 "thunder-fang",
                 "ice-fang",
                 "fire-fang",
-                "misty-terrain",
-                "power-up-punch"
+                "misty-terrain"
             ],
             "tutorMoves": []
         },
@@ -36676,7 +36587,6 @@
                 { "moveId": "iron-head", "level": 28 },
                 { "moveId": "metal-sound", "level": 33 },
                 { "moveId": "take-down", "level": 36 },
-                { "moveId": "autotomize", "level": 40 },
                 { "moveId": "iron-tail", "level": 44 },
                 { "moveId": "iron-defense", "level": 48 },
                 { "moveId": "heavy-slam", "level": 52 },
@@ -36741,7 +36651,6 @@
                 { "moveId": "iron-head", "level": 28 },
                 { "moveId": "metal-sound", "level": 35 },
                 { "moveId": "take-down", "level": 40 },
-                { "moveId": "autotomize", "level": 46 },
                 { "moveId": "iron-tail", "level": 52 },
                 { "moveId": "iron-defense", "level": 58 },
                 { "moveId": "heavy-slam", "level": 64 },
@@ -36795,7 +36704,6 @@
                 { "moveId": "iron-head", "level": 28 },
                 { "moveId": "metal-sound", "level": 35 },
                 { "moveId": "take-down", "level": 40 },
-                { "moveId": "autotomize", "level": 48 },
                 { "moveId": "iron-tail", "level": 56 },
                 { "moveId": "iron-defense", "level": 64 },
                 { "moveId": "heavy-slam", "level": 72 },
@@ -36851,7 +36759,6 @@
                 "avalanche",
                 "shadow-claw",
                 "flash-cannon",
-                "rock-climb",
                 "stone-edge",
                 "stealth-rock",
                 "bulldoze"
@@ -37063,7 +36970,6 @@
                 "thunder",
                 "double-team",
                 "light-screen",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -37125,7 +37031,6 @@
                 "thunder",
                 "double-team",
                 "light-screen",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -37453,7 +37358,6 @@
                 { "moveId": "synthesis", "level": 35 },
                 { "moveId": "toxic", "level": 40 },
                 { "moveId": "petal-blizzard", "level": 45 },
-                { "moveId": "aromatherapy", "level": 50 },
                 { "moveId": "ingrain", "level": 55 },
                 { "moveId": "petal-dance", "level": 60 }
             ],
@@ -37463,7 +37367,6 @@
                 "solar-beam",
                 "toxic",
                 "double-team",
-                "flash",
                 "rest",
                 "substitute",
                 "protect",
@@ -37488,7 +37391,6 @@
                 "pin-missile",
                 "razor-leaf",
                 "sleep-powder",
-                "mind-reader",
                 "cotton-spore",
                 "spikes",
                 "synthesis",
@@ -38307,7 +38209,6 @@
                 "psychic",
                 "double-team",
                 "dream-eater",
-                "flash",
                 "rest",
                 "rock-slide",
                 "substitute",
@@ -38348,7 +38249,6 @@
                 "role-play",
                 "wish",
                 "fake-tears",
-                "psycho-shift",
                 "psycho-cut",
                 "guard-split"
             ],
@@ -39124,7 +39024,6 @@
                 "light-screen",
                 "reflect",
                 "dream-eater",
-                "flash",
                 "explosion",
                 "rest",
                 "rock-slide",
@@ -39189,7 +39088,6 @@
                 "reflect",
                 "fire-blast",
                 "dream-eater",
-                "flash",
                 "explosion",
                 "rest",
                 "rock-slide",
@@ -39540,7 +39438,6 @@
                 "light-screen",
                 "reflect",
                 "dream-eater",
-                "flash",
                 "explosion",
                 "rest",
                 "rock-slide",
@@ -39606,7 +39503,6 @@
                 "light-screen",
                 "reflect",
                 "dream-eater",
-                "flash",
                 "explosion",
                 "rest",
                 "rock-slide",
@@ -39664,7 +39560,6 @@
                 "swords-dance",
                 "solar-beam",
                 "double-team",
-                "flash",
                 "rest",
                 "rock-slide",
                 "substitute",
@@ -39723,7 +39618,6 @@
                 "earthquake",
                 "dig",
                 "double-team",
-                "flash",
                 "rest",
                 "rock-slide",
                 "substitute",
@@ -40015,7 +39909,6 @@
                 "thunder",
                 "double-team",
                 "fire-blast",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -40085,7 +39978,6 @@
                 "dig",
                 "double-team",
                 "fire-blast",
-                "flash",
                 "rest",
                 "rock-slide",
                 "substitute",
@@ -40125,9 +40017,7 @@
                 "recover",
                 "fake-out",
                 "trick",
-                "magic-coat",
-                "foul-play",
-                "power-up-punch"
+                "foul-play"
             ],
             "tutorMoves": []
         },
@@ -40605,7 +40495,6 @@
                 "double-team",
                 "fire-blast",
                 "dream-eater",
-                "flash",
                 "rest",
                 "rock-slide",
                 "substitute",
@@ -40650,7 +40539,6 @@
                 "mean-look",
                 "megahorn",
                 "baton-pass",
-                "magic-coat",
                 "feint",
                 "assurance",
                 "sucker-punch",
@@ -41144,7 +41032,6 @@
                 "bulldoze"
             ],
             "eggMoves": [
-                "skull-bash",
                 "amnesia",
                 "snore",
                 "mud-slap",
@@ -43363,7 +43250,6 @@
                 "double-edge",
                 "quick-attack",
                 "defense-curl",
-                "skull-bash",
                 "fury-swipes",
                 "rollout",
                 "aqua-tail"
@@ -43424,7 +43310,6 @@
                 "pluck",
                 "fling",
                 "giga-impact",
-                "rock-climb",
                 "stealth-rock",
                 "grass-knot",
                 "charge-beam",
@@ -43717,7 +43602,6 @@
                 "cut",
                 "solar-beam",
                 "double-team",
-                "flash",
                 "rest",
                 "substitute",
                 "protect",
@@ -43741,7 +43625,6 @@
                 "pin-missile",
                 "razor-leaf",
                 "sleep-powder",
-                "mind-reader",
                 "cotton-spore",
                 "spikes",
                 "synthesis",
@@ -43755,7 +43638,6 @@
         "407": {
             "levelUpMoves": [
                 { "moveId": "absorb", "level": 1 },
-                { "moveId": "aromatherapy", "level": 1 },
                 { "moveId": "giga-drain", "level": 1 },
                 { "moveId": "grassy-terrain", "level": 1 },
                 { "moveId": "growth", "level": 1 },
@@ -43771,7 +43653,6 @@
                 { "moveId": "synthesis", "level": 1 },
                 { "moveId": "toxic", "level": 1 },
                 { "moveId": "toxic-spikes", "level": 1 },
-                { "moveId": "venom-drench", "level": 1 },
                 { "moveId": "worry-seed", "level": 1 }
             ],
             "tmMoves": [
@@ -43781,7 +43662,6 @@
                 "solar-beam",
                 "toxic",
                 "double-team",
-                "flash",
                 "rest",
                 "substitute",
                 "protect",
@@ -44149,7 +44029,6 @@
                 "psychic",
                 "double-team",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -44199,7 +44078,6 @@
                 "psychic",
                 "double-team",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -44565,7 +44443,6 @@
                 "swords-dance",
                 "solar-beam",
                 "double-team",
-                "flash",
                 "rest",
                 "substitute",
                 "protect",
@@ -44587,14 +44464,11 @@
                 "defense-curl",
                 "rollout",
                 "sweet-scent",
-                "nature-power",
                 "weather-ball",
-                "aromatherapy",
                 "tickle",
                 "healing-wish",
                 "seed-bomb",
                 "heal-pulse",
-                "flower-shield",
                 "grassy-terrain"
             ],
             "tutorMoves": []
@@ -44602,7 +44476,6 @@
         "421": {
             "levelUpMoves": [
                 { "moveId": "sunny-day", "level": 0 },
-                { "moveId": "flower-shield", "level": 1 },
                 { "moveId": "growth", "level": 1 },
                 { "moveId": "leafage", "level": 1 },
                 { "moveId": "morning-sun", "level": 1 },
@@ -44621,7 +44494,6 @@
                 "hyper-beam",
                 "solar-beam",
                 "double-team",
-                "flash",
                 "rest",
                 "substitute",
                 "protect",
@@ -45075,8 +44947,7 @@
                 "copycat",
                 "switcheroo",
                 "double-hit",
-                "circle-throw",
-                "power-up-punch"
+                "circle-throw"
             ],
             "tutorMoves": []
         },
@@ -45084,7 +44955,6 @@
             "levelUpMoves": [
                 { "moveId": "baby-doll-eyes", "level": 1 },
                 { "moveId": "defense-curl", "level": 1 },
-                { "moveId": "magic-coat", "level": 1 },
                 { "moveId": "mirror-coat", "level": 1 },
                 { "moveId": "pound", "level": 1 },
                 { "moveId": "splash", "level": 1 },
@@ -45309,7 +45179,6 @@
                 "dig",
                 "double-team",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -45374,7 +45243,6 @@
                 "dig",
                 "double-team",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -45872,7 +45740,6 @@
                 "light-screen",
                 "reflect",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -45964,7 +45831,6 @@
         },
         "441": {
             "levelUpMoves": [
-                { "moveId": "chatter", "level": 1 },
                 { "moveId": "confide", "level": 1 },
                 { "moveId": "hyper-voice", "level": 1 },
                 { "moveId": "taunt", "level": 1 },
@@ -46700,7 +46566,6 @@
                 "dig",
                 "toxic",
                 "double-team",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -46775,7 +46640,6 @@
                 "dig",
                 "toxic",
                 "double-team",
-                "flash",
                 "rest",
                 "rock-slide",
                 "substitute",
@@ -46805,7 +46669,6 @@
                 "x-scissor",
                 "bug-buzz",
                 "giga-impact",
-                "rock-climb",
                 "bulldoze",
                 "snarl"
             ],
@@ -46994,7 +46857,6 @@
                 { "moveId": "sweet-scent", "level": 17 },
                 { "moveId": "ingrain", "level": 21 },
                 { "moveId": "grass-knot", "level": 27 },
-                { "moveId": "leaf-tornado", "level": 31 },
                 { "moveId": "spit-up", "level": 37 },
                 { "moveId": "stockpile", "level": 37 },
                 { "moveId": "swallow", "level": 37 },
@@ -47008,7 +46870,6 @@
                 "hyper-beam",
                 "solar-beam",
                 "double-team",
-                "flash",
                 "rest",
                 "substitute",
                 "thief",
@@ -47567,7 +47428,6 @@
                 "fling",
                 "focus-blast",
                 "giga-impact",
-                "rock-climb",
                 "bulldoze",
                 "work-up"
             ],
@@ -47712,7 +47572,6 @@
                 "earthquake",
                 "double-team",
                 "reflect",
-                "flash",
                 "rest",
                 "rock-slide",
                 "substitute",
@@ -47952,7 +47811,6 @@
                 "reflect",
                 "fire-blast",
                 "dream-eater",
-                "flash",
                 "rest",
                 "substitute",
                 "protect",
@@ -49969,7 +49827,6 @@
                 { "moveId": "zen-headbutt", "level": 42 },
                 { "moveId": "inferno", "level": 49 },
                 { "moveId": "reversal", "level": 56 },
-                { "moveId": "searing-shot", "level": 63 },
                 { "moveId": "double-edge", "level": 70 },
                 { "moveId": "flare-blitz", "level": 77 },
                 { "moveId": "overheat", "level": 84 },
@@ -50708,7 +50565,6 @@
                 { "moveId": "tackle", "level": 1 },
                 { "moveId": "leer", "level": 3 },
                 { "moveId": "bite", "level": 6 },
-                { "moveId": "bide", "level": 8 },
                 { "moveId": "detect", "level": 11 },
                 { "moveId": "sand-attack", "level": 13 },
                 { "moveId": "crunch", "level": 16 },
@@ -50717,7 +50573,6 @@
                 { "moveId": "after-you", "level": 23 },
                 { "moveId": "focus-energy", "level": 26 },
                 { "moveId": "work-up", "level": 28 },
-                { "moveId": "hyper-fang", "level": 31 },
                 { "moveId": "nasty-plot", "level": 33 },
                 { "moveId": "mean-look", "level": 36 },
                 { "moveId": "baton-pass", "level": 38 },
@@ -50734,9 +50589,6 @@
                 "swagger",
                 "attract",
                 "sleep-talk",
-                "return",
-                "frustration",
-                "hidden-power",
                 "rain-dance",
                 "sunny-day",
                 "shadow-ball",
@@ -50750,10 +50602,7 @@
             "eggMoves": [
                 "screech",
                 "flail",
-                "foresight",
-                "pursuit",
                 "iron-tail",
-                "revenge",
                 "bullet-seed",
                 "assurance",
                 "tearful-look"
@@ -50772,8 +50621,7 @@
                 "seed-bomb",
                 "zen-headbutt",
                 "gunk-shot",
-                "after-you",
-                "laser-focus"
+                "after-you"
             ]
         },
         "505": {
@@ -50782,9 +50630,7 @@
                 { "moveId": "bite", "level": 1 },
                 { "moveId": "leer", "level": 1 },
                 { "moveId": "low-kick", "level": 1 },
-                { "moveId": "rototiller", "level": 1 },
                 { "moveId": "tackle", "level": 1 },
-                { "moveId": "bide", "level": 8 },
                 { "moveId": "detect", "level": 11 },
                 { "moveId": "sand-attack", "level": 13 },
                 { "moveId": "crunch", "level": 16 },
@@ -50793,7 +50639,6 @@
                 { "moveId": "after-you", "level": 25 },
                 { "moveId": "focus-energy", "level": 29 },
                 { "moveId": "psych-up", "level": 32 },
-                { "moveId": "hyper-fang", "level": 36 },
                 { "moveId": "nasty-plot", "level": 39 },
                 { "moveId": "mean-look", "level": 43 },
                 { "moveId": "baton-pass", "level": 46 },
@@ -50816,9 +50661,6 @@
                 "swagger",
                 "attract",
                 "sleep-talk",
-                "return",
-                "frustration",
-                "hidden-power",
                 "rain-dance",
                 "sunny-day",
                 "psych-up",
@@ -50845,7 +50687,6 @@
                 "helping-hand",
                 "knock-off",
                 "endeavor",
-                "signal-beam",
                 "covet",
                 "shock-wave",
                 "last-resort",
@@ -50854,7 +50695,6 @@
                 "zen-headbutt",
                 "gunk-shot",
                 "after-you",
-                "laser-focus",
                 "stomping-tantrum"
             ]
         },
@@ -51181,7 +51021,6 @@
                 { "moveId": "acrobatics", "level": 31 },
                 { "moveId": "grass-knot", "level": 34 },
                 { "moveId": "recycle", "level": 37 },
-                { "moveId": "natural-gift", "level": 40 },
                 { "moveId": "crunch", "level": 43 }
             ],
             "tmMoves": [
@@ -51195,13 +51034,9 @@
                 "swagger",
                 "attract",
                 "sleep-talk",
-                "return",
-                "frustration",
-                "hidden-power",
                 "sunny-day",
                 "torment",
                 "facade",
-                "nature-power",
                 "taunt",
                 "rock-tomb",
                 "payback",
@@ -51219,7 +51054,6 @@
                 "low-kick",
                 "role-play",
                 "astonish",
-                "grass-whistle",
                 "tickle",
                 "bullet-seed",
                 "covet",
@@ -51270,13 +51104,9 @@
                 "swagger",
                 "attract",
                 "sleep-talk",
-                "return",
-                "frustration",
-                "hidden-power",
                 "sunny-day",
                 "torment",
                 "facade",
-                "nature-power",
                 "taunt",
                 "brick-break",
                 "rock-tomb",
@@ -51327,13 +51157,11 @@
                 { "moveId": "fury-swipes", "level": 13 },
                 { "moveId": "yawn", "level": 16 },
                 { "moveId": "bite", "level": 19 },
-                { "moveId": "flame-burst", "level": 22 },
                 { "moveId": "amnesia", "level": 25 },
                 { "moveId": "fling", "level": 28 },
                 { "moveId": "acrobatics", "level": 31 },
                 { "moveId": "fire-blast", "level": 34 },
                 { "moveId": "recycle", "level": 37 },
-                { "moveId": "natural-gift", "level": 40 },
                 { "moveId": "crunch", "level": 43 }
             ],
             "tmMoves": [
@@ -51349,9 +51177,6 @@
                 "swagger",
                 "attract",
                 "sleep-talk",
-                "return",
-                "frustration",
-                "hidden-power",
                 "sunny-day",
                 "torment",
                 "will-o-wisp",
@@ -51406,7 +51231,6 @@
         },
         "514": {
             "levelUpMoves": [
-                { "moveId": "flame-burst", "level": 1 },
                 { "moveId": "fury-swipes", "level": 1 },
                 { "moveId": "leer", "level": 1 },
                 { "moveId": "lick", "level": 1 }
@@ -51426,9 +51250,6 @@
                 "swagger",
                 "attract",
                 "sleep-talk",
-                "return",
-                "frustration",
-                "hidden-power",
                 "sunny-day",
                 "torment",
                 "will-o-wisp",
@@ -51480,7 +51301,6 @@
                 { "moveId": "lick", "level": 7 },
                 { "moveId": "water-gun", "level": 10 },
                 { "moveId": "fury-swipes", "level": 13 },
-                { "moveId": "water-sport", "level": 16 },
                 { "moveId": "bite", "level": 19 },
                 { "moveId": "scald", "level": 22 },
                 { "moveId": "taunt", "level": 25 },
@@ -51488,7 +51308,6 @@
                 { "moveId": "acrobatics", "level": 31 },
                 { "moveId": "brine", "level": 34 },
                 { "moveId": "recycle", "level": 37 },
-                { "moveId": "natural-gift", "level": 40 },
                 { "moveId": "crunch", "level": 43 }
             ],
             "tmMoves": [
@@ -51505,9 +51324,6 @@
                 "swagger",
                 "attract",
                 "sleep-talk",
-                "return",
-                "frustration",
-                "hidden-power",
                 "rain-dance",
                 "snowscape",
                 "torment",
@@ -51529,7 +51345,6 @@
                 "hydro-pump",
                 "low-kick",
                 "role-play",
-                "mud-sport",
                 "astonish",
                 "tickle",
                 "covet",
@@ -51582,9 +51397,6 @@
                 "swagger",
                 "attract",
                 "sleep-talk",
-                "return",
-                "frustration",
-                "hidden-power",
                 "rain-dance",
                 "snowscape",
                 "torment",
@@ -51637,7 +51449,6 @@
                 { "moveId": "psybeam", "level": 8 },
                 { "moveId": "imprison", "level": 12 },
                 { "moveId": "moonlight", "level": 16 },
-                { "moveId": "magic-coat", "level": 20 },
                 { "moveId": "zen-headbutt", "level": 24 },
                 { "moveId": "calm-mind", "level": 28 },
                 { "moveId": "yawn", "level": 32 },
@@ -51697,7 +51508,6 @@
                 { "moveId": "future-sight", "level": 1 },
                 { "moveId": "hypnosis", "level": 1 },
                 { "moveId": "imprison", "level": 1 },
-                { "moveId": "magic-coat", "level": 1 },
                 { "moveId": "moonblast", "level": 1 },
                 { "moveId": "moonlight", "level": 1 },
                 { "moveId": "psybeam", "level": 1 },
@@ -52054,8 +51864,7 @@
                 "take-down",
                 "curse",
                 "gravity",
-                "wide-guard",
-                "autotomize"
+                "wide-guard"
             ],
             "tutorMoves": ["meteor-beam"]
         },
@@ -52225,15 +52034,13 @@
                 "stored-power",
                 "ally-switch",
                 "acrobatics",
-                "venom-drench",
                 "speed-swap"
             ],
             "eggMoves": [
                 "supersonic",
                 "flatter",
                 "knock-off",
-                "roost",
-                "psycho-shift"
+                "roost"
             ],
             "tutorMoves": ["expanding-force", "dual-wingbeat"]
         },
@@ -52303,7 +52110,6 @@
                 "stored-power",
                 "ally-switch",
                 "acrobatics",
-                "venom-drench",
                 "speed-swap",
                 "psychic-fangs"
             ],
@@ -52774,8 +52580,7 @@
                 "earth-power",
                 "sludge-wave",
                 "round",
-                "scald",
-                "venom-drench"
+                "scald"
             ],
             "eggMoves": ["mist", "toxic", "mud-slap", "water-pulse"],
             "tutorMoves": []
@@ -52825,8 +52630,7 @@
                 "sludge-wave",
                 "round",
                 "scald",
-                "bulldoze",
-                "venom-drench"
+                "bulldoze"
             ],
             "eggMoves": [],
             "tutorMoves": []
@@ -52898,7 +52702,6 @@
                 "round",
                 "scald",
                 "bulldoze",
-                "venom-drench",
                 "stomping-tantrum",
                 "liquidation"
             ],
@@ -52912,10 +52715,7 @@
                 { "moveId": "focus-energy", "level": 5 },
                 { "moveId": "circle-throw", "level": 10 },
                 { "moveId": "wide-guard", "level": 15 },
-                { "moveId": "revenge", "level": 20 },
                 { "moveId": "bulk-up", "level": 25 },
-                { "moveId": "storm-throw", "level": 30 },
-                { "moveId": "vital-throw", "level": 35 },
                 { "moveId": "seismic-toss", "level": 40 },
                 { "moveId": "endure", "level": 45 },
                 { "moveId": "reversal", "level": 50 },
@@ -52948,7 +52748,6 @@
                 "taunt",
                 "helping-hand",
                 "superpower",
-                "revenge",
                 "brick-break",
                 "rock-tomb",
                 "bulk-up",
@@ -53012,7 +52811,6 @@
                 "taunt",
                 "helping-hand",
                 "superpower",
-                "revenge",
                 "brick-break",
                 "rock-tomb",
                 "bulk-up",
@@ -53231,7 +53029,6 @@
                 { "moveId": "take-down", "level": 28 },
                 { "moveId": "agility", "level": 32 },
                 { "moveId": "toxic", "level": 36 },
-                { "moveId": "venom-drench", "level": 40 },
                 { "moveId": "double-edge", "level": 44 }
             ],
             "tmMoves": [
@@ -53257,8 +53054,7 @@
                 "poison-jab",
                 "venoshock",
                 "round",
-                "hex",
-                "venom-drench"
+                "hex"
             ],
             "eggMoves": ["bite", "fury-cutter"],
             "tutorMoves": ["steel-roller", "skitter-smack"]
@@ -53277,7 +53073,6 @@
                 { "moveId": "take-down", "level": 32 },
                 { "moveId": "agility", "level": 38 },
                 { "moveId": "toxic", "level": 44 },
-                { "moveId": "venom-drench", "level": 50 },
                 { "moveId": "double-edge", "level": 56 }
             ],
             "tmMoves": [
@@ -53303,8 +53098,7 @@
                 "poison-jab",
                 "venoshock",
                 "round",
-                "hex",
-                "venom-drench"
+                "hex"
             ],
             "eggMoves": [],
             "tutorMoves": ["steel-roller", "skitter-smack"]
@@ -53324,7 +53118,6 @@
                 { "moveId": "take-down", "level": 34 },
                 { "moveId": "agility", "level": 42 },
                 { "moveId": "toxic", "level": 50 },
-                { "moveId": "venom-drench", "level": 58 },
                 { "moveId": "double-edge", "level": 66 },
                 { "moveId": "megahorn", "level": 74 }
             ],
@@ -53367,7 +53160,6 @@
                 "round",
                 "hex",
                 "bulldoze",
-                "venom-drench",
                 "throat-chop",
                 "smart-strike",
                 "stomping-tantrum"
@@ -54464,7 +54256,7 @@
                 "dazzling-gleam",
                 "speed-swap"
             ],
-            "eggMoves": ["ancient-power", "roost", "psycho-shift"],
+            "eggMoves": ["ancient-power", "roost"],
             "tutorMoves": ["expanding-force", "dual-wingbeat"]
         },
         "562": {
@@ -54475,10 +54267,8 @@
                 { "moveId": "night-shade", "level": 8 },
                 { "moveId": "disable", "level": 12 },
                 { "moveId": "will-o-wisp", "level": 16 },
-                { "moveId": "crafty-shield", "level": 20 },
                 { "moveId": "hex", "level": 24 },
                 { "moveId": "mean-look", "level": 28 },
-                { "moveId": "grudge", "level": 32 },
                 { "moveId": "curse", "level": 36 },
                 { "moveId": "shadow-ball", "level": 40 },
                 { "moveId": "dark-pulse", "level": 44 },
@@ -54532,10 +54322,8 @@
                 { "moveId": "scary-face", "level": 1 },
                 { "moveId": "disable", "level": 12 },
                 { "moveId": "will-o-wisp", "level": 16 },
-                { "moveId": "crafty-shield", "level": 20 },
                 { "moveId": "hex", "level": 24 },
                 { "moveId": "mean-look", "level": 28 },
-                { "moveId": "grudge", "level": 32 },
                 { "moveId": "curse", "level": 38 },
                 { "moveId": "shadow-ball", "level": 44 },
                 { "moveId": "dark-pulse", "level": 50 },
@@ -54561,7 +54349,6 @@
                 "will-o-wisp",
                 "facade",
                 "trick",
-                "revenge",
                 "skill-swap",
                 "imprison",
                 "fake-tears",
@@ -54916,15 +54703,13 @@
                 "gunk-shot",
                 "venoshock",
                 "sludge-wave",
-                "round",
-                "venom-drench"
+                "round"
             ],
             "eggMoves": [
                 "sand-attack",
                 "haze",
                 "curse",
-                "rollout",
-                "autotomize"
+                "rollout"
             ],
             "tutorMoves": ["corrosive-gas"]
         },
@@ -54987,7 +54772,6 @@
                 "venoshock",
                 "sludge-wave",
                 "round",
-                "venom-drench",
                 "stomping-tantrum",
                 "body-press"
             ],
@@ -55884,7 +55668,6 @@
                 "explosion",
                 "magnet-rise",
                 "ice-shard",
-                "autotomize",
                 "icicle-crash",
                 "aurora-veil"
             ],
@@ -56282,7 +56065,6 @@
                 "rain-dance",
                 "facade",
                 "taunt",
-                "revenge",
                 "iron-defense",
                 "close-combat",
                 "poison-jab",
@@ -56756,7 +56538,6 @@
                 "sleep-talk",
                 "sunny-day",
                 "facade",
-                "revenge",
                 "bullet-seed",
                 "iron-defense",
                 "gyro-ball",
@@ -56816,7 +56597,6 @@
                 "sleep-talk",
                 "sunny-day",
                 "facade",
-                "revenge",
                 "bullet-seed",
                 "iron-defense",
                 "gyro-ball",
@@ -56849,10 +56629,8 @@
                 { "moveId": "charge", "level": 8 },
                 { "moveId": "charge-beam", "level": 12 },
                 { "moveId": "metal-sound", "level": 16 },
-                { "moveId": "autotomize", "level": 20 },
                 { "moveId": "discharge", "level": 24 },
                 { "moveId": "screech", "level": 28 },
-                { "moveId": "gear-grind", "level": 32 },
                 { "moveId": "lock-on", "level": 36 },
                 { "moveId": "shift-gear", "level": 40 },
                 { "moveId": "zap-cannon", "level": 44 },
@@ -56891,10 +56669,8 @@
                 { "moveId": "vice-grip", "level": 1 },
                 { "moveId": "charge-beam", "level": 12 },
                 { "moveId": "metal-sound", "level": 16 },
-                { "moveId": "autotomize", "level": 20 },
                 { "moveId": "discharge", "level": 24 },
                 { "moveId": "screech", "level": 28 },
-                { "moveId": "gear-grind", "level": 32 },
                 { "moveId": "lock-on", "level": 36 },
                 { "moveId": "shift-gear", "level": 42 },
                 { "moveId": "zap-cannon", "level": 48 },
@@ -56930,16 +56706,13 @@
             "levelUpMoves": [
                 { "moveId": "bind", "level": 1 },
                 { "moveId": "charge", "level": 1 },
-                { "moveId": "gear-up", "level": 1 },
                 { "moveId": "magnetic-flux", "level": 1 },
                 { "moveId": "thunder-shock", "level": 1 },
                 { "moveId": "vice-grip", "level": 1 },
                 { "moveId": "charge-beam", "level": 12 },
                 { "moveId": "metal-sound", "level": 16 },
-                { "moveId": "autotomize", "level": 20 },
                 { "moveId": "discharge", "level": 24 },
                 { "moveId": "screech", "level": 28 },
-                { "moveId": "gear-grind", "level": 32 },
                 { "moveId": "lock-on", "level": 36 },
                 { "moveId": "shift-gear", "level": 42 },
                 { "moveId": "zap-cannon", "level": 48 },
@@ -57943,7 +57716,7 @@
                 "venoshock",
                 "round"
             ],
-            "eggMoves": ["double-edge", "mind-reader", "feint", "guard-split"],
+            "eggMoves": ["double-edge", "feint", "guard-split"],
             "tutorMoves": ["skitter-smack"]
         },
         "617": {
@@ -58004,8 +57777,7 @@
                 "energy-ball",
                 "giga-impact",
                 "venoshock",
-                "round",
-                "venom-drench"
+                "round"
             ],
             "eggMoves": [],
             "tutorMoves": ["skitter-smack"]
@@ -58018,7 +57790,6 @@
                 { "moveId": "water-gun", "level": 1 },
                 { "moveId": "endure", "level": 5 },
                 { "moveId": "mud-shot", "level": 10 },
-                { "moveId": "revenge", "level": 15 },
                 { "moveId": "charge", "level": 20 },
                 { "moveId": "sucker-punch", "level": 25 },
                 { "moveId": "electric-terrain", "level": 30 },
@@ -58048,7 +57819,6 @@
                 "rain-dance",
                 "uproar",
                 "facade",
-                "revenge",
                 "rock-tomb",
                 "muddy-water",
                 "bounce",
@@ -58256,7 +58026,6 @@
                 "facade",
                 "taunt",
                 "superpower",
-                "revenge",
                 "rock-tomb",
                 "dragon-claw",
                 "payback",
@@ -58604,12 +58373,10 @@
                 { "moveId": "tackle", "level": 1 },
                 { "moveId": "focus-energy", "level": 5 },
                 { "moveId": "fury-attack", "level": 10 },
-                { "moveId": "revenge", "level": 15 },
                 { "moveId": "scary-face", "level": 20 },
                 { "moveId": "horn-attack", "level": 25 },
                 { "moveId": "reversal", "level": 30 },
                 { "moveId": "throat-chop", "level": 35 },
-                { "moveId": "head-charge", "level": 40 },
                 { "moveId": "swords-dance", "level": 45 },
                 { "moveId": "megahorn", "level": 50 },
                 { "moveId": "giga-impact", "level": 55 }
@@ -58639,7 +58406,6 @@
                 "facade",
                 "taunt",
                 "superpower",
-                "revenge",
                 "rock-tomb",
                 "mud-shot",
                 "close-combat",
@@ -58663,7 +58429,6 @@
             "eggMoves": [
                 "stomp",
                 "headbutt",
-                "skull-bash",
                 "mud-slap",
                 "endeavor",
                 "cotton-guard",
@@ -60249,7 +60014,6 @@
                 { "moveId": "simple-beam", "level": 63 },
                 { "moveId": "zap-cannon", "level": 70 },
                 { "moveId": "lock-on", "level": 77 },
-                { "moveId": "techno-blast", "level": 84 },
                 { "moveId": "self-destruct", "level": 91 }
             ],
             "tmMoves": [
@@ -61041,7 +60805,6 @@
                 { "moveId": "leer", "level": 1 },
                 { "moveId": "mud-slap", "level": 1 },
                 { "moveId": "tackle", "level": 3 },
-                { "moveId": "laser-focus", "level": 6 },
                 { "moveId": "quick-attack", "level": 9 },
                 { "moveId": "mud-shot", "level": 12 },
                 { "moveId": "flail", "level": 15 },
@@ -61095,7 +60858,6 @@
         },
         "660": {
             "levelUpMoves": [
-                { "moveId": "laser-focus", "level": 1 },
                 { "moveId": "leer", "level": 1 },
                 { "moveId": "mud-slap", "level": 1 },
                 { "moveId": "tackle", "level": 1 },
@@ -61878,7 +61640,6 @@
                 { "moveId": "low-sweep", "level": 16 },
                 { "moveId": "work-up", "level": 20 },
                 { "moveId": "slash", "level": 24 },
-                { "moveId": "vital-throw", "level": 28 },
                 { "moveId": "crunch", "level": 33 },
                 { "moveId": "body-slam", "level": 36 },
                 { "moveId": "parting-shot", "level": 40 },
@@ -61936,7 +61697,6 @@
             ],
             "eggMoves": [
                 "seismic-toss",
-                "storm-throw",
                 "quick-guard",
                 "quash",
                 "power-trip"
@@ -61955,7 +61715,6 @@
                 { "moveId": "low-sweep", "level": 16 },
                 { "moveId": "work-up", "level": 20 },
                 { "moveId": "slash", "level": 24 },
-                { "moveId": "vital-throw", "level": 28 },
                 { "moveId": "crunch", "level": 35 },
                 { "moveId": "body-slam", "level": 40 },
                 { "moveId": "parting-shot", "level": 46 },
@@ -61999,7 +61758,6 @@
                 "taunt",
                 "helping-hand",
                 "superpower",
-                "revenge",
                 "brick-break",
                 "hyper-voice",
                 "rock-tomb",
@@ -62043,7 +61801,6 @@
                 { "moveId": "headbutt", "level": 12 },
                 { "moveId": "tail-whip", "level": 15 },
                 { "moveId": "bite", "level": 22 },
-                { "moveId": "odor-sleuth", "level": 27 },
                 { "moveId": "retaliate", "level": 33 },
                 { "moveId": "take-down", "level": 35 },
                 { "moveId": "charm", "level": 38 },
@@ -62062,9 +61819,6 @@
                 "swagger",
                 "attract",
                 "sleep-talk",
-                "return",
-                "frustration",
-                "hidden-power",
                 "rain-dance",
                 "sunny-day",
                 "facade",
@@ -62083,8 +61837,6 @@
             "eggMoves": [
                 "mimic",
                 "role-play",
-                "refresh",
-                "captivate",
                 "work-up"
             ],
             "tutorMoves": [
@@ -62231,7 +61983,6 @@
                 { "moveId": "fury-cutter", "level": 1 },
                 { "moveId": "tackle", "level": 1 },
                 { "moveId": "shadow-sneak", "level": 4 },
-                { "moveId": "autotomize", "level": 8 },
                 { "moveId": "aerial-ace", "level": 12 },
                 { "moveId": "metal-sound", "level": 16 },
                 { "moveId": "slash", "level": 20 },
@@ -62277,7 +62028,6 @@
         },
         "680": {
             "levelUpMoves": [
-                { "moveId": "autotomize", "level": 1 },
                 { "moveId": "fury-cutter", "level": 1 },
                 { "moveId": "shadow-sneak", "level": 1 },
                 { "moveId": "tackle", "level": 1 },
@@ -62326,9 +62076,7 @@
         },
         "681": {
             "levelUpMoves": [
-                { "moveId": "kings-shield", "level": 0 },
                 { "moveId": "aerial-ace", "level": 1 },
-                { "moveId": "autotomize", "level": 1 },
                 { "moveId": "fury-cutter", "level": 1 },
                 { "moveId": "head-smash", "level": 1 },
                 { "moveId": "iron-defense", "level": 1 },
@@ -62387,7 +62135,6 @@
                 { "moveId": "sweet-kiss", "level": 3 },
                 { "moveId": "echoed-voice", "level": 6 },
                 { "moveId": "draining-kiss", "level": 9 },
-                { "moveId": "aromatherapy", "level": 12 },
                 { "moveId": "attract", "level": 18 },
                 { "moveId": "flail", "level": 21 },
                 { "moveId": "misty-terrain", "level": 24 },
@@ -62441,7 +62188,6 @@
                 { "moveId": "sweet-kiss", "level": 1 },
                 { "moveId": "sweet-scent", "level": 1 },
                 { "moveId": "disarming-voice", "level": 9 },
-                { "moveId": "aromatherapy", "level": 12 },
                 { "moveId": "draining-kiss", "level": 15 },
                 { "moveId": "attract", "level": 18 },
                 { "moveId": "flail", "level": 21 },
@@ -62500,7 +62246,6 @@
                 { "moveId": "tackle", "level": 1 },
                 { "moveId": "play-nice", "level": 3 },
                 { "moveId": "fairy-wind", "level": 6 },
-                { "moveId": "aromatherapy", "level": 9 },
                 { "moveId": "draining-kiss", "level": 12 },
                 { "moveId": "fake-tears", "level": 15 },
                 { "moveId": "round", "level": 18 },
@@ -62550,7 +62295,6 @@
                 { "moveId": "play-nice", "level": 1 },
                 { "moveId": "sweet-scent", "level": 1 },
                 { "moveId": "tackle", "level": 1 },
-                { "moveId": "aromatherapy", "level": 9 },
                 { "moveId": "draining-kiss", "level": 12 },
                 { "moveId": "fake-tears", "level": 15 },
                 { "moveId": "round", "level": 18 },
@@ -62810,7 +62554,6 @@
             "levelUpMoves": [
                 { "moveId": "mud-slap", "level": 1 },
                 { "moveId": "scratch", "level": 1 },
-                { "moveId": "skull-bash", "level": 1 },
                 { "moveId": "water-gun", "level": 1 },
                 { "moveId": "withdraw", "level": 1 },
                 { "moveId": "fury-cutter", "level": 12 },
@@ -63153,7 +62896,6 @@
                 { "moveId": "parabolic-charge", "level": 28 },
                 { "moveId": "thunder-wave", "level": 32 },
                 { "moveId": "thunderbolt", "level": 36 },
-                { "moveId": "electrify", "level": 40 },
                 { "moveId": "thunder", "level": 44 }
             ],
             "tmMoves": [
@@ -63200,7 +62942,6 @@
                 { "moveId": "charge", "level": 1 },
                 { "moveId": "discharge", "level": 1 },
                 { "moveId": "eerie-impulse", "level": 1 },
-                { "moveId": "electrify", "level": 1 },
                 { "moveId": "mud-slap", "level": 1 },
                 { "moveId": "parabolic-charge", "level": 1 },
                 { "moveId": "pound", "level": 1 },
@@ -63426,7 +63167,6 @@
                 { "moveId": "mist", "level": 20 },
                 { "moveId": "aurora-beam", "level": 24 },
                 { "moveId": "thunder-wave", "level": 28 },
-                { "moveId": "nature-power", "level": 32 },
                 { "moveId": "freeze-dry", "level": 36 },
                 { "moveId": "ice-beam", "level": 40 },
                 { "moveId": "light-screen", "level": 44 },
@@ -63499,7 +63239,6 @@
                 { "moveId": "mist", "level": 20 },
                 { "moveId": "aurora-beam", "level": 24 },
                 { "moveId": "thunder-wave", "level": 28 },
-                { "moveId": "nature-power", "level": 32 },
                 { "moveId": "freeze-dry", "level": 36 },
                 { "moveId": "ice-beam", "level": 42 },
                 { "moveId": "light-screen", "level": 48 },
@@ -64240,7 +63979,6 @@
         "710": {
             "levelUpMoves": [
                 { "moveId": "astonish", "level": 1 },
-                { "moveId": "trick-or-treat", "level": 1 },
                 { "moveId": "shadow-sneak", "level": 4 },
                 { "moveId": "confuse-ray", "level": 8 },
                 { "moveId": "razor-leaf", "level": 12 },
@@ -64302,7 +64040,6 @@
                 { "moveId": "explosion", "level": 1 },
                 { "moveId": "moonblast", "level": 1 },
                 { "moveId": "shadow-sneak", "level": 1 },
-                { "moveId": "trick-or-treat", "level": 1 },
                 { "moveId": "razor-leaf", "level": 12 },
                 { "moveId": "leech-seed", "level": 16 },
                 { "moveId": "bullet-seed", "level": 20 },
@@ -64628,15 +64365,12 @@
                 { "moveId": "tackle", "level": 1 },
                 { "moveId": "light-screen", "level": 5 },
                 { "moveId": "aurora-beam", "level": 10 },
-                { "moveId": "nature-power", "level": 15 },
                 { "moveId": "night-slash", "level": 20 },
-                { "moveId": "aromatherapy", "level": 25 },
                 { "moveId": "psych-up", "level": 30 },
                 { "moveId": "horn-leech", "level": 35 },
                 { "moveId": "misty-terrain", "level": 40 },
                 { "moveId": "ingrain", "level": 45 },
                 { "moveId": "take-down", "level": 50 },
-                { "moveId": "geomancy", "level": 55 },
                 { "moveId": "moonblast", "level": 60 },
                 { "moveId": "heal-pulse", "level": 65 },
                 { "moveId": "megahorn", "level": 70 },
@@ -64700,7 +64434,6 @@
                 { "moveId": "air-slash", "level": 35 },
                 { "moveId": "dark-pulse", "level": 40 },
                 { "moveId": "psychic", "level": 45 },
-                { "moveId": "oblivion-wing", "level": 50 },
                 { "moveId": "phantom-force", "level": 55 },
                 { "moveId": "foul-play", "level": 60 },
                 { "moveId": "dragon-rush", "level": 65 },
@@ -64755,16 +64488,12 @@
                 { "moveId": "bind", "level": 1 },
                 { "moveId": "bite", "level": 1 },
                 { "moveId": "bulldoze", "level": 1 },
-                { "moveId": "core-enforcer", "level": 1 },
                 { "moveId": "dragon-breath", "level": 1 },
-                { "moveId": "thousand-arrows", "level": 1 },
-                { "moveId": "thousand-waves", "level": 1 },
                 { "moveId": "haze", "level": 8 },
                 { "moveId": "dig", "level": 16 },
                 { "moveId": "safeguard", "level": 24 },
                 { "moveId": "crunch", "level": 32 },
                 { "moveId": "dragon-pulse", "level": 40 },
-                { "moveId": "lands-wrath", "level": 48 },
                 { "moveId": "glare", "level": 56 },
                 { "moveId": "sandstorm", "level": 64 },
                 { "moveId": "coil", "level": 72 },
@@ -67517,7 +67246,6 @@
                 "facade",
                 "taunt",
                 "superpower",
-                "revenge",
                 "brick-break",
                 "rock-tomb",
                 "dragon-claw",
@@ -68202,7 +67930,6 @@
                 { "moveId": "taunt", "level": 10 },
                 { "moveId": "safeguard", "level": 15 },
                 { "moveId": "counter", "level": 20 },
-                { "moveId": "purify", "level": 25 },
                 { "moveId": "curse", "level": 30 },
                 { "moveId": "gastro-acid", "level": 35 },
                 { "moveId": "pain-split", "level": 40 },
@@ -68226,8 +67953,7 @@
                 "rain-dance",
                 "snowscape",
                 "taunt",
-                "helping-hand",
-                "venom-drench"
+                "helping-hand"
             ],
             "eggMoves": ["spite", "swagger", "mirror-coat", "tickle"],
             "tutorMoves": []
@@ -68286,7 +68012,6 @@
         },
         "773": {
             "levelUpMoves": [
-                { "moveId": "multi-attack", "level": 0 },
                 { "moveId": "aerial-ace", "level": 1 },
                 { "moveId": "bite", "level": 1 },
                 { "moveId": "explosion", "level": 1 },
@@ -68511,7 +68236,6 @@
                 { "moveId": "dragon-pulse", "level": 28 },
                 { "moveId": "body-slam", "level": 32 },
                 { "moveId": "flamethrower", "level": 36 },
-                { "moveId": "shell-trap", "level": 40 },
                 { "moveId": "shell-smash", "level": 44 },
                 { "moveId": "overheat", "level": 48 },
                 { "moveId": "explosion", "level": 52 }
@@ -68541,7 +68265,6 @@
                 "will-o-wisp",
                 "facade",
                 "taunt",
-                "revenge",
                 "hyper-voice",
                 "overheat",
                 "rock-tomb",
@@ -68874,7 +68597,6 @@
                 { "moveId": "slam", "level": 40 },
                 { "moveId": "shadow-ball", "level": 44 },
                 { "moveId": "metal-sound", "level": 48 },
-                { "moveId": "anchor-shot", "level": 52 },
                 { "moveId": "energy-ball", "level": 56 },
                 { "moveId": "phantom-force", "level": 60 },
                 { "moveId": "power-whip", "level": 64 }
@@ -69170,7 +68892,6 @@
                 { "moveId": "screech", "level": 40 },
                 { "moveId": "discharge", "level": 45 },
                 { "moveId": "mean-look", "level": 50 },
-                { "moveId": "natures-madness", "level": 55 },
                 { "moveId": "wild-charge", "level": 60 },
                 { "moveId": "brave-bird", "level": 65 },
                 { "moveId": "power-swap", "level": 70 },
@@ -69231,7 +68952,6 @@
                 { "moveId": "astonish", "level": 1 },
                 { "moveId": "confusion", "level": 1 },
                 { "moveId": "withdraw", "level": 5 },
-                { "moveId": "aromatherapy", "level": 10 },
                 { "moveId": "draining-kiss", "level": 15 },
                 { "moveId": "psybeam", "level": 20 },
                 { "moveId": "flatter", "level": 25 },
@@ -69240,7 +68960,6 @@
                 { "moveId": "extrasensory", "level": 40 },
                 { "moveId": "psyshock", "level": 45 },
                 { "moveId": "mean-look", "level": 50 },
-                { "moveId": "natures-madness", "level": 55 },
                 { "moveId": "moonblast", "level": 60 },
                 { "moveId": "tickle", "level": 65 },
                 { "moveId": "skill-swap", "level": 70 },
@@ -69307,10 +69026,8 @@
                 { "moveId": "horn-leech", "level": 40 },
                 { "moveId": "zen-headbutt", "level": 45 },
                 { "moveId": "mean-look", "level": 50 },
-                { "moveId": "natures-madness", "level": 55 },
                 { "moveId": "wood-hammer", "level": 60 },
                 { "moveId": "megahorn", "level": 65 },
-                { "moveId": "skull-bash", "level": 70 },
                 { "moveId": "grassy-terrain", "level": 75 }
             ],
             "tmMoves": [
@@ -69336,7 +69053,6 @@
                 "facade",
                 "taunt",
                 "superpower",
-                "revenge",
                 "brick-break",
                 "rock-tomb",
                 "bullet-seed",
@@ -69384,7 +69100,6 @@
                 { "moveId": "surf", "level": 40 },
                 { "moveId": "muddy-water", "level": 45 },
                 { "moveId": "mean-look", "level": 50 },
-                { "moveId": "natures-madness", "level": 55 },
                 { "moveId": "moonblast", "level": 60 },
                 { "moveId": "hydro-pump", "level": 65 },
                 { "moveId": "soak", "level": 70 },
@@ -69629,7 +69344,6 @@
                 { "moveId": "venoshock", "level": 30 },
                 { "moveId": "headbutt", "level": 35 },
                 { "moveId": "toxic-spikes", "level": 40 },
-                { "moveId": "venom-drench", "level": 45 },
                 { "moveId": "power-gem", "level": 50 },
                 { "moveId": "stealth-rock", "level": 55 },
                 { "moveId": "mirror-coat", "level": 60 },
@@ -69673,7 +69387,6 @@
                 "round",
                 "ally-switch",
                 "hex",
-                "venom-drench",
                 "dazzling-gleam",
                 "brutal-swing"
             ],
@@ -69683,10 +69396,8 @@
         "794": {
             "levelUpMoves": [
                 { "moveId": "harden", "level": 1 },
-                { "moveId": "power-up-punch", "level": 1 },
                 { "moveId": "taunt", "level": 5 },
                 { "moveId": "fell-stinger", "level": 10 },
-                { "moveId": "vital-throw", "level": 15 },
                 { "moveId": "bulk-up", "level": 20 },
                 { "moveId": "endure", "level": 25 },
                 { "moveId": "reversal", "level": 30 },
@@ -69720,7 +69431,6 @@
                 "facade",
                 "taunt",
                 "superpower",
-                "revenge",
                 "brick-break",
                 "rock-tomb",
                 "bulk-up",
@@ -69868,15 +69578,13 @@
                 { "moveId": "mega-drain", "level": 15 },
                 { "moveId": "smack-down", "level": 20 },
                 { "moveId": "ingrain", "level": 25 },
-                { "moveId": "autotomize", "level": 30 },
                 { "moveId": "giga-drain", "level": 35 },
                 { "moveId": "flash-cannon", "level": 40 },
                 { "moveId": "metal-sound", "level": 45 },
                 { "moveId": "iron-defense", "level": 50 },
                 { "moveId": "leech-seed", "level": 55 },
                 { "moveId": "heavy-slam", "level": 60 },
-                { "moveId": "double-edge", "level": 65 },
-                { "moveId": "skull-bash", "level": 70 }
+                { "moveId": "double-edge", "level": 65 }
             ],
             "tmMoves": [
                 "fly",
@@ -69932,7 +69640,6 @@
                 { "moveId": "detect", "level": 30 },
                 { "moveId": "night-slash", "level": 35 },
                 { "moveId": "synthesis", "level": 40 },
-                { "moveId": "laser-focus", "level": 45 },
                 { "moveId": "defog", "level": 50 },
                 { "moveId": "leaf-blade", "level": 55 },
                 { "moveId": "sacred-sword", "level": 60 },
@@ -70229,8 +69936,6 @@
                 { "moveId": "sucker-punch", "level": 45 },
                 { "moveId": "drain-punch", "level": 54 },
                 { "moveId": "psych-up", "level": 63 },
-                { "moveId": "spectral-thief", "level": 72 },
-                { "moveId": "laser-focus", "level": 81 },
                 { "moveId": "endeavor", "level": 90 },
                 { "moveId": "close-combat", "level": 99 }
             ],
@@ -70259,7 +69964,6 @@
                 "will-o-wisp",
                 "facade",
                 "superpower",
-                "revenge",
                 "brick-break",
                 "blaze-kick",
                 "rock-tomb",
@@ -70303,7 +70007,6 @@
                 { "moveId": "fell-stinger", "level": 14 },
                 { "moveId": "charm", "level": 21 },
                 { "moveId": "venoshock", "level": 28 },
-                { "moveId": "venom-drench", "level": 35 },
                 { "moveId": "nasty-plot", "level": 42 },
                 { "moveId": "poison-jab", "level": 49 },
                 { "moveId": "gastro-acid", "level": 56 },
@@ -70330,8 +70033,7 @@
                 "gunk-shot",
                 "venoshock",
                 "sludge-wave",
-                "round",
-                "venom-drench"
+                "round"
             ],
             "eggMoves": [],
             "tutorMoves": []
@@ -70349,7 +70051,6 @@
                 { "moveId": "fell-stinger", "level": 14 },
                 { "moveId": "charm", "level": 21 },
                 { "moveId": "venoshock", "level": 28 },
-                { "moveId": "venom-drench", "level": 35 },
                 { "moveId": "nasty-plot", "level": 42 },
                 { "moveId": "poison-jab", "level": 49 },
                 { "moveId": "gastro-acid", "level": 56 },
@@ -70403,7 +70104,6 @@
                 "hex",
                 "acrobatics",
                 "snarl",
-                "venom-drench",
                 "throat-chop",
                 "smart-strike",
                 "breaking-swipe"
@@ -70421,7 +70121,6 @@
                 { "moveId": "block", "level": 20 },
                 { "moveId": "rock-slide", "level": 25 },
                 { "moveId": "wide-guard", "level": 30 },
-                { "moveId": "autotomize", "level": 35 },
                 { "moveId": "rock-blast", "level": 40 },
                 { "moveId": "magnet-rise", "level": 45 },
                 { "moveId": "iron-defense", "level": 50 },
@@ -70482,7 +70181,6 @@
                 { "moveId": "ember", "level": 10 },
                 { "moveId": "night-shade", "level": 15 },
                 { "moveId": "confuse-ray", "level": 20 },
-                { "moveId": "magic-coat", "level": 25 },
                 { "moveId": "incinerate", "level": 30 },
                 { "moveId": "hypnosis", "level": 35 },
                 { "moveId": "mystical-fire", "level": 40 },
@@ -70490,8 +70188,7 @@
                 { "moveId": "calm-mind", "level": 50 },
                 { "moveId": "will-o-wisp", "level": 55 },
                 { "moveId": "trick", "level": 60 },
-                { "moveId": "fire-blast", "level": 65 },
-                { "moveId": "mind-blown", "level": 70 }
+                { "moveId": "fire-blast", "level": 65 }
             ],
             "tmMoves": [
                 "fire-punch",
@@ -70539,7 +70236,6 @@
         "807": {
             "levelUpMoves": [
                 { "moveId": "fake-out", "level": 1 },
-                { "moveId": "power-up-punch", "level": 1 },
                 { "moveId": "quick-attack", "level": 1 },
                 { "moveId": "scratch", "level": 1 },
                 { "moveId": "snarl", "level": 1 },
@@ -70554,7 +70250,6 @@
                 { "moveId": "discharge", "level": 64 },
                 { "moveId": "wild-charge", "level": 72 },
                 { "moveId": "agility", "level": 80 },
-                { "moveId": "plasma-fists", "level": 88 },
                 { "moveId": "close-combat", "level": 96 }
             ],
             "tmMoves": [
@@ -70585,7 +70280,6 @@
                 "taunt",
                 "helping-hand",
                 "superpower",
-                "revenge",
                 "brick-break",
                 "blaze-kick",
                 "bulk-up",
@@ -70659,7 +70353,6 @@
                 { "moveId": "discharge", "level": 64 },
                 { "moveId": "dynamic-punch", "level": 72 },
                 { "moveId": "superpower", "level": 80 },
-                { "moveId": "double-iron-bash", "level": 88 },
                 { "moveId": "hyper-beam", "level": 96 }
             ],
             "tmMoves": [
@@ -71654,7 +71347,6 @@
                 { "moveId": "reflect", "level": 1 },
                 { "moveId": "struggle-bug", "level": 1 },
                 { "moveId": "confuse-ray", "level": 4 },
-                { "moveId": "magic-coat", "level": 8 },
                 { "moveId": "agility", "level": 12 },
                 { "moveId": "psybeam", "level": 16 },
                 { "moveId": "hypnosis", "level": 20 },
@@ -71826,10 +71518,8 @@
                 { "moveId": "sweet-scent", "level": 8 },
                 { "moveId": "razor-leaf", "level": 12 },
                 { "moveId": "round", "level": 16 },
-                { "moveId": "leaf-tornado", "level": 21 },
                 { "moveId": "synthesis", "level": 24 },
                 { "moveId": "hyper-voice", "level": 28 },
-                { "moveId": "aromatherapy", "level": 32 },
                 { "moveId": "leaf-storm", "level": 36 }
             ],
             "tmMoves": [
@@ -71876,10 +71566,8 @@
                 { "moveId": "sweet-scent", "level": 1 },
                 { "moveId": "razor-leaf", "level": 12 },
                 { "moveId": "round", "level": 16 },
-                { "moveId": "leaf-tornado", "level": 23 },
                 { "moveId": "synthesis", "level": 28 },
                 { "moveId": "hyper-voice", "level": 34 },
-                { "moveId": "aromatherapy", "level": 40 },
                 { "moveId": "leaf-storm", "level": 46 },
                 { "moveId": "cotton-guard", "level": 52 }
             ],
@@ -72167,7 +71855,6 @@
         "836": {
             "levelUpMoves": [
                 { "moveId": "bite", "level": 1 },
-                { "moveId": "electrify", "level": 1 },
                 { "moveId": "nuzzle", "level": 1 },
                 { "moveId": "tackle", "level": 1 },
                 { "moveId": "tail-whip", "level": 1 },
@@ -73043,7 +72730,6 @@
                 { "moveId": "detect", "level": 15 },
                 { "moveId": "brick-break", "level": 20 },
                 { "moveId": "bulk-up", "level": 25 },
-                { "moveId": "submission", "level": 30 },
                 { "moveId": "taunt", "level": 35 },
                 { "moveId": "reversal", "level": 40 },
                 { "moveId": "superpower", "level": 45 }
@@ -73064,7 +72750,6 @@
                 "facade",
                 "taunt",
                 "superpower",
-                "revenge",
                 "brick-break",
                 "dive",
                 "muddy-water",
@@ -73084,23 +72769,19 @@
                 "pain-split",
                 "sucker-punch",
                 "soak",
-                "circle-throw",
-                "power-up-punch"
+                "circle-throw"
             ],
             "tutorMoves": ["coaching"]
         },
         "853": {
             "levelUpMoves": [
-                { "moveId": "octolock", "level": 0 },
                 { "moveId": "bind", "level": 1 },
                 { "moveId": "feint", "level": 1 },
                 { "moveId": "leer", "level": 1 },
-                { "moveId": "octazooka", "level": 1 },
                 { "moveId": "rock-smash", "level": 1 },
                 { "moveId": "detect", "level": 15 },
                 { "moveId": "brick-break", "level": 20 },
                 { "moveId": "bulk-up", "level": 25 },
-                { "moveId": "submission", "level": 30 },
                 { "moveId": "taunt", "level": 35 },
                 { "moveId": "reversal", "level": 40 },
                 { "moveId": "superpower", "level": 45 },
@@ -73128,7 +72809,6 @@
                 "facade",
                 "taunt",
                 "superpower",
-                "revenge",
                 "brick-break",
                 "dive",
                 "muddy-water",
@@ -73627,7 +73307,6 @@
         },
         "862": {
             "levelUpMoves": [
-                { "moveId": "obstruct", "level": 0 },
                 { "moveId": "baby-doll-eyes", "level": 1 },
                 { "moveId": "cross-chop", "level": 1 },
                 { "moveId": "leer", "level": 1 },
@@ -73635,7 +73314,6 @@
                 { "moveId": "night-slash", "level": 1 },
                 { "moveId": "pin-missile", "level": 1 },
                 { "moveId": "sand-attack", "level": 1 },
-                { "moveId": "submission", "level": 1 },
                 { "moveId": "switcheroo", "level": 1 },
                 { "moveId": "tackle", "level": 1 },
                 { "moveId": "snarl", "level": 9 },
@@ -73689,7 +73367,6 @@
                 "taunt",
                 "helping-hand",
                 "trick",
-                "revenge",
                 "brick-break",
                 "hyper-voice",
                 "fake-tears",
@@ -73814,7 +73491,6 @@
                 { "moveId": "strength-sap", "level": 35 },
                 { "moveId": "power-gem", "level": 40 },
                 { "moveId": "night-shade", "level": 45 },
-                { "moveId": "grudge", "level": 50 },
                 { "moveId": "mirror-coat", "level": 55 }
             ],
             "tmMoves": [
@@ -73853,7 +73529,6 @@
                 "snowscape",
                 "will-o-wisp",
                 "facade",
-                "revenge",
                 "rock-tomb",
                 "icicle-spear",
                 "iron-defense",
@@ -73894,8 +73569,7 @@
                 { "moveId": "slam", "level": 50 },
                 { "moveId": "leaf-blade", "level": 55 },
                 { "moveId": "final-gambit", "level": 60 },
-                { "moveId": "brave-bird", "level": 65 },
-                { "moveId": "meteor-assault", "level": 70 }
+                { "moveId": "brave-bird", "level": 65 }
             ],
             "tmMoves": [
                 "swords-dance",
@@ -73913,7 +73587,6 @@
                 "facade",
                 "helping-hand",
                 "superpower",
-                "revenge",
                 "brick-break",
                 "iron-defense",
                 "leaf-blade",
@@ -74048,7 +73721,6 @@
                 { "moveId": "scary-face", "level": 1 },
                 { "moveId": "disable", "level": 12 },
                 { "moveId": "brutal-swing", "level": 16 },
-                { "moveId": "crafty-shield", "level": 20 },
                 { "moveId": "hex", "level": 24 },
                 { "moveId": "mean-look", "level": 28 },
                 { "moveId": "slam", "level": 32 },
@@ -74082,7 +73754,6 @@
                 "facade",
                 "taunt",
                 "trick",
-                "revenge",
                 "skill-swap",
                 "imprison",
                 "fake-tears",
@@ -74830,7 +74501,6 @@
                 { "moveId": "stomp", "level": 42 },
                 { "moveId": "slam", "level": 49 },
                 { "moveId": "discharge", "level": 56 },
-                { "moveId": "bolt-beak", "level": 63 },
                 { "moveId": "dragon-pulse", "level": 70 },
                 { "moveId": "dragon-rush", "level": 77 }
             ],
@@ -74894,7 +74564,6 @@
                 { "moveId": "freeze-dry", "level": 42 },
                 { "moveId": "slam", "level": 49 },
                 { "moveId": "discharge", "level": 56 },
-                { "moveId": "bolt-beak", "level": 63 },
                 { "moveId": "icicle-crash", "level": 70 },
                 { "moveId": "blizzard", "level": 77 }
             ],
@@ -74956,7 +74625,6 @@
                 { "moveId": "stomp", "level": 42 },
                 { "moveId": "super-fang", "level": 49 },
                 { "moveId": "crunch", "level": 56 },
-                { "moveId": "fishious-rend", "level": 63 },
                 { "moveId": "dragon-pulse", "level": 70 },
                 { "moveId": "dragon-rush", "level": 77 }
             ],
@@ -75016,7 +74684,6 @@
                 { "moveId": "freeze-dry", "level": 42 },
                 { "moveId": "super-fang", "level": 49 },
                 { "moveId": "crunch", "level": 56 },
-                { "moveId": "fishious-rend", "level": 63 },
                 { "moveId": "icicle-crash", "level": 70 },
                 { "moveId": "blizzard", "level": 77 }
             ],
@@ -84353,7 +84020,6 @@
                 { "moveId": "bite", "level": 12 },
                 { "moveId": "super-fang", "level": 15 },
                 { "moveId": "crunch", "level": 18 },
-                { "moveId": "hyper-fang", "level": 21 },
                 { "moveId": "sucker-punch", "level": 24 },
                 { "moveId": "double-edge", "level": 27 }
             ],
@@ -84389,7 +84055,6 @@
                 { "moveId": "bite", "level": 12 },
                 { "moveId": "super-fang", "level": 15 },
                 { "moveId": "crunch", "level": 18 },
-                { "moveId": "hyper-fang", "level": 26 },
                 { "moveId": "sucker-punch", "level": 34 },
                 { "moveId": "double-edge", "level": 42 }
             ],
@@ -85614,7 +85279,6 @@
         },
         "10115": {
             "levelUpMoves": [
-                { "moveId": "shadow-bone", "level": 0 },
                 { "moveId": "double-edge", "level": 1 },
                 { "moveId": "false-swipe", "level": 1 },
                 { "moveId": "fire-spin", "level": 1 },
@@ -85631,7 +85295,6 @@
                 { "moveId": "bone-rush", "level": 31 },
                 { "moveId": "will-o-wisp", "level": 36 },
                 { "moveId": "endeavor", "level": 42 },
-                { "moveId": "bonemerang", "level": 48 },
                 { "moveId": "thrash", "level": 54 },
                 { "moveId": "flare-blitz", "level": 60 }
             ],
@@ -86124,7 +85787,6 @@
                 "facade",
                 "helping-hand",
                 "superpower",
-                "revenge",
                 "brick-break",
                 "leaf-blade",
                 "close-combat",
@@ -86640,7 +86302,6 @@
                 { "moveId": "strength-sap", "level": 35 },
                 { "moveId": "power-gem", "level": 40 },
                 { "moveId": "night-shade", "level": 45 },
-                { "moveId": "grudge", "level": 50 },
                 { "moveId": "mirror-coat", "level": 55 }
             ],
             "tmMoves": [
@@ -86698,7 +86359,6 @@
                 "confuse-ray",
                 "haze",
                 "destiny-bond",
-                "nature-power",
                 "water-pulse",
                 "head-smash"
             ],
@@ -86913,8 +86573,7 @@
                 "yawn",
                 "hammer-arm",
                 "incinerate",
-                "freeze-dry",
-                "power-up-punch"
+                "freeze-dry"
             ],
             "tutorMoves": []
         },
@@ -87086,7 +86745,6 @@
                 { "moveId": "night-shade", "level": 8 },
                 { "moveId": "disable", "level": 12 },
                 { "moveId": "brutal-swing", "level": 16 },
-                { "moveId": "crafty-shield", "level": 20 },
                 { "moveId": "hex", "level": 24 },
                 { "moveId": "mean-look", "level": 28 },
                 { "moveId": "slam", "level": 32 },
@@ -87147,13 +86805,11 @@
                 { "moveId": "water-gun", "level": 1 },
                 { "moveId": "endure", "level": 5 },
                 { "moveId": "mud-shot", "level": 10 },
-                { "moveId": "revenge", "level": 15 },
                 { "moveId": "metal-sound", "level": 20 },
                 { "moveId": "sucker-punch", "level": 25 },
                 { "moveId": "iron-defense", "level": 30 },
                 { "moveId": "bounce", "level": 35 },
                 { "moveId": "muddy-water", "level": 40 },
-                { "moveId": "snap-trap", "level": 45 },
                 { "moveId": "flail", "level": 50 },
                 { "moveId": "fissure", "level": 55 }
             ],
@@ -87177,7 +86833,6 @@
                 "crunch",
                 "uproar",
                 "facade",
-                "revenge",
                 "rock-tomb",
                 "muddy-water",
                 "iron-defense",
