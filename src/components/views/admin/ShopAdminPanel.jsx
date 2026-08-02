@@ -38,7 +38,8 @@ export default function ShopAdminPanel({
       itemId: config.itemId,
       price: config.price,
       stock: config.stock,
-      isPersistent: config.isPersistent
+      isPersistent: config.isPersistent,
+      ...(config.maxPurchasePerMember > 0 ? { maxPurchasePerMember: config.maxPurchasePerMember } : {}),
     };
     
     const updatedShopData = JSON.parse(JSON.stringify(shopData));

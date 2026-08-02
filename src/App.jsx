@@ -18,6 +18,7 @@ import MobileTrainerCard from './components/views/_mobile/MobileTrainerCard';
 import PokedexView from './components/views/PokedexView';
 import PokemonView from './components/views/PokemonView';
 import ItemsView from './components/views/ItemsView';
+import BerryFarmView from './components/views/BerryFarmView';
 import ProfileView from './components/views/ProfileView';
 import AdminView from './components/views/AdminView';
 import ContestAdminPanel from './components/views/admin/ContestAdminPanel';
@@ -1414,6 +1415,13 @@ export default function App() {
     updateSelfTitle,
   } = gameState;
   useDeployRefresh({ defer: Boolean(encounterPokemon || firstCatchPokemon) });
+  // 나무열매 농장 탭은 아직 사이드바 메뉴에 없음(의도적, 테스트 끝나면 정식 노출 예정).
+  // 그동안은 관리자가 브라우저 콘솔에서 goToBerryFarm()을 호출해 접근할 수 있다.
+  useEffect(() => {
+    if (!isAdmin) return undefined;
+    window.goToBerryFarm = () => setCurrentTab('berryFarm');
+    return () => { delete window.goToBerryFarm; };
+  }, [isAdmin, setCurrentTab]);
   const isFeaturePage = currentTab !== 'home';
   const isMembersPage = currentTab === 'members';
   const isTopMenuPage = ['notice', 'world', 'system', 'qna'].includes(currentTab);
@@ -1970,6 +1978,7 @@ return (
           {currentTab === 'npcs' && <div key="npcs"><NpcView members={displayMembers} isLoading={isMembersLoading} isAdmin={isAdmin} allMoves={allMoves} allPokemonMaster={allPokemonMaster} npcOnly /></div>}
           {currentTab === 'pokemon' && <PokemonView />}
           {currentTab === 'items' && <ItemsView />}
+          {currentTab === 'berryFarm' && <BerryFarmView />}
           {currentTab === 'shop' && <ShopView />}
           {currentTab === 'cooking' && <CookingView />}
           {currentTab === 'camping' && (
@@ -2102,6 +2111,7 @@ return (
 		  {currentTab === 'npcs' && <div key="npcs"><NpcView members={displayMembers} isLoading={isMembersLoading} isAdmin={isAdmin} allMoves={allMoves} allPokemonMaster={allPokemonMaster} npcOnly onSwitchTab={setCurrentTab} /></div>}
 		  {currentTab === 'pokemon' && <PokemonView />}
 		  {currentTab === 'items' && <ItemsView />}
+		  {currentTab === 'berryFarm' && <BerryFarmView />}
 		  {currentTab === 'shop' && <ShopView />}
 		  {currentTab === 'cooking' && <CookingView />}
 		  {currentTab === 'camping' && (

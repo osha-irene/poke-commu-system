@@ -294,6 +294,15 @@ export default function PeriodItemPanel({
                             className="w-16 border border-cyan-300 rounded px-2 py-1 text-xs text-center focus:border-cyan-500 focus:outline-none bg-white"
                             placeholder="재고"
                           />
+                          <input
+                            type="number"
+                            min="0"
+                            value={periodPoolItem.maxPurchasePerMember || 0}
+                            onChange={(e) => handleUpdatePeriodPoolField(periodPoolItem.itemId, 'maxPurchasePerMember', e.target.value)}
+                            className="w-20 border border-cyan-300 rounded px-2 py-1 text-xs text-center focus:border-cyan-500 focus:outline-none bg-white"
+                            title="인당 최대 구매 개수 (평생 누적, 0이면 무제한)"
+                            placeholder="구매제한"
+                          />
                         </div>
                       </div>
                       <button

@@ -31,6 +31,7 @@ import { usePokemonCatch } from './game/usePokemonCatch';
 import { useRegionExplore } from './game/useRegionExplore';
 import { useItemEffects } from './items/useItemEffects';
 import { useCamping } from './game/useCamping';
+import { useBerryFarm } from './game/useBerryFarm';
 
 // 관리자 훅들 (맨 마지막)
 import { useAdminMembers } from './admin/useAdminMembers';
@@ -100,6 +101,7 @@ export default function useGameState() {
     updateOwnedPokemonByUniqueId,
     updateHistoryField,
     adjustNumericField,
+    updateFieldTransaction,
     changeCurrentUserPassword,
     isLoading: isAuthLoading
   } = useAuth(members, setMembers, allPokemonDataParsed);
@@ -203,6 +205,14 @@ export default function useGameState() {
   allPokemonMaster,
   allItems
 );
+
+  // 나무열매 농장
+  const berryFarmHook = useBerryFarm(
+    currentUser,
+    updateInventory,
+    updateFieldTransaction,
+    allItems
+  );
 
   // 관리자 기능 (3개 훅으로 분리)
   const adminMembers = useAdminMembers(
@@ -534,6 +544,7 @@ export default function useGameState() {
     updatePokedexMemo: (pokemonNumber, memo) => 
       gameDataUpdatePokedexMemo(pokemonNumber, memo, currentUser),
 	  camping: campingHook,
+    berryFarm: berryFarmHook,
     
     // 포켓몬 관리
     movePokemonToParty: restPokemonManagement.movePokemonToParty,

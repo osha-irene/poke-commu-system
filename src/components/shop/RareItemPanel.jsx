@@ -88,14 +88,27 @@ export default function RareItemPanel({
 
   const handleUpdateRarePoolPrice = async (itemId, newPrice) => {
     const updatedShopData = JSON.parse(JSON.stringify(shopData));
-    updatedShopData.rareItemPool = (updatedShopData.rareItemPool || []).map(i => 
+    updatedShopData.rareItemPool = (updatedShopData.rareItemPool || []).map(i =>
       i.itemId === itemId ? { ...i, price: parseInt(newPrice) || 0 } : i
     );
-    
+
     try {
       await onUpdateShop(updatedShopData);
     } catch (error) {
       console.error('희귀템 가격 수정 실패:', error);
+    }
+  };
+
+  const handleUpdateRarePoolMaxPurchase = async (itemId, newValue) => {
+    const updatedShopData = JSON.parse(JSON.stringify(shopData));
+    updatedShopData.rareItemPool = (updatedShopData.rareItemPool || []).map(i =>
+      i.itemId === itemId ? { ...i, maxPurchasePerMember: Math.max(0, parseInt(newValue) || 0) } : i
+    );
+
+    try {
+      await onUpdateShop(updatedShopData);
+    } catch (error) {
+      console.error('희귀템 구매제한 수정 실패:', error);
     }
   };
 
@@ -272,6 +285,15 @@ export default function RareItemPanel({
                             onChange={(e) => handleUpdateRarePoolPrice(rareItem.itemId, e.target.value)}
                             className="w-20 border border-purple-300 rounded px-2 py-1 text-xs text-center focus:border-purple-500 focus:outline-none bg-white"
                             placeholder="가격"
+                          />
+                          <input
+                            type="number"
+                            min="0"
+                            value={rareItem.maxPurchasePerMember || 0}
+                            onChange={(e) => handleUpdateRarePoolMaxPurchase(rareItem.itemId, e.target.value)}
+                            className="w-20 border border-purple-300 rounded px-2 py-1 text-xs text-center focus:border-purple-500 focus:outline-none bg-white"
+                            title="인당 최대 구매 개수 (평생 누적, 0이면 무제한)"
+                            placeholder="구매제한"
                           />
                         </div>
                       </div>

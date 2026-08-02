@@ -43,6 +43,16 @@ const createTradeBot = ({ db, pokemonData, findMemberByAccount, extractMentionAc
   let evolutionsData = [];
   try { evolutionsData = require('./data/evolutions.json').evolutions || []; } catch (_) {}
 
+  // ⭐ 특성/한글이름 조회용 - 앱 쪽(src/hooks/pokemon/useEvolution.js)의 진화 처리와
+  // 동일하게, 교환 진화도 특성/종족값을 정확히 갱신하기 위해 필요하다.
+  let abilityKoreanByEn = {};
+  try {
+    (require('./data/abilities.json').abilities || []).forEach((a) => {
+      if (a.nameEn) abilityKoreanByEn[a.nameEn.toLowerCase()] = a.name;
+    });
+  } catch (_) {}
+  const getAbilityKoreanName = (nameEn) => abilityKoreanByEn[String(nameEn || '').toLowerCase()] || null;
+
   const stripFormSuffix = (name = '') => name.replace(/\s*\([^)]*(?:의\s*모습|모드)[^)]*\)\s*$/, '').trim();
 
   const checkTradeEvolution = (pokemon) => {
@@ -65,11 +75,44 @@ const createTradeBot = ({ db, pokemonData, findMemberByAccount, extractMentionAc
     return template ? { evo, template } : null;
   };
 
+  // 진화형에서도 기존 특성을 그대로 쓸 수 있는지 확인하고, 아예 없어졌다면(숨겨진 특성이었다면
+  // 진화형의 숨겨진 특성으로, 아니면 진화형의 일반 특성 중) 랜덤으로 새로 배정한다.
+  // (src/hooks/pokemon/useEvolution.js의 resolveEvolvedAbility와 동일한 로직)
+  const resolveEvolvedAbility = (pokemon, template) => {
+    const wasHidden = Boolean(pokemon.isHiddenAbility);
+    const abilitiesEn = template.abilitiesEn || [];
+    const hiddenAbilityEn = template.hiddenAbilityEn || null;
+    const currentAbilityEn = pokemon.abilityEn;
+
+    const stillHasAbility = wasHidden
+      ? Boolean(currentAbilityEn) && currentAbilityEn === hiddenAbilityEn
+      : Boolean(currentAbilityEn) && abilitiesEn.includes(currentAbilityEn);
+
+    if (stillHasAbility) {
+      return { ability: pokemon.ability, abilityEn: currentAbilityEn, isHiddenAbility: wasHidden };
+    }
+    if (wasHidden && hiddenAbilityEn) {
+      return { ability: getAbilityKoreanName(hiddenAbilityEn) || hiddenAbilityEn, abilityEn: hiddenAbilityEn, isHiddenAbility: true };
+    }
+    if (abilitiesEn.length > 0) {
+      const randomAbilityEn = abilitiesEn[Math.floor(Math.random() * abilitiesEn.length)];
+      return { ability: getAbilityKoreanName(randomAbilityEn) || randomAbilityEn, abilityEn: randomAbilityEn, isHiddenAbility: false };
+    }
+    return { ability: pokemon.ability, abilityEn: currentAbilityEn, isHiddenAbility: wasHidden };
+  };
+
   const applyTradeEvolution = (pokemon, template) => {
     const isDefault = !pokemon.nickname || pokemon.nickname === pokemon.name || pokemon.nickname === stripFormSuffix(pokemon.name) || pokemon.nickname === pokemon.nameEn;
     const evolved = {
       ...pokemon,
       number: template.number, originalNumber: template.originalNumber || template.number,
+      // ⭐ findPokemonTemplate(src/utils/pokemonBaseStats.js)이 pokemonId를 number보다 먼저
+      // 매치 조건으로 쓰기 때문에, 이걸 안 갱신하면 진화 후에도 특성패치 등 여러 기능이
+      // 진화 전 종족 데이터(예: 파오리)를 계속 참조하게 된다 - 반드시 함께 갱신해야 한다.
+      pokemonId: template.number,
+      abilitiesEn: template.abilitiesEn || pokemon.abilitiesEn,
+      hiddenAbilityEn: template.hiddenAbilityEn ?? pokemon.hiddenAbilityEn,
+      ...resolveEvolvedAbility(pokemon, template),
       name: stripFormSuffix(template.name || pokemon.name), nameEn: template.nameEn || pokemon.nameEn,
       displayName: stripFormSuffix(template.name || pokemon.displayName),
       nickname: isDefault ? null : pokemon.nickname,
@@ -78,7 +121,12 @@ const createTradeBot = ({ db, pokemonData, findMemberByAccount, extractMentionAc
       spriteUrl: template.imageUrl || template.spriteUrl || pokemon.spriteUrl,
       heldItem: null, evolvedAt: new Date().toISOString(), evolvedFrom: pokemon.number || pokemon.originalNumber,
     };
-    if (template.baseStats != null) evolved.baseStats = template.baseStats;
+    // ⭐ template.baseStats(서브 객체)는 실제 데이터에 존재한 적이 없어 항상 무시되던 죽은
+    // 코드였다 - allPokemon.json은 baseHp/baseAttack/... 개별 필드라, 그동안 교환 진화한
+    // 포켓몬은 진화 전 종족값을 계속 갖고 있었다. 개별 필드로 갱신한다.
+    ['baseHp', 'baseAttack', 'baseDefense', 'baseSpAttack', 'baseSpDefense', 'baseSpeed'].forEach((key) => {
+      if (template[key] != null) evolved[key] = template[key];
+    });
     Object.keys(evolved).forEach(k => { if (evolved[k] === undefined) delete evolved[k]; });
     return evolved;
   };

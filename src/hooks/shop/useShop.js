@@ -49,7 +49,10 @@ const enrichItemData = (itemTemplate, allItems) => {
     cost: fullItem.cost,
     price: itemTemplate.price || fullItem.cost,
     stock: itemTemplate.stock || 999,
-    isPersistent: itemTemplate.isPersistent || false
+    isPersistent: itemTemplate.isPersistent || false,
+    // 요일별 아이템(dailyItems)은 normalizeShopData가 매 로드마다 이 함수로 재생성하므로,
+    // 여기 없는 필드(예: maxPurchasePerMember)는 로드할 때마다 조용히 사라진다 - 반드시 여기도 실어줘야 한다.
+    ...(itemTemplate.maxPurchasePerMember > 0 ? { maxPurchasePerMember: itemTemplate.maxPurchasePerMember } : {}),
   };
 };
 
@@ -192,7 +195,9 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
           itemId: selectedRareItem.itemId,
           price: selectedRareItem.price,
           stock: 1,
-          lastRefresh: today
+          lastRefresh: today,
+          // Firebase set()은 undefined 값을 허용하지 않으므로, 풀에 설정된 값이 있을 때만 싣는다.
+          ...(selectedRareItem.maxPurchasePerMember > 0 ? { maxPurchasePerMember: selectedRareItem.maxPurchasePerMember } : {}),
         };
       }
 
@@ -203,7 +208,8 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
           itemId: selectedPeriodItem.itemId,
           price: selectedPeriodItem.price,
           stock: selectedPeriodItem.stock ?? 10,
-          lastRefresh: currentWeek
+          lastRefresh: currentWeek,
+          ...(selectedPeriodItem.maxPurchasePerMember > 0 ? { maxPurchasePerMember: selectedPeriodItem.maxPurchasePerMember } : {}),
         };
         baseData.periodItemPool = baseData.periodItemPool.filter((_, idx) => idx !== randomIndex);
       }

@@ -1320,7 +1320,7 @@
             "pp": 30,
             "priority": 0,
             "description": "저리 가루를 많이 흩뿌려서 상대를 마비 상태로 만든다.",
-            "contestEffect": "지정한 포켓몬 하트를 절반으로 줄임",
+            "contestEffect": "지정한 포켓몬이 이번 턴에서 획득하는 어필(♥)를 절반으로 줄임",
             "contestAppeals": 2,
             "contestJam": 1,
             "generation": "i",
@@ -14477,7 +14477,7 @@
             "accuracy": 90,
             "pp": 10,
             "priority": 0,
-            "description": "멋들어진 몸놀림으로 공격한다. 입속에 싸리용이 있으면 싸리용의 모습에 따라 능력이 올라간다.", 
+            "description": "멋들어진 몸놀림으로 공격한다. 입속에 싸리용이 있으면 싸리용의 모습에 따라 능력이 올라간다.",
             "contestType": null,
             "contestEffect": "",
             "contestAppeals": 0,
@@ -15328,7 +15328,7 @@
             "accuracy": 85,
             "pp": 10,
             "priority": 0,
-            "description": "휘저은 차를 대포처럼 발사해 준 데미지의 절반을 HP로 회복한다. 화상 상태로 만들 때도 있다.",
+            "description": "끈적끈적한 물엿을 폭발시킨다. 상대를 물엿범벅 상태로 만들어서 3턴 동안 계속 스피드를 떨어뜨린다.",
             "contestType": null,
             "contestEffect": "",
             "contestAppeals": 0,
@@ -51860,12 +51860,7 @@
                 "bulldoze",
                 "body-press"
             ],
-            "eggMoves": [
-                "take-down",
-                "curse",
-                "gravity",
-                "wide-guard"
-            ],
+            "eggMoves": ["take-down", "curse", "gravity", "wide-guard"],
             "tutorMoves": ["meteor-beam"]
         },
         "525": {
@@ -52036,12 +52031,7 @@
                 "acrobatics",
                 "speed-swap"
             ],
-            "eggMoves": [
-                "supersonic",
-                "flatter",
-                "knock-off",
-                "roost"
-            ],
+            "eggMoves": ["supersonic", "flatter", "knock-off", "roost"],
             "tutorMoves": ["expanding-force", "dual-wingbeat"]
         },
         "528": {
@@ -54705,12 +54695,7 @@
                 "sludge-wave",
                 "round"
             ],
-            "eggMoves": [
-                "sand-attack",
-                "haze",
-                "curse",
-                "rollout"
-            ],
+            "eggMoves": ["sand-attack", "haze", "curse", "rollout"],
             "tutorMoves": ["corrosive-gas"]
         },
         "569": {
@@ -61695,12 +61680,7 @@
                 "bulldoze",
                 "work-up"
             ],
-            "eggMoves": [
-                "seismic-toss",
-                "quick-guard",
-                "quash",
-                "power-trip"
-            ],
+            "eggMoves": ["seismic-toss", "quick-guard", "quash", "power-trip"],
             "tutorMoves": ["lash-out", "coaching"]
         },
         "675": {
@@ -61834,11 +61814,7 @@
                 "snarl",
                 "confide"
             ],
-            "eggMoves": [
-                "mimic",
-                "role-play",
-                "work-up"
-            ],
+            "eggMoves": ["mimic", "role-play", "work-up"],
             "tutorMoves": [
                 "snore",
                 "iron-tail",

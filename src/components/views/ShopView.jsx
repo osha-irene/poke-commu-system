@@ -1734,7 +1734,9 @@ export default function ShopView() {
                   <div className="shop-scene__shop-empty">랜덤박스가 없습니다.</div>
                 )
               ) : scenePermanentItems.length > 0 ? (
-                scenePermanentItems.map((shopItem) => (
+                scenePermanentItems.map((shopItem) => {
+                  const maxPerMember = Number(shopItem.maxPurchasePerMember ?? shopItem.item?.maxPurchasePerMember) || 0;
+                  return (
                   <button
                     className={`shop-scene__shop-item ${selectedShopItem?.item?.id === shopItem.item.id ? 'is-selected' : ''}`}
                     key={shopItem.item.id}
@@ -1757,13 +1759,15 @@ export default function ShopView() {
                       <span className="shop-scene__shop-item-name">{shopItem.item.name}</span>
                       <span className="shop-scene__shop-item-meta">
                         {Number(shopItem.price || 0).toLocaleString()}원
-                        {shopItem.stock !== 99 && shopItem.stock != null ? ` / ${shopItem.stock}개 제한` : ''}
+                        {shopItem.stock !== 99 && shopItem.stock != null ? ` / 재고 ${shopItem.stock}개` : ''}
+                        {maxPerMember > 0 ? ` / 1인 ${maxPerMember}개` : ''}
                         {' / '}
                         {renderOwnedCountMeta(shopItem.item)}
                       </span>
                     </span>
                   </button>
-                ))
+                  );
+                })
               ) : (
                 <div className="shop-scene__shop-empty">상시판매 상품이 없습니다.</div>
               )}

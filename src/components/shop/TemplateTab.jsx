@@ -269,6 +269,19 @@ export default function TemplateTab({
                               />
                             </div>
 
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs text-gray-600 whitespace-nowrap" title="평생 누적, 0이면 무제한">구매제한</span>
+                              <input
+                                type="number"
+                                min="0"
+                                value={item.maxPurchasePerMember || 0}
+                                onChange={(e) => updateTemplateItem(day.id, item.itemId, 'maxPurchasePerMember', e.target.value)}
+                                disabled={!editMode}
+                                title="인당 최대 구매 개수 (평생 누적, 0이면 무제한)"
+                                className={`w-16 border ${editMode ? 'border-gray-300' : 'border-transparent'} rounded px-2 py-1 text-sm text-center focus:border-indigo-500 focus:outline-none bg-white`}
+                              />
+                            </div>
+
                             {editMode && (
                               <button
                                 onClick={() => removeTemplateItem(day.id, item.itemId)}

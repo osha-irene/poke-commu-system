@@ -389,6 +389,42 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
     return result;
   };
 
+  // ⭐ adjustNumericField가 숫자 하나만 다루는 것과 달리, berryFarm 슬롯처럼 "여러 액션이 동시에
+  // 건드릴 수 있는 구조를 가진 값"을 임의 경로(예: "berryFarm/0")에 대해 runTransaction으로
+  // 안전하게 갱신하는 범용 헬퍼. mutate가 undefined를 반환하면 트랜잭션을 중단한다(예: 이미
+  // 다른 요청이 그 슬롯을 먼저 채운 경우).
+  const updateFieldTransaction = async (fieldPath, mutate) => {
+    if (!currentUser) {
+      console.error('❌ currentUser가 없음!');
+      return { committed: false };
+    }
+
+    const fieldRef = ref(database, `members/${currentUser.id}/${fieldPath}`);
+    const result = await runTransaction(fieldRef, (current) => {
+      const next = mutate(current);
+      if (next === undefined) return; // 트랜잭션 중단
+      return JSON.parse(JSON.stringify(next, (key, value) => (value === undefined ? null : value)));
+    });
+
+    if (result.committed) {
+      const newValue = result.snapshot.val();
+      const [topField, ...rest] = fieldPath.split('/');
+      const applyLocal = (obj) => {
+        if (!obj) return obj;
+        if (rest.length === 0) return { ...obj, [topField]: newValue };
+        return { ...obj, [topField]: { ...(obj[topField] || {}), [rest[0]]: newValue } };
+      };
+      setCurrentUser(prev => applyLocal(prev));
+      setMembers(prevMembers => (
+        prevMembers[currentUser.id]
+          ? { ...prevMembers, [currentUser.id]: applyLocal(prevMembers[currentUser.id]) }
+          : prevMembers
+      ));
+    }
+
+    return result;
+  };
+
   // ⭐ 보유 포켓몬(caughtPokemon) 전용 트랜잭션 업데이트 - 항상 Firebase의 최신 배열을 기준으로
   // 병합되므로, 짧은 시간 안에 여러 마리를 연달아 잡아도(각 호출이 클로저에 갇힌 옛 배열을 기준으로
   // 통째로 덮어써서) 먼저 잡은 포켓몬이 사라지는 문제가 없다.
@@ -510,6 +546,7 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
     updateOwnedPokemonByUniqueId,
     updateHistoryField,
     adjustNumericField,
+    updateFieldTransaction,
     changeCurrentUserPassword,
     isLoading: isAuthLoading
   };

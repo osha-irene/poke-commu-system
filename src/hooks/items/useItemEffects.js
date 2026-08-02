@@ -6,6 +6,7 @@ import { isRareCandyItem, resolveItemData } from '../../utils/itemUsageRules';
 import { isSoyYYNItem } from '../../utils/specialItemUtils';
 import { findPokemonTemplate } from '../../utils/pokemonBaseStats';
 import { getPokemonAbilities } from '../../utils/abilityUtils';
+import { MAX_BERRY_PLANTER_SLOTS } from '../game/useBerryFarm';
 
 // 아이템 nameEn → 변경 가능한 포켓몬 originalNumber 목록
 const FORM_CHANGE_ITEMS = {
@@ -186,6 +187,24 @@ export const useItemEffects = (
       await consumeItem(item);
       await adjustNumericField('bonusPokemonSlots', boost);
       alert(`${item.name}을(를) 사용해서 최대 포켓몬 슬롯이 +${boost} 되었습니다!`);
+      return;
+    }
+
+    // 나무열매플랜터 슬롯 +1 — maxPokemonSlots와 동일한 패턴, 최대 개수(4개)는 여기서도
+    // 방어적으로 한 번 더 막는다(구매 제한은 상점에서 이미 걸지만 이중 안전장치).
+    if (src.specialEffect === 'unlockBerryPlanter') {
+      const currentSlots = Number(currentUser.berryPlanterSlots) || 0;
+      if (currentSlots >= MAX_BERRY_PLANTER_SLOTS) {
+        alert(`나무열매플랜터는 최대 ${MAX_BERRY_PLANTER_SLOTS}개까지만 가질 수 있습니다!`);
+        return;
+      }
+      if (typeof adjustNumericField !== 'function') {
+        alert('현재 이 아이템을 사용할 수 없습니다.');
+        return;
+      }
+      await consumeItem(item);
+      await adjustNumericField('berryPlanterSlots', 1);
+      alert(`${item.name}을(를) 사용해서 나무열매플랜터 슬롯이 +1 되었습니다!`);
       return;
     }
 
@@ -407,7 +426,9 @@ export const useItemEffects = (
       return;
     }
 
-    if (isSoyYYNItem(item) || isSoyYYNItem(itemData) || isSoyYYNItem(src)) {
+    // isSoyYYNItem은 이름으로 고정 지정된 예전 방식이고, 이제는 관리자가 커스텀 아이템
+    // 생성 화면에서 specialEffect를 'effortEdit'으로 직접 선택해서 만들 수도 있다.
+    if (isSoyYYNItem(item) || isSoyYYNItem(itemData) || isSoyYYNItem(src) || src.specialEffect === 'effortEdit') {
       if (onRequestStatSelection) {
         releaseItemUseLock();
         onRequestStatSelection(item, pokemon, 'effortEdit', 0);

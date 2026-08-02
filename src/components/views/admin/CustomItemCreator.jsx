@@ -306,6 +306,8 @@ export function CustomItemModal({ editItem = null, onSubmit, onClose }) {
                   <option value="conditionSelect">컨디션 상승 (항목 선택)</option>
                   <option value="trainerExp">멤버(트레이너) 경험치 상승</option>
                   <option value="maxPokemonSlots">최대 포켓몬 슬롯 상승</option>
+                  <option value="effortEdit">노력치 자유배분</option>
+                  <option value="unlockBerryPlanter">나무열매플랜터 슬롯 추가</option>
                 </select>
               </>
             )}
@@ -441,6 +443,28 @@ export function CustomItemModal({ editItem = null, onSubmit, onClose }) {
                 </p>
               )}
               <p className="text-xs text-teal-600 mt-1">💡 포켓몬이 아닌 사용한 멤버(트레이너) 개인에게만 누적 적용됩니다</p>
+            </div>
+          )}
+
+          {/* 노력치 자유배분 */}
+          {itemData.specialEffect === 'effortEdit' && (
+            <div className="bg-orange-50 rounded-lg p-4 border-2 border-orange-200">
+              <h4 className="font-bold text-orange-800 mb-2">🧮 노력치 자유배분</h4>
+              <p className="text-xs text-orange-700">
+                → 사용 시 대상 포켓몬을 고른 뒤, 능력치별 노력치를 원하는 대로 자유롭게 재분배할 수 있는 화면이 뜹니다 (총합 510 제한은 그대로 적용).
+              </p>
+              <p className="text-xs text-orange-600 mt-1">💡 별도 상승량 입력은 필요 없습니다.</p>
+            </div>
+          )}
+
+          {/* 나무열매플랜터 슬롯 추가 */}
+          {itemData.specialEffect === 'unlockBerryPlanter' && (
+            <div className="bg-lime-50 rounded-lg p-4 border-2 border-lime-200">
+              <h4 className="font-bold text-lime-800 mb-2">🌱 나무열매플랜터 슬롯 추가</h4>
+              <p className="text-xs text-lime-700">
+                → 사용 시 사용한 멤버 본인의 나무열매 농장 플랜터 슬롯이 +1 됩니다 (최대 4개까지).
+              </p>
+              <p className="text-xs text-lime-600 mt-1">💡 별도 상승량 입력은 필요 없습니다.</p>
             </div>
           )}
 

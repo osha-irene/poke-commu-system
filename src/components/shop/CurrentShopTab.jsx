@@ -285,6 +285,23 @@ export default function CurrentShopTab({
                         />
                       </div>
                     )}
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-xs text-gray-600 whitespace-nowrap" title="평생 누적, 0이면 무제한">구매제한</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={shopItem.maxPurchasePerMember || 0}
+                        onChange={(e) => handleUpdateItem(
+                          shopItem.itemId,
+                          shopItem.type,
+                          shopItem.day,
+                          'maxPurchasePerMember',
+                          e.target.value
+                        )}
+                        title="인당 최대 구매 개수 (평생 누적, 0이면 무제한)"
+                        className="w-full border border-gray-300 rounded px-1 py-1 text-xs text-center focus:border-indigo-500 focus:outline-none bg-white"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

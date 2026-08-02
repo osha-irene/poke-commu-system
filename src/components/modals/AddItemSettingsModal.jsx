@@ -14,10 +14,12 @@ export default function AddItemSettingsModal({
 }) {
   const [price, setPrice] = useState(0);
   const [stock, setStock] = useState(99);
+  const [maxPurchasePerMember, setMaxPurchasePerMember] = useState(0);
 
   useEffect(() => {
     if (selectedItem) {
       setPrice(selectedItem.cost || 100);
+      setMaxPurchasePerMember(Number(selectedItem.maxPurchasePerMember) || 0);
     }
   }, [selectedItem]);
 
@@ -30,6 +32,9 @@ export default function AddItemSettingsModal({
       stock,
       isPersistent: false,
       itemType: 'permanent',
+      // 0(무제한)이면 슬롯에 아예 필드를 안 실어서, 아이템 자체에 설정된 값(있다면)이
+      // 그대로 통과되게 한다 - 상점 슬롯 값은 있을 때만 아이템 기본값을 덮어쓴다.
+      ...(maxPurchasePerMember > 0 ? { maxPurchasePerMember } : {}),
     });
   };
 
@@ -89,8 +94,21 @@ export default function AddItemSettingsModal({
               />
             </div>
 
-            <button 
-              onClick={handleSubmit} 
+            <div>
+              <label className="block text-base font-semibold text-gray-700 mb-2">
+                인당 최대 구매 개수 (평생 누적, 0이면 무제한)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={maxPurchasePerMember}
+                onChange={(e) => setMaxPurchasePerMember(Math.max(0, parseInt(e.target.value) || 0))}
+                className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              />
+            </div>
+
+            <button
+              onClick={handleSubmit}
               className="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold text-xl hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
             >
               <Plus size={20} />
