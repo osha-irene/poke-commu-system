@@ -1529,17 +1529,6 @@
             }
         },
         {
-            "from": 264,
-            "to": 862,
-            "fromName": "linoone",
-            "toName": "obstagoon",
-            "condition": {
-                "type": "level",
-                "level": 35,
-                "timeOfDay": "night"
-            }
-        },
-        {
             "from": 265,
             "to": 266,
             "fromName": "wurmple",

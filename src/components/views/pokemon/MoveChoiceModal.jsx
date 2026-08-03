@@ -2,6 +2,9 @@
 import React, { useState } from 'react';
 import { X, AlertCircle, Zap, Shield, Star } from 'lucide-react';
 import { getTypeNameKr, getTypeColor } from '../../../styles/theme';
+import { getContestTypeColor, getContestEffectKo } from '../../../utils/contestMoveData';
+import RibbonIcon from '../../icons/RibbonIcon';
+import CrossedSwordsIcon from '../../icons/CrossedSwordsIcon';
 
 const CATEGORY_NAMES_KR = {
   'physical': '물리',
@@ -19,6 +22,13 @@ const getCategoryIcon = (category) => {
   }
 };
 
+const repeatContestIcon = (value, icon) => {
+  const count = Number(value) || 0;
+  return icon.repeat(count);
+};
+
+const hasContestValue = (value) => Number(value) > 0;
+
 const KIND_LABEL = {
   tm: '기술머신',
   egg: '유전 기술'
@@ -35,6 +45,7 @@ export default function MoveChoiceModal({
 }) {
   const [selectedNewMove, setSelectedNewMove] = useState(null);
   const [selectedOldMove, setSelectedOldMove] = useState(null);
+  const [contestMode, setContestMode] = useState(false);
 
   // currentMoves는 { moveId, currentPp, learnedAt }만 들고 있어서, 이름/타입 등
   // 표시에 필요한 정보는 allMoves에서 찾아 합쳐야 한다 (MovesList.jsx와 동일한 방식).
@@ -82,13 +93,37 @@ export default function MoveChoiceModal({
         <div className="min-h-0 flex-1 overflow-y-auto p-6 space-y-6">
           {/* 배울 기술 목록 */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-600 mb-2">배울 기술 선택 ({options.length}개 중)</h3>
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
+              배울 기술 선택 ({options.length}개 중)
+              <button
+                type="button"
+                onClick={() => setContestMode(false)}
+                title="배틀 정보 보기"
+                className={`p-1 rounded transition-all ${
+                  !contestMode ? 'bg-indigo-100' : 'grayscale opacity-40 hover:opacity-70'
+                }`}
+              >
+                <CrossedSwordsIcon size={15} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setContestMode(true)}
+                title="콘테스트 정보 보기"
+                className={`p-1 rounded transition-all ${
+                  contestMode ? 'bg-pink-100' : 'grayscale opacity-40 hover:opacity-70'
+                }`}
+              >
+                <RibbonIcon size={15} />
+              </button>
+            </h3>
             <div className="space-y-2">
               {options.map((move) => {
                 const typeKr = getTypeNameKr(move.type) || move.type;
                 const typeColors = getTypeColor(typeKr);
                 const categoryKr = CATEGORY_NAMES_KR[move.category] || move.category;
                 const isSelected = selectedNewMove?.id === move.id;
+                const hasContestData = !!move.contestType;
+                const contestColors = getContestTypeColor(move.contestType);
 
                 return (
                   <button
@@ -108,20 +143,56 @@ export default function MoveChoiceModal({
                           >
                             {typeKr}
                           </span>
-                          <span className="flex items-center gap-1 text-xs text-gray-600">
-                            {getCategoryIcon(move.category)}
-                            <span className="font-medium">{categoryKr}</span>
-                          </span>
-                        </div>
-                        <div className="flex gap-3 text-xs text-gray-600 mb-1">
-                          {move.power > 0 && (
-                            <span><span className="text-gray-500">위력</span> <span className="font-bold text-orange-600">{move.power}</span></span>
+                          {!contestMode && (
+                            <span className="flex items-center gap-1 text-xs text-gray-600">
+                              {getCategoryIcon(move.category)}
+                              <span className="font-medium">{categoryKr}</span>
+                            </span>
                           )}
-                          <span><span className="text-gray-500">명중</span> <span className="font-bold text-blue-600">{move.accuracy}</span></span>
-                          <span><span className="text-gray-500">PP</span> <span className="font-bold text-green-600">{move.pp}</span></span>
                         </div>
-                        {move.description && (
-                          <p className="text-xs text-gray-500 leading-relaxed">{move.description}</p>
+                        {contestMode ? (
+                          hasContestData ? (
+                            <>
+                              <div className="flex items-center gap-3 mb-1">
+                                <span
+                                  className="text-xs px-2 py-1 rounded font-bold inline-flex items-center justify-center"
+                                  style={{ backgroundColor: contestColors.bg, color: contestColors.text }}
+                                >
+                                  {move.contestType}
+                                </span>
+                                {hasContestValue(move.contestAppeals) && (
+                                  <span className="flex items-center gap-1 text-xs">
+                                    <span className="text-pink-500 font-bold">어필</span>
+                                    <span className="text-pink-500 font-bold tracking-wide">{repeatContestIcon(move.contestAppeals, '♥')}</span>
+                                  </span>
+                                )}
+                                {hasContestValue(move.contestJam) && (
+                                  <span className="flex items-center gap-1 text-xs">
+                                    <span className="text-indigo-400 font-bold">방해</span>
+                                    <span className="text-indigo-400 font-bold tracking-wide">{repeatContestIcon(move.contestJam, '♡')}</span>
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-gray-500 leading-relaxed">
+                                {getContestEffectKo(move.contestEffect) || '효과 정보 없음'}
+                              </p>
+                            </>
+                          ) : (
+                            <div className="text-xs text-gray-400 italic">콘테스트 데이터 없음</div>
+                          )
+                        ) : (
+                          <>
+                            <div className="flex gap-3 text-xs text-gray-600 mb-1">
+                              {move.power > 0 && (
+                                <span><span className="text-gray-500">위력</span> <span className="font-bold text-orange-600">{move.power}</span></span>
+                              )}
+                              <span><span className="text-gray-500">명중</span> <span className="font-bold text-blue-600">{move.accuracy}</span></span>
+                              <span><span className="text-gray-500">PP</span> <span className="font-bold text-green-600">{move.pp}</span></span>
+                            </div>
+                            {move.description && (
+                              <p className="text-xs text-gray-500 leading-relaxed">{move.description}</p>
+                            )}
+                          </>
                         )}
                       </div>
                       {isSelected && (
@@ -148,6 +219,8 @@ export default function MoveChoiceModal({
                   {resolvedCurrentMoves.map((move) => {
                     const typeKr = getTypeNameKr(move.type) || move.type;
                     const moveTypeColors = getTypeColor(typeKr);
+                    const hasContestData = !!move.contestType;
+                    const contestColors = getContestTypeColor(move.contestType);
                     return (
                       <button
                         key={move.moveId}
@@ -166,26 +239,62 @@ export default function MoveChoiceModal({
                               >
                                 {typeKr}
                               </span>
-                              <span className="flex items-center gap-1 text-xs text-gray-600">
-                                {getCategoryIcon(move.category)}
-                                <span className="font-medium">{CATEGORY_NAMES_KR[move.category] || move.category}</span>
-                              </span>
-                            </div>
-                            <div className="flex gap-3 text-xs text-gray-600 mb-1">
-                              {move.power > 0 && (
-                                <span><span className="text-gray-500">위력</span> <span className="font-bold text-orange-600">{move.power}</span></span>
+                              {!contestMode && (
+                                <span className="flex items-center gap-1 text-xs text-gray-600">
+                                  {getCategoryIcon(move.category)}
+                                  <span className="font-medium">{CATEGORY_NAMES_KR[move.category] || move.category}</span>
+                                </span>
                               )}
-                              <span><span className="text-gray-500">명중</span> <span className="font-bold text-blue-600">{move.accuracy}</span></span>
-                              <span><span className="text-gray-500">PP</span> <span className="font-bold text-green-600">{move.pp}</span></span>
                             </div>
+                            {contestMode ? (
+                              hasContestData ? (
+                                <>
+                                  <div className="flex items-center gap-3 mb-1">
+                                    <span
+                                      className="text-xs px-2 py-1 rounded font-bold inline-flex items-center justify-center"
+                                      style={{ backgroundColor: contestColors.bg, color: contestColors.text }}
+                                    >
+                                      {move.contestType}
+                                    </span>
+                                    {hasContestValue(move.contestAppeals) && (
+                                      <span className="flex items-center gap-1 text-xs">
+                                        <span className="text-pink-500 font-bold">어필</span>
+                                        <span className="text-pink-500 font-bold tracking-wide">{repeatContestIcon(move.contestAppeals, '♥')}</span>
+                                      </span>
+                                    )}
+                                    {hasContestValue(move.contestJam) && (
+                                      <span className="flex items-center gap-1 text-xs">
+                                        <span className="text-indigo-400 font-bold">방해</span>
+                                        <span className="text-indigo-400 font-bold tracking-wide">{repeatContestIcon(move.contestJam, '♡')}</span>
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-gray-500 leading-relaxed">
+                                    {getContestEffectKo(move.contestEffect) || '효과 정보 없음'}
+                                  </p>
+                                </>
+                              ) : (
+                                <div className="text-xs text-gray-400 italic">콘테스트 데이터 없음</div>
+                              )
+                            ) : (
+                              <>
+                                <div className="flex gap-3 text-xs text-gray-600 mb-1">
+                                  {move.power > 0 && (
+                                    <span><span className="text-gray-500">위력</span> <span className="font-bold text-orange-600">{move.power}</span></span>
+                                  )}
+                                  <span><span className="text-gray-500">명중</span> <span className="font-bold text-blue-600">{move.accuracy}</span></span>
+                                  <span><span className="text-gray-500">PP</span> <span className="font-bold text-green-600">{move.pp}</span></span>
+                                </div>
+                                {move.description && (
+                                  <p className="text-xs text-gray-500 leading-relaxed">{move.description}</p>
+                                )}
+                              </>
+                            )}
                           </div>
                           {selectedOldMove === move.moveId && (
                             <div className="flex-shrink-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center">✓</div>
                           )}
                         </div>
-                        {move.description && (
-                          <p className="text-xs text-gray-500 leading-relaxed">{move.description}</p>
-                        )}
                       </button>
                     );
                   })}
