@@ -1642,6 +1642,20 @@ body.mbr-overlay-open .mbr-page {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.mbr-pk-evs {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+  margin-top: 7px;
+}
+.mbr-pk-ev {
+  display: flex; align-items: center; justify-content: center; gap: 2px;
+  background: #fff; border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 999px; height: 15px;
+}
+.mbr-pk-ev-label { font-size: 9px; font-weight: 800; color: #111; line-height: 1; }
+.mbr-pk-ev-val { font-size: 9px; font-weight: 300; color: #111; line-height: 1; }
+.mbr-pk-ev-val--zero { color: #bbb; }
 
 /* 엔트리 카드 목록 */
 .mbr-entry-cards { display: flex; flex-direction: column; gap: 8px; }

@@ -206,7 +206,7 @@ const getPokemonAbility = pokemon => {
   return koFromEn || stored;
 };
 
-function PkDetailCard({ pokemon, large, isPartner = false, showPartyDetails = false, allMoves = [] }) {
+function PkDetailCard({ pokemon, large, isPartner = false, showPartyDetails = false, allMoves = [], showEffort = false }) {
   const types = getPokemonTypes(pokemon);
   const ability = getPokemonAbility(pokemon);
   const moveEntries = showPartyDetails
@@ -214,6 +214,16 @@ function PkDetailCard({ pokemon, large, isPartner = false, showPartyDetails = fa
         .map(move => allMoves.find(m => m.id === move.moveId))
         .filter(Boolean)
     : [];
+  const effort = pokemon?.effort || pokemon?.evs || {};
+  const evs = [
+    { label: 'H', val: effort.hp ?? 0 },
+    { label: 'A', val: effort.attack ?? effort.atk ?? 0 },
+    { label: 'B', val: effort.defense ?? effort.def ?? 0 },
+    { label: 'C', val: effort.specialAttack ?? effort.spa ?? 0 },
+    { label: 'D', val: effort.specialDefense ?? effort.spd ?? 0 },
+    { label: 'S', val: effort.speed ?? effort.spe ?? 0 },
+  ];
+  const hasEffort = showEffort && evs.some(ev => ev.val > 0);
   return (
     <div className={`mbr-pk${large ? ' mbr-pk--large' : ''}${isPartner ? ' mbr-pk--partner' : ''}`}>
       {isPartner && <Heart className="mbr-pk-partner-heart" size={18} aria-label="partner" fill="currentColor" strokeWidth={1.8} />}
@@ -283,6 +293,16 @@ function PkDetailCard({ pokemon, large, isPartner = false, showPartyDetails = fa
                 </span>
               );
             })}
+          </div>
+        )}
+        {hasEffort && (
+          <div className="mbr-pk-evs">
+            {evs.map(({ label, val }) => (
+              <div key={label} className="mbr-pk-ev">
+                <span className="mbr-pk-ev-label">{label}</span>
+                <span className={`mbr-pk-ev-val${val > 0 ? '' : ' mbr-pk-ev-val--zero'}`}>{val}</span>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -546,7 +566,7 @@ function MemberOverlay({ member, onClose, isAdmin, closing, allMoves = [] }) {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                       {entryPokemon.map((p, i) => (
                         <Reveal key={p.uniqueId || i} delay={i * 40}>
-                        <PkDetailCard pokemon={p} large={false} isPartner={isSamePokemon(p, partner)} showPartyDetails={!!member.npcShowPartyDetails} allMoves={allMoves} />
+                        <PkDetailCard pokemon={p} large={false} isPartner={isSamePokemon(p, partner)} showPartyDetails={!!member.npcShowPartyDetails} allMoves={allMoves} showEffort={hasEntryGroups && activeEntryTab === 'beyond'} />
                         </Reveal>
                       ))}
                     </div>
