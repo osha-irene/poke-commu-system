@@ -450,7 +450,9 @@ const toPackedSet = (pokemonData, pokemon) => {
     ability,
     moves: moves.length ? moves : ['tackle'],
     nature: pokemon.nature || 'Hardy',
-    evs: pokemon.evs || {},
+    // 마스토돈 배틀봇 배틀은 오리진 난이도(BattleView의 배틀 아이템 사용 ON)와 동일하게
+    // 기초포인트(노력치)를 배틀에 반영하지 않는다 — 항상 0으로 고정.
+    evs: { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 },
     ivs: pokemon.ivs || {},
     gender: pokemon.gender === 'male' ? 'M' : pokemon.gender === 'female' ? 'F' : '',
     shiny: Boolean(pokemon.isShiny),

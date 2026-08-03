@@ -282,6 +282,26 @@ const categories = CATEGORIES.map(cat => {
 
   const isFormChangeItem = (item) => Boolean(FORM_CHANGE_ITEM_POKEMON[getItemNameEn(item)]);
 
+  // 한 번에 여러 개를 몰아 쓸 수 있는 아이템인지 — 폼체인지/기술습득/특성패치처럼 매번
+  // 대상(폼·기술·특성)을 골라야 하는 아이템, 진화 아이템, 별도 선택 모달을 여는 아이템은
+  // "N개 사용"이 의미가 없거나 위험해서 제외하고 1개씩만 쓰게 한다.
+  const supportsBatchUse = (item) => {
+    const details = getItemDetails(item);
+    if (isSoyYYNItem(item) || isSoyYYNItem(details.itemData)) return false;
+    if (details.itemData?.isTM) return false;
+    if (isFormChangeItem(item)) return false;
+    if (String(details.category || '').includes('evolution')) return false;
+    return ![
+      'qnaItemPermit',
+      'abilityPatch',
+      'learnAnyTmMove',
+      'learnAnyEggMove',
+      'conditionSelect',
+      'evSelect',
+      'effortEdit',
+    ].includes(details.specialEffect);
+  };
+
   const getAvailableForms = (item, pokemon) => {
     if (!getPokemonFormCandidates || !pokemon) return [];
     const itemNameEn = getItemNameEn(item);
@@ -297,13 +317,17 @@ const categories = CATEGORIES.map(cat => {
 
   const handleUse = () => {
     const details = getItemDetails(selectedItem);
+    // 폼체인지/기술습득 등 대상별 선택이 필요한 아이템은 quantity를 무시하고 항상 1개씩만 쓴다.
+    const useQuantity = supportsBatchUse(selectedItem)
+      ? Math.min(Math.max(1, quantity), selectedItem.count)
+      : 1;
 
     // 멤버(트레이너) 본인 대상 효과: 포켓몬 선택 없이 바로 사용
     if (details.specialEffect === 'trainerExp') {
       if (onUseItem && selectedItem) {
         // resolveItemData의 name/nameEn 기반 매칭이 다른 아이템으로 오매칭되는 경우가 있어,
         // 화면에서 이미 정확히 찾아낸 specialEffect/boostAmount를 직접 실어 보냄
-        onUseItem({ ...selectedItem, specialEffect: 'trainerExp', boostAmount: details.boostAmount }, null);
+        onUseItem({ ...selectedItem, specialEffect: 'trainerExp', boostAmount: details.boostAmount }, null, null, useQuantity);
         closeModal();
       } else {
         alert('아이템 사용 기능이 연결되지 않았습니다.');
@@ -314,7 +338,7 @@ const categories = CATEGORIES.map(cat => {
     // 최대 포켓몬 슬롯 상승 아이템: 포켓몬 선택 없이 바로 사용
     if (details.specialEffect === 'maxPokemonSlots') {
       if (onUseItem && selectedItem) {
-        onUseItem({ ...selectedItem, specialEffect: 'maxPokemonSlots', boostAmount: details.boostAmount }, null);
+        onUseItem({ ...selectedItem, specialEffect: 'maxPokemonSlots', boostAmount: details.boostAmount }, null, null, useQuantity);
         closeModal();
       } else {
         alert('아이템 사용 기능이 연결되지 않았습니다.');
@@ -325,7 +349,7 @@ const categories = CATEGORIES.map(cat => {
     // 나무열매플랜터 슬롯 추가 아이템: 포켓몬 선택 없이 바로 사용
     if (details.specialEffect === 'unlockBerryPlanter') {
       if (onUseItem && selectedItem) {
-        onUseItem({ ...selectedItem, specialEffect: 'unlockBerryPlanter' }, null);
+        onUseItem({ ...selectedItem, specialEffect: 'unlockBerryPlanter' }, null, null, useQuantity);
         closeModal();
       } else {
         alert('아이템 사용 기능이 연결되지 않았습니다.');
@@ -368,11 +392,28 @@ const categories = CATEGORIES.map(cat => {
     }
 
     if (onUseItem && selectedItem) {
-      onUseItem(selectedItem, selectedPokemon);
+      onUseItem(selectedItem, selectedPokemon, null, useQuantity);
       closeModal();
     } else {
       alert('아이템 사용 기능이 연결되지 않았습니다.');
     }
+  };
+
+  const renderUseQuantityPicker = () => {
+    if (!selectedItem || selectedItem.count <= 1 || !supportsBatchUse(selectedItem)) return null;
+    return (
+      <div className="mb-4">
+        <label className="block text-sm font-semibold text-gray-700 mb-2">사용 개수</label>
+        <input
+          type="number"
+          min="1"
+          max={selectedItem.count}
+          value={quantity}
+          onChange={(e) => setQuantity(Math.min(selectedItem.count, Math.max(1, parseInt(e.target.value) || 1)))}
+          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-indigo-500 focus:outline-none"
+        />
+      </div>
+    );
   };
 
   const handleSell = () => {
@@ -681,6 +722,7 @@ const categories = CATEGORIES.map(cat => {
                               <p className="text-gray-700 mb-4 text-center">
                                 <span className="text-purple-700 font-semibold">본인의 경험치</span>가 {details.boostAmount}점 상승합니다.
                               </p>
+                              {renderUseQuantityPicker()}
                               <div className="flex gap-2">
                                 <button onClick={closeModal} className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
                                   취소
@@ -704,6 +746,7 @@ const categories = CATEGORIES.map(cat => {
                               <p className="text-gray-700 mb-4 text-center">
                                 <span className="text-teal-700 font-semibold">{details.name}</span>을(를) 사용하시겠습니까?
                               </p>
+                              {renderUseQuantityPicker()}
                               <div className="flex gap-2">
                                 <button onClick={closeModal} className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
                                   취소
@@ -727,6 +770,7 @@ const categories = CATEGORIES.map(cat => {
                               <p className="text-gray-700 mb-4 text-center">
                                 <span className="text-lime-700 font-semibold">{details.name}</span>을(를) 사용하시겠습니까?
                               </p>
+                              {renderUseQuantityPicker()}
                               <div className="flex gap-2">
                                 <button onClick={closeModal} className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
                                   취소
@@ -959,6 +1003,7 @@ const categories = CATEGORIES.map(cat => {
                                 </div>
                               )}
                             </div>
+                            {selectedPokemon && renderUseQuantityPicker()}
                             <div className="flex gap-2">
                               <button onClick={closeModal} className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
                                 취소

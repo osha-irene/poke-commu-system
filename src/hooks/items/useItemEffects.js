@@ -64,8 +64,13 @@ export const useItemEffects = (
   const systemSettingsRef = useRef(systemSettings);
   useEffect(() => { systemSettingsRef.current = systemSettings; }, [systemSettings]);
 
-  const useItemOnPokemon = async (item, pokemon, selectedFormNameEn = null) => {
+  const useItemOnPokemon = async (item, pokemon, selectedFormNameEn = null, quantity = 1) => {
     if (!currentUser || !item) return;
+
+    // 폼체인지/기술습득/특성패치처럼 대상(폼·기술·특성)을 매번 골라야 하는 분기는 이 값을
+    // 참조하지 않으므로 항상 1개씩만 처리된다 — ItemsView 쪽에서도 그런 아이템에는 애초에
+    // quantity 선택 UI를 보여주지 않는다(supportsBatchUse).
+    const requestedQuantity = Math.max(1, Math.floor(Number(quantity) || 1));
 
     const itemKey = item?.itemId || item?.id || item?.name || 'unknown-item';
     const pokemonKey = pokemon?.uniqueId || pokemon?.id || pokemon?.name || 'unknown-pokemon';
@@ -99,7 +104,7 @@ export const useItemEffects = (
     // (아이템을 연달아 여러 번 쓰거나 여러 포켓몬에게 나눠 쓸 때, 뒤 호출이 스테일한 인벤토리
     //  기준으로 통째로 덮어써서 앞선 소모분이 되살아나는 문제를 막기 위함)
     // extraUpdates(예: trainerExp)는 인벤토리와 무관한 필드라 별도 updateCurrentUser로 처리한다.
-    const consumeItem = async (item, extraUpdates = {}) => {
+    const consumeItem = async (item, extraUpdates = {}, count = 1) => {
       if (currentUser.isSuperAdmin) {
         if (Object.keys(extraUpdates).length > 0) updateCurrentUser(extraUpdates);
         return;
@@ -124,12 +129,13 @@ export const useItemEffects = (
       };
 
       await updateInventory((currentInventory = []) => {
-        let consumed = false;
+        let remaining = Math.max(1, Math.floor(Number(count) || 1));
         return currentInventory
           .map(i => {
-            if (!consumed && matchesItem(i)) {
-              consumed = true;
-              return { ...i, count: i.count - 1 };
+            if (remaining > 0 && matchesItem(i)) {
+              const take = Math.min(remaining, i.count);
+              remaining -= take;
+              return { ...i, count: i.count - take };
             }
             return i;
           })
@@ -165,8 +171,16 @@ export const useItemEffects = (
         alert('이 아이템은 상승량이 설정되어 있지 않습니다!');
         return;
       }
-      consumeItem(item, { trainerExp: (Number(currentUser.trainerExp) || 0) + boost });
-      alert(`${item.name}을(를) 사용해서 경험치를 ${boost} 얻었습니다!`);
+      const totalBoost = boost * requestedQuantity;
+      // trainerExp도 다른 트레이너 대상 누적값과 동일하게 클로저 스냅샷이 아니라
+      // runTransaction 기반 adjustNumericField로 처리한다 (CLAUDE.md 규칙).
+      if (typeof adjustNumericField !== 'function') {
+        alert('현재 이 아이템을 사용할 수 없습니다.');
+        return;
+      }
+      await consumeItem(item, {}, requestedQuantity);
+      await adjustNumericField('trainerExp', totalBoost);
+      alert(`${item.name}을(를) ${requestedQuantity}개 사용해서 경험치를 ${totalBoost} 얻었습니다!`);
       return;
     }
 
@@ -184,17 +198,20 @@ export const useItemEffects = (
         alert('현재 이 아이템을 사용할 수 없습니다.');
         return;
       }
-      await consumeItem(item);
-      await adjustNumericField('bonusPokemonSlots', boost);
-      alert(`${item.name}을(를) 사용해서 최대 포켓몬 슬롯이 +${boost} 되었습니다!`);
+      const totalBoost = boost * requestedQuantity;
+      await consumeItem(item, {}, requestedQuantity);
+      await adjustNumericField('bonusPokemonSlots', totalBoost);
+      alert(`${item.name}을(를) ${requestedQuantity}개 사용해서 최대 포켓몬 슬롯이 +${totalBoost} 되었습니다!`);
       return;
     }
 
     // 나무열매플랜터 슬롯 +1 — maxPokemonSlots와 동일한 패턴, 최대 개수(4개)는 여기서도
     // 방어적으로 한 번 더 막는다(구매 제한은 상점에서 이미 걸지만 이중 안전장치).
+    // 여러 개를 한 번에 쓰더라도 실제로 채울 수 있는 자리만큼만 소모한다.
     if (src.specialEffect === 'unlockBerryPlanter') {
       const currentSlots = Number(currentUser.berryPlanterSlots) || 0;
-      if (currentSlots >= MAX_BERRY_PLANTER_SLOTS) {
+      const room = MAX_BERRY_PLANTER_SLOTS - currentSlots;
+      if (room <= 0) {
         alert(`나무열매플랜터는 최대 ${MAX_BERRY_PLANTER_SLOTS}개까지만 가질 수 있습니다!`);
         return;
       }
@@ -202,9 +219,10 @@ export const useItemEffects = (
         alert('현재 이 아이템을 사용할 수 없습니다.');
         return;
       }
-      await consumeItem(item);
-      await adjustNumericField('berryPlanterSlots', 1);
-      alert(`${item.name}을(를) 사용해서 나무열매플랜터 슬롯이 +1 되었습니다!`);
+      const actualUse = Math.min(requestedQuantity, room);
+      await consumeItem(item, {}, actualUse);
+      await adjustNumericField('berryPlanterSlots', actualUse);
+      alert(`${item.name}을(를) ${actualUse}개 사용해서 나무열매플랜터 슬롯이 +${actualUse} 되었습니다!`);
       return;
     }
 
@@ -436,33 +454,8 @@ export const useItemEffects = (
       }
     }
 
-    if (src.friendshipBoost) {
-      const baseBoost = src.friendshipBoost;
-      const boost = Math.max(0, Math.floor(baseBoost * (pokemon.friendshipGainMultiplier || 1)));
-      const current = pokemon.friendship || 0;
-      updatedPokemon.friendship = Math.min(255, current + boost);
-      if (updatedPokemon.friendship > current) {
-        effectMessages.push('친밀도가 ' + updatedPokemon.friendship + '으로 올랐습니다!');
-      }
-      itemUsed = true;
-    }
-
-    if (src.ivBoost && !src.isCustom) {
-      const boost = src.ivBoost;
-      Object.keys(boost).forEach(stat => {
-        if (updatedPokemon.ivs && updatedPokemon.ivs[stat] !== undefined) {
-          const current = updatedPokemon.ivs[stat] || 0;
-          const newValue = Math.min(31, current + boost[stat]);
-          updatedPokemon.ivs[stat] = newValue;
-          if (newValue > current) {
-            effectMessages.push((statNameKo[stat] || stat) + ' 개체값이 ' + newValue + '으로 올랐습니다!');
-          }
-          itemUsed = true;
-        }
-      });
-    }
-
-    // 사용자가 항목을 선택하는 conditionSelect / evSelect
+    // 사용자가 항목을 선택하는 conditionSelect / evSelect — 실제 값은 모달에서 고른 뒤
+    // effortEdit 2단계로 재호출되므로 quantity와 무관하게 항상 1회성 분기다.
     if (src.specialEffect === 'conditionSelect' || src.specialEffect === 'evSelect') {
       if (onRequestStatSelection) {
         releaseItemUseLock();
@@ -471,60 +464,131 @@ export const useItemEffects = (
       }
     }
 
-    if (src.evBoost) {
-      const boost = src.evBoost;
-      const effort = {
-        hp: 0,
-        attack: 0,
-        defense: 0,
-        specialAttack: 0,
-        specialDefense: 0,
-        speed: 0,
-        ...(updatedPokemon.effort || updatedPokemon.effortValues || {})
-      };
+    const specialEffect = src.specialEffect;
+    const hasBoostConfig = Boolean(
+      src.friendshipBoost ||
+      (src.ivBoost && !src.isCustom) ||
+      src.evBoost ||
+      src.conditionBoost ||
+      (specialEffect && typeof specialEffect === 'string' && specialEffect.length > 10)
+    );
 
-      Object.keys(boost).forEach(stat => {
-        if (effort[stat] !== undefined) {
-          const current = Number(effort[stat] || 0);
-          const totalEV = Object.values(effort).reduce((sum, v) => sum + Number(v || 0), 0);
-          const remaining = 510 - totalEV;
-          const actualBoost = Math.min(Number(boost[stat]) || 0, remaining, 252 - current);
+    // friendshipBoost/ivBoost/evBoost/conditionBoost는 N개를 한 번에 써도 똑같은 로직을
+    // requestedQuantity번 반복 적용한다. 어느 회차든 스탯이 하나도 안 오르면(전부 캡에
+    // 걸림) 그 즉시 멈춰서 나머지를 낭비하지 않는다.
+    let boostUses = 0;
+    if (hasBoostConfig) {
+      for (let use = 0; use < requestedQuantity; use += 1) {
+        let changedThisUse = false;
 
-          if (actualBoost > 0) {
-            const newValue = current + actualBoost;
-            effort[stat] = newValue;
-            effectMessages.push((statNameKo[stat] || stat) + ' 기초포인트 ' + actualBoost + '이 상승하였다!');
-            itemUsed = true;
+        if (src.friendshipBoost) {
+          const baseBoost = src.friendshipBoost;
+          const boost = Math.max(0, Math.floor(baseBoost * (pokemon.friendshipGainMultiplier || 1)));
+          const current = updatedPokemon.friendship || 0;
+          const nextValue = Math.min(255, current + boost);
+          if (nextValue > current) {
+            updatedPokemon.friendship = nextValue;
+            changedThisUse = true;
           }
         }
-      });
 
-      updatedPokemon.effort = effort;
-      if (updatedPokemon.effortValues) {
-        updatedPokemon.effortValues = effort;
-      }
-    }
-
-    if (src.conditionBoost) {
-      const boost = src.conditionBoost;
-      const condMax = Number(systemSettingsRef.current?.conditionMax) > 0
-        ? Number(systemSettingsRef.current.conditionMax)
-        : 100;
-      Object.keys(boost).forEach(condKey => {
-        const current = Number(updatedPokemon.condition?.[condKey] || 0);
-        if (current >= condMax) { itemUsed = true; return; }
-        const newValue = Math.min(condMax, current + boost[condKey]);
-        if (newValue > current) {
-          updatedPokemon.condition[condKey] = newValue;
-          effectMessages.push((statNameKo[condKey] || condKey) + '이(가) ' + newValue + '으로 올랐습니다!');
+        if (src.ivBoost && !src.isCustom) {
+          const boost = src.ivBoost;
+          Object.keys(boost).forEach(stat => {
+            if (updatedPokemon.ivs && updatedPokemon.ivs[stat] !== undefined) {
+              const current = updatedPokemon.ivs[stat] || 0;
+              const nextValue = Math.min(31, current + boost[stat]);
+              if (nextValue > current) {
+                updatedPokemon.ivs[stat] = nextValue;
+                changedThisUse = true;
+              }
+            }
+          });
         }
-        itemUsed = true;
-      });
-    }
 
-    const specialEffect = src.specialEffect;
-    if (specialEffect && typeof specialEffect === 'string' && specialEffect.length > 10) {
-      effectMessages.push('효과: ' + specialEffect);
+        if (src.evBoost) {
+          const boost = src.evBoost;
+          const effort = {
+            hp: 0,
+            attack: 0,
+            defense: 0,
+            specialAttack: 0,
+            specialDefense: 0,
+            speed: 0,
+            ...(updatedPokemon.effort || updatedPokemon.effortValues || {})
+          };
+
+          Object.keys(boost).forEach(stat => {
+            if (effort[stat] !== undefined) {
+              const current = Number(effort[stat] || 0);
+              const totalEV = Object.values(effort).reduce((sum, v) => sum + Number(v || 0), 0);
+              const remaining = 510 - totalEV;
+              const actualBoost = Math.min(Number(boost[stat]) || 0, remaining, 252 - current);
+
+              if (actualBoost > 0) {
+                effort[stat] = current + actualBoost;
+                changedThisUse = true;
+              }
+            }
+          });
+
+          updatedPokemon.effort = effort;
+          if (updatedPokemon.effortValues) {
+            updatedPokemon.effortValues = effort;
+          }
+        }
+
+        if (src.conditionBoost) {
+          const boost = src.conditionBoost;
+          const condMax = Number(systemSettingsRef.current?.conditionMax) > 0
+            ? Number(systemSettingsRef.current.conditionMax)
+            : 100;
+          Object.keys(boost).forEach(condKey => {
+            const current = Number(updatedPokemon.condition?.[condKey] || 0);
+            if (current >= condMax) return;
+            const nextValue = Math.min(condMax, current + boost[condKey]);
+            if (nextValue > current) {
+              updatedPokemon.condition[condKey] = nextValue;
+              changedThisUse = true;
+            }
+          });
+        }
+
+        if (!changedThisUse) break;
+        boostUses += 1;
+      }
+
+      // 회차별 메시지를 그대로 쌓으면 여러 개 사용 시 줄이 너무 길어지므로, 시작값 대비
+      // 최종 순증분만 한 줄씩 계산해서 보여준다.
+      if (updatedPokemon.friendship > (pokemon.friendship || 0)) {
+        effectMessages.push('친밀도가 ' + updatedPokemon.friendship + '으로 올랐습니다!');
+      }
+      if (src.ivBoost && !src.isCustom) {
+        Object.keys(src.ivBoost).forEach(stat => {
+          const before = pokemon.ivs?.[stat] || 0;
+          const after = updatedPokemon.ivs?.[stat] || 0;
+          if (after > before) effectMessages.push((statNameKo[stat] || stat) + ' 개체값이 ' + after + '으로 올랐습니다!');
+        });
+      }
+      if (src.evBoost) {
+        const beforeEffort = pokemon.effort || pokemon.effortValues || {};
+        Object.keys(src.evBoost).forEach(stat => {
+          const before = Number(beforeEffort[stat] || 0);
+          const after = Number(updatedPokemon.effort?.[stat] || 0);
+          if (after > before) effectMessages.push((statNameKo[stat] || stat) + ' 기초포인트 ' + (after - before) + '이 상승하였다!');
+        });
+      }
+      if (src.conditionBoost) {
+        Object.keys(src.conditionBoost).forEach(condKey => {
+          const before = Number(pokemon.condition?.[condKey] || 0);
+          const after = Number(updatedPokemon.condition?.[condKey] || 0);
+          if (after > before) effectMessages.push((statNameKo[condKey] || condKey) + '이(가) ' + after + '으로 올랐습니다!');
+        });
+      }
+      if (specialEffect && typeof specialEffect === 'string' && specialEffect.length > 10) {
+        effectMessages.push('효과: ' + specialEffect);
+      }
+
       itemUsed = true;
     }
 
@@ -541,36 +605,53 @@ export const useItemEffects = (
     }
 
     if (itemUsed) {
+      const consumeCount = Math.max(1, boostUses);
       updatePokemonInUser(updatedPokemon);
       const name = pokemon.nickname || pokemon.name;
       const detail = effectMessages.length > 0 ? '\n\n' + effectMessages.join('\n') : '\n\n이미 최대치입니다.';
-      alert(name + '에게 ' + item.name + '을(를) 사용했습니다!' + detail);
-      consumeItem(item);
+      const countLabel = consumeCount > 1 ? `을(를) ${consumeCount}개` : '을(를)';
+      alert(name + '에게 ' + item.name + countLabel + ' 사용했습니다!' + detail);
+      consumeItem(item, {}, consumeCount);
       return;
     }
 
     // EV 아이템
     if (isEVItem(itemData?.nameEn || itemData?.name)) {
-      const result = applyEVItem(
-        pokemon,
-        itemData.nameEn || itemData.name,
-        updatePokemonInUser
-      );
-
-      if (result.success) {
-        alert(result.message);
-        consumeItem(item);
-      } else {
-        alert(result.message);
+      const evItemName = itemData.nameEn || itemData.name;
+      // pokemon(클로저 인자)은 requestedQuantity번 반복해도 갱신되지 않으므로, 회차마다
+      // 실제로 반영될 pokemon 스냅샷을 로컬에서 직접 이어받아 다음 회차에 넘긴다.
+      let workingPokemon = pokemon;
+      let evUses = 0;
+      let lastMessage = '';
+      for (let use = 0; use < requestedQuantity; use += 1) {
+        const result = applyEVItem(workingPokemon, evItemName, (nextPokemon) => { workingPokemon = nextPokemon; });
+        if (!result.success) {
+          if (evUses === 0) {
+            alert(result.message);
+            return;
+          }
+          break;
+        }
+        evUses += 1;
+        lastMessage = result.message;
       }
+
+      await updatePokemonInUser(workingPokemon);
+      await consumeItem(item, {}, evUses);
+      alert(evUses > 1 ? `${lastMessage}\n\n(총 ${evUses}개 사용)` : lastMessage);
       return;
     }
 
     // 이상한사탕
     if (isRareCandyItem(item, itemData)) {
-      const success = await handleRareCandyWithEvolution(pokemon.uniqueId);
-      if (success) {
-        consumeItem(item);
+      let candyUses = 0;
+      for (let use = 0; use < requestedQuantity; use += 1) {
+        const success = await handleRareCandyWithEvolution(pokemon.uniqueId);
+        if (!success) break;
+        candyUses += 1;
+      }
+      if (candyUses > 0) {
+        await consumeItem(item, {}, candyUses);
       }
       return;
     }

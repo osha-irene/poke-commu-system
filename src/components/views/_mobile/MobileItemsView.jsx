@@ -102,6 +102,25 @@ export default function MobileItemsView() {
 
   const isFormChangeItem = (item) => Boolean(FORM_CHANGE_ITEM_POKEMON[getItemNameEn(item)]);
 
+  // 데스크톱 ItemsView.jsx와 동일한 기준 — 폼체인지/기술습득/특성패치 등 매번 대상을
+  // 골라야 하는 아이템, 진화 아이템은 "N개 사용"이 의미가 없거나 위험해서 제외한다.
+  const supportsBatchUse = (item) => {
+    const details = getItemDetails(item);
+    if (isSoyYYNItem(item) || isSoyYYNItem(details.itemData)) return false;
+    if (details.itemData?.isTM) return false;
+    if (isFormChangeItem(item)) return false;
+    if (String(details.itemData?.category || item.category || '').includes('evolution')) return false;
+    return ![
+      'qnaItemPermit',
+      'abilityPatch',
+      'learnAnyTmMove',
+      'learnAnyEggMove',
+      'conditionSelect',
+      'evSelect',
+      'effortEdit',
+    ].includes(details.specialEffect);
+  };
+
   const getAvailableForms = (item, pokemon) => {
     if (!getPokemonFormCandidates || !pokemon) return [];
     const forms = getPokemonFormCandidates(pokemon);
@@ -143,25 +162,30 @@ export default function MobileItemsView() {
 
   const handleUse = () => {
     const details = selectedItem ? getItemDetails(selectedItem) : null;
+    // 폼체인지/기술습득 등 대상별 선택이 필요한 아이템은 quantity를 무시하고 항상 1개씩만 쓴다.
+    const useQuantity = selectedItem && supportsBatchUse(selectedItem)
+      ? Math.min(Math.max(1, quantity), selectedItem.count)
+      : 1;
+
     if (details?.specialEffect === 'trainerExp') {
       if (onUseItem && selectedItem) {
         // resolveItemData의 name/nameEn 기반 매칭이 다른 아이템으로 오매칭되는 경우가 있어,
         // 화면에서 이미 정확히 찾아낸 specialEffect/boostAmount를 직접 실어 보냄
-        onUseItem({ ...selectedItem, specialEffect: 'trainerExp', boostAmount: details.boostAmount }, null);
+        onUseItem({ ...selectedItem, specialEffect: 'trainerExp', boostAmount: details.boostAmount }, null, null, useQuantity);
         closeAll();
       }
       return;
     }
     if (details?.specialEffect === 'maxPokemonSlots') {
       if (onUseItem && selectedItem) {
-        onUseItem({ ...selectedItem, specialEffect: 'maxPokemonSlots', boostAmount: details.boostAmount }, null);
+        onUseItem({ ...selectedItem, specialEffect: 'maxPokemonSlots', boostAmount: details.boostAmount }, null, null, useQuantity);
         closeAll();
       }
       return;
     }
     if (details?.specialEffect === 'unlockBerryPlanter') {
       if (onUseItem && selectedItem) {
-        onUseItem({ ...selectedItem, specialEffect: 'unlockBerryPlanter' }, null);
+        onUseItem({ ...selectedItem, specialEffect: 'unlockBerryPlanter' }, null, null, useQuantity);
         closeAll();
       }
       return;
@@ -196,7 +220,7 @@ export default function MobileItemsView() {
     }
 
     if (onUseItem && selectedItem) {
-      onUseItem(selectedItem, selectedPokemon);
+      onUseItem(selectedItem, selectedPokemon, null, useQuantity);
       closeAll();
     }
   };
@@ -373,7 +397,7 @@ export default function MobileItemsView() {
           {/* 액션 버튼 */}
           <div style={{ display: 'flex', gap: 8 }}>
             {selectedDetails.canUse && (
-              <button onClick={() => setActionMode('use')} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', borderRadius: 10, border: 'none', background: '#7020c0', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+              <button onClick={() => { setActionMode('use'); setQuantity(1); }} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', borderRadius: 10, border: 'none', background: '#7020c0', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 <Sparkles size={15} /> 사용
               </button>
             )}
@@ -574,6 +598,14 @@ export default function MobileItemsView() {
                 <button onClick={closeAction} style={{ background: 'none', border: 'none', cursor: 'pointer', color: P.muted, padding: 4, flexShrink: 0 }}><X size={20} /></button>
               </div>
               {body}
+              {canConfirm && supportsBatchUse(selectedItem) && selectedItem.count > 1 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', borderTop: `1px solid ${P.border}`, flexShrink: 0 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: P.muted }}>사용 개수</span>
+                  <button onClick={() => setQuantity(q => Math.max(1, q - 1))} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${P.border}`, background: P.card, color: P.text, fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>−</button>
+                  <span style={{ flex: 1, textAlign: 'center', fontSize: 15, fontWeight: 800, color: P.text }}>{quantity}</span>
+                  <button onClick={() => setQuantity(q => Math.min(selectedItem.count, q + 1))} style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${P.border}`, background: P.card, color: P.text, fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>+</button>
+                </div>
+              )}
               <div style={{ padding: '10px 16px', borderTop: `1px solid ${P.border}`, display: 'flex', gap: 8, flexShrink: 0 }}>
                 <button onClick={closeAction} style={{ flex: 1, padding: '11px', borderRadius: 10, border: `1px solid ${P.border}`, background: 'rgba(245,245,245,0.9)', color: P.muted, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>취소</button>
                 <button onClick={handleUse} disabled={!canConfirm} style={{ flex: 1, padding: '11px', borderRadius: 10, border: 'none', fontSize: 14, fontWeight: 800, cursor: canConfirm ? 'pointer' : 'not-allowed', color: '#fff', background: canConfirm ? '#7020c0' : '#ccc' }}>{confirmLabel}</button>
