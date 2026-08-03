@@ -11,6 +11,20 @@ function getRegionalFormLabel(pokemon = {}) {
   return displayParts.formLabel || displayParts.name;
 }
 
+// 호바귀/펌킨인(호화귀)은 사이즈별로 내부 기록(조우/포획/메모)은 그대로 유지하되,
+// 도감 화면에서만 폼 탭과 폼 이름 표시를 없애고 하나의 항목처럼 보이게 한다.
+const SIZE_UNIFIED_SPECIES = new Set(['pumpkaboo', 'gourgeist']);
+const isSizeUnifiedForm = (pokemon = {}) =>
+  SIZE_UNIFIED_SPECIES.has(String(pokemon.baseSpeciesEn || '').toLowerCase());
+
+const getDexDisplayParts = (pokemon = {}) => {
+  const parts = getPokemonDisplayParts(pokemon);
+  if (isSizeUnifiedForm(pokemon)) {
+    return { name: pokemon.baseSpecies || parts.name, formLabel: '' };
+  }
+  return parts;
+};
+
 const toDexNumber = (value) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
@@ -64,37 +78,22 @@ export default function PokedexView({
     ));
   };
 
+  // 폼(리전폼 등)마다 조우/포획/메모를 독립적으로 기록하기 위해, 해당 폼 자신의
+  // number 키에 저장된 항목을 최우선으로 사용한다. 예전에는 원종 쪽 항목이 먼저
+  // 잡혀 있으면 폼 탭에서 메모를 저장해도 원종 키로 덮어써져 모든 폼이 메모를
+  // 공유해버리는 문제가 있었다 — 폼별 메모 요구사항 때문에 병합을 제거했다.
   const getPokedexEntryWithKey = (pokemon = {}) => {
     const number = toDexNumber(pokemon.number);
     const originalNumber = toDexNumber(pokemon.originalNumber);
     const entryByNumber = number ? pokedexData[number] : null;
     const entryByOriginal = originalNumber ? pokedexData[originalNumber] : null;
 
-    if (entryByNumber && entryByOriginal && number !== originalNumber) {
-      const mergedEntry = {
-        ...entryByOriginal,
-        ...entryByNumber,
-        firstEncounter: entryByNumber.firstEncounter || entryByOriginal.firstEncounter,
-        encounteredAt: entryByNumber.encounteredAt || entryByOriginal.encounteredAt,
-        firstCatcher: entryByNumber.firstCatcher || entryByOriginal.firstCatcher,
-        caughtBy: entryByNumber.caughtBy || entryByOriginal.caughtBy,
-        caughtAt: entryByNumber.caughtAt || entryByOriginal.caughtAt,
-        memo: entryByNumber.memo || entryByOriginal.memo || null,
-        regions: entryByNumber.regions?.length ? entryByNumber.regions : (entryByOriginal.regions || [])
-      };
-
-      return {
-        entry: mergedEntry,
-        key: entryByOriginal.firstCatcher ? originalNumber : number
-      };
+    if (entryByNumber) {
+      return { entry: entryByNumber, key: number };
     }
 
     if (entryByOriginal) {
       return { entry: entryByOriginal, key: originalNumber };
-    }
-
-    if (entryByNumber) {
-      return { entry: entryByNumber, key: number };
     }
 
     return { entry: null, key: originalNumber || number };
@@ -372,7 +371,7 @@ export default function PokedexView({
       const isUnlocked = gamePokedexNumbers.has(toDexNumber(p.number)) &&
         unlockedNumbers.has(toDexNumber(p.number));
 
-      return isRegionalForm && isSameFamily && isDifferent && isUnlocked;
+      return isRegionalForm && isSameFamily && isDifferent && isUnlocked && !isSizeUnifiedForm(p);
     });
 
     console.log('?뵇 由ъ쟾??寃??', pokemon.name, 'baseNumber:', baseNumber, 'forms:', forms.map(f => `${f.name}(${f.number})`));
@@ -518,7 +517,7 @@ export default function PokedexView({
             } else if (!unlockedNumbers.has(currentNumber) && unlockedRegionalForm) {
               displayPokemon = unlockedRegionalForm;
             }
-            const displayNameParts = getPokemonDisplayParts(displayPokemon);
+            const displayNameParts = getDexDisplayParts(displayPokemon);
 
             return (
               <div
@@ -601,7 +600,7 @@ export default function PokedexView({
 
               {/* 번호 + 이름 */}
               <div style={{ fontSize: 19, fontWeight: 800, color: '#1a2e10', marginBottom: 12 }}>
-                {getPokemonDisplayParts(selectedForm).name}
+                {getDexDisplayParts(selectedForm).name}
               </div>
 
               {/* 스프라이트 */}
@@ -617,7 +616,8 @@ export default function PokedexView({
                   p.originalNumber === (originalForm?.number || selectedPokemon.number) &&
                   p.originalNumber !== p.number &&
                   gamePokedexNumbers.has(toDexNumber(p.number)) &&
-                  unlockedNumbers.has(toDexNumber(p.number))
+                  unlockedNumbers.has(toDexNumber(p.number)) &&
+                  !isSizeUnifiedForm(p)
                 );
                 const allForms = originalForm ? [originalForm, ...regionalForms] : regionalForms;
                 if (allForms.length <= 1) return null;
@@ -824,7 +824,7 @@ export default function PokedexView({
               } else if (!unlockedNumbers.has(currentNumber) && unlockedRegionalForm) {
                 displayPokemon = unlockedRegionalForm;
               }
-              const displayNameParts = getPokemonDisplayParts(displayPokemon);
+              const displayNameParts = getDexDisplayParts(displayPokemon);
 
               return (
                 <div
@@ -941,7 +941,8 @@ export default function PokedexView({
                     p.originalNumber === selectedPokemon.number &&
                     p.originalNumber !== p.number &&
                     gamePokedexNumbers.has(toDexNumber(p.number)) &&
-                    unlockedNumbers.has(toDexNumber(p.number))
+                    unlockedNumbers.has(toDexNumber(p.number)) &&
+                    !isSizeUnifiedForm(p)
                   );
                 }
 
@@ -1000,11 +1001,11 @@ export default function PokedexView({
 
               {/* 이름 */}
               <h3 className="mb-2 text-2xl font-bold text-[#26351f]">
-                {getPokemonDisplayParts(selectedForm).name}
+                {getDexDisplayParts(selectedForm).name}
               </h3>
-              {getPokemonDisplayParts(selectedForm).formLabel && (
+              {getDexDisplayParts(selectedForm).formLabel && (
                 <div className="mb-3 text-sm font-semibold text-[#7c9157]">
-                  {getPokemonDisplayParts(selectedForm).formLabel}
+                  {getDexDisplayParts(selectedForm).formLabel}
                 </div>
               )}
               {/* 타입 */}
