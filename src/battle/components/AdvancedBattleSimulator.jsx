@@ -234,6 +234,9 @@ export function AdvancedBattleSimulator({
     battleFormat: 'Singles',
     generation: 9,
     ruleId,
+    // 오리진 난이도(배틀 아이템 사용 ON): 모든 포켓몬의 기초포인트(노력치)가
+    // 배틀 스탯에 반영되지 않도록 0으로 취급한다.
+    originModeEnabled: battleItemsEnabled,
   });
 
   const [selectedP1Pokemon, setSelectedP1Pokemon] = useState([0]);

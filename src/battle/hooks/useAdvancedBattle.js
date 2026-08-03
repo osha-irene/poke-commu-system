@@ -147,21 +147,26 @@ const toShowdownMoveId = (move) => {
   return moveData?.id || normalizeBattleKey(moveData?.nameEn || moveName) || 'tackle';
 };
 
-const toPackedSet = (pokemon) => ({
+const ZERO_EVS = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
+
+// 오리진 난이도(배틀 아이템 사용 ON)에서는 모든 포켓몬의 기초포인트(노력치)가
+// 배틀 스탯에 반영되지 않도록 0으로 취급한다. 실제 저장된 pokemon.effort 값은
+// 건드리지 않고, 배틀용 패킹 시점에서만 0으로 대체한다.
+const toPackedSet = (pokemon, { zeroEffort = false } = {}) => ({
   name: pokemon.nickname || pokemon.nameKo || pokemon.name || pokemon.species || 'Pokemon',
   species: pokemon.species || pokemon.nameEn || pokemon.name || 'Ditto',
   item: toShowdownItemName(pokemon.item || pokemon.heldItem || ''),
   ability: toCalcAbilityName(pokemon.abilityEn || pokemon.ability) || 'No Ability',
   moves: (pokemon.moves || []).map(toShowdownMoveId).filter(Boolean).slice(0, 4),
   nature: pokemon.nature || 'Hardy',
-  evs: pokemon.evs || {
+  evs: zeroEffort ? ZERO_EVS : (pokemon.evs || {
     hp: pokemon.effort?.hp ?? 0,
     atk: pokemon.effort?.attack ?? pokemon.effort?.atk ?? 0,
     def: pokemon.effort?.defense ?? pokemon.effort?.def ?? 0,
     spa: pokemon.effort?.specialAttack ?? pokemon.effort?.spa ?? 0,
     spd: pokemon.effort?.specialDefense ?? pokemon.effort?.spd ?? 0,
     spe: pokemon.effort?.speed ?? pokemon.effort?.spe ?? 0,
-  },
+  }),
   ivs: {
     hp: pokemon.ivs?.hp ?? 31,
     atk: pokemon.ivs?.attack ?? pokemon.ivs?.atk ?? 31,
@@ -175,7 +180,7 @@ const toPackedSet = (pokemon) => ({
   level: Number(pokemon.level || 50),
 });
 
-const packTeam = (team) => Teams.pack(team.map(toPackedSet));
+const packTeam = (team, options) => Teams.pack(team.map(pokemon => toPackedSet(pokemon, options)));
 
 const teamPreviewOrder = (selectedIndices, teamLength) => {
   const selected = selectedIndices.filter(index => index >= 0 && index < teamLength);
@@ -937,6 +942,7 @@ export function useAdvancedBattle(initialOptions = {}) {
     player1Team = [],
     player2Team = [],
     ruleId = DEFAULT_BATTLE_RULE_ID,
+    originModeEnabled = false,
   } = initialOptions;
 
   const battleRef = useRef(null);
@@ -1055,8 +1061,9 @@ export function useAdvancedBattle(initialOptions = {}) {
 
   const startBattle = useCallback((p1ActiveIndices, p2ActiveIndices) => {
     const battle = new Battle({ format: buildBattleFormat(ruleId) });
-    battle.setPlayer('p1', { name: 'Player 1', team: packTeam(player1Team) });
-    battle.setPlayer('p2', { name: 'Player 2', team: packTeam(player2Team) });
+    const packOptions = { zeroEffort: originModeEnabled };
+    battle.setPlayer('p1', { name: 'Player 1', team: packTeam(player1Team, packOptions) });
+    battle.setPlayer('p2', { name: 'Player 2', team: packTeam(player2Team, packOptions) });
 
     battle.choose('p1', `team ${teamPreviewOrder(p1ActiveIndices, player1Team.length)}`);
     battle.choose('p2', `team ${teamPreviewOrder(p2ActiveIndices, player2Team.length)}`);
@@ -1076,7 +1083,7 @@ export function useAdvancedBattle(initialOptions = {}) {
 
     const autoLogs = applyAutomaticChoices(battle);
     setBattleState(stateFromBattle(battle, initialState, 0, autoLogs, teamsRef.current));
-  }, [player1Team, player2Team, ruleId]);
+  }, [player1Team, player2Team, ruleId, originModeEnabled]);
 
   // options.target: 더블배틀 등 대상 지정이 필요한 기술에 쓰는 숫자.
   // 양수 = 상대 슬롯(1/2), 음수 = 아군 슬롯(-1/-2). 싱글배틀에서는 생략.

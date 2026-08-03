@@ -1063,6 +1063,11 @@ export function BattleView() {
               {BATTLE_RULES.find(rule => rule.id === battleRuleId)?.name}: {BATTLE_RULES.find(rule => rule.id === battleRuleId)?.description}
             </p>
           )}
+          {battleItemsEnabled && requiredActiveCount <= 1 && (
+            <p className="mt-1 text-sm font-semibold text-indigo-700">
+              오리진 난이도: 배틀 중 아이템을 사용할 수 있고, 모든 포켓몬의 기초포인트는 0으로 취급되어 배틀에 영향을 주지 않습니다.
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {renderBattleLogArchiveButton()}
@@ -1080,12 +1085,16 @@ export function BattleView() {
               ))}
             </select>
           </label>
-          {/* 배틀 아이템 토글 (더블배틀은 아직 미지원) */}
+          {/* 오리진 난이도 토글 (배틀 중 아이템 사용 + 기초포인트 미반영, 더블배틀은 아직 미지원) */}
           <button
             type="button"
             onClick={() => setBattleItemsEnabled(prev => !prev)}
             disabled={requiredActiveCount > 1}
-            title={requiredActiveCount > 1 ? '더블배틀에서는 아직 배틀 아이템을 지원하지 않습니다.' : undefined}
+            title={
+              requiredActiveCount > 1
+                ? '더블배틀에서는 아직 오리진 난이도를 지원하지 않습니다.'
+                : '배틀 중 아이템을 사용할 수 있고, 모든 포켓몬의 기초포인트가 배틀에 반영되지 않습니다.'
+            }
             className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
               requiredActiveCount > 1
                 ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400'
@@ -1094,7 +1103,7 @@ export function BattleView() {
                   : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
             }`}
           >
-            🎒 아이템 사용 {requiredActiveCount > 1 ? '(더블 미지원)' : battleItemsEnabled ? 'ON' : 'OFF'}
+            🎒 오리진 난이도 {requiredActiveCount > 1 ? '(더블 미지원)' : battleItemsEnabled ? 'ON' : 'OFF'}
           </button>
         </div>
       </div>
