@@ -305,9 +305,13 @@ export const useAdminRegions = (
     
     const newPokedex = selectedPokemonNumbers
       .map(num => {
-        const found = allPokemonMaster.find(p => 
-          p.originalNumber === num || p.number === num
-        );
+        // number가 정확히 일치하는 항목을 최우선으로 찾는다. originalNumber만으로
+        // 매칭하면 같은 originalNumber를 공유하는 여러 폼(예: 배쓰나이 청색근/적색근/
+        // 백색근이 모두 originalNumber:550)이 있을 때 배열 순서상 먼저 나오는 엉뚱한
+        // 폼이 골라져서, 실제로 원하던 번호의 포켓몬은 추가되지 않고 다른 폼만
+        // 중복으로 들어가는 문제가 있었다.
+        const found = allPokemonMaster.find(p => p.number === num) ||
+          allPokemonMaster.find(p => p.originalNumber === num);
         console.log(`  - 번호 ${num} 검색 결과:`, found?.name);
         return found;
       })
