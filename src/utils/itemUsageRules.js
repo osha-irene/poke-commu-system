@@ -105,15 +105,17 @@ const canUseEVItemOnPokemon = (pokemon, itemName) => {
   const effortField = statFieldMapping[effect.stat];
   const currentEffort = pokemon.effort || {};
   const currentValue = Number(currentEffort[effortField] || 0);
-  const nextValue = Math.max(0, Math.min(252, currentValue + effect.change));
-
-  if (currentValue === nextValue) return false;
-
-  const totalEVs = Object.entries(currentEffort).reduce((sum, [key, value]) => (
-    sum + (key === effortField ? nextValue : Number(value || 0))
+  const otherTotal = Object.entries(currentEffort).reduce((sum, [key, value]) => (
+    key === effortField ? sum : sum + Number(value || 0)
   ), 0);
 
-  return totalEVs <= 510;
+  // 총합 510 상한에 걸려도 남은 자리만큼 부분 적용이 가능하므로(applyEVItem 참고),
+  // 정확히 change만큼 못 채운다는 이유만으로 사용 자체를 막지 않는다.
+  const nextValue = effect.change > 0
+    ? Math.max(0, Math.min(252, currentValue + effect.change, 510 - otherTotal))
+    : Math.max(0, Math.min(252, currentValue + effect.change));
+
+  return currentValue !== nextValue;
 };
 
 const hasBoost = (boost) => boost && Object.values(boost).some(v => Number(v) > 0);

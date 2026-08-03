@@ -56,32 +56,33 @@ export const applyEVItem = (pokemon, itemName, updatePokemon) => {
   };
   
   const currentValue = currentEffort[effortField] || 0;
-  const newValue = Math.max(0, Math.min(252, currentValue + change));
-  
-  // EV 합계 체크 (최대 510)
-  const totalEVs = Object.entries(currentEffort).reduce((sum, [key, value]) => {
-    return sum + (key === effortField ? newValue : (value || 0));
-  }, 0);
-  
-  if (totalEVs > 510) {
-    return { 
-      success: false, 
-      message: `노력치 총합이 510을 초과할 수 없습니다. (현재: ${totalEVs})` 
-    };
-  }
-  
-  // 변화가 없는 경우 (이미 최대/최소값)
+  const otherTotal = Object.entries(currentEffort).reduce((sum, [key, value]) => (
+    key === effortField ? sum : sum + Number(value || 0)
+  ), 0);
+
+  // 스탯 상한(252)뿐 아니라 전체 총합 상한(510)도 함께 고려해서, +10 같은 고정
+  // 증가량을 다 못 채우더라도 남은 자리만큼만 부분 적용한다 — 안 그러면 총합이
+  // 504(남은 자리 6)일 때 +10짜리 영양제가 정확히 안 맞아떨어진다는 이유로
+  // 아예 사용 자체가 막혀버린다.
+  const newValue = change > 0
+    ? Math.max(0, Math.min(252, currentValue + change, 510 - otherTotal))
+    : Math.max(0, Math.min(252, currentValue + change));
+
+  // 변화가 없는 경우 (이미 최대/최소값, 혹은 총합이 이미 510)
   if (currentValue === newValue) {
     const statNameKo = getStatNameKo(stat);
     if (change > 0) {
-      return { 
-        success: false, 
-        message: `${statNameKo}의 노력치가 이미 최대값(252)입니다.` 
+      const atTotalCap = otherTotal + currentValue >= 510;
+      return {
+        success: false,
+        message: atTotalCap
+          ? '노력치 총합이 이미 최대치(510)입니다.'
+          : `${statNameKo}의 노력치가 이미 최대값(252)입니다.`
       };
     } else {
-      return { 
-        success: false, 
-        message: `${statNameKo}의 노력치가 이미 최소값(0)입니다.` 
+      return {
+        success: false,
+        message: `${statNameKo}의 노력치가 이미 최소값(0)입니다.`
       };
     }
   }
