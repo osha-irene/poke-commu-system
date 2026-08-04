@@ -2,6 +2,7 @@ import useMediaQuery from '../../hooks/useMediaQuery';
 import MobileItemsView from './_mobile/MobileItemsView';
 import { getItemPocket, canUseItem, CATEGORIES } from '../../utils/itemUtils';
 import { canUseItemOnPokemonTarget, FORM_CHANGE_ITEM_POKEMON } from '../../utils/itemUsageRules';
+import { getOwnedPokemonSpriteUrl } from '../../utils/pokemonImageUtils';
 import { isSoyYYNItem } from '../../utils/specialItemUtils';
 import { getItemEffectBadges } from '../../utils/itemEffectBadges';
 import { Package, Circle, Heart, Dumbbell, Apple, Disc, Backpack, Sparkles, Sword, Key, Search, X,Trash2, ShoppingCart } from 'lucide-react'; 
@@ -992,7 +993,7 @@ const categories = CATEGORIES.map(cat => {
                                         } ${!canUseTarget ? 'is-disabled' : ''}`}
                                       >
                                         <img
-                                          src={pokemon.spriteUrl || `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pokemon.number}.png`}
+                                          src={getOwnedPokemonSpriteUrl(pokemon) || `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pokemon.originalNumber || pokemon.number}.png`}
                                           alt={pokemon.name}
                                           className="w-16 h-16 mb-1"
                                           style={{ imageRendering: 'pixelated' }}

@@ -52,8 +52,12 @@ const getPokemonNumbers = (pokemon = {}) => {
   const formNumbers = [pokemon.number, pokemon.pokemonId, pokemon.id]
     .map(value => Number(value))
     .filter(number => Number.isFinite(number) && number !== originalNumber);
+  // 플라베베/플라엣테 꽃 색깔 폼처럼 number/pokemonId/id가 전부 "pokemon-form-XXXXX" 같은
+  // 비숫자 문자열뿐인 코스메틱 폼은 formNumbers가 항상 빈 배열이 되는데, 그 상태로 originalNumber도
+  // 없이 폴백하면 진화 후보 숫자가 하나도 안 남아 이 아이템으로 진화 가능한 포켓몬인지 자체를
+  // 영영 판단 못한다(= 빛의돌 등 진화 아이템이 항상 사용 불가로 뜸). originalNumber를 폴백에 포함시킨다.
   const sourceNumbers = pokemon.regionalForm || pokemon.formVariant
-    ? (formNumbers.length > 0 ? formNumbers : [pokemon.number, pokemon.pokemonId, pokemon.id])
+    ? (formNumbers.length > 0 ? formNumbers : [pokemon.number, pokemon.pokemonId, pokemon.id, pokemon.originalNumber])
     : [pokemon.number, pokemon.originalNumber, pokemon.pokemonId, pokemon.nationalNo];
 
   return sourceNumbers
