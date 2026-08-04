@@ -624,7 +624,7 @@ const BattleLogArchiveModal = ({ logs, onClose, onDelete, loading }) => {
 };
 
 export function BattleView() {
-  const { checkEvolutionOnLevelUp } = useGame();
+  const { checkEvolutionOnLevelUp, allItems } = useGame();
   const [battleItemsEnabled, setBattleItemsEnabled] = useState(false);
   const [battleRuleId, setBattleRuleId] = useState(DEFAULT_BATTLE_RULE_ID);
   const [loadingMembers, setLoadingMembers] = useState(false);
@@ -797,9 +797,20 @@ export function BattleView() {
 
       const usage = {};   // { memberId: { key: { moveId: count } } }
       const crits = {};   // { memberId: { key: count } }
-      // 배틀 중 지닌 도구가 소모(-enditem: 나무열매/구슬/랜드코트 등 1회성 도구 소진, 하지만
-      // 인기시코 knock off로 떨어져도 결과는 같이 "더 이상 안 들고 있음"이라 함께 처리)된 포켓몬
+      // 배틀 중 나무열매를 "먹어서"(-enditem [eat]) 실제로 소모된 포켓몬만 담는다.
+      // 포커스 샤시가 깨지거나 초킹아이템이 상대 기술로 떨어지는 등 나무열매가 아닌
+      // 지닌 도구 소모는 배틀 안에서만 효과가 나고, 실제 보유 아이템은 배틀 종료 후에도
+      // 남아있어야 한다 - 멤버가 직접 회수하지 않는 이상 사라지지 않음.
       const heldItemUsed = {}; // { memberId: { key: true } }
+      const isBerryItemName = (rawName) => {
+        const norm = normalizeId(rawName);
+        if (!norm) return false;
+        return (allItems || []).some(it => {
+          const nameMatch = normalizeId(it.name) === norm || normalizeId(it.nameEn) === norm;
+          if (!nameMatch) return false;
+          return it.categoryData?.pocket === 'berries' || (it.nameEn || '').endsWith('-berry');
+        });
+      };
       let lastMoveSlot = null;
 
       for (const line of rawLog) {
@@ -825,10 +836,12 @@ export function BattleView() {
           if (!crits[info.memberId]) crits[info.memberId] = {};
           crits[info.memberId][key] = (crits[info.memberId][key] || 0) + 1;
         }
-        if (line.startsWith('|-enditem|')) {
+        if (line.startsWith('|-enditem|') && parts.includes('[eat]')) {
           const slot = (parts[2] || '').split(':')[0].trim().toLowerCase();
+          const itemName = (parts[3] || '').trim();
           const info = slotMap[slot];
           if (!info?.memberId || !info?.pokemon) continue;
+          if (!isBerryItemName(itemName)) continue;
           const key = pokemonKey(info.pokemon);
           if (!heldItemUsed[info.memberId]) heldItemUsed[info.memberId] = {};
           heldItemUsed[info.memberId][key] = true;

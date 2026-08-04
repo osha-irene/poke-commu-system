@@ -110,13 +110,26 @@ export const useRegionExplore = (
       }
 
       // 포켓몬 조우 시
-      const regionPokemonIds = region.pokemons || []; 
+      const regionPokemonIds = region.pokemons || [];
       const searchPokedex = region.allowNationalPokedex ? allPokemonMaster : gamePokedex;
 
-      const availablePokemon = searchPokedex.filter(p => 
-        regionPokemonIds.includes(p.id) || 
+      const matchedPokemon = searchPokedex.filter(p =>
+        regionPokemonIds.includes(p.id) ||
         regionPokemonIds.includes(p.number)
       );
+
+      // 장소 설정에서 특정 폼(예: 플라베베 색깔 폼)을 명시적으로 골라도, 그 폼이
+      // "게임 도감"에는 원종만 등록되어 있고 폼 자체는 별도 등록이 안 돼 있으면
+      // 위 필터에서 조용히 빠져서 항상 원종만 나오는 것처럼 보인다. 장소에서 이미
+      // 명시적으로 선택한 id는 전국 도감에서라도 찾아서 후보에 포함시킨다.
+      const matchedIds = new Set();
+      matchedPokemon.forEach(p => { matchedIds.add(p.id); matchedIds.add(p.number); });
+      const missingIds = regionPokemonIds.filter(id => !matchedIds.has(id));
+      const fallbackPokemon = missingIds.length > 0
+        ? allPokemonMaster.filter(p => missingIds.includes(p.id) || missingIds.includes(p.number))
+        : [];
+
+      const availablePokemon = [...matchedPokemon, ...fallbackPokemon];
 
       if (availablePokemon.length > 0) {
         const rates = region.pokemonRates || {};

@@ -235,13 +235,29 @@ export default function PokemonSettingsPanel({
     const byId = new Map();
     const byNumber = new Map();
     const formsByOriginal = new Map();
-    (allPokemonMaster || []).forEach((pokemon) => {
+    const list = allPokemonMaster || [];
+
+    // 1차: 자기 자신의 id/number를 최우선으로 등록한다. 배쓰나이 적색근처럼
+    // "자기 number"가 곧 원종 도감번호(550)인 폼이 있는 경우, 아래 2차 패스에서
+    // 다른 폼(청색근 등)의 originalNumber:550 키가 먼저 먹어버리면 적색근 자체를
+    // 조회할 때도 청색근이 나오는 문제가 있었다. id/number는 항상 정확한 값이므로
+    // 뒤에 나오는 항목이라도 덮어써서 최신/정확한 매핑을 유지한다.
+    list.forEach((pokemon) => {
       if (!pokemon) return;
-      [pokemon.id, pokemon.number, pokemon.originalNumber].forEach((key) => {
-        if (key !== undefined && key !== null && !byId.has(String(key))) {
+      [pokemon.id, pokemon.number].forEach((key) => {
+        if (key !== undefined && key !== null) {
           byId.set(String(key), pokemon);
         }
       });
+    });
+
+    // 2차: originalNumber는 1차에서 채워지지 않은 키에 한해 폴백으로만 채운다.
+    list.forEach((pokemon) => {
+      if (!pokemon) return;
+      const key = pokemon.originalNumber;
+      if (key !== undefined && key !== null && !byId.has(String(key))) {
+        byId.set(String(key), pokemon);
+      }
       // "pokemon-form-10039" 같은 폼 전용 문자열 id는 Number()로 변환하면 전부 NaN이 되어
       // Map 키가 겹쳐버린다(나중에 처리된 폼이 앞선 폼을 덮어씀 - 지역폼 조회 시 엉뚱한
       // 포켓몬이 나오는 원인). 진짜 숫자 도감번호일 때만 byNumber에 넣는다.

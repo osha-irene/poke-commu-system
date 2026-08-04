@@ -809,7 +809,6 @@ const recordMoveUsage = async (db, log, session) => {
   // crits: { memberId: { pokemonKey: count } }  ← 이 배틀에서 맞힌 급소 수
   const usage = {};
   const crits = {}; // 급소를 "맞힌" 포켓몬 슬롯 기준
-  const consumedItems = {};
   let lastMoveSlot = null; // 직전 move 라인의 슬롯 (급소는 공격자 기준)
 
   for (const line of log) {
@@ -838,17 +837,6 @@ const recordMoveUsage = async (db, log, session) => {
         crits[info.memberId][info.key] = (crits[info.memberId][info.key] || 0) + 1;
       }
     }
-
-    if (line.startsWith('|-enditem|') && parts.includes('[eat]')) {
-      const slotRaw = parts[2] || '';
-      const slot = slotRaw.split(':')[0].trim().toLowerCase();
-      const itemName = (parts[3] || '').trim();
-      const info = slotMap[slot];
-      if (itemName && info?.memberId && info?.key) {
-        if (!consumedItems[info.memberId]) consumedItems[info.memberId] = {};
-        consumedItems[info.memberId][info.key] = itemName;
-      }
-    }
   }
 
   // 각 멤버의 caughtPokemon에서 해당 pokemon을 찾아 업데이트
@@ -874,31 +862,14 @@ const recordMoveUsage = async (db, log, session) => {
       next = { ...next, lastBattleCritCount: 0 };
     }
 
-    const consumedItem = consumedItems[memberId]?.[key];
-    if (consumedItem) {
-      const heldItemKeys = [
-        next.heldItem,
-        next.heldItemEn,
-        next.item,
-        next.itemEn,
-      ].map(normalizeId).filter(Boolean);
-      const consumedKey = normalizeId(consumedItem);
-      if (!heldItemKeys.length || heldItemKeys.includes(consumedKey)) {
-        next = {
-          ...next,
-          heldItem: null,
-          heldItemEn: null,
-          item: null,
-          itemEn: null,
-          lastBattleConsumedItem: consumedItem,
-        };
-      }
-    }
-
     return next;
   };
 
-  const memberIds = new Set([...Object.keys(usage), ...Object.keys(crits), ...Object.keys(consumedItems)]);
+  // 배틀 중 나무열매/구슬 등 지닌 도구가 소모되는 연출은 배틀 자체(시뮬레이션)에는
+  // 그대로 반영되지만, 여기서는 저장된 포켓몬 데이터의 heldItem을 지우지 않는다 -
+  // 지닌 도구가 배틀 한 번으로 사라지지 않아야 한다는 요구사항. 나무열매만 예외로
+  // 소모되는 처리는 클라이언트(BattleView.jsx)에서 별도로 담당한다.
+  const memberIds = new Set([...Object.keys(usage), ...Object.keys(crits)]);
   await Promise.all([...memberIds].map(async (memberId) => {
     await Promise.all([
       db.ref(`members/${memberId}/caughtPokemon`).transaction((caught) => {
