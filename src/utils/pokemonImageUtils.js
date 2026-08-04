@@ -78,13 +78,20 @@ export const getOwnedPokemonSpriteUrl = (pokemon, pokemonData = pokemon) => {
   // CDN에 개별 스프라이트가 없는 경우가 많고, formVariant 템플릿의 number 필드도
   // "pokemon-form-10120" 같은 비숫자 문자열이라 아래 CDN 번호 조합이 깨진 URL이 된다.
   // formVariant가 있으면 템플릿에 저장된 spriteUrl/imageUrl(로컬 에셋 포함)을 그대로 쓴다.
+  //
+  // 예전 버그(진화/포획 시 spriteUrl/iconUrl을 "pokemon-form-XXXXX" 문자열로 잘못 조합해
+  // Firebase에 그대로 저장해버린 경우)로 저장된 깨진 URL이 남아있을 수 있어, 그런 값은
+  // 걸러내고 imageUrl로 폴백한다.
   if (pokemon.formVariant) {
-    if (pokemon.isShiny && (pokemon.shinySprite || pokemon.shinySpriteUrl)) {
-      return pokemon.shinySprite || pokemon.shinySpriteUrl;
+    const isBrokenFormUrl = (url) => typeof url === 'string' && url.includes('pokemon-form-');
+
+    if (pokemon.isShiny) {
+      const shinyCandidate = [pokemon.shinySprite, pokemon.shinySpriteUrl].find(url => url && !isBrokenFormUrl(url));
+      if (shinyCandidate) return shinyCandidate;
     }
-    if (pokemon.spriteUrl || pokemon.imageUrl || pokemon.sprite) {
-      return pokemon.spriteUrl || pokemon.imageUrl || pokemon.sprite;
-    }
+
+    const candidate = [pokemon.spriteUrl, pokemon.imageUrl, pokemon.sprite].find(url => url && !isBrokenFormUrl(url));
+    if (candidate) return candidate;
   }
 
   const number = pokemon.number || pokemon.dexId || pokemon.pokemonId || pokemon.id || pokemon.originalNumber;

@@ -367,11 +367,13 @@ const categories = CATEGORIES.map(cat => {
 
     // 폼체인지 아이템: 폼 선택 단계 필요
     if (isFormItem) {
-      if (!selectedForm) {
+      const nectarForm = NECTAR_FORM_MAP[itemNameEn];
+      // 꿀 아이템은 대상 폼이 고정돼 있어 selectedForm을 거치지 않으므로, 로토무 카탈로그 등
+      // 실제로 폼을 골라야 하는 아이템에만 selectedForm 필수 체크를 적용한다.
+      if (!nectarForm && !selectedForm) {
         alert('폼을 선택해주세요!');
         return;
       }
-      const nectarForm = NECTAR_FORM_MAP[itemNameEn];
       const targetFormNameEn = nectarForm || selectedForm.nameEn || selectedForm.id || selectedForm.name;
       if (onUseItem) {
         onUseItem(selectedItem, selectedPokemon, targetFormNameEn);

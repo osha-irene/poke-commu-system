@@ -134,16 +134,23 @@ export const usePokemonCatch = (
         speed: 0 
       },
       imageUrl: pokemonTemplate.imageUrl,
-      iconUrl: (() => {
-        const orig = pokemonTemplate.originalNumber;
-        const iconNum = (orig === 710 || orig === 711) ? orig : pokemonTemplate.number;
-        return pokemon.isShiny
-          ? `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-viii/icons/shiny/${iconNum}.png`
-          : `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-viii/icons/${iconNum}.png`;
-      })(),
-      spriteUrl: pokemon.isShiny
-        ? `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/${pokemonTemplate.number}.png`
-        : `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pokemonTemplate.number}.png`
+      // 플라베베/플라엣테 꽃 색깔 폼처럼 pokemonTemplate.number가 "pokemon-form-10105" 같은
+      // 비숫자 문자열인 코스메틱 폼은 이 문자열로 CDN URL을 조립하면 깨진 이미지가 된다.
+      // 이런 폼은 template 자체에 이미 올바른 iconUrl/spriteUrl이 저장돼 있으니 그걸 그대로 쓴다.
+      iconUrl: Number.isFinite(Number(pokemonTemplate.number))
+        ? (() => {
+            const orig = pokemonTemplate.originalNumber;
+            const iconNum = (orig === 710 || orig === 711) ? orig : pokemonTemplate.number;
+            return pokemon.isShiny
+              ? `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-viii/icons/shiny/${iconNum}.png`
+              : `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-viii/icons/${iconNum}.png`;
+          })()
+        : (pokemon.isShiny ? (pokemonTemplate.shinySprite || pokemonTemplate.iconUrl) : pokemonTemplate.iconUrl) || pokemonTemplate.imageUrl,
+      spriteUrl: Number.isFinite(Number(pokemonTemplate.number))
+        ? (pokemon.isShiny
+            ? `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/${pokemonTemplate.number}.png`
+            : `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pokemonTemplate.number}.png`)
+        : (pokemon.isShiny ? (pokemonTemplate.shinySprite || pokemonTemplate.spriteUrl) : pokemonTemplate.spriteUrl) || pokemonTemplate.imageUrl
     });
 
     // ⭐ 클로저에 갇힌 caughtPokemon 스냅샷을 기준으로 통째로 덮어쓰면, 짧은 시간 안에 여러 마리를

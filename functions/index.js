@@ -366,13 +366,13 @@ const processTradeStatus = async (status, source = 'webhook') => {
     const posted = await tradeCtx.replyToStatus(status, response);
     // 봇 답글 ID를 trade 레코드에 저장 → 스레드 식별에 사용
     if (posted?.id) {
-      const snap = await db.ref('gameData/tradeRequests').once('value');
-      const trades = snap.val() || {};
+      // 전체 tradeRequests를 훑지 않고 회원별 포인터 색인만 본다 (syncTradeRequestIndex 참고).
+      const snap = await db.ref(`gameData/memberTradeRequests/${author.id}`).once('value');
+      const pointers = snap.val() || {};
       const now = Date.now();
-      const match = Object.entries(trades).find(([, t]) =>
-        ['pending', 'accepted'].includes(t.status) &&
-        (t.requesterId === author.id || t.targetId === author.id) &&
-        now - Number(t.createdAt || 0) <= 24 * 60 * 60 * 1000
+      const match = Object.entries(pointers).find(([, p]) =>
+        ['pending', 'accepted'].includes(p.status) &&
+        now - Number(p.createdAt || 0) <= 24 * 60 * 60 * 1000
       );
       if (match) await db.ref(`gameData/tradeRequests/${match[0]}/lastBotStatusId`).set(posted.id);
     }
@@ -1024,12 +1024,142 @@ exports.syncContestSessionIndex = functions
     return null;
   });
 
+// ── DB 트리거: 캠핑 세션 색인 ──────────────────────────────────────
+// campBot.js의 findActiveSession이 gameData/campingSessions 전체(삭제 없이 계속 쌓이는
+// 컬렉션)를 [계속]/[만족] 등 거의 모든 캠핑 답글마다 통째로 읽던 문제 - syncBattleSessionIndex와
+// 동일한 이유로 RTDB 다운로드를 불렸다(2026-08-05, "RTDB 다운로드 4GB 급증" 조사로 발견).
+// 회원별 포인터 색인만 유지해서, findActiveSession이 전체 컬렉션 대신 이 작은 노드만 읽고
+// 실제로 필요한 세션 하나만 개별 조회하도록 한다.
+// 배포 직후에는 이 색인이 비어 있으므로, 이미 진행 중이던 캠핑 세션이 있다면 배포와 함께
+// 백필 스크립트를 반드시 같이 돌려야 한다(그렇지 않으면 진행 중이던 [계속]/[만족] 답글이
+// "진행 중인 캠핑이 없어요"로 끊길 수 있다).
+exports.syncCampingSessionIndex = functions
+  .region('us-central1')
+  .database.ref('gameData/campingSessions/{sessionKey}')
+  .onWrite(async (change, context) => {
+    const { sessionKey } = context.params;
+
+    if (!change.after.exists()) {
+      const before = change.before.val() || {};
+      if (before.memberId) {
+        await db.ref(`gameData/memberCampingSessions/${before.memberId}/${sessionKey}`).set(null);
+      }
+      return null;
+    }
+
+    const after = change.after.val();
+    if (!after.memberId) return null;
+
+    await db.ref(`gameData/memberCampingSessions/${after.memberId}/${sessionKey}`).set({
+      status: after.status || null,
+      createdAt: after.createdAt || null,
+      updatedAt: after.lastUpdatedAt || after.completedAt || after.createdAt || null,
+    });
+    return null;
+  });
+
+// ── DB 트리거: 교환 요청 색인 ──────────────────────────────────────
+// tradeBot.js의 findPendingTrade/findActiveTrade, index.js의 lastBotStatusId 연결 로직이
+// gameData/tradeRequests 전체를 교환 신청/수락/거절/취소/포켓몬 선택 등 거의 모든 명령마다
+// 통째로 읽던 문제 - 위 캠핑 색인과 동일한 이유로 RTDB 다운로드를 불렸다(2026-08-05).
+// 신청자/상대방 양쪽에 대해 회원별 포인터 색인을 유지해서, 실제로 필요한 교환 하나만
+// 개별 조회하도록 한다. 배포 직후에는 진행 중이던 교환에 대한 백필이 마찬가지로 필요하다.
+exports.syncTradeRequestIndex = functions
+  .region('us-central1')
+  .database.ref('gameData/tradeRequests/{tradeKey}')
+  .onWrite(async (change, context) => {
+    const { tradeKey } = context.params;
+
+    if (!change.after.exists()) {
+      const before = change.before.val() || {};
+      const writes = [];
+      if (before.requesterId) writes.push(db.ref(`gameData/memberTradeRequests/${before.requesterId}/${tradeKey}`).set(null));
+      if (before.targetId) writes.push(db.ref(`gameData/memberTradeRequests/${before.targetId}/${tradeKey}`).set(null));
+      await Promise.all(writes);
+      return null;
+    }
+
+    const after = change.after.val();
+    const pointer = (role, otherMemberId) => ({
+      status: after.status || null,
+      role,
+      otherMemberId: otherMemberId || null,
+      createdAt: after.createdAt || null,
+      updatedAt: after.updatedAt || after.createdAt || null,
+    });
+
+    const writes = [];
+    if (after.requesterId) {
+      writes.push(db.ref(`gameData/memberTradeRequests/${after.requesterId}/${tradeKey}`).set(pointer('requester', after.targetId)));
+    }
+    if (after.targetId) {
+      writes.push(db.ref(`gameData/memberTradeRequests/${after.targetId}/${tradeKey}`).set(pointer('target', after.requesterId)));
+    }
+
+    await Promise.all(writes);
+    return null;
+  });
+
 // 테스트 / 진단
 exports.testNetwork = functions.region(region.region).https.onRequest(async (req, res) => {
   try {
     const instance = await campCtx.makeMastodonRequest('/api/v1/instance');
     res.json({ success: true, instanceUrl: INSTANCE_URL, title: instance.title, version: instance.version });
   } catch (e) { res.status(500).json({ success: false, error: e.message }); }
+});
+
+// ── 일회성 마이그레이션: 캠핑/교환 색인 백필 ─────────────────────
+// syncCampingSessionIndex/syncTradeRequestIndex를 배포한 직후에는 이미 진행 중이던 캠핑/교환에
+// 대한 회원별 포인터 색인이 비어 있다 - 그 세션/교환에 다음 답글이 오기 전까지는
+// findActiveSession/findActiveTrade가 "진행 중인 게 없다"고 잘못 응답할 수 있다. 이 트리거들을
+// 배포한 직후 이 엔드포인트를 ?confirm=yes로 한 번 호출해서 기존 데이터의 색인을 채운다.
+// 멱등(재실행해도 안전)하므로 실수로 두 번 불러도 문제없다. 다 쓰면 이 함수는 지워도 된다
+// (2026-08-05, "RTDB 다운로드 4GB 급증" 대응).
+exports.backfillSessionIndexes = functions.region(region.region).runWith(scheduleOpts).https.onRequest(async (req, res) => {
+  if (req.query.confirm !== 'yes') {
+    res.status(400).json({ success: false, error: 'add ?confirm=yes to run' });
+    return;
+  }
+  try {
+    const [campingSnap, tradeSnap] = await Promise.all([
+      db.ref('gameData/campingSessions').once('value'),
+      db.ref('gameData/tradeRequests').once('value'),
+    ]);
+
+    const campingSessions = campingSnap.val() || {};
+    const campingWrites = Object.entries(campingSessions)
+      .filter(([, s]) => s && s.memberId)
+      .map(([key, s]) => db.ref(`gameData/memberCampingSessions/${s.memberId}/${key}`).set({
+        status: s.status || null,
+        createdAt: s.createdAt || null,
+        updatedAt: s.lastUpdatedAt || s.completedAt || s.createdAt || null,
+      }));
+
+    const tradeRequests = tradeSnap.val() || {};
+    const tradeWrites = [];
+    for (const [key, t] of Object.entries(tradeRequests)) {
+      if (!t) continue;
+      const pointer = (role, otherMemberId) => ({
+        status: t.status || null,
+        role,
+        otherMemberId: otherMemberId || null,
+        createdAt: t.createdAt || null,
+        updatedAt: t.updatedAt || t.createdAt || null,
+      });
+      if (t.requesterId) tradeWrites.push(db.ref(`gameData/memberTradeRequests/${t.requesterId}/${key}`).set(pointer('requester', t.targetId)));
+      if (t.targetId) tradeWrites.push(db.ref(`gameData/memberTradeRequests/${t.targetId}/${key}`).set(pointer('target', t.requesterId)));
+    }
+
+    await Promise.all([...campingWrites, ...tradeWrites]);
+    res.json({
+      success: true,
+      campingSessionsIndexed: campingWrites.length,
+      tradeRequestsIndexed: Object.keys(tradeRequests).length,
+    });
+  } catch (e) {
+    console.error('backfillSessionIndexes failed:', e);
+    res.status(500).json({ success: false, error: e.message });
+  }
 });
 
 // 하위 호환 — 기존 단일 웹훅 엔드포인트 유지 (캠핑+교환+배틀 모두 처리)

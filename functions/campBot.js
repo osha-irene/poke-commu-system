@@ -330,14 +330,21 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
     partnerPokemon: applyFriendshipToPartner(memberData.partnerPokemon, participantKeys, bonus),
   });
 
+  // gameData/campingSessions는 삭제 없이 계속 쌓이는 컬렉션이라, 예전처럼 [계속]/[만족]
+  // 답글마다 전체를 훑으면(index.js:syncCampingSessionIndex 주석 참고) 답글 하나당 그동안
+  // 쌓인 캠핑 이력 전체를 다시 다운로드하게 된다. 회원별 포인터 색인
+  // (gameData/memberCampingSessions/{memberId})만 보고 실제로 필요한 세션 하나만 개별
+  // 조회한다 - battleBot.js의 findActiveBattle과 동일한 패턴(2026-08-05).
   const findActiveSession = async memberId => {
-    const snap = await db.ref('gameData/campingSessions').once('value');
-    const sessions = snap.val() || {};
-    const active = Object.entries(sessions)
-      .filter(([, s]) => s.memberId === memberId && !isTerminalCampingStatus(s.status))
-      .sort((a, b) => String(b[1].createdAt || '').localeCompare(String(a[1].createdAt || '')));
+    const snap = await db.ref(`gameData/memberCampingSessions/${memberId}`).once('value');
+    const pointers = snap.val() || {};
+    const active = Object.entries(pointers)
+      .filter(([, p]) => !isTerminalCampingStatus(p.status))
+      .sort((a, b) => String(b[1].updatedAt || b[1].createdAt || '').localeCompare(String(a[1].updatedAt || a[1].createdAt || '')));
     if (!active.length) return null;
-    return { sessionKey: active[0][0], session: active[0][1] };
+    const [sessionKey] = active[0];
+    const sessionSnap = await db.ref(`gameData/campingSessions/${sessionKey}`).once('value');
+    return sessionSnap.exists() ? { sessionKey, session: sessionSnap.val() } : null;
   };
 
   const createSession = async ({ memberId, member, partnerId, partner, statusId, settings, dishChoice }) => {

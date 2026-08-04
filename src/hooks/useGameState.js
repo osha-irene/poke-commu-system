@@ -137,6 +137,12 @@ export default function useGameState() {
     setLoadFullMembers(Boolean((currentUser?.isAdmin || currentUser?.isSuperAdmin) && needsFullMembers));
   }, [currentUser?.isAdmin, currentUser?.isSuperAdmin, needsFullMembers]);
 
+  // 캠핑 관리자 패널(admin 탭)도 members와 같은 이유로 전체 캠핑 세션이 필요할 때만 로드한다.
+  const [loadAllCampingSessions, setLoadAllCampingSessions] = useState(false);
+  useEffect(() => {
+    setLoadAllCampingSessions(Boolean((currentUser?.isAdmin || currentUser?.isSuperAdmin) && currentTab === 'admin'));
+  }, [currentUser?.isAdmin, currentUser?.isSuperAdmin, currentTab]);
+
   // 레시피 (요리 결과 아이템은 useGameData의 allItems에 파생되어 들어가므로 먼저 로드)
   const recipesHook = useRecipes(currentUser, updateCurrentUser, updateInventory, updateHistoryField);
 
@@ -203,7 +209,8 @@ export default function useGameState() {
   currentUser,
   updateCurrentUser,
   allPokemonMaster,
-  allItems
+  allItems,
+  loadAllCampingSessions
 );
 
   // 나무열매 농장

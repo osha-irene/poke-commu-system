@@ -1230,7 +1230,7 @@ export default function AdminView() {
 
 		{adminTab === 'camping' && (
 		  <CampingAdminPanel
-			campingSessions={camping?.campingSessions || []}
+			campingSessions={camping?.allCampingSessions || []}
 			systemSettings={systemSettings}
 			onSaveSettings={updateSystemSettings}
 			onProgressSession={camping.progressSession}

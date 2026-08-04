@@ -40,7 +40,12 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster, u
         return formNumbers.filter((number, index, numbers) => numbers.indexOf(number) === index);
       }
 
-      return [currentNumber, pokemonId]
+      // 폼(currentNumber/pokemonId)이 실제 숫자 도감번호를 갖지 못하는 경우(플라베베/플라엣테
+      // 꽃 색깔 폼처럼 id가 "pokemon-form-XXXXX" 같은 문자열뿐인 코스메틱 폼)엔 originalNumber로
+      // 폴백한다. 그렇지 않으면 candidates가 빈 배열이 되어 evolutions.json의 원종 번호(예: 669)
+      // 기준 진화 조건과 절대 매칭되지 않아, 빨간 꽃(진짜 숫자 번호를 쓰는 기본형)만 진화하고
+      // 나머지 색깔 폼은 영원히 진화하지 못하는 문제가 있었다.
+      return [currentNumber, pokemonId, originalNumber]
         .filter((number, index, numbers) => number !== null && numbers.indexOf(number) === index);
     }
 
@@ -81,6 +86,29 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster, u
       allPokemonMaster.find((pokemon) => !pokemon.regionalForm && toPokemonNumber(pokemon.originalNumber) === targetNumber) ||
       allPokemonMaster.find((pokemon) => toPokemonNumber(pokemon.originalNumber) === targetNumber)
     );
+  };
+
+  // 플라베베→플라엣테처럼 꽃 색깔 등 "코스메틱 폼"이 진화 후에도 같은 색으로 이어지도록,
+  // findPokemonTemplateByNumber(evolution.to)로 아무 폼이나(기본적으로 첫 매치=빨강) 잡기 전에
+  // 진화 전 개체의 formVariant 접미사("flabebe-blue"의 "-blue")와 같은 접미사를 가진 진화형
+  // 템플릿("floette-blue")이 있는지 먼저 찾는다. 없으면(=색깔 폼이 아니거나 매칭 템플릿이 없으면)
+  // 기존 방식(숫자 도감번호 매칭)으로 폴백한다.
+  const findEvolvedTemplateForPokemon = (pokemon, evolution) => {
+    const fromNameEn = (evolution.fromName || '').toLowerCase();
+    const toNameEn = (evolution.toName || '').toLowerCase();
+    const sourceVariant = (pokemon.formVariant || pokemon.species || pokemon.nameEn || '').toLowerCase();
+
+    if (fromNameEn && toNameEn && sourceVariant.startsWith(`${fromNameEn}-`)) {
+      const suffix = sourceVariant.slice(fromNameEn.length);
+      const expectedVariant = `${toNameEn}${suffix}`;
+      const variantTemplate = allPokemonMaster.find((p) =>
+        (p.nameEn || '').toLowerCase() === expectedVariant ||
+        (p.species || '').toLowerCase() === expectedVariant
+      );
+      if (variantTemplate) return variantTemplate;
+    }
+
+    return findPokemonTemplateByNumber(evolution.to);
   };
 
   const ensureStoredWurmpleEvolutionId = (pokemon) => {
@@ -260,7 +288,7 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster, u
     if (evolution) {
       console.log('✨ 진화 가능! 모달 띄우기');
 
-      const evolvedPokemonData = findPokemonTemplateByNumber(evolution.to);
+      const evolvedPokemonData = findEvolvedTemplateForPokemon(preparedPokemon, evolution);
 
       if (!evolvedPokemonData) {
         console.log('❌ 진화할 포켓몬 데이터 없음');
@@ -339,7 +367,7 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster, u
     }
     
     // ⭐ 변경: 바로 진화하지 않고 모달 표시
-    const evolvedPokemonData = findPokemonTemplateByNumber(evolution.to);
+    const evolvedPokemonData = findEvolvedTemplateForPokemon(pokemon, evolution);
     
     if (!evolvedPokemonData) {
       alert('진화할 포켓몬 데이터를 찾을 수 없습니다!');
@@ -411,7 +439,7 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster, u
 
   // 진화 실행 (imageOverrides: 마휘핑 맛처럼 진화 결과 이미지를 직접 지정해야 할 때 사용)
   const performEvolution = async (pokemon, evolution, imageOverrides = {}) => {
-    const evolvedTemplate = findPokemonTemplateByNumber(evolution.to);
+    const evolvedTemplate = findEvolvedTemplateForPokemon(pokemon, evolution);
 
     if (!evolvedTemplate) {
       alert('❌ 진화 정보를 찾을 수 없습니다!');
@@ -438,8 +466,15 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster, u
       ...resolveEvolvedAbility(p, evolvedTemplate),
       ...getBaseStatPatch(evolvedTemplate),
       imageUrl: evolvedTemplate.imageUrl,
-      iconUrl: (() => { const orig = evolvedTemplate.originalNumber; const n = (orig === 710 || orig === 711) ? orig : evolvedTemplate.number; return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-viii/icons/${n}.png`; })(),
-      spriteUrl: `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${evolvedTemplate.number}.png`,
+      // 플라베베/플라엣테 꽃 색깔 폼처럼 template.number가 "pokemon-form-10109" 같은
+      // 비숫자 문자열인 코스메틱 폼은 이 문자열로 CDN URL을 조립하면 깨진 이미지가 된다.
+      // 이런 폼은 template 자체에 이미 올바른 iconUrl/spriteUrl이 저장돼 있으니 그걸 그대로 쓴다.
+      iconUrl: Number.isFinite(Number(evolvedTemplate.number))
+        ? (() => { const orig = evolvedTemplate.originalNumber; const n = (orig === 710 || orig === 711) ? orig : evolvedTemplate.number; return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-viii/icons/${n}.png`; })()
+        : (evolvedTemplate.iconUrl || evolvedTemplate.imageUrl),
+      spriteUrl: Number.isFinite(Number(evolvedTemplate.number))
+        ? `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${evolvedTemplate.number}.png`
+        : (evolvedTemplate.spriteUrl || evolvedTemplate.imageUrl),
       // 닉네임이 종족명이면 제거, 커스텀 닉네임은 유지
       nickname: (p.nickname && p.nickname !== getBaseName(p) && p.nickname !== p.name && p.nickname !== p.nameEn) ? p.nickname : null,
       evolutionCancelled: false,
@@ -502,7 +537,7 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster, u
     const success = await performEvolution(pokemon, evolution);
 
     if (success) {
-      const evolvedTemplate = findPokemonTemplateByNumber(evolution.to);
+      const evolvedTemplate = findEvolvedTemplateForPokemon(pokemon, evolution);
       alert(`🎉 축하합니다!\n${pokemon.nickname || pokemon.name}이(가) ${evolvedTemplate.name}(으)로 진화했습니다!`);
     }
 
@@ -529,7 +564,7 @@ const manualEvolve = (pokemon) => {
   }
   
   // 모달 표시 (실제 진화는 acceptEvolution에서)
-  const evolvedPokemonData = findPokemonTemplateByNumber(evolution.to);
+  const evolvedPokemonData = findEvolvedTemplateForPokemon(preparedPokemon, evolution);
   
   if (!evolvedPokemonData) {
     alert('진화할 포켓몬 데이터를 찾을 수 없습니다!');

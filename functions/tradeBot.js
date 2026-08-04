@@ -148,38 +148,49 @@ const createTradeBot = ({ db, pokemonData, findMemberByAccount, extractMentionAc
     return matches[0];
   };
 
+  // gameData/tradeRequests도 campingSessions/battleSessions와 같은 구조(삭제 없이 계속
+  // 쌓이는 컬렉션)라 신청/수락/거절/취소/포켓몬 선택 등 거의 모든 교환 명령마다 전체를
+  // 훑으면 다운로드량이 계속 불어난다. 회원별 포인터 색인
+  // (gameData/memberTradeRequests/{memberId} - index.js:syncTradeRequestIndex 참고)만
+  // 보고 실제로 필요한 교환 하나만 개별 조회한다(2026-08-05).
   const findPendingTrade = async (targetId, requesterId = null) => {
-    const snap = await db.ref('gameData/tradeRequests').once('value');
-    const trades = snap.val() || {};
+    const snap = await db.ref(`gameData/memberTradeRequests/${targetId}`).once('value');
+    const pointers = snap.val() || {};
     const now = Date.now();
-    const pending = Object.entries(trades)
-      .filter(([, t]) => t.status === 'pending' && t.targetId === targetId && (!requesterId || t.requesterId === requesterId) && now - Number(t.createdAt || 0) <= TRADE_EXPIRATION_MS)
+    const pending = Object.entries(pointers)
+      .filter(([, p]) => p.role === 'target' && p.status === 'pending' && (!requesterId || p.otherMemberId === requesterId) && now - Number(p.createdAt || 0) <= TRADE_EXPIRATION_MS)
       .sort((a, b) => Number(b[1].createdAt || 0) - Number(a[1].createdAt || 0));
-    return pending.length ? { tradeKey: pending[0][0], trade: pending[0][1] } : null;
+    if (!pending.length) return null;
+    const [tradeKey] = pending[0];
+    const tradeSnap = await db.ref(`gameData/tradeRequests/${tradeKey}`).once('value');
+    return tradeSnap.exists() ? { tradeKey, trade: tradeSnap.val() } : null;
   };
 
   const findActiveTrade = async (memberId, otherMemberId = null, inReplyToId = null) => {
-    const snap = await db.ref('gameData/tradeRequests').once('value');
-    const trades = snap.val() || {};
+    const snap = await db.ref(`gameData/memberTradeRequests/${memberId}`).once('value');
+    const pointers = snap.val() || {};
     const now = Date.now();
-    const active = Object.entries(trades)
-      .filter(([, t]) => {
-        if (!['pending', 'accepted'].includes(t.status)) return false;
-        if (now - Number(t.createdAt || 0) > TRADE_EXPIRATION_MS) return false;
-        const isParticipant = t.requesterId === memberId || t.targetId === memberId;
-        const matchesOther = !otherMemberId || t.requesterId === otherMemberId || t.targetId === otherMemberId;
-        return isParticipant && matchesOther;
+    const active = Object.entries(pointers)
+      .filter(([, p]) => {
+        if (!['pending', 'accepted'].includes(p.status)) return false;
+        if (now - Number(p.createdAt || 0) > TRADE_EXPIRATION_MS) return false;
+        return !otherMemberId || p.otherMemberId === otherMemberId;
       })
       .sort((a, b) => Number(b[1].updatedAt || b[1].createdAt || 0) - Number(a[1].updatedAt || a[1].createdAt || 0));
     if (!active.length) return null;
     // 리플라이 스레드 ID로 어느 교환인지 우선 식별
-    if (inReplyToId) {
-      const byThread = active.find(([, t]) =>
-        t.lastBotStatusId === inReplyToId || t.mastodonStatusId === inReplyToId
-      );
-      if (byThread) return { tradeKey: byThread[0], trade: byThread[1] };
+    if (inReplyToId && active.length > 1) {
+      for (const [tradeKey] of active) {
+        const tradeSnap = await db.ref(`gameData/tradeRequests/${tradeKey}`).once('value');
+        const trade = tradeSnap.val();
+        if (trade && (trade.lastBotStatusId === inReplyToId || trade.mastodonStatusId === inReplyToId)) {
+          return { tradeKey, trade };
+        }
+      }
     }
-    return { tradeKey: active[0][0], trade: active[0][1] };
+    const [tradeKey] = active[0];
+    const tradeSnap = await db.ref(`gameData/tradeRequests/${tradeKey}`).once('value');
+    return tradeSnap.exists() ? { tradeKey, trade: tradeSnap.val() } : null;
   };
 
   // 중간에 삭제된 자리 때문에 caughtPokemon 배열에 구멍(hole)이 있으면 [...current]로 복사할 때
@@ -429,14 +440,14 @@ const createTradeBot = ({ db, pokemonData, findMemberByAccount, extractMentionAc
         if (taggedMember.id === author.id) return '자기 자신과는 교환할 수 없어요.';
         const offeredResult = offeredName ? findOwnedPokemonForTrade(author.member, offeredName) : null;
         if (offeredResult?.error) return offeredResult.error;
-        // 신청자가 참여한 기존 교환(pending/accepted) 전부 취소
-        const snap = await db.ref('gameData/tradeRequests').once('value');
-        const allTrades = snap.val() || {};
+        // 신청자가 참여한 기존 교환(pending/accepted) 전부 취소 - battleBot.js의
+        // forceCloseOpenSessions와 동일한 이유로 전체 컬렉션 대신 회원별 포인터 색인만 본다.
+        const snap = await db.ref(`gameData/memberTradeRequests/${author.id}`).once('value');
+        const pointers = snap.val() || {};
         const now0 = Date.now();
-        const cancels = Object.entries(allTrades).filter(([, t]) =>
-          ['pending', 'accepted'].includes(t.status) &&
-          (t.requesterId === author.id || t.targetId === author.id) &&
-          now0 - Number(t.createdAt || 0) <= TRADE_EXPIRATION_MS
+        const cancels = Object.entries(pointers).filter(([, p]) =>
+          ['pending', 'accepted'].includes(p.status) &&
+          now0 - Number(p.createdAt || 0) <= TRADE_EXPIRATION_MS
         );
         await Promise.all(cancels.map(([key]) =>
           db.ref(`gameData/tradeRequests/${key}`).update({ status: 'cancelled', cancelledAt: now0, updatedAt: now0 })

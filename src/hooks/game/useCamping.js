@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { ref, get, set, push, update, onValue, onChildAdded, onChildChanged, onChildRemoved } from 'firebase/database';
+import { useState, useEffect, useRef } from 'react';
+import { ref, get, set, push, update, onValue, onChildAdded, onChildChanged, onChildRemoved, query, orderByChild, equalTo } from 'firebase/database';
 import { database } from '../../firebase';
 import * as campingHelper from '../../utils/campingHelper';
 
@@ -102,10 +102,15 @@ const addInventoryItem = (inventory = [], item, count = 1) => {
   ];
 };
 
-export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, allItems) => {
+export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, allItems, loadAllCampingSessions = false) => {
   const [campingSessions, setCampingSessions] = useState([]);
+  const [allCampingSessions, setAllCampingSessions] = useState([]);
   const [userCampingData, setUserCampingData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  // 관리자 전체 목록(allCampingSessions)은 useMembers.js의 loadFullMembers와 동일하게
+  // 세션당 한 번만 get()으로 읽는다 - 실시간 리스너를 켜두면 캠핑 탭을 보고 있는 관리자에게
+  // 다른 모든 회원의 캠핑 진행(거의 매 답글)이 실시간으로 다시 다운로드된다.
+  const fullSessionsLoadedRef = useRef(false);
 
   // User camping data realtime listener
   useEffect(() => {
@@ -129,9 +134,22 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
     return () => unsub();
   }, [currentUser?.id]);
 
-  // Camping sessions: load once, then receive changed children only.
+  // 내 캠핑 세션만: memberId로 쿼리해서 로드 + 실시간 구독. 예전엔 로그인한 모든 유저가
+  // gameData/campingSessions 전체(삭제 없이 계속 쌓이는 컬렉션)를 통째로 구독해서, 캠핑을
+  // 한 번이라도 진행([계속]/[만족] 답글마다) 할 때마다 접속 중인 모든 클라이언트에게
+  // 그 세션이 재전송됐다 - RTDB 다운로드 급증의 원인이었다(2026-08-04). 자기 것만 쿼리하면
+  // 다운로드량이 "그 유저의 캠핑 횟수"에만 비례한다.
   useEffect(() => {
-    const sessionsRef = ref(database, 'gameData/campingSessions');
+    if (!currentUser?.id) {
+      setCampingSessions([]);
+      return undefined;
+    }
+
+    const sessionsRef = query(
+      ref(database, 'gameData/campingSessions'),
+      orderByChild('memberId'),
+      equalTo(currentUser.id)
+    );
     let isInitialLoad = true;
 
     get(sessionsRef)
@@ -175,7 +193,35 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
       unsubChanged();
       unsubRemoved();
     };
-  }, []);
+  }, [currentUser?.id]);
+
+  // 관리자 캠핑 패널용 전체 목록: admin 탭에 있을 때만(useGameState.js의 loadAllCampingSessions
+  // 게이팅), 세션당 한 번만 전체를 읽는다. campBot.js가 이미 답글마다 최신 값을 다시 읽고 쓰므로
+  // (progressSession/completeCooking/applyResultsToMember도 마찬가지로 항상 get()으로 재조회)
+  // 이 목록은 실시간일 필요가 없다 - useMembers.js의 loadFullMembers와 동일한 패턴.
+  useEffect(() => {
+    if (!loadAllCampingSessions || fullSessionsLoadedRef.current) {
+      return undefined;
+    }
+    fullSessionsLoadedRef.current = true;
+
+    const sessionsRef = ref(database, 'gameData/campingSessions');
+    get(sessionsRef)
+      .then((snapshot) => {
+        if (!snapshot.exists()) {
+          setAllCampingSessions([]);
+          return;
+        }
+        const sessions = Object.entries(snapshot.val()).map(([key, value]) => ({
+          firebaseKey: key,
+          ...value
+        }));
+        setAllCampingSessions(sessions);
+      })
+      .catch((error) => {
+        console.error('전체 캠핑 세션 로드 실패:', error);
+      });
+  }, [loadAllCampingSessions]);
 
   // 캠핑 시작
   const startCamping = async (entryPokemon, partnerId = null, partnerName = null, dishType = null) => {
@@ -268,7 +314,7 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
       }
 
       const updatedSession = { ...session, currentStage: newStage, status: choice === 'satisfy' || newStage === 5 ? 'ready_to_complete' : 'in_progress' };
-      setCampingSessions(prev => prev.map(s => s.firebaseKey === sessionKey ? { ...s, ...updatedSession } : s));
+      setAllCampingSessions(prev => prev.map(s => s.firebaseKey === sessionKey ? { ...s, ...updatedSession } : s));
 
       alert(`단계 ${newStage}로 진행되었습니다`);
     } catch (error) {
@@ -306,9 +352,9 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
         completedAt: new Date().toISOString()
       });
 
-      setCampingSessions(prev => prev.map(s => 
-        s.firebaseKey === sessionKey 
-          ? { ...s, cookingResult: stageData, cookingSuccess: success, status: 'completed' } 
+      setAllCampingSessions(prev => prev.map(s =>
+        s.firebaseKey === sessionKey
+          ? { ...s, cookingResult: stageData, cookingSuccess: success, status: 'completed' }
           : s
       ));
 
@@ -602,7 +648,7 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
         },
       });
 
-      setCampingSessions(prev => prev.map(s => s.firebaseKey === sessionKey ? { ...s, status: 'applied' } : s));
+      setAllCampingSessions(prev => prev.map(s => s.firebaseKey === sessionKey ? { ...s, status: 'applied' } : s));
 
       updateCurrentUser({
         caughtPokemon: updatedPokemon,
@@ -640,7 +686,7 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
       const sessionRef = ref(database, `gameData/campingSessions/${sessionKey}`);
       await set(sessionRef, null);
 
-      setCampingSessions(prev => prev.filter(s => s.firebaseKey !== sessionKey));
+      setAllCampingSessions(prev => prev.filter(s => s.firebaseKey !== sessionKey));
       alert('세션이 삭제되었습니다');
     } catch (error) {
       console.error('세션 삭제 실패:', error);
@@ -650,6 +696,7 @@ export const useCamping = (currentUser, updateCurrentUser, allPokemonMaster, all
 
   return {
     campingSessions,
+    allCampingSessions,
     userCampingData,
     isLoading,
     startCamping,
