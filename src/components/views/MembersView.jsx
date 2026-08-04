@@ -1,6 +1,6 @@
 ﻿import React, { useState, useRef, useEffect, useLayoutEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Award, ChevronLeft, User, Text, Users } from 'lucide-react';
+import { Award, ChevronLeft, Heart, User, Text, Users } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import { getOwnedPokemonSpriteUrl } from '../../utils/pokemonImageUtils';
 import { findPokemonTemplate } from '../../utils/pokemonBaseStats';
@@ -309,6 +309,16 @@ const getBallImageUrl = (p, allItems) => {
   if (p?.ballImageUrl) return p.ballImageUrl;
   return 'https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png';
 };
+const getHeldItemImageUrl = (p, allItems) => {
+  if (!p?.heldItem || !allItems?.length) return null;
+  const heldItemName = p.heldItem.toLowerCase();
+  const item = allItems.find(it => {
+    const n = it.name?.toLowerCase();
+    const en = it.nameEn?.toLowerCase();
+    return n === heldItemName || en === heldItemName || n?.includes(heldItemName) || en?.includes(heldItemName);
+  });
+  return item?.spriteUrl || item?.imageUrl || null;
+};
 const getOfficialArtwork = p => {
   if (p?.sprite) {
     const m = p.sprite.match(/\/pokemon\/(\d+)\.png/);
@@ -443,9 +453,6 @@ const getPokemonOriginLines = (p) => {
     lines.push(p.favoriteFlavor ? `${sizeStr} ${p.favoriteFlavor}을 좋아한다.` : sizeStr);
   } else if (p.favoriteFlavor) {
     lines.push(`${p.favoriteFlavor}을 좋아한다.`);
-  }
-  if (p.ability) {
-    lines.push(`특성은 ${getAbilityKoreanName(p.ability) || p.ability}.`);
   }
   return lines;
 };
@@ -915,9 +922,9 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   const [charTabTransition, setCharTabTransition] = useState('');
 
   const commitTabChange = (id) => {
-    const transition = (id === 'text' || id === 'relation')
+    const transition = (id === 'text' || id === 'relation' || id === 'entry')
       ? 'rmv-char-to-text'
-      : (tab === 'text' || tab === 'relation')
+      : (tab === 'text' || tab === 'relation' || tab === 'entry')
         ? 'rmv-char-from-text'
         : '';
     if (charTransitionTimerRef.current) clearTimeout(charTransitionTimerRef.current);
@@ -1260,7 +1267,14 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   };
 
   const party = getParty(member);
-  const partner = party.find(p => p?.isPartner) || member.partnerPokemon || party[0] || null;
+  // member.partnerPokemon은 목록 카드 아이콘용 경량 스냅샷이라 기술/IV/EV 등이 빠져 있다
+  // (memberViewData.js의 toMemberParty 참고). 그래서 파트너 식별은 여기서 하되, 실제로
+  // 보여줄 데이터는 항상 caughtPokemon(party)에서 같은 개체를 찾아 전체 정보로 가져온다.
+  const partner = party.find(p => p?.isPartner)
+    || (member.partnerPokemon?.uniqueId && party.find(p => p?.uniqueId === member.partnerPokemon.uniqueId))
+    || member.partnerPokemon
+    || party[0]
+    || null;
   const partnerSpriteUrl = partner ? getPokeApiSprite(partner) : null;
   const partnerDbSpriteUrl = partner ? getPokemonDbSprite(partner) : null;
   const partnerUsesDbException = partner ? isPokemonDbSpriteException(partner) : false;
@@ -1288,7 +1302,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
         background: 'linear-gradient(to right, transparent 0%, rgba(255,255,255,0.70) 18%, rgba(255,255,255,0.88) 56%, rgba(255,255,255,0.98) 100%)',
       }
     : {
-        left: '22%',
+        left: tab === 'entry' ? 'calc(22% - 80px)' : '22%',
         right: 0,
         background: 'linear-gradient(to right, transparent 0%, rgba(255,255,255,0.85) 12%, rgba(255,255,255,0.97) 28%, rgba(255,255,255,0.97) 100%)',
       };
@@ -1659,7 +1673,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             zIndex: MEMBER_CHARACTER_Z_INDEX, pointerEvents: 'none',
           }}>
             <div
-              className={`rmv-polaroid-detail${(tab === 'text' || tab === 'relation') ? ' rmv-polaroid-pushed' : ''}${charTabTransition ? ` ${charTabTransition}` : ''}`}
+              className={`rmv-polaroid-detail${(tab === 'text' || tab === 'relation' || tab === 'entry') ? ' rmv-polaroid-pushed' : ''}${charTabTransition ? ` ${charTabTransition}` : ''}`}
               style={{
               position: 'relative',
               aspectRatio: '628 / 747',
@@ -1743,7 +1757,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               crossOrigin="anonymous"
               onLoad={handleImgLoad}
               onError={() => setImgLoaded(true)}
-              className={`rmv-char-base${(tab === 'text' || tab === 'relation') ? ' rmv-char-pushed' : ''}${charTabTransition ? ` ${charTabTransition}` : ''}`}
+              className={`rmv-char-base${(tab === 'text' || tab === 'relation' || tab === 'entry') ? ' rmv-char-pushed' : ''}${charTabTransition ? ` ${charTabTransition}` : ''}`}
               style={{
                 position: 'fixed',
                 top: member.charImageTop ?? 0,
@@ -2054,7 +2068,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
           {/* 회전하는 뱃지 실루엣 안에서만 배경 텍스트를 흐리게 처리 */}
           <div className="rmv-tab-content" data-badge-rotate style={{
             position: 'absolute',
-            top: 'calc(8.5rem - 5px)', left: 'calc(39% + 3px)',
+            top: 'calc(8.5rem - 5px)', left: 'calc(39% + 23px)',
             width: 430, height: 430,
             zIndex: 5,
             pointerEvents: 'none',
@@ -2114,7 +2128,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               setBadgeScrubPreview({ index: null, progress: 0 });
               stopRubbingSound();
             }}
-            style={{ position: 'absolute', top: 'calc(8.5rem - 5px)', left: 'calc(39% + 3px)', width: 430, height: 430, display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', zIndex: 10, isolation: 'isolate' }}
+            style={{ position: 'absolute', top: 'calc(8.5rem - 5px)', left: 'calc(39% + 23px)', width: 430, height: 430, display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', zIndex: 10, isolation: 'isolate' }}
           >
             {/* accent 오버레이 — z=1 */}
             <div data-badge-rotate style={{
@@ -2519,8 +2533,8 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
           className="rmv-entry-title"
           style={{
             position: 'absolute',
-            top: '2rem',
-            left: '37%',
+            top: 'calc(2rem + 17px)',
+            left: 'calc(37% + 85px)',
             right: 0,
             zIndex: gradientAwareTitleZIndex,
             pointerEvents: 'none',
@@ -2531,7 +2545,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
           <div
             style={{
               fontFamily: "'SUITE', sans-serif",
-              fontSize: 160,
+              fontSize: 180,
               fontWeight: 300,
               lineHeight: 1,
               letterSpacing: '-0.06em',
@@ -2545,17 +2559,166 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             ENTRY
           </div>
         </div>
+        {partner && (() => {
+          const partnerTypes = Array.from(new Set(
+            [...(Array.isArray(partner.types) ? partner.types : []), partner.type, partner.type2].filter(Boolean)
+          ));
+          const partnerMoves = (partner.moves || []).slice(0, 4);
+          const partnerHeldItemImg = getHeldItemImageUrl(partner, allItems);
+          const partnerHeldItemIsSerebii = Boolean(partnerHeldItemImg?.includes('serebii.net'));
+          const pe = partner.effort || partner.evs || {};
+          const partnerEvs = [
+            { label: 'H', val: pe.hp ?? 0 },
+            { label: 'A', val: pe.attack ?? pe.atk ?? 0 },
+            { label: 'B', val: pe.defense ?? pe.def ?? 0 },
+            { label: 'C', val: pe.specialAttack ?? pe.spa ?? 0 },
+            { label: 'D', val: pe.specialDefense ?? pe.spd ?? 0 },
+            { label: 'S', val: pe.speed ?? pe.spe ?? 0 },
+          ];
+          const partnerHasEv = partnerEvs.some(ev => ev.val > 0);
+          const partnerCond = partner.condition || {};
+          const PARTNER_COND = [
+            { key: 'elegance',     label: '근사함' },
+            { key: 'beauty',       label: '아름다움' },
+            { key: 'cuteness',     label: '귀여움' },
+            { key: 'intelligence', label: '슬기로움' },
+            { key: 'strength',     label: '강인함' },
+          ];
+          const partnerHasCond = PARTNER_COND.some(({ key }) => Number(partnerCond[key] || 0) > 0);
+          return (
+            <div style={{
+              position: 'absolute', top: '13rem', left: 'calc(55% - 270px)', right: '10px',
+              minHeight: 180, borderRadius: 14,
+              background: `rgba(${accentRgb}, 0.14)`,
+              backdropFilter: 'blur(8px)',
+              padding: '14px 16px',
+              display: 'flex', gap: 16,
+              boxSizing: 'border-box',
+              zIndex: gradientAwareContentZIndex,
+            }}>
+              {/* 왼쪽: 기본 정보 (다른 엔트리 카드 앞면과 동일한 구성) */}
+              <div style={{ position: 'relative', flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}>
+                <img src={getBallImageUrl(partner, allItems)} alt="" style={{ position: 'absolute', top: 0, left: 0, width: 27, height: 27, objectFit: 'contain', imageRendering: 'pixelated', opacity: 0.75, pointerEvents: 'none' }} />
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  <div
+                    className="pokemon-bg-sprite"
+                    style={{
+                      width: 96, height: 96, minWidth: 96, minHeight: 96, flexShrink: 0,
+                      backgroundImage: `url(${getEntryPokemonSprite(partner, allPokemonMaster)})`,
+                      backgroundSize: '100%', backgroundPosition: 'center center', backgroundRepeat: 'no-repeat',
+                      position: 'relative',
+                      top: 30,
+                      alignSelf: 'flex-start',
+                      imageRendering: 'pixelated',
+                    }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0, alignSelf: 'stretch', paddingTop: 3 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 999, background: `rgb(${accentRgb})` }}>
+                        <Heart size={12} fill="#fff" color="#fff" />
+                      </span>
+                      <span style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a' }}>{partner.nickname || partner.nameKo || partner.name}</span>
+                      {partner.gender === 'male' && <GenderMale />}
+                      {partner.gender === 'female' && <GenderFemale />}
+                      {partnerTypes.map((t, ti) => {
+                        const tc = TYPE_COLORS[t] || { bg: '#888', text: '#fff' };
+                        return <span key={ti} style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: tc.bg, color: tc.text }}>{t}</span>;
+                      })}
+                      {partner.level && <span style={{ fontSize: 12, fontWeight: 600, color: '#555' }}>Lv.{partner.level}</span>}
+                    </div>
+                    {(partner.ability || partner.heldItem) && (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginTop: 5 }}>
+                        <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.55)', whiteSpace: 'nowrap' }}>
+                          {partner.ability ? (getAbilityKoreanName(partner.ability) || partner.ability) : ''}
+                        </span>
+                        {partner.heldItem && (
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, color: 'rgba(0,0,0,0.55)', whiteSpace: 'nowrap' }}>
+                            {partnerHeldItemImg && (
+                              partnerHeldItemIsSerebii ? (
+                                <span style={{ display: 'block', width: 30, height: 30, flexShrink: 0, backgroundImage: `url(${partnerHeldItemImg})`, backgroundSize: '150%', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', imageRendering: 'pixelated' }} />
+                              ) : (
+                                <img src={partnerHeldItemImg} alt="" style={{ width: 30, height: 30, maxWidth: 30, maxHeight: 30, objectFit: 'contain', imageRendering: 'pixelated' }} />
+                              )
+                            )}
+                            {partner.heldItem}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {partnerMoves.length > 0 && (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 6, marginTop: 18 }}>
+                        {partnerMoves.map((mv, mi) => {
+                          const mc = getMoveTypeColor(mv);
+                          return <span key={`${getMoveKey(mv)}-${mi}`} style={{ fontSize: 10, fontWeight: 700, lineHeight: 1.2, color: mc.text, background: mc.bg, borderRadius: 999, padding: '3px 7px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{getMoveLabel(mv)}</span>;
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {partnerHasEv && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4 }}>
+                    {partnerEvs.map(({ label, val }) => (
+                      <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, background: '#fff', borderRadius: 999, padding: '0 4px', height: 16 }}>
+                        <span style={{ fontSize: 10, fontWeight: 800, color: '#111', lineHeight: 1 }}>{label}</span>
+                        <span style={{ fontSize: 10, fontWeight: 300, color: val > 0 ? '#111' : '#bbb', lineHeight: 1 }}>{val}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {/* 오른쪽: 다른 엔트리 카드 뒷면과 동일한 구성 (출신/개인 메모/컨디션) */}
+              <div style={{
+                flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 6,
+                borderLeft: `1px solid rgba(${accentRgb}, 0.2)`, paddingLeft: 16,
+              }}>
+                <div style={{ flex: '1 1 auto', minHeight: 0, maxHeight: 150, overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.72)', lineHeight: 1.65 }}>
+                    {getPokemonOriginLines(partner)
+                      .filter(line => {
+                        const text = line && typeof line === 'object' ? line.text : line;
+                        // 크기/맛 템플릿 문장(예: "중간 정도의 크기인 것 같다. 신맛을 좋아한다.")은 파트너 카드에서 생략
+                        return !(text?.includes('크기인 것 같다') || /좋아한다\.$/.test(text || ''));
+                      })
+                      .map((line, li) => {
+                        const isObj = line && typeof line === 'object';
+                        const text = isObj ? line.text : line;
+                        return <div key={li}>{text}</div>;
+                      })}
+                  </div>
+                  {(partner.memo || partner.notes) && (
+                    <div style={{ fontSize: 10.5, color: 'rgba(0,0,0,0.6)', lineHeight: 1.5, fontStyle: 'italic' }}>
+                      {partner.memo || partner.notes}
+                    </div>
+                  )}
+                </div>
+                {partnerHasCond && (
+                  <div style={{ flexShrink: 0, display: 'flex', flexWrap: 'wrap', gap: 3, height: 16 }}>
+                    {PARTNER_COND.map(({ key, label }) => {
+                      const val = Number(partnerCond[key] || 0);
+                      return (
+                        <div key={key} style={{ display: 'flex', alignItems: 'center', flexShrink: 0, background: `rgba(${accentRgb}, 0.14)`, borderRadius: 999, padding: '2px 6px', height: 16 }}>
+                          <span style={{ fontSize: 9, fontWeight: 800, color: `rgb(${accentRgb})`, lineHeight: 1, whiteSpace: 'nowrap' }}>{label}</span>
+                          <span style={{ fontSize: 9, fontWeight: 300, color: val > 0 ? `rgb(${accentRgb})` : 'rgba(0,0,0,0.3)', lineHeight: 1, whiteSpace: 'nowrap' }}>&nbsp;{val}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
         <div
           key="entry"
-          className="rmv-tab-content flex flex-col justify-start gap-3"
+          className="rmv-tab-content"
           onAnimationEnd={e => { e.currentTarget.style.animation = 'none'; }}
-          style={{ position: 'absolute', top: '13rem', left: '55%', width: 320, overflow: 'visible', paddingBottom: 24, paddingRight: 6, boxSizing: 'border-box', zIndex: gradientAwareContentZIndex }}
+          style={{ position: 'absolute', top: 'calc(13rem + 220px)', left: 'calc(55% - 270px)', right: '10px', display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gridAutoRows: '160px', gap: 10, overflow: 'visible', paddingBottom: 24, paddingRight: 6, boxSizing: 'border-box', zIndex: gradientAwareContentZIndex }}
         >
           <style>{`
             @keyframes rmv-card-flip-in { from { transform: rotateY(-90deg) scaleX(0.8); opacity: 0; } to { transform: rotateY(0deg) scaleX(1); opacity: 1; } }
           `}</style>
           {party.length === 0
-            ? <span style={{ fontSize: 14, color: 'rgba(0,0,0,0.3)' }}>엔트리가 비어있어요</span>
+            ? <span style={{ gridColumn: '1 / -1', fontSize: 14, color: 'rgba(0,0,0,0.3)' }}>엔트리가 비어있어요</span>
             : party.map((p, i) => {
               // type2(복합 타입)를 안 읽으면 두 가지 타입인 포켓몬도 하나만 보인다.
               const types = Array.from(new Set(
@@ -2563,7 +2726,13 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               ));
               const moves = (p.moves || []).slice(0, 4);
               const baseName = p.nameKo || p.name || '';
-              const nickname = p.nickname && p.nickname !== baseName ? p.nickname : null;
+              const speciesLabel = baseName.replace(/\s*\([^)]*\)\s*/g, '').trim();
+              const nickname = p.nickname && p.nickname !== baseName && p.nickname !== speciesLabel ? p.nickname : null;
+              const heldItemImg = getHeldItemImageUrl(p, allItems);
+              // 세레비(serebii.net) 아이템 스프라이트는 원본 캔버스가 커서 아이콘 주위에 여백이
+              // 많다. objectFit:contain으로는 그 여백까지 그대로 보여서 아이콘이 작아 보이므로,
+              // 배경 이미지를 확대(backgroundSize)해 여백을 잘라내고 30x30에 꽉 채운다.
+              const heldItemIsSerebii = Boolean(heldItemImg?.includes('serebii.net'));
               const isFlipped = flippedEntryIndex === i;
               const cardBg = hoveredEntryIndex === i && !isFlipped
                 ? `rgb(${Math.round(255*0.9+(accent?.[0]??80)*0.1)},${Math.round(255*0.9+(accent?.[1]??120)*0.1)},${Math.round(255*0.9+(accent?.[2]??200)*0.1)})`
@@ -2574,17 +2743,22 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                   onMouseEnter={() => setHoveredEntryIndex(i)}
                   onMouseLeave={() => setHoveredEntryIndex(null)}
                   onClick={() => setFlippedEntryIndex(isFlipped ? null : i)}
-                  style={{ position: 'relative', zIndex: hoveredEntryIndex === i ? 20 : 1, cursor: 'pointer', borderRadius: 14, display: 'grid' }}
+                  style={{ position: 'relative', zIndex: hoveredEntryIndex === i ? 20 : 1, cursor: 'pointer', borderRadius: 14, display: 'grid', height: '100%', minWidth: 0 }}
                 >
                   {/* 앞면 */}
                   <div style={{
                     gridArea: '1/1',
+                    width: '100%',
+                    height: '100%',
+                    minWidth: 0,
+                    boxSizing: 'border-box',
+                    overflow: 'hidden',
                     borderRadius: 14,
                     background: cardBg,
                     backdropFilter: 'blur(8px)',
                     boxShadow: hoveredEntryIndex === i && !isFlipped ? '0 4px 20px rgba(0,0,0,0.10)' : 'none',
                     padding: '10px 16px 10px 12px',
-                    display: 'flex', flexDirection: 'column', gap: 8,
+                    display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8,
                     transition: 'opacity 0.18s ease, transform 0.22s ease, background 0.18s ease',
                     opacity: isFlipped ? 0 : 1,
                     transform: isFlipped ? 'rotateY(90deg)' : (hoveredEntryIndex === i ? 'rotateY(-12deg)' : 'rotateY(0deg)'),
@@ -2607,14 +2781,16 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                           backgroundPosition: 'center center',
                           backgroundRepeat: 'no-repeat',
                           position: 'relative',
+                          top: 15,
+                          alignSelf: 'flex-start',
                           imageRendering: 'pixelated',
                         }}
                       />
                       <div style={{ flex: 1, minWidth: 0, alignSelf: 'stretch', paddingTop: 3 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>{nickname || baseName}</span>
+                          <span style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>{nickname || speciesLabel}</span>
                           {p.isShiny && <span aria-label="이로치" title="이로치" style={{ color: '#dc2626', fontSize: 11, lineHeight: 1, fontWeight: 900 }}>★</span>}
-                          {nickname && <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.38)' }}>{baseName}</span>}
+                          {nickname && <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.38)' }}>{speciesLabel}</span>}
                           {p.gender === 'male' && <GenderMale />}
                           {p.gender === 'female' && <GenderFemale />}
                           {types.map((t, ti) => {
@@ -2624,8 +2800,32 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                           {p.level && <span style={{ fontSize: 11, fontWeight: 600, color: '#555', whiteSpace: 'nowrap' }}>Lv.{p.level}</span>}
                           {p.isPartner && <span style={{ fontSize: 11, fontWeight: 600, color: '#d97706' }}>파트너</span>}
                         </div>
+                        {(p.ability || p.heldItem) && (
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginTop: 0 }}>
+                            <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.55)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {p.ability ? (getAbilityKoreanName(p.ability) || p.ability) : ''}
+                            </span>
+                            {p.heldItem && (
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, color: 'rgba(0,0,0,0.55)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                {heldItemImg && (
+                                  heldItemIsSerebii ? (
+                                    <span style={{
+                                      display: 'block', width: 30, height: 30, flexShrink: 0,
+                                      backgroundImage: `url(${heldItemImg})`,
+                                      backgroundSize: '150%', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
+                                      imageRendering: 'pixelated',
+                                    }} />
+                                  ) : (
+                                    <img src={heldItemImg} alt="" style={{ width: 30, height: 30, maxWidth: 30, maxHeight: 30, objectFit: 'contain', imageRendering: 'pixelated' }} />
+                                  )
+                                )}
+                                {p.heldItem}
+                              </span>
+                            )}
+                          </div>
+                        )}
                         {moves.length > 0 && (
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 6, marginTop: 8 }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 6, marginTop: 10 }}>
                             {moves.map((mv, mi) => {
                               const mc = getMoveTypeColor(mv);
                               return <span key={`${getMoveKey(mv)}-${mi}`} style={{ fontSize: 10, fontWeight: 700, lineHeight: 1.2, color: mc.text, background: mc.bg, borderRadius: 999, padding: '3px 7px', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{getMoveLabel(mv)}</span>;
@@ -2661,6 +2861,11 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                   {/* 뒷면 — 출신 메모 + 컨디션 */}
                   <div style={{
                     gridArea: '1/1',
+                    width: '100%',
+                    height: '100%',
+                    minWidth: 0,
+                    boxSizing: 'border-box',
+                    overflow: 'hidden',
                     borderRadius: 14,
                     background: `rgba(${accentRgb}, 0.92)`,
                     backdropFilter: 'blur(8px)',
@@ -2671,7 +2876,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                     transform: isFlipped ? 'rotateY(0deg)' : 'rotateY(-90deg)',
                     pointerEvents: isFlipped ? 'auto' : 'none',
                   }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: '1 1 auto', minWidth: 0, minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
                       {/* 출신 메모 */}
                       <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.90)', lineHeight: 1.75 }}>
                         {getPokemonOriginLines(p).map((line, li) => {
@@ -2679,10 +2884,21 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                           const text = isObj ? line.text : line;
                           const nowrap = isObj && line.nowrap;
                           return (
-                            <div key={li} style={nowrap ? { whiteSpace: 'nowrap', fontSize: 10 } : undefined}>{text}</div>
+                            <div key={li} style={nowrap ? { fontSize: 10 } : undefined}>{text}</div>
                           );
                         })}
                       </div>
+                      {/* 개인 메모 */}
+                      {(p.memo || p.notes) && (
+                        <div style={{
+                          fontSize: 10.5,
+                          color: 'rgba(255,255,255,0.85)',
+                          lineHeight: 1.6,
+                          fontStyle: 'italic',
+                        }}>
+                          {p.memo || p.notes}
+                        </div>
+                      )}
                     </div>
                     {/* 컨디션 — 하단 고정 */}
                     {(() => {
@@ -2696,17 +2912,18 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                       ];
                       const hasAny = COND.some(({ key }) => Number(cond[key] || 0) > 0);
                       if (!hasAny) return null;
+                      const renderPill = ({ key, label }) => {
+                        const val = Number(cond[key] || 0);
+                        return (
+                          <div key={key} style={{ display: 'flex', alignItems: 'center', flexShrink: 0, background: 'rgba(255,255,255,0.18)', borderRadius: 999, padding: '2px 5px', height: 16 }}>
+                            <span style={{ fontSize: 9, fontWeight: 800, color: '#fff', lineHeight: 1, whiteSpace: 'nowrap' }}>{label}</span>
+                            <span style={{ fontSize: 9, fontWeight: 300, color: val > 0 ? '#fff' : 'rgba(255,255,255,0.4)', lineHeight: 1, whiteSpace: 'nowrap' }}>&nbsp;{val}</span>
+                          </div>
+                        );
+                      };
                       return (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(44px, 1fr))', gap: 4 }}>
-                          {COND.map(({ key, label }) => {
-                            const val = Number(cond[key] || 0);
-                            return (
-                              <div key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.18)', borderRadius: 999, padding: '2px 6px', height: 16 }}>
-                                <span style={{ fontSize: 8, fontWeight: 800, color: '#fff', lineHeight: 1, whiteSpace: 'nowrap', overflow: 'visible' }}>{label}</span>
-                                <span style={{ fontSize: 9, fontWeight: 300, color: val > 0 ? '#fff' : 'rgba(255,255,255,0.4)', lineHeight: 1, marginLeft: 'auto', flexShrink: 0 }}>{val}</span>
-                              </div>
-                            );
-                          })}
+                        <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'center', gap: 3 }}>
+                          {COND.map(renderPill)}
                         </div>
                       );
                     })()}
@@ -3103,7 +3320,7 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
           className="rmv-overlay"
           style={{
             position: 'fixed',
-            top: 0, bottom: 0, left: '30%', right: activeTab === 'text' ? '23%' : '30%',
+            top: 0, bottom: 0, left: '30%', right: activeTab === 'text' ? '23%' : activeTab === 'entry' ? '16%' : '27%',
             zIndex: 50,
             overflow: 'visible',
             background: 'rgba(255, 255, 255)',
@@ -3111,6 +3328,7 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
             transform: 'translateX(0)',
             opacity: showDetail ? 1 : 0,
             pointerEvents: showDetail ? 'auto' : 'none',
+            transition: 'right 0.45s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
           <MemberDetail
