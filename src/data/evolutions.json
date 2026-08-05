@@ -5211,17 +5211,6 @@
       }
     },
     {
-      "from": 57,
-      "to": 979,
-      "fromName": "primeape",
-      "toName": "annihilape",
-      "condition": {
-        "type": "moveUsage",
-        "move": "ragefist",
-        "count": 20
-      }
-    },
-    {
       "from": 133,
       "to": 470,
       "fromName": "eevee",
