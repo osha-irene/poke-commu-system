@@ -853,6 +853,12 @@ export function BattleView() {
       const memberIds = new Set([...Object.keys(usage), ...Object.keys(crits), ...Object.keys(heldItemUsed)]);
       await Promise.all([...memberIds].map(async (memberId) => {
         try {
+          // NPC 트레이너의 포켓몬은 배틀에서 나무열매를 "먹어도" 실제 보유 아이템에서
+          // 소모 처리하지 않는다 - NPC는 플레이어가 직접 채워준 지닌 도구를 회수할 방법이
+          // 없으므로, 매번 배틀할 때마다 열매가 사라지면 관리자가 계속 다시 채워줘야 한다.
+          const isNpcSnap = await get(ref(database, `members/${memberId}/isNPC`));
+          const isNpc = !!isNpcSnap.val();
+
           const snap = await get(ref(database, `members/${memberId}/caughtPokemon`));
           const rawCaught = snap.val();
 
@@ -877,7 +883,7 @@ export function BattleView() {
               } else if (next.lastBattleCritCount !== undefined) {
                 next = { ...next, lastBattleCritCount: 0 };
               }
-              if (heldItemUsed[memberId]?.[key] && (next.heldItem || next.item || next.heldItemName)) {
+              if (!isNpc && heldItemUsed[memberId]?.[key] && (next.heldItem || next.item || next.heldItemName)) {
                 next = clearHeldItem(next);
               }
               return next;
@@ -898,7 +904,7 @@ export function BattleView() {
           }
 
           // 파트너 포켓몬은 caughtPokemon 배열이 아니라 별도 경로에 저장되므로 따로 확인한다.
-          if (heldItemUsed[memberId]) {
+          if (!isNpc && heldItemUsed[memberId]) {
             const partnerSnap = await get(ref(database, `members/${memberId}/partnerPokemon`));
             const partner = partnerSnap.val();
             if (partner) {
