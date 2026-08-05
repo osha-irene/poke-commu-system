@@ -1061,7 +1061,7 @@
       "toName": "pikachu",
       "condition": {
         "type": "friendship",
-        "friendship": 220
+        "friendship": 160
       }
     },
     {
