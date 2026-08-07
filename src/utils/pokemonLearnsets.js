@@ -1,3 +1,5 @@
+import evolutionsData from '../data/evolutions.json';
+
 export const getPokemonLearnsetKeys = (pokemonOrNumber) => {
   if (pokemonOrNumber === null || pokemonOrNumber === undefined) return [];
 
@@ -35,3 +37,28 @@ export const getLearnsetTmMoves = (learnset = {}) => (
 export const getLearnsetEggMoves = (learnset = {}) => (
   learnset.eggMoves || []
 );
+
+const findPreEvolutionNumber = (number) => {
+  const evolution = (evolutionsData.evolutions || []).find((e) => String(e.to) === String(number));
+  return evolution ? evolution.from : null;
+};
+
+// 교배(알)로는 미진화체만 얻을 수 있어서, 학습셋 데이터에는 진화체의 eggMoves가 비어있는
+// 경우가 많다(예: 페르시안-알로라 10108은 []이지만 나옹-알로라 10107은 알기술을 갖고 있음).
+// 실제로는 진화해도 원래 알로 태어났을 때 배울 수 있었던 기술을 그대로 떠올릴 수 있어야
+// 하므로, 자기 학습셋에 eggMoves가 없으면 진화 전 단계로 거슬러 올라가며 찾는다.
+export const getInheritedEggMoves = (pokemonLearnsets = {}, pokemonOrNumber, visited = new Set()) => {
+  const learnset = getPokemonLearnset(pokemonLearnsets, pokemonOrNumber);
+  const ownEggMoves = getLearnsetEggMoves(learnset || {});
+  if (ownEggMoves.length > 0) return ownEggMoves;
+
+  const keys = getPokemonLearnsetKeys(pokemonOrNumber);
+  const resolvedKey = keys.find((candidate) => pokemonLearnsets[candidate]);
+  if (resolvedKey == null || visited.has(resolvedKey)) return [];
+  visited.add(resolvedKey);
+
+  const preEvoNumber = findPreEvolutionNumber(resolvedKey);
+  if (preEvoNumber == null) return [];
+
+  return getInheritedEggMoves(pokemonLearnsets, preEvoNumber, visited);
+};

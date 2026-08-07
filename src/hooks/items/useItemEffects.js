@@ -1,7 +1,7 @@
 // src/hooks/items/useItemEffects.js
 import { useRef, useEffect } from 'react';
 import { isEVItem, applyEVItem } from '../../utils/evItemUtils';
-import { getLearnsetTmMoves, getLearnsetEggMoves, getPokemonLearnset } from '../../utils/pokemonLearnsets';
+import { getLearnsetTmMoves, getInheritedEggMoves, getPokemonLearnset } from '../../utils/pokemonLearnsets';
 import { isRareCandyItem, resolveItemData } from '../../utils/itemUsageRules';
 import { isSoyYYNItem } from '../../utils/specialItemUtils';
 import { findPokemonTemplate } from '../../utils/pokemonBaseStats';
@@ -285,7 +285,7 @@ export const useItemEffects = (
         return;
       }
 
-      const poolIds = isGenericTmItem ? getLearnsetTmMoves(learnset) : getLearnsetEggMoves(learnset);
+      const poolIds = isGenericTmItem ? getLearnsetTmMoves(learnset) : getInheritedEggMoves(pokemonLearnsets, pokemon);
       const knownMoveIds = new Set((pokemon.moves || []).map(m => m.moveId));
       const options = poolIds
         .filter(moveId => !knownMoveIds.has(moveId))

@@ -1,5 +1,5 @@
 import evolutionsData from '../data/evolutions.json';
-import { getLearnsetTmMoves, getLearnsetEggMoves, getPokemonLearnset } from './pokemonLearnsets';
+import { getLearnsetTmMoves, getInheritedEggMoves, getPokemonLearnset } from './pokemonLearnsets';
 import { getEVItemEffect, isEVItem } from './evItemUtils';
 import { isSoyYYNItem } from './specialItemUtils';
 
@@ -182,7 +182,7 @@ export const canUseItemOnPokemonTarget = ({
     if (!learnset) return false;
     const poolIds = resolvedItemData.specialEffect === 'learnAnyTmMove'
       ? getLearnsetTmMoves(learnset)
-      : getLearnsetEggMoves(learnset);
+      : getInheritedEggMoves(pokemonLearnsets, pokemon);
     const knownMoveIds = new Set((pokemon.moves || []).map(move => move.moveId));
     return poolIds.some(moveId => !knownMoveIds.has(moveId));
   }
