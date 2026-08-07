@@ -496,7 +496,7 @@ export default function CampingAdminPanel({
             {/* 보너스 아이템 */}
             <div className="mb-5 rounded border border-amber-100 bg-amber-50/30 p-3">
               <div className="font-semibold text-amber-800 text-base mb-1">보너스 아이템</div>
-              <p className="text-sm text-gray-500 mb-3">친밀도 기준 이상의 포켓몬이 함께하면 각 아이템을 지정한 확률(%)로 독립적으로 획득합니다.</p>
+              <p className="text-sm text-gray-500 mb-3">친밀도 기준 이상인 참가 포켓몬 마리 수만큼 각 아이템을 지정한 확률(%)로 독립적으로 굴립니다. (예: 기준 이상 포켓몬 3마리 + 확률 100% 아이템 → 3개 확정 획득)</p>
               <BonusItemChancePanel
                 bonusItems={draft.bonusItems}
                 onUpdate={items => updateDraft('bonusItems', items)}

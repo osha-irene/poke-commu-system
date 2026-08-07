@@ -394,7 +394,7 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
       ...normalizeCaughtPokemon(friendshipResult.caughtPokemon).filter(isEntry),
       ...(friendshipResult.partnerPokemon ? [friendshipResult.partnerPokemon] : []),
     ];
-    const highFriendship = memberEntryPokemon.some(p => Number(p.friendship || 0) >= settings.minFriendshipForBonus);
+    const highFriendshipCount = memberEntryPokemon.filter(p => Number(p.friendship || 0) >= settings.minFriendshipForBonus).length;
 
     let inventory = memberData.inventory || [];
     const dishItem = success
@@ -406,15 +406,17 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
       inventory = addInventoryItem(inventory, reward, reward.count || 1);
     }
     let bonusItems = [];
-    if (success && highFriendship) {
-      bonusItems = rollBonusItems(settings, session.currentStage);
+    if (success && highFriendshipCount > 0) {
+      for (let i = 0; i < highFriendshipCount; i++) {
+        bonusItems.push(...rollBonusItems(settings, session.currentStage));
+      }
       for (const item of bonusItems) {
         inventory = addInventoryItem(inventory, item);
       }
     }
 
     let egg = null;
-    if (success && session.isDuo && session.partnerId && !memberData.egg) {
+    if (session.isDuo && session.partnerId && !memberData.egg) {
       const partnerSnap = await db.ref(`members/${session.partnerId}`).once('value');
       if (partnerSnap.exists()) {
         const partnerData = partnerSnap.val();
@@ -484,7 +486,15 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
       `친밀도 +${rewards.friendshipBonus}`, `경험치 +${rewards.expBonus}`,
     ];
     if (rewards.dishItem) lines.push(`떡볶이 아이템: ${rewards.dishItem.name || rewards.dishItem.nameEn}`);
-    if (rewards.bonusItems?.length) lines.push(`보너스 아이템: ${rewards.bonusItems.map(item => item.name).join(', ')}`);
+    if (rewards.bonusItems?.length) {
+      const grouped = Object.values(rewards.bonusItems.reduce((acc, item) => {
+        const key = item.itemId || item.id || item.name;
+        if (!acc[key]) acc[key] = { name: item.name, count: 0 };
+        acc[key].count += 1;
+        return acc;
+      }, {}));
+      lines.push(`보너스 아이템: ${grouped.map(g => g.count > 1 ? `${g.name} x${g.count}` : g.name).join(', ')}`);
+    }
     if (rewards.failRewards?.length) lines.push(`실패 보상: ${rewards.failRewards.map(item => `${item.name || item.nameKo || item.nameEn || item.itemId} x${item.count || 1}`).join(', ')}`);
     if (rewards.egg) lines.push('알을 발견했어요!');
     return lines.join('\n');
