@@ -172,7 +172,8 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
         randomBoxes: loadedData.randomBoxes || getDefaultRandomBoxes(),
         refreshInterval: loadedData.refreshInterval || 86400000,
         lastRefresh: loadedData.lastRefresh || Date.now(),
-        lastWeekReset: loadedData.lastWeekReset || currentWeek
+        lastWeekReset: loadedData.lastWeekReset || currentWeek,
+        cramorantBeakItem: loadedData.cramorantBeakItem || null
       };
     };
 

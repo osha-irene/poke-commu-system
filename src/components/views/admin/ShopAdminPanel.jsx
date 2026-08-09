@@ -28,19 +28,32 @@ export default function ShopAdminPanel({
   const [showGachaPanel, setShowGachaPanel] = useState(false);
   const [showRandomBoxPanel, setShowRandomBoxPanel] = useState(false);
   const [showBeakItemSelector, setShowBeakItemSelector] = useState(false);
+  const [pendingBeakItemId, setPendingBeakItemId] = useState(null);
+  const [isSavingBeakItem, setIsSavingBeakItem] = useState(false);
 
-  const cramorantBeakItem = allItems.find(i => i.id === (shopData.cramorantBeakItem?.itemId ?? 17));
+  const savedBeakItemId = shopData.cramorantBeakItem?.itemId ?? 17;
+  const cramorantBeakItem = allItems.find(i => i.id === (pendingBeakItemId ?? savedBeakItemId));
+  const hasPendingBeakChange = pendingBeakItemId !== null && pendingBeakItemId !== savedBeakItemId;
 
-  const handleSelectBeakItem = async (item) => {
-    const updatedShopData = { ...shopData, cramorantBeakItem: { itemId: item.id } };
+  const handleSelectBeakItem = (item) => {
+    setPendingBeakItemId(item.id);
+    setShowBeakItemSelector(false);
+  };
+
+  const handleSaveBeakItem = async () => {
+    setIsSavingBeakItem(true);
     try {
-      await onUpdateShop(updatedShopData);
-      setShowBeakItemSelector(false);
+      await onUpdateShop({ ...shopData, cramorantBeakItem: { itemId: pendingBeakItemId } });
+      setPendingBeakItemId(null);
     } catch (error) {
       console.error('윽우지 부리 아이템 설정 실패:', error);
       alert('설정 저장 중 오류가 발생했습니다: ' + error.message);
+    } finally {
+      setIsSavingBeakItem(false);
     }
   };
+
+  const handleCancelBeakItem = () => setPendingBeakItemId(null);
 
   const handleResetBeak = () => {
     if (window.confirm('모든 회원의 윽우지 부리 이스터에그를 다시 클릭할 수 있게 리셋할까요?')) {
@@ -178,6 +191,7 @@ export default function ShopAdminPanel({
         </div>
         <span className="text-sm text-gray-600">
           지급 아이템: <strong>{cramorantBeakItem?.name || '설정 안 됨'}</strong>
+          {hasPendingBeakChange && <span className="text-orange-600 font-semibold"> (저장 안 됨)</span>}
         </span>
         <button
           onClick={() => setShowBeakItemSelector(true)}
@@ -185,6 +199,24 @@ export default function ShopAdminPanel({
         >
           아이템 변경
         </button>
+        {hasPendingBeakChange && (
+          <>
+            <button
+              onClick={handleSaveBeakItem}
+              disabled={isSavingBeakItem}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-indigo-600 bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60"
+            >
+              {isSavingBeakItem ? '저장 중...' : '저장'}
+            </button>
+            <button
+              onClick={handleCancelBeakItem}
+              disabled={isSavingBeakItem}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-300 bg-white text-gray-600 hover:bg-gray-100"
+            >
+              취소
+            </button>
+          </>
+        )}
         <button
           onClick={handleResetBeak}
           className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-red-300 bg-red-50 text-red-600 hover:bg-red-100"
