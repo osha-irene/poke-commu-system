@@ -1261,15 +1261,6 @@
             }
         },
         {
-            "from": 215,
-            "to": 903,
-            "fromName": "sneasel",
-            "toName": "sneasler",
-            "condition": {
-                "timeOfDay": "day"
-            }
-        },
-        {
             "from": 216,
             "to": 217,
             "fromName": "teddiursa",

@@ -1351,6 +1351,7 @@ export default function App() {
     trainer,
     caughtPokemon,
     items,
+    allItems,
     encounterPokemon,
     firstCatchPokemon,
     statSelectPending,
@@ -2155,11 +2156,12 @@ return (
           onClose={handleCloseEncounter}
           onCatchSuccess={handleCatchSuccess}  
           items={items}
-          sharedPokedexData={sharedPokedexData} 
-          caughtPokemon={caughtPokemon} 
-          onApplyLoot={applyLoot} 
+          allItems={allItems}
+          sharedPokedexData={sharedPokedexData}
+          caughtPokemon={caughtPokemon}
+          onApplyLoot={applyLoot}
           isSuperAdmin={currentUser?.isSuperAdmin}
-          allPokemonMaster={allPokemonMaster} 
+          allPokemonMaster={allPokemonMaster}
           maxNonPartnerPokemon={(Number(systemSettings?.maxNonPartnerPokemon) || 18) + (Number(currentUser?.bonusPokemonSlots) || 0)}
           escapeMode={systemSettings?.escapeMode || 'none'}
           isCave={encounterPokemon.isCave === true}

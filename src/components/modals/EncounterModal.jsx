@@ -29,6 +29,7 @@ export default function EncounterModal({
   onClose,
   onCatchSuccess,
   items,
+  allItems = [],
   sharedPokedexData = {},
   caughtPokemon = [],
   allPokemonMaster = [],
@@ -114,12 +115,24 @@ export default function EncounterModal({
     return ownedSpeciesKey && ownedSpeciesKey === targetSpeciesKey;
   });
 
-  // 인벤토리에서 볼 종류만 필터링하고 배율 계산
+  // 인벤토리 아이템(itemId, name, count만 있음)에는 카테고리 정보가 없어서, 마스터 아이템
+  // 목록(allItems)에서 itemId로 실제 포켓볼 포켓(categoryData.pocket === 'pokeballs')인지
+  // 조회한다. 예전엔 이름에 "볼"/"ball"이 들어가는지로만 판별해서 볼 변경 티켓, 연막탄,
+  // 전기구슬 같은 비-포켓볼 아이템까지 포획 볼 목록에 몬스터볼 취급으로 끼어들었다.
+  const itemMasterById = useMemo(() => {
+    const map = new Map();
+    for (const master of allItems) {
+      if (master?.id !== undefined && master?.id !== null) map.set(String(master.id), master);
+    }
+    return map;
+  }, [allItems]);
+
   const pokeballs = items
     .filter(item => {
       if (!item || !item.name) return false;
+      const master = itemMasterById.get(String(item.itemId));
+      if (master ? master.categoryData?.pocket !== 'pokeballs' : true) return false;
       const name = item.name.toLowerCase();
-      if (!(name.includes('볼') || name.includes('ball'))) return false;
       const isSafariBall = name.includes('사파리') || name.includes('safari');
       if (isSafariBall !== isSafari) return false;
       return true;

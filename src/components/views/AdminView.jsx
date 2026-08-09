@@ -222,6 +222,7 @@ export default function AdminView() {
     toggleAdminStatus,
     resetMemberWalkCount,
     resetAllWalkCounts,
+    resetAllCramorantBeak,
     bulkAdjustPartnerLevel,
     bulkIncreaseFriendship,
     bulkGiveItem,
@@ -857,6 +858,7 @@ export default function AdminView() {
           onAddDailyItem={addDailyItem}
           onRemoveDailyItem={removeDailyItem}
           onTogglePersistent={toggleItemPersistent}
+          onResetCramorantBeak={resetAllCramorantBeak}
         />
       )}
 

@@ -174,7 +174,8 @@ export default function useGameState() {
     addDailyItem,
     removeDailyItem,
     toggleItemPersistent,
-    handlePurchase
+    handlePurchase,
+    claimCramorantBeak
   } = useShop(currentUser, updateCurrentUser, allItems, updateInventory);
 
   // 기술
@@ -517,6 +518,7 @@ export default function useGameState() {
     saveFirstCatchMemo,
     skipFirstCatchMemo,
     handlePurchase,
+    claimCramorantBeak,
     createCustomItem,
     applyLoot: lootHook.applyLoot,
     updateRegionLootConfig: (regionId, lootConfig) => 

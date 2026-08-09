@@ -735,6 +735,45 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
     }
   };
 
+  // ⭐ 윽우지 부리 이스터에그 - 1인당 1회, 관리자가 shopData.cramorantBeakItem으로 지급
+  // 아이템을 지정할 수 있다(기본값: 상처약/id 17). 인벤토리 반영은 CLAUDE.md 규칙대로
+  // updateInventory(트랜잭션)로 처리한다 - 예전엔 ShopView에서 클로저에 캡처된
+  // trainer.inventory 스냅샷에 그대로 이어붙여 updateCurrentUser로 덮어썼는데, 그 사이
+  // 다른 곳(구매/전리품 등)에서 바뀐 인벤토리를 통째로 날릴 수 있는 방식이었다.
+  const claimCramorantBeak = async () => {
+    if (!currentUser || currentUser.cramorantBeakClaimed) return { success: false };
+
+    const configuredItemId = shopData.cramorantBeakItem?.itemId ?? 17;
+    const rewardItem = allItems.find(i => i.id === configuredItemId);
+    if (!rewardItem) return { success: false };
+
+    const result = await updateInventory((inventory) => {
+      const next = Array.isArray(inventory) ? [...inventory] : [];
+      const existingIndex = next.findIndex(i => i.itemId === rewardItem.id);
+      if (existingIndex >= 0) {
+        next[existingIndex] = { ...next[existingIndex], count: (Number(next[existingIndex].count) || 0) + 1 };
+      } else {
+        next.push({
+          itemId: rewardItem.id,
+          name: rewardItem.name,
+          nameEn: rewardItem.nameEn,
+          count: 1,
+          imageUrl: rewardItem.spriteUrl || rewardItem.imageUrl,
+          cost: rewardItem.cost || 0,
+          sellPrice: rewardItem.sellPrice || 0,
+          category: rewardItem.category,
+          pocket: getItemPocket(rewardItem),
+        });
+      }
+      return next;
+    });
+
+    if (!result.committed) return { success: false };
+
+    updateCurrentUser({ cramorantBeakClaimed: true });
+    return { success: true, itemName: rewardItem.name };
+  };
+
   return {
     shopData,
     updateShopData,
@@ -745,6 +784,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
     sellItem,
     buyRandomBox,
     handlePurchase,
+    claimCramorantBeak,
     isLoading
   };
 };

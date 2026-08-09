@@ -74,6 +74,9 @@ const normalizeStage = (stage, index) => ({
       expBonus: exp.min,
       successRate: toProbability(stage?.successRate, 1),
       message: String(stage?.message || DEFAULT_CAMPING_SETTINGS.stages[index]?.message || ''),
+      bonusItems: Array.isArray(stage?.bonusItems) ? stage.bonusItems : [],
+      minPick: Math.max(1, Number(stage?.minPick ?? 1) || 1),
+      maxPick: Math.max(1, Number(stage?.maxPick ?? stage?.minPick ?? 1) || 1),
     };
   })(),
 });
@@ -235,11 +238,29 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
     };
   };
 
-  const rollBonusItems = (settings, currentStage) => {
+  // 단계 완료 시 지급되는 "단계 아이템 풀": 친밀도 조건과 무관하게, 이 단계 완료 1회당
+  // minPick~maxPick개를 풀에서 매번 독립적으로(복원추출로) 뽑는다 — 같은 아이템이 여러 번
+  // 나올 수 있다 (예: A/B/C 풀 → ABC, AAB, ACC 등 모두 가능).
+  const rollStageItems = (settings, currentStage) => {
     const idx = typeof currentStage === 'number' ? currentStage - 1 : -1;
-    const stageItems = idx >= 0 ? settings.stages?.[idx]?.bonusItems : null;
-    const pool = Array.isArray(stageItems) && stageItems.length > 0 ? stageItems : settings.bonusItems;
-    const items = (pool || []).filter(item => Number(item.chance ?? item.weight) > 0);
+    const stageSettings = idx >= 0 ? settings.stages?.[idx] : null;
+    const pool = Array.isArray(stageSettings?.bonusItems) ? stageSettings.bonusItems : [];
+    if (pool.length === 0) return [];
+    const minPick = Math.max(1, Number(stageSettings.minPick ?? 1) || 1);
+    const maxPick = Math.max(minPick, Number(stageSettings.maxPick ?? minPick) || minPick);
+    const pickCount = rollRange(minPick, maxPick, minPick);
+    const picked = [];
+    for (let i = 0; i < pickCount; i++) {
+      picked.push(pool[Math.floor(Math.random() * pool.length)]);
+    }
+    return picked;
+  };
+
+  // 전역 "보너스 아이템": 친밀도 기준을 넘는 참가 포켓몬 마리 수만큼 반복해서, 풀의 각
+  // 아이템을 지정된 확률(chance/weight, %)로 독립적으로 굴린다.
+  const rollBonusItems = (settings) => {
+    const pool = Array.isArray(settings.bonusItems) ? settings.bonusItems : [];
+    const items = pool.filter(item => Number(item.chance ?? item.weight) > 0);
     return items.filter(item => Math.random() < toProbability(item.chance ?? item.weight, 0));
   };
 
@@ -406,13 +427,16 @@ const createCampBot = ({ db, pokemonData, findMemberByAccount, extractMentionAcc
       inventory = addInventoryItem(inventory, reward, reward.count || 1);
     }
     let bonusItems = [];
+    if (success) {
+      bonusItems.push(...rollStageItems(settings, session.currentStage));
+    }
     if (success && highFriendshipCount > 0) {
       for (let i = 0; i < highFriendshipCount; i++) {
-        bonusItems.push(...rollBonusItems(settings, session.currentStage));
+        bonusItems.push(...rollBonusItems(settings));
       }
-      for (const item of bonusItems) {
-        inventory = addInventoryItem(inventory, item);
-      }
+    }
+    for (const item of bonusItems) {
+      inventory = addInventoryItem(inventory, item);
     }
 
     let egg = null;

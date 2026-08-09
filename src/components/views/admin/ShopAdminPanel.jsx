@@ -10,13 +10,14 @@ import PeriodItemPanel from '../../shop/PeriodItemPanel';
 import GachaBallPanel from '../../shop/GachaBallPanel';
 import RandomBoxAdminPanel from './RandomBoxAdminPanel';
 
-export default function ShopAdminPanel({ 
+export default function ShopAdminPanel({
   shopData = {},
   allItems = [],
   onUpdateShop,
   onAddDailyItem,
   onRemoveDailyItem,
-  onTogglePersistent
+  onTogglePersistent,
+  onResetCramorantBeak
 }) {
   const [activeTab, setActiveTab] = useState('current');
   const [showItemSelector, setShowItemSelector] = useState(false);
@@ -26,6 +27,26 @@ export default function ShopAdminPanel({
   const [showPeriodPanel, setShowPeriodPanel] = useState(false);
   const [showGachaPanel, setShowGachaPanel] = useState(false);
   const [showRandomBoxPanel, setShowRandomBoxPanel] = useState(false);
+  const [showBeakItemSelector, setShowBeakItemSelector] = useState(false);
+
+  const cramorantBeakItem = allItems.find(i => i.id === (shopData.cramorantBeakItem?.itemId ?? 17));
+
+  const handleSelectBeakItem = async (item) => {
+    const updatedShopData = { ...shopData, cramorantBeakItem: { itemId: item.id } };
+    try {
+      await onUpdateShop(updatedShopData);
+      setShowBeakItemSelector(false);
+    } catch (error) {
+      console.error('윽우지 부리 아이템 설정 실패:', error);
+      alert('설정 저장 중 오류가 발생했습니다: ' + error.message);
+    }
+  };
+
+  const handleResetBeak = () => {
+    if (window.confirm('모든 회원의 윽우지 부리 이스터에그를 다시 클릭할 수 있게 리셋할까요?')) {
+      onResetCramorantBeak?.();
+    }
+  };
 
   const handleItemSelect = (item) => {
     setSelectedItem(item);
@@ -150,6 +171,28 @@ export default function ShopAdminPanel({
         </div>
       </div>
 
+      <div className="bg-white rounded-lg border border-gray-200 p-4 flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 text-sm font-bold text-gray-700 whitespace-nowrap">
+          <Gift size={16} />
+          윽우지 부리 이스터에그
+        </div>
+        <span className="text-sm text-gray-600">
+          지급 아이템: <strong>{cramorantBeakItem?.name || '설정 안 됨'}</strong>
+        </span>
+        <button
+          onClick={() => setShowBeakItemSelector(true)}
+          className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-300 bg-white text-gray-600 hover:bg-gray-100"
+        >
+          아이템 변경
+        </button>
+        <button
+          onClick={handleResetBeak}
+          className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-red-300 bg-red-50 text-red-600 hover:bg-red-100"
+        >
+          전체 리셋
+        </button>
+      </div>
+
       {activeTab === 'current' && (
         <CurrentShopTab 
           shopData={shopData}
@@ -174,6 +217,14 @@ export default function ShopAdminPanel({
         onSelect={handleItemSelect}
         items={allItems}
         title="상점에 추가할 아이템 선택"
+      />
+
+      <ItemSelectorModal
+        show={showBeakItemSelector}
+        onClose={() => setShowBeakItemSelector(false)}
+        onSelect={handleSelectBeakItem}
+        items={allItems}
+        title="윽우지 부리 지급 아이템 선택"
       />
 
       <AddItemSettingsModal

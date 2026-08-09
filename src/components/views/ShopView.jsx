@@ -43,6 +43,15 @@ const P = {
   rareBg:    'rgba(112,16,176,0.10)',
 };
 
+// 한글 완성형 음절의 마지막 글자에 받침이 있는지 판정 (목적격 조사 을/를 선택용).
+// 한글이 아닌 문자로 끝나면(영문/숫자 등) 받침 없는 쪽을 기본값으로 쓴다.
+const hasBatchim = (value) => {
+  const lastChar = String(value || '').trim().slice(-1);
+  const code = lastChar.charCodeAt(0);
+  if (Number.isNaN(code) || code < 0xac00 || code > 0xd7a3) return false;
+  return (code - 0xac00) % 28 !== 0;
+};
+
 const getDailyGachaBalls = (balls) => {
   if (!balls || balls.length <= 2) return balls || [];
   const dateStr = getKoreaDateKey();
@@ -82,7 +91,8 @@ export default function ShopView() {
     updateCurrentUser,
     allItems = [],
     shopData = {},
-    handlePurchase: onPurchase
+    handlePurchase: onPurchase,
+    claimCramorantBeak
   } = useGame();
 
   const [selectedItem, setSelectedItem] = useState(null);
@@ -144,33 +154,14 @@ export default function ShopView() {
     <span>보유 {getOwnedItemCount(item).toLocaleString()}개</span>
   );
 
-  const handleCramorantBeakClick = () => {
+  const handleCramorantBeakClick = async () => {
     if (trainer?.cramorantBeakClaimed) return;
-    const potionItem = allItems.find(i => i.id === 17 || i.name === '상처약');
-    const inventory = Array.isArray(trainer?.inventory) ? trainer.inventory : [];
-    const existingItem = inventory.find(i => i.itemId === 17 || i.name === '상처약');
-    const newInventory = existingItem
-      ? inventory.map(i => (
-          (i.itemId === 17 || i.name === '상처약') ? { ...i, count: (i.count || 0) + 1 } : i
-        ))
-      : [
-          ...inventory,
-          {
-            itemId: 17,
-            name: '상처약',
-            nameEn: potionItem?.nameEn,
-            count: 1,
-            imageUrl: potionItem?.spriteUrl || potionItem?.imageUrl,
-            cost: potionItem?.cost || 0,
-            sellPrice: potionItem?.sellPrice || 0,
-            category: potionItem?.category,
-            pocket: getItemPocket(potionItem),
-          },
-        ];
-    updateCurrentUser({ inventory: newInventory, cramorantBeakClaimed: true });
+    const result = await claimCramorantBeak?.();
+    if (!result?.success) return;
+    const withObjectParticle = (name) => `${name}${hasBatchim(name) ? '을' : '를'}`;
     beakQueueRef.current = [
-      '윽우지가 목에 걸려 있던 상처약을 뱉었다!',
-      '…상처약을 1개 얻었다!',
+      `윽우지가 목에 걸려 있던 ${withObjectParticle(result.itemName)} 뱉었다!`,
+      `…${withObjectParticle(result.itemName)} 1개 얻었다!`,
     ];
     setBeakMsg('윽우지의 부리를 실수로 건드렸다!');
   };

@@ -337,7 +337,7 @@ const moveChoiceTokenFromText = (content) => {
 
 const teamChoiceFromText = (content) => {
   const text = extractBracketText(content);
-  const match = text.match(/^(?:포켓몬|엔트리|선택)\s*([1-6])$/i) || text.match(/^([1-6])번?$/);
+  const match = text.match(/^(?:포켓몬|엔트리|선택)\s*([1-7])$/i) || text.match(/^([1-7])번?$/);
   if (match) return { type: 'index', value: Number(match[1]) };
   // 대괄호로 감싼 이름만 "이름으로 선택"으로 인정한다. 대괄호가 없으면 extractBracketText가
   // 메시지 전체를 그대로 돌려주므로, 여기서 막지 않으면 배틀과 무관한 잡담까지
@@ -380,7 +380,7 @@ const isBattleMoveLikeText = (content) => {
   const text = extractBracketText(content);
   if (!text) return false;
   if (/^(캠핑|계속|만족|교환|배틀\s*(신청|수락|거절|도움말|help)|기권)/i.test(text)) return false;
-  if (/^(포켓몬|엔트리|선택)\s*[1-6]$/i.test(text)) return false;
+  if (/^(포켓몬|엔트리|선택)\s*[1-7]$/i.test(text)) return false;
   return isExplicitMoveText(content) || isKnownMoveText(content);
 };
 
@@ -461,7 +461,7 @@ const toPackedSet = (pokemonData, pokemon) => {
 };
 
 const packTeam = (pokemonData, pokemonList) =>
-  getPokemonSim().Teams.pack(pokemonList.slice(0, 6).map((pokemon) => toPackedSet(pokemonData, pokemon)));
+  getPokemonSim().Teams.pack(pokemonList.slice(0, 7).map((pokemon) => toPackedSet(pokemonData, pokemon)));
 
 const extractName = (value = '') => String(value).replace(/^p[12][a-z]?:\s*/, '') || value;
 
@@ -1061,7 +1061,7 @@ const formatPokemonName = (pokemon) => {
 
 const formatEntryList = (label, pokemonList = []) => [
   `${label} 엔트리`,
-  ...pokemonList.slice(0, 6).map((pokemon, index) => (
+  ...pokemonList.slice(0, 7).map((pokemon, index) => (
     // player1Entries/player2Entries의 pokemon.name은 세션 생성 시 이미 formatPokemonName으로
     // "닉네임 (종족명)" 형태로 만들어둔 값이라, 여기서 다시 formatPokemonName을 부르면
     // "닉네임 (닉네임 (종족명))"처럼 이중으로 감싸진다.
@@ -1374,8 +1374,8 @@ const createBattleBot = ({
     if (!opponent) return '[배틀 신청] 뒤에 상대 계정을 함께 태그해 주세요.';
     if (opponent.id === author.id) return '자기 자신에게는 배틀을 신청할 수 없어요.';
 
-    const player1Pokemon = getParticipantPokemon(author.member).slice(0, 6);
-    const player2Pokemon = getParticipantPokemon(opponent.member).slice(0, 6);
+    const player1Pokemon = getParticipantPokemon(author.member).slice(0, 7);
+    const player2Pokemon = getParticipantPokemon(opponent.member).slice(0, 7);
     if (!player1Pokemon.length) return '신청자의 배틀 참가 포켓몬을 찾을 수 없어요.';
     if (!player2Pokemon.length) return '상대의 배틀 참가 포켓몬을 찾을 수 없어요.';
 

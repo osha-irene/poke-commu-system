@@ -611,6 +611,39 @@ export const useAdminMembers = (
     }
   };
 
+  // ========== 윽우지 부리 이스터에그 전체 리셋 ==========
+  // cramorantBeakClaimed는 boolean 플래그(누적값 아님)라 다른 재화 필드처럼 트랜잭션이
+  // 필요하진 않지만, resetAllWalkCounts와 같은 이유로 바뀐 필드만 update()로 건드린다.
+  const resetAllCramorantBeak = async () => {
+    if (!currentUser?.isAdmin) return;
+
+    try {
+      const updates = {};
+      for (const [id, member] of Object.entries(members)) {
+        if (!member?.cramorantBeakClaimed) continue;
+        await update(ref(database, `members/${id}`), { cramorantBeakClaimed: false });
+        updates[id] = { cramorantBeakClaimed: false };
+      }
+
+      setMembers(prev => {
+        const next = { ...prev };
+        Object.entries(updates).forEach(([id, fieldUpdates]) => {
+          next[id] = { ...next[id], ...fieldUpdates };
+        });
+        return next;
+      });
+
+      if (updates[currentUser?.id]) {
+        updateCurrentUser({ cramorantBeakClaimed: false });
+      }
+
+      alert(`${Object.keys(updates).length}명의 윽우지 부리 이스터에그를 리셋했습니다!`);
+    } catch (error) {
+      console.error('❌ 윽우지 부리 리셋 실패:', error);
+      alert('윽우지 부리 리셋 중 오류가 발생했습니다: ' + error.message);
+    }
+  };
+
   // ========== 파트너 포켓몬 레벨 일괄 조정 (선택 회원 대상) ==========
   const bulkAdjustPartnerLevel = async (memberIds, delta) => {
     if (!currentUser?.isAdmin) return;
@@ -1999,6 +2032,7 @@ export const useAdminMembers = (
     updateMaxDailyWalks,
     resetMemberWalkCount,
     resetAllWalkCounts,
+    resetAllCramorantBeak,
     bulkAdjustPartnerLevel,
     bulkIncreaseFriendship,
     bulkGiveMoney,
