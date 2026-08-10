@@ -4931,6 +4931,15 @@
             }
         },
         {
+            "from": 840,
+            "to": 1011,
+            "fromName": "applin",
+            "toName": "dipplin",
+            "condition": {
+                "knownMove": "dragon-cheer"
+            }
+        },
+        {
             "from": 1012,
             "to": 1013,
             "fromName": "poltchageist",
