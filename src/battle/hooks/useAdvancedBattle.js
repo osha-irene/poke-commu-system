@@ -149,12 +149,21 @@ const toShowdownMoveId = (move) => {
 
 const ZERO_EVS = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
 
+// 메테노는 도감 데이터상 색깔별 운석 폼("minior-red-meteor" 등)으로 저장되지만,
+// Pokemon Showdown 시뮬레이터는 운석 폼의 색깔을 구분하지 않고 "Minior-Meteor"
+// 하나만 인식한다(코어 폼만 색깔별로 존재). 색깔이 붙은 이름을 그대로 넘기면
+// 시뮬레이터가 종을 못 찾아서 배틀에 낼 수 없다.
+const resolveBattleSpeciesName = (species) => {
+  const value = String(species || '');
+  return /^minior-.+-meteor$/i.test(value) ? 'Minior-Meteor' : value;
+};
+
 // 오리진 난이도(배틀 아이템 사용 ON)에서는 모든 포켓몬의 기초포인트(노력치)가
 // 배틀 스탯에 반영되지 않도록 0으로 취급한다. 실제 저장된 pokemon.effort 값은
 // 건드리지 않고, 배틀용 패킹 시점에서만 0으로 대체한다.
 const toPackedSet = (pokemon, { zeroEffort = false } = {}) => ({
   name: pokemon.nickname || pokemon.nameKo || pokemon.name || pokemon.species || 'Pokemon',
-  species: pokemon.species || pokemon.nameEn || pokemon.name || 'Ditto',
+  species: resolveBattleSpeciesName(pokemon.species || pokemon.nameEn || pokemon.name || 'Ditto'),
   item: toShowdownItemName(pokemon.item || pokemon.heldItem || ''),
   ability: toCalcAbilityName(pokemon.abilityEn || pokemon.ability) || 'No Ability',
   moves: (pokemon.moves || []).map(toShowdownMoveId).filter(Boolean).slice(0, 4),

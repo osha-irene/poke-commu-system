@@ -267,6 +267,15 @@ const resolveItemName = (value) => {
   return itemIdMap.get(normalized) || value || '';
 };
 
+// 메테노는 도감 데이터상 색깔별 운석 폼("minior-red-meteor" 등)으로 저장되지만,
+// Pokemon Showdown 시뮬레이터는 운석 폼의 색깔을 구분하지 않고 "Minior-Meteor"
+// 하나만 인식한다(코어 폼만 색깔별로 존재). 색깔이 붙은 이름을 그대로 넘기면
+// 시뮬레이터가 종을 못 찾아서 배틀에 낼 수 없다.
+const resolveSpeciesName = (value) => {
+  const species = String(value || '');
+  return /^minior-.+-meteor$/i.test(species) ? 'Minior-Meteor' : species;
+};
+
 const translateItemName = (value) => {
   ensureBattleDataMaps();
   const normalized = normalizeId(value);
@@ -445,7 +454,7 @@ const toPackedSet = (pokemonData, pokemon) => {
 
   return {
     name: pokemon.nickname || pokemon.name || template?.nameEn || 'Pokemon',
-    species: pokemon.nameEn || template?.nameEn || pokemon.species || pokemon.name || 'Ditto',
+    species: resolveSpeciesName(pokemon.nameEn || template?.nameEn || pokemon.species || pokemon.name || 'Ditto'),
     item,
     ability,
     moves: moves.length ? moves : ['tackle'],
@@ -734,9 +743,15 @@ const protocolToMessage = (line) => {
     case '-terastallize':
       return `${extractName(parts[2])}은(는) ${parts[3]}타입으로 테라스탈했다!`;
     case '-start': {
+      const perishMatch = /^perish(\d)$/i.exec(parts[3] || '');
+      if (perishMatch) {
+        return `${extractName(parts[2])}의 멸망의 카운트가 ${perishMatch[1]}이(가) 되었다!`;
+      }
       const source = formatEffectSource(parts);
       return `${extractName(parts[2])}에게 ${formatBattleEffect(parts[3])} 효과가 나타났다${source ? ` (${translateAbilityName(source)})` : ''}.`;
     }
+    case '-fieldactivate':
+      return null;
     case '-end':
       return `${extractName(parts[2])}의 ${formatBattleEffect(parts[3])} 효과가 사라졌다.`;
     case '-activate':
