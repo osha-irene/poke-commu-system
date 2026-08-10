@@ -84,11 +84,26 @@ export const useRegionExplore = (
 
       if (canReceiveSafariBalls) {
         await updateInventory((inventory) => {
-          const idx = (inventory || []).findIndex(i => i.id === safariBall.id || i.nameEn === safariBall.nameEn);
+          const idx = (inventory || []).findIndex(i => i.itemId === safariBall.id || i.nameEn === safariBall.nameEn);
           if (idx >= 0) {
-            return inventory.map((i, n) => n === idx ? { ...i, count: (i.count || 0) + SAFARI_BALL_DAILY_REWARD_COUNT } : i);
+            // itemId가 없는(과거 버그로 저장된) 항목이 매칭됐을 수도 있으므로, 병합 시
+            // itemId를 항상 다시 채워서 정상 모양으로 복구한다.
+            return inventory.map((i, n) => n === idx ? {
+              ...i,
+              itemId: safariBall.id,
+              count: (i.count || 0) + SAFARI_BALL_DAILY_REWARD_COUNT
+            } : i);
           }
-          return [...(inventory || []), { ...safariBall, count: SAFARI_BALL_DAILY_REWARD_COUNT }];
+          return [
+            ...(inventory || []),
+            {
+              itemId: safariBall.id,
+              name: safariBall.name,
+              nameEn: safariBall.nameEn,
+              count: SAFARI_BALL_DAILY_REWARD_COUNT,
+              imageUrl: safariBall.spriteUrl || safariBall.imageUrl || ''
+            }
+          ];
         });
       }
 
