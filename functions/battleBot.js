@@ -268,12 +268,15 @@ const resolveItemName = (value) => {
 };
 
 // 메테노는 도감 데이터상 색깔별 운석 폼("minior-red-meteor" 등)으로 저장되지만,
-// Pokemon Showdown 시뮬레이터는 운석 폼의 색깔을 구분하지 않고 "Minior-Meteor"
-// 하나만 인식한다(코어 폼만 색깔별로 존재). 색깔이 붙은 이름을 그대로 넘기면
-// 시뮬레이터가 종을 못 찾아서 배틀에 낼 수 없다.
+// Pokemon Showdown 시뮬레이터에서 "Minior-Meteor"는 battleOnly 폼이라 팀 구성 시
+// 직접 지정할 수 없다(코어 폼("Minior")만 팀에 넣을 수 있고, 방탄패기 특성이 HP에
+// 따라 배틀 중 유성의 모습으로 자동 전환한다). "Minior-Meteor"를 그대로 넘기면
+// 방탄패기가 "코어 폼으로 되돌리기"를 시도할 때 되돌아갈 대상(pokemon.set.species)도
+// 유성의 모습이 되어버려서, 매 턴 폼체인지 메시지가 무한 반복되는 버그가 있었다
+// (2026-08-11). 반드시 코어 폼인 "Minior"로 정규화해야 한다.
 const resolveSpeciesName = (value) => {
   const species = String(value || '');
-  return /^minior-.+-meteor$/i.test(species) ? 'Minior-Meteor' : species;
+  return /^minior-.+-meteor$/i.test(species) ? 'Minior' : species;
 };
 
 const translateItemName = (value) => {
