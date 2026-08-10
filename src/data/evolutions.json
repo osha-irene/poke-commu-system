@@ -4931,10 +4931,10 @@
             }
         },
         {
-            "from": 840,
-            "to": 1011,
-            "fromName": "applin",
-            "toName": "dipplin",
+            "from": 1011,
+            "to": 1019,
+            "fromName": "dipplin",
+            "toName": "Hydrapple",
             "condition": {
                 "knownMove": "dragon-cheer"
             }
