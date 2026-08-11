@@ -767,18 +767,21 @@
     },
     { "name": "콩통조림", "stats": { "beauty": 10, "intelligence": 15 } },
     { "name": "식빵", "stats": { "cuteness": 10 } },
-    { "name": "파스타", "stats": { "cuteness": 10, "beauty": 10 } },
+    {
+      "name": "파스타",
+      "stats": { "cuteness": 10, "beauty": 10, "strength": 10 }
+    },
     { "name": "버섯팩", "stats": { "intelligence": 20, "strength": 10 } },
     { "name": "꼬리훈제", "stats": { "elegance": 10, "intelligence": 20 } },
     { "name": "굵은대파", "stats": { "elegance": 20, "intelligence": 10 } },
-    { "name": "특선사과", "stats": { "cuteness": 20, "strength": 10 } },
+    { "name": "특선사과", "stats": { "cuteness": 20, "strength": 15 } },
     {
       "name": "가느다란뼈",
       "stats": { "intelligence": 10, "strength": 15 }
     },
     {
       "name": "포테이토팩",
-      "stats": { "cuteness": 10, "intelligence": 10 }
+      "stats": { "cuteness": 10, "intelligence": 10, "strength": 10 }
     },
     {
       "name": "물가허브팩",

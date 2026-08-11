@@ -239,17 +239,20 @@ export default function CookingView() {
     const matchingRecipes = statRecipes.filter(recipe =>
       Object.keys(recipe.requiredStats || {}).every(stat => (totalStats[stat] || 0) >= recipe.requiredStats[stat])
     );
+    if (matchingRecipes.length === 0) return undefined;
 
     // 여러 티어가 동시에 조건을 만족할 수 있어(예: 매운맛 55 → 기본/고급/특제 오란다 모두 통과),
     // 요구 수치 합이 가장 높은(=가장 상위 티어) 레시피를 고른다. statRecipes 배열 순서(find의
     // 첫 매치)에 의존하면 레시피 나열 순서가 바뀌거나 관리자가 레시피를 새로 추가할 때
     // 하위 티어가 먼저 매칭되는 회귀가 생길 수 있다.
-    return matchingRecipes.reduce((best, recipe) => {
-      if (!best) return recipe;
-      const recipeThreshold = Object.values(recipe.requiredStats || {}).reduce((sum, v) => sum + v, 0);
-      const bestThreshold = Object.values(best.requiredStats || {}).reduce((sum, v) => sum + v, 0);
-      return recipeThreshold > bestThreshold ? recipe : best;
-    }, null);
+    const getThreshold = (recipe) => Object.values(recipe.requiredStats || {}).reduce((sum, v) => sum + v, 0);
+    const maxThreshold = Math.max(...matchingRecipes.map(getThreshold));
+    const topRecipes = matchingRecipes.filter(recipe => getThreshold(recipe) === maxThreshold);
+
+    // 베리잼처럼 서로 다른 맛 스탯에 같은 값을 주는 재료 탓에 요구 수치 합까지 동률로
+    // 부딪히는 경우(예: 귀여움 60 = 힘 60 → 단맛/신맛 특제 오란다 동시 충족)엔 우열을 가릴
+    // 근거가 없으므로 동률 후보 중 하나를 무작위로 뽑는다.
+    return topRecipes[Math.floor(Math.random() * topRecipes.length)];
   };
 
   const FAIL_ITEMS = [
