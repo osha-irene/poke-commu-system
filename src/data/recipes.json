@@ -1,1209 +1,1209 @@
 {
-    "recipes": [
-        {
-            "id": "recipe_oranda_spicy_base_1",
-            "name": "매운 오란다",
-            "type": "fixed",
-            "description": "와작와작한 식감이 매력적인 영운의 명물 매운맛 오란다.",
-            "ingredients": [{ "name": "버치열매", "count": 3 }],
-            "result": {
-                "name": "매운 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 근사함을 1 증가시킨다",
-                "conditionBoost": { "elegance": 1 },
-                "spriteUrl": "/img/items/oranda/spicy-oranda.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_spicy_base_2",
-            "name": "매운 오란다",
-            "type": "fixed",
-            "description": "와작와작한 식감이 매력적인 영운의 명물 매운맛 오란다.",
-            "ingredients": [
-                { "name": "버치열매", "count": 2 },
-                { "name": "과사열매", "count": 1 }
-            ],
-            "result": {
-                "name": "매운 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 근사함을 1 증가시킨다",
-                "conditionBoost": { "elegance": 1 },
-                "spriteUrl": "/img/items/oranda/spicy-oranda.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_spicy_base_3",
-            "name": "매운 오란다",
-            "type": "fixed",
-            "description": "와작와작한 식감이 매력적인 영운의 명물 매운맛 오란다.",
-            "ingredients": [
-                { "name": "버치열매", "count": 1 },
-                { "name": "과사열매", "count": 2 }
-            ],
-            "result": {
-                "name": "매운 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 근사함을 1 증가시킨다",
-                "conditionBoost": { "elegance": 1 },
-                "spriteUrl": "/img/items/oranda/spicy-oranda.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_spicy_base_4",
-            "name": "매운 오란다",
-            "type": "fixed",
-            "description": "와작와작한 식감이 매력적인 영운의 명물 매운맛 오란다.",
-            "ingredients": [{ "name": "과사열매", "count": 3 }],
-            "result": {
-                "name": "매운 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 근사함을 1 증가시킨다",
-                "conditionBoost": { "elegance": 1 },
-                "spriteUrl": "/img/items/oranda/spicy-oranda.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_spicy_adv_1",
-            "name": "고급 매운 오란다",
-            "type": "fixed",
-            "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 매운맛 오란다.",
-            "ingredients": [
-                { "name": "무화열매", "count": 1 },
-                { "name": "버치열매", "count": 1 },
-                { "name": "과사열매", "count": 1 }
-            ],
-            "result": {
-                "name": "고급 매운 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 근사함을 3 증가시킨다",
-                "conditionBoost": { "elegance": 3 },
-                "spriteUrl": "/img/items/oranda/spicy-oranda-sp.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_spicy_adv_2",
-            "name": "고급 매운 오란다",
-            "type": "fixed",
-            "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 매운맛 오란다.",
-            "ingredients": [
-                { "name": "무화열매", "count": 2 },
-                { "name": "버치열매", "count": 1 }
-            ],
-            "result": {
-                "name": "고급 매운 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 근사함을 3 증가시킨다",
-                "conditionBoost": { "elegance": 3 },
-                "spriteUrl": "/img/items/oranda/spicy-oranda-sp.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_spicy_special_1",
-            "name": "특제 매운 오란다",
-            "type": "fixed",
-            "description": "와작바작콰삭한 식감이 영운님도 반하고 갈 명물 특제 매운맛 오란다.",
-            "ingredients": [
-                { "name": "의문열매", "count": 1 },
-                { "name": "무화열매", "count": 1 },
-                { "name": "버치열매", "count": 1 }
-            ],
-            "result": {
-                "name": "특제 매운 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 근사함을 5 증가시킨다",
-                "conditionBoost": { "elegance": 5 },
-                "spriteUrl": "/img/items/oranda/spicy-oranda-ss.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_dry_base_1",
-            "name": "떫은 오란다",
-            "type": "fixed",
-            "description": "와작와작한 식감이 매력적인 영운의 명물 떫은맛 오란다.",
-            "ingredients": [{ "name": "유루열매", "count": 3 }],
-            "result": {
-                "name": "떫은 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 아름다움을 1 증가시킨다",
-                "conditionBoost": { "beauty": 1 },
-                "spriteUrl": "/img/items/oranda/dry-oranda.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_dry_base_2",
-            "name": "떫은 오란다",
-            "type": "fixed",
-            "description": "와작와작한 식감이 매력적인 영운의 명물 떫은맛 오란다.",
-            "ingredients": [
-                { "name": "유루열매", "count": 2 },
-                { "name": "오랭열매", "count": 1 }
-            ],
-            "result": {
-                "name": "떫은 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 아름다움을 1 증가시킨다",
-                "conditionBoost": { "beauty": 1 },
-                "spriteUrl": "/img/items/oranda/dry-oranda.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_dry_base_3",
-            "name": "떫은 오란다",
-            "type": "fixed",
-            "description": "와작와작한 식감이 매력적인 영운의 명물 떫은맛 오란다.",
-            "ingredients": [
-                { "name": "유루열매", "count": 1 },
-                { "name": "오랭열매", "count": 2 }
-            ],
-            "result": {
-                "name": "떫은 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 아름다움을 1 증가시킨다",
-                "conditionBoost": { "beauty": 1 },
-                "spriteUrl": "/img/items/oranda/dry-oranda.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_dry_base_4",
-            "name": "떫은 오란다",
-            "type": "fixed",
-            "description": "와작와작한 식감이 매력적인 영운의 명물 떫은맛 오란다.",
-            "ingredients": [{ "name": "오랭열매", "count": 3 }],
-            "result": {
-                "name": "떫은 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 아름다움을 1 증가시킨다",
-                "conditionBoost": { "beauty": 1 },
-                "spriteUrl": "/img/items/oranda/dry-oranda.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_dry_adv_1",
-            "name": "고급 떫은 오란다",
-            "type": "fixed",
-            "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 떫은맛 오란다.",
-            "ingredients": [
-                { "name": "위키열매", "count": 1 },
-                { "name": "유루열매", "count": 1 },
-                { "name": "오랭열매", "count": 1 }
-            ],
-            "result": {
-                "name": "고급 떫은 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 아름다움을 3 증가시킨다",
-                "conditionBoost": { "beauty": 3 },
-                "spriteUrl": "/img/items/oranda/dry-oranda-sp.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_dry_adv_2",
-            "name": "고급 떫은 오란다",
-            "type": "fixed",
-            "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 떫은맛 오란다.",
-            "ingredients": [
-                { "name": "위키열매", "count": 2 },
-                { "name": "유루열매", "count": 1 }
-            ],
-            "result": {
-                "name": "고급 떫은 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 아름다움을 3 증가시킨다",
-                "conditionBoost": { "beauty": 3 },
-                "spriteUrl": "/img/items/oranda/dry-oranda-sp.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_dry_special_1",
-            "name": "특제 떫은 오란다",
-            "type": "fixed",
-            "description": "와작바작콰삭한 식감이 영운님도 반하고 갈 명물 특제 떫은맛 오란다.",
-            "ingredients": [
-                { "name": "미클열매", "count": 1 },
-                { "name": "위키열매", "count": 1 },
-                { "name": "유루열매", "count": 1 }
-            ],
-            "result": {
-                "name": "특제 떫은 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 아름다움을 5 증가시킨다",
-                "conditionBoost": { "beauty": 5 },
-                "spriteUrl": "/img/items/oranda/dry-oranda-ss.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_sweet_base_1",
-            "name": "단 오란다",
-            "type": "fixed",
-            "description": "와작와작한 식감이 매력적인 영운의 명물 단맛 오란다.",
-            "ingredients": [{ "name": "복슝열매", "count": 3 }],
-            "result": {
-                "name": "단 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 귀여움을 1 증가시킨다",
-                "conditionBoost": { "cuteness": 1 },
-                "spriteUrl": "/img/items/oranda/sweet-oranda.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_sweet_base_2",
-            "name": "단 오란다",
-            "type": "fixed",
-            "description": "와작와작한 식감이 매력적인 영운의 명물 단맛 오란다.",
-            "ingredients": [
-                { "name": "복슝열매", "count": 2 },
-                { "name": "시몬열매", "count": 1 }
-            ],
-            "result": {
-                "name": "단 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 귀여움을 1 증가시킨다",
-                "conditionBoost": { "cuteness": 1 },
-                "spriteUrl": "/img/items/oranda/sweet-oranda.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_sweet_base_3",
-            "name": "단 오란다",
-            "type": "fixed",
-            "description": "와작와작한 식감이 매력적인 영운의 명물 단맛 오란다.",
-            "ingredients": [
-                { "name": "복슝열매", "count": 1 },
-                { "name": "시몬열매", "count": 2 }
-            ],
-            "result": {
-                "name": "단 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 귀여움을 1 증가시킨다",
-                "conditionBoost": { "cuteness": 1 },
-                "spriteUrl": "/img/items/oranda/sweet-oranda.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_sweet_base_4",
-            "name": "단 오란다",
-            "type": "fixed",
-            "description": "와작와작한 식감이 매력적인 영운의 명물 단맛 오란다.",
-            "ingredients": [{ "name": "시몬열매", "count": 3 }],
-            "result": {
-                "name": "단 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 귀여움을 1 증가시킨다",
-                "conditionBoost": { "cuteness": 1 },
-                "spriteUrl": "/img/items/oranda/sweet-oranda.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_sweet_adv_1",
-            "name": "고급 단 오란다",
-            "type": "fixed",
-            "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 단맛 오란다.",
-            "ingredients": [
-                { "name": "마고열매", "count": 1 },
-                { "name": "복슝열매", "count": 1 },
-                { "name": "시몬열매", "count": 1 }
-            ],
-            "result": {
-                "name": "고급 단 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 귀여움을 3 증가시킨다",
-                "conditionBoost": { "cuteness": 3 },
-                "spriteUrl": "/img/items/oranda/sweet-oranda-sp.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_sweet_adv_2",
-            "name": "고급 단 오란다",
-            "type": "fixed",
-            "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 단맛 오란다.",
-            "ingredients": [
-                { "name": "마고열매", "count": 2 },
-                { "name": "복슝열매", "count": 1 }
-            ],
-            "result": {
-                "name": "고급 단 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 귀여움을 3 증가시킨다",
-                "conditionBoost": { "cuteness": 3 },
-                "spriteUrl": "/img/items/oranda/sweet-oranda-sp.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_sweet_special_1",
-            "name": "특제 단 오란다",
-            "type": "fixed",
-            "description": "와작바작콰삭한 식감이 영운님도 반하고 갈 명물 특제 단맛 오란다.",
-            "ingredients": [
-                { "name": "애슈열매", "count": 1 },
-                { "name": "마고열매", "count": 1 },
-                { "name": "복슝열매", "count": 1 }
-            ],
-            "result": {
-                "name": "특제 단 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 귀여움을 5 증가시킨다",
-                "conditionBoost": { "cuteness": 5 },
-                "spriteUrl": "/img/items/oranda/sweet-oranda-ss.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_sweet_special_2",
-            "name": "특제 단 오란다",
-            "type": "fixed",
-            "description": "와작바작콰삭한 식감이 영운님도 반하고 갈 명물 특제 단맛 오란다.",
-            "ingredients": [
-                { "name": "로셀열매", "count": 1 },
-                { "name": "마고열매", "count": 1 },
-                { "name": "시몬열매", "count": 1 }
-            ],
-            "result": {
-                "name": "특제 단 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 귀여움을 5 증가시킨다",
-                "conditionBoost": { "cuteness": 5 },
-                "spriteUrl": "/img/items/oranda/sweet-oranda-ss.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_bitter_base_1",
-            "name": "쓴 오란다",
-            "type": "fixed",
-            "description": "와작와작한 식감이 매력적인 영운의 명물 쓴맛 오란다.",
-            "ingredients": [{ "name": "복분열매", "count": 3 }],
-            "result": {
-                "name": "쓴 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 슬기로움을 1 증가시킨다",
-                "conditionBoost": { "intelligence": 1 },
-                "spriteUrl": "/img/items/oranda/bitter-oranda.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_bitter_base_2",
-            "name": "쓴 오란다",
-            "type": "fixed",
-            "description": "와작와작한 식감이 매력적인 영운의 명물 쓴맛 오란다.",
-            "ingredients": [
-                { "name": "복분열매", "count": 2 },
-                { "name": "리샘열매", "count": 1 }
-            ],
-            "result": {
-                "name": "쓴 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 슬기로움을 1 증가시킨다",
-                "conditionBoost": { "intelligence": 1 },
-                "spriteUrl": "/img/items/oranda/bitter-oranda.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_bitter_base_3",
-            "name": "쓴 오란다",
-            "type": "fixed",
-            "description": "와작와작한 식감이 매력적인 영운의 명물 쓴맛 오란다.",
-            "ingredients": [
-                { "name": "복분열매", "count": 1 },
-                { "name": "리샘열매", "count": 2 }
-            ],
-            "result": {
-                "name": "쓴 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 슬기로움을 1 증가시킨다",
-                "conditionBoost": { "intelligence": 1 },
-                "spriteUrl": "/img/items/oranda/bitter-oranda.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_bitter_base_4",
-            "name": "쓴 오란다",
-            "type": "fixed",
-            "description": "와작와작한 식감이 매력적인 영운의 명물 쓴맛 오란다.",
-            "ingredients": [{ "name": "리샘열매", "count": 3 }],
-            "result": {
-                "name": "쓴 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 슬기로움을 1 증가시킨다",
-                "conditionBoost": { "intelligence": 1 },
-                "spriteUrl": "/img/items/oranda/bitter-oranda.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_bitter_adv_1",
-            "name": "고급 쓴 오란다",
-            "type": "fixed",
-            "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 쓴맛 오란다.",
-            "ingredients": [
-                { "name": "아바열매", "count": 1 },
-                { "name": "복분열매", "count": 1 },
-                { "name": "리샘열매", "count": 1 }
-            ],
-            "result": {
-                "name": "고급 쓴 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 슬기로움을 3 증가시킨다",
-                "conditionBoost": { "intelligence": 3 },
-                "spriteUrl": "/img/items/oranda/bitter-oranda-sp.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_bitter_adv_2",
-            "name": "고급 쓴 오란다",
-            "type": "fixed",
-            "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 쓴맛 오란다.",
-            "ingredients": [
-                { "name": "아바열매", "count": 2 },
-                { "name": "복분열매", "count": 1 }
-            ],
-            "result": {
-                "name": "고급 쓴 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 슬기로움을 3 증가시킨다",
-                "conditionBoost": { "intelligence": 3 },
-                "spriteUrl": "/img/items/oranda/bitter-oranda-sp.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_bitter_special_1",
-            "name": "특제 쓴 오란다",
-            "type": "fixed",
-            "description": "와작바작콰삭한 식감이 영운님도 반하고 갈 명물 특제 쓴맛 오란다.",
-            "ingredients": [
-                { "name": "자보열매", "count": 1 },
-                { "name": "아바열매", "count": 1 },
-                { "name": "복분열매", "count": 1 }
-            ],
-            "result": {
-                "name": "특제 쓴 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 슬기로움을 5 증가시킨다",
-                "conditionBoost": { "intelligence": 5 },
-                "spriteUrl": "/img/items/oranda/bitter-oranda-ss.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_sour_base_1",
-            "name": "신 오란다",
-            "type": "fixed",
-            "description": "와작와작한 식감이 매력적인 영운의 명물 신맛 오란다.",
-            "ingredients": [{ "name": "배리열매", "count": 3 }],
-            "result": {
-                "name": "신 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 강인함을 1 증가시킨다",
-                "conditionBoost": { "strength": 1 },
-                "spriteUrl": "/img/items/oranda/sour-oranda.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_sour_base_2",
-            "name": "신 오란다",
-            "type": "fixed",
-            "description": "와작와작한 식감이 매력적인 영운의 명물 신맛 오란다.",
-            "ingredients": [
-                { "name": "배리열매", "count": 2 },
-                { "name": "자뭉열매", "count": 1 }
-            ],
-            "result": {
-                "name": "신 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 강인함을 1 증가시킨다",
-                "conditionBoost": { "strength": 1 },
-                "spriteUrl": "/img/items/oranda/sour-oranda.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_sour_base_3",
-            "name": "신 오란다",
-            "type": "fixed",
-            "description": "와작와작한 식감이 매력적인 영운의 명물 신맛 오란다.",
-            "ingredients": [
-                { "name": "배리열매", "count": 1 },
-                { "name": "자뭉열매", "count": 2 }
-            ],
-            "result": {
-                "name": "신 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 강인함을 1 증가시킨다",
-                "conditionBoost": { "strength": 1 },
-                "spriteUrl": "/img/items/oranda/sour-oranda.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_sour_base_4",
-            "name": "신 오란다",
-            "type": "fixed",
-            "description": "와작와작한 식감이 매력적인 영운의 명물 신맛 오란다.",
-            "ingredients": [{ "name": "자뭉열매", "count": 3 }],
-            "result": {
-                "name": "신 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 강인함을 1 증가시킨다",
-                "conditionBoost": { "strength": 1 },
-                "spriteUrl": "/img/items/oranda/sour-oranda.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_sour_adv_1",
-            "name": "고급 신 오란다",
-            "type": "fixed",
-            "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 신맛 오란다.",
-            "ingredients": [
-                { "name": "파야열매", "count": 1 },
-                { "name": "배리열매", "count": 1 },
-                { "name": "자뭉열매", "count": 1 }
-            ],
-            "result": {
-                "name": "고급 신 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 강인함을 3 증가시킨다",
-                "conditionBoost": { "strength": 3 },
-                "spriteUrl": "/img/items/oranda/sour-oranda-sp.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_sour_adv_2",
-            "name": "고급 신 오란다",
-            "type": "fixed",
-            "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 신맛 오란다.",
-            "ingredients": [
-                { "name": "파야열매", "count": 2 },
-                { "name": "배리열매", "count": 1 }
-            ],
-            "result": {
-                "name": "고급 신 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 강인함을 3 증가시킨다",
-                "conditionBoost": { "strength": 3 },
-                "spriteUrl": "/img/items/oranda/sour-oranda-sp.png"
-            }
-        },
-        {
-            "id": "recipe_oranda_sour_special_1",
-            "name": "특제 신 오란다",
-            "type": "fixed",
-            "description": "와작바작콰삭한 식감이 영운님도 반하고 갈 명물 특제 신맛 오란다.",
-            "ingredients": [
-                { "name": "애터열매", "count": 1 },
-                { "name": "파야열매", "count": 1 },
-                { "name": "배리열매", "count": 1 }
-            ],
-            "result": {
-                "name": "특제 신 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 강인함을 5 증가시킨다",
-                "conditionBoost": { "strength": 5 },
-                "spriteUrl": "/img/items/oranda/sour-oranda-ss.png"
-            }
-        }
-    ],
-    "ingredientStats": [
-        { "name": "버치열매", "stats": { "elegance": 10 } },
-        { "name": "유루열매", "stats": { "beauty": 10 } },
-        { "name": "복슝열매", "stats": { "cuteness": 10 } },
-        { "name": "복분열매", "stats": { "intelligence": 10 } },
-        { "name": "배리열매", "stats": { "strength": 10 } },
-        {
-            "name": "과사열매",
-            "stats": {
-                "elegance": 10,
-                "cuteness": 10,
-                "intelligence": 10,
-                "strength": 10
-            }
-        },
-        {
-            "name": "오랭열매",
-            "stats": {
-                "elegance": 10,
-                "beauty": 10,
-                "intelligence": 10,
-                "strength": 10
-            }
-        },
-        {
-            "name": "시몬열매",
-            "stats": {
-                "elegance": 10,
-                "beauty": 10,
-                "cuteness": 10,
-                "strength": 10
-            }
-        },
-        {
-            "name": "리샘열매",
-            "stats": {
-                "elegance": 10,
-                "beauty": 10,
-                "cuteness": 10,
-                "intelligence": 10
-            }
-        },
-        {
-            "name": "자뭉열매",
-            "stats": {
-                "beauty": 10,
-                "cuteness": 10,
-                "intelligence": 10,
-                "strength": 10
-            }
-        },
-        { "name": "무화열매", "stats": { "elegance": 15 } },
-        { "name": "위키열매", "stats": { "beauty": 15 } },
-        { "name": "마고열매", "stats": { "cuteness": 15 } },
-        { "name": "아바열매", "stats": { "intelligence": 15 } },
-        { "name": "파야열매", "stats": { "strength": 15 } },
-        { "name": "라즈열매", "stats": { "elegance": 10, "beauty": 10 } },
-        { "name": "블리열매", "stats": { "beauty": 10, "cuteness": 10 } },
-        { "name": "나나열매", "stats": { "cuteness": 10, "intelligence": 10 } },
-        { "name": "서배열매", "stats": { "intelligence": 10, "strength": 10 } },
-        { "name": "파인열매", "stats": { "elegance": 10, "strength": 10 } },
-        {
-            "name": "유석열매",
-            "stats": { "elegance": 10, "cuteness": 10, "intelligence": 10 }
-        },
-        {
-            "name": "시마열매",
-            "stats": { "beauty": 10, "intelligence": 10, "strength": 10 }
-        },
-        {
-            "name": "파비열매",
-            "stats": { "elegance": 10, "cuteness": 10, "strength": 10 }
-        },
-        {
-            "name": "로매열매",
-            "stats": { "elegance": 10, "beauty": 10, "intelligence": 10 }
-        },
-        {
-            "name": "또뽀열매",
-            "stats": { "beauty": 10, "cuteness": 10, "strength": 10 }
-        },
-        { "name": "토망열매", "stats": { "elegance": 20, "beauty": 10 } },
-        { "name": "수숙열매", "stats": { "beauty": 20, "cuteness": 10 } },
-        {
-            "name": "고스티열매",
-            "stats": { "cuteness": 20, "intelligence": 10 }
-        },
-        {
-            "name": "라부탐열매",
-            "stats": { "intelligence": 20, "strength": 10 }
-        },
-        { "name": "노멜열매", "stats": { "elegance": 10, "strength": 20 } },
-        { "name": "메호키열매", "stats": { "elegance": 30, "beauty": 10 } },
-        { "name": "자야열매", "stats": { "beauty": 30, "cuteness": 10 } },
-        { "name": "슈박열매", "stats": { "cuteness": 30, "intelligence": 10 } },
-        { "name": "두리열매", "stats": { "intelligence": 30, "strength": 10 } },
-        { "name": "루베열매", "stats": { "elegance": 10, "strength": 30 } },
-        { "name": "오카열매", "stats": { "elegance": 15, "cuteness": 10 } },
-        { "name": "꼬시개열매", "stats": { "beauty": 15, "intelligence": 10 } },
-        { "name": "초나열매", "stats": { "cuteness": 15, "strength": 10 } },
-        { "name": "린드열매", "stats": { "elegance": 10, "intelligence": 15 } },
-        { "name": "플카열매", "stats": { "beauty": 10, "strength": 15 } },
-        { "name": "로플열매", "stats": { "elegance": 15, "intelligence": 10 } },
-        { "name": "으름열매", "stats": { "beauty": 15, "strength": 10 } },
-        { "name": "슈캐열매", "stats": { "elegance": 10, "cuteness": 15 } },
-        { "name": "바코열매", "stats": { "beauty": 10, "intelligence": 15 } },
-        { "name": "야파열매", "stats": { "cuteness": 10, "strength": 15 } },
-        { "name": "리체열매", "stats": { "elegance": 20, "strength": 10 } },
-        { "name": "루미열매", "stats": { "elegance": 10, "beauty": 20 } },
-        { "name": "수불열매", "stats": { "beauty": 10, "cuteness": 20 } },
-        { "name": "하반열매", "stats": { "cuteness": 10, "intelligence": 20 } },
-        { "name": "마코열매", "stats": { "intelligence": 10, "strength": 20 } },
-        { "name": "바리비열매", "stats": { "elegance": 25, "beauty": 10 } },
-        { "name": "카리열매", "stats": { "beauty": 25, "cuteness": 10 } },
-        {
-            "name": "치리열매",
-            "stats": { "elegance": 30, "beauty": 10, "cuteness": 30 }
-        },
-        {
-            "name": "용아열매",
-            "stats": { "beauty": 30, "cuteness": 10, "intelligence": 30 }
-        },
-        {
-            "name": "캄라열매",
-            "stats": { "cuteness": 30, "intelligence": 10, "strength": 30 }
-        },
-        {
-            "name": "야타비열매",
-            "stats": { "elegance": 30, "intelligence": 30, "strength": 10 }
-        },
-        {
-            "name": "규살열매",
-            "stats": { "elegance": 10, "beauty": 30, "strength": 30 }
-        },
-        {
-            "name": "랑사열매",
-            "stats": {
-                "elegance": 30,
-                "beauty": 10,
-                "cuteness": 30,
-                "intelligence": 10,
-                "strength": 30
-            }
-        },
-        {
-            "name": "스타열매",
-            "stats": {
-                "elegance": 30,
-                "beauty": 10,
-                "cuteness": 30,
-                "intelligence": 10,
-                "strength": 30
-            }
-        },
-        { "name": "의문열매", "stats": { "elegance": 40, "beauty": 10 } },
-        { "name": "미클열매", "stats": { "beauty": 40, "cuteness": 10 } },
-        { "name": "애슈열매", "stats": { "cuteness": 40, "intelligence": 10 } },
-        { "name": "자보열매", "stats": { "intelligence": 40, "strength": 10 } },
-        { "name": "애터열매", "stats": { "elegance": 10, "strength": 40 } },
-        {
-            "name": "탱글탱글부어스트",
-            "stats": { "elegance": 10, "beauty": 15 }
-        },
-        {
-            "name": "밥의통조림",
-            "stats": { "cuteness": 10, "intelligence": 10 }
-        },
-        {
-            "name": "바크의통조림",
-            "stats": { "elegance": 10, "intelligence": 10 }
-        },
-        { "name": "콩통조림", "stats": { "beauty": 10, "intelligence": 15 } },
-        { "name": "식빵", "stats": { "cuteness": 10 } },
-        { "name": "파스타", "stats": { "cuteness": 10, "beauty": 10 } },
-        { "name": "버섯팩", "stats": { "intelligence": 20, "strength": 10 } },
-        { "name": "꼬리훈제", "stats": { "elegance": 10, "intelligence": 20 } },
-        { "name": "굵은대파", "stats": { "elegance": 20, "intelligence": 10 } },
-        { "name": "특선사과", "stats": { "cuteness": 20, "strength": 10 } },
-        {
-            "name": "가느다란뼈",
-            "stats": { "intelligence": 10, "strength": 15 }
-        },
-        {
-            "name": "포테이토팩",
-            "stats": { "cuteness": 10, "intelligence": 10 }
-        },
-        {
-            "name": "물가허브팩",
-            "stats": { "elegance": 15, "intelligence": 15 }
-        },
-        { "name": "채소팩", "stats": { "intelligence": 15, "strength": 10 } },
-        { "name": "모둠튀김", "stats": { "elegance": 10, "strength": 15 } },
-        { "name": "삶은알", "stats": { "beauty": 10, "intelligence": 10 } },
-        { "name": "송이팩", "stats": { "cuteness": 20, "strength": 10 } },
-        { "name": "튼튼치즈", "stats": { "beauty": 15, "strength": 20 } },
-        {
-            "name": "스파이스세트",
-            "stats": { "elegance": 25, "intelligence": 15 }
-        },
-        { "name": "신선한크림", "stats": { "cuteness": 20, "strength": 10 } },
-        {
-            "name": "레토르트카레",
-            "stats": { "elegance": 20, "intelligence": 15 }
-        },
-        { "name": "야자밀크", "stats": { "cuteness": 20, "strength": 10 } },
-        { "name": "레토르트면", "stats": { "beauty": 15, "strength": 15 } },
-        {
-            "name": "레토르트햄버그",
-            "stats": { "elegance": 10, "beauty": 10, "strength": 20 }
-        },
-        {
-            "name": "거대파우더",
-            "stats": {
-                "elegance": 20,
-                "beauty": 20,
-                "cuteness": 20,
-                "intelligence": 20,
-                "strength": 20
-            }
-        },
-        { "name": "바게트", "stats": { "cuteness": 10 } },
-        { "name": "마요네즈", "stats": { "cuteness": 10, "strength": 15 } },
-        { "name": "케첩", "stats": { "cuteness": 15, "strength": 10 } },
-        { "name": "머스터드", "stats": { "elegance": 15, "intelligence": 10 } },
-        { "name": "버터", "stats": { "beauty": 10, "cuteness": 10 } },
-        { "name": "땅콩버터", "stats": { "cuteness": 10, "intelligence": 15 } },
-        { "name": "칠리소스", "stats": { "elegance": 20, "strength": 10 } },
-        { "name": "소금", "stats": { "beauty": 25 } },
-        { "name": "후추", "stats": { "elegance": 15, "intelligence": 10 } },
-        { "name": "요구르트", "stats": { "cuteness": 10, "strength": 15 } },
-        { "name": "휘핑크림", "stats": { "cuteness": 20 } },
-        { "name": "크림치즈", "stats": { "beauty": 10, "strength": 15 } },
-        { "name": "베리잼", "stats": { "cuteness": 20, "strength": 10 } },
-        {
-            "name": "마멀레이드",
-            "stats": { "cuteness": 15, "intelligence": 10 }
-        },
-        { "name": "올리브오일", "stats": { "beauty": 10, "intelligence": 10 } },
-        { "name": "비니거", "stats": { "strength": 25 } },
-        { "name": "비전 달콤스파이스", "stats": { "cuteness": 35 } },
-        { "name": "비전 짭짤스파이스", "stats": { "beauty": 35 } },
-        { "name": "비전 새콤스파이스", "stats": { "strength": 35 } },
-        { "name": "비전 쌉쌀스파이스", "stats": { "intelligence": 35 } },
-        { "name": "비전 매콤스파이스", "stats": { "elegance": 35 } },
-        { "name": "양상추", "stats": { "intelligence": 10, "strength": 10 } },
-        {
-            "name": "토마토슬라이스",
-            "stats": { "cuteness": 10, "strength": 15 }
-        },
-        {
-            "name": "방울토마토슬라이스",
-            "stats": { "cuteness": 15, "strength": 10 }
-        },
-        {
-            "name": "오이슬라이스",
-            "stats": { "strength": 10, "intelligence": 10 }
-        },
-        {
-            "name": "피클슬라이스",
-            "stats": { "intelligence": 10, "strength": 20 }
-        },
-        { "name": "양파슬라이스", "stats": { "elegance": 15, "cuteness": 10 } },
-        { "name": "적양파", "stats": { "elegance": 15, "cuteness": 10 } },
-        {
-            "name": "피망슬라이스",
-            "stats": { "intelligence": 15, "strength": 10 }
-        },
-        {
-            "name": "빨간파프리카슬라이스",
-            "stats": { "cuteness": 15, "elegance": 10 }
-        },
-        { "name": "노란파프리카슬라이스", "stats": { "cuteness": 15 } },
-        { "name": "아보카도", "stats": { "beauty": 10, "intelligence": 15 } },
-        { "name": "구운베이컨", "stats": { "elegance": 10, "beauty": 15 } },
-        { "name": "슬라이스햄", "stats": { "beauty": 15, "cuteness": 10 } },
-        { "name": "생햄", "stats": { "elegance": 10, "beauty": 20 } },
-        { "name": "구운초리조", "stats": { "elegance": 20, "beauty": 10 } },
-        { "name": "허브소시지", "stats": { "beauty": 10, "intelligence": 10 } },
-        { "name": "햄버그", "stats": { "beauty": 10, "strength": 15 } },
-        { "name": "절벼게맛살", "stats": { "beauty": 10, "cuteness": 15 } },
-        { "name": "훈제토막", "stats": { "beauty": 10, "intelligence": 15 } },
-        { "name": "튀긴토막", "stats": { "beauty": 10, "strength": 15 } },
-        {
-            "name": "에그슬라이스",
-            "stats": { "cuteness": 10, "intelligence": 10 }
-        },
-        { "name": "토르티야", "stats": { "beauty": 10, "cuteness": 10 } },
-        { "name": "두부", "stats": { "cuteness": 10, "intelligence": 10 } },
-        { "name": "라이스", "stats": { "beauty": 10, "cuteness": 10 } },
-        { "name": "누들", "stats": { "beauty": 10, "cuteness": 10 } },
-        { "name": "감자샐러드", "stats": { "cuteness": 10, "strength": 10 } },
-        { "name": "슬라이스치즈", "stats": { "beauty": 10, "strength": 15 } },
-        { "name": "바나나슬라이스", "stats": { "cuteness": 20 } },
-        { "name": "딸기슬라이스", "stats": { "cuteness": 15, "strength": 10 } },
-        { "name": "사과슬라이스", "stats": { "cuteness": 15, "strength": 10 } },
-        { "name": "키위슬라이스", "stats": { "cuteness": 10, "strength": 20 } },
-        {
-            "name": "파인애플슬라이스",
-            "stats": { "cuteness": 15, "strength": 15 }
-        },
-        { "name": "할라페뇨", "stats": { "elegance": 30 } },
-        {
-            "name": "호스래디시",
-            "stats": { "elegance": 25, "intelligence": 10 }
-        },
-        {
-            "name": "카레파우더",
-            "stats": { "elegance": 20, "intelligence": 15 }
-        },
-        { "name": "와사비소스", "stats": { "elegance": 30 } },
-        { "name": "물냉이", "stats": { "elegance": 10, "intelligence": 10 } },
-        { "name": "바질", "stats": { "elegance": 10, "intelligence": 15 } },
-        { "name": "달콤한꿀", "stats": { "cuteness": 20, "beauty": 10 } },
-        { "name": "설탕", "stats": { "cuteness": 10 } },
-        { "name": "밀가루", "stats": { "beauty": 10 } },
-        { "name": "오렌지", "stats": { "strength": 10 } },
-        { "name": "당근", "stats": { "cuteness": 10 } },
-        { "name": "럭키의 알", "stats": { "beauty": 10 } },
-        { "name": "옥수수", "stats": { "cuteness": 10 } },
-        { "name": "고추장", "stats": { "elegance": 10 } },
-        { "name": "간장", "stats": { "strength": 10 } },
-        { "name": "된장", "stats": { "intelligence": 20 } },
-        { "name": "미역", "stats": { "strength": 10 } },
-        { "name": "부추", "stats": { "elegance": 10 } },
-        { "name": "홍차", "stats": { "intelligence": 20 } },
-        { "name": "커피", "stats": { "intelligence": 20 } },
-        { "name": "초콜릿", "stats": { "intelligence": 20 } },
-        { "name": "초코", "stats": { "intelligence": 20 } },
-        { "name": "아몬드가루", "stats": { "intelligence": 20 } },
-        { "name": "젤라틴", "stats": { "beauty": 20 } },
-        { "name": "식용 얼음", "stats": { "beauty": 20 } },
-        { "name": "민트", "stats": { "beauty": 20 } },
-        { "name": "두리안", "stats": { "intelligence": 30 } },
-        { "name": "마라소스", "stats": { "elegance": 30 } },
-        { "name": "대포무노 먹물", "stats": { "intelligence": 30 } },
-        { "name": "떡", "stats": { "cuteness": 10 } },
-        { "name": "로셀열매", "stats": { "cuteness": 40 } },
-        { "name": "악키열매", "stats": { "strength": 15 } },
-        { "name": "타라프열매", "stats": { "intelligence": 15 } }
-    ],
-    "statBasedRecipes": [
-        {
-            "id": "stat_recipe_oranda_spicy_special",
-            "name": "특제 매운 오란다",
-            "type": "stat",
-            "description": "재료의 매운맛 스탯 합이 51 이상이면 만들어지는 오란다",
-            "requiredStats": {
-                "elegance": 51
-            },
-            "result": {
-                "name": "특제 매운 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 근사함을 5 증가시킨다",
-                "conditionBoost": {
-                    "elegance": 5
-                },
-                "spriteUrl": "/img/items/oranda/spicy-oranda-ss.png"
-            }
-        },
-        {
-            "id": "stat_recipe_oranda_spicy_adv",
-            "name": "고급 매운 오란다",
-            "type": "stat",
-            "description": "재료의 매운맛 스탯 합이 41 이상이면 만들어지는 오란다",
-            "requiredStats": {
-                "elegance": 41
-            },
-            "result": {
-                "name": "고급 매운 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 근사함을 3 증가시킨다",
-                "conditionBoost": {
-                    "elegance": 3
-                },
-                "spriteUrl": "/img/items/oranda/spicy-oranda-sp.png"
-            }
-        },
-        {
-            "id": "stat_recipe_oranda_spicy_base",
-            "name": "매운 오란다",
-            "type": "stat",
-            "description": "재료의 매운맛 스탯 합이 21 이상이면 만들어지는 오란다",
-            "requiredStats": {
-                "elegance": 21
-            },
-            "result": {
-                "name": "매운 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 근사함을 1 증가시킨다",
-                "conditionBoost": {
-                    "elegance": 1
-                },
-                "spriteUrl": "/img/items/oranda/spicy-oranda.png"
-            }
-        },
-        {
-            "id": "stat_recipe_oranda_dry_special",
-            "name": "특제 떫은 오란다",
-            "type": "stat",
-            "description": "재료의 떫은맛 스탯 합이 51 이상이면 만들어지는 오란다",
-            "requiredStats": {
-                "beauty": 51
-            },
-            "result": {
-                "name": "특제 떫은 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 아름다움을 5 증가시킨다",
-                "conditionBoost": {
-                    "beauty": 5
-                },
-                "spriteUrl": "/img/items/oranda/dry-oranda-ss.png"
-            }
-        },
-        {
-            "id": "stat_recipe_oranda_dry_adv",
-            "name": "고급 떫은 오란다",
-            "type": "stat",
-            "description": "재료의 떫은맛 스탯 합이 41 이상이면 만들어지는 오란다",
-            "requiredStats": {
-                "beauty": 41
-            },
-            "result": {
-                "name": "고급 떫은 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 아름다움을 3 증가시킨다",
-                "conditionBoost": {
-                    "beauty": 3
-                },
-                "spriteUrl": "/img/items/oranda/dry-oranda-sp.png"
-            }
-        },
-        {
-            "id": "stat_recipe_oranda_dry_base",
-            "name": "떫은 오란다",
-            "type": "stat",
-            "description": "재료의 떫은맛 스탯 합이 21 이상이면 만들어지는 오란다",
-            "requiredStats": {
-                "beauty": 21
-            },
-            "result": {
-                "name": "떫은 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 아름다움을 1 증가시킨다",
-                "conditionBoost": {
-                    "beauty": 1
-                },
-                "spriteUrl": "/img/items/oranda/dry-oranda.png"
-            }
-        },
-        {
-            "id": "stat_recipe_oranda_sweet_special",
-            "name": "특제 단 오란다",
-            "type": "stat",
-            "description": "재료의 단맛 스탯 합이 51 이상이면 만들어지는 오란다",
-            "requiredStats": {
-                "cuteness": 51
-            },
-            "result": {
-                "name": "특제 단 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 귀여움을 5 증가시킨다",
-                "conditionBoost": {
-                    "cuteness": 5
-                },
-                "spriteUrl": "/img/items/oranda/sweet-oranda-ss.png"
-            }
-        },
-        {
-            "id": "stat_recipe_oranda_sweet_adv",
-            "name": "고급 단 오란다",
-            "type": "stat",
-            "description": "재료의 단맛 스탯 합이 41 이상이면 만들어지는 오란다",
-            "requiredStats": {
-                "cuteness": 41
-            },
-            "result": {
-                "name": "고급 단 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 귀여움을 3 증가시킨다",
-                "conditionBoost": {
-                    "cuteness": 3
-                },
-                "spriteUrl": "/img/items/oranda/sweet-oranda-sp.png"
-            }
-        },
-        {
-            "id": "stat_recipe_oranda_sweet_base",
-            "name": "단 오란다",
-            "type": "stat",
-            "description": "재료의 단맛 스탯 합이 21 이상이면 만들어지는 오란다",
-            "requiredStats": {
-                "cuteness": 21
-            },
-            "result": {
-                "name": "단 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 귀여움을 1 증가시킨다",
-                "conditionBoost": {
-                    "cuteness": 1
-                },
-                "spriteUrl": "/img/items/oranda/sweet-oranda.png"
-            }
-        },
-        {
-            "id": "stat_recipe_oranda_bitter_special",
-            "name": "특제 쓴 오란다",
-            "type": "stat",
-            "description": "재료의 쓴맛 스탯 합이 51 이상이면 만들어지는 오란다",
-            "requiredStats": {
-                "intelligence": 51
-            },
-            "result": {
-                "name": "특제 쓴 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 슬기로움을 5 증가시킨다",
-                "conditionBoost": {
-                    "intelligence": 5
-                },
-                "spriteUrl": "/img/items/oranda/bitter-oranda-ss.png"
-            }
-        },
-        {
-            "id": "stat_recipe_oranda_bitter_adv",
-            "name": "고급 쓴 오란다",
-            "type": "stat",
-            "description": "재료의 쓴맛 스탯 합이 41 이상이면 만들어지는 오란다",
-            "requiredStats": {
-                "intelligence": 41
-            },
-            "result": {
-                "name": "고급 쓴 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 슬기로움을 3 증가시킨다",
-                "conditionBoost": {
-                    "intelligence": 3
-                },
-                "spriteUrl": "/img/items/oranda/bitter-oranda-sp.png"
-            }
-        },
-        {
-            "id": "stat_recipe_oranda_bitter_base",
-            "name": "쓴 오란다",
-            "type": "stat",
-            "description": "재료의 쓴맛 스탯 합이 21 이상이면 만들어지는 오란다",
-            "requiredStats": {
-                "intelligence": 21
-            },
-            "result": {
-                "name": "쓴 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 슬기로움을 1 증가시킨다",
-                "conditionBoost": {
-                    "intelligence": 1
-                },
-                "spriteUrl": "/img/items/oranda/bitter-oranda.png"
-            }
-        },
-        {
-            "id": "stat_recipe_oranda_sour_special",
-            "name": "특제 신 오란다",
-            "type": "stat",
-            "description": "재료의 신맛 스탯 합이 51 이상이면 만들어지는 오란다",
-            "requiredStats": {
-                "strength": 51
-            },
-            "result": {
-                "name": "특제 신 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 강인함을 5 증가시킨다",
-                "conditionBoost": {
-                    "strength": 5
-                },
-                "spriteUrl": "/img/items/oranda/sour-oranda-ss.png"
-            }
-        },
-        {
-            "id": "stat_recipe_oranda_sour_adv",
-            "name": "고급 신 오란다",
-            "type": "stat",
-            "description": "재료의 신맛 스탯 합이 41 이상이면 만들어지는 오란다",
-            "requiredStats": {
-                "strength": 41
-            },
-            "result": {
-                "name": "고급 신 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 강인함을 3 증가시킨다",
-                "conditionBoost": {
-                    "strength": 3
-                },
-                "spriteUrl": "/img/items/oranda/sour-oranda-sp.png"
-            }
-        },
-        {
-            "id": "stat_recipe_oranda_sour_base",
-            "name": "신 오란다",
-            "type": "stat",
-            "description": "재료의 신맛 스탯 합이 21 이상이면 만들어지는 오란다",
-            "requiredStats": {
-                "strength": 21
-            },
-            "result": {
-                "name": "신 오란다",
-                "pocket": "vitamins",
-                "effect": "포켓몬의 강인함을 1 증가시킨다",
-                "conditionBoost": {
-                    "strength": 1
-                },
-                "spriteUrl": "/img/items/oranda/sour-oranda.png"
-            }
-        }
-    ]
+  "recipes": [
+    {
+      "id": "recipe_oranda_spicy_base_1",
+      "name": "매운 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 매운맛 오란다.",
+      "ingredients": [{ "name": "버치열매", "count": 3 }],
+      "result": {
+        "name": "매운 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 근사함을 1 증가시킨다",
+        "conditionBoost": { "elegance": 1 },
+        "spriteUrl": "/img/items/oranda/spicy-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_spicy_base_2",
+      "name": "매운 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 매운맛 오란다.",
+      "ingredients": [
+        { "name": "버치열매", "count": 2 },
+        { "name": "과사열매", "count": 1 }
+      ],
+      "result": {
+        "name": "매운 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 근사함을 1 증가시킨다",
+        "conditionBoost": { "elegance": 1 },
+        "spriteUrl": "/img/items/oranda/spicy-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_spicy_base_3",
+      "name": "매운 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 매운맛 오란다.",
+      "ingredients": [
+        { "name": "버치열매", "count": 1 },
+        { "name": "과사열매", "count": 2 }
+      ],
+      "result": {
+        "name": "매운 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 근사함을 1 증가시킨다",
+        "conditionBoost": { "elegance": 1 },
+        "spriteUrl": "/img/items/oranda/spicy-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_spicy_base_4",
+      "name": "매운 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 매운맛 오란다.",
+      "ingredients": [{ "name": "과사열매", "count": 3 }],
+      "result": {
+        "name": "매운 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 근사함을 1 증가시킨다",
+        "conditionBoost": { "elegance": 1 },
+        "spriteUrl": "/img/items/oranda/spicy-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_spicy_adv_1",
+      "name": "고급 매운 오란다",
+      "type": "fixed",
+      "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 매운맛 오란다.",
+      "ingredients": [
+        { "name": "무화열매", "count": 1 },
+        { "name": "버치열매", "count": 1 },
+        { "name": "과사열매", "count": 1 }
+      ],
+      "result": {
+        "name": "고급 매운 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 근사함을 3 증가시킨다",
+        "conditionBoost": { "elegance": 3 },
+        "spriteUrl": "/img/items/oranda/spicy-oranda-sp.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_spicy_adv_2",
+      "name": "고급 매운 오란다",
+      "type": "fixed",
+      "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 매운맛 오란다.",
+      "ingredients": [
+        { "name": "무화열매", "count": 2 },
+        { "name": "버치열매", "count": 1 }
+      ],
+      "result": {
+        "name": "고급 매운 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 근사함을 3 증가시킨다",
+        "conditionBoost": { "elegance": 3 },
+        "spriteUrl": "/img/items/oranda/spicy-oranda-sp.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_spicy_special_1",
+      "name": "특제 매운 오란다",
+      "type": "fixed",
+      "description": "와작바작콰삭한 식감이 영운님도 반하고 갈 명물 특제 매운맛 오란다.",
+      "ingredients": [
+        { "name": "의문열매", "count": 1 },
+        { "name": "무화열매", "count": 1 },
+        { "name": "버치열매", "count": 1 }
+      ],
+      "result": {
+        "name": "특제 매운 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 근사함을 5 증가시킨다",
+        "conditionBoost": { "elegance": 5 },
+        "spriteUrl": "/img/items/oranda/spicy-oranda-ss.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_dry_base_1",
+      "name": "떫은 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 떫은맛 오란다.",
+      "ingredients": [{ "name": "유루열매", "count": 3 }],
+      "result": {
+        "name": "떫은 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 아름다움을 1 증가시킨다",
+        "conditionBoost": { "beauty": 1 },
+        "spriteUrl": "/img/items/oranda/dry-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_dry_base_2",
+      "name": "떫은 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 떫은맛 오란다.",
+      "ingredients": [
+        { "name": "유루열매", "count": 2 },
+        { "name": "오랭열매", "count": 1 }
+      ],
+      "result": {
+        "name": "떫은 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 아름다움을 1 증가시킨다",
+        "conditionBoost": { "beauty": 1 },
+        "spriteUrl": "/img/items/oranda/dry-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_dry_base_3",
+      "name": "떫은 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 떫은맛 오란다.",
+      "ingredients": [
+        { "name": "유루열매", "count": 1 },
+        { "name": "오랭열매", "count": 2 }
+      ],
+      "result": {
+        "name": "떫은 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 아름다움을 1 증가시킨다",
+        "conditionBoost": { "beauty": 1 },
+        "spriteUrl": "/img/items/oranda/dry-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_dry_base_4",
+      "name": "떫은 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 떫은맛 오란다.",
+      "ingredients": [{ "name": "오랭열매", "count": 3 }],
+      "result": {
+        "name": "떫은 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 아름다움을 1 증가시킨다",
+        "conditionBoost": { "beauty": 1 },
+        "spriteUrl": "/img/items/oranda/dry-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_dry_adv_1",
+      "name": "고급 떫은 오란다",
+      "type": "fixed",
+      "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 떫은맛 오란다.",
+      "ingredients": [
+        { "name": "위키열매", "count": 1 },
+        { "name": "유루열매", "count": 1 },
+        { "name": "오랭열매", "count": 1 }
+      ],
+      "result": {
+        "name": "고급 떫은 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 아름다움을 3 증가시킨다",
+        "conditionBoost": { "beauty": 3 },
+        "spriteUrl": "/img/items/oranda/dry-oranda-sp.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_dry_adv_2",
+      "name": "고급 떫은 오란다",
+      "type": "fixed",
+      "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 떫은맛 오란다.",
+      "ingredients": [
+        { "name": "위키열매", "count": 2 },
+        { "name": "유루열매", "count": 1 }
+      ],
+      "result": {
+        "name": "고급 떫은 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 아름다움을 3 증가시킨다",
+        "conditionBoost": { "beauty": 3 },
+        "spriteUrl": "/img/items/oranda/dry-oranda-sp.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_dry_special_1",
+      "name": "특제 떫은 오란다",
+      "type": "fixed",
+      "description": "와작바작콰삭한 식감이 영운님도 반하고 갈 명물 특제 떫은맛 오란다.",
+      "ingredients": [
+        { "name": "미클열매", "count": 1 },
+        { "name": "위키열매", "count": 1 },
+        { "name": "유루열매", "count": 1 }
+      ],
+      "result": {
+        "name": "특제 떫은 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 아름다움을 5 증가시킨다",
+        "conditionBoost": { "beauty": 5 },
+        "spriteUrl": "/img/items/oranda/dry-oranda-ss.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sweet_base_1",
+      "name": "단 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 단맛 오란다.",
+      "ingredients": [{ "name": "복슝열매", "count": 3 }],
+      "result": {
+        "name": "단 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 귀여움을 1 증가시킨다",
+        "conditionBoost": { "cuteness": 1 },
+        "spriteUrl": "/img/items/oranda/sweet-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sweet_base_2",
+      "name": "단 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 단맛 오란다.",
+      "ingredients": [
+        { "name": "복슝열매", "count": 2 },
+        { "name": "시몬열매", "count": 1 }
+      ],
+      "result": {
+        "name": "단 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 귀여움을 1 증가시킨다",
+        "conditionBoost": { "cuteness": 1 },
+        "spriteUrl": "/img/items/oranda/sweet-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sweet_base_3",
+      "name": "단 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 단맛 오란다.",
+      "ingredients": [
+        { "name": "복슝열매", "count": 1 },
+        { "name": "시몬열매", "count": 2 }
+      ],
+      "result": {
+        "name": "단 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 귀여움을 1 증가시킨다",
+        "conditionBoost": { "cuteness": 1 },
+        "spriteUrl": "/img/items/oranda/sweet-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sweet_base_4",
+      "name": "단 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 단맛 오란다.",
+      "ingredients": [{ "name": "시몬열매", "count": 3 }],
+      "result": {
+        "name": "단 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 귀여움을 1 증가시킨다",
+        "conditionBoost": { "cuteness": 1 },
+        "spriteUrl": "/img/items/oranda/sweet-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sweet_adv_1",
+      "name": "고급 단 오란다",
+      "type": "fixed",
+      "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 단맛 오란다.",
+      "ingredients": [
+        { "name": "마고열매", "count": 1 },
+        { "name": "복슝열매", "count": 1 },
+        { "name": "시몬열매", "count": 1 }
+      ],
+      "result": {
+        "name": "고급 단 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 귀여움을 3 증가시킨다",
+        "conditionBoost": { "cuteness": 3 },
+        "spriteUrl": "/img/items/oranda/sweet-oranda-sp.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sweet_adv_2",
+      "name": "고급 단 오란다",
+      "type": "fixed",
+      "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 단맛 오란다.",
+      "ingredients": [
+        { "name": "마고열매", "count": 2 },
+        { "name": "복슝열매", "count": 1 }
+      ],
+      "result": {
+        "name": "고급 단 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 귀여움을 3 증가시킨다",
+        "conditionBoost": { "cuteness": 3 },
+        "spriteUrl": "/img/items/oranda/sweet-oranda-sp.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sweet_special_1",
+      "name": "특제 단 오란다",
+      "type": "fixed",
+      "description": "와작바작콰삭한 식감이 영운님도 반하고 갈 명물 특제 단맛 오란다.",
+      "ingredients": [
+        { "name": "애슈열매", "count": 1 },
+        { "name": "마고열매", "count": 1 },
+        { "name": "복슝열매", "count": 1 }
+      ],
+      "result": {
+        "name": "특제 단 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 귀여움을 5 증가시킨다",
+        "conditionBoost": { "cuteness": 5 },
+        "spriteUrl": "/img/items/oranda/sweet-oranda-ss.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sweet_special_2",
+      "name": "특제 단 오란다",
+      "type": "fixed",
+      "description": "와작바작콰삭한 식감이 영운님도 반하고 갈 명물 특제 단맛 오란다.",
+      "ingredients": [
+        { "name": "로셀열매", "count": 1 },
+        { "name": "마고열매", "count": 1 },
+        { "name": "시몬열매", "count": 1 }
+      ],
+      "result": {
+        "name": "특제 단 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 귀여움을 5 증가시킨다",
+        "conditionBoost": { "cuteness": 5 },
+        "spriteUrl": "/img/items/oranda/sweet-oranda-ss.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_bitter_base_1",
+      "name": "쓴 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 쓴맛 오란다.",
+      "ingredients": [{ "name": "복분열매", "count": 3 }],
+      "result": {
+        "name": "쓴 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 슬기로움을 1 증가시킨다",
+        "conditionBoost": { "intelligence": 1 },
+        "spriteUrl": "/img/items/oranda/bitter-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_bitter_base_2",
+      "name": "쓴 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 쓴맛 오란다.",
+      "ingredients": [
+        { "name": "복분열매", "count": 2 },
+        { "name": "리샘열매", "count": 1 }
+      ],
+      "result": {
+        "name": "쓴 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 슬기로움을 1 증가시킨다",
+        "conditionBoost": { "intelligence": 1 },
+        "spriteUrl": "/img/items/oranda/bitter-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_bitter_base_3",
+      "name": "쓴 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 쓴맛 오란다.",
+      "ingredients": [
+        { "name": "복분열매", "count": 1 },
+        { "name": "리샘열매", "count": 2 }
+      ],
+      "result": {
+        "name": "쓴 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 슬기로움을 1 증가시킨다",
+        "conditionBoost": { "intelligence": 1 },
+        "spriteUrl": "/img/items/oranda/bitter-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_bitter_base_4",
+      "name": "쓴 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 쓴맛 오란다.",
+      "ingredients": [{ "name": "리샘열매", "count": 3 }],
+      "result": {
+        "name": "쓴 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 슬기로움을 1 증가시킨다",
+        "conditionBoost": { "intelligence": 1 },
+        "spriteUrl": "/img/items/oranda/bitter-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_bitter_adv_1",
+      "name": "고급 쓴 오란다",
+      "type": "fixed",
+      "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 쓴맛 오란다.",
+      "ingredients": [
+        { "name": "아바열매", "count": 1 },
+        { "name": "복분열매", "count": 1 },
+        { "name": "리샘열매", "count": 1 }
+      ],
+      "result": {
+        "name": "고급 쓴 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 슬기로움을 3 증가시킨다",
+        "conditionBoost": { "intelligence": 3 },
+        "spriteUrl": "/img/items/oranda/bitter-oranda-sp.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_bitter_adv_2",
+      "name": "고급 쓴 오란다",
+      "type": "fixed",
+      "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 쓴맛 오란다.",
+      "ingredients": [
+        { "name": "아바열매", "count": 2 },
+        { "name": "복분열매", "count": 1 }
+      ],
+      "result": {
+        "name": "고급 쓴 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 슬기로움을 3 증가시킨다",
+        "conditionBoost": { "intelligence": 3 },
+        "spriteUrl": "/img/items/oranda/bitter-oranda-sp.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_bitter_special_1",
+      "name": "특제 쓴 오란다",
+      "type": "fixed",
+      "description": "와작바작콰삭한 식감이 영운님도 반하고 갈 명물 특제 쓴맛 오란다.",
+      "ingredients": [
+        { "name": "자보열매", "count": 1 },
+        { "name": "아바열매", "count": 1 },
+        { "name": "복분열매", "count": 1 }
+      ],
+      "result": {
+        "name": "특제 쓴 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 슬기로움을 5 증가시킨다",
+        "conditionBoost": { "intelligence": 5 },
+        "spriteUrl": "/img/items/oranda/bitter-oranda-ss.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sour_base_1",
+      "name": "신 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 신맛 오란다.",
+      "ingredients": [{ "name": "배리열매", "count": 3 }],
+      "result": {
+        "name": "신 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 강인함을 1 증가시킨다",
+        "conditionBoost": { "strength": 1 },
+        "spriteUrl": "/img/items/oranda/sour-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sour_base_2",
+      "name": "신 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 신맛 오란다.",
+      "ingredients": [
+        { "name": "배리열매", "count": 2 },
+        { "name": "자뭉열매", "count": 1 }
+      ],
+      "result": {
+        "name": "신 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 강인함을 1 증가시킨다",
+        "conditionBoost": { "strength": 1 },
+        "spriteUrl": "/img/items/oranda/sour-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sour_base_3",
+      "name": "신 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 신맛 오란다.",
+      "ingredients": [
+        { "name": "배리열매", "count": 1 },
+        { "name": "자뭉열매", "count": 2 }
+      ],
+      "result": {
+        "name": "신 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 강인함을 1 증가시킨다",
+        "conditionBoost": { "strength": 1 },
+        "spriteUrl": "/img/items/oranda/sour-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sour_base_4",
+      "name": "신 오란다",
+      "type": "fixed",
+      "description": "와작와작한 식감이 매력적인 영운의 명물 신맛 오란다.",
+      "ingredients": [{ "name": "자뭉열매", "count": 3 }],
+      "result": {
+        "name": "신 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 강인함을 1 증가시킨다",
+        "conditionBoost": { "strength": 1 },
+        "spriteUrl": "/img/items/oranda/sour-oranda.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sour_adv_1",
+      "name": "고급 신 오란다",
+      "type": "fixed",
+      "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 신맛 오란다.",
+      "ingredients": [
+        { "name": "파야열매", "count": 1 },
+        { "name": "배리열매", "count": 1 },
+        { "name": "자뭉열매", "count": 1 }
+      ],
+      "result": {
+        "name": "고급 신 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 강인함을 3 증가시킨다",
+        "conditionBoost": { "strength": 3 },
+        "spriteUrl": "/img/items/oranda/sour-oranda-sp.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sour_adv_2",
+      "name": "고급 신 오란다",
+      "type": "fixed",
+      "description": "와작바삭한 식감이 환상적인 영운의 명물 고급 신맛 오란다.",
+      "ingredients": [
+        { "name": "파야열매", "count": 2 },
+        { "name": "배리열매", "count": 1 }
+      ],
+      "result": {
+        "name": "고급 신 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 강인함을 3 증가시킨다",
+        "conditionBoost": { "strength": 3 },
+        "spriteUrl": "/img/items/oranda/sour-oranda-sp.png"
+      }
+    },
+    {
+      "id": "recipe_oranda_sour_special_1",
+      "name": "특제 신 오란다",
+      "type": "fixed",
+      "description": "와작바작콰삭한 식감이 영운님도 반하고 갈 명물 특제 신맛 오란다.",
+      "ingredients": [
+        { "name": "애터열매", "count": 1 },
+        { "name": "파야열매", "count": 1 },
+        { "name": "배리열매", "count": 1 }
+      ],
+      "result": {
+        "name": "특제 신 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 강인함을 5 증가시킨다",
+        "conditionBoost": { "strength": 5 },
+        "spriteUrl": "/img/items/oranda/sour-oranda-ss.png"
+      }
+    }
+  ],
+  "ingredientStats": [
+    { "name": "버치열매", "stats": { "elegance": 10 } },
+    { "name": "유루열매", "stats": { "beauty": 10 } },
+    { "name": "복슝열매", "stats": { "cuteness": 10 } },
+    { "name": "복분열매", "stats": { "intelligence": 10 } },
+    { "name": "배리열매", "stats": { "strength": 10 } },
+    {
+      "name": "과사열매",
+      "stats": {
+        "elegance": 10,
+        "cuteness": 10,
+        "intelligence": 10,
+        "strength": 10
+      }
+    },
+    {
+      "name": "오랭열매",
+      "stats": {
+        "elegance": 10,
+        "beauty": 10,
+        "intelligence": 10,
+        "strength": 10
+      }
+    },
+    {
+      "name": "시몬열매",
+      "stats": {
+        "elegance": 10,
+        "beauty": 10,
+        "cuteness": 10,
+        "strength": 10
+      }
+    },
+    {
+      "name": "리샘열매",
+      "stats": {
+        "elegance": 10,
+        "beauty": 10,
+        "cuteness": 10,
+        "intelligence": 10
+      }
+    },
+    {
+      "name": "자뭉열매",
+      "stats": {
+        "beauty": 10,
+        "cuteness": 10,
+        "intelligence": 10,
+        "strength": 10
+      }
+    },
+    { "name": "무화열매", "stats": { "elegance": 15 } },
+    { "name": "위키열매", "stats": { "beauty": 15 } },
+    { "name": "마고열매", "stats": { "cuteness": 15 } },
+    { "name": "아바열매", "stats": { "intelligence": 15 } },
+    { "name": "파야열매", "stats": { "strength": 15 } },
+    { "name": "라즈열매", "stats": { "elegance": 10, "beauty": 10 } },
+    { "name": "블리열매", "stats": { "beauty": 10, "cuteness": 10 } },
+    { "name": "나나열매", "stats": { "cuteness": 10, "intelligence": 10 } },
+    { "name": "서배열매", "stats": { "intelligence": 10, "strength": 10 } },
+    { "name": "파인열매", "stats": { "elegance": 10, "strength": 10 } },
+    {
+      "name": "유석열매",
+      "stats": { "elegance": 10, "cuteness": 10, "intelligence": 10 }
+    },
+    {
+      "name": "시마열매",
+      "stats": { "beauty": 10, "intelligence": 10, "strength": 10 }
+    },
+    {
+      "name": "파비열매",
+      "stats": { "elegance": 10, "cuteness": 10, "strength": 10 }
+    },
+    {
+      "name": "로매열매",
+      "stats": { "elegance": 10, "beauty": 10, "intelligence": 10 }
+    },
+    {
+      "name": "또뽀열매",
+      "stats": { "beauty": 10, "cuteness": 10, "strength": 10 }
+    },
+    { "name": "토망열매", "stats": { "elegance": 20, "beauty": 10 } },
+    { "name": "수숙열매", "stats": { "beauty": 20, "cuteness": 10 } },
+    {
+      "name": "고스티열매",
+      "stats": { "cuteness": 20, "intelligence": 10 }
+    },
+    {
+      "name": "라부탐열매",
+      "stats": { "intelligence": 20, "strength": 10 }
+    },
+    { "name": "노멜열매", "stats": { "elegance": 10, "strength": 20 } },
+    { "name": "메호키열매", "stats": { "elegance": 30, "beauty": 10 } },
+    { "name": "자야열매", "stats": { "beauty": 30, "cuteness": 10 } },
+    { "name": "슈박열매", "stats": { "cuteness": 30, "intelligence": 10 } },
+    { "name": "두리열매", "stats": { "intelligence": 30, "strength": 10 } },
+    { "name": "루베열매", "stats": { "elegance": 10, "strength": 30 } },
+    { "name": "오카열매", "stats": { "elegance": 15, "cuteness": 10 } },
+    { "name": "꼬시개열매", "stats": { "beauty": 15, "intelligence": 10 } },
+    { "name": "초나열매", "stats": { "cuteness": 15, "strength": 10 } },
+    { "name": "린드열매", "stats": { "elegance": 10, "intelligence": 15 } },
+    { "name": "플카열매", "stats": { "beauty": 10, "strength": 15 } },
+    { "name": "로플열매", "stats": { "elegance": 15, "intelligence": 10 } },
+    { "name": "으름열매", "stats": { "beauty": 15, "strength": 10 } },
+    { "name": "슈캐열매", "stats": { "elegance": 10, "cuteness": 15 } },
+    { "name": "바코열매", "stats": { "beauty": 10, "intelligence": 15 } },
+    { "name": "야파열매", "stats": { "cuteness": 10, "strength": 15 } },
+    { "name": "리체열매", "stats": { "elegance": 20, "strength": 10 } },
+    { "name": "루미열매", "stats": { "elegance": 10, "beauty": 20 } },
+    { "name": "수불열매", "stats": { "beauty": 10, "cuteness": 20 } },
+    { "name": "하반열매", "stats": { "cuteness": 10, "intelligence": 20 } },
+    { "name": "마코열매", "stats": { "intelligence": 10, "strength": 20 } },
+    { "name": "바리비열매", "stats": { "elegance": 25, "beauty": 10 } },
+    { "name": "카리열매", "stats": { "beauty": 25, "cuteness": 10 } },
+    {
+      "name": "치리열매",
+      "stats": { "elegance": 30, "beauty": 10, "cuteness": 30 }
+    },
+    {
+      "name": "용아열매",
+      "stats": { "beauty": 30, "cuteness": 10, "intelligence": 30 }
+    },
+    {
+      "name": "캄라열매",
+      "stats": { "cuteness": 30, "intelligence": 10, "strength": 30 }
+    },
+    {
+      "name": "야타비열매",
+      "stats": { "elegance": 30, "intelligence": 30, "strength": 10 }
+    },
+    {
+      "name": "규살열매",
+      "stats": { "elegance": 10, "beauty": 30, "strength": 30 }
+    },
+    {
+      "name": "랑사열매",
+      "stats": {
+        "elegance": 30,
+        "beauty": 10,
+        "cuteness": 30,
+        "intelligence": 10,
+        "strength": 30
+      }
+    },
+    {
+      "name": "스타열매",
+      "stats": {
+        "elegance": 30,
+        "beauty": 10,
+        "cuteness": 30,
+        "intelligence": 10,
+        "strength": 30
+      }
+    },
+    { "name": "의문열매", "stats": { "elegance": 40, "beauty": 10 } },
+    { "name": "미클열매", "stats": { "beauty": 40, "cuteness": 10 } },
+    { "name": "애슈열매", "stats": { "cuteness": 40, "intelligence": 10 } },
+    { "name": "자보열매", "stats": { "intelligence": 40, "strength": 10 } },
+    { "name": "애터열매", "stats": { "elegance": 10, "strength": 40 } },
+    {
+      "name": "탱글탱글부어스트",
+      "stats": { "elegance": 10, "beauty": 15 }
+    },
+    {
+      "name": "밥의통조림",
+      "stats": { "cuteness": 10, "intelligence": 10 }
+    },
+    {
+      "name": "바크의통조림",
+      "stats": { "elegance": 10, "intelligence": 10 }
+    },
+    { "name": "콩통조림", "stats": { "beauty": 10, "intelligence": 15 } },
+    { "name": "식빵", "stats": { "cuteness": 10 } },
+    { "name": "파스타", "stats": { "cuteness": 10, "beauty": 10 } },
+    { "name": "버섯팩", "stats": { "intelligence": 20, "strength": 10 } },
+    { "name": "꼬리훈제", "stats": { "elegance": 10, "intelligence": 20 } },
+    { "name": "굵은대파", "stats": { "elegance": 20, "intelligence": 10 } },
+    { "name": "특선사과", "stats": { "cuteness": 20, "strength": 10 } },
+    {
+      "name": "가느다란뼈",
+      "stats": { "intelligence": 10, "strength": 15 }
+    },
+    {
+      "name": "포테이토팩",
+      "stats": { "cuteness": 10, "intelligence": 10 }
+    },
+    {
+      "name": "물가허브팩",
+      "stats": { "elegance": 15, "intelligence": 15 }
+    },
+    { "name": "채소팩", "stats": { "intelligence": 15, "strength": 10 } },
+    { "name": "모둠튀김", "stats": { "elegance": 10, "strength": 15 } },
+    { "name": "삶은알", "stats": { "beauty": 10, "intelligence": 10 } },
+    { "name": "송이팩", "stats": { "cuteness": 20, "strength": 10 } },
+    { "name": "튼튼치즈", "stats": { "beauty": 15, "strength": 20 } },
+    {
+      "name": "스파이스세트",
+      "stats": { "elegance": 25, "intelligence": 15 }
+    },
+    { "name": "신선한크림", "stats": { "cuteness": 20, "strength": 10 } },
+    {
+      "name": "레토르트카레",
+      "stats": { "elegance": 20, "intelligence": 15 }
+    },
+    { "name": "야자밀크", "stats": { "cuteness": 20, "strength": 10 } },
+    { "name": "레토르트면", "stats": { "beauty": 15, "strength": 15 } },
+    {
+      "name": "레토르트햄버그",
+      "stats": { "elegance": 10, "beauty": 10, "strength": 20 }
+    },
+    {
+      "name": "거대파우더",
+      "stats": {
+        "elegance": 20,
+        "beauty": 20,
+        "cuteness": 20,
+        "intelligence": 20,
+        "strength": 20
+      }
+    },
+    { "name": "바게트", "stats": { "cuteness": 10 } },
+    { "name": "마요네즈", "stats": { "cuteness": 10, "strength": 15 } },
+    { "name": "케첩", "stats": { "cuteness": 15, "strength": 15 } },
+    { "name": "머스터드", "stats": { "elegance": 15, "intelligence": 10 } },
+    { "name": "버터", "stats": { "beauty": 10, "cuteness": 10 } },
+    { "name": "땅콩버터", "stats": { "cuteness": 10, "intelligence": 15 } },
+    { "name": "칠리소스", "stats": { "elegance": 20, "strength": 10 } },
+    { "name": "소금", "stats": { "beauty": 25 } },
+    { "name": "후추", "stats": { "elegance": 15, "intelligence": 10 } },
+    { "name": "요구르트", "stats": { "cuteness": 10, "strength": 15 } },
+    { "name": "휘핑크림", "stats": { "cuteness": 20 } },
+    { "name": "크림치즈", "stats": { "beauty": 10, "strength": 15 } },
+    { "name": "베리잼", "stats": { "cuteness": 20, "strength": 20 } },
+    {
+      "name": "마멀레이드",
+      "stats": { "cuteness": 15, "intelligence": 10 }
+    },
+    { "name": "올리브오일", "stats": { "beauty": 10, "intelligence": 10 } },
+    { "name": "비니거", "stats": { "strength": 25 } },
+    { "name": "비전 달콤스파이스", "stats": { "cuteness": 41 } },
+    { "name": "비전 짭짤스파이스", "stats": { "beauty": 41 } },
+    { "name": "비전 새콤스파이스", "stats": { "strength": 41 } },
+    { "name": "비전 쌉쌀스파이스", "stats": { "intelligence": 41 } },
+    { "name": "비전 매콤스파이스", "stats": { "elegance": 41 } },
+    { "name": "양상추", "stats": { "intelligence": 10, "strength": 10 } },
+    {
+      "name": "토마토슬라이스",
+      "stats": { "cuteness": 10, "strength": 15 }
+    },
+    {
+      "name": "방울토마토슬라이스",
+      "stats": { "cuteness": 15, "strength": 10 }
+    },
+    {
+      "name": "오이슬라이스",
+      "stats": { "strength": 10, "intelligence": 10 }
+    },
+    {
+      "name": "피클슬라이스",
+      "stats": { "intelligence": 10, "strength": 20 }
+    },
+    { "name": "양파슬라이스", "stats": { "elegance": 15, "cuteness": 10 } },
+    { "name": "적양파", "stats": { "elegance": 15, "cuteness": 10 } },
+    {
+      "name": "피망슬라이스",
+      "stats": { "intelligence": 15, "strength": 10 }
+    },
+    {
+      "name": "빨간파프리카슬라이스",
+      "stats": { "cuteness": 15, "elegance": 10 }
+    },
+    { "name": "노란파프리카슬라이스", "stats": { "cuteness": 15 } },
+    { "name": "아보카도", "stats": { "beauty": 10, "intelligence": 15 } },
+    { "name": "구운베이컨", "stats": { "elegance": 10, "beauty": 15 } },
+    { "name": "슬라이스햄", "stats": { "beauty": 15, "cuteness": 10 } },
+    { "name": "생햄", "stats": { "elegance": 10, "beauty": 20 } },
+    { "name": "구운초리조", "stats": { "elegance": 20, "beauty": 10 } },
+    { "name": "허브소시지", "stats": { "beauty": 10, "intelligence": 10 } },
+    { "name": "햄버그", "stats": { "beauty": 10, "strength": 15 } },
+    { "name": "절벼게맛살", "stats": { "beauty": 10, "cuteness": 15 } },
+    { "name": "훈제토막", "stats": { "beauty": 10, "intelligence": 15 } },
+    { "name": "튀긴토막", "stats": { "beauty": 10, "strength": 15 } },
+    {
+      "name": "에그슬라이스",
+      "stats": { "cuteness": 10, "intelligence": 10 }
+    },
+    { "name": "토르티야", "stats": { "beauty": 10, "cuteness": 10 } },
+    { "name": "두부", "stats": { "cuteness": 10, "intelligence": 10 } },
+    { "name": "라이스", "stats": { "beauty": 10, "cuteness": 10 } },
+    { "name": "누들", "stats": { "beauty": 10, "cuteness": 10 } },
+    { "name": "감자샐러드", "stats": { "cuteness": 10, "strength": 15 } },
+    { "name": "슬라이스치즈", "stats": { "beauty": 10, "strength": 15 } },
+    { "name": "바나나슬라이스", "stats": { "cuteness": 20 } },
+    { "name": "딸기슬라이스", "stats": { "cuteness": 15, "strength": 15 } },
+    { "name": "사과슬라이스", "stats": { "cuteness": 15, "strength": 15 } },
+    { "name": "키위슬라이스", "stats": { "cuteness": 10, "strength": 20 } },
+    {
+      "name": "파인애플슬라이스",
+      "stats": { "cuteness": 15, "strength": 20 }
+    },
+    { "name": "할라페뇨", "stats": { "elegance": 30 } },
+    {
+      "name": "호스래디시",
+      "stats": { "elegance": 25, "intelligence": 10 }
+    },
+    {
+      "name": "카레파우더",
+      "stats": { "elegance": 20, "intelligence": 15 }
+    },
+    { "name": "와사비소스", "stats": { "elegance": 30 } },
+    { "name": "물냉이", "stats": { "elegance": 10, "intelligence": 10 } },
+    { "name": "바질", "stats": { "elegance": 10, "intelligence": 15 } },
+    { "name": "달콤한꿀", "stats": { "cuteness": 20, "beauty": 10 } },
+    { "name": "설탕", "stats": { "cuteness": 10 } },
+    { "name": "밀가루", "stats": { "beauty": 10 } },
+    { "name": "오렌지", "stats": { "strength": 10 } },
+    { "name": "당근", "stats": { "cuteness": 10 } },
+    { "name": "럭키의 알", "stats": { "beauty": 10 } },
+    { "name": "옥수수", "stats": { "cuteness": 10 } },
+    { "name": "고추장", "stats": { "elegance": 10 } },
+    { "name": "간장", "stats": { "strength": 10 } },
+    { "name": "된장", "stats": { "intelligence": 20 } },
+    { "name": "미역", "stats": { "strength": 10 } },
+    { "name": "부추", "stats": { "elegance": 10 } },
+    { "name": "홍차", "stats": { "intelligence": 20 } },
+    { "name": "커피", "stats": { "intelligence": 20 } },
+    { "name": "초콜릿", "stats": { "intelligence": 20, "cuteness": 10 } },
+    { "name": "초코", "stats": { "intelligence": 20 } },
+    { "name": "아몬드가루", "stats": { "intelligence": 20 } },
+    { "name": "젤라틴", "stats": { "beauty": 20 } },
+    { "name": "식용 얼음", "stats": { "beauty": 20 } },
+    { "name": "민트", "stats": { "beauty": 20 } },
+    { "name": "두리안", "stats": { "intelligence": 30 } },
+    { "name": "마라소스", "stats": { "elegance": 30 } },
+    { "name": "대포무노 먹물", "stats": { "intelligence": 30 } },
+    { "name": "떡", "stats": { "cuteness": 10 } },
+    { "name": "로셀열매", "stats": { "cuteness": 40 } },
+    { "name": "악키열매", "stats": { "strength": 15 } },
+    { "name": "타라프열매", "stats": { "intelligence": 15 } }
+  ],
+  "statBasedRecipes": [
+    {
+      "id": "stat_recipe_oranda_spicy_special",
+      "name": "특제 매운 오란다",
+      "type": "stat",
+      "description": "재료의 매운맛 스탯 합이 51 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "elegance": 51
+      },
+      "result": {
+        "name": "특제 매운 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 근사함을 5 증가시킨다",
+        "conditionBoost": {
+          "elegance": 5
+        },
+        "spriteUrl": "/img/items/oranda/spicy-oranda-ss.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_spicy_adv",
+      "name": "고급 매운 오란다",
+      "type": "stat",
+      "description": "재료의 매운맛 스탯 합이 41 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "elegance": 41
+      },
+      "result": {
+        "name": "고급 매운 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 근사함을 3 증가시킨다",
+        "conditionBoost": {
+          "elegance": 3
+        },
+        "spriteUrl": "/img/items/oranda/spicy-oranda-sp.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_spicy_base",
+      "name": "매운 오란다",
+      "type": "stat",
+      "description": "재료의 매운맛 스탯 합이 21 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "elegance": 21
+      },
+      "result": {
+        "name": "매운 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 근사함을 1 증가시킨다",
+        "conditionBoost": {
+          "elegance": 1
+        },
+        "spriteUrl": "/img/items/oranda/spicy-oranda.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_dry_special",
+      "name": "특제 떫은 오란다",
+      "type": "stat",
+      "description": "재료의 떫은맛 스탯 합이 51 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "beauty": 51
+      },
+      "result": {
+        "name": "특제 떫은 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 아름다움을 5 증가시킨다",
+        "conditionBoost": {
+          "beauty": 5
+        },
+        "spriteUrl": "/img/items/oranda/dry-oranda-ss.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_dry_adv",
+      "name": "고급 떫은 오란다",
+      "type": "stat",
+      "description": "재료의 떫은맛 스탯 합이 41 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "beauty": 41
+      },
+      "result": {
+        "name": "고급 떫은 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 아름다움을 3 증가시킨다",
+        "conditionBoost": {
+          "beauty": 3
+        },
+        "spriteUrl": "/img/items/oranda/dry-oranda-sp.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_dry_base",
+      "name": "떫은 오란다",
+      "type": "stat",
+      "description": "재료의 떫은맛 스탯 합이 21 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "beauty": 21
+      },
+      "result": {
+        "name": "떫은 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 아름다움을 1 증가시킨다",
+        "conditionBoost": {
+          "beauty": 1
+        },
+        "spriteUrl": "/img/items/oranda/dry-oranda.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_sweet_special",
+      "name": "특제 단 오란다",
+      "type": "stat",
+      "description": "재료의 단맛 스탯 합이 51 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "cuteness": 51
+      },
+      "result": {
+        "name": "특제 단 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 귀여움을 5 증가시킨다",
+        "conditionBoost": {
+          "cuteness": 5
+        },
+        "spriteUrl": "/img/items/oranda/sweet-oranda-ss.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_sweet_adv",
+      "name": "고급 단 오란다",
+      "type": "stat",
+      "description": "재료의 단맛 스탯 합이 41 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "cuteness": 41
+      },
+      "result": {
+        "name": "고급 단 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 귀여움을 3 증가시킨다",
+        "conditionBoost": {
+          "cuteness": 3
+        },
+        "spriteUrl": "/img/items/oranda/sweet-oranda-sp.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_sweet_base",
+      "name": "단 오란다",
+      "type": "stat",
+      "description": "재료의 단맛 스탯 합이 21 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "cuteness": 21
+      },
+      "result": {
+        "name": "단 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 귀여움을 1 증가시킨다",
+        "conditionBoost": {
+          "cuteness": 1
+        },
+        "spriteUrl": "/img/items/oranda/sweet-oranda.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_bitter_special",
+      "name": "특제 쓴 오란다",
+      "type": "stat",
+      "description": "재료의 쓴맛 스탯 합이 51 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "intelligence": 51
+      },
+      "result": {
+        "name": "특제 쓴 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 슬기로움을 5 증가시킨다",
+        "conditionBoost": {
+          "intelligence": 5
+        },
+        "spriteUrl": "/img/items/oranda/bitter-oranda-ss.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_bitter_adv",
+      "name": "고급 쓴 오란다",
+      "type": "stat",
+      "description": "재료의 쓴맛 스탯 합이 41 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "intelligence": 41
+      },
+      "result": {
+        "name": "고급 쓴 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 슬기로움을 3 증가시킨다",
+        "conditionBoost": {
+          "intelligence": 3
+        },
+        "spriteUrl": "/img/items/oranda/bitter-oranda-sp.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_bitter_base",
+      "name": "쓴 오란다",
+      "type": "stat",
+      "description": "재료의 쓴맛 스탯 합이 21 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "intelligence": 21
+      },
+      "result": {
+        "name": "쓴 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 슬기로움을 1 증가시킨다",
+        "conditionBoost": {
+          "intelligence": 1
+        },
+        "spriteUrl": "/img/items/oranda/bitter-oranda.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_sour_special",
+      "name": "특제 신 오란다",
+      "type": "stat",
+      "description": "재료의 신맛 스탯 합이 51 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "strength": 51
+      },
+      "result": {
+        "name": "특제 신 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 강인함을 5 증가시킨다",
+        "conditionBoost": {
+          "strength": 5
+        },
+        "spriteUrl": "/img/items/oranda/sour-oranda-ss.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_sour_adv",
+      "name": "고급 신 오란다",
+      "type": "stat",
+      "description": "재료의 신맛 스탯 합이 41 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "strength": 41
+      },
+      "result": {
+        "name": "고급 신 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 강인함을 3 증가시킨다",
+        "conditionBoost": {
+          "strength": 3
+        },
+        "spriteUrl": "/img/items/oranda/sour-oranda-sp.png"
+      }
+    },
+    {
+      "id": "stat_recipe_oranda_sour_base",
+      "name": "신 오란다",
+      "type": "stat",
+      "description": "재료의 신맛 스탯 합이 21 이상이면 만들어지는 오란다",
+      "requiredStats": {
+        "strength": 21
+      },
+      "result": {
+        "name": "신 오란다",
+        "pocket": "vitamins",
+        "effect": "포켓몬의 강인함을 1 증가시킨다",
+        "conditionBoost": {
+          "strength": 1
+        },
+        "spriteUrl": "/img/items/oranda/sour-oranda.png"
+      }
+    }
+  ]
 }
