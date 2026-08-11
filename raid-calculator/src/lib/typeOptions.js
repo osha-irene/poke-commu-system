@@ -1,0 +1,21 @@
+// @smogon/calc가 요구하는 정확한 영문 타입 표기(TypeName)와 한글 표시명
+export const TYPE_OPTIONS = [
+  { en: 'Normal', ko: '노말' },
+  { en: 'Fire', ko: '불꽃' },
+  { en: 'Water', ko: '물' },
+  { en: 'Electric', ko: '전기' },
+  { en: 'Grass', ko: '풀' },
+  { en: 'Ice', ko: '얼음' },
+  { en: 'Fighting', ko: '격투' },
+  { en: 'Poison', ko: '독' },
+  { en: 'Ground', ko: '땅' },
+  { en: 'Flying', ko: '비행' },
+  { en: 'Psychic', ko: '에스퍼' },
+  { en: 'Bug', ko: '벌레' },
+  { en: 'Rock', ko: '바위' },
+  { en: 'Ghost', ko: '고스트' },
+  { en: 'Dragon', ko: '드래곤' },
+  { en: 'Dark', ko: '악' },
+  { en: 'Steel', ko: '강철' },
+  { en: 'Fairy', ko: '페어리' },
+];

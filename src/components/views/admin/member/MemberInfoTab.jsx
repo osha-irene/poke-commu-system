@@ -262,8 +262,8 @@ function MemberInfoTab({
           </div>
           <div className="flex gap-2">
             <button onClick={() => setMoneyInput(moneyInput + 1000)} className="flex-1 bg-gray-100 text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-200 transition-colors text-xs">+1,000</button>
+            <button onClick={() => setMoneyInput(moneyInput + 1500)} className="flex-1 bg-gray-100 text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-200 transition-colors text-xs">+1,500</button>
             <button onClick={() => setMoneyInput(moneyInput + 10000)} className="flex-1 bg-gray-100 text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-200 transition-colors text-xs">+10,000</button>
-            <button onClick={() => setMoneyInput(moneyInput + 100000)} className="flex-1 bg-gray-100 text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-200 transition-colors text-xs">+100,000</button>
           </div>
         </div>
 

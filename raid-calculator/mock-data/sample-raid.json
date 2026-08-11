@@ -1,0 +1,247 @@
+{
+  "boss": {
+    "nickname": "무장조 레이드보스",
+    "species": "kingambit",
+    "level": 60,
+    "nature": "adamant",
+    "ability": "supremeoverlord",
+    "item": "leftovers",
+    "teraType": "",
+    "ivs": {
+      "hp": 31,
+      "atk": 31,
+      "def": 31,
+      "spa": 31,
+      "spd": 31,
+      "spe": 31
+    },
+    "evs": {
+      "hp": 252,
+      "atk": 252,
+      "def": 4,
+      "spa": 0,
+      "spd": 0,
+      "spe": 0
+    },
+    "customMaxHP": "5000"
+  },
+  "participants": [
+    {
+      "id": 0,
+      "nickname": "딜러1",
+      "position": "딜러",
+      "teraType": "",
+      "types": [
+        "Fire"
+      ]
+    },
+    {
+      "id": 1,
+      "nickname": "탱커1",
+      "position": "탱커",
+      "teraType": "",
+      "types": [
+        "Water"
+      ]
+    },
+    {
+      "id": 2,
+      "nickname": "서포터1",
+      "position": "서포터",
+      "teraType": "",
+      "types": [
+        "Grass"
+      ]
+    },
+    {
+      "id": 3,
+      "nickname": "딜러2",
+      "position": "딜러",
+      "teraType": "",
+      "types": [
+        "Electric"
+      ]
+    },
+    {
+      "id": 4,
+      "nickname": "탱커2",
+      "position": "탱커",
+      "teraType": "",
+      "types": [
+        "Psychic"
+      ]
+    },
+    {
+      "id": 5,
+      "nickname": "서포터2",
+      "position": "서포터",
+      "teraType": "",
+      "types": [
+        "Dark"
+      ]
+    },
+    {
+      "id": 6,
+      "nickname": "딜러3",
+      "position": "딜러",
+      "teraType": "",
+      "types": [
+        "Fighting"
+      ]
+    },
+    {
+      "id": 7,
+      "nickname": "탱커3",
+      "position": "탱커",
+      "teraType": "",
+      "types": [
+        "Steel"
+      ]
+    },
+    {
+      "id": 8,
+      "nickname": "서포터3",
+      "position": "서포터",
+      "teraType": "",
+      "types": [
+        "Fairy"
+      ]
+    },
+    {
+      "id": 9,
+      "nickname": "딜러4",
+      "position": "딜러",
+      "teraType": "",
+      "types": [
+        "Dragon"
+      ]
+    },
+    {
+      "id": 10,
+      "nickname": "탱커4",
+      "position": "탱커",
+      "teraType": "",
+      "types": [
+        "Ghost"
+      ]
+    },
+    {
+      "id": 11,
+      "nickname": "서포터4",
+      "position": "서포터",
+      "teraType": "",
+      "types": [
+        "Flying"
+      ]
+    },
+    {
+      "id": 12,
+      "nickname": "딜러5",
+      "position": "딜러",
+      "teraType": "",
+      "types": [
+        "Fire"
+      ]
+    },
+    {
+      "id": 13,
+      "nickname": "탱커5",
+      "position": "탱커",
+      "teraType": "",
+      "types": [
+        "Water"
+      ]
+    },
+    {
+      "id": 14,
+      "nickname": "서포터5",
+      "position": "서포터",
+      "teraType": "",
+      "types": [
+        "Grass"
+      ]
+    },
+    {
+      "id": 15,
+      "nickname": "딜러6",
+      "position": "딜러",
+      "teraType": "",
+      "types": [
+        "Electric"
+      ]
+    },
+    {
+      "id": 16,
+      "nickname": "탱커6",
+      "position": "탱커",
+      "teraType": "",
+      "types": [
+        "Psychic"
+      ]
+    },
+    {
+      "id": 17,
+      "nickname": "서포터6",
+      "position": "서포터",
+      "teraType": "",
+      "types": [
+        "Dark"
+      ]
+    },
+    {
+      "id": 18,
+      "nickname": "딜러7",
+      "position": "딜러",
+      "teraType": "",
+      "types": [
+        "Fighting"
+      ]
+    },
+    {
+      "id": 19,
+      "nickname": "탱커7",
+      "position": "탱커",
+      "teraType": "",
+      "types": [
+        "Steel"
+      ]
+    },
+    {
+      "id": 20,
+      "nickname": "서포터7",
+      "position": "서포터",
+      "teraType": "",
+      "types": [
+        "Fairy"
+      ]
+    },
+    {
+      "id": 21,
+      "nickname": "딜러8",
+      "position": "딜러",
+      "teraType": "",
+      "types": [
+        "Dragon"
+      ]
+    },
+    {
+      "id": 22,
+      "nickname": "탱커8",
+      "position": "탱커",
+      "teraType": "",
+      "types": [
+        "Ghost"
+      ]
+    },
+    {
+      "id": 23,
+      "nickname": "서포터8",
+      "position": "서포터",
+      "teraType": "",
+      "types": [
+        "Flying"
+      ]
+    }
+  ],
+  "maxRounds": 100
+}
