@@ -3,6 +3,7 @@ import { ref, set } from 'firebase/database';
 import { database } from '../../firebase';
 import evolutionsData from '../../data/evolutions.json';
 import movesDataRaw from '../../data/moves.json';
+import itemsDataRaw from '../../data/items.json';
 import { getBaseStatPatch } from '../../utils/pokemonBaseStats';
 import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
 import {
@@ -14,8 +15,36 @@ import { getAlcremieImage, getAlcremieShapeForItem } from '../../utils/alcremieF
 import { getAbilityKoreanName } from '../../utils/abilityUtils';
 
 const allMovesData = Array.isArray(movesDataRaw) ? movesDataRaw : movesDataRaw.moves || [];
+const allItemsData = Array.isArray(itemsDataRaw) ? itemsDataRaw : itemsDataRaw.items || [];
 
 const getBaseName = (pokemon) => getPokemonDisplayParts(pokemon).name;
+
+// 아이템 이름 정규화 (한글명/영문명/슬러그 어느 쪽으로 와도 비교 가능하도록)
+const normalizeItemToken = (value) => String(value || '')
+  .toLowerCase()
+  .replace(/[\s-_]/g, '')
+  .replace(/의돌/g, '')
+  .replace(/stone/g, '');
+
+// pokemon.heldItem은 UI에서 아이템의 한글 표시명(item.name)으로 저장되므로,
+// evolutions.json의 영문 슬러그(예: "razor-fang")와 직접 비교할 수 없다.
+// items.json에서 매칭되는 아이템을 찾아 정규화된 토큰으로 비교한다.
+const heldItemMatchesCondition = (heldItem, conditionHeldItem) => {
+  if (!conditionHeldItem) return true;
+  if (!heldItem) return false;
+
+  const normalizedCondition = normalizeItemToken(conditionHeldItem);
+  const normalizedHeld = normalizeItemToken(heldItem);
+  if (normalizedHeld === normalizedCondition) return true;
+
+  const matchedItem = allItemsData.find((item) => {
+    const nameToken = normalizeItemToken(item.name);
+    const nameEnToken = normalizeItemToken(item.nameEn);
+    return nameToken === normalizedHeld || nameEnToken === normalizedHeld;
+  });
+
+  return normalizeItemToken(matchedItem?.nameEn) === normalizedCondition;
+};
 
 export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster, updateHistoryField, updateOwnedPokemonByUniqueId) => {
   const [evolutionModal, setEvolutionModal] = useState(null);
@@ -177,6 +206,10 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster, u
           m => m.moveId === condition.knownMove || m.name?.toLowerCase() === condition.knownMove
         );
         if (!hasMove) return false;
+      }
+
+      if (condition.heldItem && !heldItemMatchesCondition(pokemon.heldItem, condition.heldItem)) {
+        return false;
       }
 
       return true;
