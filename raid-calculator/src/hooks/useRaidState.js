@@ -3,23 +3,32 @@ import {
   createInitialBattleState,
   executeParticipantAction,
   executeBossAction,
+  executeBossSpreadAction,
+  executeParticipantCheer,
+  endRound,
+  setActiveTeam,
 } from '../engine/raidEngine.js';
+import { DEFAULT_ROSTER } from '../data/defaultRoster.js';
 
 export const MAX_PARTICIPANTS = 24;
-const STORAGE_KEY = 'raid-calculator-draft-v2';
+const STORAGE_KEY = 'raid-calculator-draft-v3';
 
 const DEFAULT_IVS = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
 const DEFAULT_EVS = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
 
-// 레벨 50 / 성격 하드(무보정) / 도구 없음 / 특성 없음 / 종족값 100 / 개체값 31 / 노력치 0으로 고정
-// (engine의 buildBattlePokemon에서 강제 적용됨)
+// 레벨 50 / 성격 하드(무보정) / 도구 없음 / 특성 없음 / 종족값 100 / 개체값 31로 고정
+// (engine의 buildBattlePokemon에서 강제 적용됨). 노력치(기초 포인트)는 규칙 VI장에 따라
+// 레이드 전용으로 참가자마다 직접 입력한다.
 function emptyParticipant(id) {
   return {
     id,
     nickname: '',
+    pokemon: '',
     position: '',
+    team: '',
     teraType: '',
     types: ['Normal'],
+    evs: { ...DEFAULT_EVS },
   };
 }
 
@@ -59,7 +68,8 @@ export function useRaidState() {
       ? draft.participants
       : Array.from({ length: MAX_PARTICIPANTS }, (_, i) => emptyParticipant(i))
   );
-  const [maxRounds, setMaxRounds] = useState(draft?.maxRounds || 100);
+  const [maxRounds, setMaxRounds] = useState(draft?.maxRounds || 6);
+  const [selectedTeam, setSelectedTeam] = useState('');
   const [battle, setBattle] = useState(null);
 
   useEffect(() => {
@@ -79,9 +89,56 @@ export function useRaidState() {
     setParticipants((prev) => prev.map((p) => (p.id === id ? emptyParticipant(id) : p)));
   }, []);
 
+  // 포지션 조합대로 조 배정: 순서대로 자르는 게 아니라, 철벽1·도우미1·칼춤(teamSize-2)명 조합이 되도록
+  // 철벽/칼춤/도우미 풀에서 각각 뽑아 조를 구성한다. 조를 못 채우고 남는 인원은 조 미배정으로 남는다.
+  const autoAssignTeams = useCallback(
+    (teamSize) => {
+      const size = Math.max(3, Number(teamSize) || 5);
+      const swordPerTeam = size - 2;
+
+      const tankIds = participants.filter((p) => p.position === '철벽').map((p) => p.id);
+      const healerIds = participants.filter((p) => p.position === '도우미').map((p) => p.id);
+      const swordIds = participants.filter((p) => p.position === '칼춤').map((p) => p.id);
+
+      const teamCount = Math.min(tankIds.length, healerIds.length, Math.floor(swordIds.length / swordPerTeam));
+
+      const teamById = new Map();
+      for (let t = 0; t < teamCount; t += 1) {
+        const teamLabel = String(t + 1);
+        teamById.set(tankIds[t], teamLabel);
+        teamById.set(healerIds[t], teamLabel);
+        for (let s = 0; s < swordPerTeam; s += 1) {
+          teamById.set(swordIds[t * swordPerTeam + s], teamLabel);
+        }
+      }
+
+      setParticipants((prev) => prev.map((p) => ({ ...p, team: teamById.get(p.id) || '' })));
+
+      const usedCount = teamCount > 0 ? teamCount * (2 + swordPerTeam) : 0;
+      const assignableCount = tankIds.length + healerIds.length + swordIds.length;
+      return { teamCount, leftoverCount: assignableCount - usedCount };
+    },
+    [participants]
+  );
+
+  // 고정 명단(트레이너/포켓몬/타입) 불러오기 — 기존 입력을 전부 덮어쓴다
+  const loadDefaultRoster = useCallback(() => {
+    setParticipants(
+      Array.from({ length: MAX_PARTICIPANTS }, (_, i) => {
+        const entry = DEFAULT_ROSTER[i];
+        return entry
+          ? { ...emptyParticipant(i), nickname: entry.nickname, pokemon: entry.pokemon, position: entry.position, types: entry.types }
+          : emptyParticipant(i);
+      })
+    );
+  }, []);
+
   const startBattle = useCallback(() => {
-    setBattle(createInitialBattleState({ boss, participants, maxRounds }));
-  }, [boss, participants, maxRounds]);
+    const battleParticipants = selectedTeam
+      ? participants.filter((p) => String(p.team || '') === String(selectedTeam))
+      : participants;
+    setBattle(createInitialBattleState({ boss, participants: battleParticipants, maxRounds }));
+  }, [boss, participants, maxRounds, selectedTeam]);
 
   const resetBattle = useCallback(() => {
     setBattle(null);
@@ -93,6 +150,25 @@ export function useRaidState() {
 
   const runBossAction = useCallback((moveId, targetId) => {
     setBattle((prev) => (prev ? executeBossAction(prev, moveId, targetId) : prev));
+  }, []);
+
+  const runBossSpreadAction = useCallback((moveId, protectionChoices) => {
+    setBattle((prev) => (prev ? executeBossSpreadAction(prev, moveId, protectionChoices) : prev));
+  }, []);
+
+  const runParticipantCheer = useCallback((participantId, cheerId) => {
+    setBattle((prev) => (prev ? executeParticipantCheer(prev, participantId, cheerId) : prev));
+  }, []);
+
+  // 라운드는 자동으로 넘어가지 않는다 — 조원 행동이 끝난 뒤 보스 행동까지 원하는 만큼 마치고
+  // 나면 이 버튼으로 명시적으로 다음 라운드로 넘긴다.
+  const runEndRound = useCallback(() => {
+    setBattle((prev) => (prev ? endRound(prev) : prev));
+  }, []);
+
+  // 이번 라운드에 행동할 조 지정 — 전체공격은 이 조에 한정해서 적용된다
+  const runSetActiveTeam = useCallback((team) => {
+    setBattle((prev) => (prev ? setActiveTeam(prev, team) : prev));
   }, []);
 
   const exportDraft = useCallback(() => {
@@ -127,13 +203,21 @@ export function useRaidState() {
     participants,
     updateParticipant,
     clearParticipant,
+    autoAssignTeams,
+    loadDefaultRoster,
     maxRounds,
     setMaxRounds,
+    selectedTeam,
+    setSelectedTeam,
     battle,
     startBattle,
     resetBattle,
     runParticipantAction,
     runBossAction,
+    runBossSpreadAction,
+    runParticipantCheer,
+    runEndRound,
+    runSetActiveTeam,
     exportDraft,
     importDraft,
   };

@@ -2,7 +2,7 @@ const STATUS_LABELS = {
   ongoing: '진행 중',
   win: '참가자 승리 (보스 처치)',
   loss: '보스 승리 (참가자 전멸)',
-  timeout: '시간 초과 (최대 라운드 도달)',
+  timeout: '레이드 실패 (최대 라운드 내 처치 실패)',
 };
 
 export default function ResultSummary({ battle }) {
