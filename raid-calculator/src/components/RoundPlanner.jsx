@@ -3,11 +3,14 @@ import { POSITION_CHEERS, MAX_CHEERS_PER_PARTICIPANT } from '../lib/cheers.js';
 
 export default function RoundPlanner({ raid }) {
   const { battle } = raid;
+  const [actionType, setActionType] = useState('fight');
   const [participantChoice, setParticipantChoice] = useState('');
   const [bossTarget, setBossTarget] = useState('');
+  const [protectionChoices, setProtectionChoices] = useState({});
 
   if (!battle || battle.status !== 'ongoing') return null;
 
+  const currentRound = battle.round + 1;
   const aliveParticipants = battle.participants.filter((p) => p && !p.fainted);
   const availableParticipants = aliveParticipants.filter((p) => !battle.actedParticipantIds.includes(p.id));
   const selectedParticipant =
@@ -38,7 +41,28 @@ export default function RoundPlanner({ raid }) {
 
   return (
     <section className="panel planner-panel">
-      <h2>{battle.round + 1}라운드 진행 중</h2>
+      <h2>{currentRound}라운드 진행 중</h2>
+
+      {teamOptions.length > 0 && (
+        <div className="add-row">
+          <label className="inline-field" style={{ flex: 1 }}>
+            이번 라운드에 행동할 조 (참가자 행동 대상과 보스 전체공격 범위가 이 조로 한정됩니다)
+            <select value={activeTeam} onChange={(e) => raid.runSetActiveTeam(e.target.value)} disabled={!!activeTeam}>
+              <option value="">전체 참가자 (조 제한 없음)</option>
+              {teamOptions.map((team) => (
+                <option key={team} value={team}>
+                  {team}조
+                </option>
+              ))}
+            </select>
+          </label>
+          {activeTeam && (
+            <p className="plan-hint" style={{ alignSelf: 'center' }}>
+              {activeTeam}조로 고정됨 — 라운드를 종료해야 다시 고를 수 있습니다.
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="planner-columns">
         <div className="planner-column">
@@ -123,7 +147,51 @@ export default function RoundPlanner({ raid }) {
               자신 상태이상 회복
             </button>
           </div>
+          {bossMoveIsSpread && (
+            <p className="plan-hint">
+              전체공격 기술로 인식되어 {activeTeam ? `${activeTeam}조 생존 참가자(${spreadScopeParticipants.length}명)에게만` : '생존한 참가자 전원에게'}{' '}
+              적용됩니다.
+            </p>
+          )}
+          {bossMoveIsSpread &&
+            guardians.map((guardian) => {
+              const protectableAllies = spreadScopeParticipants.filter(
+                (p) => p.id !== guardian.id && !guardians.some((g) => g.id === p.id)
+              );
+              const protectableByTeam = groupByTeam(protectableAllies);
+              return (
+                <div className="add-row" key={guardian.id}>
+                  <label className="inline-field" style={{ flex: 1 }}>
+                    {guardian.nickname}이(가) 대신 지켜줄 아군 (미지정 시 같은 조 중 무작위)
+                    <select
+                      value={protectionChoices[guardian.id] || ''}
+                      onChange={(e) => setProtectionChoices((prev) => ({ ...prev, [guardian.id]: e.target.value }))}
+                    >
+                      <option value="">무작위로 선택</option>
+                      {protectableByTeam.map(([teamLabel, members]) => (
+                        <optgroup key={teamLabel} label={teamLabel}>
+                          {members.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.nickname}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              );
+            })}
         </div>
+      </div>
+
+      <div className="round-end-row">
+        {availableParticipants.length > 0 && (
+          <p className="plan-hint">아직 행동하지 않은 참가자가 {availableParticipants.length}명 있습니다. (종료해도 무방하면 그냥 진행하세요)</p>
+        )}
+        <button type="button" className="btn-primary" onClick={() => raid.runEndRound()}>
+          {currentRound}라운드 종료하고 다음 라운드로
+        </button>
       </div>
     </section>
   );

@@ -7,6 +7,7 @@ import {
   resetFieldBoosts,
   cureBossStatus,
 } from '../engine/raidEngine.js';
+import { DEFAULT_ROSTER } from '../data/defaultRoster.js';
 
 export const MAX_PARTICIPANTS = 24;
 const STORAGE_KEY = 'raid-calculator-draft-v3';
@@ -21,6 +22,7 @@ function emptyParticipant(id) {
   return {
     id,
     nickname: '',
+    pokemon: '',
     position: '',
     gender: '',
     teraType: '',
@@ -90,9 +92,56 @@ export function useRaidState() {
     setParticipants((prev) => prev.map((p) => (p.id === id ? emptyParticipant(id) : p)));
   }, []);
 
+  // 포지션 조합대로 조 배정: 순서대로 자르는 게 아니라, 철벽1·도우미1·칼춤(teamSize-2)명 조합이 되도록
+  // 철벽/칼춤/도우미 풀에서 각각 뽑아 조를 구성한다. 조를 못 채우고 남는 인원은 조 미배정으로 남는다.
+  const autoAssignTeams = useCallback(
+    (teamSize) => {
+      const size = Math.max(3, Number(teamSize) || 5);
+      const swordPerTeam = size - 2;
+
+      const tankIds = participants.filter((p) => p.position === '철벽').map((p) => p.id);
+      const healerIds = participants.filter((p) => p.position === '도우미').map((p) => p.id);
+      const swordIds = participants.filter((p) => p.position === '칼춤').map((p) => p.id);
+
+      const teamCount = Math.min(tankIds.length, healerIds.length, Math.floor(swordIds.length / swordPerTeam));
+
+      const teamById = new Map();
+      for (let t = 0; t < teamCount; t += 1) {
+        const teamLabel = String(t + 1);
+        teamById.set(tankIds[t], teamLabel);
+        teamById.set(healerIds[t], teamLabel);
+        for (let s = 0; s < swordPerTeam; s += 1) {
+          teamById.set(swordIds[t * swordPerTeam + s], teamLabel);
+        }
+      }
+
+      setParticipants((prev) => prev.map((p) => ({ ...p, team: teamById.get(p.id) || '' })));
+
+      const usedCount = teamCount > 0 ? teamCount * (2 + swordPerTeam) : 0;
+      const assignableCount = tankIds.length + healerIds.length + swordIds.length;
+      return { teamCount, leftoverCount: assignableCount - usedCount };
+    },
+    [participants]
+  );
+
+  // 고정 명단(트레이너/포켓몬/타입) 불러오기 — 기존 입력을 전부 덮어쓴다
+  const loadDefaultRoster = useCallback(() => {
+    setParticipants(
+      Array.from({ length: MAX_PARTICIPANTS }, (_, i) => {
+        const entry = DEFAULT_ROSTER[i];
+        return entry
+          ? { ...emptyParticipant(i), nickname: entry.nickname, pokemon: entry.pokemon, position: entry.position, types: entry.types }
+          : emptyParticipant(i);
+      })
+    );
+  }, []);
+
   const startBattle = useCallback(() => {
-    setBattle(createInitialBattleState({ boss, participants, maxRounds }));
-  }, [boss, participants, maxRounds]);
+    const battleParticipants = selectedTeam
+      ? participants.filter((p) => String(p.team || '') === String(selectedTeam))
+      : participants;
+    setBattle(createInitialBattleState({ boss, participants: battleParticipants, maxRounds }));
+  }, [boss, participants, maxRounds, selectedTeam]);
 
   const resetBattle = useCallback(() => {
     setBattle(null);
@@ -150,8 +199,12 @@ export function useRaidState() {
     participants,
     updateParticipant,
     clearParticipant,
+    autoAssignTeams,
+    loadDefaultRoster,
     maxRounds,
     setMaxRounds,
+    selectedTeam,
+    setSelectedTeam,
     battle,
     startBattle,
     resetBattle,

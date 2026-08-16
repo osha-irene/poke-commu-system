@@ -2,8 +2,21 @@ import { TYPE_OPTIONS } from '../lib/typeOptions.js';
 import { POSITION_OPTIONS } from '../lib/cheers.js';
 import { statsToText, textToStats } from '../lib/statText.js';
 
-export default function ParticipantRow({ participant, index, onChange, onClear, disabled }) {
+const EV_STATS = [
+  ['hp', 'HP'],
+  ['atk', '공'],
+  ['def', '방'],
+  ['spa', '특공'],
+  ['spd', '특방'],
+  ['spe', '스피드'],
+];
+
+const EV_TOTAL_MAX = 508;
+const EV_STAT_MAX = 252;
+
+export default function ParticipantRow({ participant, onChange, onClear, disabled }) {
   const p = participant;
+  const slotNumber = p.id + 1;
   const [type1, type2] = p.types && p.types.length ? p.types : ['Normal'];
   const moves = p.moves && p.moves.length ? p.moves : ['', '', '', ''];
 
@@ -30,11 +43,11 @@ export default function ParticipantRow({ participant, index, onChange, onClear, 
 
   return (
     <tr className={p.fainted ? 'row-fainted' : ''}>
-      <td className="col-index">{index + 1}</td>
+      <td className="col-index">{slotNumber}</td>
       <td>
         <input
           value={p.nickname}
-          placeholder={`참가자${index + 1}`}
+          placeholder={`참가자${slotNumber}`}
           disabled={disabled}
           onChange={(e) => onChange({ nickname: e.target.value })}
         />
@@ -54,6 +67,16 @@ export default function ParticipantRow({ participant, index, onChange, onClear, 
           <option value="">불명</option>
           <option value="M">수컷</option>
           <option value="F">암컷</option>
+        </select>
+      </td>
+      <td>
+        <select value={p.position} disabled={disabled} onChange={(e) => onChange({ position: e.target.value })}>
+          <option value="">-</option>
+          {POSITION_OPTIONS.map((pos) => (
+            <option key={pos} value={pos}>
+              {pos}
+            </option>
+          ))}
         </select>
       </td>
       <td>

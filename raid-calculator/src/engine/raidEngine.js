@@ -37,6 +37,9 @@ export function buildBattlePokemon(raw) {
     moves: (raw.moves || []).filter(Boolean),
     baseMaxHP,
     maxHP,
+    // 상태이상/조이기 데미지 틱은 레이드용으로 부풀린 maxHP가 아니라 이 "정상 배틀 기준" 체력을 기준으로
+    // 계산한다(규칙 V장 2항)
+    formulaMaxHP,
     currentHP: maxHP,
     fainted: false,
     boosts: { ...EMPTY_BOOSTS },
@@ -106,7 +109,7 @@ function isStatusImmune(status, types) {
  * attacker/defender의 새 상태와 게임 공식 문구 스타일의 로그 줄들을 반환.
  * (데미지는 항상 평균값 사용, 급소는 기술의 critRatio에 따라 실제 확률로 판정)
  */
-function attack(attacker, defender, moveId) {
+function attack(attacker, defender, moveId, options = {}) {
   const moveInfo = showdownIntegration.getMove(moveId);
   const isCrit = moveInfo ? rollCrit(moveInfo.critRatio) : false;
 
@@ -128,6 +131,62 @@ function attack(attacker, defender, moveId) {
 
   const moveData = result.moveData;
   const lines = [`${attacker.nickname}의 ${moveData.name}!`];
+  let updatedAttacker = { ...attacker, lastMoveId: moveData.id };
+
+  function tryInflictStatus(target, statusId) {
+    if (!statusId || !STATUS_NAMES[statusId]) return target;
+    const { target: updated, applied } = inflictStatus(target, statusId);
+    if (applied) lines.push(`${updated.nickname}은(는) ${STATUS_NAMES[statusId]} 상태가 되었다!`);
+    return updated;
+  }
+
+  function tryInflictVolatile(target, volatileId) {
+    if (!target || target.fainted || !volatileId || !VOLATILE_NAMES[volatileId]) return target;
+
+    switch (volatileId) {
+      case 'confusion':
+        if (target.confusionTurns > 0) return target;
+        lines.push(`${target.nickname}은(는) 혼란에 빠졌다!`);
+        return { ...target, confusionTurns: 1 + Math.floor(Math.random() * 4) };
+      case 'leechseed':
+        if (target.leechSeed || (target.types || []).includes('Grass')) return target;
+        lines.push(`${target.nickname}에게 씨앗이 심어졌다!`);
+        return {
+          ...target,
+          leechSeed: { sourceIsBoss: !updatedAttacker.isParticipant, sourceId: updatedAttacker.isParticipant ? updatedAttacker.id : null },
+        };
+      case 'partiallytrapped':
+        if (target.bindTurns > 0) return target;
+        lines.push(`${target.nickname}은(는) 조여져 빠져나갈 수 없게 되었다!`);
+        return { ...target, bindTurns: 4 + Math.floor(Math.random() * 2) };
+      case 'taunt':
+        if (target.tauntTurns > 0) return target;
+        lines.push(`${target.nickname}은(는) 도발에 걸렸다!`);
+        return { ...target, tauntTurns: 3 };
+      case 'encore':
+        if (target.encoreTurns > 0 || !target.lastMoveId) return target;
+        lines.push(`${target.nickname}에게 앵콜이 걸렸다!`);
+        return { ...target, encoreTurns: 3, encoreMove: target.lastMoveId };
+      case 'torment':
+        if (target.tormentActive) return target;
+        lines.push(`${target.nickname}은(는) 트집이 났다!`);
+        return { ...target, tormentActive: true };
+      case 'attract':
+        if (target.attractActive) return target;
+        lines.push(`${target.nickname}은(는) 헤롱헤롱해졌다!`);
+        return { ...target, attractActive: true };
+      case 'healblock':
+        if (target.healBlockTurns > 0) return target;
+        lines.push(`${target.nickname}은(는) 회복 봉인 상태가 되었다!`);
+        return { ...target, healBlockTurns: 5 };
+      case 'disable':
+        if (target.disableTurns > 0 || !target.lastMoveId) return target;
+        lines.push(`${target.nickname}의 기술이 사슬묶였다!`);
+        return { ...target, disableTurns: 4, disableMove: target.lastMoveId };
+      default:
+        return target;
+    }
+  }
 
   // 헤롱헤롱(Attract): 서로 성별이 다를 때만 효과가 있음
   if (moveData.id === 'attract') {
@@ -191,10 +250,11 @@ function attack(attacker, defender, moveId) {
   if (effectiveness > 1) lines.push('효과가 굉장했다!');
   else if (effectiveness < 1) lines.push('효과가 별로인 듯하다...');
 
-  const dmg = Math.min(defender.currentHP, pickDamageValue(result.damage));
+  const rawDmg = pickDamageValue(result.damage);
+  const dmg = Math.min(defender.currentHP, options.isSpread ? Math.floor(rawDmg * 0.75) : rawDmg);
   const nextHP = Math.max(0, defender.currentHP - dmg);
   const fainted = nextHP <= 0;
-  const updatedDefender = { ...defender, currentHP: nextHP, fainted };
+  let updatedDefender = { ...defender, currentHP: nextHP, fainted };
 
   lines.push(`${defender.nickname}에게 피해를 입혔다! (HP ${formatHpPercent(nextHP, defender.maxHP)})`);
   if (fainted) lines.push(`${defender.nickname}은(는) 쓰러졌다!`);
@@ -253,11 +313,188 @@ function expireBuffs(pokemon, finishedRound) {
  * 라운드 종료 시 상태이상 잔여 데미지 적용, 임시 능력 변화 만료, 다음 라운드에 행동 불가한
  * 참가자(끝내버려 사용자 등) 자동 처리까지 함께 수행한다.
  */
-function finalizeRoundIfComplete(state) {
-  if (state.status !== 'ongoing') return state;
+function applyStatusTick(entity) {
+  if (!entity || entity.fainted || !entity.status) return { entity, lines: [] };
 
-  const remaining = aliveNotActed(state.participants, state.actedParticipantIds);
-  if (remaining.length > 0) return state;
+  const baseline = entity.formulaMaxHP || entity.maxHP;
+  let dmg = 0;
+  if (entity.status === 'brn') dmg = Math.max(1, Math.floor(baseline / 16));
+  else if (entity.status === 'psn') dmg = Math.max(1, Math.floor(baseline / 8));
+  else if (entity.status === 'tox') dmg = Math.max(1, Math.floor((baseline * ((entity.toxicCounter || 0) + 1)) / 16));
+  else return { entity, lines: [] };
+
+  const toxicCounter = entity.status === 'tox' ? (entity.toxicCounter || 0) + 1 : entity.toxicCounter;
+  const currentHP = Math.max(0, entity.currentHP - dmg);
+  const fainted = currentHP <= 0;
+  const lines = [`${entity.nickname}은(는) ${STATUS_NAMES[entity.status]} 데미지를 입었다! (-${dmg})`];
+  if (fainted) lines.push(`${entity.nickname}은(는) 쓰러졌다!`);
+
+  return { entity: { ...entity, currentHP, toxicCounter, fainted }, lines };
+}
+
+/**
+ * 라운드 전환 시 조이기 데미지 틱 + 도발/앵콜/회복봉인/사슬묶기 지속시간을 갱신한다.
+ * (혼란/마비/수면/냉동/헤롱헤롱은 매 행동 시도마다 resolveActionGate에서 처리)
+ */
+function advanceEntityVolatiles(entity) {
+  if (!entity || entity.fainted) return { entity, lines: [] };
+
+  const lines = [];
+  let currentHP = entity.currentHP;
+  let fainted = entity.fainted;
+  let bindTurns = entity.bindTurns || 0;
+
+  if (bindTurns > 0) {
+    const dmg = Math.max(1, Math.floor((entity.formulaMaxHP || entity.maxHP) / 8));
+    currentHP = Math.max(0, currentHP - dmg);
+    fainted = currentHP <= 0;
+    lines.push(`${entity.nickname}은(는) 조임 데미지를 입었다! (-${dmg})`);
+    if (fainted) lines.push(`${entity.nickname}은(는) 쓰러졌다!`);
+    bindTurns -= 1;
+    if (bindTurns <= 0 && !fainted) lines.push(`${entity.nickname}의 조이기가 풀렸다!`);
+  }
+
+  const tauntTurns = Math.max(0, (entity.tauntTurns || 0) - 1);
+
+  let encoreTurns = entity.encoreTurns || 0;
+  let encoreMove = entity.encoreMove;
+  if (encoreTurns > 0) {
+    encoreTurns -= 1;
+    if (encoreTurns <= 0) {
+      encoreMove = null;
+      if (!fainted) lines.push(`${entity.nickname}의 앵콜이 풀렸다!`);
+    }
+  }
+
+  const healBlockTurns = Math.max(0, (entity.healBlockTurns || 0) - 1);
+
+  let disableTurns = entity.disableTurns || 0;
+  let disableMove = entity.disableMove;
+  if (disableTurns > 0) {
+    disableTurns -= 1;
+    if (disableTurns <= 0) disableMove = null;
+  }
+
+  return {
+    entity: { ...entity, currentHP, fainted, bindTurns, tauntTurns, encoreTurns, encoreMove, healBlockTurns, disableTurns, disableMove },
+    lines,
+  };
+}
+
+/**
+ * 라운드 전환 시 참가자별 응원 버프/지속효과를 갱신한다.
+ * - 철통방어/힘내라힘(3턴 버프): 매 라운드 전환마다 1씩 감소, 0이 되면 스탯 원복
+ * - 끝내버려: 시전한 다음 라운드에 물공/특공 3배(+4스택)가 발동하고, 그 버프가 끝나는 라운드
+ *   전환 시 "다음 턴 행동불가"가 걸린다 (mustSkipTurn)
+ * - 뒤는맡기라고(redirectActive)는 보스 행동 1회(이번 턴)만 받아내면 바로 해제되지만(executeBossAction/
+ *   executeBossSpreadAction에서 처리), 그 전에 라운드가 넘어가 버리면 여기서 안전장치로 한 번 더 해제한다
+ */
+function advanceParticipantTurnState(p) {
+  if (!p) return { participant: p, logs: [] };
+
+  const boosts = { ...(p.boosts || {}) };
+  const buffTimers = { ...(p.buffTimers || {}) };
+  let pendingFinisher = p.pendingFinisher;
+  let finisherTimer = p.finisherTimer || 0;
+  let mustSkipTurn = false;
+  const logs = [];
+
+  BUFF_STATS.forEach((stat) => {
+    if (buffTimers[stat] > 0) {
+      buffTimers[stat] -= 1;
+      if (buffTimers[stat] <= 0) {
+        boosts[stat] = 0;
+        buffTimers[stat] = 0;
+      }
+    }
+  });
+
+  if (finisherTimer > 0) {
+    finisherTimer -= 1;
+    if (finisherTimer <= 0) {
+      boosts.atk = 0;
+      boosts.spa = 0;
+      mustSkipTurn = true;
+      logs.push(`${p.nickname}은(는) 반동으로 이번 턴 행동할 수 없다!`);
+    }
+  } else if (pendingFinisher) {
+    boosts.atk = 4;
+    boosts.spa = 4;
+    finisherTimer = 1;
+    pendingFinisher = false;
+    logs.push(`${p.nickname}의 힘이 폭발한다! (물리/특수공격 3배)`);
+  }
+
+  const buffed = {
+    ...p,
+    boosts,
+    buffTimers,
+    pendingFinisher,
+    finisherTimer,
+    mustSkipTurn,
+    redirectActive: false,
+  };
+
+  const tick = applyStatusTick(buffed);
+  const volatileTick = advanceEntityVolatiles(tick.entity);
+
+  return { participant: volatileTick.entity, logs: [...logs, ...tick.lines, ...volatileTick.lines] };
+}
+
+/** 씨뿌리기: 걸려있는 대상의 체력을 깎아 심은 쪽(참가자 또는 보스)에게 회복시켜준다 */
+function applyLeechSeedDrain(boss, participants) {
+  let nextBoss = boss;
+  let nextParticipants = participants;
+  const lines = [];
+
+  if (nextBoss.leechSeed && !nextBoss.fainted) {
+    const dmg = Math.max(1, Math.floor((nextBoss.formulaMaxHP || nextBoss.maxHP) / 8));
+    const nextHP = Math.max(0, nextBoss.currentHP - dmg);
+    const fainted = nextHP <= 0;
+    lines.push(`${nextBoss.nickname}은(는) 씨뿌리기로 체력을 빨렸다! (-${dmg})`);
+    if (fainted) lines.push(`${nextBoss.nickname}은(는) 쓰러졌다!`);
+
+    const sourceId = nextBoss.leechSeed.sourceId;
+    nextBoss = { ...nextBoss, currentHP: nextHP, fainted };
+
+    if (sourceId != null) {
+      const srcIdx = nextParticipants.findIndex((p) => p && p.id === sourceId && !p.fainted);
+      if (srcIdx !== -1) {
+        const src = nextParticipants[srcIdx];
+        const healed = Math.min(src.maxHP, src.currentHP + dmg);
+        if (healed > src.currentHP) lines.push(`${src.nickname}은(는) 체력을 흡수했다! (+${healed - src.currentHP})`);
+        nextParticipants = nextParticipants.map((p, i) => (i === srcIdx ? { ...p, currentHP: healed } : p));
+      }
+    }
+  }
+
+  nextParticipants = nextParticipants.map((p) => {
+    if (!p || p.fainted || !p.leechSeed) return p;
+    const dmg = Math.max(1, Math.floor((p.formulaMaxHP || p.maxHP) / 8));
+    const nextHP = Math.max(0, p.currentHP - dmg);
+    const fainted = nextHP <= 0;
+    lines.push(`${p.nickname}은(는) 씨뿌리기로 체력을 빨렸다! (-${dmg})`);
+    if (fainted) lines.push(`${p.nickname}은(는) 쓰러졌다!`);
+
+    if (p.leechSeed.sourceIsBoss && !nextBoss.fainted) {
+      const healed = Math.min(nextBoss.maxHP, nextBoss.currentHP + dmg);
+      if (healed > nextBoss.currentHP) lines.push(`${nextBoss.nickname}은(는) 체력을 흡수했다! (+${healed - nextBoss.currentHP})`);
+      nextBoss = { ...nextBoss, currentHP: healed };
+    }
+
+    return { ...p, currentHP: nextHP, fainted };
+  });
+
+  return { boss: nextBoss, participants: nextParticipants, lines };
+}
+
+/**
+ * 라운드를 명시적으로 종료하고 다음 라운드로 넘어간다. 참가자가 다 행동하지 않았어도(보스 행동을
+ * 더 하고 싶을 수 있으므로) 강제로 끝내지 않고, 사용자가 이 함수를 호출했을 때만 라운드가 넘어간다
+ * — 보스는 라운드 진행과 무관하게 언제든 원하는 만큼 행동할 수 있다.
+ */
+export function endRound(state) {
+  if (state.status !== 'ongoing') return state;
 
   const finishedRound = state.round + 1;
   const log = [...state.log];
@@ -294,7 +531,26 @@ function finalizeRoundIfComplete(state) {
   }
 
   const nextRound = finishedRound + 1;
+  const advanced = state.participants.map((p) => advanceParticipantTurnState(p));
+  let participants = advanced.map((a) => a.participant);
+  const statusLogs = advanced.flatMap((a) => a.logs);
+
+  const bossTick = applyStatusTick(state.boss);
+  const bossVolatileTick = advanceEntityVolatiles(bossTick.entity);
+  let boss = bossVolatileTick.entity;
+
+  const leech = applyLeechSeedDrain(boss, participants);
+  boss = leech.boss;
+  participants = leech.participants;
+
   log.push({ round: nextRound, phase: 'start', text: `--- ${nextRound}라운드 시작 ---` });
+  log = [
+    ...log,
+    ...statusLogs.map((text) => ({ round: nextRound, phase: 'status', text })),
+    ...bossTick.lines.map((text) => ({ round: nextRound, phase: 'status', text })),
+    ...bossVolatileTick.lines.map((text) => ({ round: nextRound, phase: 'status', text })),
+    ...leech.lines.map((text) => ({ round: nextRound, phase: 'status', text })),
+  ];
 
   // 끝내버려 등으로 다음 라운드에 행동 불가한 참가자는 자동으로 "행동 완료" 처리해 선택지에서 뺀다
   const skippedIds = participants.filter((p) => p && !p.fainted && p.skipNextAction).map((p) => p.id);
@@ -307,7 +563,12 @@ function finalizeRoundIfComplete(state) {
   return { ...state, boss, participants, round: finishedRound, status: 'ongoing', actedParticipantIds: skippedIds, log };
 }
 
-/** 참가자 한 명의 행동을 즉시 실행 (이번 라운드에 이미 행동했으면 무시) */
+/** 이번 라운드에 아직 행동하지 않은 생존 참가자 수 (UI에서 "라운드 종료" 전 안내용) */
+export function countUnactedParticipants(state) {
+  return aliveNotActed(state.participants, state.actedParticipantIds).length;
+}
+
+/** 참가자 한 명의 행동을 즉시 실행 (이번 라운드에 이미 행동했거나 금지 기술이면 무시) */
 export function executeParticipantAction(state, participantId, moveId) {
   if (state.status !== 'ongoing' || !moveId || participantId == null) return state;
   if (state.actedParticipantIds.includes(participantId)) return state;
@@ -315,8 +576,42 @@ export function executeParticipantAction(state, participantId, moveId) {
   const idx = state.participants.findIndex((p) => p && p.id === participantId && !p.fainted);
   if (idx === -1) return state;
 
+  const moveInfo = showdownIntegration.getMove(moveId);
+  if (moveInfo && isMoveBanned(moveInfo.id)) {
+    const roundNum = state.round + 1;
+    return {
+      ...state,
+      log: [
+        ...state.log,
+        {
+          round: roundNum,
+          phase: 'participant',
+          text: `${state.participants[idx].nickname}은(는) ${moveInfo.name}을(를) 레이드에서 사용할 수 없다!`,
+        },
+      ],
+    };
+  }
+
   const roundNum = state.round + 1;
-  const result = attack(state.participants[idx], state.boss, moveId);
+  const gate = resolveActionGate(state.participants[idx]);
+  let participants = state.participants.map((p, i) => (i === idx ? gate.attacker : p));
+  let log = [...state.log, ...gate.lines.map((text) => ({ round: roundNum, phase: 'participant', text }))];
+
+  if (!gate.canAct) {
+    return { ...state, participants, actedParticipantIds: [...state.actedParticipantIds, participantId], log };
+  }
+
+  let finalMoveId = moveId;
+  if (moveInfo) {
+    const legality = checkMoveLegality(participants[idx], moveId, moveInfo);
+    log = [...log, ...legality.lines.map((text) => ({ round: roundNum, phase: 'participant', text }))];
+    if (legality.blocked) {
+      return { ...state, participants, actedParticipantIds: [...state.actedParticipantIds, participantId], log };
+    }
+    finalMoveId = legality.finalMoveId;
+  }
+
+  const result = attack(participants[idx], state.boss, finalMoveId);
   const boss = result.defender;
   const participants = state.participants.map((p, i) => (i === idx ? result.attacker : p));
   const log = [...state.log, ...result.lines.map((text) => ({ round: roundNum, phase: 'participant', text }))];
@@ -337,18 +632,32 @@ export function executeParticipantAction(state, participantId, moveId) {
     };
   }
 
-  return finalizeRoundIfComplete(next);
+  return next;
 }
 
 /**
- * 보스 행동을 즉시 실행. 라운드 진행과 무관하게 원하는 만큼 반복 실행 가능.
+ * 보스 행동을 즉시 실행. 라운드 진행과 무관하게 원하는 만큼, 언제든 반복 실행 가능
+ * (라운드는 endRound를 호출해야만 넘어간다).
  * targetId로 'random'을 넘기면 그 시점에 살아있는 참가자 중 무작위로 대상을 고른다.
  */
 export function executeBossAction(state, moveId, targetId) {
   if (state.status !== 'ongoing' || !moveId || targetId == null) return state;
 
+  // 철벽의 "뒤는 맡기라고" 응원이 활성화된 참가자가 있으면 이번 턴 공격 대상을 강제로 그쪽으로 고정.
+  // 여러 명이 동시에 활성화되어 있으면(여러 조가 함께 진행 중일 때 등), 원래 노린 대상과 같은 조의
+  // 가디언을 우선으로 고르고, 매칭되는 조가 없으면 먼저 활성화된 쪽을 쓴다.
+  const guardians = state.participants.filter((p) => p && !p.fainted && p.redirectActive);
+  const intendedTarget =
+    targetId !== 'random' ? state.participants.find((p) => p && String(p.id) === String(targetId)) : null;
+  const guardian =
+    guardians.length === 0
+      ? null
+      : (intendedTarget && guardians.find((g) => (g.team || '') === (intendedTarget.team || ''))) || guardians[0];
+
   let resolvedTargetId = targetId;
-  if (targetId === 'random') {
+  if (guardian) {
+    resolvedTargetId = guardian.id;
+  } else if (targetId === 'random') {
     const aliveParticipants = state.participants.filter((p) => p && !p.fainted);
     if (aliveParticipants.length === 0) return state;
     resolvedTargetId = aliveParticipants[Math.floor(Math.random() * aliveParticipants.length)].id;
@@ -373,7 +682,111 @@ export function executeBossAction(state, moveId, targetId) {
     };
   }
 
-  return finalizeRoundIfComplete(next);
+  return next;
+}
+
+function applyStatBuff(participant, buffs, turns) {
+  const boosts = { ...participant.boosts };
+  const buffTimers = { ...participant.buffTimers };
+  Object.entries(buffs).forEach(([stat, stage]) => {
+    boosts[stat] = stage;
+    buffTimers[stat] = turns;
+  });
+  return { ...participant, boosts, buffTimers };
+}
+
+/**
+ * 참가자의 응원(싸운다 대신 선택하는 행동) 실행. 포지션에 맞는 응원 스킬만 사용 가능하며,
+ * 레이드당 참가자 1인 최대 2회로 제한된다(규칙 IV장 6항). "끝내버려"는 마지막 라운드에는 사용 불가.
+ */
+export function executeParticipantCheer(state, participantId, cheerId) {
+  if (state.status !== 'ongoing' || !cheerId || participantId == null) return state;
+  if (state.actedParticipantIds.includes(participantId)) return state;
+
+  const idx = state.participants.findIndex((p) => p && p.id === participantId && !p.fainted);
+  if (idx === -1) return state;
+
+  const actor = state.participants[idx];
+  if ((actor.cheerUsed || 0) >= CHEER_MAX_USES) return state;
+
+  const skill = findCheerSkill(actor.position, cheerId);
+  if (!skill) return state;
+
+  if (cheerId === 'finisher' && state.round + 1 >= (state.maxRounds || 100)) return state;
+
+  const roundNum = state.round + 1;
+  let participants = state.participants;
+  const lines = [`${actor.nickname}의 ${skill.name}!`];
+  // 팀 전체 대상 응원(철통방어/치유의함성/만전태세)은 시전자와 같은 조원에게만 적용된다
+  const isSameTeam = (p) => (p.team || '') === (actor.team || '');
+
+  switch (cheerId) {
+    case 'ironwall':
+      participants = participants.map((p) =>
+        p && !p.fainted && isSameTeam(p) ? applyStatBuff(p, { def: 1, spd: 1 }, 3) : p
+      );
+      lines.push(`${actor.team ? `${actor.team}조` : '같은 조'} 아군의 방어/특수방어가 상승했다!`);
+      break;
+    case 'guard':
+      participants = participants.map((p, i) => (i === idx ? { ...p, redirectActive: true } : p));
+      lines.push(`${actor.nickname}이(가) 이번 턴 공격을 대신 받아낸다!`);
+      break;
+    case 'pumpup':
+      participants = participants.map((p, i) => (i === idx ? applyStatBuff(p, { atk: 1, spa: 1 }, 3) : p));
+      lines.push(`${actor.nickname}의 공격/특수공격이 상승했다!`);
+      break;
+    case 'finisher':
+      participants = participants.map((p, i) => (i === idx ? { ...p, pendingFinisher: true } : p));
+      lines.push(`${actor.nickname}이(가) 다음 턴을 위해 힘을 모은다!`);
+      break;
+    case 'healcry':
+      participants = participants.map((p) =>
+        p && !p.fainted && isSameTeam(p)
+          ? {
+              ...p,
+              currentHP: p.healBlockTurns > 0 ? p.currentHP : Math.min(p.maxHP, p.currentHP + Math.round(p.maxHP * 0.5)),
+            }
+          : p
+      );
+      lines.push(`${actor.team ? `${actor.team}조` : '같은 조'} 아군의 체력을 회복했다! (회복 봉인 상태인 아군은 제외)`);
+      break;
+    case 'cleanse':
+      participants = participants.map((p) =>
+        p && !p.fainted && isSameTeam(p)
+          ? {
+              ...p,
+              status: null,
+              statusTurns: 0,
+              toxicCounter: 0,
+              tauntTurns: 0,
+              encoreTurns: 0,
+              encoreMove: null,
+              tormentActive: false,
+              healBlockTurns: 0,
+              attractActive: false,
+              disableTurns: 0,
+              disableMove: null,
+            }
+          : p
+      );
+      lines.push(
+        `${actor.team ? `${actor.team}조` : '같은 조'} 아군의 상태이상·헤롱헤롱·도발·앵콜·트집·회복봉인·사슬묶기를 회복했다! (혼란/씨뿌리기/조이기는 대상 외)`
+      );
+      break;
+    default:
+      return state;
+  }
+
+  participants = participants.map((p, i) => (i === idx ? { ...p, cheerUsed: (p.cheerUsed || 0) + 1 } : p));
+
+  const log = [...state.log, ...lines.map((text) => ({ round: roundNum, phase: 'participant', text }))];
+
+  return {
+    ...state,
+    participants,
+    actedParticipantIds: [...state.actedParticipantIds, participantId],
+    log,
+  };
 }
 
 /** 참가자의 응원 실행 (포지션별 2종, 참가자 1명당 최대 2회까지) */
@@ -477,5 +890,12 @@ export function createInitialBattleState({ boss, participants, maxRounds = 6 }) 
     maxRounds,
     log: [{ round: 1, phase: 'start', text: '--- 1라운드 시작 ---' }],
     actedParticipantIds: [],
+    // 이번 라운드에 행동할 조. 비어있으면("") 조 구분 없이 전체 참가자를 대상으로 한다.
+    activeTeam: '',
   };
+}
+
+/** 이번 라운드에 행동할 조를 지정한다("" 이면 조 제한 없음) — 전체공격 범위를 그 조로 한정한다 */
+export function setActiveTeam(state, team) {
+  return { ...state, activeTeam: team ? String(team) : '' };
 }
