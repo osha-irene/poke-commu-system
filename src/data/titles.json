@@ -188,5 +188,60 @@
         "id": "fighting",
         "label": "격투 타입 전문가",
         "icon": "/img/titles/expert/fighting.png"
+    },
+    {
+        "id": "bug",
+        "label": "벌레 타입 전문가",
+        "icon": "/img/titles/expert/bug.png"
+    },
+    {
+        "id": "dark",
+        "label": "악 타입 전문가",
+        "icon": "/img/titles/expert/dark.png"
+    },
+    {
+        "id": "dragon",
+        "label": "드래곤 타입 전문가",
+        "icon": "/img/titles/expert/dragon.png"
+    },
+    {
+        "id": "fairy",
+        "label": "페어리 타입 전문가",
+        "icon": "/img/titles/expert/fairy.png"
+    },
+    {
+        "id": "flight",
+        "label": "비행 타입 전문가",
+        "icon": "/img/titles/expert/flight.png"
+    },
+    {
+        "id": "ghost",
+        "label": "고스트 타입 전문가",
+        "icon": "/img/titles/expert/ghost.png"
+    },
+    {
+        "id": "ground",
+        "label": "땅 타입 전문가",
+        "icon": "/img/titles/expert/ground.png"
+    },
+    {
+        "id": "ice",
+        "label": "얼음 타입 전문가",
+        "icon": "/img/titles/expert/ice.png"
+    },
+    {
+        "id": "poison",
+        "label": "독 타입 전문가",
+        "icon": "/img/titles/expert/poison.png"
+    },
+    {
+        "id": "psychic",
+        "label": "에스퍼 타입 전문가",
+        "icon": "/img/titles/expert/psychic.png"
+    },
+    {
+        "id": "steel",
+        "label": "강철 타입 전문가",
+        "icon": "/img/titles/expert/steel.png"
     }
 ]

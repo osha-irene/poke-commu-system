@@ -1,6 +1,6 @@
 import { NATURE_MODIFIERS } from '../lib/statCalculator.js';
-import { statsToText, textToStats } from '../lib/statText.js';
 import { TYPE_OPTIONS } from '../lib/typeOptions.js';
+import StatTextInput from './StatTextInput.jsx';
 
 const NATURE_OPTIONS = Object.keys(NATURE_MODIFIERS);
 
@@ -110,27 +110,15 @@ export default function BossPanel({ boss, onChange, disabled }) {
         </label>
         <label className="span-2">
           종족값 (HP,공격,방어,특공,특방,스피드)
-          <input
-            value={statsToText(boss.baseStats)}
-            disabled={disabled}
-            onChange={(e) => onChange({ baseStats: textToStats(e.target.value, boss.baseStats) })}
-          />
+          <StatTextInput value={boss.baseStats} disabled={disabled} onChange={(baseStats) => onChange({ baseStats })} />
         </label>
         <label className="span-2">
           개체값 (위와 동일 순서)
-          <input
-            value={statsToText(boss.ivs)}
-            disabled={disabled}
-            onChange={(e) => onChange({ ivs: textToStats(e.target.value, boss.ivs) })}
-          />
+          <StatTextInput value={boss.ivs} disabled={disabled} onChange={(ivs) => onChange({ ivs })} />
         </label>
         <label className="span-2">
           노력치 (위와 동일 순서)
-          <input
-            value={statsToText(boss.evs)}
-            disabled={disabled}
-            onChange={(e) => onChange({ evs: textToStats(e.target.value, boss.evs) })}
-          />
+          <StatTextInput value={boss.evs} disabled={disabled} onChange={(evs) => onChange({ evs })} />
         </label>
         <label>
           한 턴당 기본 행동 횟수 (참고용, 실제 실행 횟수는 자유)

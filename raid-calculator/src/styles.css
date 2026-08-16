@@ -133,7 +133,7 @@ button {
 
 input,
 select {
-  background: #0d1220;
+  background: rgba(0, 0, 0, 0.28);
   border: 1px solid var(--border);
   border-radius: 6px;
   color: var(--text);
@@ -222,6 +222,18 @@ button:disabled {
   color: var(--hp-high);
 }
 
+.participant-tables-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 20px;
+}
+
+@media (max-width: 900px) {
+  .participant-tables-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .table-wrap {
   overflow-x: auto;
 }
@@ -248,7 +260,12 @@ button:disabled {
 .participant-table input,
 .participant-table select {
   width: 100%;
-  min-width: 70px;
+  min-width: 58px;
+}
+
+.participant-table td button {
+  padding: 5px 8px;
+  font-size: 11px;
 }
 
 .type-select-pair {
@@ -257,7 +274,7 @@ button:disabled {
 }
 
 .type-select-pair select {
-  min-width: 60px;
+  min-width: 50px;
 }
 
 .participant-table .col-index {
@@ -314,6 +331,84 @@ button:disabled {
   font-weight: 600;
 }
 
+.participant-row-main td {
+  border-bottom: none;
+  vertical-align: top;
+}
+
+.participant-row-main.row-alt td,
+.participant-row-moves.row-alt td {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.participant-row-moves td {
+  padding-top: 0;
+  border-bottom: 7px solid var(--panel);
+}
+
+.moves-row-cell {
+  padding-top: 2px !important;
+}
+
+.participant-detail-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.detail-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.moves-row-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.move-input-sm {
+  flex: 1 1 62px;
+  min-width: 62px;
+}
+
+.ev-stat-box {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.ev-stat-initial {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.ev-stat-input {
+  flex: 0 0 40px;
+  min-width: 40px;
+  padding: 4px;
+  text-align: center;
+}
+
+.position-select-sm {
+  flex: 0 0 88px;
+  min-width: 88px;
+}
+
+.gender-select-sm {
+  flex: 0 0 70px;
+  min-width: 70px;
+}
+
+.ev-total-inline {
+  font-size: 10px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
 .hp-bar {
   display: flex;
   align-items: center;
@@ -363,11 +458,40 @@ button:disabled {
   color: var(--text-dim);
 }
 
-.participant-hp-grid {
+.status-team-columns {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 16px;
   margin-top: 10px;
+}
+
+.status-team-column {
+  min-width: 0;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+/* 조 단위로 세로 열이 늘어나면 라벨/수치 텍스트가 HP 바 자리를 다 차지해버리므로,
+   이 영역 안에서는 라벨/텍스트를 줄여서 실제 막대가 보일 공간을 확보한다 */
+.status-team-column .hp-bar-label {
+  min-width: 60px;
+}
+
+.status-team-column .hp-bar-text {
+  min-width: 46px;
+}
+
+.status-team-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.status-team-members {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .participant-hp-card.fainted {
@@ -376,10 +500,28 @@ button:disabled {
   padding: 2px 6px;
 }
 
-.condition-badge {
+.condition-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: -4px 0 6px 118px;
+}
+
+.badge {
   font-size: 10px;
   color: var(--accent);
-  margin: -4px 0 6px 118px;
+  background: rgba(91, 140, 255, 0.12);
+  border: 1px solid rgba(91, 140, 255, 0.35);
+  border-radius: 999px;
+  padding: 1px 7px;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.badge-status {
+  color: var(--hp-mid);
+  background: rgba(240, 195, 60, 0.12);
+  border-color: rgba(240, 195, 60, 0.35);
 }
 
 .result-grid {
@@ -451,6 +593,21 @@ button:disabled {
 
 .btn-free-action:hover:not(:disabled) {
   background: #274a30;
+}
+
+.round-end-row {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.round-end-row .plan-hint {
+  margin: 0;
 }
 
 .boss-moves-grid {

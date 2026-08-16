@@ -1,16 +1,19 @@
 import showdownIntegration from '../lib/showdownIntegration.js';
 import { calculateHP } from '../lib/statCalculator.js';
-import { POSITION_CHEERS, STAT_LABEL, STATUS_LABEL, MAX_CHEERS_PER_PARTICIPANT } from '../lib/cheers.js';
+import { STAT_LABEL, STATUS_LABEL, findCheerSkill, CHEER_MAX_USES } from '../lib/cheers.js';
+import { isMoveBanned } from './bannedMoves.js';
 
 const DEFAULT_BASE_STATS = { hp: 100, atk: 100, def: 100, spa: 100, spd: 100, spe: 100 };
 const FIXED_IVS = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
 const EMPTY_EVS = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
 const EMPTY_BOOSTS = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
+// 응원(철통방어/힘내라힘)이 임시로 걸 수 있는 스탯 — 라운드 전환마다 buffTimers를 감소시켜 만료시킨다
+const BUFF_STATS = ['atk', 'def', 'spa', 'spd'];
 
 /** 입력 폼 데이터(raw)를 실제 전투에 쓸 수 있는 파생 상태를 가진 객체로 변환 */
 export function buildBattlePokemon(raw) {
   // 아군 참가자(position 필드를 가진 커스텀 유닛)는 레벨 50 / 성격 하드 / 도구 없음 / 특성 없음 /
-  // 개체값 전부 31로 고정. 종족값/타입/노력치/기술/포지션/성별은 직접 입력값을 사용.
+  // 개체값 전부 31로 고정. 종족값/타입/노력치/기술/포지션/성별/조는 직접 입력값을 사용.
   // 보스는 이 고정 규칙 없이 입력값을 그대로 사용하되, HP 배수(hpMultiplier)만 별도 적용.
   const isParticipant = 'position' in raw;
 
@@ -37,18 +40,34 @@ export function buildBattlePokemon(raw) {
     moves: (raw.moves || []).filter(Boolean),
     baseMaxHP,
     maxHP,
-    // 상태이상/조이기 데미지 틱은 레이드용으로 부풀린 maxHP가 아니라 이 "정상 배틀 기준" 체력을 기준으로
-    // 계산한다(규칙 V장 2항)
-    formulaMaxHP,
+    // 상태이상/조이기 데미지 틱은 레이드용으로 부풀린 maxHP가 아니라 이 "정상 배틀 기준" 체력을
+    // 기준으로 계산한다 (규칙 V장 2항)
+    formulaMaxHP: baseMaxHP,
     currentHP: maxHP,
     fainted: false,
     boosts: { ...EMPTY_BOOSTS },
+    buffTimers: {},
     status: '',
     toxicCounter: 0,
-    volatileFlags: [],
-    cheersUsed: 0,
-    activeBuffs: [],
-    skipNextAction: false,
+    lastMoveId: null,
+    // 혼란/씨뿌리기/조이기/도발/앵콜/트집/회복봉인/헤롱헤롱/사슬묶기
+    confusionTurns: 0,
+    leechSeed: null,
+    bindTurns: 0,
+    tauntTurns: 0,
+    encoreTurns: 0,
+    encoreMove: null,
+    tormentActive: false,
+    healBlockTurns: 0,
+    attractActive: false,
+    disableTurns: 0,
+    disableMove: null,
+    // 응원(뒤는맡기라고/끝내버려) 관련
+    redirectActive: false,
+    pendingFinisher: false,
+    finisherTimer: 0,
+    mustSkipTurn: false,
+    cheerUsed: 0,
   };
 }
 
@@ -91,6 +110,17 @@ function applyStatDeltas(pokemon, deltas) {
   return { ...pokemon, boosts };
 }
 
+/** 응원(철통방어/힘내라힘)처럼 정해진 랭크값을 N턴 동안 고정으로 거는 버프 (라운드 전환마다 buffTimers 감소, 0되면 원복) */
+function applyStatBuff(participant, buffs, turns) {
+  const boosts = { ...participant.boosts };
+  const buffTimers = { ...participant.buffTimers };
+  Object.entries(buffs).forEach(([stat, stage]) => {
+    boosts[stat] = stage;
+    buffTimers[stat] = turns;
+  });
+  return { ...participant, boosts, buffTimers };
+}
+
 function describeStatChange(nickname, deltas) {
   return Object.entries(deltas)
     .filter(([, delta]) => delta)
@@ -104,8 +134,56 @@ function isStatusImmune(status, types) {
   return false;
 }
 
+/** 기술의 volatileStatus(혼란/씨뿌리기/조이기/도발/앵콜/트집/회복봉인/사슬묶기)를 target에 적용 */
+function applyVolatileStatus(target, volatileId, lines, sourceAttacker) {
+  if (!target || target.fainted || !volatileId) return target;
+
+  switch (volatileId) {
+    case 'confusion':
+      if (target.confusionTurns > 0) return target;
+      lines.push(`${target.nickname}은(는) 혼란에 빠졌다!`);
+      return { ...target, confusionTurns: 1 + Math.floor(Math.random() * 4) };
+    case 'leechseed':
+      if (target.leechSeed || (target.types || []).includes('Grass')) return target;
+      lines.push(`${target.nickname}에게 씨앗이 심어졌다!`);
+      return {
+        ...target,
+        leechSeed: {
+          sourceIsBoss: !sourceAttacker.isParticipant,
+          sourceId: sourceAttacker.isParticipant ? sourceAttacker.id : null,
+        },
+      };
+    case 'partiallytrapped':
+      if (target.bindTurns > 0) return target;
+      lines.push(`${target.nickname}은(는) 조여져 빠져나갈 수 없게 되었다!`);
+      return { ...target, bindTurns: 4 + Math.floor(Math.random() * 2) };
+    case 'taunt':
+      if (target.tauntTurns > 0) return target;
+      lines.push(`${target.nickname}은(는) 도발에 걸렸다!`);
+      return { ...target, tauntTurns: 3 };
+    case 'encore':
+      if (target.encoreTurns > 0 || !target.lastMoveId) return target;
+      lines.push(`${target.nickname}에게 앵콜이 걸렸다!`);
+      return { ...target, encoreTurns: 3, encoreMove: target.lastMoveId };
+    case 'torment':
+      if (target.tormentActive) return target;
+      lines.push(`${target.nickname}은(는) 트집이 났다!`);
+      return { ...target, tormentActive: true };
+    case 'healblock':
+      if (target.healBlockTurns > 0) return target;
+      lines.push(`${target.nickname}은(는) 회복 봉인 상태가 되었다!`);
+      return { ...target, healBlockTurns: 5 };
+    case 'disable':
+      if (target.disableTurns > 0 || !target.lastMoveId) return target;
+      lines.push(`${target.nickname}의 기술이 사슬묶였다!`);
+      return { ...target, disableTurns: 4, disableMove: target.lastMoveId };
+    default:
+      return target;
+  }
+}
+
 /**
- * attacker가 moveId로 defender를 공격. 데미지뿐 아니라 랭크 변화/상태이상까지 반영한
+ * attacker가 moveId로 defender를 공격. 데미지뿐 아니라 랭크 변화/상태이상/변화상태까지 반영한
  * attacker/defender의 새 상태와 게임 공식 문구 스타일의 로그 줄들을 반환.
  * (데미지는 항상 평균값 사용, 급소는 기술의 critRatio에 따라 실제 확률로 판정)
  */
@@ -131,62 +209,8 @@ function attack(attacker, defender, moveId, options = {}) {
 
   const moveData = result.moveData;
   const lines = [`${attacker.nickname}의 ${moveData.name}!`];
-  let updatedAttacker = { ...attacker, lastMoveId: moveData.id };
-
-  function tryInflictStatus(target, statusId) {
-    if (!statusId || !STATUS_NAMES[statusId]) return target;
-    const { target: updated, applied } = inflictStatus(target, statusId);
-    if (applied) lines.push(`${updated.nickname}은(는) ${STATUS_NAMES[statusId]} 상태가 되었다!`);
-    return updated;
-  }
-
-  function tryInflictVolatile(target, volatileId) {
-    if (!target || target.fainted || !volatileId || !VOLATILE_NAMES[volatileId]) return target;
-
-    switch (volatileId) {
-      case 'confusion':
-        if (target.confusionTurns > 0) return target;
-        lines.push(`${target.nickname}은(는) 혼란에 빠졌다!`);
-        return { ...target, confusionTurns: 1 + Math.floor(Math.random() * 4) };
-      case 'leechseed':
-        if (target.leechSeed || (target.types || []).includes('Grass')) return target;
-        lines.push(`${target.nickname}에게 씨앗이 심어졌다!`);
-        return {
-          ...target,
-          leechSeed: { sourceIsBoss: !updatedAttacker.isParticipant, sourceId: updatedAttacker.isParticipant ? updatedAttacker.id : null },
-        };
-      case 'partiallytrapped':
-        if (target.bindTurns > 0) return target;
-        lines.push(`${target.nickname}은(는) 조여져 빠져나갈 수 없게 되었다!`);
-        return { ...target, bindTurns: 4 + Math.floor(Math.random() * 2) };
-      case 'taunt':
-        if (target.tauntTurns > 0) return target;
-        lines.push(`${target.nickname}은(는) 도발에 걸렸다!`);
-        return { ...target, tauntTurns: 3 };
-      case 'encore':
-        if (target.encoreTurns > 0 || !target.lastMoveId) return target;
-        lines.push(`${target.nickname}에게 앵콜이 걸렸다!`);
-        return { ...target, encoreTurns: 3, encoreMove: target.lastMoveId };
-      case 'torment':
-        if (target.tormentActive) return target;
-        lines.push(`${target.nickname}은(는) 트집이 났다!`);
-        return { ...target, tormentActive: true };
-      case 'attract':
-        if (target.attractActive) return target;
-        lines.push(`${target.nickname}은(는) 헤롱헤롱해졌다!`);
-        return { ...target, attractActive: true };
-      case 'healblock':
-        if (target.healBlockTurns > 0) return target;
-        lines.push(`${target.nickname}은(는) 회복 봉인 상태가 되었다!`);
-        return { ...target, healBlockTurns: 5 };
-      case 'disable':
-        if (target.disableTurns > 0 || !target.lastMoveId) return target;
-        lines.push(`${target.nickname}의 기술이 사슬묶였다!`);
-        return { ...target, disableTurns: 4, disableMove: target.lastMoveId };
-      default:
-        return target;
-    }
-  }
+  let nextAttacker = { ...attacker, lastMoveId: moveData.id };
+  let nextDefender = defender;
 
   // 헤롱헤롱(Attract): 서로 성별이 다를 때만 효과가 있음
   if (moveData.id === 'attract') {
@@ -195,9 +219,10 @@ function attack(attacker, defender, moveId, options = {}) {
     if (!aGender || !dGender || aGender === dGender) {
       lines.push(`${defender.nickname}에게는 효과가 없다!`);
     } else {
+      nextDefender = { ...defender, attractActive: true };
       lines.push(`${defender.nickname}은(는) ${attacker.nickname}에게 반했다!`);
     }
-    return { attacker, defender, lines };
+    return { attacker: nextAttacker, defender: nextDefender, lines };
   }
 
   const defenderTypes = defender.types && defender.types.length ? defender.types : ['Normal'];
@@ -205,21 +230,18 @@ function attack(attacker, defender, moveId, options = {}) {
 
   if (effectiveness === 0) {
     lines.push(`${defender.nickname}에게는 통하지 않았다!`);
-    return { attacker, defender, lines };
+    return { attacker: nextAttacker, defender, lines };
   }
 
   if (!moveData.basePower) {
-    // 변화기술: 랭크 변화/상태이상만 적용 (데미지 없음)
-    let nextAttacker = attacker;
-    let nextDefender = defender;
-
+    // 변화기술: 랭크 변화/상태이상/변화상태만 적용 (데미지 없음)
     if (moveData.boosts) {
       if (moveData.target === 'self') {
-        nextAttacker = applyStatDeltas(attacker, moveData.boosts);
-        lines.push(...describeStatChange(attacker.nickname, moveData.boosts));
+        nextAttacker = applyStatDeltas(nextAttacker, moveData.boosts);
+        lines.push(...describeStatChange(nextAttacker.nickname, moveData.boosts));
       } else {
-        nextDefender = applyStatDeltas(defender, moveData.boosts);
-        lines.push(...describeStatChange(defender.nickname, moveData.boosts));
+        nextDefender = applyStatDeltas(nextDefender, moveData.boosts);
+        lines.push(...describeStatChange(nextDefender.nickname, moveData.boosts));
       }
     }
 
@@ -234,7 +256,15 @@ function attack(attacker, defender, moveId, options = {}) {
       }
     }
 
-    if (!moveData.boosts && !moveData.status) {
+    if (moveData.volatileStatus) {
+      if (moveData.target === 'self') {
+        nextAttacker = applyVolatileStatus(nextAttacker, moveData.volatileStatus, lines, nextAttacker);
+      } else {
+        nextDefender = applyVolatileStatus(nextDefender, moveData.volatileStatus, lines, nextAttacker);
+      }
+    }
+
+    if (!moveData.boosts && !moveData.status && !moveData.volatileStatus) {
       lines.push(`${defender.nickname}에게는 별다른 효과가 없었다.`);
     }
 
@@ -243,7 +273,7 @@ function attack(attacker, defender, moveId, options = {}) {
 
   if (result.error) {
     lines.push(`${defender.nickname}에게는 효과가 없었다...`);
-    return { attacker, defender, lines };
+    return { attacker: nextAttacker, defender, lines };
   }
 
   if (isCrit) lines.push('급소에 맞았다!');
@@ -254,65 +284,19 @@ function attack(attacker, defender, moveId, options = {}) {
   const dmg = Math.min(defender.currentHP, options.isSpread ? Math.floor(rawDmg * 0.75) : rawDmg);
   const nextHP = Math.max(0, defender.currentHP - dmg);
   const fainted = nextHP <= 0;
-  let updatedDefender = { ...defender, currentHP: nextHP, fainted };
+  nextDefender = { ...defender, currentHP: nextHP, fainted };
 
   lines.push(`${defender.nickname}에게 피해를 입혔다! (HP ${formatHpPercent(nextHP, defender.maxHP)})`);
   if (fainted) lines.push(`${defender.nickname}은(는) 쓰러졌다!`);
 
-  return { attacker, defender: updatedDefender, lines, damage: dmg };
+  return { attacker: nextAttacker, defender: nextDefender, lines, damage: dmg };
 }
 
 function aliveNotActed(participants, actedIds) {
   return participants.filter((p) => p && !p.fainted && !actedIds.includes(p.id));
 }
 
-/** 화상/독/맹독 잔여 데미지. 레이드 체력 배수가 아닌 원래(배수 곱하기 전) 최대 체력 기준으로 계산 */
-function applyResidualStatus(pokemon) {
-  if (!pokemon || pokemon.fainted || !pokemon.status) return { pokemon, line: null };
-  if (!['brn', 'psn', 'tox'].includes(pokemon.status)) return { pokemon, line: null };
-
-  const base = pokemon.baseMaxHP || pokemon.maxHP;
-  let dmg;
-  let nextToxicCounter = pokemon.toxicCounter || 1;
-
-  if (pokemon.status === 'tox') {
-    dmg = Math.max(1, Math.floor((base * nextToxicCounter) / 16));
-    nextToxicCounter += 1;
-  } else {
-    dmg = Math.max(1, Math.floor(base / 16));
-  }
-
-  const nextHP = Math.max(0, pokemon.currentHP - dmg);
-  const fainted = nextHP <= 0;
-  const line =
-    `${pokemon.nickname}은(는) ${STATUS_LABEL[pokemon.status]}(으)로 피해를 입었다! ` +
-    `(HP ${formatHpPercent(nextHP, pokemon.maxHP)})${fainted ? ` — ${pokemon.nickname} 기절` : ''}`;
-
-  return { pokemon: { ...pokemon, currentHP: nextHP, fainted, toxicCounter: nextToxicCounter }, line };
-}
-
-/** 응원/기술로 부여된 임시 능력 변화 중 이번 라운드에 만료되는 것을 되돌림 */
-function expireBuffs(pokemon, finishedRound) {
-  if (!pokemon || !pokemon.activeBuffs || pokemon.activeBuffs.length === 0) return pokemon;
-
-  const boosts = { ...pokemon.boosts };
-  const stillActive = [];
-  pokemon.activeBuffs.forEach((buff) => {
-    if (finishedRound >= buff.expiresAfterRound) {
-      boosts[buff.stat] = clampStage((boosts[buff.stat] || 0) - buff.amount);
-    } else {
-      stillActive.push(buff);
-    }
-  });
-
-  return { ...pokemon, boosts, activeBuffs: stillActive };
-}
-
-/**
- * 이번 라운드에 아직 행동하지 않은 생존 참가자가 더 이상 없으면 라운드를 마무리한다.
- * 라운드 종료 시 상태이상 잔여 데미지 적용, 임시 능력 변화 만료, 다음 라운드에 행동 불가한
- * 참가자(끝내버려 사용자 등) 자동 처리까지 함께 수행한다.
- */
+/** 화상/독/맹독 잔여 데미지 (라운드 종료 시 1회). 레이드 체력 배수가 아닌 원래 최대 체력 기준으로 계산 */
 function applyStatusTick(entity) {
   if (!entity || entity.fainted || !entity.status) return { entity, lines: [] };
 
@@ -326,8 +310,10 @@ function applyStatusTick(entity) {
   const toxicCounter = entity.status === 'tox' ? (entity.toxicCounter || 0) + 1 : entity.toxicCounter;
   const currentHP = Math.max(0, entity.currentHP - dmg);
   const fainted = currentHP <= 0;
-  const lines = [`${entity.nickname}은(는) ${STATUS_NAMES[entity.status]} 데미지를 입었다! (-${dmg})`];
-  if (fainted) lines.push(`${entity.nickname}은(는) 쓰러졌다!`);
+  const lines = [
+    `${entity.nickname}은(는) ${STATUS_LABEL[entity.status] || entity.status}(으)로 피해를 입었다! ` +
+      `(HP ${formatHpPercent(currentHP, entity.maxHP)})${fainted ? ` — ${entity.nickname} 기절` : ''}`,
+  ];
 
   return { entity: { ...entity, currentHP, toxicCounter, fainted }, lines };
 }
@@ -376,7 +362,18 @@ function advanceEntityVolatiles(entity) {
   }
 
   return {
-    entity: { ...entity, currentHP, fainted, bindTurns, tauntTurns, encoreTurns, encoreMove, healBlockTurns, disableTurns, disableMove },
+    entity: {
+      ...entity,
+      currentHP,
+      fainted,
+      bindTurns,
+      tauntTurns,
+      encoreTurns,
+      encoreMove,
+      healBlockTurns,
+      disableTurns,
+      disableMove,
+    },
     lines,
   };
 }
@@ -386,8 +383,8 @@ function advanceEntityVolatiles(entity) {
  * - 철통방어/힘내라힘(3턴 버프): 매 라운드 전환마다 1씩 감소, 0이 되면 스탯 원복
  * - 끝내버려: 시전한 다음 라운드에 물공/특공 3배(+4스택)가 발동하고, 그 버프가 끝나는 라운드
  *   전환 시 "다음 턴 행동불가"가 걸린다 (mustSkipTurn)
- * - 뒤는맡기라고(redirectActive)는 보스 행동 1회(이번 턴)만 받아내면 바로 해제되지만(executeBossAction/
- *   executeBossSpreadAction에서 처리), 그 전에 라운드가 넘어가 버리면 여기서 안전장치로 한 번 더 해제한다
+ * - 뒤는맡기라고(redirectActive)는 보스 행동 1회(이번 턴)만 받아내면 바로 해제되지만(executeBossAction에서
+ *   처리), 그 전에 라운드가 넘어가 버리면 여기서 안전장치로 한 번 더 해제한다
  */
 function advanceParticipantTurnState(p) {
   if (!p) return { participant: p, logs: [] };
@@ -435,10 +432,9 @@ function advanceParticipantTurnState(p) {
     redirectActive: false,
   };
 
-  const tick = applyStatusTick(buffed);
-  const volatileTick = advanceEntityVolatiles(tick.entity);
+  const volatileTick = advanceEntityVolatiles(buffed);
 
-  return { participant: volatileTick.entity, logs: [...logs, ...tick.lines, ...volatileTick.lines] };
+  return { participant: volatileTick.entity, logs: [...logs, ...volatileTick.lines] };
 }
 
 /** 씨뿌리기: 걸려있는 대상의 체력을 깎아 심은 쪽(참가자 또는 보스)에게 회복시켜준다 */
@@ -497,22 +493,19 @@ export function endRound(state) {
   if (state.status !== 'ongoing') return state;
 
   const finishedRound = state.round + 1;
-  const log = [...state.log];
+  let log = [...state.log];
 
-  let boss = state.boss;
-  const bossResidual = applyResidualStatus(boss);
-  boss = bossResidual.pokemon;
-  if (bossResidual.line) log.push({ round: finishedRound, phase: 'status', text: bossResidual.line });
+  // 1) 상태이상(화상/독/맹독) 잔여 데미지 — 배수 곱하기 전 원래 체력 기준, 라운드 종료 시 1회만 적용
+  const bossTick = applyStatusTick(state.boss);
+  let boss = bossTick.entity;
+  log.push(...bossTick.lines.map((text) => ({ round: finishedRound, phase: 'status', text })));
 
   let participants = state.participants.map((p) => {
     if (!p) return p;
-    const { pokemon, line } = applyResidualStatus(p);
-    if (line) log.push({ round: finishedRound, phase: 'status', text: line });
-    return pokemon;
+    const tick = applyStatusTick(p);
+    log.push(...tick.lines.map((text) => ({ round: finishedRound, phase: 'status', text })));
+    return tick.entity;
   });
-
-  boss = expireBuffs(boss, finishedRound);
-  participants = participants.map((p) => (p ? expireBuffs(p, finishedRound) : p));
 
   log.push({
     round: finishedRound,
@@ -530,14 +523,15 @@ export function endRound(state) {
     return { ...state, boss, participants, round: finishedRound, status: 'timeout', log };
   }
 
+  // 2) 다음 라운드로 전환: 응원/버프 만료, 조이기·도발·앵콜·회복봉인·사슬묶기 지속시간 감소, 씨뿌리기 흡수
   const nextRound = finishedRound + 1;
-  const advanced = state.participants.map((p) => advanceParticipantTurnState(p));
-  let participants = advanced.map((a) => a.participant);
+
+  const advanced = participants.map((p) => advanceParticipantTurnState(p));
+  participants = advanced.map((a) => a.participant);
   const statusLogs = advanced.flatMap((a) => a.logs);
 
-  const bossTick = applyStatusTick(state.boss);
-  const bossVolatileTick = advanceEntityVolatiles(bossTick.entity);
-  let boss = bossVolatileTick.entity;
+  const bossVolatileTick = advanceEntityVolatiles(boss);
+  boss = bossVolatileTick.entity;
 
   const leech = applyLeechSeedDrain(boss, participants);
   boss = leech.boss;
@@ -547,14 +541,12 @@ export function endRound(state) {
   log = [
     ...log,
     ...statusLogs.map((text) => ({ round: nextRound, phase: 'status', text })),
-    ...bossTick.lines.map((text) => ({ round: nextRound, phase: 'status', text })),
     ...bossVolatileTick.lines.map((text) => ({ round: nextRound, phase: 'status', text })),
     ...leech.lines.map((text) => ({ round: nextRound, phase: 'status', text })),
   ];
 
-  // 끝내버려 등으로 다음 라운드에 행동 불가한 참가자는 자동으로 "행동 완료" 처리해 선택지에서 뺀다
-  const skippedIds = participants.filter((p) => p && !p.fainted && p.skipNextAction).map((p) => p.id);
-  participants = participants.map((p) => (p && p.skipNextAction ? { ...p, skipNextAction: false } : p));
+  // 끝내버려 반동 등으로 다음 라운드에 행동 불가한 참가자는 자동으로 "행동 완료" 처리해 선택지에서 뺀다
+  const skippedIds = participants.filter((p) => p && !p.fainted && p.mustSkipTurn).map((p) => p.id);
   skippedIds.forEach((id) => {
     const p = participants.find((x) => x && x.id === id);
     if (p) log.push({ round: nextRound, phase: 'status', text: `${p.nickname}은(는) 이번 턴 행동할 수 없다!` });
@@ -568,6 +560,85 @@ export function countUnactedParticipants(state) {
   return aliveNotActed(state.participants, state.actedParticipantIds).length;
 }
 
+/** 마비/수면/냉동/헤롱헤롱/혼란처럼 행동 시도 자체를 가로막는 상태를 판정한다 */
+function resolveActionGate(attacker) {
+  const lines = [];
+  let a = attacker;
+
+  if (a.status === 'slp') {
+    lines.push(`${a.nickname}은(는) 잠들어 있다.`);
+    return { attacker: a, canAct: false, lines };
+  }
+
+  if (a.status === 'frz') {
+    if (Math.random() < 0.2) {
+      lines.push(`${a.nickname}의 얼음이 녹았다!`);
+      a = { ...a, status: '' };
+    } else {
+      lines.push(`${a.nickname}은(는) 얼어붙어서 움직일 수 없다!`);
+      return { attacker: a, canAct: false, lines };
+    }
+  }
+
+  if (a.attractActive && Math.random() < 0.5) {
+    lines.push(`${a.nickname}은(는) 헤롱헤롱해서 움직일 수 없었다!`);
+    return { attacker: a, canAct: false, lines };
+  }
+
+  if (a.confusionTurns > 0) {
+    const turns = a.confusionTurns - 1;
+    a = { ...a, confusionTurns: turns };
+    if (turns <= 0) lines.push(`${a.nickname}의 혼란이 풀렸다!`);
+
+    if (Math.random() < 1 / 3) {
+      const base = a.formulaMaxHP || a.maxHP;
+      const dmg = Math.max(1, Math.floor(base / 8));
+      const nextHP = Math.max(0, a.currentHP - dmg);
+      const fainted = nextHP <= 0;
+      lines.push(`${a.nickname}은(는) 혼란으로 자신을 공격했다! (-${dmg})`);
+      if (fainted) lines.push(`${a.nickname}은(는) 쓰러졌다!`);
+      a = { ...a, currentHP: nextHP, fainted };
+      return { attacker: a, canAct: false, lines };
+    }
+  }
+
+  if (a.status === 'par' && Math.random() < 0.25) {
+    lines.push(`${a.nickname}은(는) 몸이 저려서 움직일 수 없다!`);
+    return { attacker: a, canAct: false, lines };
+  }
+
+  return { attacker: a, canAct: true, lines };
+}
+
+/** 도발/사슬묶기/트집/앵콜처럼 "행동은 가능하지만 이 기술은 못 쓴다/다른 기술을 강제로 써야 한다"를 판정 */
+function checkMoveLegality(attacker, moveId, moveInfo) {
+  const lines = [];
+
+  if (attacker.encoreTurns > 0 && attacker.encoreMove) {
+    if (attacker.encoreMove !== moveInfo.id) {
+      lines.push(`${attacker.nickname}은(는) 앵콜 상태라 ${moveInfo.name} 대신 이전 기술을 사용한다!`);
+    }
+    return { blocked: false, finalMoveId: attacker.encoreMove, lines };
+  }
+
+  if (attacker.disableTurns > 0 && attacker.disableMove === moveInfo.id) {
+    lines.push(`${attacker.nickname}의 ${moveInfo.name}은(는) 사슬묶여 사용할 수 없다!`);
+    return { blocked: true, finalMoveId: moveId, lines };
+  }
+
+  if (attacker.tauntTurns > 0 && moveInfo.category === 'Status') {
+    lines.push(`${attacker.nickname}은(는) 도발에 걸려 변화기술을 사용할 수 없다!`);
+    return { blocked: true, finalMoveId: moveId, lines };
+  }
+
+  if (attacker.tormentActive && attacker.lastMoveId && attacker.lastMoveId === moveInfo.id) {
+    lines.push(`${attacker.nickname}은(는) 트집 때문에 같은 기술을 연속으로 사용할 수 없다!`);
+    return { blocked: true, finalMoveId: moveId, lines };
+  }
+
+  return { blocked: false, finalMoveId: moveId, lines };
+}
+
 /** 참가자 한 명의 행동을 즉시 실행 (이번 라운드에 이미 행동했거나 금지 기술이면 무시) */
 export function executeParticipantAction(state, participantId, moveId) {
   if (state.status !== 'ongoing' || !moveId || participantId == null) return state;
@@ -576,9 +647,10 @@ export function executeParticipantAction(state, participantId, moveId) {
   const idx = state.participants.findIndex((p) => p && p.id === participantId && !p.fainted);
   if (idx === -1) return state;
 
+  const roundNum = state.round + 1;
   const moveInfo = showdownIntegration.getMove(moveId);
+
   if (moveInfo && isMoveBanned(moveInfo.id)) {
-    const roundNum = state.round + 1;
     return {
       ...state,
       log: [
@@ -592,7 +664,6 @@ export function executeParticipantAction(state, participantId, moveId) {
     };
   }
 
-  const roundNum = state.round + 1;
   const gate = resolveActionGate(state.participants[idx]);
   let participants = state.participants.map((p, i) => (i === idx ? gate.attacker : p));
   let log = [...state.log, ...gate.lines.map((text) => ({ round: roundNum, phase: 'participant', text }))];
@@ -613,8 +684,8 @@ export function executeParticipantAction(state, participantId, moveId) {
 
   const result = attack(participants[idx], state.boss, finalMoveId);
   const boss = result.defender;
-  const participants = state.participants.map((p, i) => (i === idx ? result.attacker : p));
-  const log = [...state.log, ...result.lines.map((text) => ({ round: roundNum, phase: 'participant', text }))];
+  participants = participants.map((p, i) => (i === idx ? result.attacker : p));
+  log = [...log, ...result.lines.map((text) => ({ round: roundNum, phase: 'participant', text }))];
 
   const next = {
     ...state,
@@ -669,7 +740,11 @@ export function executeBossAction(state, moveId, targetId) {
   const roundNum = state.round + 1;
   const result = attack(state.boss, state.participants[idx], moveId);
   const boss = result.attacker;
-  const participants = state.participants.map((p, i) => (i === idx ? result.defender : p));
+  let participants = state.participants.map((p, i) => (i === idx ? result.defender : p));
+  // 대상으로 지정됐던 가디언은 한 번 받아내면 해제
+  if (guardian) {
+    participants = participants.map((p) => (p && p.id === guardian.id ? { ...p, redirectActive: false } : p));
+  }
   const log = [...state.log, ...result.lines.map((text) => ({ round: roundNum, phase: 'boss', text }))];
 
   const next = { ...state, boss, participants, log };
@@ -683,16 +758,6 @@ export function executeBossAction(state, moveId, targetId) {
   }
 
   return next;
-}
-
-function applyStatBuff(participant, buffs, turns) {
-  const boosts = { ...participant.boosts };
-  const buffTimers = { ...participant.buffTimers };
-  Object.entries(buffs).forEach(([stat, stage]) => {
-    boosts[stat] = stage;
-    buffTimers[stat] = turns;
-  });
-  return { ...participant, boosts, buffTimers };
 }
 
 /**
@@ -755,8 +820,7 @@ export function executeParticipantCheer(state, participantId, cheerId) {
         p && !p.fainted && isSameTeam(p)
           ? {
               ...p,
-              status: null,
-              statusTurns: 0,
+              status: '',
               toxicCounter: 0,
               tauntTurns: 0,
               encoreTurns: 0,
@@ -789,76 +853,12 @@ export function executeParticipantCheer(state, participantId, cheerId) {
   };
 }
 
-/** 참가자의 응원 실행 (포지션별 2종, 참가자 1명당 최대 2회까지) */
-export function executeCheer(state, participantId, cheerId) {
-  if (state.status !== 'ongoing') return state;
-  if (state.actedParticipantIds.includes(participantId)) return state;
-
-  const idx = state.participants.findIndex((p) => p && p.id === participantId && !p.fainted);
-  if (idx === -1) return state;
-
-  const caster = state.participants[idx];
-  if ((caster.cheersUsed || 0) >= MAX_CHEERS_PER_PARTICIPANT) return state;
-
-  const cheer = (POSITION_CHEERS[caster.position] || []).find((c) => c.id === cheerId);
-  if (!cheer) return state;
-
-  const roundNum = state.round + 1;
-  const lines = [`${caster.nickname}의 응원 - ${cheer.name}!`];
-  let participants = [...state.participants];
-
-  if (cheer.scope === 'team') {
-    const deltas = Object.fromEntries(cheer.stats.map((s) => [s, cheer.amount]));
-    participants = participants.map((p) => {
-      if (!p || p.fainted) return p;
-      const boosted = applyStatDeltas(p, deltas);
-      const buffs = cheer.stats.map((s) => ({ stat: s, amount: cheer.amount, expiresAfterRound: roundNum + cheer.duration }));
-      return { ...boosted, activeBuffs: [...(boosted.activeBuffs || []), ...buffs] };
-    });
-    lines.push(`아군 전체의 ${cheer.stats.map((s) => STAT_LABEL[s]).join('/')}이(가) 올랐다!`);
-  } else if (cheer.scope === 'self') {
-    const deltas = Object.fromEntries(cheer.stats.map((s) => [s, cheer.amount]));
-    const boosted = applyStatDeltas(caster, deltas);
-    const buffs = cheer.stats.map((s) => ({ stat: s, amount: cheer.amount, expiresAfterRound: roundNum + cheer.duration }));
-    participants[idx] = {
-      ...boosted,
-      activeBuffs: [...(boosted.activeBuffs || []), ...buffs],
-      skipNextAction: !!cheer.skipNext || boosted.skipNextAction,
-    };
-    lines.push(`${caster.nickname}의 ${cheer.stats.map((s) => STAT_LABEL[s]).join('/')}이(가) 크게 올랐다!`);
-  } else if (cheer.scope === 'team-heal') {
-    participants = participants.map((p) => {
-      if (!p || p.fainted) return p;
-      const nextHP = Math.min(p.maxHP, p.currentHP + Math.round(p.maxHP * cheer.amount));
-      return { ...p, currentHP: nextHP };
-    });
-    lines.push('아군 전체의 체력이 회복되었다!');
-  } else if (cheer.scope === 'team-cure') {
-    participants = participants.map((p) => (p && !p.fainted ? { ...p, status: '', toxicCounter: 0, volatileFlags: [] } : p));
-    lines.push('아군 전체의 상태이상이 회복되었다!');
-  } else if (cheer.scope === 'self-flag') {
-    participants[idx] = { ...caster, volatileFlags: [...(caster.volatileFlags || []), cheer.flag] };
-    lines.push(`${caster.nickname}이(가) 시선을 끈다!`);
-  }
-
-  participants = participants.map((p, i) => (i === idx ? { ...p, cheersUsed: (p.cheersUsed || 0) + 1 } : p));
-
-  const next = {
-    ...state,
-    participants,
-    actedParticipantIds: [...state.actedParticipantIds, participantId],
-    log: [...state.log, ...lines.map((text) => ({ round: roundNum, phase: 'cheer', text }))],
-  };
-
-  return finalizeRoundIfComplete(next);
-}
-
 /** 테라레이드처럼 보스가 턴을 소모하지 않고 필드(자신 포함) 전체의 랭크 변화를 원래대로 되돌림 */
 export function resetFieldBoosts(state) {
   if (state.status !== 'ongoing') return state;
   const roundNum = state.round + 1;
-  const boss = { ...state.boss, boosts: { ...EMPTY_BOOSTS }, activeBuffs: [] };
-  const participants = state.participants.map((p) => (p ? { ...p, boosts: { ...EMPTY_BOOSTS }, activeBuffs: [] } : p));
+  const boss = { ...state.boss, boosts: { ...EMPTY_BOOSTS }, buffTimers: {} };
+  const participants = state.participants.map((p) => (p ? { ...p, boosts: { ...EMPTY_BOOSTS }, buffTimers: {} } : p));
   const line = {
     round: roundNum,
     phase: 'boss',
@@ -871,7 +871,19 @@ export function resetFieldBoosts(state) {
 export function cureBossStatus(state) {
   if (state.status !== 'ongoing') return state;
   const roundNum = state.round + 1;
-  const boss = { ...state.boss, status: '', toxicCounter: 0, volatileFlags: [] };
+  const boss = {
+    ...state.boss,
+    status: '',
+    toxicCounter: 0,
+    tauntTurns: 0,
+    encoreTurns: 0,
+    encoreMove: null,
+    tormentActive: false,
+    healBlockTurns: 0,
+    attractActive: false,
+    disableTurns: 0,
+    disableMove: null,
+  };
   const line = {
     round: roundNum,
     phase: 'boss',
@@ -890,12 +902,5 @@ export function createInitialBattleState({ boss, participants, maxRounds = 6 }) 
     maxRounds,
     log: [{ round: 1, phase: 'start', text: '--- 1라운드 시작 ---' }],
     actedParticipantIds: [],
-    // 이번 라운드에 행동할 조. 비어있으면("") 조 구분 없이 전체 참가자를 대상으로 한다.
-    activeTeam: '',
   };
-}
-
-/** 이번 라운드에 행동할 조를 지정한다("" 이면 조 제한 없음) — 전체공격 범위를 그 조로 한정한다 */
-export function setActiveTeam(state, team) {
-  return { ...state, activeTeam: team ? String(team) : '' };
 }

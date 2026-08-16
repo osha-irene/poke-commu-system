@@ -32903,7 +32903,7 @@
         "baseSpeed": 48,
         "generation": 8,
         "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/831.png",
-        "shinySprite": "img/pokemon/831.png",
+        "shinySprite": "https://firebasestorage.googleapis.com/v0/b/poke-commu-system.firebasestorage.app/o/pokemon%2F831.png?alt=media&token=1f58f98c-22bd-40fc-a48d-5ec526a7b552",
         "isShiny": false,
         "genderRatio": { "male": 50, "female": 50 },
         "height": 6,

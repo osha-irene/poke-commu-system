@@ -3,9 +3,10 @@ import {
   createInitialBattleState,
   executeParticipantAction,
   executeBossAction,
-  executeCheer,
+  executeParticipantCheer,
   resetFieldBoosts,
   cureBossStatus,
+  endRound,
 } from '../engine/raidEngine.js';
 import { DEFAULT_ROSTER } from '../data/defaultRoster.js';
 
@@ -73,6 +74,7 @@ export function useRaidState() {
       : Array.from({ length: MAX_PARTICIPANTS }, (_, i) => emptyParticipant(i))
   );
   const [maxRounds, setMaxRounds] = useState(draft?.maxRounds || 6);
+  const [selectedTeam, setSelectedTeam] = useState('');
   const [battle, setBattle] = useState(null);
 
   useEffect(() => {
@@ -156,7 +158,11 @@ export function useRaidState() {
   }, []);
 
   const runCheer = useCallback((participantId, cheerId) => {
-    setBattle((prev) => (prev ? executeCheer(prev, participantId, cheerId) : prev));
+    setBattle((prev) => (prev ? executeParticipantCheer(prev, participantId, cheerId) : prev));
+  }, []);
+
+  const runEndRound = useCallback(() => {
+    setBattle((prev) => (prev ? endRound(prev) : prev));
   }, []);
 
   const runResetFieldBoosts = useCallback(() => {
@@ -211,6 +217,7 @@ export function useRaidState() {
     runParticipantAction,
     runBossAction,
     runCheer,
+    runEndRound,
     runResetFieldBoosts,
     runCureBossStatus,
     exportDraft,

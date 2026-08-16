@@ -11,7 +11,12 @@ export const DEFAULT_ROSTER = [
     pokemon: "부르르룸",
     types: ["Steel", "Poison"],
   },
-  { position: "철벽", nickname: "나몬", pokemon: "픽시", types: ["Fairy"] },
+  {
+    position: "철벽",
+    nickname: "삐낭시에 ",
+    pokemon: "픽시",
+    types: ["Fairy"],
+  },
   {
     position: "철벽",
     nickname: "네온",
