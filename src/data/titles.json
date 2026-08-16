@@ -81,7 +81,7 @@
     },
     {
         "id": "over-endless-times",
-        "label": "억겹의 시간을 넘어",
+        "label": "억겁의 시간을 넘어",
         "icon": "/img/titles/over-endless-times.png"
     },
     {
@@ -89,9 +89,104 @@
         "label": "사실은 힘을 숨김",
         "icon": "/img/titles/hiddenpower.png"
     },
-      {
+    {
         "id": "human-chatot",
         "label": "인간 페라페",
         "icon": "/img/titles/human-chatot.png"
+    },
+    {
+        "id": "newgen",
+        "label": "세대 교체",
+        "icon": "/img/titles/newgen.png"
+    },
+    {
+        "id": "celebiFriend",
+        "label": "세레비의 친구",
+        "icon": "/img/titles/celebiFriend.png"
+    },
+    {
+        "id": "comorantlover",
+        "label": "윽우지의 후원자",
+        "icon": "/img/titles/comorantlover.png"
+    },
+    {
+        "id": "eightcolors",
+        "label": "영운의 8색 증명자",
+        "icon": "/img/titles/eightcolors.png"
+    },
+    {
+        "id": "elite",
+        "label": "엘리트 트레이너",
+        "icon": "/img/titles/elite.png"
+    },
+    {
+        "id": "future",
+        "label": "영운의 미래",
+        "icon": "/img/titles/future.png"
+    },
+    {
+        "id": "onecoin",
+        "label": "원코인 클리어",
+        "icon": "/img/titles/onecoin.png"
+    },
+    {
+        "id": "snowrace",
+        "label": "최고의 기적 밍기적",
+        "icon": "/img/titles/chubby.png"
+    },
+    {
+        "id": "spotlight",
+        "label": "스포트라이트 강탈자",
+        "icon": "/img/titles/spotlight.png"
+    },
+    {
+        "id": "top",
+        "label": "영운의 정점",
+        "icon": "/img/titles/top.png"
+    },
+    {
+        "id": "onecoin",
+        "label": "원코인 클리어",
+        "icon": "/img/titles/onecoin.png"
+    },
+    {
+        "id": "watchme",
+        "label": "스타랭크 ★★★★★",
+        "icon": "/img/titles/watchme.png"
+    },
+    {
+        "id": "normal",
+        "label": "노말 타입 전문가",
+        "icon": "/img/titles/expert/normal.png"
+    },
+    {
+        "id": "water",
+        "label": "물 타입 전문가",
+        "icon": "/img/titles/expert/water.png"
+    },
+    {
+        "id": "grass",
+        "label": "풀 타입 전문가",
+        "icon": "/img/titles/expert/grass.png"
+    },
+    {
+        "id": "fire",
+        "label": "불꽃 타입 전문가",
+        "icon": "/img/titles/expert/fire.png"
+    },
+    {
+        "id": "electric",
+        "label": "전기 타입 전문가",
+        "icon": "/img/titles/expert/electric.png"
+    },
+    {
+        "id": "rock",
+        "label": "바위 타입 전문가",
+        "icon": "/img/titles/expert/rock.png"
+    },
+    {
+        "id": "fighting",
+        "label": "격투 타입 전문가",
+        "icon": "/img/titles/expert/fighting.png"
     }
 ]
