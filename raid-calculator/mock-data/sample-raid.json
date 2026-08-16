@@ -1,11 +1,23 @@
 {
   "boss": {
     "nickname": "무장조 레이드보스",
-    "species": "kingambit",
+    "types": [
+      "Dark",
+      "Steel"
+    ],
+    "baseStats": {
+      "hp": 100,
+      "atk": 135,
+      "def": 120,
+      "spa": 60,
+      "spd": 85,
+      "spe": 50
+    },
     "level": 60,
     "nature": "adamant",
-    "ability": "supremeoverlord",
-    "item": "leftovers",
+    "ability": "심안",
+    "item": "",
+    "gender": "",
     "teraType": "",
     "ivs": {
       "hp": 31,
@@ -23,225 +35,592 @@
       "spd": 0,
       "spe": 0
     },
-    "customMaxHP": "5000"
+    "hpMultiplier": 5,
+    "moves": [
+      "아이언헤드",
+      "깨트리다",
+      "검은연기",
+      "스톤에지"
+    ],
+    "actionsPerRound": 2
   },
   "participants": [
     {
       "id": 0,
-      "nickname": "딜러1",
-      "position": "딜러",
+      "nickname": "철벽1",
+      "position": "철벽",
+      "gender": "M",
       "teraType": "",
       "types": [
         "Fire"
+      ],
+      "evs": {
+        "hp": 252,
+        "atk": 0,
+        "def": 252,
+        "spa": 0,
+        "spd": 4,
+        "spe": 0
+      },
+      "moves": [
+        "지진",
+        "스톤에지",
+        "으르렁",
+        "자기재생"
       ]
     },
     {
       "id": 1,
-      "nickname": "탱커1",
-      "position": "탱커",
+      "nickname": "칼춤1",
+      "position": "칼춤",
+      "gender": "F",
       "teraType": "",
       "types": [
         "Water"
+      ],
+      "evs": {
+        "hp": 4,
+        "atk": 252,
+        "def": 0,
+        "spa": 0,
+        "spd": 0,
+        "spe": 252
+      },
+      "moves": [
+        "인파이트",
+        "기습",
+        "검무",
+        "스톤에지"
       ]
     },
     {
       "id": 2,
-      "nickname": "서포터1",
-      "position": "서포터",
+      "nickname": "도우미1",
+      "position": "도우미",
+      "gender": "M",
       "teraType": "",
       "types": [
         "Grass"
+      ],
+      "evs": {
+        "hp": 252,
+        "atk": 0,
+        "def": 4,
+        "spa": 0,
+        "spd": 252,
+        "spe": 0
+      },
+      "moves": [
+        "치유의바람",
+        "독가스",
+        "전기자석파",
+        "몸통박치기"
       ]
     },
     {
       "id": 3,
-      "nickname": "딜러2",
-      "position": "딜러",
+      "nickname": "철벽2",
+      "position": "철벽",
+      "gender": "F",
       "teraType": "",
       "types": [
         "Electric"
+      ],
+      "evs": {
+        "hp": 252,
+        "atk": 0,
+        "def": 252,
+        "spa": 0,
+        "spd": 4,
+        "spe": 0
+      },
+      "moves": [
+        "지진",
+        "스톤에지",
+        "으르렁",
+        "자기재생"
       ]
     },
     {
       "id": 4,
-      "nickname": "탱커2",
-      "position": "탱커",
+      "nickname": "칼춤2",
+      "position": "칼춤",
+      "gender": "M",
       "teraType": "",
       "types": [
         "Psychic"
+      ],
+      "evs": {
+        "hp": 4,
+        "atk": 252,
+        "def": 0,
+        "spa": 0,
+        "spd": 0,
+        "spe": 252
+      },
+      "moves": [
+        "인파이트",
+        "기습",
+        "검무",
+        "스톤에지"
       ]
     },
     {
       "id": 5,
-      "nickname": "서포터2",
-      "position": "서포터",
+      "nickname": "도우미2",
+      "position": "도우미",
+      "gender": "F",
       "teraType": "",
       "types": [
         "Dark"
+      ],
+      "evs": {
+        "hp": 252,
+        "atk": 0,
+        "def": 4,
+        "spa": 0,
+        "spd": 252,
+        "spe": 0
+      },
+      "moves": [
+        "치유의바람",
+        "독가스",
+        "전기자석파",
+        "몸통박치기"
       ]
     },
     {
       "id": 6,
-      "nickname": "딜러3",
-      "position": "딜러",
+      "nickname": "철벽3",
+      "position": "철벽",
+      "gender": "M",
       "teraType": "",
       "types": [
         "Fighting"
+      ],
+      "evs": {
+        "hp": 252,
+        "atk": 0,
+        "def": 252,
+        "spa": 0,
+        "spd": 4,
+        "spe": 0
+      },
+      "moves": [
+        "지진",
+        "스톤에지",
+        "으르렁",
+        "자기재생"
       ]
     },
     {
       "id": 7,
-      "nickname": "탱커3",
-      "position": "탱커",
+      "nickname": "칼춤3",
+      "position": "칼춤",
+      "gender": "F",
       "teraType": "",
       "types": [
         "Steel"
+      ],
+      "evs": {
+        "hp": 4,
+        "atk": 252,
+        "def": 0,
+        "spa": 0,
+        "spd": 0,
+        "spe": 252
+      },
+      "moves": [
+        "인파이트",
+        "기습",
+        "검무",
+        "스톤에지"
       ]
     },
     {
       "id": 8,
-      "nickname": "서포터3",
-      "position": "서포터",
+      "nickname": "도우미3",
+      "position": "도우미",
+      "gender": "M",
       "teraType": "",
       "types": [
         "Fairy"
+      ],
+      "evs": {
+        "hp": 252,
+        "atk": 0,
+        "def": 4,
+        "spa": 0,
+        "spd": 252,
+        "spe": 0
+      },
+      "moves": [
+        "치유의바람",
+        "독가스",
+        "전기자석파",
+        "몸통박치기"
       ]
     },
     {
       "id": 9,
-      "nickname": "딜러4",
-      "position": "딜러",
+      "nickname": "철벽4",
+      "position": "철벽",
+      "gender": "F",
       "teraType": "",
       "types": [
         "Dragon"
+      ],
+      "evs": {
+        "hp": 252,
+        "atk": 0,
+        "def": 252,
+        "spa": 0,
+        "spd": 4,
+        "spe": 0
+      },
+      "moves": [
+        "지진",
+        "스톤에지",
+        "으르렁",
+        "자기재생"
       ]
     },
     {
       "id": 10,
-      "nickname": "탱커4",
-      "position": "탱커",
+      "nickname": "칼춤4",
+      "position": "칼춤",
+      "gender": "M",
       "teraType": "",
       "types": [
         "Ghost"
+      ],
+      "evs": {
+        "hp": 4,
+        "atk": 252,
+        "def": 0,
+        "spa": 0,
+        "spd": 0,
+        "spe": 252
+      },
+      "moves": [
+        "인파이트",
+        "기습",
+        "검무",
+        "스톤에지"
       ]
     },
     {
       "id": 11,
-      "nickname": "서포터4",
-      "position": "서포터",
+      "nickname": "도우미4",
+      "position": "도우미",
+      "gender": "F",
       "teraType": "",
       "types": [
         "Flying"
+      ],
+      "evs": {
+        "hp": 252,
+        "atk": 0,
+        "def": 4,
+        "spa": 0,
+        "spd": 252,
+        "spe": 0
+      },
+      "moves": [
+        "치유의바람",
+        "독가스",
+        "전기자석파",
+        "몸통박치기"
       ]
     },
     {
       "id": 12,
-      "nickname": "딜러5",
-      "position": "딜러",
+      "nickname": "철벽5",
+      "position": "철벽",
+      "gender": "M",
       "teraType": "",
       "types": [
         "Fire"
+      ],
+      "evs": {
+        "hp": 252,
+        "atk": 0,
+        "def": 252,
+        "spa": 0,
+        "spd": 4,
+        "spe": 0
+      },
+      "moves": [
+        "지진",
+        "스톤에지",
+        "으르렁",
+        "자기재생"
       ]
     },
     {
       "id": 13,
-      "nickname": "탱커5",
-      "position": "탱커",
+      "nickname": "칼춤5",
+      "position": "칼춤",
+      "gender": "F",
       "teraType": "",
       "types": [
         "Water"
+      ],
+      "evs": {
+        "hp": 4,
+        "atk": 252,
+        "def": 0,
+        "spa": 0,
+        "spd": 0,
+        "spe": 252
+      },
+      "moves": [
+        "인파이트",
+        "기습",
+        "검무",
+        "스톤에지"
       ]
     },
     {
       "id": 14,
-      "nickname": "서포터5",
-      "position": "서포터",
+      "nickname": "도우미5",
+      "position": "도우미",
+      "gender": "M",
       "teraType": "",
       "types": [
         "Grass"
+      ],
+      "evs": {
+        "hp": 252,
+        "atk": 0,
+        "def": 4,
+        "spa": 0,
+        "spd": 252,
+        "spe": 0
+      },
+      "moves": [
+        "치유의바람",
+        "독가스",
+        "전기자석파",
+        "몸통박치기"
       ]
     },
     {
       "id": 15,
-      "nickname": "딜러6",
-      "position": "딜러",
+      "nickname": "철벽6",
+      "position": "철벽",
+      "gender": "F",
       "teraType": "",
       "types": [
         "Electric"
+      ],
+      "evs": {
+        "hp": 252,
+        "atk": 0,
+        "def": 252,
+        "spa": 0,
+        "spd": 4,
+        "spe": 0
+      },
+      "moves": [
+        "지진",
+        "스톤에지",
+        "으르렁",
+        "자기재생"
       ]
     },
     {
       "id": 16,
-      "nickname": "탱커6",
-      "position": "탱커",
+      "nickname": "칼춤6",
+      "position": "칼춤",
+      "gender": "M",
       "teraType": "",
       "types": [
         "Psychic"
+      ],
+      "evs": {
+        "hp": 4,
+        "atk": 252,
+        "def": 0,
+        "spa": 0,
+        "spd": 0,
+        "spe": 252
+      },
+      "moves": [
+        "인파이트",
+        "기습",
+        "검무",
+        "스톤에지"
       ]
     },
     {
       "id": 17,
-      "nickname": "서포터6",
-      "position": "서포터",
+      "nickname": "도우미6",
+      "position": "도우미",
+      "gender": "F",
       "teraType": "",
       "types": [
         "Dark"
+      ],
+      "evs": {
+        "hp": 252,
+        "atk": 0,
+        "def": 4,
+        "spa": 0,
+        "spd": 252,
+        "spe": 0
+      },
+      "moves": [
+        "치유의바람",
+        "독가스",
+        "전기자석파",
+        "몸통박치기"
       ]
     },
     {
       "id": 18,
-      "nickname": "딜러7",
-      "position": "딜러",
+      "nickname": "철벽7",
+      "position": "철벽",
+      "gender": "M",
       "teraType": "",
       "types": [
         "Fighting"
+      ],
+      "evs": {
+        "hp": 252,
+        "atk": 0,
+        "def": 252,
+        "spa": 0,
+        "spd": 4,
+        "spe": 0
+      },
+      "moves": [
+        "지진",
+        "스톤에지",
+        "으르렁",
+        "자기재생"
       ]
     },
     {
       "id": 19,
-      "nickname": "탱커7",
-      "position": "탱커",
+      "nickname": "칼춤7",
+      "position": "칼춤",
+      "gender": "F",
       "teraType": "",
       "types": [
         "Steel"
+      ],
+      "evs": {
+        "hp": 4,
+        "atk": 252,
+        "def": 0,
+        "spa": 0,
+        "spd": 0,
+        "spe": 252
+      },
+      "moves": [
+        "인파이트",
+        "기습",
+        "검무",
+        "스톤에지"
       ]
     },
     {
       "id": 20,
-      "nickname": "서포터7",
-      "position": "서포터",
+      "nickname": "도우미7",
+      "position": "도우미",
+      "gender": "M",
       "teraType": "",
       "types": [
         "Fairy"
+      ],
+      "evs": {
+        "hp": 252,
+        "atk": 0,
+        "def": 4,
+        "spa": 0,
+        "spd": 252,
+        "spe": 0
+      },
+      "moves": [
+        "치유의바람",
+        "독가스",
+        "전기자석파",
+        "몸통박치기"
       ]
     },
     {
       "id": 21,
-      "nickname": "딜러8",
-      "position": "딜러",
+      "nickname": "철벽8",
+      "position": "철벽",
+      "gender": "F",
       "teraType": "",
       "types": [
         "Dragon"
+      ],
+      "evs": {
+        "hp": 252,
+        "atk": 0,
+        "def": 252,
+        "spa": 0,
+        "spd": 4,
+        "spe": 0
+      },
+      "moves": [
+        "지진",
+        "스톤에지",
+        "으르렁",
+        "자기재생"
       ]
     },
     {
       "id": 22,
-      "nickname": "탱커8",
-      "position": "탱커",
+      "nickname": "칼춤8",
+      "position": "칼춤",
+      "gender": "M",
       "teraType": "",
       "types": [
         "Ghost"
+      ],
+      "evs": {
+        "hp": 4,
+        "atk": 252,
+        "def": 0,
+        "spa": 0,
+        "spd": 0,
+        "spe": 252
+      },
+      "moves": [
+        "인파이트",
+        "기습",
+        "검무",
+        "스톤에지"
       ]
     },
     {
       "id": 23,
-      "nickname": "서포터8",
-      "position": "서포터",
+      "nickname": "도우미8",
+      "position": "도우미",
+      "gender": "F",
       "teraType": "",
       "types": [
         "Flying"
+      ],
+      "evs": {
+        "hp": 252,
+        "atk": 0,
+        "def": 4,
+        "spa": 0,
+        "spd": 252,
+        "spe": 0
+      },
+      "moves": [
+        "치유의바람",
+        "독가스",
+        "전기자석파",
+        "몸통박치기"
       ]
     }
   ],
-  "maxRounds": 100
+  "maxRounds": 6
 }

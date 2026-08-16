@@ -1,8 +1,11 @@
 import { TYPE_OPTIONS } from '../lib/typeOptions.js';
+import { POSITION_OPTIONS } from '../lib/cheers.js';
+import { statsToText, textToStats } from '../lib/statText.js';
 
 export default function ParticipantRow({ participant, index, onChange, onClear, disabled }) {
   const p = participant;
   const [type1, type2] = p.types && p.types.length ? p.types : ['Normal'];
+  const moves = p.moves && p.moves.length ? p.moves : ['', '', '', ''];
 
   function handleTypeChange(slot, value) {
     const types = [type1, type2].filter(Boolean);
@@ -14,6 +17,15 @@ export default function ParticipantRow({ participant, index, onChange, onClear, 
       types.length = 1;
     }
     onChange({ types: types.filter(Boolean) });
+  }
+
+  function handleMovesTextChange(text) {
+    const parts = text
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 4);
+    onChange({ moves: parts });
   }
 
   return (
@@ -28,12 +40,21 @@ export default function ParticipantRow({ participant, index, onChange, onClear, 
         />
       </td>
       <td>
-        <input
-          value={p.position}
-          placeholder="포지션"
-          disabled={disabled}
-          onChange={(e) => onChange({ position: e.target.value })}
-        />
+        <select value={p.position} disabled={disabled} onChange={(e) => onChange({ position: e.target.value })}>
+          <option value="">포지션 선택</option>
+          {POSITION_OPTIONS.map((pos) => (
+            <option key={pos} value={pos}>
+              {pos}
+            </option>
+          ))}
+        </select>
+      </td>
+      <td>
+        <select value={p.gender || ''} disabled={disabled} onChange={(e) => onChange({ gender: e.target.value })}>
+          <option value="">불명</option>
+          <option value="M">수컷</option>
+          <option value="F">암컷</option>
+        </select>
       </td>
       <td>
         <div className="type-select-pair">
@@ -53,6 +74,24 @@ export default function ParticipantRow({ participant, index, onChange, onClear, 
             ))}
           </select>
         </div>
+      </td>
+      <td>
+        <input
+          className="col-stats"
+          title="HP,공격,방어,특공,특방,스피드"
+          value={statsToText(p.evs)}
+          disabled={disabled}
+          onChange={(e) => onChange({ evs: textToStats(e.target.value, p.evs) })}
+        />
+      </td>
+      <td>
+        <input
+          list="move-options"
+          value={moves.join(', ')}
+          placeholder="기술1, 기술2, 기술3, 기술4"
+          disabled={disabled}
+          onChange={(e) => handleMovesTextChange(e.target.value)}
+        />
       </td>
       <td>
         <button type="button" disabled={disabled} onClick={onClear}>

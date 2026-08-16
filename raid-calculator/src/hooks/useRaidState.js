@@ -3,38 +3,49 @@ import {
   createInitialBattleState,
   executeParticipantAction,
   executeBossAction,
+  executeCheer,
+  resetFieldBoosts,
+  cureBossStatus,
 } from '../engine/raidEngine.js';
 
 export const MAX_PARTICIPANTS = 24;
-const STORAGE_KEY = 'raid-calculator-draft-v2';
+const STORAGE_KEY = 'raid-calculator-draft-v3';
 
 const DEFAULT_IVS = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
 const DEFAULT_EVS = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
+const DEFAULT_BASE_STATS = { hp: 100, atk: 100, def: 100, spa: 100, spd: 100, spe: 100 };
 
-// 레벨 50 / 성격 하드(무보정) / 도구 없음 / 특성 없음 / 종족값 100 / 개체값 31 / 노력치 0으로 고정
-// (engine의 buildBattlePokemon에서 강제 적용됨)
+// 레벨 50 / 성격 하드(무보정) / 도구 없음 / 특성 없음 / 종족값 100 / 개체값 31로 고정
+// (engine의 buildBattlePokemon에서 강제 적용됨). 노력치/타입/기술/포지션/성별은 직접 입력.
 function emptyParticipant(id) {
   return {
     id,
     nickname: '',
     position: '',
+    gender: '',
     teraType: '',
     types: ['Normal'],
+    evs: { ...DEFAULT_EVS },
+    moves: ['', '', '', ''],
   };
 }
 
 function defaultBoss() {
   return {
     nickname: '보스',
-    species: '',
+    types: ['Normal'],
+    baseStats: { ...DEFAULT_BASE_STATS },
     level: 50,
     nature: 'hardy',
     ability: '',
     item: '',
+    gender: '',
     teraType: '',
     ivs: { ...DEFAULT_IVS },
     evs: { ...DEFAULT_EVS },
-    customMaxHP: '',
+    hpMultiplier: 1,
+    moves: ['', '', '', ''],
+    actionsPerRound: 2,
   };
 }
 
@@ -59,7 +70,7 @@ export function useRaidState() {
       ? draft.participants
       : Array.from({ length: MAX_PARTICIPANTS }, (_, i) => emptyParticipant(i))
   );
-  const [maxRounds, setMaxRounds] = useState(draft?.maxRounds || 100);
+  const [maxRounds, setMaxRounds] = useState(draft?.maxRounds || 6);
   const [battle, setBattle] = useState(null);
 
   useEffect(() => {
@@ -93,6 +104,18 @@ export function useRaidState() {
 
   const runBossAction = useCallback((moveId, targetId) => {
     setBattle((prev) => (prev ? executeBossAction(prev, moveId, targetId) : prev));
+  }, []);
+
+  const runCheer = useCallback((participantId, cheerId) => {
+    setBattle((prev) => (prev ? executeCheer(prev, participantId, cheerId) : prev));
+  }, []);
+
+  const runResetFieldBoosts = useCallback(() => {
+    setBattle((prev) => (prev ? resetFieldBoosts(prev) : prev));
+  }, []);
+
+  const runCureBossStatus = useCallback(() => {
+    setBattle((prev) => (prev ? cureBossStatus(prev) : prev));
   }, []);
 
   const exportDraft = useCallback(() => {
@@ -134,6 +157,9 @@ export function useRaidState() {
     resetBattle,
     runParticipantAction,
     runBossAction,
+    runCheer,
+    runResetFieldBoosts,
+    runCureBossStatus,
     exportDraft,
     importDraft,
   };

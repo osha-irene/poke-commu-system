@@ -32,6 +32,13 @@ const adminTabs = [
   { id: 'admin', label: '관리자', icon: adminIcon },
   { id: 'battle', label: '배틀', icon: battleIcon },
   { id: 'contest', label: '콘테스트', icon: contestIcon },
+  {
+    id: 'raid',
+    label: '레이드 계산기',
+    icon: battleIcon,
+    href: `${process.env.PUBLIC_URL}/raid-calculator/`,
+    external: true,
+  },
 ];
 
 const IconImage = ({ src }) => <img src={src} alt="" aria-hidden="true" />;
@@ -177,17 +184,30 @@ export default function Sidebar({ currentTab, setCurrentTab, isAdmin, hiddenMenu
             </button>
 
             <div className="trainer-nav__submenu" aria-label="설정 하위 메뉴">
-              {adminTabs.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setCurrentTab(item.id)}
-                  className={`trainer-nav__submenu-button ${currentTab === item.id ? 'is-active' : ''}`}
-                  aria-label={item.label}
-                >
-                  <IconImage src={item.icon} />
-                </button>
-              ))}
+              {adminTabs.map((item) =>
+                item.external ? (
+                  <a
+                    key={item.id}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="trainer-nav__submenu-button"
+                    aria-label={item.label}
+                  >
+                    <IconImage src={item.icon} />
+                  </a>
+                ) : (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setCurrentTab(item.id)}
+                    className={`trainer-nav__submenu-button ${currentTab === item.id ? 'is-active' : ''}`}
+                    aria-label={item.label}
+                  >
+                    <IconImage src={item.icon} />
+                  </button>
+                )
+              )}
             </div>
           </div>
         </nav>

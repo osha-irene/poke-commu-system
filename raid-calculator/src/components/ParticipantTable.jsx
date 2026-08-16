@@ -9,7 +9,10 @@ function ParticipantTableHalf({ participants, onUpdate, onClear, disabled }) {
             <th>#</th>
             <th>닉네임</th>
             <th>포지션</th>
+            <th>성별</th>
             <th>타입</th>
+            <th>노력치</th>
+            <th>기술(최대4)</th>
             <th></th>
           </tr>
         </thead>

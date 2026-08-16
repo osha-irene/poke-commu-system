@@ -310,6 +310,12 @@ button:disabled {
   padding: 2px 6px;
 }
 
+.condition-badge {
+  font-size: 10px;
+  color: var(--accent);
+  margin: -4px 0 6px 118px;
+}
+
 .result-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -343,6 +349,47 @@ button:disabled {
   margin: 6px 0 0;
   font-size: 11px;
   color: var(--text-dim);
+}
+
+.action-picker {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+
+.button-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.button-grid button {
+  font-size: 12px;
+  padding: 6px 10px;
+}
+
+.btn-cheer {
+  background: #2a2140;
+  border-color: #4a3a78;
+}
+
+.btn-cheer:hover:not(:disabled) {
+  background: #362a52;
+}
+
+.btn-free-action {
+  background: #1f3324;
+  border-color: #2f5a3a;
+}
+
+.btn-free-action:hover:not(:disabled) {
+  background: #274a30;
+}
+
+.boss-moves-grid {
+  margin-top: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
 }
 
 .battle-log {

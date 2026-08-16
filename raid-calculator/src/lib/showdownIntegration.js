@@ -202,37 +202,27 @@ class ShowdownIntegration {
    */
   createCalcPokemon(pokemon, generation = 9) {
     try {
-      const gen = this.gens.get(generation);
       const natureName = pokemon.nature
         ? pokemon.nature.charAt(0).toUpperCase() + pokemon.nature.slice(1).toLowerCase()
         : 'Hardy';
 
-      // 아군 참가자(isParticipant)는 종족값/타입을 직접 지정한 커스텀 유닛이므로
-      // 실제 종족 데이터 대신 overrides로 완전히 덮어써서 사용. 보스는 항상 실제 종족 데이터를 그대로 사용
-      // (baseStats/types 필드가 있어도 그건 로그용 정보 표시 목적이지 override 대상이 아님).
-      let anchorSpecies = 'bulbasaur';
-      let overrides;
-      if (pokemon.isParticipant) {
-        overrides = { baseStats: pokemon.baseStats, types: pokemon.types };
-      } else {
-        const speciesName = this.resolveSpeciesName(pokemon.species || pokemon.name || 'bulbasaur');
-        // getSpecies()와 동일한 이유로 currentGen이 아닌 원본 dex 기준으로 존재 여부를 확인
-        const speciesData = this.dex.species.get(speciesName);
-        anchorSpecies = speciesData ? speciesName : 'ditto';
-        if (!speciesData) {
-          console.warn(`[showdownIntegration] 포켓몬을 찾을 수 없음: ${speciesName}, ditto로 대체`);
-        }
-      }
+      // 레이드 계산기에서는 보스/참가자 모두 종족값·타입을 직접 지정하는 커스텀 유닛이므로
+      // 항상 overrides로 완전히 덮어써서 사용 (앵커 종족명은 베이스만 빌려오는 더미)
+      const overrides = {
+        baseStats: pokemon.baseStats || { hp: 100, atk: 100, def: 100, spa: 100, spd: 100, spe: 100 },
+        types: pokemon.types && pokemon.types.length ? pokemon.types : ['Normal'],
+      };
 
       // 한글로 입력됐을 수 있는 특성/도구를 @smogon/calc가 이해하는 쇼다운 영문명으로 변환
       const resolvedAbility = pokemon.ability ? this.getAbility(pokemon.ability)?.nameEn : undefined;
       const resolvedItem = pokemon.item ? this.getItem(pokemon.item)?.name : undefined;
 
-      return new Pokemon(generation, anchorSpecies, {
+      return new Pokemon(generation, 'bulbasaur', {
         level: pokemon.level || 50,
         ability: resolvedAbility,
         item: resolvedItem || '',
         nature: natureName,
+        gender: pokemon.gender || undefined,
         ivs: pokemon.ivs || { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 },
         evs: pokemon.evs || { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 },
         boosts: pokemon.boosts || { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 },
