@@ -137,20 +137,43 @@ export const usePokemonCatch = (
       // 플라베베/플라엣테 꽃 색깔 폼처럼 pokemonTemplate.number가 "pokemon-form-10105" 같은
       // 비숫자 문자열인 코스메틱 폼은 이 문자열로 CDN URL을 조립하면 깨진 이미지가 된다.
       // 이런 폼은 template 자체에 이미 올바른 iconUrl/spriteUrl이 저장돼 있으니 그걸 그대로 쓴다.
-      iconUrl: Number.isFinite(Number(pokemonTemplate.number))
-        ? (() => {
-            const orig = pokemonTemplate.originalNumber;
-            const iconNum = (orig === 710 || orig === 711) ? orig : pokemonTemplate.number;
-            return pokemon.isShiny
-              ? `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-viii/icons/shiny/${iconNum}.png`
-              : `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-viii/icons/${iconNum}.png`;
-          })()
-        : (pokemon.isShiny ? (pokemonTemplate.shinySprite || pokemonTemplate.iconUrl) : pokemonTemplate.iconUrl) || pokemonTemplate.imageUrl,
-      spriteUrl: Number.isFinite(Number(pokemonTemplate.number))
-        ? (pokemon.isShiny
-            ? `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/${pokemonTemplate.number}.png`
-            : `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pokemonTemplate.number}.png`)
-        : (pokemon.isShiny ? (pokemonTemplate.shinySprite || pokemonTemplate.spriteUrl) : pokemonTemplate.spriteUrl) || pokemonTemplate.imageUrl
+      //
+      // 우르/마릴처럼 숫자 도감번호를 쓰는 일반 포켓몬도 마스터데이터(allPokemon.json)에
+      // 기본 PokeAPI CDN 패턴이 아닌 커스텀 shinySprite가 지정된 경우가 있다(관리자가 개별
+      // 지정한 대체 이로치 이미지). 예전 코드는 숫자 번호면 무조건 기본 CDN URL을 조립해버려서
+      // 이런 커스텀 지정이 새로 잡는 개체에 전혀 반영되지 않았다 - 커스텀 값일 때만 그걸 쓰고,
+      // 기본값이면 기존처럼 CDN URL을 조립한다(멀쩡한 나머지 포켓몬 수백 종의 아이콘 경로를
+      // 건드리지 않기 위함).
+      iconUrl: (() => {
+        if (!Number.isFinite(Number(pokemonTemplate.number))) {
+          return (pokemon.isShiny ? (pokemonTemplate.shinySprite || pokemonTemplate.iconUrl) : pokemonTemplate.iconUrl) || pokemonTemplate.imageUrl;
+        }
+        const defaultShinySprite = `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/${pokemonTemplate.number}.png`;
+        if (pokemon.isShiny && pokemonTemplate.shinySprite && pokemonTemplate.shinySprite !== defaultShinySprite) {
+          return pokemonTemplate.shinySprite;
+        }
+        const orig = pokemonTemplate.originalNumber;
+        const iconNum = (orig === 710 || orig === 711) ? orig : pokemonTemplate.number;
+        return pokemon.isShiny
+          ? `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-viii/icons/shiny/${iconNum}.png`
+          : `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-viii/icons/${iconNum}.png`;
+      })(),
+      spriteUrl: (() => {
+        if (!Number.isFinite(Number(pokemonTemplate.number))) {
+          return (pokemon.isShiny ? (pokemonTemplate.shinySprite || pokemonTemplate.spriteUrl) : pokemonTemplate.spriteUrl) || pokemonTemplate.imageUrl;
+        }
+        const defaultShinySprite = `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/${pokemonTemplate.number}.png`;
+        if (pokemon.isShiny && pokemonTemplate.shinySprite && pokemonTemplate.shinySprite !== defaultShinySprite) {
+          return pokemonTemplate.shinySprite;
+        }
+        return pokemon.isShiny
+          ? defaultShinySprite
+          : `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pokemonTemplate.number}.png`;
+      })(),
+      // 상세 화면(getOwnedPokemonSpriteUrl)은 이로치일 때 pokemon.shinySprite 필드를 최우선으로
+      // 읽으므로, 커스텀 이미지가 있으면 여기에도 같이 저장해야 상세 패널에 반영된다.
+      // (Firebase는 undefined 필드를 쓰면 에러가 나므로 없을 땐 null)
+      shinySprite: (pokemon.isShiny && pokemonTemplate.shinySprite) ? pokemonTemplate.shinySprite : null,
     });
 
     // ⭐ 클로저에 갇힌 caughtPokemon 스냅샷을 기준으로 통째로 덮어쓰면, 짧은 시간 안에 여러 마리를

@@ -33,6 +33,14 @@ export function findCheerSkill(position, cheerId) {
   return (POSITION_CHEERS[position] || []).find((c) => c.id === cheerId) || null;
 }
 
-export const STAT_LABEL = { atk: '공격', def: '방어', spa: '특수공격', spd: '특수방어', spe: '스피드' };
+export const STAT_LABEL = {
+  atk: '공격',
+  def: '방어',
+  spa: '특수공격',
+  spd: '특수방어',
+  spe: '스피드',
+  accuracy: '명중률',
+  evasion: '회피율',
+};
 
 export const STATUS_LABEL = { brn: '화상', psn: '독', tox: '맹독', par: '마비', slp: '잠듦', frz: '얼음' };

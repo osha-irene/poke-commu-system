@@ -88,29 +88,35 @@ function CustomItemManageModal({ items, members = {}, onUpdate, onDelete, onRemo
               <div className="flex gap-1 shrink-0">
                 <button className="text-blue-500 text-xs px-2 py-1 rounded hover:bg-blue-50"
                   onClick={e => { e.stopPropagation(); setEditingItem(item); }}>수정</button>
-                <button className="text-orange-500 text-xs px-2 py-1 rounded hover:bg-orange-50"
-                  onClick={async e => {
-                    e.stopPropagation();
-                    const holderCount = countHolders(item);
-                    if (holderCount === 0) { alert(`"${item.name}"을(를) 보유한 회원이 없습니다.`); return; }
-                    if (!window.confirm(`"${item.name}"을(를) 보유한 회원 ${holderCount}명의 인벤토리에서 전부 삭제하시겠습니까?\n(아이템 정의 자체는 삭제되지 않습니다)`)) return;
-                    const result = await onRemoveFromAllInventories(item.id);
-                    if (!result) { alert('전체 삭제 중 오류가 발생했습니다.'); return; }
-                    const { removedCount = 0, failedNames = [] } = result;
-                    alert(failedNames.length > 0
-                      ? `${removedCount}명의 인벤토리에서 삭제했습니다.\n실패: ${failedNames.join(', ')}`
-                      : `${removedCount}명의 인벤토리에서 "${item.name}"을(를) 전부 삭제했습니다.`);
-                  }}>전체삭제</button>
-                <button className="text-red-500 text-xs px-2 py-1 rounded hover:bg-red-50"
-                  onClick={async e => {
-                    e.stopPropagation();
-                    const confirmMsg = item.isRecipe
-                      ? `"${item.name}"은(는) 레시피 결과 아이템입니다. 삭제하면 연결된 레시피 자체가 삭제됩니다. 계속하시겠습니까?`
-                      : `"${item.name}" 아이템을 삭제하시겠습니까?`;
-                    if (!window.confirm(confirmMsg)) return;
-                    const ok = await onDelete(item.id);
-                    if (ok) alert(`"${item.name}" 삭제 완료.`);
-                  }}>삭제</button>
+                {/* items.json 정적 카탈로그 아이템(메가스톤 등)은 아직 gameData/customItems에
+                    없어서 삭제 대상이 없다 — "수정"으로 저장해 DB에 편입된 뒤에만 삭제 가능. */}
+                {item.__customItemSource && (
+                  <>
+                    <button className="text-orange-500 text-xs px-2 py-1 rounded hover:bg-orange-50"
+                      onClick={async e => {
+                        e.stopPropagation();
+                        const holderCount = countHolders(item);
+                        if (holderCount === 0) { alert(`"${item.name}"을(를) 보유한 회원이 없습니다.`); return; }
+                        if (!window.confirm(`"${item.name}"을(를) 보유한 회원 ${holderCount}명의 인벤토리에서 전부 삭제하시겠습니까?\n(아이템 정의 자체는 삭제되지 않습니다)`)) return;
+                        const result = await onRemoveFromAllInventories(item.id);
+                        if (!result) { alert('전체 삭제 중 오류가 발생했습니다.'); return; }
+                        const { removedCount = 0, failedNames = [] } = result;
+                        alert(failedNames.length > 0
+                          ? `${removedCount}명의 인벤토리에서 삭제했습니다.\n실패: ${failedNames.join(', ')}`
+                          : `${removedCount}명의 인벤토리에서 "${item.name}"을(를) 전부 삭제했습니다.`);
+                      }}>전체삭제</button>
+                    <button className="text-red-500 text-xs px-2 py-1 rounded hover:bg-red-50"
+                      onClick={async e => {
+                        e.stopPropagation();
+                        const confirmMsg = item.isRecipe
+                          ? `"${item.name}"은(는) 레시피 결과 아이템입니다. 삭제하면 연결된 레시피 자체가 삭제됩니다. 계속하시겠습니까?`
+                          : `"${item.name}" 아이템을 삭제하시겠습니까?`;
+                        if (!window.confirm(confirmMsg)) return;
+                        const ok = await onDelete(item.id);
+                        if (ok) alert(`"${item.name}" 삭제 완료.`);
+                      }}>삭제</button>
+                  </>
+                )}
               </div>
             </div>
           ))}
@@ -488,6 +494,11 @@ export default function AdminView() {
   // 커스텀 아이템 관리 모달에서는 레시피 결과 아이템도 함께 보여준다.
   // 레시피 결과 아이템은 recipes 쪽 데이터에서 파생되므로(customItems에 별도 저장 X),
   // 수정/삭제 요청은 customItems가 아니라 연결된 레시피 쪽으로 라우팅한다.
+  //
+  // items.json에 박혀 있는 메가스톤(category: 'mega-stones', isCustom && !isOfficial)도
+  // 목록에 포함시킨다. 아직 gameData/customItems에 없더라도 "수정" 저장 시
+  // updateCustomItem이 업서트하면서 DB로 편입되므로(관리자가 이미지 URL을 넣는 순간
+  // Firebase에서 관리되는 아이템이 된다), 여기서는 목록에만 노출하면 된다.
   const handleUpdateManagedItem = async (itemId, fields) => {
     const target = allItems.find(i => i.id === itemId);
     if (target?.isRecipe && target.recipeId) {
@@ -957,7 +968,7 @@ export default function AdminView() {
                   onClick={() => setShowCustomItemManage(true)}
                   className="flex items-center gap-1.5 border border-gray-300 bg-white text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50 font-semibold text-sm transition"
                 >
-                  관리 ({allItems.filter(i => i.__customItemSource === 'database' || i.__customItemSource === 'recipe').length})
+                  관리 ({allItems.filter(i => i.__customItemSource === 'database' || i.__customItemSource === 'recipe' || (i.category === 'mega-stones' && i.isCustom && !i.isOfficial)).length})
                 </button>
                 <CustomItemCreator
                   onCreateItem={async (data) => {
@@ -970,7 +981,7 @@ export default function AdminView() {
           </Card>
           {showCustomItemManage && (
             <CustomItemManageModal
-              items={allItems.filter(i => i.__customItemSource === 'database' || i.__customItemSource === 'recipe')}
+              items={allItems.filter(i => i.__customItemSource === 'database' || i.__customItemSource === 'recipe' || (i.category === 'mega-stones' && i.isCustom && !i.isOfficial))}
               members={members}
               onUpdate={handleUpdateManagedItem}
               onDelete={handleDeleteManagedItem}

@@ -565,6 +565,62 @@ button:disabled {
   border-top: 1px dashed var(--border);
 }
 
+.round-team-select {
+  margin: 4px 0 12px;
+}
+
+.round-team-select label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.turn-order-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  width: fit-content;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-dim);
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  margin-bottom: 12px;
+}
+
+.turn-order-entry {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  padding: 1px 2px;
+  border-radius: 5px;
+}
+
+.turn-order-sep {
+  color: var(--text-dim);
+  margin: 0 3px;
+}
+
+.turn-order-boss {
+  color: #ff9d7a;
+}
+
+.turn-order-current {
+  background: var(--accent-strong);
+  color: #fff;
+  padding: 1px 7px;
+}
+
+.turn-order-fainted {
+  color: var(--text-dim);
+  text-decoration: line-through;
+  font-weight: 400;
+}
+
 .button-grid {
   display: flex;
   flex-wrap: wrap;

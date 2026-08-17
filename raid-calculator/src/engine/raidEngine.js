@@ -89,6 +89,27 @@ function rollCrit(critRatio) {
   return Math.random() < (CRIT_CHANCE_BY_RATIO[ratio] ?? 1 / 24);
 }
 
+// 명중률/회피율 랭크 배율표 (실제 게임 공식, -6 ~ +6 스테이지)
+const ACCURACY_STAGE_MULTIPLIER = [3 / 9, 3 / 8, 3 / 7, 3 / 6, 3 / 5, 3 / 4, 1, 4 / 3, 5 / 3, 2, 7 / 3, 8 / 3, 3];
+
+/**
+ * 기술의 명중 여부를 판정한다. accuracy: true(=alwaysHit, 스매쉬다운/에어로블래스트류처럼
+ * "명중 판정 자체가 없는" 기술)는 랭크와 무관하게 항상 명중.
+ * 그 외에는 (시전자 명중률 랭크 - 상대 회피율 랭크, ignoreEvasion 기술은 상대 회피율 무시)를
+ * 배율로 환산해 기본 명중률에 곱한 확률로 판정한다.
+ */
+function rollAccuracy(moveData, attacker, defender) {
+  if (moveData.alwaysHit || moveData.accuracy == null) return true;
+
+  const accStage = attacker.boosts?.accuracy || 0;
+  const evaStage = moveData.ignoreEvasion ? 0 : defender.boosts?.evasion || 0;
+  const stage = clampStage(accStage - evaStage);
+  const multiplier = ACCURACY_STAGE_MULTIPLIER[stage + 6];
+  const hitChance = Math.min(100, moveData.accuracy * multiplier);
+
+  return Math.random() * 100 < hitChance;
+}
+
 /** HP를 배틀 로그 표기용 퍼센트 문자열로 변환 (실제 게임 배틀 로그와 동일한 표기) */
 function formatHpPercent(current, max) {
   if (!(max > 0)) return `${current}`;
@@ -125,6 +146,33 @@ function describeStatChange(nickname, deltas) {
   return Object.entries(deltas)
     .filter(([, delta]) => delta)
     .map(([stat, delta]) => `${nickname}의 ${STAT_LABEL[stat] || stat}이(가) ${delta > 0 ? '올랐다' : '떨어졌다'}!`);
+}
+
+/** 회복기(생명의물방울/자기재생 등)를 entity 본인에게 적용하고, 회복량을 최대체력 대비 %로 로그에 남긴다 */
+function applyHealToEntity(entity, healSpec) {
+  if (!entity || entity.fainted) return { entity, lines: [] };
+
+  if (entity.healBlockTurns > 0) {
+    return { entity, lines: [`${entity.nickname}은(는) 회복 봉인 상태라 회복할 수 없다!`] };
+  }
+
+  const healFrac = Array.isArray(healSpec) ? healSpec[0] / healSpec[1] : healSpec;
+  if (!(healFrac > 0)) return { entity, lines: [] };
+
+  const rawHeal = Math.max(1, Math.round(entity.maxHP * healFrac));
+  const nextHP = Math.min(entity.maxHP, entity.currentHP + rawHeal);
+  const actualHeal = nextHP - entity.currentHP;
+
+  if (actualHeal <= 0) {
+    return { entity, lines: [`${entity.nickname}은(는) 이미 HP가 가득하다!`] };
+  }
+
+  const healPercent = Math.round((actualHeal / entity.maxHP) * 100);
+  const line =
+    `${entity.nickname}의 HP가 ${healPercent}% 회복했다! (+${actualHeal}, ` +
+    `현재 HP ${formatHpPercent(nextHP, entity.maxHP)})`;
+
+  return { entity: { ...entity, currentHP: nextHP }, lines: [line] };
 }
 
 function isStatusImmune(status, types) {
@@ -212,6 +260,52 @@ function attack(attacker, defender, moveId, options = {}) {
   let nextAttacker = { ...attacker, lastMoveId: moveData.id };
   let nextDefender = defender;
 
+  // 자신/자신의 조를 대상으로 하는 기술(회복기 등)은 "상대"라는 개념 자체가 없으므로
+  // defender(보스 또는 더미로 넘어온 자기 자신)와의 타입 상성으로 무효 판정을 하면 안 된다
+  // (생명의물방울(물)을 상대가 비행/땅 타입이라 "통하지 않았다"로 씹어버리는 등의 오류 방지)
+  const isSelfOrTeamTargeted = moveData.target === 'self' || moveData.target === 'allies' || moveData.target === 'allySide';
+  const defenderTypes = defender.types && defender.types.length ? defender.types : ['Normal'];
+  const effectiveness = isSelfOrTeamTargeted ? 1 : showdownIntegration.getTypeEffectiveness(moveData.type, defenderTypes);
+
+  if (!isSelfOrTeamTargeted && effectiveness === 0) {
+    lines.push(`${defender.nickname}에게는 통하지 않았다!`);
+    return { attacker: nextAttacker, defender, lines };
+  }
+
+  // 명중 판정: accuracy: true(=alwaysHit)인 기술이 아니면 시전자 명중률 랭크 - 상대 회피율 랭크를
+  // 배율로 환산해 기본 명중률에 곱한 확률로 판정한다 (자신/자신의 조 대상 기술은 애초에 빗나가지 않음)
+  if (!isSelfOrTeamTargeted && !rollAccuracy(moveData, nextAttacker, defender)) {
+    lines.push(`${nextAttacker.nickname}의 공격이 빗나갔다!`);
+
+    // 옥탄포화/스틸빔: 명중 성공 여부와 무관하게 자신이 최대 HP의 절반을 잃는다
+    if (moveData.mindBlownRecoil) {
+      const selfDmg = Math.max(1, Math.ceil(nextAttacker.maxHP / 2));
+      const selfHP = Math.max(0, nextAttacker.currentHP - selfDmg);
+      const selfFainted = selfHP <= 0;
+      lines.push(
+        `${nextAttacker.nickname}은(는) 반동으로 최대 HP의 절반을 잃었다! (-${selfDmg}, 현재 HP ${formatHpPercent(selfHP, nextAttacker.maxHP)})`
+      );
+      if (selfFainted) lines.push(`${nextAttacker.nickname}은(는) 쓰러졌다!`);
+      nextAttacker = { ...nextAttacker, currentHP: selfHP, fainted: selfFainted };
+    }
+
+    // 하이점프킥/점프킥: 빗나갔을 때만 발동하는 추락 피해 (원래 입혔을 데미지의 절반, 상대 최대체력 절반이 상한)
+    if (moveData.hasCrashDamage && moveData.basePower) {
+      const wouldBeDmg = pickDamageValue(result.damage);
+      const crashCap = Math.floor((defender.maxHP || wouldBeDmg) / 2);
+      const crashDmg = Math.max(1, Math.min(Math.floor(wouldBeDmg / 2), crashCap));
+      const crashHP = Math.max(0, nextAttacker.currentHP - crashDmg);
+      const crashFainted = crashHP <= 0;
+      lines.push(
+        `${nextAttacker.nickname}은(는) 추락 피해를 입었다! (-${crashDmg}, 현재 HP ${formatHpPercent(crashHP, nextAttacker.maxHP)})`
+      );
+      if (crashFainted) lines.push(`${nextAttacker.nickname}은(는) 쓰러졌다!`);
+      nextAttacker = { ...nextAttacker, currentHP: crashHP, fainted: crashFainted };
+    }
+
+    return { attacker: nextAttacker, defender, lines };
+  }
+
   // 헤롱헤롱(Attract): 서로 성별이 다를 때만 효과가 있음
   if (moveData.id === 'attract') {
     const aGender = attacker.gender;
@@ -225,16 +319,8 @@ function attack(attacker, defender, moveId, options = {}) {
     return { attacker: nextAttacker, defender: nextDefender, lines };
   }
 
-  const defenderTypes = defender.types && defender.types.length ? defender.types : ['Normal'];
-  const effectiveness = showdownIntegration.getTypeEffectiveness(moveData.type, defenderTypes);
-
-  if (effectiveness === 0) {
-    lines.push(`${defender.nickname}에게는 통하지 않았다!`);
-    return { attacker: nextAttacker, defender, lines };
-  }
-
   if (!moveData.basePower) {
-    // 변화기술: 랭크 변화/상태이상/변화상태만 적용 (데미지 없음)
+    // 변화기술: 랭크 변화/상태이상/변화상태/회복만 적용 (데미지 없음)
     if (moveData.boosts) {
       if (moveData.target === 'self') {
         nextAttacker = applyStatDeltas(nextAttacker, moveData.boosts);
@@ -264,7 +350,16 @@ function attack(attacker, defender, moveId, options = {}) {
       }
     }
 
-    if (!moveData.boosts && !moveData.status && !moveData.volatileStatus) {
+    // 생명의물방울/구애플로럴/자기재생 등: 자신(또는 자신의 조)을 회복시킨다. 팀 전체로 퍼지는
+    // 부분(target === 'allies')은 executeParticipantAction에서 이 결과를 받은 뒤 같은 조 전체에
+    // 추가로 적용한다 — 여기서는 시전자 본인 몫만 계산한다.
+    if (moveData.heal) {
+      const healResult = applyHealToEntity(nextAttacker, moveData.heal);
+      nextAttacker = healResult.entity;
+      lines.push(...healResult.lines);
+    }
+
+    if (!moveData.boosts && !moveData.status && !moveData.volatileStatus && !moveData.heal) {
       lines.push(`${defender.nickname}에게는 별다른 효과가 없었다.`);
     }
 
@@ -288,6 +383,90 @@ function attack(attacker, defender, moveId, options = {}) {
 
   lines.push(`${defender.nickname}에게 피해를 입혔다! (HP ${formatHpPercent(nextHP, defender.maxHP)})`);
   if (fainted) lines.push(`${defender.nickname}은(는) 쓰러졌다!`);
+
+  // 흡수(기가드레인/드레인킥 등): 입힌 데미지의 일정 비율만큼 자신을 회복
+  if (moveData.drain && dmg > 0) {
+    if (nextAttacker.healBlockTurns > 0) {
+      lines.push(`${nextAttacker.nickname}은(는) 회복 봉인 상태라 흡수할 수 없다!`);
+    } else {
+      const [num, den] = moveData.drain;
+      const rawHeal = Math.max(1, Math.round((dmg * num) / den));
+      const healedHP = Math.min(nextAttacker.maxHP, nextAttacker.currentHP + rawHeal);
+      const actualHeal = healedHP - nextAttacker.currentHP;
+      if (actualHeal > 0) {
+        const healPercent = Math.round((actualHeal / nextAttacker.maxHP) * 100);
+        lines.push(
+          `${nextAttacker.nickname}은(는) 체력을 흡수했다! HP가 ${healPercent}% 회복했다! ` +
+            `(+${actualHeal}, 현재 HP ${formatHpPercent(healedHP, nextAttacker.maxHP)})`
+        );
+        nextAttacker = { ...nextAttacker, currentHP: healedHP };
+      }
+    }
+  }
+
+  // 반동(테이크다운/플레어드라이브/브레이브버드 등): 입힌 데미지의 일정 비율만큼 자신도 피해를 입는다
+  if (moveData.recoil && dmg > 0) {
+    const [rNum, rDen] = moveData.recoil;
+    const recoilDmg = Math.max(1, Math.round((dmg * rNum) / rDen));
+    const recoilHP = Math.max(0, nextAttacker.currentHP - recoilDmg);
+    const recoilFainted = recoilHP <= 0;
+    lines.push(
+      `${nextAttacker.nickname}은(는) 반동으로 피해를 입었다! (-${recoilDmg}, 현재 HP ${formatHpPercent(recoilHP, nextAttacker.maxHP)})`
+    );
+    if (recoilFainted) lines.push(`${nextAttacker.nickname}은(는) 쓰러졌다!`);
+    nextAttacker = { ...nextAttacker, currentHP: recoilHP, fainted: recoilFainted };
+  }
+
+  // 자폭급 반동(옥탄포화/스틸빔 등): 명중 성공 여부와 무관하게 최대 HP의 절반을 자신이 잃는다
+  // (이 계산기는 명중 실패를 시뮬레이션하지 않으므로 사실상 매번 적용됨)
+  if (moveData.mindBlownRecoil) {
+    const selfDmg = Math.max(1, Math.ceil(nextAttacker.maxHP / 2));
+    const selfHP = Math.max(0, nextAttacker.currentHP - selfDmg);
+    const selfFainted = selfHP <= 0;
+    lines.push(
+      `${nextAttacker.nickname}은(는) 반동으로 최대 HP의 절반을 잃었다! (-${selfDmg}, 현재 HP ${formatHpPercent(selfHP, nextAttacker.maxHP)})`
+    );
+    if (selfFainted) lines.push(`${nextAttacker.nickname}은(는) 쓰러졌다!`);
+    nextAttacker = { ...nextAttacker, currentHP: selfHP, fainted: selfFainted };
+  }
+
+  // 확정 자기효과(오버히트/드래곤에너지/파워제네레이터/절대영도킥 등: secondary의 "확률부가효과"와
+  // 달리 명중만 하면 무조건 적용되는 자신 랭크변화 — 상대가 이 공격으로 기절해도 그대로 적용된다)
+  if (moveData.self?.boosts) {
+    const selfChance = moveData.self.chance ?? 100;
+    if (Math.random() * 100 < selfChance) {
+      nextAttacker = applyStatDeltas(nextAttacker, moveData.self.boosts);
+      lines.push(...describeStatChange(nextAttacker.nickname, moveData.self.boosts));
+    }
+  }
+
+  // 부가효과(덤벼들기의 공격 랭크 하락처럼 확률로 발동하는 랭크변화/상태이상/변화상태)
+  if (moveData.secondary && !fainted) {
+    const chance = moveData.secondary.chance ?? 100;
+    if (Math.random() * 100 < chance) {
+      if (moveData.secondary.self?.boosts) {
+        nextAttacker = applyStatDeltas(nextAttacker, moveData.secondary.self.boosts);
+        lines.push(...describeStatChange(nextAttacker.nickname, moveData.secondary.self.boosts));
+      }
+      if (moveData.secondary.boosts) {
+        nextDefender = applyStatDeltas(nextDefender, moveData.secondary.boosts);
+        lines.push(...describeStatChange(nextDefender.nickname, moveData.secondary.boosts));
+      }
+      if (moveData.secondary.status && !nextDefender.status && !isStatusImmune(moveData.secondary.status, defenderTypes)) {
+        nextDefender = {
+          ...nextDefender,
+          status: moveData.secondary.status,
+          toxicCounter: moveData.secondary.status === 'tox' ? 1 : 0,
+        };
+        lines.push(
+          `${nextDefender.nickname}은(는) ${STATUS_LABEL[moveData.secondary.status] || moveData.secondary.status} 상태가 되었다!`
+        );
+      }
+      if (moveData.secondary.volatileStatus) {
+        nextDefender = applyVolatileStatus(nextDefender, moveData.secondary.volatileStatus, lines, nextAttacker);
+      }
+    }
+  }
 
   return { attacker: nextAttacker, defender: nextDefender, lines, damage: dmg };
 }
@@ -639,8 +818,12 @@ function checkMoveLegality(attacker, moveId, moveInfo) {
   return { blocked: false, finalMoveId: moveId, lines };
 }
 
-/** 참가자 한 명의 행동을 즉시 실행 (이번 라운드에 이미 행동했거나 금지 기술이면 무시) */
-export function executeParticipantAction(state, participantId, moveId) {
+/**
+ * 참가자 한 명의 행동을 즉시 실행 (이번 라운드에 이미 행동했거나 금지 기술이면 무시).
+ * targetParticipantId가 주어지면(도우미 응원기처럼 아군을 지정할 수 있는 기술) 보스 대신
+ * 그 참가자를 대상으로 기술을 사용한다 — 자기 자신을 지정하는 것도 허용한다.
+ */
+export function executeParticipantAction(state, participantId, moveId, targetParticipantId) {
   if (state.status !== 'ongoing' || !moveId || participantId == null) return state;
   if (state.actedParticipantIds.includes(participantId)) return state;
 
@@ -680,6 +863,81 @@ export function executeParticipantAction(state, participantId, moveId) {
       return { ...state, participants, actedParticipantIds: [...state.actedParticipantIds, participantId], log };
     }
     finalMoveId = legality.finalMoveId;
+  }
+
+  const targetIdx =
+    targetParticipantId != null
+      ? participants.findIndex((p) => p && p.id === targetParticipantId && !p.fainted)
+      : -1;
+
+  // 아군(자기 자신 포함)을 대상으로 지정한 기술: 보스가 아니라 그 참가자를 상대로 실행한다
+  if (targetIdx !== -1) {
+    const result = attack(participants[idx], participants[targetIdx], finalMoveId);
+    const resolvedDefender =
+      targetIdx === idx ? { ...result.defender, lastMoveId: result.attacker.lastMoveId } : result.defender;
+    participants = participants.map((p, i) => {
+      if (i === targetIdx) return resolvedDefender;
+      if (i === idx) return result.attacker;
+      return p;
+    });
+    log = [...log, ...result.lines.map((text) => ({ round: roundNum, phase: 'participant', text }))];
+
+    const next = {
+      ...state,
+      participants,
+      actedParticipantIds: [...state.actedParticipantIds, participantId],
+      log,
+    };
+
+    if (!participants.some((p) => p && !p.fainted)) {
+      return {
+        ...next,
+        status: 'loss',
+        log: [...log, { round: roundNum, phase: 'end', text: `--- ${roundNum}라운드 종료 (참가자 전멸) ---` }],
+      };
+    }
+
+    return next;
+  }
+
+  // 자신/자신의 조 전체를 대상으로 하는 기술(생명의물방울 같은 회복기, 자기 랭크업 등)은
+  // 원래 "상대"라는 개념이 없으므로 보스를 상대로 실행하지 않고 시전자 자신을 대상으로 실행한다
+  // (안 그러면 회복기가 보스에게 쓰인 걸로 처리되어 아무도 회복되지 않고 턴만 날아감).
+  if (moveInfo && (moveInfo.target === 'self' || moveInfo.target === 'allies' || moveInfo.target === 'allySide')) {
+    const result = attack(participants[idx], participants[idx], finalMoveId);
+    let selfLines = result.lines;
+    participants = participants.map((p, i) => (i === idx ? result.attacker : p));
+
+    // target === 'allies'(생명의물방울 등)는 시전자와 같은 조 전체에도 동일 비율로 회복을 퍼뜨린다
+    if (moveInfo.target === 'allies' && moveInfo.heal) {
+      const actor = participants[idx];
+      const isSameTeamAlly = (p) => p && p.id !== actor.id && !p.fainted && (p.team || '') === (actor.team || '');
+      participants = participants.map((p) => {
+        if (!isSameTeamAlly(p)) return p;
+        const healResult = applyHealToEntity(p, moveInfo.heal);
+        selfLines = [...selfLines, ...healResult.lines];
+        return healResult.entity;
+      });
+    }
+
+    log = [...log, ...selfLines.map((text) => ({ round: roundNum, phase: 'participant', text }))];
+
+    const next = {
+      ...state,
+      participants,
+      actedParticipantIds: [...state.actedParticipantIds, participantId],
+      log,
+    };
+
+    if (!participants.some((p) => p && !p.fainted)) {
+      return {
+        ...next,
+        status: 'loss',
+        log: [...log, { round: roundNum, phase: 'end', text: `--- ${roundNum}라운드 종료 (참가자 전멸) ---` }],
+      };
+    }
+
+    return next;
   }
 
   const result = attack(participants[idx], state.boss, finalMoveId);

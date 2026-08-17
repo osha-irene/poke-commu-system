@@ -174,6 +174,11 @@ export const useAdminItems = (
     }
   };
 
+  // itemId가 아직 gameData/customItems에 없으면(= items.json 등 정적 카탈로그에만
+  // 존재하는 아이템, 예: 메가스톤) 새 레코드로 추가(업서트)한다. 이렇게 하면 정적
+  // 카탈로그 아이템도 이 함수 한 번 호출로 "Firebase에서 관리되는" 아이템으로
+  // 전환되고, 이후 buildAllItems의 중복 제거 로직이 정적 버전 대신 이 DB 버전을
+  // 노출한다.
   const updateCustomItem = async (itemId, updatedFields) => {
     if (!canManageItems()) return false;
     try {
@@ -187,7 +192,15 @@ export const useAdminItems = (
         found = true;
         return { ...i, ...updatedFields };
       });
-      if (!found) return false;
+      if (!found) {
+        updated.push({
+          ...updatedFields,
+          id: itemId,
+          isCustom: true,
+          createdBy: currentUser?.name || 'admin',
+          createdAt: new Date().toISOString(),
+        });
+      }
       const cleanUpdated = JSON.parse(
         JSON.stringify(updated, (key, value) => value === undefined ? null : value)
       );

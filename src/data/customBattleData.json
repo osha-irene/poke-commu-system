@@ -13,8 +13,14 @@
       "baseSpecies": "Milotic",
       "baseSpeciesKo": "밀로틱",
       "forme": "Mega",
-      "types": ["Water", "Fairy"],
-      "typesKo": ["물", "페어리"],
+      "types": [
+        "Water",
+        "Fairy"
+      ],
+      "typesKo": [
+        "물",
+        "페어리"
+      ],
       "ability": "Drought",
       "abilityKo": "쾌청",
       "item": "Milotite",
@@ -30,7 +36,10 @@
       "heightm": 6.2,
       "weightkg": 162,
       "color": "Pink",
-      "eggGroups": ["Water 1", "Dragon"]
+      "eggGroups": [
+        "Water 1",
+        "Dragon"
+      ]
     },
     {
       "id": "clodsiremega",
@@ -39,24 +48,2219 @@
       "baseSpecies": "Clodsire",
       "baseSpeciesKo": "토오",
       "forme": "Mega",
-      "types": ["Poison", "Ground"],
-      "typesKo": ["독", "땅"],
+      "types": [
+        "Poison",
+        "Ground"
+      ],
+      "typesKo": [
+        "독",
+        "땅"
+      ],
       "ability": "Toxic Buildup",
       "abilityKo": "적토성산",
       "item": "Clodite",
-      "itemKo": "토오나이트",
+      "itemKo": "토오나이트C",
       "baseStats": {
-        "hp": 140,
+        "hp": 130,
         "atk": 105,
         "def": 100,
         "spa": 45,
-        "spd": 120,
+        "spd": 130,
         "spe": 20
       },
       "heightm": 2.2,
       "weightkg": 260,
       "color": "Purple",
-      "eggGroups": ["Water 1", "Field"]
+      "eggGroups": [
+        "Water 1",
+        "Field"
+      ]
+    },
+    {
+      "id": "revavroommega",
+      "name": "Revavroom-Mega",
+      "displayName": "메가부르르룸",
+      "baseSpecies": "Revavroom",
+      "baseSpeciesKo": "부르르룸",
+      "forme": "Mega",
+      "types": [
+        "Steel",
+        "Poison"
+      ],
+      "typesKo": [
+        "강철",
+        "독"
+      ],
+      "ability": "Levitate",
+      "abilityKo": "부유",
+      "item": "Revavroomite",
+      "itemKo": "부르르룸나이트C",
+      "baseStats": {
+        "hp": 80,
+        "atk": 128,
+        "def": 100,
+        "spa": 54,
+        "spd": 129,
+        "spe": 90
+      },
+      "heightm": 1.8,
+      "weightkg": 120,
+      "color": "Gray",
+      "eggGroups": [
+        "Mineral"
+      ]
+    },
+    {
+      "id": "sceptilemega2",
+      "name": "Sceptile-Mega2",
+      "displayName": "메가나무킹",
+      "baseSpecies": "Sceptile",
+      "baseSpeciesKo": "나무킹",
+      "forme": "Mega2",
+      "types": [
+        "Grass",
+        "Dragon"
+      ],
+      "typesKo": [
+        "풀",
+        "드래곤"
+      ],
+      "ability": "Skill Link",
+      "abilityKo": "스킬링크",
+      "item": "Sceptibondite",
+      "itemKo": "나무킹나이트C",
+      "baseStats": {
+        "hp": 70,
+        "atk": 145,
+        "def": 90,
+        "spa": 95,
+        "spd": 85,
+        "spe": 145
+      },
+      "heightm": 1.7,
+      "weightkg": 52.2,
+      "color": "Green",
+      "eggGroups": [
+        "Monster",
+        "Dragon"
+      ]
+    },
+    {
+      "id": "lycanrocduskmega",
+      "name": "Lycanroc-Dusk-Mega",
+      "displayName": "메가루가루암(황혼)",
+      "baseSpecies": "Lycanroc-Dusk",
+      "baseSpeciesKo": "루가루암(황혼)",
+      "forme": "Mega",
+      "types": [
+        "Rock"
+      ],
+      "typesKo": [
+        "바위"
+      ],
+      "ability": "Speed Boost",
+      "abilityKo": "가속",
+      "item": "Duskrocite",
+      "itemKo": "황혼루가루암나이트C",
+      "baseStats": {
+        "hp": 75,
+        "atk": 157,
+        "def": 85,
+        "spa": 75,
+        "spd": 85,
+        "spe": 110
+      },
+      "heightm": 0.8,
+      "weightkg": 25,
+      "color": "Brown",
+      "eggGroups": [
+        "Field"
+      ]
+    },
+    {
+      "id": "flareonmega",
+      "name": "Flareon-Mega",
+      "displayName": "메가부스터",
+      "baseSpecies": "Flareon",
+      "baseSpeciesKo": "부스터",
+      "forme": "Mega",
+      "types": [
+        "Fire"
+      ],
+      "typesKo": [
+        "불꽃"
+      ],
+      "ability": "Smoldering Ember",
+      "abilityKo": "깜부기불",
+      "item": "Flareonite",
+      "itemKo": "부스터나이트C",
+      "baseStats": {
+        "hp": 65,
+        "atk": 130,
+        "def": 80,
+        "spa": 155,
+        "spd": 110,
+        "spe": 85
+      },
+      "heightm": 0.9,
+      "weightkg": 25,
+      "color": "Red",
+      "eggGroups": [
+        "Field"
+      ]
+    },
+    {
+      "id": "leavannymega",
+      "name": "Leavanny-Mega",
+      "displayName": "메가모아머",
+      "baseSpecies": "Leavanny",
+      "baseSpeciesKo": "모아머",
+      "forme": "Mega",
+      "types": [
+        "Bug",
+        "Grass"
+      ],
+      "typesKo": [
+        "벌레",
+        "풀"
+      ],
+      "ability": "Grassy Surge",
+      "abilityKo": "그래스메이커",
+      "item": "Leavanite",
+      "itemKo": "모아머나이트C",
+      "baseStats": {
+        "hp": 75,
+        "atk": 150,
+        "def": 80,
+        "spa": 70,
+        "spd": 80,
+        "spe": 145
+      },
+      "heightm": 1.2,
+      "weightkg": 20.5,
+      "color": "Green",
+      "eggGroups": [
+        "Bug"
+      ]
+    },
+    {
+      "id": "clefablemega",
+      "name": "Clefable-Mega",
+      "displayName": "메가픽시",
+      "baseSpecies": "Clefable",
+      "baseSpeciesKo": "픽시",
+      "forme": "Mega",
+      "types": [
+        "Fairy",
+        "Dragon"
+      ],
+      "typesKo": [
+        "페어리",
+        "드래곤"
+      ],
+      "ability": "Magic Bounce",
+      "abilityKo": "매직미러",
+      "item": "Clefablitec",
+      "itemKo": "픽시나이트C",
+      "baseStats": {
+        "hp": 95,
+        "atk": 80,
+        "def": 83,
+        "spa": 140,
+        "spd": 105,
+        "spe": 80
+      },
+      "heightm": 1.3,
+      "weightkg": 40,
+      "color": "Pink",
+      "eggGroups": [
+        "Fairy"
+      ]
+    },
+    {
+      "id": "gardevoirmegabond",
+      "name": "Gardevoir-Mega-Bond",
+      "displayName": "메가가디안(인연)",
+      "baseSpecies": "Gardevoir",
+      "baseSpeciesKo": "가디안",
+      "forme": "Mega-Bond",
+      "types": [
+        "Psychic",
+        "Fairy"
+      ],
+      "typesKo": [
+        "에스퍼",
+        "페어리"
+      ],
+      "ability": "Pixilate",
+      "abilityKo": "페어리스킨",
+      "item": "Bondevoirite",
+      "itemKo": "가디안나이트C",
+      "baseStats": {
+        "hp": 68,
+        "atk": 65,
+        "def": 85,
+        "spa": 165,
+        "spd": 135,
+        "spe": 100
+      },
+      "heightm": 1.6,
+      "weightkg": 48.4,
+      "color": "Green",
+      "eggGroups": [
+        "Human-Like",
+        "Amorphous"
+      ]
+    },
+    {
+      "id": "samurotthisuimega",
+      "name": "Samurott-Hisui-Mega",
+      "displayName": "메가대검귀(히스이)",
+      "baseSpecies": "Samurott-Hisui",
+      "baseSpeciesKo": "대검귀(히스이)",
+      "forme": "Mega",
+      "types": [
+        "Water",
+        "Dark"
+      ],
+      "typesKo": [
+        "물",
+        "악"
+      ],
+      "ability": "Sharpness",
+      "abilityKo": "예리함",
+      "item": "Hisamuroite",
+      "itemKo": "대검귀나이트C",
+      "baseStats": {
+        "hp": 90,
+        "atk": 138,
+        "def": 90,
+        "spa": 120,
+        "spd": 90,
+        "spe": 100
+      },
+      "heightm": 1.5,
+      "weightkg": 58.2,
+      "color": "Blue",
+      "eggGroups": [
+        "Field"
+      ]
+    },
+    {
+      "id": "sneaslermega",
+      "name": "Sneasler-Mega",
+      "displayName": "메가포푸니크",
+      "baseSpecies": "Sneasler",
+      "baseSpeciesKo": "포푸니크",
+      "forme": "Mega",
+      "types": [
+        "Dark",
+        "Poison"
+      ],
+      "typesKo": [
+        "악",
+        "독"
+      ],
+      "ability": "Sharpness",
+      "abilityKo": "예리함",
+      "item": "Sneasclite",
+      "itemKo": "포푸니크나이트C",
+      "baseStats": {
+        "hp": 80,
+        "atk": 145,
+        "def": 85,
+        "spa": 60,
+        "spd": 100,
+        "spe": 140
+      },
+      "heightm": 1.3,
+      "weightkg": 43,
+      "color": "Black",
+      "eggGroups": [
+        "Field"
+      ]
+    },
+    {
+      "id": "mimikyumega",
+      "name": "Mimikyu-Mega",
+      "displayName": "메가따라큐",
+      "baseSpecies": "Mimikyu",
+      "baseSpeciesKo": "따라큐",
+      "forme": "Mega",
+      "types": [
+        "Ghost",
+        "Fairy"
+      ],
+      "typesKo": [
+        "고스트",
+        "페어리"
+      ],
+      "ability": "Disguise",
+      "abilityKo": "탈",
+      "item": "Mimikite",
+      "itemKo": "따라큐나이트C",
+      "baseStats": {
+        "hp": 55,
+        "atk": 140,
+        "def": 95,
+        "spa": 75,
+        "spd": 105,
+        "spe": 106
+      },
+      "heightm": 0.2,
+      "weightkg": 0.7,
+      "color": "Purple",
+      "eggGroups": [
+        "Amorphous"
+      ]
+    },
+    {
+      "id": "blazikenmegabond",
+      "name": "Blaziken-Mega-Bond",
+      "displayName": "메가번치코(인연)",
+      "baseSpecies": "Blaziken",
+      "baseSpeciesKo": "번치코",
+      "forme": "Mega-Bond",
+      "types": [
+        "Fire",
+        "Fighting"
+      ],
+      "typesKo": [
+        "불꽃",
+        "격투"
+      ],
+      "ability": "Surging Speed",
+      "abilityKo": "쾌속",
+      "item": "Bondblazikenite",
+      "itemKo": "번치코나이트C",
+      "baseStats": {
+        "hp": 80,
+        "atk": 160,
+        "def": 90,
+        "spa": 110,
+        "spd": 90,
+        "spe": 100
+      },
+      "heightm": 1.9,
+      "weightkg": 52,
+      "color": "Red",
+      "eggGroups": [
+        "Field"
+      ]
+    },
+    {
+      "id": "porygonzmega",
+      "name": "Porygon-Z-Mega",
+      "displayName": "메가폴리곤Z",
+      "baseSpecies": "Porygon-Z",
+      "baseSpeciesKo": "폴리곤Z",
+      "forme": "Mega",
+      "types": [
+        "Normal"
+      ],
+      "typesKo": [
+        "노말"
+      ],
+      "ability": "Database",
+      "abilityKo": "데이터베이스",
+      "item": "Porygonzite",
+      "itemKo": "폴리곤Z나이트C",
+      "baseStats": {
+        "hp": 85,
+        "atk": 90,
+        "def": 80,
+        "spa": 160,
+        "spd": 90,
+        "spe": 130
+      },
+      "heightm": 0.9,
+      "weightkg": 34,
+      "color": "Blue",
+      "eggGroups": [
+        "Mineral"
+      ]
+    },
+    {
+      "id": "eelektrossmega",
+      "name": "Eelektross-Mega",
+      "displayName": "메가저리더프",
+      "baseSpecies": "Eelektross",
+      "baseSpeciesKo": "저리더프",
+      "forme": "Mega",
+      "types": [
+        "Electric"
+      ],
+      "typesKo": [
+        "전기"
+      ],
+      "ability": "Sky High",
+      "abilityKo": "천정부지",
+      "item": "Eelektrite",
+      "itemKo": "저리더프나이트C",
+      "baseStats": {
+        "hp": 85,
+        "atk": 145,
+        "def": 90,
+        "spa": 85,
+        "spd": 90,
+        "spe": 120
+      },
+      "heightm": 2.1,
+      "weightkg": 80.5,
+      "color": "Yellow",
+      "eggGroups": [
+        "Amorphous"
+      ]
+    },
+    {
+      "id": "empoleonmega",
+      "name": "Empoleon-Mega",
+      "displayName": "메가엠페르트",
+      "baseSpecies": "Empoleon",
+      "baseSpeciesKo": "엠페르트",
+      "forme": "Mega",
+      "types": [
+        "Water",
+        "Steel"
+      ],
+      "typesKo": [
+        "물",
+        "강철"
+      ],
+      "ability": "Analytic",
+      "abilityKo": "애널라이즈",
+      "item": "Empoleonite",
+      "itemKo": "엠페르트나이트C",
+      "baseStats": {
+        "hp": 84,
+        "atk": 101,
+        "def": 130,
+        "spa": 140,
+        "spd": 130,
+        "spe": 45
+      },
+      "heightm": 1.7,
+      "weightkg": 84.5,
+      "color": "Blue",
+      "eggGroups": [
+        "Water 1",
+        "Field"
+      ]
+    },
+    {
+      "id": "quagsiremega",
+      "name": "Quagsire-Mega",
+      "displayName": "메가누오",
+      "baseSpecies": "Quagsire",
+      "baseSpeciesKo": "누오",
+      "forme": "Mega",
+      "types": [
+        "Water",
+        "Ground"
+      ],
+      "typesKo": [
+        "물",
+        "땅"
+      ],
+      "ability": "Flowing Mercy",
+      "abilityKo": "적수성연",
+      "item": "Quagsirite",
+      "itemKo": "누오나이트C",
+      "baseStats": {
+        "hp": 95,
+        "atk": 85,
+        "def": 155,
+        "spa": 65,
+        "spd": 95,
+        "spe": 35
+      },
+      "heightm": 1.4,
+      "weightkg": 75,
+      "color": "Blue",
+      "eggGroups": [
+        "Water 1",
+        "Field"
+      ]
+    },
+    {
+      "id": "cinderacemega",
+      "name": "Cinderace-Mega",
+      "displayName": "메가에이스번",
+      "baseSpecies": "Cinderace",
+      "baseSpeciesKo": "에이스번",
+      "forme": "Mega",
+      "types": [
+        "Fire"
+      ],
+      "typesKo": [
+        "불꽃"
+      ],
+      "ability": "Libero",
+      "abilityKo": "리베로",
+      "item": "Cinderacite",
+      "itemKo": "에이스번나이트C",
+      "baseStats": {
+        "hp": 80,
+        "atk": 146,
+        "def": 95,
+        "spa": 95,
+        "spd": 95,
+        "spe": 119
+      },
+      "heightm": 1.4,
+      "weightkg": 33,
+      "color": "White",
+      "eggGroups": [
+        "Field",
+        "Human-Like"
+      ]
+    },
+    {
+      "id": "sirfetchdmega",
+      "name": "Sirfetchd-Mega",
+      "displayName": "메가창파나이트",
+      "baseSpecies": "Sirfetch'd",
+      "baseSpeciesKo": "창파나이트",
+      "forme": "Mega",
+      "types": [
+        "Fighting",
+        "Steel"
+      ],
+      "typesKo": [
+        "격투",
+        "강철"
+      ],
+      "ability": "Mold Breaker",
+      "abilityKo": "틀깨기",
+      "item": "Changpite",
+      "itemKo": "창파나이트나이트C",
+      "baseStats": {
+        "hp": 62,
+        "atk": 155,
+        "def": 125,
+        "spa": 78,
+        "spd": 112,
+        "spe": 75
+      },
+      "heightm": 0.8,
+      "weightkg": 117,
+      "color": "Brown",
+      "eggGroups": [
+        "Flying",
+        "Field"
+      ]
+    },
+    {
+      "id": "skeledirgemega",
+      "name": "Skeledirge-Mega",
+      "displayName": "메가라우드본",
+      "baseSpecies": "Skeledirge",
+      "baseSpeciesKo": "라우드본",
+      "forme": "Mega",
+      "types": [
+        "Fire",
+        "Ghost"
+      ],
+      "typesKo": [
+        "불꽃",
+        "고스트"
+      ],
+      "ability": "Requiem Hymn",
+      "abilityKo": "진혼성가",
+      "item": "Skeledirgite",
+      "itemKo": "라우드본나이트C",
+      "baseStats": {
+        "hp": 104,
+        "atk": 95,
+        "def": 110,
+        "spa": 140,
+        "spd": 95,
+        "spe": 86
+      },
+      "heightm": 1.6,
+      "weightkg": 326.5,
+      "color": "Red",
+      "eggGroups": [
+        "Field"
+      ]
+    },
+    {
+      "id": "grimmsnarlmega",
+      "name": "Grimmsnarl-Mega",
+      "displayName": "메가오롱털",
+      "baseSpecies": "Grimmsnarl",
+      "baseSpeciesKo": "오롱털",
+      "forme": "Mega",
+      "types": [
+        "Dark",
+        "Fairy"
+      ],
+      "typesKo": [
+        "악",
+        "페어리"
+      ],
+      "ability": "Demon Lord",
+      "abilityKo": "마왕",
+      "item": "Grimmsnarlite",
+      "itemKo": "오롱털나이트C",
+      "baseStats": {
+        "hp": 95,
+        "atk": 140,
+        "def": 105,
+        "spa": 95,
+        "spd": 125,
+        "spe": 60
+      },
+      "heightm": 1.5,
+      "weightkg": 61,
+      "color": "Purple",
+      "eggGroups": [
+        "Fairy",
+        "Human-Like"
+      ]
+    },
+    {
+      "id": "rotommega",
+      "name": "Rotom-Mega",
+      "displayName": "메가로토무",
+      "baseSpecies": "Rotom",
+      "baseSpeciesKo": "로토무",
+      "forme": "Mega",
+      "types": [
+        "Electric"
+      ],
+      "typesKo": [
+        "전기"
+      ],
+      "ability": "Levitate",
+      "abilityKo": "부유",
+      "item": "Rotomite",
+      "itemKo": "로토무나이트C",
+      "baseStats": {
+        "hp": 50,
+        "atk": 65,
+        "def": 77,
+        "spa": 150,
+        "spd": 77,
+        "spe": 121
+      },
+      "heightm": 0.3,
+      "weightkg": 0.3,
+      "color": "Red",
+      "eggGroups": [
+        "Amorphous"
+      ]
+    },
+    {
+      "id": "stoutlandmega",
+      "name": "Stoutland-Mega",
+      "displayName": "메가바랜드",
+      "baseSpecies": "Stoutland",
+      "baseSpeciesKo": "바랜드",
+      "forme": "Mega",
+      "types": [
+        "Normal",
+        "Ground"
+      ],
+      "typesKo": [
+        "노말",
+        "땅"
+      ],
+      "ability": "Sand Bound",
+      "abilityKo": "모래의지",
+      "item": "Stoutlandite",
+      "itemKo": "바랜드나이트C",
+      "baseStats": {
+        "hp": 85,
+        "atk": 150,
+        "def": 120,
+        "spa": 45,
+        "spd": 120,
+        "spe": 80
+      },
+      "heightm": 1.2,
+      "weightkg": 61,
+      "color": "Brown",
+      "eggGroups": [
+        "Field"
+      ]
+    },
+    {
+      "id": "infernapemega",
+      "name": "Infernape-Mega",
+      "displayName": "메가초염몽",
+      "baseSpecies": "Infernape",
+      "baseSpeciesKo": "초염몽",
+      "forme": "Mega",
+      "types": [
+        "Fire",
+        "Fighting"
+      ],
+      "typesKo": [
+        "불꽃",
+        "격투"
+      ],
+      "ability": "Piercing Gaze",
+      "abilityKo": "화안금정",
+      "item": "Infernapite",
+      "itemKo": "초염몽나이트C",
+      "baseStats": {
+        "hp": 76,
+        "atk": 144,
+        "def": 86,
+        "spa": 124,
+        "spd": 86,
+        "spe": 118
+      },
+      "heightm": 1.2,
+      "weightkg": 55,
+      "color": "Red",
+      "eggGroups": [
+        "Field",
+        "Human-Like"
+      ]
+    },
+    {
+      "id": "chimechomega",
+      "name": "Chimecho-Mega",
+      "displayName": "메가치렁",
+      "baseSpecies": "Chimecho",
+      "baseSpeciesKo": "치렁",
+      "forme": "Mega",
+      "types": [
+        "Psychic",
+        "Ghost"
+      ],
+      "typesKo": [
+        "에스퍼",
+        "고스트"
+      ],
+      "ability": "Mourning Field",
+      "abilityKo": "애도공간",
+      "item": "Chimechitec",
+      "itemKo": "치렁나이트C",
+      "baseStats": {
+        "hp": 75,
+        "atk": 30,
+        "def": 60,
+        "spa": 140,
+        "spd": 130,
+        "spe": 120
+      },
+      "heightm": 0.6,
+      "weightkg": 1,
+      "color": "Blue",
+      "eggGroups": [
+        "Amorphous"
+      ]
+    },
+    {
+      "id": "meganiumza0",
+      "name": "Meganium-MegaZA0",
+      "displayName": "메가메가니움",
+      "baseSpecies": "Meganium",
+      "baseSpeciesKo": "메가니움",
+      "forme": "MegaZA",
+      "types": [
+        "Grass",
+        "Fairy"
+      ],
+      "typesKo": [
+        "풀",
+        "페어리"
+      ],
+      "ability": "Mega Sol",
+      "abilityKo": "메가솔",
+      "item": "Meganiumite",
+      "itemKo": "메가니움나이트",
+      "baseStats": {
+        "hp": 80,
+        "atk": 92,
+        "def": 115,
+        "spa": 143,
+        "spd": 115,
+        "spe": 80
+      },
+      "heightm": 1.8,
+      "weightkg": 100.5,
+      "color": "Gray",
+      "eggGroups": [
+        "monster",
+        "plant"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "emboarza1",
+      "name": "Emboar-MegaZA1",
+      "displayName": "메가염무왕",
+      "baseSpecies": "Emboar",
+      "baseSpeciesKo": "염무왕",
+      "forme": "MegaZA",
+      "types": [
+        "Fire",
+        "Fighting"
+      ],
+      "typesKo": [
+        "불꽃",
+        "격투"
+      ],
+      "ability": "Mold Breaker",
+      "abilityKo": "틀깨기",
+      "item": "Emboarite",
+      "itemKo": "염무왕나이트",
+      "baseStats": {
+        "hp": 110,
+        "atk": 148,
+        "def": 75,
+        "spa": 110,
+        "spd": 110,
+        "spe": 75
+      },
+      "heightm": 1.6,
+      "weightkg": 150,
+      "color": "Gray",
+      "eggGroups": [
+        "ground"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "feraligatrza2",
+      "name": "Feraligatr-MegaZA2",
+      "displayName": "메가장크로다일",
+      "baseSpecies": "Feraligatr",
+      "baseSpeciesKo": "장크로다일",
+      "forme": "MegaZA",
+      "types": [
+        "Water",
+        "Dragon"
+      ],
+      "typesKo": [
+        "물",
+        "드래곤"
+      ],
+      "ability": "Dragonize",
+      "abilityKo": "드래고나이즈",
+      "item": "Feraligite",
+      "itemKo": "장크로다일나이트",
+      "baseStats": {
+        "hp": 85,
+        "atk": 160,
+        "def": 125,
+        "spa": 89,
+        "spd": 93,
+        "spe": 78
+      },
+      "heightm": 2.3,
+      "weightkg": 88.8,
+      "color": "Gray",
+      "eggGroups": [
+        "monster",
+        "water1"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "barbaracleza3",
+      "name": "Barbaracle-MegaZA3",
+      "displayName": "메가거북손데스",
+      "baseSpecies": "Barbaracle",
+      "baseSpeciesKo": "거북손데스",
+      "forme": "MegaZA",
+      "types": [
+        "Rock",
+        "Fighting"
+      ],
+      "typesKo": [
+        "바위",
+        "격투"
+      ],
+      "ability": "Tough Claws",
+      "abilityKo": "단단한발톱",
+      "item": "Barbaracite",
+      "itemKo": "거북손데스나이트",
+      "baseStats": {
+        "hp": 72,
+        "atk": 140,
+        "def": 130,
+        "spa": 64,
+        "spd": 106,
+        "spe": 88
+      },
+      "heightm": 1.3,
+      "weightkg": 96,
+      "color": "Gray",
+      "eggGroups": [
+        "water3"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "starmieza4",
+      "name": "Starmie-MegaZA4",
+      "displayName": "메가아쿠스타",
+      "baseSpecies": "Starmie",
+      "baseSpeciesKo": "아쿠스타",
+      "forme": "MegaZA",
+      "types": [
+        "Water",
+        "Psychic"
+      ],
+      "typesKo": [
+        "물",
+        "에스퍼"
+      ],
+      "ability": "Huge Power",
+      "abilityKo": "왕큰힘",
+      "item": "Starminite",
+      "itemKo": "아쿠스타나이트",
+      "baseStats": {
+        "hp": 60,
+        "atk": 140,
+        "def": 105,
+        "spa": 130,
+        "spd": 105,
+        "spe": 120
+      },
+      "heightm": 1.1,
+      "weightkg": 80,
+      "color": "Gray",
+      "eggGroups": [
+        "water3"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "pyroarza5",
+      "name": "Pyroar-MegaZA5",
+      "displayName": "메가화염레오",
+      "baseSpecies": "Pyroar",
+      "baseSpeciesKo": "화염레오",
+      "forme": "MegaZA",
+      "types": [
+        "Fire",
+        "Normal"
+      ],
+      "typesKo": [
+        "불꽃",
+        "노말"
+      ],
+      "ability": "Fire Mane",
+      "abilityKo": "파이어메인",
+      "item": "Pyroarite",
+      "itemKo": "화염레오나이트",
+      "baseStats": {
+        "hp": 86,
+        "atk": 88,
+        "def": 92,
+        "spa": 129,
+        "spd": 86,
+        "spe": 126
+      },
+      "heightm": 1.5,
+      "weightkg": 81.5,
+      "color": "Gray",
+      "eggGroups": [
+        "ground"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "clefableza6",
+      "name": "Clefable-MegaZA6",
+      "displayName": "메가픽시(공식)",
+      "baseSpecies": "Clefable",
+      "baseSpeciesKo": "픽시",
+      "forme": "MegaZA",
+      "types": [
+        "Fairy",
+        "Flying"
+      ],
+      "typesKo": [
+        "페어리",
+        "비행"
+      ],
+      "ability": "Magic Bounce",
+      "abilityKo": "매직미러",
+      "item": "Clefablite",
+      "itemKo": "픽시나이트",
+      "baseStats": {
+        "hp": 95,
+        "atk": 80,
+        "def": 93,
+        "spa": 135,
+        "spd": 110,
+        "spe": 70
+      },
+      "heightm": 1.3,
+      "weightkg": 40,
+      "color": "Gray",
+      "eggGroups": [
+        "fairy"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "scolipedeza7",
+      "name": "Scolipede-MegaZA7",
+      "displayName": "메가펜드라",
+      "baseSpecies": "Scolipede",
+      "baseSpeciesKo": "펜드라",
+      "forme": "MegaZA",
+      "types": [
+        "Bug",
+        "Poison"
+      ],
+      "typesKo": [
+        "벌레",
+        "독"
+      ],
+      "ability": "Shell Armor",
+      "abilityKo": "쉘아머",
+      "item": "Scolipite",
+      "itemKo": "펜드라나이트",
+      "baseStats": {
+        "hp": 60,
+        "atk": 140,
+        "def": 149,
+        "spa": 75,
+        "spd": 99,
+        "spe": 62
+      },
+      "heightm": 2.5,
+      "weightkg": 200.5,
+      "color": "Gray",
+      "eggGroups": [
+        "bug"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "victreebelza8",
+      "name": "Victreebel-MegaZA8",
+      "displayName": "메가우츠보트",
+      "baseSpecies": "Victreebel",
+      "baseSpeciesKo": "우츠보트",
+      "forme": "MegaZA",
+      "types": [
+        "Grass",
+        "Poison"
+      ],
+      "typesKo": [
+        "풀",
+        "독"
+      ],
+      "ability": "Innards Out",
+      "abilityKo": "이너즈아웃",
+      "item": "Victreebelite",
+      "itemKo": "우츠보트나이트",
+      "baseStats": {
+        "hp": 80,
+        "atk": 125,
+        "def": 85,
+        "spa": 135,
+        "spd": 95,
+        "spe": 70
+      },
+      "heightm": 1.7,
+      "weightkg": 15.5,
+      "color": "Gray",
+      "eggGroups": [
+        "plant"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "excadrillza9",
+      "name": "Excadrill-MegaZA9",
+      "displayName": "메가몰드류",
+      "baseSpecies": "Excadrill",
+      "baseSpeciesKo": "몰드류",
+      "forme": "MegaZA",
+      "types": [
+        "Ground",
+        "Steel"
+      ],
+      "typesKo": [
+        "땅",
+        "강철"
+      ],
+      "ability": "Piercing Drill",
+      "abilityKo": "피어싱드릴",
+      "item": "Excadrite",
+      "itemKo": "몰드류나이트",
+      "baseStats": {
+        "hp": 110,
+        "atk": 165,
+        "def": 100,
+        "spa": 65,
+        "spd": 65,
+        "spe": 103
+      },
+      "heightm": 0.7,
+      "weightkg": 40.4,
+      "color": "Gray",
+      "eggGroups": [
+        "ground"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "garchompza10",
+      "name": "Garchomp-MegaZA10",
+      "displayName": "메가한카리아스Z",
+      "baseSpecies": "Garchomp",
+      "baseSpeciesKo": "한카리아스",
+      "forme": "MegaZA",
+      "types": [
+        "Dragon"
+      ],
+      "typesKo": [
+        "드래곤"
+      ],
+      "ability": "Sand Force",
+      "abilityKo": "모래의힘",
+      "item": "Garchompite Z",
+      "itemKo": "한카리아스나이트Z",
+      "baseStats": {
+        "hp": 108,
+        "atk": 130,
+        "def": 85,
+        "spa": 141,
+        "spd": 85,
+        "spe": 151
+      },
+      "heightm": 1.9,
+      "weightkg": 95,
+      "color": "Gray",
+      "eggGroups": [
+        "monster",
+        "dragon"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "absolza11",
+      "name": "Absol-MegaZA11",
+      "displayName": "메가앱솔Z",
+      "baseSpecies": "Absol",
+      "baseSpeciesKo": "앱솔",
+      "forme": "MegaZA",
+      "types": [
+        "Dark",
+        "Ghost"
+      ],
+      "typesKo": [
+        "악",
+        "고스트"
+      ],
+      "ability": "Magic Bounce",
+      "abilityKo": "매직미러",
+      "item": "Absolite Z",
+      "itemKo": "앱솔나이트Z",
+      "baseStats": {
+        "hp": 65,
+        "atk": 154,
+        "def": 60,
+        "spa": 75,
+        "spd": 60,
+        "spe": 151
+      },
+      "heightm": 1.2,
+      "weightkg": 47,
+      "color": "Gray",
+      "eggGroups": [
+        "ground"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "lucarioza12",
+      "name": "Lucario-MegaZA12",
+      "displayName": "메가루카리오Z",
+      "baseSpecies": "Lucario",
+      "baseSpeciesKo": "루카리오",
+      "forme": "MegaZA",
+      "types": [
+        "Fighting",
+        "Steel"
+      ],
+      "typesKo": [
+        "격투",
+        "강철"
+      ],
+      "ability": "Adaptability",
+      "abilityKo": "적응력",
+      "item": "Lucarionite Z",
+      "itemKo": "루카리오나이트Z",
+      "baseStats": {
+        "hp": 70,
+        "atk": 100,
+        "def": 70,
+        "spa": 164,
+        "spd": 70,
+        "spe": 151
+      },
+      "heightm": 1.2,
+      "weightkg": 54,
+      "color": "Gray",
+      "eggGroups": [
+        "ground",
+        "humanshape"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "eelektrossza13",
+      "name": "Eelektross-MegaZA13",
+      "displayName": "메가저리더프(공식)",
+      "baseSpecies": "Eelektross",
+      "baseSpeciesKo": "저리더프",
+      "forme": "MegaZA",
+      "types": [
+        "Electric"
+      ],
+      "typesKo": [
+        "전기"
+      ],
+      "ability": "Eelevate",
+      "abilityKo": "일리베이트",
+      "item": "Eelektrossite",
+      "itemKo": "저리더프나이트",
+      "baseStats": {
+        "hp": 85,
+        "atk": 145,
+        "def": 80,
+        "spa": 135,
+        "spd": 90,
+        "spe": 80
+      },
+      "heightm": 2.1,
+      "weightkg": 80.5,
+      "color": "Gray",
+      "eggGroups": [
+        "indeterminate"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "dragoniteza14",
+      "name": "Dragonite-MegaZA14",
+      "displayName": "메가망나뇽",
+      "baseSpecies": "Dragonite",
+      "baseSpeciesKo": "망나뇽",
+      "forme": "MegaZA",
+      "types": [
+        "Dragon",
+        "Flying"
+      ],
+      "typesKo": [
+        "드래곤",
+        "비행"
+      ],
+      "ability": "Multiscale",
+      "abilityKo": "멀티스케일",
+      "item": "Dragoninite",
+      "itemKo": "망나뇽나이트",
+      "baseStats": {
+        "hp": 91,
+        "atk": 124,
+        "def": 115,
+        "spa": 145,
+        "spd": 125,
+        "spe": 100
+      },
+      "heightm": 2.2,
+      "weightkg": 210,
+      "color": "Gray",
+      "eggGroups": [
+        "water1",
+        "dragon"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "malamarza15",
+      "name": "Malamar-MegaZA15",
+      "displayName": "메가칼라마네로",
+      "baseSpecies": "Malamar",
+      "baseSpeciesKo": "칼라마네로",
+      "forme": "MegaZA",
+      "types": [
+        "Dark",
+        "Psychic"
+      ],
+      "typesKo": [
+        "악",
+        "에스퍼"
+      ],
+      "ability": "Contrary",
+      "abilityKo": "심술꾸러기",
+      "item": "Malamarite",
+      "itemKo": "칼라마네로나이트",
+      "baseStats": {
+        "hp": 86,
+        "atk": 102,
+        "def": 88,
+        "spa": 98,
+        "spd": 120,
+        "spe": 88
+      },
+      "heightm": 1.5,
+      "weightkg": 47,
+      "color": "Gray",
+      "eggGroups": [
+        "water1",
+        "water2"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "dragalgeza16",
+      "name": "Dragalge-MegaZA16",
+      "displayName": "메가드래캄",
+      "baseSpecies": "Dragalge",
+      "baseSpeciesKo": "드래캄",
+      "forme": "MegaZA",
+      "types": [
+        "Poison",
+        "Dragon"
+      ],
+      "typesKo": [
+        "독",
+        "드래곤"
+      ],
+      "ability": "Regenerator",
+      "abilityKo": "재생력",
+      "item": "Dragalgite",
+      "itemKo": "드래캄나이트",
+      "baseStats": {
+        "hp": 65,
+        "atk": 85,
+        "def": 105,
+        "spa": 132,
+        "spd": 163,
+        "spe": 44
+      },
+      "heightm": 1.8,
+      "weightkg": 81.5,
+      "color": "Gray",
+      "eggGroups": [
+        "water1",
+        "dragon"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "froslassza17",
+      "name": "Froslass-MegaZA17",
+      "displayName": "메가눈여아",
+      "baseSpecies": "Froslass",
+      "baseSpeciesKo": "눈여아",
+      "forme": "MegaZA",
+      "types": [
+        "Ice",
+        "Ghost"
+      ],
+      "typesKo": [
+        "얼음",
+        "고스트"
+      ],
+      "ability": "Snow Warning",
+      "abilityKo": "눈퍼뜨리기",
+      "item": "Froslassite",
+      "itemKo": "눈여아나이트",
+      "baseStats": {
+        "hp": 70,
+        "atk": 80,
+        "def": 70,
+        "spa": 140,
+        "spd": 100,
+        "spe": 120
+      },
+      "heightm": 1.3,
+      "weightkg": 26.6,
+      "color": "Gray",
+      "eggGroups": [
+        "fairy",
+        "mineral"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "hawluchaza18",
+      "name": "Hawlucha-MegaZA18",
+      "displayName": "메가루차불",
+      "baseSpecies": "Hawlucha",
+      "baseSpeciesKo": "루차불",
+      "forme": "MegaZA",
+      "types": [
+        "Fighting",
+        "Flying"
+      ],
+      "typesKo": [
+        "격투",
+        "비행"
+      ],
+      "ability": "No Guard",
+      "abilityKo": "노가드",
+      "item": "Hawluchanite",
+      "itemKo": "루차불나이트",
+      "baseStats": {
+        "hp": 78,
+        "atk": 137,
+        "def": 100,
+        "spa": 74,
+        "spd": 93,
+        "spe": 118
+      },
+      "heightm": 0.8,
+      "weightkg": 21.5,
+      "color": "Gray",
+      "eggGroups": [
+        "flying",
+        "humanshape"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "scraftyza19",
+      "name": "Scrafty-MegaZA19",
+      "displayName": "메가곤율거니",
+      "baseSpecies": "Scrafty",
+      "baseSpeciesKo": "곤율거니",
+      "forme": "MegaZA",
+      "types": [
+        "Dark",
+        "Fighting"
+      ],
+      "typesKo": [
+        "악",
+        "격투"
+      ],
+      "ability": "Intimidate",
+      "abilityKo": "위협",
+      "item": "Scraftinite",
+      "itemKo": "곤율거니나이트",
+      "baseStats": {
+        "hp": 65,
+        "atk": 130,
+        "def": 135,
+        "spa": 55,
+        "spd": 135,
+        "spe": 68
+      },
+      "heightm": 1.1,
+      "weightkg": 30,
+      "color": "Gray",
+      "eggGroups": [
+        "ground",
+        "dragon"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "chandelureza20",
+      "name": "Chandelure-MegaZA20",
+      "displayName": "메가샹델라",
+      "baseSpecies": "Chandelure",
+      "baseSpeciesKo": "샹델라",
+      "forme": "MegaZA",
+      "types": [
+        "Ghost",
+        "Fire"
+      ],
+      "typesKo": [
+        "고스트",
+        "불꽃"
+      ],
+      "ability": "Infiltrator",
+      "abilityKo": "틈새포착",
+      "item": "Chandelurite",
+      "itemKo": "샹델라나이트",
+      "baseStats": {
+        "hp": 60,
+        "atk": 75,
+        "def": 110,
+        "spa": 175,
+        "spd": 110,
+        "spe": 90
+      },
+      "heightm": 1,
+      "weightkg": 34.3,
+      "color": "Gray",
+      "eggGroups": [
+        "indeterminate"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "greninjaza21",
+      "name": "Greninja-MegaZA21",
+      "displayName": "메가개굴닌자",
+      "baseSpecies": "Greninja",
+      "baseSpeciesKo": "개굴닌자",
+      "forme": "MegaZA",
+      "types": [
+        "Water",
+        "Dark"
+      ],
+      "typesKo": [
+        "물",
+        "악"
+      ],
+      "ability": "Protean",
+      "abilityKo": "변환자재",
+      "item": "Greninjite",
+      "itemKo": "개굴닌자나이트",
+      "baseStats": {
+        "hp": 72,
+        "atk": 125,
+        "def": 77,
+        "spa": 133,
+        "spd": 81,
+        "spe": 142
+      },
+      "heightm": 1.5,
+      "weightkg": 40,
+      "color": "Gray",
+      "eggGroups": [
+        "water1"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "falinksza22",
+      "name": "Falinks-MegaZA22",
+      "displayName": "메가대여르",
+      "baseSpecies": "Falinks",
+      "baseSpeciesKo": "대여르",
+      "forme": "MegaZA",
+      "types": [
+        "Fighting"
+      ],
+      "typesKo": [
+        "격투"
+      ],
+      "ability": "Defiant",
+      "abilityKo": "오기",
+      "item": "Falinksite",
+      "itemKo": "대여르나이트",
+      "baseStats": {
+        "hp": 65,
+        "atk": 135,
+        "def": 135,
+        "spa": 70,
+        "spd": 65,
+        "spe": 100
+      },
+      "heightm": 3,
+      "weightkg": 62,
+      "color": "Gray",
+      "eggGroups": [
+        "fairy",
+        "mineral"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "chesnaughtza23",
+      "name": "Chesnaught-MegaZA23",
+      "displayName": "메가브리가론",
+      "baseSpecies": "Chesnaught",
+      "baseSpeciesKo": "브리가론",
+      "forme": "MegaZA",
+      "types": [
+        "Grass",
+        "Fighting"
+      ],
+      "typesKo": [
+        "풀",
+        "격투"
+      ],
+      "ability": "Bulletproof",
+      "abilityKo": "방탄",
+      "item": "Chesnaughtite",
+      "itemKo": "브리가론나이트",
+      "baseStats": {
+        "hp": 88,
+        "atk": 137,
+        "def": 172,
+        "spa": 74,
+        "spd": 115,
+        "spe": 44
+      },
+      "heightm": 1.6,
+      "weightkg": 90,
+      "color": "Gray",
+      "eggGroups": [
+        "ground"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "skarmoryza24",
+      "name": "Skarmory-MegaZA24",
+      "displayName": "메가무장조",
+      "baseSpecies": "Skarmory",
+      "baseSpeciesKo": "무장조",
+      "forme": "MegaZA",
+      "types": [
+        "Steel",
+        "Flying"
+      ],
+      "typesKo": [
+        "강철",
+        "비행"
+      ],
+      "ability": "Stalwart",
+      "abilityKo": "스톨워트",
+      "item": "Skarmorite",
+      "itemKo": "무장조나이트",
+      "baseStats": {
+        "hp": 65,
+        "atk": 140,
+        "def": 110,
+        "spa": 40,
+        "spd": 100,
+        "spe": 110
+      },
+      "heightm": 1.7,
+      "weightkg": 50.5,
+      "color": "Gray",
+      "eggGroups": [
+        "flying"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "delphoxza25",
+      "name": "Delphox-MegaZA25",
+      "displayName": "메가마폭시",
+      "baseSpecies": "Delphox",
+      "baseSpeciesKo": "마폭시",
+      "forme": "MegaZA",
+      "types": [
+        "Fire",
+        "Psychic"
+      ],
+      "typesKo": [
+        "불꽃",
+        "에스퍼"
+      ],
+      "ability": "Levitate",
+      "abilityKo": "부유",
+      "item": "Delphoxite",
+      "itemKo": "마폭시나이트",
+      "baseStats": {
+        "hp": 75,
+        "atk": 69,
+        "def": 72,
+        "spa": 159,
+        "spd": 125,
+        "spe": 134
+      },
+      "heightm": 1.5,
+      "weightkg": 39,
+      "color": "Gray",
+      "eggGroups": [
+        "ground"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "drampaza26",
+      "name": "Drampa-MegaZA26",
+      "displayName": "메가할비롱",
+      "baseSpecies": "Drampa",
+      "baseSpeciesKo": "할비롱",
+      "forme": "MegaZA",
+      "types": [
+        "Normal",
+        "Dragon"
+      ],
+      "typesKo": [
+        "노말",
+        "드래곤"
+      ],
+      "ability": "Berserk",
+      "abilityKo": "발끈",
+      "item": "Drampanite",
+      "itemKo": "할비롱나이트",
+      "baseStats": {
+        "hp": 78,
+        "atk": 85,
+        "def": 110,
+        "spa": 160,
+        "spd": 116,
+        "spe": 36
+      },
+      "heightm": 3,
+      "weightkg": 185,
+      "color": "Gray",
+      "eggGroups": [
+        "monster",
+        "dragon"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "scovillainza27",
+      "name": "Scovillain-MegaZA27",
+      "displayName": "메가스코빌런",
+      "baseSpecies": "Scovillain",
+      "baseSpeciesKo": "스코빌런",
+      "forme": "MegaZA",
+      "types": [
+        "Grass",
+        "Fire"
+      ],
+      "typesKo": [
+        "풀",
+        "불꽃"
+      ],
+      "ability": "Spicy Spray",
+      "abilityKo": "스파이시스프레이",
+      "item": "Scovillainite",
+      "itemKo": "스코빌런나이트",
+      "baseStats": {
+        "hp": 65,
+        "atk": 138,
+        "def": 85,
+        "spa": 138,
+        "spd": 85,
+        "spe": 75
+      },
+      "heightm": 0.9,
+      "weightkg": 15,
+      "color": "Gray",
+      "eggGroups": [
+        "plant"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "glimmoraza28",
+      "name": "Glimmora-MegaZA28",
+      "displayName": "메가킬라플로르",
+      "baseSpecies": "Glimmora",
+      "baseSpeciesKo": "킬라플로르",
+      "forme": "MegaZA",
+      "types": [
+        "Rock",
+        "Poison"
+      ],
+      "typesKo": [
+        "바위",
+        "독"
+      ],
+      "ability": "Adaptability",
+      "abilityKo": "적응력",
+      "item": "Glimmoranite",
+      "itemKo": "킬라플로르나이트",
+      "baseStats": {
+        "hp": 83,
+        "atk": 90,
+        "def": 105,
+        "spa": 150,
+        "spd": 96,
+        "spe": 101
+      },
+      "heightm": 1.5,
+      "weightkg": 45,
+      "color": "Gray",
+      "eggGroups": [
+        "mineral"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "baxcaliburza29",
+      "name": "Baxcalibur-MegaZA29",
+      "displayName": "메가드닐레이브",
+      "baseSpecies": "Baxcalibur",
+      "baseSpeciesKo": "드닐레이브",
+      "forme": "MegaZA",
+      "types": [
+        "Dragon",
+        "Ice"
+      ],
+      "typesKo": [
+        "드래곤",
+        "얼음"
+      ],
+      "ability": "Thermal Exchange",
+      "abilityKo": "열교환",
+      "item": "Baxcalibrite",
+      "itemKo": "드닐레이브나이트",
+      "baseStats": {
+        "hp": 115,
+        "atk": 175,
+        "def": 117,
+        "spa": 105,
+        "spd": 101,
+        "spe": 87
+      },
+      "heightm": 2.1,
+      "weightkg": 210,
+      "color": "Gray",
+      "eggGroups": [
+        "dragon",
+        "mineral"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "chimechoza30",
+      "name": "Chimecho-MegaZA30",
+      "displayName": "메가치렁(공식)",
+      "baseSpecies": "Chimecho",
+      "baseSpeciesKo": "치렁",
+      "forme": "MegaZA",
+      "types": [
+        "Psychic",
+        "Steel"
+      ],
+      "typesKo": [
+        "에스퍼",
+        "강철"
+      ],
+      "ability": "Levitate",
+      "abilityKo": "부유",
+      "item": "Chimechite",
+      "itemKo": "치렁나이트",
+      "baseStats": {
+        "hp": 75,
+        "atk": 50,
+        "def": 110,
+        "spa": 135,
+        "spd": 120,
+        "spe": 65
+      },
+      "heightm": 0.6,
+      "weightkg": 1,
+      "color": "Gray",
+      "eggGroups": [
+        "indeterminate"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "golisopodza31",
+      "name": "Golisopod-MegaZA31",
+      "displayName": "메가갑주무사",
+      "baseSpecies": "Golisopod",
+      "baseSpeciesKo": "갑주무사",
+      "forme": "MegaZA",
+      "types": [
+        "Bug",
+        "Steel"
+      ],
+      "typesKo": [
+        "벌레",
+        "강철"
+      ],
+      "ability": "Emergency Exit",
+      "abilityKo": "위기회피",
+      "item": "Golisopite",
+      "itemKo": "갑주무사나이트",
+      "baseStats": {
+        "hp": 75,
+        "atk": 150,
+        "def": 175,
+        "spa": 70,
+        "spd": 120,
+        "spe": 40
+      },
+      "heightm": 2,
+      "weightkg": 108,
+      "color": "Gray",
+      "eggGroups": [
+        "bug",
+        "water3"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "golurkza32",
+      "name": "Golurk-MegaZA32",
+      "displayName": "메가골루그",
+      "baseSpecies": "Golurk",
+      "baseSpeciesKo": "골루그",
+      "forme": "MegaZA",
+      "types": [
+        "Ground",
+        "Ghost"
+      ],
+      "typesKo": [
+        "땅",
+        "고스트"
+      ],
+      "ability": "Unseen Fist",
+      "abilityKo": "언신핏스트",
+      "item": "Golurkite",
+      "itemKo": "골루그나이트",
+      "baseStats": {
+        "hp": 89,
+        "atk": 159,
+        "def": 105,
+        "spa": 70,
+        "spd": 105,
+        "spe": 55
+      },
+      "heightm": 2.8,
+      "weightkg": 330,
+      "color": "Gray",
+      "eggGroups": [
+        "mineral"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "staraptorza33",
+      "name": "Staraptor-MegaZA33",
+      "displayName": "메가찌르호크",
+      "baseSpecies": "Staraptor",
+      "baseSpeciesKo": "찌르호크",
+      "forme": "MegaZA",
+      "types": [
+        "Fighting",
+        "Flying"
+      ],
+      "typesKo": [
+        "격투",
+        "비행"
+      ],
+      "ability": "Contrary",
+      "abilityKo": "심술꾸러기",
+      "item": "Staraptite",
+      "itemKo": "찌르호크나이트",
+      "baseStats": {
+        "hp": 85,
+        "atk": 140,
+        "def": 100,
+        "spa": 60,
+        "spd": 90,
+        "spe": 110
+      },
+      "heightm": 1.2,
+      "weightkg": 24.9,
+      "color": "Gray",
+      "eggGroups": [
+        "flying"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "crabominableza34",
+      "name": "Crabominable-MegaZA34",
+      "displayName": "메가모단단게",
+      "baseSpecies": "Crabominable",
+      "baseSpeciesKo": "모단단게",
+      "forme": "MegaZA",
+      "types": [
+        "Fighting",
+        "Ice"
+      ],
+      "typesKo": [
+        "격투",
+        "얼음"
+      ],
+      "ability": "Iron Fist",
+      "abilityKo": "철주먹",
+      "item": "Crabominite",
+      "itemKo": "모단단게나이트",
+      "baseStats": {
+        "hp": 97,
+        "atk": 157,
+        "def": 122,
+        "spa": 62,
+        "spd": 107,
+        "spe": 33
+      },
+      "heightm": 1.7,
+      "weightkg": 180,
+      "color": "Gray",
+      "eggGroups": [
+        "water3"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "heatranza35",
+      "name": "Heatran-MegaZA35",
+      "displayName": "메가히드런",
+      "baseSpecies": "Heatran",
+      "baseSpeciesKo": "히드런",
+      "forme": "MegaZA",
+      "types": [
+        "Fire",
+        "Steel"
+      ],
+      "typesKo": [
+        "불꽃",
+        "강철"
+      ],
+      "ability": "Flame Body",
+      "abilityKo": "불꽃몸",
+      "item": "Heatranite",
+      "itemKo": "히드런나이트",
+      "baseStats": {
+        "hp": 91,
+        "atk": 120,
+        "def": 106,
+        "spa": 175,
+        "spd": 141,
+        "spe": 67
+      },
+      "heightm": 1.7,
+      "weightkg": 430,
+      "color": "Gray",
+      "eggGroups": [
+        "no-eggs"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "darkraiza36",
+      "name": "Darkrai-MegaZA36",
+      "displayName": "메가다크라이",
+      "baseSpecies": "Darkrai",
+      "baseSpeciesKo": "다크라이",
+      "forme": "MegaZA",
+      "types": [
+        "Dark"
+      ],
+      "typesKo": [
+        "악"
+      ],
+      "ability": "Bad Dreams",
+      "abilityKo": "나이트메어",
+      "item": "Darkranite",
+      "itemKo": "다크라이나이트",
+      "baseStats": {
+        "hp": 70,
+        "atk": 120,
+        "def": 130,
+        "spa": 165,
+        "spd": 130,
+        "spe": 85
+      },
+      "heightm": 1.5,
+      "weightkg": 50.5,
+      "color": "Gray",
+      "eggGroups": [
+        "no-eggs"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "magearnaza37",
+      "name": "Magearna-MegaZA37",
+      "displayName": "메가마기아나",
+      "baseSpecies": "Magearna",
+      "baseSpeciesKo": "마기아나",
+      "forme": "MegaZA",
+      "types": [
+        "Steel",
+        "Fairy"
+      ],
+      "typesKo": [
+        "강철",
+        "페어리"
+      ],
+      "ability": "Soul-Heart",
+      "abilityKo": "소울하트",
+      "item": "Magearnite",
+      "itemKo": "마기아나나이트",
+      "baseStats": {
+        "hp": 80,
+        "atk": 125,
+        "def": 115,
+        "spa": 170,
+        "spd": 115,
+        "spe": 95
+      },
+      "heightm": 1,
+      "weightkg": 80.5,
+      "color": "Gray",
+      "eggGroups": [
+        "no-eggs"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
+    },
+    {
+      "id": "zeraoraza38",
+      "name": "Zeraora-MegaZA38",
+      "displayName": "메가제라오라",
+      "baseSpecies": "Zeraora",
+      "baseSpeciesKo": "제라오라",
+      "forme": "MegaZA",
+      "types": [
+        "Electric"
+      ],
+      "typesKo": [
+        "전기"
+      ],
+      "ability": "Volt Absorb",
+      "abilityKo": "축전",
+      "item": "Zeraorite",
+      "itemKo": "제라오라나이트",
+      "baseStats": {
+        "hp": 88,
+        "atk": 157,
+        "def": 75,
+        "spa": 147,
+        "spd": 80,
+        "spe": 153
+      },
+      "heightm": 1.5,
+      "weightkg": 44.5,
+      "color": "Gray",
+      "eggGroups": [
+        "no-eggs"
+      ],
+      "isOfficial": true,
+      "sourceGame": "Pokemon Legends: Z-A"
     }
   ],
   "aliases": {
@@ -64,7 +2268,27 @@
       "쾌청": "Drought",
       "가뭄": "Drought",
       "매직미러": "Magic Bounce",
-      "적토성산": "Toxic Buildup"
+      "적토성산": "Toxic Buildup",
+      "부유": "Levitate",
+      "스킬링크": "Skill Link",
+      "가속": "Speed Boost",
+      "그래스메이커": "Grassy Surge",
+      "페어리스킨": "Pixilate",
+      "예리함": "Sharpness",
+      "탈": "Disguise",
+      "애널라이즈": "Analytic",
+      "리베로": "Libero",
+      "틀깨기": "Mold Breaker",
+      "깜부기불": "Smoldering Ember",
+      "쾌속": "Surging Speed",
+      "천정부지": "Sky High",
+      "마왕": "Demon Lord",
+      "모래의지": "Sand Bound",
+      "화안금정": "Piercing Gaze",
+      "데이터베이스": "Database",
+      "적수성연": "Flowing Mercy",
+      "진혼성가": "Requiem Hymn",
+      "애도공간": "Mourning Field"
     },
     "abilityLabels": {
       "Drought": "쾌청",
@@ -72,22 +2296,170 @@
       "Magic Bounce": "매직미러",
       "magic-bounce": "매직미러",
       "Toxic Buildup": "적토성산",
-      "toxic buildup": "적토성산"
+      "toxic buildup": "적토성산",
+      "Levitate": "부유",
+      "levitate": "부유",
+      "Skill Link": "스킬링크",
+      "skill-link": "스킬링크",
+      "Speed Boost": "가속",
+      "speed-boost": "가속",
+      "Grassy Surge": "그래스메이커",
+      "grassy-surge": "그래스메이커",
+      "Pixilate": "페어리스킨",
+      "pixilate": "페어리스킨",
+      "Sharpness": "예리함",
+      "sharpness": "예리함",
+      "Disguise": "탈",
+      "disguise": "탈",
+      "Analytic": "애널라이즈",
+      "analytic": "애널라이즈",
+      "Libero": "리베로",
+      "libero": "리베로",
+      "Mold Breaker": "틀깨기",
+      "mold-breaker": "틀깨기",
+      "Smoldering Ember": "깜부기불",
+      "smoldering-ember": "깜부기불",
+      "Surging Speed": "쾌속",
+      "surging-speed": "쾌속",
+      "Sky High": "천정부지",
+      "sky-high": "천정부지",
+      "Demon Lord": "마왕",
+      "demon-lord": "마왕",
+      "Sand Bound": "모래의지",
+      "sand-bound": "모래의지",
+      "Piercing Gaze": "화안금정",
+      "piercing-gaze": "화안금정",
+      "Database": "데이터베이스",
+      "database": "데이터베이스",
+      "Flowing Mercy": "적수성연",
+      "flowing-mercy": "적수성연",
+      "Requiem Hymn": "진혼성가",
+      "requiem-hymn": "진혼성가",
+      "Mourning Field": "애도공간",
+      "mourning-field": "애도공간"
     },
     "items": {
       "밀로틱나이트": "Milotite",
       "밀로틱이트": "Milotite",
       "Milotite": "Milotite",
-      "디안시나이트": "Diancite",
-      "토오나이트": "Clodite",
+      "토오나이트C": "Clodite",
       "클로다이트": "Clodite",
-      "Clodite": "Clodite"
+      "Clodite": "Clodite",
+      "디안시나이트": "Diancite",
+      "부르르룸나이트C": "Revavroomite",
+      "나무킹나이트C": "Sceptibondite",
+      "황혼루가루암나이트C": "Duskrocite",
+      "부스터나이트C": "Flareonite",
+      "모아머나이트C": "Leavanite",
+      "픽시나이트C": "Clefablitec",
+      "가디안나이트C": "Bondevoirite",
+      "대검귀나이트C": "Hisamuroite",
+      "포푸니크나이트C": "Sneasclite",
+      "따라큐나이트C": "Mimikite",
+      "번치코나이트C": "Bondblazikenite",
+      "폴리곤Z나이트C": "Porygonzite",
+      "저리더프나이트C": "Eelektrite",
+      "엠페르트나이트C": "Empoleonite",
+      "누오나이트C": "Quagsirite",
+      "에이스번나이트C": "Cinderacite",
+      "창파나이트나이트C": "Changpite",
+      "라우드본나이트C": "Skeledirgite",
+      "오롱털나이트C": "Grimmsnarlite",
+      "로토무나이트C": "Rotomite",
+      "바랜드나이트C": "Stoutlandite",
+      "초염몽나이트C": "Infernapite",
+      "치렁나이트C": "Chimechitec",
+      "메가니움나이트": "Meganiumite",
+      "염무왕나이트": "Emboarite",
+      "장크로다일나이트": "Feraligite",
+      "거북손데스나이트": "Barbaracite",
+      "아쿠스타나이트": "Starminite",
+      "화염레오나이트": "Pyroarite",
+      "픽시나이트": "Clefablite",
+      "펜드라나이트": "Scolipite",
+      "우츠보트나이트": "Victreebelite",
+      "몰드류나이트": "Excadrite",
+      "한카리아스나이트Z": "Garchompite Z",
+      "앱솔나이트Z": "Absolite Z",
+      "루카리오나이트Z": "Lucarionite Z",
+      "저리더프나이트": "Eelektrossite",
+      "망나뇽나이트": "Dragoninite",
+      "칼라마네로나이트": "Malamarite",
+      "드래캄나이트": "Dragalgite",
+      "눈여아나이트": "Froslassite",
+      "루차불나이트": "Hawluchanite",
+      "곤율거니나이트": "Scraftinite",
+      "샹델라나이트": "Chandelurite",
+      "개굴닌자나이트": "Greninjite",
+      "대여르나이트": "Falinksite",
+      "브리가론나이트": "Chesnaughtite",
+      "무장조나이트": "Skarmorite",
+      "마폭시나이트": "Delphoxite",
+      "할비롱나이트": "Drampanite",
+      "스코빌런나이트": "Scovillainite",
+      "킬라플로르나이트": "Glimmoranite",
+      "드닐레이브나이트": "Baxcalibrite",
+      "치렁나이트": "Chimechite",
+      "갑주무사나이트": "Golisopite",
+      "골루그나이트": "Golurkite",
+      "찌르호크나이트": "Staraptite",
+      "모단단게나이트": "Crabominite",
+      "히드런나이트": "Heatranite",
+      "다크라이나이트": "Darkranite",
+      "마기아나나이트": "Magearnite",
+      "제라오라나이트": "Zeraorite"
     },
     "speciesLabels": {
       "Milotic-Mega": "메가밀로틱",
       "메가밀로틱": "메가밀로틱",
       "Clodsire-Mega": "메가토오",
       "메가토오": "메가토오",
+      "Revavroom-Mega": "메가부르르룸",
+      "메가부르르룸": "메가부르르룸",
+      "Sceptile-Mega2": "메가나무킹",
+      "메가나무킹": "메가나무킹",
+      "Lycanroc-Dusk-Mega": "메가루가루암(황혼)",
+      "메가루가루암(황혼)": "메가루가루암(황혼)",
+      "Flareon-Mega": "메가부스터",
+      "메가부스터": "메가부스터",
+      "Leavanny-Mega": "메가모아머",
+      "메가모아머": "메가모아머",
+      "Clefable-Mega": "메가픽시",
+      "메가픽시": "메가픽시",
+      "Gardevoir-Mega-Bond": "메가가디안(인연)",
+      "메가가디안(인연)": "메가가디안(인연)",
+      "Samurott-Hisui-Mega": "메가대검귀(히스이)",
+      "메가대검귀(히스이)": "메가대검귀(히스이)",
+      "Sneasler-Mega": "메가포푸니크",
+      "메가포푸니크": "메가포푸니크",
+      "Mimikyu-Mega": "메가따라큐",
+      "메가따라큐": "메가따라큐",
+      "Blaziken-Mega-Bond": "메가번치코(인연)",
+      "메가번치코(인연)": "메가번치코(인연)",
+      "Porygon-Z-Mega": "메가폴리곤Z",
+      "메가폴리곤Z": "메가폴리곤Z",
+      "Eelektross-Mega": "메가저리더프",
+      "메가저리더프": "메가저리더프",
+      "Empoleon-Mega": "메가엠페르트",
+      "메가엠페르트": "메가엠페르트",
+      "Quagsire-Mega": "메가누오",
+      "메가누오": "메가누오",
+      "Cinderace-Mega": "메가에이스번",
+      "메가에이스번": "메가에이스번",
+      "Sirfetchd-Mega": "메가창파나이트",
+      "메가창파나이트": "메가창파나이트",
+      "Skeledirge-Mega": "메가라우드본",
+      "메가라우드본": "메가라우드본",
+      "Grimmsnarl-Mega": "메가오롱털",
+      "메가오롱털": "메가오롱털",
+      "Rotom-Mega": "메가로토무",
+      "메가로토무": "메가로토무",
+      "Stoutland-Mega": "메가바랜드",
+      "메가바랜드": "메가바랜드",
+      "Infernape-Mega": "메가초염몽",
+      "메가초염몽": "메가초염몽",
+      "Chimecho-Mega": "메가치렁",
+      "메가치렁": "메가치렁",
       "Castform-Sunny": "태양의 모습",
       "Castform-Rainy": "빗방울의 모",
       "Castform-Snowy": "설운의 모습",
@@ -114,7 +2486,85 @@
       "Ogerpon-Hearthflame-Tera": "오거폰(화로가면 테라)",
       "Ogerpon-Cornerstone-Tera": "오거폰(주춧돌가면 테라)",
       "Terapagos-Terastal": "테라파고스(테라스탈폼)",
-      "Terapagos-Stellar": "테라파고스(항성폼)"
+      "Terapagos-Stellar": "테라파고스(항성폼)",
+      "Meganium-MegaZA0": "메가메가니움",
+      "메가메가니움": "메가메가니움",
+      "Emboar-MegaZA1": "메가염무왕",
+      "메가염무왕": "메가염무왕",
+      "Feraligatr-MegaZA2": "메가장크로다일",
+      "메가장크로다일": "메가장크로다일",
+      "Barbaracle-MegaZA3": "메가거북손데스",
+      "메가거북손데스": "메가거북손데스",
+      "Starmie-MegaZA4": "메가아쿠스타",
+      "메가아쿠스타": "메가아쿠스타",
+      "Pyroar-MegaZA5": "메가화염레오",
+      "메가화염레오": "메가화염레오",
+      "Clefable-MegaZA6": "메가픽시(공식)",
+      "메가픽시(공식)": "메가픽시(공식)",
+      "Scolipede-MegaZA7": "메가펜드라",
+      "메가펜드라": "메가펜드라",
+      "Victreebel-MegaZA8": "메가우츠보트",
+      "메가우츠보트": "메가우츠보트",
+      "Excadrill-MegaZA9": "메가몰드류",
+      "메가몰드류": "메가몰드류",
+      "Garchomp-MegaZA10": "메가한카리아스Z",
+      "메가한카리아스Z": "메가한카리아스Z",
+      "Absol-MegaZA11": "메가앱솔Z",
+      "메가앱솔Z": "메가앱솔Z",
+      "Lucario-MegaZA12": "메가루카리오Z",
+      "메가루카리오Z": "메가루카리오Z",
+      "Eelektross-MegaZA13": "메가저리더프(공식)",
+      "메가저리더프(공식)": "메가저리더프(공식)",
+      "Dragonite-MegaZA14": "메가망나뇽",
+      "메가망나뇽": "메가망나뇽",
+      "Malamar-MegaZA15": "메가칼라마네로",
+      "메가칼라마네로": "메가칼라마네로",
+      "Dragalge-MegaZA16": "메가드래캄",
+      "메가드래캄": "메가드래캄",
+      "Froslass-MegaZA17": "메가눈여아",
+      "메가눈여아": "메가눈여아",
+      "Hawlucha-MegaZA18": "메가루차불",
+      "메가루차불": "메가루차불",
+      "Scrafty-MegaZA19": "메가곤율거니",
+      "메가곤율거니": "메가곤율거니",
+      "Chandelure-MegaZA20": "메가샹델라",
+      "메가샹델라": "메가샹델라",
+      "Greninja-MegaZA21": "메가개굴닌자",
+      "메가개굴닌자": "메가개굴닌자",
+      "Falinks-MegaZA22": "메가대여르",
+      "메가대여르": "메가대여르",
+      "Chesnaught-MegaZA23": "메가브리가론",
+      "메가브리가론": "메가브리가론",
+      "Skarmory-MegaZA24": "메가무장조",
+      "메가무장조": "메가무장조",
+      "Delphox-MegaZA25": "메가마폭시",
+      "메가마폭시": "메가마폭시",
+      "Drampa-MegaZA26": "메가할비롱",
+      "메가할비롱": "메가할비롱",
+      "Scovillain-MegaZA27": "메가스코빌런",
+      "메가스코빌런": "메가스코빌런",
+      "Glimmora-MegaZA28": "메가킬라플로르",
+      "메가킬라플로르": "메가킬라플로르",
+      "Baxcalibur-MegaZA29": "메가드닐레이브",
+      "메가드닐레이브": "메가드닐레이브",
+      "Chimecho-MegaZA30": "메가치렁(공식)",
+      "메가치렁(공식)": "메가치렁(공식)",
+      "Golisopod-MegaZA31": "메가갑주무사",
+      "메가갑주무사": "메가갑주무사",
+      "Golurk-MegaZA32": "메가골루그",
+      "메가골루그": "메가골루그",
+      "Staraptor-MegaZA33": "메가찌르호크",
+      "메가찌르호크": "메가찌르호크",
+      "Crabominable-MegaZA34": "메가모단단게",
+      "메가모단단게": "메가모단단게",
+      "Heatran-MegaZA35": "메가히드런",
+      "메가히드런": "메가히드런",
+      "Darkrai-MegaZA36": "메가다크라이",
+      "메가다크라이": "메가다크라이",
+      "Magearna-MegaZA37": "메가마기아나",
+      "메가마기아나": "메가마기아나",
+      "Zeraora-MegaZA38": "메가제라오라",
+      "메가제라오라": "메가제라오라"
     }
   }
 }

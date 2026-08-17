@@ -149,8 +149,10 @@ export function useRaidState() {
     setBattle(null);
   }, []);
 
-  const runParticipantAction = useCallback((participantId, moveId) => {
-    setBattle((prev) => (prev ? executeParticipantAction(prev, participantId, moveId) : prev));
+  const runParticipantAction = useCallback((participantId, moveId, targetParticipantId) => {
+    setBattle((prev) =>
+      prev ? executeParticipantAction(prev, participantId, moveId, targetParticipantId) : prev
+    );
   }, []);
 
   const runBossAction = useCallback((moveId, targetId) => {

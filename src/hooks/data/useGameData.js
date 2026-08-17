@@ -131,8 +131,17 @@ const buildAllItems = (customItems = [], recipes = []) => {
     generation: tm.generation
   }));
 
+  // gameData/customItems에 정적 카탈로그(items.json)와 같은 id의 레코드가 생기면
+  // (예: 메가스톤 이미지 URL을 관리자 UI로 "업서트"한 경우) DB 쪽 값이 최신이므로
+  // 정적 카탈로그 쪽 항목은 제외해 같은 아이템이 두 번 나오지 않게 한다.
+  const rawCustomItems = Array.isArray(customItems) ? customItems : Object.values(customItems || {});
+  const dbItemIds = new Set(rawCustomItems.filter(Boolean).map(item => item.id));
+  const staticItems = dbItemIds.size > 0
+    ? itemsData.items.filter(item => !dbItemIds.has(item.id))
+    : itemsData.items;
+
   return [
-    ...itemsData.items,
+    ...staticItems,
     ...tmItems,
     ...markDatabaseCustomItems(customItems),
     ...deriveRecipeItems(recipes)

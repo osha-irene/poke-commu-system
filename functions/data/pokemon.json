@@ -58703,5 +58703,3414 @@
     "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/1025.png",
     "isRegionalForm": false,
     "regionalForm": null
+  },
+  {
+    "id": 900001,
+    "number": 900001,
+    "displayNumber": 966,
+    "name": "메가 부르르룸",
+    "nameEn": "revavroom-mega",
+    "type": "강철",
+    "type2": "독",
+    "catchRate": "0.29",
+    "baseHp": 80,
+    "baseAttack": 128,
+    "baseDefense": 100,
+    "baseSpeed": 90,
+    "generation": 9,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/966.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/966.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 18,
+    "weight": 1200,
+    "abilities": [
+      "부유"
+    ],
+    "abilitiesEn": [
+      "levitate"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "광물"
+    ],
+    "eggGroupsEn": [
+      "mineral"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/966.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/966.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 966,
+    "species": "revavroom-mega",
+    "baseSpAttack": 54,
+    "baseSpDefense": 129,
+    "formVariant": "revavroom-mega",
+    "baseSpecies": "부르르룸",
+    "baseSpeciesEn": "revavroom",
+    "isFanMade": true,
+    "megaAbilityDescription": "땅타입 기술을 받지 않는다.",
+    "flavorText": "자신의 파트너를 위한 마음으로 진화한 유일무이한 모습. 현란한 음악과 배기음으로 굉음을 울리며 자신의 등장을 알린다.",
+    "megaStoneName": "부르르룸나이트"
+  },
+  {
+    "id": 900002,
+    "number": 900002,
+    "displayNumber": 254,
+    "name": "메가 나무킹",
+    "nameEn": "sceptile-mega",
+    "type": "풀",
+    "type2": "드래곤",
+    "catchRate": "0.18",
+    "baseHp": 70,
+    "baseAttack": 145,
+    "baseDefense": 90,
+    "baseSpeed": 145,
+    "generation": 3,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/254.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/254.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 87.5,
+      "female": 12.5
+    },
+    "height": 17,
+    "weight": 522,
+    "abilities": [
+      "스킬링크"
+    ],
+    "abilitiesEn": [
+      "skill-link"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "괴수",
+      "드래곤"
+    ],
+    "eggGroupsEn": [
+      "monster",
+      "dragon"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/254.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/254.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 254,
+    "species": "sceptile-mega",
+    "baseSpAttack": 95,
+    "baseSpDefense": 85,
+    "formVariant": "sceptile-mega",
+    "baseSpecies": "나무킹",
+    "baseSpeciesEn": "sceptile",
+    "isFanMade": true,
+    "megaAbilityDescription": "연속공격기술의 공격 횟수가 항상 최대치로 고정된다.",
+    "flavorText": "메가진화로 등에 있는 씨앗에 있던 생명의 힘이 각성해 양팔의 잎에 깃들었다. 예리해진 잎은 눈으로 쫓을 수 없을 만큼 빠른 연속 참격을 퍼붓는다.",
+    "megaStoneName": "나무킹나이트"
+  },
+  {
+    "id": 900003,
+    "number": 900003,
+    "displayNumber": 745,
+    "name": "메가 루가루암 (황혼의 모습)",
+    "nameEn": "lycanroc-dusk-mega",
+    "type": "바위",
+    "type2": null,
+    "catchRate": "0.35",
+    "baseHp": 75,
+    "baseAttack": 157,
+    "baseDefense": 85,
+    "baseSpeed": 110,
+    "generation": 7,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/10152.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/10152.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 8,
+    "weight": 250,
+    "abilities": [
+      "가속"
+    ],
+    "abilitiesEn": [
+      "accelerate"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "ground"
+    ],
+    "eggGroupsEn": [
+      "ground"
+    ],
+    "hatchSteps": 3825,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/10152.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/10152.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 745,
+    "species": "lycanroc-dusk-mega",
+    "baseSpAttack": 75,
+    "baseSpDefense": 85,
+    "formVariant": "lycanroc-dusk-mega",
+    "baseSpecies": "루가루암",
+    "baseSpeciesEn": "lycanroc",
+    "isFanMade": true,
+    "megaAbilityDescription": "매턴 속도가 1랭크씩 상승한다.",
+    "flavorText": "파트너와 함께 바라본 미래를 향해 질주한다. 아무도 쫓아올 수 없을 정도의 스피드로 달릴 수 있다.",
+    "megaStoneName": "황혼루가루암나이트"
+  },
+  {
+    "id": 900004,
+    "number": 900004,
+    "displayNumber": 136,
+    "name": "메가 부스터",
+    "nameEn": "flareon-mega",
+    "type": "불꽃",
+    "type2": null,
+    "catchRate": "0.18",
+    "baseHp": 65,
+    "baseAttack": 130,
+    "baseDefense": 80,
+    "baseSpeed": 85,
+    "generation": 1,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/136.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/136.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 87.5,
+      "female": 12.5
+    },
+    "height": 9,
+    "weight": 250,
+    "abilities": [
+      "깜부기불"
+    ],
+    "abilitiesEn": [
+      "smoldering-ember"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "ground"
+    ],
+    "eggGroupsEn": [
+      "ground"
+    ],
+    "hatchSteps": 8925,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/136.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/136.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 136,
+    "species": "flareon-mega",
+    "baseSpAttack": 155,
+    "baseSpDefense": 110,
+    "formVariant": "flareon-mega",
+    "baseSpecies": "부스터",
+    "baseSpeciesEn": "flareon",
+    "isFanMade": true,
+    "megaAbilityDescription": "일격 필살기가 통하지 않는다. 일격에 기절하지 않는다.",
+    "flavorText": "부스터가 메가진화한 포켓몬. 메가진화에 의한 열기가 체내 불꽃 주머니의 온도를 올려 더욱 불꽃에 가까운 모습이 되었다. 꺼질 줄 모르고 맹렬히 타오르는 화염이 이따금 숨결에 섞여 나온다.",
+    "megaStoneName": "부스터나이트"
+  },
+  {
+    "id": 900005,
+    "number": 900005,
+    "displayNumber": 542,
+    "name": "메가 모아머",
+    "nameEn": "leavanny-mega",
+    "type": "벌레",
+    "type2": "풀",
+    "catchRate": "0.18",
+    "baseHp": 75,
+    "baseAttack": 150,
+    "baseDefense": 80,
+    "baseSpeed": 145,
+    "generation": 5,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/542.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/542.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 12,
+    "weight": 205,
+    "abilities": [
+      "그래스메이커"
+    ],
+    "abilitiesEn": [
+      "grass-maker"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "벌레"
+    ],
+    "eggGroupsEn": [
+      "bug"
+    ],
+    "hatchSteps": 3825,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/542.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/542.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 542,
+    "species": "leavanny-mega",
+    "baseSpAttack": 70,
+    "baseSpDefense": 80,
+    "formVariant": "leavanny-mega",
+    "baseSpecies": "모아머",
+    "baseSpeciesEn": "leavanny",
+    "isFanMade": true,
+    "megaAbilityDescription": "등장했을 때 그래스필드를 사용한다.",
+    "flavorText": "파트너의 눈빛과 같은 열정의 색으로 물들인 망토를 두른 위풍당당한 모습. 부드러운 벨벳 촉감에 무늬도 옅게 들어가 있다. 더듬이가 꽃잎처럼 변해 왕관을 쓴 듯한 실루엣이 되었다.",
+    "megaStoneName": "모아머나이트"
+  },
+  {
+    "id": 900006,
+    "number": 900006,
+    "displayNumber": 36,
+    "name": "메가 픽시",
+    "nameEn": "clefable-mega",
+    "type": "페어리",
+    "type2": "드래곤",
+    "catchRate": "0.10",
+    "baseHp": 95,
+    "baseAttack": 80,
+    "baseDefense": 83,
+    "baseSpeed": 80,
+    "generation": 1,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/36.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/36.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 25,
+      "female": 75
+    },
+    "height": 13,
+    "weight": 400,
+    "abilities": [
+      "매직미러"
+    ],
+    "abilitiesEn": [
+      "magic-bounce"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "요정"
+    ],
+    "eggGroupsEn": [
+      "fairy"
+    ],
+    "hatchSteps": 2550,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/36.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/36.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 36,
+    "species": "clefable-mega",
+    "baseSpAttack": 140,
+    "baseSpDefense": 105,
+    "formVariant": "clefable-mega",
+    "baseSpecies": "픽시",
+    "baseSpeciesEn": "clefable",
+    "isFanMade": true,
+    "megaAbilityDescription": "변화기술을 반사한다.",
+    "flavorText": "달빛을 바라보다가 우주로부터 떨어지는 용성군에서 뿜어져 나오는 복사광을 쬐고 용의 힘을 얻었다고 전해진다. 더는 별도 달도 그리워하지 않는 강인한 마음을 지녔다.",
+    "megaStoneName": "픽시나이트"
+  },
+  {
+    "id": 900007,
+    "number": 900007,
+    "displayNumber": 282,
+    "name": "메가 가디안 (인연의 모습)",
+    "nameEn": "gardevoir-mega",
+    "type": "에스퍼",
+    "type2": "페어리",
+    "catchRate": "0.18",
+    "baseHp": 68,
+    "baseAttack": 65,
+    "baseDefense": 85,
+    "baseSpeed": 100,
+    "generation": 3,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/282.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/282.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 16,
+    "weight": 484,
+    "abilities": [
+      "페어리스킨"
+    ],
+    "abilitiesEn": [
+      "pixilate"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "humanshape",
+      "indeterminate"
+    ],
+    "eggGroupsEn": [
+      "humanshape",
+      "indeterminate"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/282.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/282.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 282,
+    "species": "gardevoir-mega",
+    "baseSpAttack": 165,
+    "baseSpDefense": 135,
+    "formVariant": "gardevoir-mega",
+    "baseSpecies": "가디안",
+    "baseSpeciesEn": "gardevoir",
+    "isFanMade": true,
+    "megaAbilityDescription": "노말타입의 기술이 페어리 타입이 된다.",
+    "flavorText": "보통의 메가 가디안과 달리 길어진 머리카락과 리본이 생긴 드레스는 트레이너와의 유대를 나타낸다. 해방된 마음과 트레이너를 지키고 싶다는 결의가 더욱 강력한 사이코 파워를 만들어낸다.",
+    "megaStoneName": "인연가디안나이트"
+  },
+  {
+    "id": 900008,
+    "number": 900008,
+    "displayNumber": 503,
+    "name": "메가 대검귀 (히스이 지방의 모습)",
+    "nameEn": "samurott-hisui-mega",
+    "type": "물",
+    "type2": "악",
+    "catchRate": "0.18",
+    "baseHp": 90,
+    "baseAttack": 138,
+    "baseDefense": 90,
+    "baseSpeed": 100,
+    "generation": 5,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/10236.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/10236.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 87.5,
+      "female": 12.5
+    },
+    "height": 15,
+    "weight": 582,
+    "abilities": [
+      "예리함"
+    ],
+    "abilitiesEn": [
+      "sharpness"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "ground"
+    ],
+    "eggGroupsEn": [
+      "ground"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/10236.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/10236.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 503,
+    "species": "samurott-hisui-mega",
+    "baseSpAttack": 120,
+    "baseSpDefense": 90,
+    "formVariant": "samurott-hisui-mega",
+    "baseSpecies": "대검귀",
+    "baseSpeciesEn": "samurott",
+    "isFanMade": true,
+    "megaAbilityDescription": "상대를 베는 기술의 위력이 올라간다.",
+    "flavorText": "몸체만 한 커다란 검도 휘두를 수 있게 되었다. 길게 자라난 수염이 천 겹의 파도처럼 일렁인다.",
+    "megaStoneName": "히스이대검귀나이트"
+  },
+  {
+    "id": 900009,
+    "number": 900009,
+    "displayNumber": 903,
+    "name": "메가 포푸니크",
+    "nameEn": "sneasler-mega",
+    "type": "악",
+    "type2": "독",
+    "catchRate": "0.53",
+    "baseHp": 80,
+    "baseAttack": 145,
+    "baseDefense": 85,
+    "baseSpeed": 140,
+    "generation": 8,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/903.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/903.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 13,
+    "weight": 430,
+    "abilities": [
+      "예리함"
+    ],
+    "abilitiesEn": [
+      "sharpness"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "ground"
+    ],
+    "eggGroupsEn": [
+      "ground"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/903.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/903.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 903,
+    "species": "sneasler-mega",
+    "baseSpAttack": 60,
+    "baseSpDefense": 100,
+    "formVariant": "sneasler-mega",
+    "baseSpecies": "포푸니크",
+    "baseSpeciesEn": "sneasler",
+    "isFanMade": true,
+    "megaAbilityDescription": "상대를 베는 기술의 위력이 올라간다.",
+    "flavorText": "메가진화하여 양팔이 날카로운 낫으로 변했다. 맞수를 만나면 어느 한 쪽이 쓰러질 때까지 싸움을 멈추지 않는다. 진정으로 신뢰하는 트레이너만이 말릴 수 있다.",
+    "megaStoneName": "포푸니크나이트"
+  },
+  {
+    "id": 900010,
+    "number": 900010,
+    "displayNumber": 778,
+    "name": "메가 따라큐",
+    "nameEn": "mimikyu-disguised-mega",
+    "type": "고스트",
+    "type2": "페어리",
+    "catchRate": "0.18",
+    "baseHp": 55,
+    "baseAttack": 140,
+    "baseDefense": 95,
+    "baseSpeed": 106,
+    "generation": 7,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/778.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/778.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 2,
+    "weight": 7,
+    "abilities": [
+      "탈"
+    ],
+    "abilitiesEn": [
+      "disguise"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "부정형"
+    ],
+    "eggGroupsEn": [
+      "indeterminate"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/778.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/778.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 778,
+    "species": "mimikyu-disguised-mega",
+    "baseSpAttack": 75,
+    "baseSpDefense": 105,
+    "formVariant": "mimikyu-disguised-mega",
+    "baseSpecies": "따라큐",
+    "baseSpeciesEn": "mimikyu",
+    "isFanMade": true,
+    "megaAbilityDescription": "몸을 덮는 탈로 1번 공격을 막을 수 있다.",
+    "flavorText": "메가진화로 몹시 큰 부정형의 힘이 천 아래에 깃들었다. 소중한 탈이 망가지지 않도록 단단히 붙잡았지만, 감추지 못한 힘은 그림자로 분출된다.",
+    "megaStoneName": "따라큐나이트"
+  },
+  {
+    "id": 900011,
+    "number": 900011,
+    "displayNumber": 257,
+    "name": "메가 번치코",
+    "nameEn": "blaziken-mega",
+    "type": "불꽃",
+    "type2": "격투",
+    "catchRate": "0.18",
+    "baseHp": 80,
+    "baseAttack": 160,
+    "baseDefense": 90,
+    "baseSpeed": 100,
+    "generation": 3,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/257.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/257.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 87.5,
+      "female": 12.5
+    },
+    "height": 19,
+    "weight": 520,
+    "abilities": [
+      "쾌속"
+    ],
+    "abilitiesEn": [
+      "surging-speed"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "ground"
+    ],
+    "eggGroupsEn": [
+      "ground"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/257.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/257.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 257,
+    "species": "blaziken-mega",
+    "baseSpAttack": 110,
+    "baseSpDefense": 90,
+    "formVariant": "blaziken-mega",
+    "baseSpecies": "번치코",
+    "baseSpeciesEn": "blaziken",
+    "isFanMade": true,
+    "megaAbilityDescription": "매 턴이 끝날 때마다 스피드가 1랭크 상승한다. 이 효과는 상대가 능력을 떨어뜨릴 수 없다.",
+    "flavorText": "튀어나온 날개 깃들은 그의 속력에 추진력을 높여 한층 더 빠르게 만들어준다. 작열하는 불꽃은 마치 머리를 불태우듯 위로 솟아올라 강렬하게 불타오른다. 길게 뻗어 나온 세 갈래의 꼬리는 강인한 손과 발처럼 사용할 수 있다.",
+    "megaStoneName": "번치코나이트"
+  },
+  {
+    "id": 900012,
+    "number": 900012,
+    "displayNumber": 474,
+    "name": "메가 폴리곤Z",
+    "nameEn": "porygon-z-mega",
+    "type": "노말",
+    "type2": null,
+    "catchRate": "0.12",
+    "baseHp": 85,
+    "baseAttack": 90,
+    "baseDefense": 80,
+    "baseSpeed": 130,
+    "generation": 4,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/474.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/474.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 0,
+      "female": 0
+    },
+    "height": 9,
+    "weight": 340,
+    "abilities": [
+      "데이터베이스"
+    ],
+    "abilitiesEn": [
+      "database"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "광물"
+    ],
+    "eggGroupsEn": [
+      "mineral"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/474.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/474.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 474,
+    "species": "porygon-z-mega",
+    "baseSpAttack": 160,
+    "baseSpDefense": 90,
+    "formVariant": "porygon-z-mega",
+    "baseSpecies": "폴리곤Z",
+    "baseSpeciesEn": "porygon-z",
+    "isFanMade": true,
+    "megaAbilityDescription": "같은 기술에 연속으로 피격 당할 시 랜덤한 랭크가 1단계 상승한다.",
+    "flavorText": "트레이너와의 유대를 통해, 한층 높은 차원에서도 자유자재로 움직일 수 있는 새로운 모습으로 변했다. 다양한 차원에 동시에 존재하고 있어 불안정한 면이 있다.",
+    "megaStoneName": "폴리곤Z나이트"
+  },
+  {
+    "id": 900013,
+    "number": 900013,
+    "displayNumber": 604,
+    "name": "메가 저리더프",
+    "nameEn": "eelektross-mega",
+    "type": "전기",
+    "type2": null,
+    "catchRate": "0.12",
+    "baseHp": 85,
+    "baseAttack": 145,
+    "baseDefense": 90,
+    "baseSpeed": 120,
+    "generation": 5,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/604.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/604.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 21,
+    "weight": 805,
+    "abilities": [
+      "천정부지"
+    ],
+    "abilitiesEn": [
+      "sky-high"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "indeterminate"
+    ],
+    "eggGroupsEn": [
+      "indeterminate"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/604.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/604.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 604,
+    "species": "eelektross-mega",
+    "baseSpAttack": 85,
+    "baseSpDefense": 90,
+    "formVariant": "eelektross-mega",
+    "baseSpecies": "저리더프",
+    "baseSpeciesEn": "eelektross",
+    "isFanMade": true,
+    "megaAbilityDescription": "땅 타입 기술에 맞지 않는다. 공격으로 상대를 쓰러뜨리면 자신의 가장 높은 능력이 1랭크 올라간다.",
+    "flavorText": "발전량은 메가진화 전의 10배에 이른다. 점액으로 만든 가짜 저리릴을 통해 방전하며 빠른 속도로 유영한다.",
+    "megaStoneName": "저리더프나이트"
+  },
+  {
+    "id": 900014,
+    "number": 900014,
+    "displayNumber": 980,
+    "name": "메가 토오",
+    "nameEn": "clodsire-mega",
+    "type": "독",
+    "type2": "땅",
+    "catchRate": "0.35",
+    "baseHp": 130,
+    "baseAttack": 105,
+    "baseDefense": 100,
+    "baseSpeed": 20,
+    "generation": 9,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/980.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/980.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 18,
+    "weight": 2230,
+    "abilities": [
+      "적토성산"
+    ],
+    "abilitiesEn": [
+      "rising-toxin"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "수중1",
+      "ground"
+    ],
+    "eggGroupsEn": [
+      "water1",
+      "ground"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/980.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/980.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 980,
+    "species": "clodsire-mega",
+    "baseSpAttack": 45,
+    "baseSpDefense": 130,
+    "formVariant": "clodsire-mega",
+    "baseSpecies": "토오",
+    "baseSpeciesEn": "clodsire",
+    "isFanMade": true,
+    "megaAbilityDescription": "받은 공격의 횟수가 많을수록 다음 독타입 공격 기술의 위력이 30씩 증가한다. (최대 300 / 볼에 들어갈 시 초기화)",
+    "flavorText": "트레이너와의 신뢰와 유대가 공명하여 담대함과 진솔한 마음이 한층 더 크게 개화했다. 계속 공격받으면 등에 지고 있는 소중한 습지를 지키기 위해 쌓여있는 독소를 단번에 방출한다.",
+    "megaStoneName": "토오나이트"
+  },
+  {
+    "id": 900015,
+    "number": 900015,
+    "displayNumber": 395,
+    "name": "메가 엠페르트",
+    "nameEn": "empoleon-mega",
+    "type": "물",
+    "type2": "강철",
+    "catchRate": "0.18",
+    "baseHp": 84,
+    "baseAttack": 101,
+    "baseDefense": 130,
+    "baseSpeed": 45,
+    "generation": 4,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/395.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/395.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 87.5,
+      "female": 12.5
+    },
+    "height": 17,
+    "weight": 845,
+    "abilities": [
+      "애널라이즈"
+    ],
+    "abilitiesEn": [
+      "analytic"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "수중1",
+      "ground"
+    ],
+    "eggGroupsEn": [
+      "water1",
+      "ground"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/395.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/395.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 395,
+    "species": "empoleon-mega",
+    "baseSpAttack": 140,
+    "baseSpDefense": 130,
+    "formVariant": "empoleon-mega",
+    "baseSpecies": "엠페르트",
+    "baseSpeciesEn": "empoleon",
+    "isFanMade": true,
+    "megaAbilityDescription": "제일 마지막에 기술을 쓰면 기술의 위력이 올라간다.",
+    "flavorText": "무거운 철갑을 둘렀다. 더욱 날카로워진 날개로 적을 가차 없이 베어 버리지만 철갑의 무게 때문에 이전보다 빠르게 움직이기 어려워졌다.",
+    "megaStoneName": "엠페르트나이트"
+  },
+  {
+    "id": 900016,
+    "number": 900016,
+    "displayNumber": 195,
+    "name": "메가 누오",
+    "nameEn": "quagsire-mega",
+    "type": "물",
+    "type2": "땅",
+    "catchRate": "0.35",
+    "baseHp": 95,
+    "baseAttack": 85,
+    "baseDefense": 155,
+    "baseSpeed": 35,
+    "generation": 2,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/195.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/195.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 14,
+    "weight": 750,
+    "abilities": [
+      "적수성연"
+    ],
+    "abilitiesEn": [
+      "flowing-mercy"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "수중1",
+      "ground"
+    ],
+    "eggGroupsEn": [
+      "water1",
+      "ground"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/195.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/195.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 195,
+    "species": "quagsire-mega",
+    "baseSpAttack": 65,
+    "baseSpDefense": 95,
+    "formVariant": "quagsire-mega",
+    "baseSpecies": "누오",
+    "baseSpeciesEn": "quagsire",
+    "isFanMade": true,
+    "megaAbilityDescription": "자신과 아군의 체력을 매 턴 최대 HP의 1/16만큼 회복시킨다.",
+    "flavorText": "트레이너와의 신뢰와 유대가 공명하여 상냥함과 친절한 마음이 한층 더 크게 개화했다. 등에 지고 있는 강인한 파도의 잔잔한 베일로 주변의 몸과 마음을 보호한다.",
+    "megaStoneName": "누오나이트"
+  },
+  {
+    "id": 900017,
+    "number": 900017,
+    "displayNumber": 815,
+    "name": "메가 에이스번",
+    "nameEn": "cinderace-mega",
+    "type": "불꽃",
+    "type2": null,
+    "catchRate": "0.18",
+    "baseHp": 80,
+    "baseAttack": 146,
+    "baseDefense": 95,
+    "baseSpeed": 119,
+    "generation": 8,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/815.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/815.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 87.5,
+      "female": 12.5
+    },
+    "height": 14,
+    "weight": 330,
+    "abilities": [
+      "리베로"
+    ],
+    "abilitiesEn": [
+      "libero"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "ground",
+      "humanshape"
+    ],
+    "eggGroupsEn": [
+      "ground",
+      "humanshape"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/815.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/815.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 815,
+    "species": "cinderace-mega",
+    "baseSpAttack": 95,
+    "baseSpDefense": 95,
+    "formVariant": "cinderace-mega",
+    "baseSpecies": "에이스번",
+    "baseSpeciesEn": "cinderace",
+    "isFanMade": true,
+    "megaAbilityDescription": "배틀에 나올 때마다 단 한 번 자신이 사용한 기술과 같은 타입으로 변화한다.",
+    "flavorText": "질주의 감각이 극한까지 예민해져, 어떤 기술을 쓰든 그 순간 몸 전체가 그 힘에 맞춰 타오른다.",
+    "megaStoneName": "에이스번나이트"
+  },
+  {
+    "id": 900018,
+    "number": 900018,
+    "displayNumber": 865,
+    "name": "창파나이트",
+    "nameEn": "sirfetchd-mega",
+    "type": "격투",
+    "type2": "강철",
+    "catchRate": "0.18",
+    "baseHp": 62,
+    "baseAttack": 155,
+    "baseDefense": 125,
+    "baseSpeed": 75,
+    "generation": 8,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/865.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/865.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 8,
+    "weight": 1170,
+    "abilities": [
+      "틀깨기"
+    ],
+    "abilitiesEn": [
+      "mold-breaker"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "비행",
+      "ground"
+    ],
+    "eggGroupsEn": [
+      "flying",
+      "ground"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/865.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/865.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 865,
+    "species": "sirfetchd-mega",
+    "baseSpAttack": 78,
+    "baseSpDefense": 112,
+    "formVariant": "sirfetchd-mega",
+    "baseSpecies": "창파나이트",
+    "baseSpeciesEn": "sirfetchd",
+    "isFanMade": true,
+    "megaAbilityDescription": "특성에 관계없이 상대에게 기술을 쓸 수 있다.",
+    "flavorText": "메가진화의 힘을 받아 강철처럼 단단해진 대파는 쌍검이 되어 공중을 가른다.",
+    "megaStoneName": "창파석"
+  },
+  {
+    "id": 900019,
+    "number": 900019,
+    "displayNumber": 911,
+    "name": "메가 라우드본",
+    "nameEn": "skeledirge-mega",
+    "type": "불꽃",
+    "type2": "고스트",
+    "catchRate": "0.18",
+    "baseHp": 104,
+    "baseAttack": 95,
+    "baseDefense": 110,
+    "baseSpeed": 86,
+    "generation": 9,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/911.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/911.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 87.5,
+      "female": 12.5
+    },
+    "height": 16,
+    "weight": 3265,
+    "abilities": [
+      "진혼성가"
+    ],
+    "abilitiesEn": [
+      "requiem-hymn"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "ground"
+    ],
+    "eggGroupsEn": [
+      "ground"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/911.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/911.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 911,
+    "species": "skeledirge-mega",
+    "baseSpAttack": 140,
+    "baseSpDefense": 95,
+    "formVariant": "skeledirge-mega",
+    "baseSpecies": "라우드본",
+    "baseSpeciesEn": "skeledirge",
+    "isFanMade": true,
+    "megaAbilityDescription": "불꽃 기술을 사용한 뒤 다음 고스트 기술의 위력이 1.2배가 되고, 고스트 기술을 사용한 뒤 다음 불꽃 기술의 위력이 1.2배가 된다. 효과는 강화된 기술을 사용하면 사라진다.",
+    "flavorText": "트레이너의 굳건한 의지가 대지의 심장과 공명할 때 메가진화한다. 라우드본은 내핵의 불꽃을 성가로 바꾸어 파트너에게 끝없는 용기를 전한다고 한다.",
+    "megaStoneName": "라우드본나이트"
+  },
+  {
+    "id": 900020,
+    "number": 900020,
+    "displayNumber": 861,
+    "name": "메가 오롱털",
+    "nameEn": "grimmsnarl-mega",
+    "type": "악",
+    "type2": "페어리",
+    "catchRate": "0.18",
+    "baseHp": 95,
+    "baseAttack": 140,
+    "baseDefense": 105,
+    "baseSpeed": 60,
+    "generation": 8,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/861.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/861.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 100,
+      "female": 0
+    },
+    "height": 15,
+    "weight": 610,
+    "abilities": [
+      "마왕"
+    ],
+    "abilitiesEn": [
+      "demon-lord"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "요정",
+      "humanshape"
+    ],
+    "eggGroupsEn": [
+      "fairy",
+      "humanshape"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/861.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/861.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 861,
+    "species": "grimmsnarl-mega",
+    "baseSpAttack": 95,
+    "baseSpDefense": 125,
+    "formVariant": "grimmsnarl-mega",
+    "baseSpecies": "오롱털",
+    "baseSpeciesEn": "grimmsnarl",
+    "isFanMade": true,
+    "megaAbilityDescription": "변화 기술을 먼저 쓸 수 있다. 악 타입에게도 무효화되지 않는다.",
+    "flavorText": "순수한 영혼을 달콤한 속삭임으로 유혹한다. 속삭임에 귀를 기울인 존재는 어디론가 사라져 버린다.",
+    "megaStoneName": "오롱털나이트"
+  },
+  {
+    "id": 900021,
+    "number": 900021,
+    "displayNumber": 479,
+    "name": "메가 로토무",
+    "nameEn": "rotom-mega",
+    "type": "전기",
+    "type2": null,
+    "catchRate": "0.18",
+    "baseHp": 50,
+    "baseAttack": 65,
+    "baseDefense": 77,
+    "baseSpeed": 121,
+    "generation": 4,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/479.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/479.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 0,
+      "female": 0
+    },
+    "height": 3,
+    "weight": 3,
+    "abilities": [
+      "부유"
+    ],
+    "abilitiesEn": [
+      "levitate"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "부정형"
+    ],
+    "eggGroupsEn": [
+      "indeterminate"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/479.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/479.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 479,
+    "species": "rotom-mega",
+    "baseSpAttack": 150,
+    "baseSpDefense": 77,
+    "formVariant": "rotom-mega",
+    "baseSpecies": "로토무",
+    "baseSpeciesEn": "rotom",
+    "isFanMade": true,
+    "megaAbilityDescription": "땅타입의 기술을 받지 않는다.",
+    "flavorText": "전류를 공급받아 강한 전기장을 만들어낸다. 플라즈마를 팔처럼 휘두를 수 있다.",
+    "megaStoneName": "로토무나이트"
+  },
+  {
+    "id": 900022,
+    "number": 900022,
+    "displayNumber": 508,
+    "name": "메가 바랜드",
+    "nameEn": "stoutland-mega",
+    "type": "노말",
+    "type2": "땅",
+    "catchRate": "0.18",
+    "baseHp": 85,
+    "baseAttack": 150,
+    "baseDefense": 120,
+    "baseSpeed": 80,
+    "generation": 5,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/508.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/508.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 12,
+    "weight": 610,
+    "abilities": [
+      "모래의지"
+    ],
+    "abilitiesEn": [
+      "sand-bound"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "ground"
+    ],
+    "eggGroupsEn": [
+      "ground"
+    ],
+    "hatchSteps": 3825,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/508.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/508.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 508,
+    "species": "stoutland-mega",
+    "baseSpAttack": 45,
+    "baseSpDefense": 120,
+    "formVariant": "stoutland-mega",
+    "baseSpecies": "바랜드",
+    "baseSpeciesEn": "stoutland",
+    "isFanMade": true,
+    "megaAbilityDescription": "이 특성을 가진 포켓몬이 기술을 사용하면 모래날림 상태일 때와 같은 효과를 받는다. 모래바람일 때 스피드가 2배로 상승한다.",
+    "flavorText": "메가진화를 통해 길고 따뜻한 털이 모래를 헤치기 용이하게 바위처럼 각지고, 딱딱하게 변화했다. 주변을 감싸고 있는 모래바람은 빠르게 달릴 수 있게 도움을 준다.",
+    "megaStoneName": "바랜드나이트"
+  },
+  {
+    "id": 900023,
+    "number": 900023,
+    "displayNumber": 392,
+    "name": "메가 초염몽",
+    "nameEn": "infernape-mega",
+    "type": "불꽃",
+    "type2": "격투",
+    "catchRate": "0.18",
+    "baseHp": 76,
+    "baseAttack": 144,
+    "baseDefense": 86,
+    "baseSpeed": 118,
+    "generation": 4,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/392.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/392.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 87.5,
+      "female": 12.5
+    },
+    "height": 12,
+    "weight": 550,
+    "abilities": [
+      "화안금정"
+    ],
+    "abilitiesEn": [
+      "piercing-gaze"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "ground",
+      "humanshape"
+    ],
+    "eggGroupsEn": [
+      "ground",
+      "humanshape"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/392.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/392.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 392,
+    "species": "infernape-mega",
+    "baseSpAttack": 124,
+    "baseSpDefense": 86,
+    "formVariant": "infernape-mega",
+    "baseSpecies": "초염몽",
+    "baseSpeciesEn": "infernape",
+    "isFanMade": true,
+    "megaAbilityDescription": "상대의 급소에 공격이 맞기 쉽다. 급소에 맞으면 위력이 올라간다.",
+    "flavorText": "눈동자는 금빛으로 빛나며 모든 것을 꿰뚫어 볼 수 있게 되었다. 같은 색으로 이글거리는 불꽃을 자유자재로 다루며 날뛴다.",
+    "megaStoneName": "초염몽나이트"
+  },
+  {
+    "id": 900024,
+    "number": 900024,
+    "displayNumber": 358,
+    "name": "메가 치렁",
+    "nameEn": "chimecho-mega",
+    "type": "에스퍼",
+    "type2": "고스트",
+    "catchRate": "0.18",
+    "baseHp": 75,
+    "baseAttack": 30,
+    "baseDefense": 60,
+    "baseSpeed": 120,
+    "generation": 3,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/358.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/358.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 6,
+    "weight": 10,
+    "abilities": [
+      "애도공간"
+    ],
+    "abilitiesEn": [
+      "mourning-field"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "indeterminate"
+    ],
+    "eggGroupsEn": [
+      "indeterminate"
+    ],
+    "hatchSteps": 6375,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/358.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/358.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 358,
+    "species": "chimecho-mega",
+    "baseSpAttack": 140,
+    "baseSpDefense": 130,
+    "formVariant": "chimecho-mega",
+    "baseSpecies": "치렁",
+    "baseSpeciesEn": "chimecho",
+    "isFanMade": true,
+    "megaAbilityDescription": "이 특성을 지닌 포켓몬이 필드에 존재할 때 모든 포켓몬의 고스트 타입 기술 위력이 1.2배 증가한다.",
+    "flavorText": "몸을 흔들어 구슬픈 방울소리를 낸다. 그 소리를 계속 듣다 보면 자신도 모르는 새 눈물이 흐르기 시작한다.",
+    "megaStoneName": "치렁나이트"
+  },
+  {
+    "id": 900101,
+    "number": 900101,
+    "displayNumber": 154,
+    "name": "메가메가니움",
+    "nameEn": "meganium-mega-za",
+    "type": "풀",
+    "type2": "페어리",
+    "catchRate": "0.18",
+    "baseHp": 80,
+    "baseAttack": 92,
+    "baseDefense": 115,
+    "baseSpeed": 80,
+    "generation": 2,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/154.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/154.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 87.5,
+      "female": 12.5
+    },
+    "height": 18,
+    "weight": 1005,
+    "abilities": [
+      "메가솔"
+    ],
+    "abilitiesEn": [
+      "Mega Sol"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "괴수",
+      "plant"
+    ],
+    "eggGroupsEn": [
+      "monster",
+      "plant"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/154.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/154.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 154,
+    "species": "meganium-mega-za",
+    "baseSpAttack": 143,
+    "baseSpDefense": 115,
+    "formVariant": "meganium-mega-za",
+    "baseSpecies": "메가니움",
+    "baseSpeciesEn": "meganium",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900102,
+    "number": 900102,
+    "displayNumber": 500,
+    "name": "메가염무왕",
+    "nameEn": "emboar-mega-za",
+    "type": "불꽃",
+    "type2": "격투",
+    "catchRate": "0.18",
+    "baseHp": 110,
+    "baseAttack": 148,
+    "baseDefense": 75,
+    "baseSpeed": 75,
+    "generation": 5,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/500.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/500.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 87.5,
+      "female": 12.5
+    },
+    "height": 16,
+    "weight": 1500,
+    "abilities": [
+      "틀깨기"
+    ],
+    "abilitiesEn": [
+      "Mold Breaker"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "ground"
+    ],
+    "eggGroupsEn": [
+      "ground"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/500.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/500.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 500,
+    "species": "emboar-mega-za",
+    "baseSpAttack": 110,
+    "baseSpDefense": 110,
+    "formVariant": "emboar-mega-za",
+    "baseSpecies": "염무왕",
+    "baseSpeciesEn": "emboar",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900103,
+    "number": 900103,
+    "displayNumber": 160,
+    "name": "메가장크로다일",
+    "nameEn": "feraligatr-mega-za",
+    "type": "물",
+    "type2": "드래곤",
+    "catchRate": "0.18",
+    "baseHp": 85,
+    "baseAttack": 160,
+    "baseDefense": 125,
+    "baseSpeed": 78,
+    "generation": 2,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/160.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/160.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 87.5,
+      "female": 12.5
+    },
+    "height": 23,
+    "weight": 888,
+    "abilities": [
+      "드래고나이즈"
+    ],
+    "abilitiesEn": [
+      "Dragonize"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "괴수",
+      "수중1"
+    ],
+    "eggGroupsEn": [
+      "monster",
+      "water1"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/160.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/160.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 160,
+    "species": "feraligatr-mega-za",
+    "baseSpAttack": 89,
+    "baseSpDefense": 93,
+    "formVariant": "feraligatr-mega-za",
+    "baseSpecies": "장크로다일",
+    "baseSpeciesEn": "feraligatr",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900104,
+    "number": 900104,
+    "displayNumber": 689,
+    "name": "메가거북손데스",
+    "nameEn": "barbaracle-mega-za",
+    "type": "바위",
+    "type2": "격투",
+    "catchRate": "0.18",
+    "baseHp": 72,
+    "baseAttack": 140,
+    "baseDefense": 130,
+    "baseSpeed": 88,
+    "generation": 6,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/689.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/689.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 13,
+    "weight": 960,
+    "abilities": [
+      "단단한발톱"
+    ],
+    "abilitiesEn": [
+      "Tough Claws"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "수중3"
+    ],
+    "eggGroupsEn": [
+      "water3"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/689.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/689.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 689,
+    "species": "barbaracle-mega-za",
+    "baseSpAttack": 64,
+    "baseSpDefense": 106,
+    "formVariant": "barbaracle-mega-za",
+    "baseSpecies": "거북손데스",
+    "baseSpeciesEn": "barbaracle",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900105,
+    "number": 900105,
+    "displayNumber": 121,
+    "name": "메가아쿠스타",
+    "nameEn": "starmie-mega-za",
+    "type": "물",
+    "type2": "에스퍼",
+    "catchRate": "0.24",
+    "baseHp": 60,
+    "baseAttack": 140,
+    "baseDefense": 105,
+    "baseSpeed": 120,
+    "generation": 1,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/121.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/121.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 0,
+      "female": 0
+    },
+    "height": 11,
+    "weight": 800,
+    "abilities": [
+      "왕큰힘"
+    ],
+    "abilitiesEn": [
+      "Huge Power"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "수중3"
+    ],
+    "eggGroupsEn": [
+      "water3"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/121.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/121.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 121,
+    "species": "starmie-mega-za",
+    "baseSpAttack": 130,
+    "baseSpDefense": 105,
+    "formVariant": "starmie-mega-za",
+    "baseSpecies": "아쿠스타",
+    "baseSpeciesEn": "starmie",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900106,
+    "number": 900106,
+    "displayNumber": 668,
+    "name": "메가화염레오",
+    "nameEn": "pyroar-mega-za",
+    "type": "불꽃",
+    "type2": "노말",
+    "catchRate": "0.25",
+    "baseHp": 86,
+    "baseAttack": 88,
+    "baseDefense": 92,
+    "baseSpeed": 126,
+    "generation": 6,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/668.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/668.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 12.5,
+      "female": 87.5
+    },
+    "height": 15,
+    "weight": 815,
+    "abilities": [
+      "파이어메인"
+    ],
+    "abilitiesEn": [
+      "Fire Mane"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "ground"
+    ],
+    "eggGroupsEn": [
+      "ground"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/668.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/668.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 668,
+    "species": "pyroar-mega-za",
+    "baseSpAttack": 129,
+    "baseSpDefense": 86,
+    "formVariant": "pyroar-mega-za",
+    "baseSpecies": "화염레오",
+    "baseSpeciesEn": "pyroar",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900107,
+    "number": 900107,
+    "displayNumber": 36,
+    "name": "메가픽시(공식)",
+    "nameEn": "clefable-mega-za",
+    "type": "페어리",
+    "type2": "비행",
+    "catchRate": "0.10",
+    "baseHp": 95,
+    "baseAttack": 80,
+    "baseDefense": 93,
+    "baseSpeed": 70,
+    "generation": 1,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/36.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/36.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 25,
+      "female": 75
+    },
+    "height": 13,
+    "weight": 400,
+    "abilities": [
+      "매직미러"
+    ],
+    "abilitiesEn": [
+      "Magic Bounce"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "요정"
+    ],
+    "eggGroupsEn": [
+      "fairy"
+    ],
+    "hatchSteps": 2550,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/36.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/36.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 36,
+    "species": "clefable-mega-za",
+    "baseSpAttack": 135,
+    "baseSpDefense": 110,
+    "formVariant": "clefable-mega-za",
+    "baseSpecies": "픽시",
+    "baseSpeciesEn": "clefable",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900108,
+    "number": 900108,
+    "displayNumber": 545,
+    "name": "메가펜드라",
+    "nameEn": "scolipede-mega-za",
+    "type": "벌레",
+    "type2": "독",
+    "catchRate": "0.18",
+    "baseHp": 60,
+    "baseAttack": 140,
+    "baseDefense": 149,
+    "baseSpeed": 62,
+    "generation": 5,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/545.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/545.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 25,
+    "weight": 2005,
+    "abilities": [
+      "쉘아머"
+    ],
+    "abilitiesEn": [
+      "Shell Armor"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "벌레"
+    ],
+    "eggGroupsEn": [
+      "bug"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/545.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/545.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 545,
+    "species": "scolipede-mega-za",
+    "baseSpAttack": 75,
+    "baseSpDefense": 99,
+    "formVariant": "scolipede-mega-za",
+    "baseSpecies": "펜드라",
+    "baseSpeciesEn": "scolipede",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900109,
+    "number": 900109,
+    "displayNumber": 71,
+    "name": "메가우츠보트",
+    "nameEn": "victreebel-mega-za",
+    "type": "풀",
+    "type2": "독",
+    "catchRate": "0.18",
+    "baseHp": 80,
+    "baseAttack": 125,
+    "baseDefense": 85,
+    "baseSpeed": 70,
+    "generation": 1,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/71.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/71.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 17,
+    "weight": 155,
+    "abilities": [
+      "이너즈아웃"
+    ],
+    "abilitiesEn": [
+      "Innards Out"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "plant"
+    ],
+    "eggGroupsEn": [
+      "plant"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/71.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/71.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 71,
+    "species": "victreebel-mega-za",
+    "baseSpAttack": 135,
+    "baseSpDefense": 95,
+    "formVariant": "victreebel-mega-za",
+    "baseSpecies": "우츠보트",
+    "baseSpeciesEn": "victreebel",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900110,
+    "number": 900110,
+    "displayNumber": 530,
+    "name": "메가몰드류",
+    "nameEn": "excadrill-mega-za",
+    "type": "땅",
+    "type2": "강철",
+    "catchRate": "0.24",
+    "baseHp": 110,
+    "baseAttack": 165,
+    "baseDefense": 100,
+    "baseSpeed": 103,
+    "generation": 5,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/530.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/530.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 7,
+    "weight": 404,
+    "abilities": [
+      "피어싱드릴"
+    ],
+    "abilitiesEn": [
+      "Piercing Drill"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "ground"
+    ],
+    "eggGroupsEn": [
+      "ground"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/530.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/530.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 530,
+    "species": "excadrill-mega-za",
+    "baseSpAttack": 65,
+    "baseSpDefense": 65,
+    "formVariant": "excadrill-mega-za",
+    "baseSpecies": "몰드류",
+    "baseSpeciesEn": "excadrill",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900111,
+    "number": 900111,
+    "displayNumber": 445,
+    "name": "메가한카리아스Z",
+    "nameEn": "garchomp-mega-za",
+    "type": "드래곤",
+    "type2": null,
+    "catchRate": "0.18",
+    "baseHp": 108,
+    "baseAttack": 130,
+    "baseDefense": 85,
+    "baseSpeed": 151,
+    "generation": 4,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/445.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/445.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 19,
+    "weight": 950,
+    "abilities": [
+      "모래의힘"
+    ],
+    "abilitiesEn": [
+      "Sand Force"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "괴수",
+      "드래곤"
+    ],
+    "eggGroupsEn": [
+      "monster",
+      "dragon"
+    ],
+    "hatchSteps": 10200,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/445.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/445.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 445,
+    "species": "garchomp-mega-za",
+    "baseSpAttack": 141,
+    "baseSpDefense": 85,
+    "formVariant": "garchomp-mega-za",
+    "baseSpecies": "한카리아스",
+    "baseSpeciesEn": "garchomp",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": true
+  },
+  {
+    "id": 900112,
+    "number": 900112,
+    "displayNumber": 359,
+    "name": "메가앱솔Z",
+    "nameEn": "absol-mega-za",
+    "type": "악",
+    "type2": "고스트",
+    "catchRate": "0.12",
+    "baseHp": 65,
+    "baseAttack": 154,
+    "baseDefense": 60,
+    "baseSpeed": 151,
+    "generation": 3,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/359.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/359.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 12,
+    "weight": 470,
+    "abilities": [
+      "매직미러"
+    ],
+    "abilitiesEn": [
+      "Magic Bounce"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "ground"
+    ],
+    "eggGroupsEn": [
+      "ground"
+    ],
+    "hatchSteps": 6375,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/359.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/359.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 359,
+    "species": "absol-mega-za",
+    "baseSpAttack": 75,
+    "baseSpDefense": 60,
+    "formVariant": "absol-mega-za",
+    "baseSpecies": "앱솔",
+    "baseSpeciesEn": "absol",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": true
+  },
+  {
+    "id": 900113,
+    "number": 900113,
+    "displayNumber": 448,
+    "name": "메가루카리오Z",
+    "nameEn": "lucario-mega-za",
+    "type": "격투",
+    "type2": "강철",
+    "catchRate": "0.18",
+    "baseHp": 70,
+    "baseAttack": 100,
+    "baseDefense": 70,
+    "baseSpeed": 151,
+    "generation": 4,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/448.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/448.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 87.5,
+      "female": 12.5
+    },
+    "height": 12,
+    "weight": 540,
+    "abilities": [
+      "적응력"
+    ],
+    "abilitiesEn": [
+      "Adaptability"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "ground",
+      "humanshape"
+    ],
+    "eggGroupsEn": [
+      "ground",
+      "humanshape"
+    ],
+    "hatchSteps": 6375,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/448.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/448.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 448,
+    "species": "lucario-mega-za",
+    "baseSpAttack": 164,
+    "baseSpDefense": 70,
+    "formVariant": "lucario-mega-za",
+    "baseSpecies": "루카리오",
+    "baseSpeciesEn": "lucario",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": true
+  },
+  {
+    "id": 900114,
+    "number": 900114,
+    "displayNumber": 604,
+    "name": "메가저리더프(공식)",
+    "nameEn": "eelektross-mega-za",
+    "type": "전기",
+    "type2": null,
+    "catchRate": "0.12",
+    "baseHp": 85,
+    "baseAttack": 145,
+    "baseDefense": 80,
+    "baseSpeed": 80,
+    "generation": 5,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/604.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/604.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 21,
+    "weight": 805,
+    "abilities": [
+      "일리베이트"
+    ],
+    "abilitiesEn": [
+      "Eelevate"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "indeterminate"
+    ],
+    "eggGroupsEn": [
+      "indeterminate"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/604.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/604.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 604,
+    "species": "eelektross-mega-za",
+    "baseSpAttack": 135,
+    "baseSpDefense": 90,
+    "formVariant": "eelektross-mega-za",
+    "baseSpecies": "저리더프",
+    "baseSpeciesEn": "eelektross",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900115,
+    "number": 900115,
+    "displayNumber": 149,
+    "name": "메가망나뇽",
+    "nameEn": "dragonite-mega-za",
+    "type": "드래곤",
+    "type2": "비행",
+    "catchRate": "0.18",
+    "baseHp": 91,
+    "baseAttack": 124,
+    "baseDefense": 115,
+    "baseSpeed": 100,
+    "generation": 1,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/149.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/149.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 22,
+    "weight": 2100,
+    "abilities": [
+      "멀티스케일"
+    ],
+    "abilitiesEn": [
+      "Multiscale"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "수중1",
+      "드래곤"
+    ],
+    "eggGroupsEn": [
+      "water1",
+      "dragon"
+    ],
+    "hatchSteps": 10200,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/149.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/149.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 149,
+    "species": "dragonite-mega-za",
+    "baseSpAttack": 145,
+    "baseSpDefense": 125,
+    "formVariant": "dragonite-mega-za",
+    "baseSpecies": "망나뇽",
+    "baseSpeciesEn": "dragonite",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900116,
+    "number": 900116,
+    "displayNumber": 687,
+    "name": "메가칼라마네로",
+    "nameEn": "malamar-mega-za",
+    "type": "악",
+    "type2": "에스퍼",
+    "catchRate": "0.31",
+    "baseHp": 86,
+    "baseAttack": 102,
+    "baseDefense": 88,
+    "baseSpeed": 88,
+    "generation": 6,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/687.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/687.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 15,
+    "weight": 470,
+    "abilities": [
+      "심술꾸러기"
+    ],
+    "abilitiesEn": [
+      "Contrary"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "수중1",
+      "수중2"
+    ],
+    "eggGroupsEn": [
+      "water1",
+      "water2"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/687.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/687.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 687,
+    "species": "malamar-mega-za",
+    "baseSpAttack": 98,
+    "baseSpDefense": 120,
+    "formVariant": "malamar-mega-za",
+    "baseSpecies": "칼라마네로",
+    "baseSpeciesEn": "malamar",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900117,
+    "number": 900117,
+    "displayNumber": 691,
+    "name": "메가드래캄",
+    "nameEn": "dragalge-mega-za",
+    "type": "독",
+    "type2": "드래곤",
+    "catchRate": "0.22",
+    "baseHp": 65,
+    "baseAttack": 85,
+    "baseDefense": 105,
+    "baseSpeed": 44,
+    "generation": 6,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/691.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/691.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 18,
+    "weight": 815,
+    "abilities": [
+      "재생력"
+    ],
+    "abilitiesEn": [
+      "Regenerator"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "수중1",
+      "드래곤"
+    ],
+    "eggGroupsEn": [
+      "water1",
+      "dragon"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/691.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/691.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 691,
+    "species": "dragalge-mega-za",
+    "baseSpAttack": 132,
+    "baseSpDefense": 163,
+    "formVariant": "dragalge-mega-za",
+    "baseSpecies": "드래캄",
+    "baseSpeciesEn": "dragalge",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900118,
+    "number": 900118,
+    "displayNumber": 478,
+    "name": "메가눈여아",
+    "nameEn": "froslass-mega-za",
+    "type": "얼음",
+    "type2": "고스트",
+    "catchRate": "0.29",
+    "baseHp": 70,
+    "baseAttack": 80,
+    "baseDefense": 70,
+    "baseSpeed": 120,
+    "generation": 4,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/478.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/478.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 0,
+      "female": 100
+    },
+    "height": 13,
+    "weight": 266,
+    "abilities": [
+      "눈퍼뜨리기"
+    ],
+    "abilitiesEn": [
+      "Snow Warning"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "요정",
+      "광물"
+    ],
+    "eggGroupsEn": [
+      "fairy",
+      "mineral"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/478.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/478.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 478,
+    "species": "froslass-mega-za",
+    "baseSpAttack": 140,
+    "baseSpDefense": 100,
+    "formVariant": "froslass-mega-za",
+    "baseSpecies": "눈여아",
+    "baseSpeciesEn": "froslass",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900119,
+    "number": 900119,
+    "displayNumber": 701,
+    "name": "메가루차불",
+    "nameEn": "hawlucha-mega-za",
+    "type": "격투",
+    "type2": "비행",
+    "catchRate": "0.39",
+    "baseHp": 78,
+    "baseAttack": 137,
+    "baseDefense": 100,
+    "baseSpeed": 118,
+    "generation": 6,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/701.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/701.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 8,
+    "weight": 215,
+    "abilities": [
+      "노가드"
+    ],
+    "abilitiesEn": [
+      "No Guard"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "비행",
+      "humanshape"
+    ],
+    "eggGroupsEn": [
+      "flying",
+      "humanshape"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/701.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/701.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 701,
+    "species": "hawlucha-mega-za",
+    "baseSpAttack": 74,
+    "baseSpDefense": 93,
+    "formVariant": "hawlucha-mega-za",
+    "baseSpecies": "루차불",
+    "baseSpeciesEn": "hawlucha",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900120,
+    "number": 900120,
+    "displayNumber": 560,
+    "name": "메가곤율거니",
+    "nameEn": "scrafty-mega-za",
+    "type": "악",
+    "type2": "격투",
+    "catchRate": "0.35",
+    "baseHp": 65,
+    "baseAttack": 130,
+    "baseDefense": 135,
+    "baseSpeed": 68,
+    "generation": 5,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/560.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/560.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 11,
+    "weight": 300,
+    "abilities": [
+      "위협"
+    ],
+    "abilitiesEn": [
+      "Intimidate"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "ground",
+      "드래곤"
+    ],
+    "eggGroupsEn": [
+      "ground",
+      "dragon"
+    ],
+    "hatchSteps": 3825,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/560.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/560.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 560,
+    "species": "scrafty-mega-za",
+    "baseSpAttack": 55,
+    "baseSpDefense": 135,
+    "formVariant": "scrafty-mega-za",
+    "baseSpecies": "곤율거니",
+    "baseSpeciesEn": "scrafty",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900121,
+    "number": 900121,
+    "displayNumber": 609,
+    "name": "메가샹델라",
+    "nameEn": "chandelure-mega-za",
+    "type": "고스트",
+    "type2": "불꽃",
+    "catchRate": "0.18",
+    "baseHp": 60,
+    "baseAttack": 75,
+    "baseDefense": 110,
+    "baseSpeed": 90,
+    "generation": 5,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/609.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/609.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 10,
+    "weight": 343,
+    "abilities": [
+      "틈새포착"
+    ],
+    "abilitiesEn": [
+      "Infiltrator"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "indeterminate"
+    ],
+    "eggGroupsEn": [
+      "indeterminate"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/609.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/609.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 609,
+    "species": "chandelure-mega-za",
+    "baseSpAttack": 175,
+    "baseSpDefense": 110,
+    "formVariant": "chandelure-mega-za",
+    "baseSpecies": "샹델라",
+    "baseSpeciesEn": "chandelure",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900122,
+    "number": 900122,
+    "displayNumber": 658,
+    "name": "메가개굴닌자",
+    "nameEn": "greninja-mega-za",
+    "type": "물",
+    "type2": "악",
+    "catchRate": "0.18",
+    "baseHp": 72,
+    "baseAttack": 125,
+    "baseDefense": 77,
+    "baseSpeed": 142,
+    "generation": 6,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/658.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/658.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 87.5,
+      "female": 12.5
+    },
+    "height": 15,
+    "weight": 400,
+    "abilities": [
+      "변환자재"
+    ],
+    "abilitiesEn": [
+      "Protean"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "수중1"
+    ],
+    "eggGroupsEn": [
+      "water1"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/658.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/658.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 658,
+    "species": "greninja-mega-za",
+    "baseSpAttack": 133,
+    "baseSpDefense": 81,
+    "formVariant": "greninja-mega-za",
+    "baseSpecies": "개굴닌자",
+    "baseSpeciesEn": "greninja",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900123,
+    "number": 900123,
+    "displayNumber": 870,
+    "name": "메가대여르",
+    "nameEn": "falinks-mega-za",
+    "type": "격투",
+    "type2": null,
+    "catchRate": "0.18",
+    "baseHp": 65,
+    "baseAttack": 135,
+    "baseDefense": 135,
+    "baseSpeed": 100,
+    "generation": 8,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/870.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/870.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 0,
+      "female": 0
+    },
+    "height": 30,
+    "weight": 620,
+    "abilities": [
+      "오기"
+    ],
+    "abilitiesEn": [
+      "Defiant"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "요정",
+      "광물"
+    ],
+    "eggGroupsEn": [
+      "fairy",
+      "mineral"
+    ],
+    "hatchSteps": 6375,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/870.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/870.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 870,
+    "species": "falinks-mega-za",
+    "baseSpAttack": 70,
+    "baseSpDefense": 65,
+    "formVariant": "falinks-mega-za",
+    "baseSpecies": "대여르",
+    "baseSpeciesEn": "falinks",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900124,
+    "number": 900124,
+    "displayNumber": 652,
+    "name": "메가브리가론",
+    "nameEn": "chesnaught-mega-za",
+    "type": "풀",
+    "type2": "격투",
+    "catchRate": "0.18",
+    "baseHp": 88,
+    "baseAttack": 137,
+    "baseDefense": 172,
+    "baseSpeed": 44,
+    "generation": 6,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/652.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/652.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 87.5,
+      "female": 12.5
+    },
+    "height": 16,
+    "weight": 900,
+    "abilities": [
+      "방탄"
+    ],
+    "abilitiesEn": [
+      "Bulletproof"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "ground"
+    ],
+    "eggGroupsEn": [
+      "ground"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/652.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/652.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 652,
+    "species": "chesnaught-mega-za",
+    "baseSpAttack": 74,
+    "baseSpDefense": 115,
+    "formVariant": "chesnaught-mega-za",
+    "baseSpecies": "브리가론",
+    "baseSpeciesEn": "chesnaught",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900125,
+    "number": 900125,
+    "displayNumber": 227,
+    "name": "메가무장조",
+    "nameEn": "skarmory-mega-za",
+    "type": "강철",
+    "type2": "비행",
+    "catchRate": "0.10",
+    "baseHp": 65,
+    "baseAttack": 140,
+    "baseDefense": 110,
+    "baseSpeed": 110,
+    "generation": 2,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/227.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/227.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 17,
+    "weight": 505,
+    "abilities": [
+      "스톨워트"
+    ],
+    "abilitiesEn": [
+      "Stalwart"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "비행"
+    ],
+    "eggGroupsEn": [
+      "flying"
+    ],
+    "hatchSteps": 6375,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/227.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/227.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 227,
+    "species": "skarmory-mega-za",
+    "baseSpAttack": 40,
+    "baseSpDefense": 100,
+    "formVariant": "skarmory-mega-za",
+    "baseSpecies": "무장조",
+    "baseSpeciesEn": "skarmory",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900126,
+    "number": 900126,
+    "displayNumber": 655,
+    "name": "메가마폭시",
+    "nameEn": "delphox-mega-za",
+    "type": "불꽃",
+    "type2": "에스퍼",
+    "catchRate": "0.18",
+    "baseHp": 75,
+    "baseAttack": 69,
+    "baseDefense": 72,
+    "baseSpeed": 134,
+    "generation": 6,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/655.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/655.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 87.5,
+      "female": 12.5
+    },
+    "height": 15,
+    "weight": 390,
+    "abilities": [
+      "부유"
+    ],
+    "abilitiesEn": [
+      "Levitate"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "ground"
+    ],
+    "eggGroupsEn": [
+      "ground"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/655.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/655.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 655,
+    "species": "delphox-mega-za",
+    "baseSpAttack": 159,
+    "baseSpDefense": 125,
+    "formVariant": "delphox-mega-za",
+    "baseSpecies": "마폭시",
+    "baseSpeciesEn": "delphox",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900127,
+    "number": 900127,
+    "displayNumber": 780,
+    "name": "메가할비롱",
+    "nameEn": "drampa-mega-za",
+    "type": "노말",
+    "type2": "드래곤",
+    "catchRate": "0.27",
+    "baseHp": 78,
+    "baseAttack": 85,
+    "baseDefense": 110,
+    "baseSpeed": 36,
+    "generation": 7,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/780.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/780.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 30,
+    "weight": 1850,
+    "abilities": [
+      "발끈"
+    ],
+    "abilitiesEn": [
+      "Berserk"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "괴수",
+      "드래곤"
+    ],
+    "eggGroupsEn": [
+      "monster",
+      "dragon"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/780.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/780.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 780,
+    "species": "drampa-mega-za",
+    "baseSpAttack": 160,
+    "baseSpDefense": 116,
+    "formVariant": "drampa-mega-za",
+    "baseSpecies": "할비롱",
+    "baseSpeciesEn": "drampa",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900128,
+    "number": 900128,
+    "displayNumber": 952,
+    "name": "메가스코빌런",
+    "nameEn": "scovillain-mega-za",
+    "type": "풀",
+    "type2": "불꽃",
+    "catchRate": "0.29",
+    "baseHp": 65,
+    "baseAttack": 138,
+    "baseDefense": 85,
+    "baseSpeed": 75,
+    "generation": 9,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/952.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/952.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 9,
+    "weight": 150,
+    "abilities": [
+      "스파이시스프레이"
+    ],
+    "abilitiesEn": [
+      "Spicy Spray"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "plant"
+    ],
+    "eggGroupsEn": [
+      "plant"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/952.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/952.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 952,
+    "species": "scovillain-mega-za",
+    "baseSpAttack": 138,
+    "baseSpDefense": 85,
+    "formVariant": "scovillain-mega-za",
+    "baseSpecies": "스코빌런",
+    "baseSpeciesEn": "scovillain",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900129,
+    "number": 900129,
+    "displayNumber": 970,
+    "name": "메가킬라플로르",
+    "nameEn": "glimmora-mega-za",
+    "type": "바위",
+    "type2": "독",
+    "catchRate": "0.10",
+    "baseHp": 83,
+    "baseAttack": 90,
+    "baseDefense": 105,
+    "baseSpeed": 101,
+    "generation": 9,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/970.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/970.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 15,
+    "weight": 450,
+    "abilities": [
+      "적응력"
+    ],
+    "abilitiesEn": [
+      "Adaptability"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "광물"
+    ],
+    "eggGroupsEn": [
+      "mineral"
+    ],
+    "hatchSteps": 7650,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/970.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/970.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 970,
+    "species": "glimmora-mega-za",
+    "baseSpAttack": 150,
+    "baseSpDefense": 96,
+    "formVariant": "glimmora-mega-za",
+    "baseSpecies": "킬라플로르",
+    "baseSpeciesEn": "glimmora",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900130,
+    "number": 900130,
+    "displayNumber": 998,
+    "name": "메가드닐레이브",
+    "nameEn": "baxcalibur-mega-za",
+    "type": "드래곤",
+    "type2": "얼음",
+    "catchRate": "0.04",
+    "baseHp": 115,
+    "baseAttack": 175,
+    "baseDefense": 117,
+    "baseSpeed": 87,
+    "generation": 9,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/998.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/998.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 21,
+    "weight": 2100,
+    "abilities": [
+      "열교환"
+    ],
+    "abilitiesEn": [
+      "Thermal Exchange"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "드래곤",
+      "광물"
+    ],
+    "eggGroupsEn": [
+      "dragon",
+      "mineral"
+    ],
+    "hatchSteps": 10200,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/998.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/998.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 998,
+    "species": "baxcalibur-mega-za",
+    "baseSpAttack": 105,
+    "baseSpDefense": 101,
+    "formVariant": "baxcalibur-mega-za",
+    "baseSpecies": "드닐레이브",
+    "baseSpeciesEn": "baxcalibur",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": true
+  },
+  {
+    "id": 900131,
+    "number": 900131,
+    "displayNumber": 358,
+    "name": "메가치렁(공식)",
+    "nameEn": "chimecho-mega-za",
+    "type": "에스퍼",
+    "type2": "강철",
+    "catchRate": "0.18",
+    "baseHp": 75,
+    "baseAttack": 50,
+    "baseDefense": 110,
+    "baseSpeed": 65,
+    "generation": 3,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/358.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/358.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 6,
+    "weight": 10,
+    "abilities": [
+      "부유"
+    ],
+    "abilitiesEn": [
+      "Levitate"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "indeterminate"
+    ],
+    "eggGroupsEn": [
+      "indeterminate"
+    ],
+    "hatchSteps": 6375,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/358.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/358.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 358,
+    "species": "chimecho-mega-za",
+    "baseSpAttack": 135,
+    "baseSpDefense": 120,
+    "formVariant": "chimecho-mega-za",
+    "baseSpecies": "치렁",
+    "baseSpeciesEn": "chimecho",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900132,
+    "number": 900132,
+    "displayNumber": 768,
+    "name": "메가갑주무사",
+    "nameEn": "golisopod-mega-za",
+    "type": "벌레",
+    "type2": "강철",
+    "catchRate": "0.18",
+    "baseHp": 75,
+    "baseAttack": 150,
+    "baseDefense": 175,
+    "baseSpeed": 40,
+    "generation": 7,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/768.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/768.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 20,
+    "weight": 1080,
+    "abilities": [
+      "위기회피"
+    ],
+    "abilitiesEn": [
+      "Emergency Exit"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "벌레",
+      "수중3"
+    ],
+    "eggGroupsEn": [
+      "bug",
+      "water3"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/768.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/768.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 768,
+    "species": "golisopod-mega-za",
+    "baseSpAttack": 70,
+    "baseSpDefense": 120,
+    "formVariant": "golisopod-mega-za",
+    "baseSpecies": "갑주무사",
+    "baseSpeciesEn": "golisopod",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": true
+  },
+  {
+    "id": 900133,
+    "number": 900133,
+    "displayNumber": 623,
+    "name": "메가골루그",
+    "nameEn": "golurk-mega-za",
+    "type": "땅",
+    "type2": "고스트",
+    "catchRate": "0.35",
+    "baseHp": 89,
+    "baseAttack": 159,
+    "baseDefense": 105,
+    "baseSpeed": 55,
+    "generation": 5,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/623.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/623.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 0,
+      "female": 0
+    },
+    "height": 28,
+    "weight": 3300,
+    "abilities": [
+      "언신핏스트"
+    ],
+    "abilitiesEn": [
+      "Unseen Fist"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "광물"
+    ],
+    "eggGroupsEn": [
+      "mineral"
+    ],
+    "hatchSteps": 6375,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/623.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/623.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 623,
+    "species": "golurk-mega-za",
+    "baseSpAttack": 70,
+    "baseSpDefense": 105,
+    "formVariant": "golurk-mega-za",
+    "baseSpecies": "골루그",
+    "baseSpeciesEn": "golurk",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900134,
+    "number": 900134,
+    "displayNumber": 398,
+    "name": "메가찌르호크",
+    "nameEn": "staraptor-mega-za",
+    "type": "격투",
+    "type2": "비행",
+    "catchRate": "0.18",
+    "baseHp": 85,
+    "baseAttack": 140,
+    "baseDefense": 100,
+    "baseSpeed": 110,
+    "generation": 4,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/398.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/398.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 12,
+    "weight": 249,
+    "abilities": [
+      "심술꾸러기"
+    ],
+    "abilitiesEn": [
+      "Contrary"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "비행"
+    ],
+    "eggGroupsEn": [
+      "flying"
+    ],
+    "hatchSteps": 3825,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/398.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/398.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 398,
+    "species": "staraptor-mega-za",
+    "baseSpAttack": 60,
+    "baseSpDefense": 90,
+    "formVariant": "staraptor-mega-za",
+    "baseSpecies": "찌르호크",
+    "baseSpeciesEn": "staraptor",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900135,
+    "number": 900135,
+    "displayNumber": 740,
+    "name": "메가모단단게",
+    "nameEn": "crabominable-mega-za",
+    "type": "격투",
+    "type2": "얼음",
+    "catchRate": "0.24",
+    "baseHp": 97,
+    "baseAttack": 157,
+    "baseDefense": 122,
+    "baseSpeed": 33,
+    "generation": 7,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/740.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/740.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 17,
+    "weight": 1800,
+    "abilities": [
+      "철주먹"
+    ],
+    "abilitiesEn": [
+      "Iron Fist"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "수중3"
+    ],
+    "eggGroupsEn": [
+      "water3"
+    ],
+    "hatchSteps": 5100,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/740.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/740.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 740,
+    "species": "crabominable-mega-za",
+    "baseSpAttack": 62,
+    "baseSpDefense": 107,
+    "formVariant": "crabominable-mega-za",
+    "baseSpecies": "모단단게",
+    "baseSpeciesEn": "crabominable",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": false
+  },
+  {
+    "id": 900136,
+    "number": 900136,
+    "displayNumber": 485,
+    "name": "메가히드런",
+    "nameEn": "heatran-mega-za",
+    "type": "불꽃",
+    "type2": "강철",
+    "catchRate": "0.01",
+    "baseHp": 91,
+    "baseAttack": 120,
+    "baseDefense": 106,
+    "baseSpeed": 67,
+    "generation": 4,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/485.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/485.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 50,
+      "female": 50
+    },
+    "height": 17,
+    "weight": 4300,
+    "abilities": [
+      "불꽃몸"
+    ],
+    "abilitiesEn": [
+      "Flame Body"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "알미발견"
+    ],
+    "eggGroupsEn": [
+      "no-eggs"
+    ],
+    "hatchSteps": 2550,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/485.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/485.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 485,
+    "species": "heatran-mega-za",
+    "baseSpAttack": 175,
+    "baseSpDefense": 141,
+    "formVariant": "heatran-mega-za",
+    "baseSpecies": "히드런",
+    "baseSpeciesEn": "heatran",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": true
+  },
+  {
+    "id": 900137,
+    "number": 900137,
+    "displayNumber": 491,
+    "name": "메가다크라이",
+    "nameEn": "darkrai-mega-za",
+    "type": "악",
+    "type2": null,
+    "catchRate": "0.01",
+    "baseHp": 70,
+    "baseAttack": 120,
+    "baseDefense": 130,
+    "baseSpeed": 85,
+    "generation": 4,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/491.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/491.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 0,
+      "female": 0
+    },
+    "height": 15,
+    "weight": 505,
+    "abilities": [
+      "나이트메어"
+    ],
+    "abilitiesEn": [
+      "Bad Dreams"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "알미발견"
+    ],
+    "eggGroupsEn": [
+      "no-eggs"
+    ],
+    "hatchSteps": 30600,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/491.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/491.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 491,
+    "species": "darkrai-mega-za",
+    "baseSpAttack": 165,
+    "baseSpDefense": 130,
+    "formVariant": "darkrai-mega-za",
+    "baseSpecies": "다크라이",
+    "baseSpeciesEn": "darkrai",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": true
+  },
+  {
+    "id": 900138,
+    "number": 900138,
+    "displayNumber": 801,
+    "name": "메가마기아나",
+    "nameEn": "magearna-mega-za",
+    "type": "강철",
+    "type2": "페어리",
+    "catchRate": "0.01",
+    "baseHp": 80,
+    "baseAttack": 125,
+    "baseDefense": 115,
+    "baseSpeed": 95,
+    "generation": 7,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/801.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/801.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 0,
+      "female": 0
+    },
+    "height": 10,
+    "weight": 805,
+    "abilities": [
+      "소울하트"
+    ],
+    "abilitiesEn": [
+      "Soul-Heart"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "알미발견"
+    ],
+    "eggGroupsEn": [
+      "no-eggs"
+    ],
+    "hatchSteps": 30600,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/801.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/801.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 801,
+    "species": "magearna-mega-za",
+    "baseSpAttack": 170,
+    "baseSpDefense": 115,
+    "formVariant": "magearna-mega-za",
+    "baseSpecies": "마기아나",
+    "baseSpeciesEn": "magearna",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": true
+  },
+  {
+    "id": 900139,
+    "number": 900139,
+    "displayNumber": 807,
+    "name": "메가제라오라",
+    "nameEn": "zeraora-mega-za",
+    "type": "전기",
+    "type2": null,
+    "catchRate": "0.01",
+    "baseHp": 88,
+    "baseAttack": 157,
+    "baseDefense": 75,
+    "baseSpeed": 153,
+    "generation": 7,
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/807.png",
+    "shinySprite": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/shiny/807.png",
+    "isShiny": false,
+    "genderRatio": {
+      "male": 0,
+      "female": 0
+    },
+    "height": 15,
+    "weight": 445,
+    "abilities": [
+      "축전"
+    ],
+    "abilitiesEn": [
+      "Volt Absorb"
+    ],
+    "hiddenAbility": null,
+    "hiddenAbilityEn": null,
+    "eggGroups": [
+      "알미발견"
+    ],
+    "eggGroupsEn": [
+      "no-eggs"
+    ],
+    "hatchSteps": 30600,
+    "iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/807.png",
+    "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/807.png",
+    "isRegionalForm": false,
+    "regionalForm": null,
+    "originalNumber": 807,
+    "species": "zeraora-mega-za",
+    "baseSpAttack": 147,
+    "baseSpDefense": 80,
+    "formVariant": "zeraora-mega-za",
+    "baseSpecies": "제라오라",
+    "baseSpeciesEn": "zeraora",
+    "isOfficial": true,
+    "sourceGame": "Pokemon Legends: Z-A",
+    "abilityPending": true
   }
 ]

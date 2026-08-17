@@ -85,15 +85,23 @@ class ShowdownIntegration {
       category: showdownMove.category,
       basePower: showdownMove.basePower,
       accuracy: showdownMove.accuracy === true ? 100 : showdownMove.accuracy,
+      // accuracy: true인 기술(에어슬래시류 X, 스매쉬다운/에어로블래스트 등 "명중 판정 자체가 없는" 기술)은
+      // 명중률/회피율 랭크가 어떻든 절대 빗나가지 않는다 — 위 accuracy 필드만 보면 100과 구분이 안 되므로 별도 플래그로 보존
+      alwaysHit: showdownMove.accuracy === true,
+      hasCrashDamage: showdownMove.hasCrashDamage || false,
       pp: showdownMove.pp,
       priority: showdownMove.priority,
       target: showdownMove.target,
       flags: showdownMove.flags || {},
       secondary: showdownMove.secondary,
       secondaryChance: showdownMove.secondaryChance,
+      // 오버히트/드래곤에너지/파워제네레이터/절대영도킥 등: secondary(확률부가효과)와 별개로,
+      // "사용하면 무조건 자신에게 적용되는" 랭크변화 등을 담는 필드 (@pkmn/dex 원본 구조 그대로)
+      self: showdownMove.self,
       critRatio: showdownMove.critRatio || 1,
       willCrit: showdownMove.willCrit || false,
       recoil: showdownMove.recoil,
+      mindBlownRecoil: showdownMove.mindBlownRecoil || false,
       drain: showdownMove.drain,
       heal: showdownMove.heal,
       multihit: showdownMove.multihit,
