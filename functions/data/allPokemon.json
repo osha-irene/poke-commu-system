@@ -1348,8 +1348,12 @@
     },
     "height": 12,
     "weight": 380,
-    "abilities": [],
-    "abilitiesEn": [],
+    "abilities": [
+      "서핑테일"
+    ],
+    "abilitiesEn": [
+      "surge-surfer"
+    ],
     "hiddenAbility": null,
     "hiddenAbilityEn": null,
     "eggGroups": [
@@ -1396,8 +1400,12 @@
     },
     "height": 10,
     "weight": 260,
-    "abilities": [],
-    "abilitiesEn": [],
+    "abilities": [
+      "서핑테일"
+    ],
+    "abilitiesEn": [
+      "surge-surfer"
+    ],
     "hiddenAbility": null,
     "hiddenAbilityEn": null,
     "eggGroups": [

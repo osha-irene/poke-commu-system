@@ -44609,6 +44609,82 @@
                 "quality": "normal"
             },
             "onUse": null
+        },
+        {
+            "id": "custom-raichunitex",
+            "name": "라이츄나이트X",
+            "nameEn": "raichunite-x",
+            "category": "mega-stones",
+            "categoryData": {
+                "id": "mega-stones",
+                "nameEn": "mega-stones",
+                "name": "mega-stones",
+                "pocket": "misc"
+            },
+            "cost": 0,
+            "sellPrice": 0,
+            "canSell": false,
+            "effect": "라이츄에게 지니게 하면 배틀할 때 메가라이츄X(으)로 메가진화할 수 있는 창작 메가스톤.",
+            "description": "라이츄에게 지니게 하면 배틀할 때 메가라이츄X(으)로 메가진화할 수 있는 창작 메가스톤.",
+            "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/mewtwonite-x.png",
+            "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/mewtwonite-x.png",
+            "attributes": [
+                "custom"
+            ],
+            "flingPower": 80,
+            "flingEffect": null,
+            "isCustom": true,
+            "isOfficial": false,
+            "createdBy": "customBattleData",
+            "createdAt": null,
+            "cooking": {
+                "isIngredient": false,
+                "isCookable": false,
+                "resultItem": null,
+                "requiredItems": [],
+                "cookingTime": 0,
+                "difficulty": "easy",
+                "quality": "normal"
+            },
+            "onUse": null
+        },
+        {
+            "id": "custom-raichunitey",
+            "name": "라이츄나이트Y",
+            "nameEn": "raichunite-y",
+            "category": "mega-stones",
+            "categoryData": {
+                "id": "mega-stones",
+                "nameEn": "mega-stones",
+                "name": "mega-stones",
+                "pocket": "misc"
+            },
+            "cost": 0,
+            "sellPrice": 0,
+            "canSell": false,
+            "effect": "라이츄에게 지니게 하면 배틀할 때 메가라이츄Y(으)로 메가진화할 수 있는 창작 메가스톤.",
+            "description": "라이츄에게 지니게 하면 배틀할 때 메가라이츄Y(으)로 메가진화할 수 있는 창작 메가스톤.",
+            "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/mewtwonite-y.png",
+            "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/mewtwonite-y.png",
+            "attributes": [
+                "custom"
+            ],
+            "flingPower": 80,
+            "flingEffect": null,
+            "isCustom": true,
+            "isOfficial": false,
+            "createdBy": "customBattleData",
+            "createdAt": null,
+            "cooking": {
+                "isIngredient": false,
+                "isCookable": false,
+                "resultItem": null,
+                "requiredItems": [],
+                "cookingTime": 0,
+                "difficulty": "easy",
+                "quality": "normal"
+            },
+            "onUse": null
         }
     ],
     "metadata": {
