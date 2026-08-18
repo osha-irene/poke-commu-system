@@ -274,9 +274,51 @@ const resolveItemName = (value) => {
 // 방탄패기가 "코어 폼으로 되돌리기"를 시도할 때 되돌아갈 대상(pokemon.set.species)도
 // 유성의 모습이 되어버려서, 매 턴 폼체인지 메시지가 무한 반복되는 버그가 있었다
 // (2026-08-11). 반드시 코어 폼인 "Minior"로 정규화해야 한다.
+//
+// 팔데아 켄타로스는 PokeAPI 이름 그대로("tauros-paldea-aqua-breed"처럼 끝에
+// "-breed"가 붙은 형태) 도감 데이터에 저장되지만, Pokemon Showdown 종족 이름은
+// "Tauros-Paldea-Aqua"처럼 "-breed"가 없다. 그대로 넘기면 종을 찾지 못해
+// "Unidentified species" 크래시가 난다(2026-08-18, src/battle/utils/battleTranslations.js의
+// toShowdownSpeciesName과 동일한 예외 — 이 파일은 그쪽 코드를 공유하지 않으므로
+// 여기도 같이 갱신해야 한다).
+// 2026-08-18: Tauros 외에도 같은 유형(PokeAPI식 이름 ≠ Showdown 종족명)의 불일치가
+// 도감 데이터 전체에서 @pkmn/sim의 Dex.species.get()과 대조해 21건 더 확인됐다 —
+// 갈라르 다르만이탄, 바스쿨레긴/꿀꿀오크 암컷, 말이슈머, 꽥꽥초리 4색, 코라이돈/
+// 미라이돈의 코스메틱 폼(스탯 차이 없어 원종으로 매핑), 지가르데. 그대로 두면
+// 전부 "Unidentified species" 크래시로 이어진다(src/battle/utils/battleTranslations.js와
+// 동일한 매핑 — 이 파일은 그쪽 코드를 공유하지 않으므로 여기도 같이 갱신해야 한다).
+const SPECIES_NAME_OVERRIDES = {
+  taurospaldeaaquabreed: 'Tauros-Paldea-Aqua',
+  taurospaldeablazebreed: 'Tauros-Paldea-Blaze',
+  taurospaldeacombatbreed: 'Tauros-Paldea-Combat',
+  darmanitangalarstandard: 'Darmanitan-Galar',
+  basculegionfemale: 'Basculegion-F',
+  basculegionmale: 'Basculegion',
+  oinkolognefemale: 'Oinkologne-F',
+  oinkolognemale: 'Oinkologne',
+  mausholdfamilyoffour: 'Maushold-Four',
+  mausholdfamilyofthree: 'Maushold',
+  squawkabillyblueplumage: 'Squawkabilly-Blue',
+  squawkabillyyellowplumage: 'Squawkabilly-Yellow',
+  squawkabillywhiteplumage: 'Squawkabilly-White',
+  squawkabillygreenplumage: 'Squawkabilly',
+  koraidonlimitedbuild: 'Koraidon',
+  koraidonsprintingbuild: 'Koraidon',
+  koraidonswimmingbuild: 'Koraidon',
+  koraidonglidingbuild: 'Koraidon',
+  miraidonlowpowermode: 'Miraidon',
+  miraidondrivemode: 'Miraidon',
+  miraidonaquaticmode: 'Miraidon',
+  miraidonglidemode: 'Miraidon',
+  zygarde10powerconstruct: 'Zygarde-10%',
+  zygarde50powerconstruct: 'Zygarde',
+};
+
 const resolveSpeciesName = (value) => {
   const species = String(value || '');
-  return /^minior-.+-meteor$/i.test(species) ? 'Minior' : species;
+  if (/^minior-.+-meteor$/i.test(species)) return 'Minior';
+  const override = SPECIES_NAME_OVERRIDES[normalizeId(species)];
+  return override || species;
 };
 
 const translateItemName = (value) => {
