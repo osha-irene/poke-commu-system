@@ -58,6 +58,21 @@ export const toShowdownItemName = (value) => {
   return showdownItemNames[normalized] || value || '';
 };
 
+// PokeAPI 폼 이름과 Pokemon Showdown 종족 이름이 다른 경우를 위한 예외 매핑.
+// 예: 팔데아 켄타로스는 PokeAPI에서 "tauros-paldea-aqua-breed"처럼 끝에 "-breed"가
+// 붙지만, Showdown 시뮬레이터/데미지 계산기에서는 "Tauros-Paldea-Aqua"로 존재해서
+// "-breed"가 붙은 이름을 그대로 넘기면 종을 찾지 못해 배틀이 즉시 크래시했다.
+const SPECIES_NAME_OVERRIDES = {
+  taurospaldeaaquabreed: 'Tauros-Paldea-Aqua',
+  taurospaldeablazebreed: 'Tauros-Paldea-Blaze',
+  taurospaldeacombatbreed: 'Tauros-Paldea-Combat',
+};
+
+export const toShowdownSpeciesName = (value) => {
+  const normalized = normalizeBattleKey(value);
+  return SPECIES_NAME_OVERRIDES[normalized] || value || '';
+};
+
 export const translateTypeName = (type) => ({
   Normal: '노말',
   Fire: '불꽃',

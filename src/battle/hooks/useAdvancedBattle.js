@@ -21,6 +21,7 @@ import {
   translateVolatileName,
   translateWeatherName,
   toShowdownItemName,
+  toShowdownSpeciesName,
 } from '../utils/battleTranslations';
 
 // Showdown hardcodes ppUps=3 (PP Max, 1.6x base PP) for all moves internally.
@@ -158,7 +159,8 @@ const ZERO_EVS = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
 // (2026-08-11). 반드시 코어 폼인 "Minior"로 정규화해야 한다.
 const resolveBattleSpeciesName = (species) => {
   const value = String(species || '');
-  return /^minior-.+-meteor$/i.test(value) ? 'Minior' : value;
+  if (/^minior-.+-meteor$/i.test(value)) return 'Minior';
+  return toShowdownSpeciesName(value) || value;
 };
 
 // 오리진 난이도(배틀 아이템 사용 ON)에서는 모든 포켓몬의 기초포인트(노력치)가

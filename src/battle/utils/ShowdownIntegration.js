@@ -5,6 +5,7 @@ import { calculate, Pokemon, Move, Field, Side } from '@smogon/calc';
 // 로컬 데이터 import
 import movesData from '../../data/moves.json';
 import abilitiesData from '../../data/abilities.json';
+import { toShowdownSpeciesName } from './battleTranslations';
 
 /**
  * 쇼다운 데이터와 로컬 데이터를 통합하는 클래스
@@ -222,7 +223,7 @@ class ShowdownIntegration {
   getSpecies(speciesName) {
     if (!speciesName) return null;
 
-    const normalizedName = this.normalizeKey(speciesName);
+    const normalizedName = this.normalizeKey(toShowdownSpeciesName(speciesName) || speciesName);
     const species = this.currentGen.species.get(normalizedName);
 
     if (!species) {
@@ -283,7 +284,7 @@ class ShowdownIntegration {
     try {
       // 포켓몬 이름 정규화
       let speciesName = pokemon.species || pokemon.name || 'bulbasaur';
-      speciesName = this.normalizeKey(speciesName);
+      speciesName = this.normalizeKey(toShowdownSpeciesName(speciesName) || speciesName);
       
       console.log('[createCalcPokemon] 정규화된 이름:', speciesName);
       

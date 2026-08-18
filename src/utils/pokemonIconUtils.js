@@ -28,6 +28,12 @@ const FORM_ICON_ALIASES = {
   // 돌핀맨은 폼(제로/히어로) 구분 없이 기본 아이콘(PALAFIN.png) 하나만 쓴다.
   'PALAFIN-HERO': 'PALAFIN',
   'PALAFIN-ZERO': 'PALAFIN',
+  // 팔데아 켄타로스는 formVariant가 PokeAPI 이름 그대로("...-BREED"가 붙은 형태)라
+  // 다른 지역폼(WOOPER-PALDEA 등)과 다르게 그대로 두면 파일명이 지저분해진다.
+  // "-BREED"를 뗀 짧은 이름으로 통일한다.
+  'TAUROS-PALDEA-AQUA-BREED': 'TAUROS-PALDEA-AQUA',
+  'TAUROS-PALDEA-BLAZE-BREED': 'TAUROS-PALDEA-BLAZE',
+  'TAUROS-PALDEA-COMBAT-BREED': 'TAUROS-PALDEA-COMBAT',
 };
 
 const REGIONAL_ICON_SUFFIXES = {

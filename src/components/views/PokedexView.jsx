@@ -103,23 +103,6 @@ export default function PokedexView({
     return getPokedexEntryWithKey(pokemon).entry;
   };
 
-  // 영운 도감에 등록된 포켓몬은 해금 전에도 카드로 표시
-  const visiblePokedex = pokedex.filter(pokemon => {
-    const isRegionalForm = pokemon.originalNumber && pokemon.originalNumber !== pokemon.number;
-
-    if (isRegionalForm) {
-      // 원종이 영운 도감에 있으면 원종 카드 안의 폼 탭으로만 표시
-      if (gamePokedexNumbers.has(toDexNumber(pokemon.originalNumber))) {
-        return false;
-      }
-
-      // 원종이 영운 도감에 없고 리전폼만 등록되어 있으면 리전폼 카드로 표시
-      return true;
-    }
-
-    return true;
-  });
-
   // 활성 마을에 속한 포켓몬 번호 집합 계산
   // pokedexActiveTowns는 "이 마을을 도감에 포함시킬지"만 결정하는 마을 단위 화이트리스트다.
   // 마을/지역의 눈감기(groupVisible/visible)는 여기서도 무시해 실제 출현 여부와 분리하지만,
@@ -179,18 +162,47 @@ export default function PokedexView({
     return hiddenOnly;
   }, [regions]);
 
-  const townFilteredPokedex = activeTownPokemonNums
-    ? visiblePokedex.filter(pokemon => {
-        const num = toDexNumber(pokemon.number);
-        const orig = toDexNumber(pokemon.originalNumber);
-        return (num && activeTownPokemonNums.has(num)) || (orig && activeTownPokemonNums.has(orig));
-      })
-    : visiblePokedex.filter(pokemon => {
-        const num = toDexNumber(pokemon.number);
-        const orig = toDexNumber(pokemon.originalNumber);
-        const isHidden = (num && hiddenOnlyPokemonNums.has(num)) || (orig && hiddenOnlyPokemonNums.has(orig));
-        return !isHidden;
-      });
+  const passesLocationFilter = (pokemon) => {
+    const num = toDexNumber(pokemon.number);
+    const orig = toDexNumber(pokemon.originalNumber);
+    if (activeTownPokemonNums) {
+      return (num && activeTownPokemonNums.has(num)) || (orig && activeTownPokemonNums.has(orig));
+    }
+    const isHidden = (num && hiddenOnlyPokemonNums.has(num)) || (orig && hiddenOnlyPokemonNums.has(orig));
+    return !isHidden;
+  };
+
+  // 원종이 실제로 카드로 뜰 예정인 번호만 모아둔다. 장소(마을/눈감기) 필터를 통과하지
+  // 못해 원종 카드 자체가 안 뜰 거라면, 리전폼을 "원종 카드 안 폼 탭"으로 숨겨버리면
+  // 안 된다 — 원종도 리전폼도 화면에서 통째로 사라지는 문제가 생긴다(예: 팔데아
+  // 켄타로스만 장소에 배치돼 있고 원종 켄타로스는 어디에도 배치 안 된 경우).
+  const locationVisiblePokedexNumbers = new Set(
+    pokedex.filter(passesLocationFilter).map(pokemon => toDexNumber(pokemon.number)).filter(Boolean)
+  );
+
+  // 영운 도감에 등록된 포켓몬은 해금 전에도 카드로 표시
+  const visiblePokedex = pokedex.filter(pokemon => {
+    if (!passesLocationFilter(pokemon)) return false;
+
+    const isRegionalForm = pokemon.originalNumber && pokemon.originalNumber !== pokemon.number;
+
+    if (isRegionalForm) {
+      // 원종이 실제로 카드로 뜬다면 원종 카드 안의 폼 탭으로만 표시
+      if (
+        gamePokedexNumbers.has(toDexNumber(pokemon.originalNumber)) &&
+        locationVisiblePokedexNumbers.has(toDexNumber(pokemon.originalNumber))
+      ) {
+        return false;
+      }
+
+      // 원종이 안 뜨거나(장소 필터로 제외 포함) 영운 도감에 없으면 리전폼 카드로 표시
+      return true;
+    }
+
+    return true;
+  });
+
+  const townFilteredPokedex = visiblePokedex;
 
   const filteredPokedex = townFilteredPokedex.filter(pokemon => {
     if (!searchTerm) return true;
