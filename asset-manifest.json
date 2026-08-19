@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.bbd35f22.css",
-    "main.js": "/static/js/main.6540b17a.js",
+    "main.css": "/static/css/main.157a185a.css",
+    "main.js": "/static/js/main.bb3c8063.js",
     "static/js/623.69c45dc4.chunk.js": "/static/js/623.69c45dc4.chunk.js",
     "static/media/forest-bg.png": "/static/media/forest-bg.ed51a4032d3a6a7016d2.png",
     "static/media/map.png": "/static/media/map.a93920750eb1513e2792.png",
@@ -11,11 +11,9 @@
     "static/media/GmarketSansTTFLight.ttf": "/static/media/GmarketSansTTFLight.efaa8f19ead1555b1c39.ttf",
     "static/media/YeojuCeramic.ttf": "/static/media/YeojuCeramic.95ed01e4fba0f8c0a443.ttf",
     "static/media/main_deco_paper.png": "/static/media/main_deco_paper.f65efe6456e423dc929f.png",
-    "static/media/doctor_wpen.png": "/static/media/doctor_wpen.d1d9dd1e8d1cdb4271a9.png",
     "static/media/main_player.png": "/static/media/main_player.e7faba9211c9be0d3ba5.png",
     "static/media/main_schedule.png": "/static/media/main_schedule.08afd157600a8606a2b3.png",
     "static/media/cramorant.png": "/static/media/cramorant.b77088b896dded6e516a.png",
-    "static/media/main_npc.png": "/static/media/main_npc.b48850ebb2a6e5f6c1b5.png",
     "static/media/ribbon-intelligence.png": "/static/media/ribbon-intelligence.f323ac102b9fe7a13add.png",
     "static/media/ribbon-cool.png": "/static/media/ribbon-cool.8a7d3e56819355219ece.png",
     "static/media/ribbon-cute.png": "/static/media/ribbon-cute.4907a0e6f6604405cd98.png",
@@ -33,6 +31,7 @@
     "static/media/badge8.png": "/static/media/badge8.89fdb387b11aebb0ae56.png",
     "static/media/rubbing.mp3": "/static/media/rubbing.b846dd12125a470dd965.mp3",
     "static/media/forest-bg-blurred.jpg": "/static/media/forest-bg-blurred.97f48d40be7379db6d3e.jpg",
+    "static/media/main_npc.png": "/static/media/main_npc.7f3fcb7dab4548ecf912.png",
     "static/media/device-top.png": "/static/media/device-top.33437cbe24c506cd4219.png",
     "static/media/badge.png": "/static/media/badge.9940f5dbbf09d4ee3a56.png",
     "static/media/main_news.png": "/static/media/main_news.1610334b488bf668eaef.png",
@@ -73,12 +72,12 @@
     "static/media/Whirl Islands cave_arnie.png": "/static/media/Whirl Islands cave_arnie.66120ee2033224a9cc5d.png",
     "index.html": "/index.html",
     "static/media/pokemon-icon.svg": "/static/media/pokemon-icon.d36b6f0655c180980d5acb3287a88011.svg",
-    "main.bbd35f22.css.map": "/static/css/main.bbd35f22.css.map",
-    "main.6540b17a.js.map": "/static/js/main.6540b17a.js.map",
+    "main.157a185a.css.map": "/static/css/main.157a185a.css.map",
+    "main.bb3c8063.js.map": "/static/js/main.bb3c8063.js.map",
     "623.69c45dc4.chunk.js.map": "/static/js/623.69c45dc4.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.bbd35f22.css",
-    "static/js/main.6540b17a.js"
+    "static/css/main.157a185a.css",
+    "static/js/main.bb3c8063.js"
   ]
 }
