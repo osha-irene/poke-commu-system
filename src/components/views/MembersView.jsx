@@ -39,6 +39,11 @@ import rubbingSound from '../../assets/sounds/rubbing.mp3';
 
 const BADGE_IMGS = [badge1Img, badge2Img, badge3Img, badge4Img, badge5Img, badge6Img, badge7Img, badge8Img];
 const STATIC_TITLE_ICONS = { icon1: loginIcon1, icon2: loginIcon2, icon3: loginIcon3, icon4: loginIcon4 };
+// 특정 칭호는 기존 스티커를 교체하지 않고, 보조 이미지를 대각선 반대편에 겹쳐 붙여서 함께 보여준다.
+const TITLE_BONUS_STICKERS = {
+  millonaire: '/img/titles/millonaire-coin.webp',
+  comorantlover: '/img/titles/comorantlover2.png',
+};
 const BADGE_CLEANLINESS_DEFAULT = 2;
 const BADGE_CLEANLINESS_MIN = 1;
 const BADGE_CLEANLINESS_MAX = 5;
@@ -250,35 +255,68 @@ const seededNumber = (seed) => {
   return (hash >>> 0) / 4294967295;
 };
 
+// positions의 left 범위는 11~85(합 96), top 범위는 8~54(합 62)로 설계되어 있어
+// 대각선 반대편 스티커는 96/62에서 빼는 것만으로 같은 안전 영역 안에서 대칭된다.
+const STICKER_POSITIONS = [
+  { left: 14, leftJitter: 8, top: 10, topJitter: 6 },
+  { left: 34, leftJitter: 24, top: 8, topJitter: 5 },
+  { left: 11, leftJitter: 5, top: 26, topJitter: 24 },
+  { left: 82, leftJitter: 3, top: 39, topJitter: 15 },
+  { left: 20, leftJitter: 36, top: 9, topJitter: 5 },
+];
+const STICKER_LEFT_MIRROR_SUM = 96;
+const STICKER_TOP_MIRROR_SUM = 62;
+
+const getStickerAnchorPosition = (seed) => {
+  const anchor = Math.floor(seededNumber(`${seed}:anchor`) * 5);
+  const p = STICKER_POSITIONS[anchor];
+  return {
+    left: p.left + seededNumber(`${seed}:l${anchor}`) * p.leftJitter,
+    top: p.top + seededNumber(`${seed}:t${anchor}`) * p.topJitter,
+  };
+};
+
+const buildStickerStyle = ({ left, top, size, rotation, zIndex = 12 }) => ({
+  position: 'absolute',
+  left: `${left}%`,
+  top: `${top}%`,
+  width: size,
+  height: size,
+  zIndex,
+  transform: 'translate(-50%, -50%)',
+  transformOrigin: '50% 50%',
+  '--title-sticker-rotation': `${rotation.toFixed(1)}deg`,
+  objectFit: 'contain',
+  pointerEvents: 'auto',
+  userSelect: 'none',
+  filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.18)) drop-shadow(0 0 2px rgba(255,255,255,0.95))',
+});
+
 const getTitleStickerStyle = (member, titleId) => {
   const seed = `${member?.id || member?.name || ''}:${titleId || ''}`;
-  const anchor = Math.floor(seededNumber(`${seed}:anchor`) * 5);
-  const positions = [
-    { left: 14 + seededNumber(`${seed}:l0`) * 8, top: 10 + seededNumber(`${seed}:t0`) * 6 },
-    { left: 34 + seededNumber(`${seed}:l1`) * 24, top: 8 + seededNumber(`${seed}:t1`) * 5 },
-    { left: 11 + seededNumber(`${seed}:l2`) * 5, top: 26 + seededNumber(`${seed}:t2`) * 24 },
-    { left: 82 + seededNumber(`${seed}:l3`) * 3, top: 39 + seededNumber(`${seed}:t3`) * 15 },
-    { left: 20 + seededNumber(`${seed}:l4`) * 36, top: 9 + seededNumber(`${seed}:t4`) * 5 },
-  ];
-  const selected = positions[anchor];
+  const { left, top } = getStickerAnchorPosition(seed);
   const rotation = -18 + seededNumber(`${seed}:rotation`) * 36;
   const size = 63 + seededNumber(`${seed}:size`) * 18;
+  return buildStickerStyle({ left, top, size, rotation });
+};
 
-  return {
-    position: 'absolute',
-    left: `${selected.left}%`,
-    top: `${selected.top}%`,
-    width: size,
-    height: size,
-    zIndex: 12,
-    transform: 'translate(-50%, -50%)',
-    transformOrigin: '50% 50%',
-    '--title-sticker-rotation': `${rotation.toFixed(1)}deg`,
-    objectFit: 'contain',
-    pointerEvents: 'auto',
-    userSelect: 'none',
-    filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.18)) drop-shadow(0 0 2px rgba(255,255,255,0.95))',
-  };
+// 중앙값에서 멀어질수록 더 세게 밀어서, 사진 중앙을 가리지 않고 가장자리 쪽에 붙게 한다.
+const pushTowardEdge = (value, min, max, strength = 1.8) => {
+  const mid = (min + max) / 2;
+  const pushed = mid + (value - mid) * strength;
+  return Math.min(max, Math.max(min, pushed));
+};
+
+// 보조 스티커(황금몸 금틀니 등)는 기본 스티커와 좌우/상하가 뒤집힌 대각선 반대편에 붙이되,
+// 얼굴이 있는 중앙부는 가리지 않도록 가장자리 쪽으로 밀어서 배치한다.
+const getDiagonalStickerStyle = (member, titleId, primaryPosition, size) => {
+  const seed = `${member?.id || member?.name || ''}:${titleId || ''}`;
+  const rotation = -18 + seededNumber(`${seed}:bonus-rotation`) * 36;
+  const mirroredLeft = STICKER_LEFT_MIRROR_SUM - primaryPosition.left;
+  const mirroredTop = STICKER_TOP_MIRROR_SUM - primaryPosition.top;
+  const left = pushTowardEdge(mirroredLeft, 11, 85);
+  const top = pushTowardEdge(mirroredTop, 8, 54);
+  return buildStickerStyle({ left, top, size, rotation });
 };
 
 const getPokemonImg = p => p?.sprite || p?.spriteUrl || p?.imageUrl || p?.iconUrl || '';
@@ -584,6 +622,15 @@ function MemberCard({ member, titles, onClick }) {
   const titleIcon = getTitleIconUrl(member?.title, titles);
   const titleLabel = titleIcon ? getTitleLabel(member?.title, titles) : '';
   const titleStickerStyle = titleIcon ? getTitleStickerStyle(member, member.title) : null;
+  const bonusStickerIcon = titleIcon ? TITLE_BONUS_STICKERS[member?.title] : null;
+  const bonusStickerStyle = bonusStickerIcon
+    ? getDiagonalStickerStyle(
+        member,
+        member.title,
+        getStickerAnchorPosition(`${member?.id || member?.name || ''}:${member.title || ''}`),
+        48
+      )
+    : null;
 
   useEffect(() => {
     setTitleTooltipColor({ bg: 'rgba(35, 32, 28, 0.94)', text: '#fff' });
@@ -644,6 +691,23 @@ function MemberCard({ member, titles, onClick }) {
             draggable={false}
             onLoad={handleTitleIconLoad}
             style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', pointerEvents: 'none', transform: 'rotate(var(--title-sticker-rotation))' }}
+          />
+        </div>
+      )}
+      {bonusStickerIcon && (
+        <div style={bonusStickerStyle} aria-hidden="true">
+          <img
+            src={bonusStickerIcon}
+            alt=""
+            draggable={false}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              display: 'block',
+              pointerEvents: 'none',
+              transform: 'rotate(var(--title-sticker-rotation))',
+            }}
           />
         </div>
       )}
