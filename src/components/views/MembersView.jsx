@@ -301,7 +301,7 @@ const getTitleStickerStyle = (member, titleId) => {
 };
 
 // 중앙값에서 멀어질수록 더 세게 밀어서, 사진 중앙을 가리지 않고 가장자리 쪽에 붙게 한다.
-const pushTowardEdge = (value, min, max, strength = 1.8) => {
+const pushTowardEdge = (value, min, max, strength = 2.2) => {
   const mid = (min + max) / 2;
   const pushed = mid + (value - mid) * strength;
   return Math.min(max, Math.max(min, pushed));
@@ -309,13 +309,15 @@ const pushTowardEdge = (value, min, max, strength = 1.8) => {
 
 // 보조 스티커(황금몸 금틀니 등)는 기본 스티커와 좌우/상하가 뒤집힌 대각선 반대편에 붙이되,
 // 얼굴이 있는 중앙부는 가리지 않도록 가장자리 쪽으로 밀어서 배치한다.
+// 보조 스티커는 48px로 고정 크기라(기본 스티커의 63~81px보다 작음) 기본 스티커보다
+// 더 가장자리(5~92% / 6~62%)까지 밀어도 사진 밖으로 크게 삐져나오지 않는다.
 const getDiagonalStickerStyle = (member, titleId, primaryPosition, size) => {
   const seed = `${member?.id || member?.name || ''}:${titleId || ''}`;
   const rotation = -18 + seededNumber(`${seed}:bonus-rotation`) * 36;
   const mirroredLeft = STICKER_LEFT_MIRROR_SUM - primaryPosition.left;
   const mirroredTop = STICKER_TOP_MIRROR_SUM - primaryPosition.top;
-  const left = pushTowardEdge(mirroredLeft, 11, 85);
-  const top = pushTowardEdge(mirroredTop, 8, 54);
+  const left = pushTowardEdge(mirroredLeft, 5, 92);
+  const top = pushTowardEdge(mirroredTop, 6, 62);
   return buildStickerStyle({ left, top, size, rotation });
 };
 
