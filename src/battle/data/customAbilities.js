@@ -384,6 +384,70 @@ export const customAbilities = {
     rating: 4,
     num: 9017,
   },
+
+  // 탈 (Disguise) — 엔진 내장 특성 패치(신규 특성 아님).
+  // @pkmn/sim에 내장된 탈 특성은 onDamage/onCriticalHit/onEffectiveness/onUpdate 네
+  // 훅 전부가 target.species.id === 'mimikyu' | 'mimikyutotem'인지만 확인하도록
+  // 하드코딩되어 있다. 커스텀 메가따라큐(species id: 'mimikyumega')는 이 목록에
+  // 없어서 특성만 붙어있을 뿐 첫 대미지도 안 막고, 급소/상성 무효화도 안 되고, 폼이
+  // 깨지는 1/8 대미지도 발동하지 않았다. 아래는 원본 로직을 그대로 복제하되
+  // 'mimikyumega'를 인식 목록에 추가한 버전이다 — 일반 따라큐/따라큐(퇴마)는 원본과
+  // 동일하게 동작하고 메가따라큐만 새로 정상 작동한다.
+  // 메가따라큐 전용 "Busted" 폼(스탯/스프라이트)은 만들지 않았으므로, 메가폼이 깨질
+  // 때는 폼체인지 대신 최대체력 1/8 대미지만 주고 이후로는 계속 무력화 상태로 남는다
+  // (실전 결과는 원본과 동일: 스위치인당 1회용 방어, 깨진 뒤엔 재사용 불가).
+  disguise: {
+    name: 'Disguise',
+    shortDesc: 'If this Pokemon is a Mimikyu (or Mega Mimikyu), the first hit it takes in '
+      + 'battle deals 0 damage instead, and it takes 1/8 of its max HP damage.',
+    onDamagePriority: 1,
+    onDamage(damage, target, source, effect) {
+      if (
+        effect?.effectType === 'Move'
+        && ['mimikyu', 'mimikyutotem', 'mimikyumega'].includes(target.species.id)
+        && !this.effectState.busted
+      ) {
+        this.add('-activate', target, 'ability: Disguise');
+        this.effectState.busted = true;
+        return 0;
+      }
+    },
+    onCriticalHit(target, source, move) {
+      if (!target) return;
+      if (!['mimikyu', 'mimikyutotem', 'mimikyumega'].includes(target.species.id)) return;
+      const hitSub = target.volatiles['substitute'] && !move.flags['bypasssub']
+        && !(move.infiltrates && this.gen >= 6);
+      if (hitSub) return;
+      if (!target.runImmunity(move)) return;
+      return false;
+    },
+    onEffectiveness(typeMod, target, type, move) {
+      if (!target || move.category === 'Status') return;
+      if (!['mimikyu', 'mimikyutotem', 'mimikyumega'].includes(target.species.id)) return;
+      const hitSub = target.volatiles['substitute'] && !move.flags['bypasssub']
+        && !(move.infiltrates && this.gen >= 6);
+      if (hitSub) return;
+      if (!target.runImmunity(move)) return;
+      return 0;
+    },
+    onUpdate(pokemon) {
+      if (!this.effectState.busted) return;
+      if (['mimikyu', 'mimikyutotem'].includes(pokemon.species.id)) {
+        const speciesid = pokemon.species.id === 'mimikyutotem' ? 'Mimikyu-Busted-Totem' : 'Mimikyu-Busted';
+        pokemon.formeChange(speciesid, this.effect, true);
+        this.damage(pokemon.baseMaxhp / 8, pokemon, pokemon, this.dex.species.get(speciesid));
+      } else if (pokemon.species.id === 'mimikyumega' && !this.effectState.bustedDamageDealt) {
+        this.effectState.bustedDamageDealt = true;
+        this.damage(pokemon.baseMaxhp / 8, pokemon, pokemon, this.effect);
+      }
+    },
+    flags: {
+      failroleplay: 1, noreceiver: 1, noentrain: 1, notrace: 1, failskillswap: 1, cantsuppress: 1,
+      breakable: 1, notransform: 1,
+    },
+    rating: 3.5,
+    num: 209,
+  },
 };
 
 export default customAbilities;

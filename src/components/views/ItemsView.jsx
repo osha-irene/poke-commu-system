@@ -242,7 +242,7 @@ const categories = CATEGORIES.map(cat => {
     if (isFormChangeItem(item)) {
       const itemNameEn = getItemNameEn(item);
       const eligibleNumbers = FORM_CHANGE_ITEM_POKEMON[itemNameEn] || [];
-      const eligible = caughtPokemon.filter(p =>
+      const eligible = allPokemonForItem.filter(p =>
         p && p !== 'null' && p.uniqueId &&
         eligibleNumbers.includes(Number(p.originalNumber || p.number))
       );
@@ -713,7 +713,7 @@ const categories = CATEGORIES.map(cat => {
                         const itemNameEn = getItemNameEn(selectedItem);
                         const isNectar = Boolean(NECTAR_FORM_MAP[itemNameEn]);
                         const eligibleNumbers = FORM_CHANGE_ITEM_POKEMON[itemNameEn] || [];
-                        const eligible = caughtPokemon.filter(p =>
+                        const eligible = allPokemonForItem.filter(p =>
                           p && p !== 'null' && p.uniqueId &&
                           eligibleNumbers.includes(Number(p.originalNumber || p.number))
                         );
