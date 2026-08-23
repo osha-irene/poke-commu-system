@@ -67,7 +67,7 @@ export const customAbilities = {
         this.boost({ spe: 1 });
       }
     },
-    onBoost(boost, target, source, effect) {
+    onTryBoost(boost, target, source, effect) {
       if (source && target !== source && boost.spe && boost.spe < 0) {
         delete boost.spe;
       }

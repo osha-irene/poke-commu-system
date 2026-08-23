@@ -420,14 +420,26 @@ const isStoutland = p => {
 
   return joined.includes('stoutland') || joined.includes('그랑불');
 };
-const isPokemonDbSpriteException = p => isGalarianFarfetchd(p) || isLillipup(p) || isHerdier(p) || isStoutland(p);
+const isSirfetchd = p => {
+  const values = [
+    p?.nameEn,
+    p?.name,
+    p?.species,
+    p?.formName,
+    p?.formVariant,
+  ].filter(Boolean).map(v => String(v).toLowerCase());
+  const joined = values.join(' ');
+
+  return joined.includes('sirfetchd') || joined.includes('창파나이트');
+};
+const isPokemonDbSpriteException = p => isGalarianFarfetchd(p) || isLillipup(p) || isHerdier(p) || isStoutland(p) || isSirfetchd(p);
 const getPokemonDbExceptionTopOffset = p => {
-  if (isGalarianFarfetchd(p)) return 0.22;
+  if (isGalarianFarfetchd(p) || isSirfetchd(p)) return 0.22;
   if (isLillipup(p) || isHerdier(p) || isStoutland(p)) return 0.28;
   return 0;
 };
 const getPartnerTooltipOffset = p => {
-  if (isGalarianFarfetchd(p) || isLillipup(p) || isHerdier(p) || isStoutland(p)) return { x: 20, y: -60 };
+  if (isGalarianFarfetchd(p) || isLillipup(p) || isHerdier(p) || isStoutland(p) || isSirfetchd(p)) return { x: 20, y: -60 };
   return { x: 0, y: 0 };
 };
 const getPokemonDbSprite = p => {
@@ -442,6 +454,9 @@ const getPokemonDbSprite = p => {
   }
   if (isHerdier(p)) {
     return 'https://img.pokemondb.net/sprites/sword-shield/normal/herdier.png';
+  }
+  if (isSirfetchd(p)) {
+    return 'https://img.pokemondb.net/sprites/sword-shield/normal/sirfetchd.png';
   }
   const name = p?.nameEn || p?.name;
   if (name) return `https://img.pokemondb.net/sprites/scarlet-violet/normal/${name.toLowerCase().replace(/\s+/g, '-')}.png`;

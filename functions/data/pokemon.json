@@ -1348,10 +1348,14 @@
     },
     "height": 12,
     "weight": 380,
-    "abilities": [],
-    "abilitiesEn": [],
-    "hiddenAbility": null,
-    "hiddenAbilityEn": null,
+    "abilities": [
+      "일렉트릭메이커"
+    ],
+    "abilitiesEn": [
+      "electric-surge"
+    ],
+    "hiddenAbility": "피뢰침",
+    "hiddenAbilityEn": "lightning-rod",
     "eggGroups": [
       "ground",
       "요정"
@@ -1396,10 +1400,14 @@
     },
     "height": 10,
     "weight": 260,
-    "abilities": [],
-    "abilitiesEn": [],
-    "hiddenAbility": null,
-    "hiddenAbilityEn": null,
+    "abilities": [
+      "노가드"
+    ],
+    "abilitiesEn": [
+      "no-guard"
+    ],
+    "hiddenAbility": "피뢰침",
+    "hiddenAbilityEn": "lightning-rod",
     "eggGroups": [
       "ground",
       "요정"

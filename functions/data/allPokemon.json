@@ -1349,13 +1349,13 @@
     "height": 12,
     "weight": 380,
     "abilities": [
-      "서핑테일"
+      "일렉트릭메이커"
     ],
     "abilitiesEn": [
-      "surge-surfer"
+      "electric-surge"
     ],
-    "hiddenAbility": null,
-    "hiddenAbilityEn": null,
+    "hiddenAbility": "피뢰침",
+    "hiddenAbilityEn": "lightning-rod",
     "eggGroups": [
       "ground",
       "요정"
@@ -1401,13 +1401,13 @@
     "height": 10,
     "weight": 260,
     "abilities": [
-      "서핑테일"
+      "노가드"
     ],
     "abilitiesEn": [
-      "surge-surfer"
+      "no-guard"
     ],
-    "hiddenAbility": null,
-    "hiddenAbilityEn": null,
+    "hiddenAbility": "피뢰침",
+    "hiddenAbilityEn": "lightning-rod",
     "eggGroups": [
       "ground",
       "요정"

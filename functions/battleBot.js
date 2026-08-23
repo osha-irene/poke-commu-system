@@ -110,6 +110,12 @@ const registerCustomBattleData = () => {
     Dex.data.Abilities[abilityId] = { id: abilityId, ...ability };
   });
 
+  // @pkmn/sim에 내장된 라이츄-메가-X/Y(포켓몬 레전드 Z-A) 데이터가 특성을 서핑테일(Surge
+  // Surfer)로 잘못 갖고 있음 - 실제로는 일렉트릭메이커/노가드 (Bulbapedia 확인, 2026-08-23).
+  // baseStats/메가스톤 연결은 내장 데이터가 정확하므로 종 전체를 덮어쓰지 않고 특성만 패치한다.
+  if (Dex.data.Species.raichumegax) Dex.data.Species.raichumegax.abilities = { 0: 'Electric Surge' };
+  if (Dex.data.Species.raichumegay) Dex.data.Species.raichumegay.abilities = { 0: 'No Guard' };
+
   (customBattleData.customMegaEvolutions || []).forEach((mega) => {
     Dex.data.Species[normalizeId(mega.name)] = {
       num: 350,

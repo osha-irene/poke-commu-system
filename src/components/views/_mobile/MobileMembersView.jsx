@@ -137,6 +137,19 @@ const isStoutland = p => {
   return joined.includes('stoutland') || joined.includes('그랑불');
 };
 
+const isSirfetchd = p => {
+  const values = [
+    p?.nameEn,
+    p?.name,
+    p?.species,
+    p?.formName,
+    p?.formVariant,
+  ].filter(Boolean).map(v => String(v).toLowerCase());
+  const joined = values.join(' ');
+
+  return joined.includes('sirfetchd') || joined.includes('창파나이트');
+};
+
 const getPokemonDbSprite = p => {
   if (isGalarianFarfetchd(p)) {
     return 'https://img.pokemondb.net/sprites/sword-shield/normal/farfetchd-galarian.png';
@@ -149,6 +162,9 @@ const getPokemonDbSprite = p => {
   }
   if (isHerdier(p)) {
     return 'https://img.pokemondb.net/sprites/sword-shield/normal/herdier.png';
+  }
+  if (isSirfetchd(p)) {
+    return 'https://img.pokemondb.net/sprites/sword-shield/normal/sirfetchd.png';
   }
   if (p?.regionalForm || p?.formVariant) {
     return getOwnedPokemonSpriteUrl(p) || getPokemonLocalIconUrl(p);
