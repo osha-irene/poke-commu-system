@@ -326,7 +326,7 @@ export const useAdminMembers = (
         return ranks[Math.floor(Math.random() * ranks.length)];
       })(),
       ...(inheritedNature ? { nature: inheritedNature } : {}),
-      favoriteFlavor: inheritedFlavor || ['매운맛','신맛','단맛','쓴맛','짠맛'][Math.floor(Math.random() * 5)]
+      favoriteFlavor: inheritedFlavor || ['매운맛','신맛','단맛','쓴맛','떫은맛'][Math.floor(Math.random() * 5)]
     });
   };
 
@@ -937,7 +937,7 @@ export const useAdminMembers = (
       member.caughtPokemon = [];
     }
 
-    const FLAVORS = ['매운맛', '신맛', '단맛', '쓴맛', '짠맛'];
+    const FLAVORS = ['매운맛', '신맛', '단맛', '쓴맛', '떫은맛'];
 
     const {
       level = 5,

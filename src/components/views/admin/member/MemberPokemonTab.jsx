@@ -366,8 +366,17 @@ function MemberPokemonTab({
       pokemonId: evolvedTemplate.number,
       name: newName,
       nameEn: evolvedTemplate.nameEn,
+      species: evolvedTemplate.species || evolvedTemplate.nameEn,
       type: evolvedTemplate.type,
       type2: evolvedTemplate.type2 || null,
+      // 진화 전 개체(예: 가라르 파오리)가 지역 폼이었을 때 regionalForm/formVariant를 안 지우면,
+      // 진화형(창파나이트)이 지역 폼이 아닌데도 MembersView.jsx의 isGalarianFarfetchd() 같은
+      // 판별 로직이 옛 값(regionalForm: "galar")을 보고 계속 진화 전 포켓몬으로 오판한다.
+      isRegionalForm: Boolean(evolvedTemplate.isRegionalForm),
+      regionalForm: evolvedTemplate.regionalForm || null,
+      formVariant: evolvedTemplate.formVariant || null,
+      baseSpecies: evolvedTemplate.baseSpecies || null,
+      baseSpeciesEn: evolvedTemplate.baseSpeciesEn || null,
       ...basePatch,
       imageUrl: evolvedTemplate.imageUrl,
       iconUrl: (() => {
@@ -519,7 +528,7 @@ function MemberPokemonTab({
 
     const moves = giveData.randomMoves ? getRandomMoves() : giveData.selectedMoves;
 
-    const FLAVORS = ['매운맛', '신맛', '단맛', '쓴맛', '짠맛'];
+    const FLAVORS = ['매운맛', '신맛', '단맛', '쓴맛', '떫은맛'];
     const pokemonData = {
       level: giveData.level,
       nickname: giveData.nickname || giveData.selectedPokemon.name,

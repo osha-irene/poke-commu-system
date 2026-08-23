@@ -1,6 +1,7 @@
 import movesData from '../../data/moves.json';
 import abilitiesData from '../../data/abilities.json';
 import itemsData from '../../data/items.json';
+import customBattleData from '../../data/customBattleData.json';
 
 export const normalizeBattleKey = (value) => String(value || '')
   .toLowerCase()
@@ -26,6 +27,16 @@ const showdownItemNames = {};
 
 (abilitiesData.abilities || []).forEach((ability) => {
   addTranslation(abilityNames, [ability.id, ability.nameEn, ability.name], ability.name || ability.nameEn || ability.id);
+});
+
+// customBattleData.json의 커스텀 메가진화 특성(쾌속 등)은 abilities.json(PokeAPI 기반
+// 공식 특성 목록)에 없어서, 위 루프만으로는 번역되지 않고 영문 이름이 그대로 노출된다.
+// customMegaEvolutions의 ability/abilityKo 쌍과 aliases.abilityLabels를 추가로 병합한다.
+(customBattleData.customMegaEvolutions || []).forEach((mega) => {
+  addTranslation(abilityNames, [mega.ability], mega.abilityKo || mega.ability);
+});
+Object.entries(customBattleData.aliases?.abilityLabels || {}).forEach(([key, label]) => {
+  addTranslation(abilityNames, [key], label);
 });
 
 const items = Array.isArray(itemsData) ? itemsData : (itemsData.items || []);

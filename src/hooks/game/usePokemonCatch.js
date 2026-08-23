@@ -79,7 +79,7 @@ export const usePokemonCatch = (
     const abilityEn = pokemon.abilityEn || getAbilityEnglishName(ability) || pokemonTemplate.abilitiesEn?.[0] || null;
     const ivs = pokemon.ivs ? normalizeIVs(pokemon.ivs) : generateIVs();
     
-    const FLAVORS = ['매운맛', '신맛', '단맛', '쓴맛', '짠맛'];
+    const FLAVORS = ['매운맛', '신맛', '단맛', '쓴맛', '떫은맛'];
     const favoriteFlavor = FLAVORS[Math.floor(Math.random() * FLAVORS.length)];
 
     const newPokemon = withWurmpleEvolutionId({

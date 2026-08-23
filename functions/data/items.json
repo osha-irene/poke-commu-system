@@ -42574,8 +42574,8 @@
             "cost": 0,
             "sellPrice": 0,
             "canSell": false,
-            "effect": "가디안에게 지니게 하면 배틀할 때 메가가디안(인연)(으)로 메가진화할 수 있는 창작 메가스톤.",
-            "description": "가디안에게 지니게 하면 배틀할 때 메가가디안(인연)(으)로 메가진화할 수 있는 창작 메가스톤.",
+            "effect": "가디안에게 지니게 하면 배틀할 때 메가가디안C(으)로 메가진화할 수 있는 창작 메가스톤.",
+            "description": "가디안에게 지니게 하면 배틀할 때 메가가디안C(으)로 메가진화할 수 있는 창작 메가스톤.",
             "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/alakazite.png",
             "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/alakazite.png",
             "attributes": [
@@ -42726,8 +42726,8 @@
             "cost": 0,
             "sellPrice": 0,
             "canSell": false,
-            "effect": "번치코에게 지니게 하면 배틀할 때 메가번치코(인연)(으)로 메가진화할 수 있는 창작 메가스톤.",
-            "description": "번치코에게 지니게 하면 배틀할 때 메가번치코(인연)(으)로 메가진화할 수 있는 창작 메가스톤.",
+            "effect": "번치코에게 지니게 하면 배틀할 때 메가번치코C(으)로 메가진화할 수 있는 창작 메가스톤.",
+            "description": "번치코에게 지니게 하면 배틀할 때 메가번치코C(으)로 메가진화할 수 있는 창작 메가스톤.",
             "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/charizardite-y.png",
             "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/charizardite-y.png",
             "attributes": [
