@@ -1,6 +1,6 @@
 // src/components/views/admin/ShopAdminPanel.jsx
 import React, { useState } from 'react';
-import { Store, Star, CircleDot, RefreshCw, Gift, X, CalendarClock } from 'lucide-react';
+import { Store, Star, CircleDot, RefreshCw, Gift, X, CalendarClock, Snowflake } from 'lucide-react';
 import ItemSelectorModal from '../../modals/ItemSelectorModal';
 import AddItemSettingsModal from '../../modals/AddItemSettingsModal';
 import CurrentShopTab from '../../shop/CurrentShopTab';
@@ -9,6 +9,7 @@ import RareItemPanel from '../../shop/RareItemPanel';
 import PeriodItemPanel from '../../shop/PeriodItemPanel';
 import GachaBallPanel from '../../shop/GachaBallPanel';
 import RandomBoxAdminPanel from './RandomBoxAdminPanel';
+import NunmegiRaceAdminPanel from './NunmegiRaceAdminPanel';
 
 export default function ShopAdminPanel({
   shopData = {},
@@ -27,6 +28,7 @@ export default function ShopAdminPanel({
   const [showPeriodPanel, setShowPeriodPanel] = useState(false);
   const [showGachaPanel, setShowGachaPanel] = useState(false);
   const [showRandomBoxPanel, setShowRandomBoxPanel] = useState(false);
+  const [showRacePanel, setShowRacePanel] = useState(false);
   const [showBeakItemSelector, setShowBeakItemSelector] = useState(false);
   const [pendingBeakItemId, setPendingBeakItemId] = useState(null);
   const [isSavingBeakItem, setIsSavingBeakItem] = useState(false);
@@ -181,6 +183,14 @@ export default function ShopAdminPanel({
             <Gift size={16} />
             랜덤박스
           </button>
+
+          <button
+            onClick={() => setShowRacePanel(true)}
+            className="px-3 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 bg-sky-600 text-white hover:bg-sky-700"
+          >
+            <Snowflake size={16} />
+            누니머기 레이스
+          </button>
         </div>
       </div>
 
@@ -324,6 +334,22 @@ export default function ShopAdminPanel({
                 allItems={allItems}
                 onUpdateShop={onUpdateShop}
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showRacePanel && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-2xl">
+            <div className="relative">
+              <button
+                onClick={() => setShowRacePanel(false)}
+                className="absolute top-4 right-4 z-50 p-2 bg-white hover:bg-gray-100 rounded-lg transition-colors shadow-lg"
+              >
+                <X size={24} className="text-gray-600" />
+              </button>
+              <NunmegiRaceAdminPanel />
             </div>
           </div>
         </div>

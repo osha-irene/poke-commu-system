@@ -6,6 +6,7 @@ const { createTradeBot, getTradeCommand, extractTradePokemonName } = require('./
 const { createNotifyBot } = require('./notifyBot');
 const { createBattleBot } = require('./battleBot');
 const { createContestBot, getContestCommand } = require('./contestBot');
+const { createRaceBot, getRaceCommand } = require('./raceBot');
 
 // ── Firebase 초기화 ──────────────────────────────────────────────
 const getFirebaseConfig = () => {
@@ -143,6 +144,12 @@ const notifyBot = createNotifyBot({
   db,
 });
 
+let _raceBot = null;
+const getRaceBot = () => {
+  if (!_raceBot) _raceBot = createRaceBot({ db });
+  return _raceBot;
+};
+
 // ── 공통 처리 헬퍼 ───────────────────────────────────────────────
 const statusFromWebhookBody = body => {
   if (!body) return null;
@@ -253,7 +260,7 @@ const findAuthorForStatus = async (ctx, members, status) => {
 
 // 봇 자신의 계정 id를 status.mentions에서 배워 캐시해두고, self-check에 사용한다.
 // verify_credentials 호출은 토큰 스코프 부족으로 403이 나서 쓸 수 없다.
-const botIdLoadedFromDb = { camp: false, trade: false, battle: false, contest: false };
+const botIdLoadedFromDb = { camp: false, trade: false, battle: false, contest: false, notify: false };
 const isSelfAuthoredStatus = async (prefix, ctx, status) => {
   if (ctx.isFromBotAccount(status)) return true;
 
@@ -303,7 +310,8 @@ const processCampStatus = async (status, source = 'webhook') => {
   if (await isSelfAuthoredStatus('camp', campCtx, status)) return { ignored: true, reason: 'self' };
   const content = stripHtml(status.content);
   if ((battleCtx.isBotMentioned(status) && getBattleBot().getCommand(content)) ||
-      (tradeCtx.isBotMentioned(status) && getTradeCommand(content))) {
+      (tradeCtx.isBotMentioned(status) && getTradeCommand(content)) ||
+      (notifyCtx.isBotMentioned(status) && getRaceCommand(content))) {
     return { ignored: true, reason: 'routed to another bot' };
   }
   if (!campCtx.isBotMentioned(status)) return { ignored: true, reason: 'not mentioned' };
@@ -338,7 +346,8 @@ const processTradeStatus = async (status, source = 'webhook') => {
   if (await isSelfAuthoredStatus('trade', tradeCtx, status)) return { ignored: true, reason: 'self' };
   const content = stripHtml(status.content);
   if ((battleCtx.isBotMentioned(status) && getBattleBot().getCommand(content)) ||
-      (campCtx.isBotMentioned(status) && getCampCommand(content))) {
+      (campCtx.isBotMentioned(status) && getCampCommand(content)) ||
+      (notifyCtx.isBotMentioned(status) && getRaceCommand(content))) {
     return { ignored: true, reason: 'routed to another bot' };
   }
   if (!tradeCtx.isBotMentioned(status)) return { ignored: true, reason: 'not mentioned' };
@@ -386,7 +395,8 @@ const processBattleStatus = async (status, source = 'webhook') => {
   if (await isSelfAuthoredStatus('battle', battleCtx, status)) return { ignored: true, reason: 'self' };
   const content = stripHtml(status.content);
   if ((tradeCtx.isBotMentioned(status) && getTradeCommand(content)) ||
-      (campCtx.isBotMentioned(status) && getCampCommand(content))) {
+      (campCtx.isBotMentioned(status) && getCampCommand(content)) ||
+      (notifyCtx.isBotMentioned(status) && getRaceCommand(content))) {
     return { ignored: true, reason: 'routed to another bot' };
   }
   const command = getBattleBot().getCommand(content);
@@ -459,7 +469,8 @@ const processContestStatus = async (status, source = 'webhook') => {
   const content = stripHtml(status.content);
   if ((tradeCtx.isBotMentioned(status) && getTradeCommand(content)) ||
       (campCtx.isBotMentioned(status) && getCampCommand(content)) ||
-      (battleCtx.isBotMentioned(status) && getBattleBot().getCommand(content))) {
+      (battleCtx.isBotMentioned(status) && getBattleBot().getCommand(content)) ||
+      (notifyCtx.isBotMentioned(status) && getRaceCommand(content))) {
     return { ignored: true, reason: 'routed to another bot' };
   }
   const command = getContestBot().getCommand(content);
@@ -535,6 +546,36 @@ const closeTimedOutContestSessions = async () => {
   return { count: closed.length };
 };
 
+// ── 공지 봇(누니머기 레이스) 처리 ──────────────────────────────────
+// 다른 봇들과 달리 회원별 세션/계정 연동이 필요 없는 전체 공개 조회 명령이라
+// findAuthorForStatus 없이 바로 응답한다.
+const processNotifyStatus = async (status, source = 'webhook') => {
+  if (!status?.id) return { ignored: true, reason: 'no id' };
+  if (await isSelfAuthoredStatus('notify', notifyCtx, status)) return { ignored: true, reason: 'self' };
+  const content = stripHtml(status.content);
+  if ((tradeCtx.isBotMentioned(status) && getTradeCommand(content)) ||
+      (campCtx.isBotMentioned(status) && getCampCommand(content)) ||
+      (battleCtx.isBotMentioned(status) && getBattleBot().getCommand(content)) ||
+      (contestCtx.isBotMentioned(status) && getContestBot().getCommand(content))) {
+    return { ignored: true, reason: 'routed to another bot' };
+  }
+  if (!notifyCtx.isBotMentioned(status)) return { ignored: true, reason: 'not mentioned' };
+
+  const key = `${status.id}_notify`;
+  if (!(await claimProcessing(db, status.id, 'notify'))) return { ignored: true, reason: 'already processed' };
+
+  const command = getRaceCommand(content);
+  if (!command) {
+    await markProcessed(db, key, { source, ignored: 'unknown command' });
+    return { ignored: true, reason: 'unknown command' };
+  }
+
+  const response = await getRaceBot().handle({ command });
+  await markProcessed(db, key, { source, command });
+  if (response) await notifyCtx.replyToStatus(status, response);
+  return { processed: true, command };
+};
+
 // ── 폴링 헬퍼 ──────────────────────────────────────────────────
 const pollMentions = async (ctx, processStatus, lastIdKey, prefix) => {
   const lastIdRef = db.ref(`mastodonBot/${lastIdKey}`);
@@ -585,12 +626,16 @@ const getBotRoutesForStatus = (status) => {
   if (contestCommand && contestCommand !== 'move') {
     return [{ prefix: 'contest', processStatus: processContestStatus }];
   }
+  if (getRaceCommand(content)) {
+    return [{ prefix: 'notify', processStatus: processNotifyStatus }];
+  }
 
   const routes = [];
   if (campCtx.isBotMentioned(status)) routes.push({ prefix: 'camp', processStatus: processCampStatus });
   if (tradeCtx.isBotMentioned(status)) routes.push({ prefix: 'trade', processStatus: processTradeStatus });
   if (battleCtx.isBotMentioned(status)) routes.push({ prefix: 'battle', processStatus: processBattleStatus });
   if (contestCtx.isBotMentioned(status)) routes.push({ prefix: 'contest', processStatus: processContestStatus });
+  if (notifyCtx.isBotMentioned(status)) routes.push({ prefix: 'notify', processStatus: processNotifyStatus });
   return routes;
 };
 
@@ -671,6 +716,14 @@ exports.checkContestMentions = functions.region(region.region).runWith(scheduleO
       return { mentions, timeouts, expired };
     } catch (e) { console.error(e); return null; }
   });
+
+// 공지 봇(누니머기 레이스 조회)
+exports.notifyWebhook = functions.region(region.region).runWith(webhookOpts).https.onRequest(async (req, res) => {
+  await handleBotWebhook(req, res, processNotifyStatus, 'notify');
+});
+exports.checkNotifyMentions = functions.region(region.region).runWith(scheduleOpts)
+  .pubsub.schedule('every 1 minutes').timeZone('Asia/Seoul')
+  .onRun(async () => { try { return await pollMentions(notifyCtx, processNotifyStatus, 'lastNotifyNotificationId', 'notify'); } catch (e) { console.error(e); return null; } });
 
 // 매일 자정(KST) 전체 회원 산책/탐험 횟수 리셋
 // 예전에는 클라이언트가 gameData/lastWalkReset을 runTransaction으로 선점해서 리셋을
@@ -1188,7 +1241,7 @@ exports.mastodonWebhook = functions.region(region.region).runWith(webhookOpts).h
       results: results.map(r => r.value || r.reason?.message),
     });
   } catch (e) {
-    await Promise.all(['camp', 'trade', 'battle', 'contest'].map(prefix => markProcessingFailed(db, status?.id, prefix, e, 'webhook')));
+    await Promise.all(['camp', 'trade', 'battle', 'contest', 'notify'].map(prefix => markProcessingFailed(db, status?.id, prefix, e, 'webhook')));
     console.error('mastodonWebhook error:', e);
     res.status(200).json({ ok: false, accepted: true, retrySuppressed: true, error: e.message });
   }

@@ -187,7 +187,7 @@ export default function ShopView() {
     });
   };
 
-  const handlePurchase = () => {
+  const handlePurchase = async () => {
     if (!selectedItem) return;
 
     // 랜덤박스 구매
@@ -264,8 +264,10 @@ export default function ShopView() {
       return;
     }
     
-    const success = onPurchase(selectedItem, quantity);
+    const result = await onPurchase(selectedItem, quantity);
+    const success = result === true || result?.success;
     if (success) {
+      if (result?.raceMsg) alert(result.raceMsg);
       setSelectedItem(null);
       setQuantity(1);
     }
@@ -1892,7 +1894,8 @@ export default function ShopView() {
                         setBuyConfirming(false);
                         const baseMsg = `${itemName}${getEulReul(itemName)} ${quantity}개 구매하였다!`;
                         const premier = result?.premierMsg ? `\n${result.premierMsg}` : '';
-                        setPurchaseMsg(baseMsg + premier);
+                        const race = result?.raceMsg ? `\n${result.raceMsg}` : '';
+                        setPurchaseMsg(baseMsg + premier + race);
                         setPendingClosedMouth(isSoldOutAfterPurchase);
                         if (isSoldOutAfterPurchase && activeListButton) {
                           setClosedListButtons((prev) => ({ ...prev, [activeListButton]: true }));

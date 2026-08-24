@@ -138,6 +138,29 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
     return runTransaction(moneyRef, (money) => (Number(money) || 0) + delta);
   };
 
+  // 누니머기 레이스 - 여러 명이 거의 동시에 눈덩이를 사도(=먹여도) 유실 없이 반영되도록,
+  // gameData/nunmegiRace 전체를 runTransaction으로 원자적으로 갱신한다. money/inventory와
+  // 같은 이유(CLAUDE.md 재화 갱신 규칙) - 클로저에 캡처된 로컬 스냅샷 기준으로 덮어쓰지 않는다.
+  const feedNunmegiRace = async () => {
+    const raceRef = ref(database, 'gameData/nunmegiRace');
+    const result = await runTransaction(raceRef, (current) => {
+      const base = current || {};
+      const racers = { ...(base.racers || {}) };
+      ['1', '2', '3'].forEach((id) => {
+        if (!racers[id]) racers[id] = { progressMm: 0 };
+      });
+      const racerId = String(1 + Math.floor(Math.random() * 3));
+      racers[racerId] = { progressMm: (Number(racers[racerId]?.progressMm) || 0) + 1 };
+      return {
+        racers,
+        totalFed: (Number(base.totalFed) || 0) + 1,
+        lastFedRacer: racerId,
+        lastFedAt: Date.now(),
+      };
+    });
+    return result.committed ? result.snapshot.val()?.lastFedRacer : null;
+  };
+
   useEffect(() => {
     if (!hasItems) return;
     const allItems = allItemsRef.current;
@@ -527,7 +550,14 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
     const itemType = itemData.type;
     const itemId = itemData.itemId ?? itemData.id;
     const resolvedItemId = itemData.id ?? itemData.itemId;
-    
+
+    // 누니머기의 눈덩이는 인벤토리에 쌓이는 소모품이 아니라, 구매 즉시 소비되어 누니머기
+    // 레이스를 1mm 전진시키는 아이템이다. shopData(dailyItems/permanentItems 등)에는
+    // enrichItemData가 고정 필드만 남기고 나머지를 잘라내므로, 원본 카탈로그(allItems)에서
+    // nunmegiRace 플래그를 다시 조회해야 한다.
+    const catalogItem = allItems.find(i => i.id === resolvedItemId);
+    const isNunmegiSnowball = Boolean(catalogItem?.nunmegiRace ?? itemData.nunmegiRace);
+
     if (itemType === 'rare') {
       const purchaseHistory = currentUser.purchaseHistory || {};
       const today = getKoreaDateKey();
@@ -561,6 +591,20 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
     const premierBallCount = isPokeBall ? Math.floor(quantity / 10) : 0;
     const premierData = premierBallCount > 0 ? allItems.find(i => i.nameEn === 'premier-ball') : null;
 
+    let fedRacers = [];
+    if (isNunmegiSnowball) {
+      // 인벤토리에 넣지 않고, 산 개수만큼 한 마리씩 순서대로 먹인다(각 시도가 독립적으로
+      // 무작위 - runTransaction 안에서 매번 다시 뽑으므로 재시도돼도 결과가 한쪽으로 쏠리지 않음).
+      for (let i = 0; i < quantity; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        const racerId = await feedNunmegiRace();
+        if (racerId) fedRacers.push(racerId);
+      }
+      if (fedRacers.length === 0) {
+        alert('구매 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+        return false;
+      }
+    } else {
     // 인벤토리에 아이템(+프리미어볼 증정분) 추가 - 항상 최신 인벤토리 기준으로 병합
     const invTxResult = await updateInventory((inventory) => {
       const existingItem = inventory.find(
@@ -624,6 +668,7 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
     if (!invTxResult.committed) {
       alert('구매 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
       return false;
+    }
     }
 
     // 평생 누적 구매 이력 기록 - 날짜 키가 있는 한정 아이템 이력(purchaseHistory/{날짜})과
@@ -727,7 +772,17 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
       }
 
       const premierMsg = premierBallCount > 0 ? `프레미어볼 ${premierBallCount}개를 증정 받았다!` : '';
-      return { success: true, premierMsg };
+      const raceCounts = fedRacers.reduce((acc, racerId) => {
+        acc[racerId] = (acc[racerId] || 0) + 1;
+        return acc;
+      }, {});
+      const raceMsg = fedRacers.length > 0
+        ? Object.entries(raceCounts)
+          .sort((a, b) => Number(a[0]) - Number(b[0]))
+          .map(([racerId, count]) => `${racerId}번 누니머기가 ${count}개 받아먹었다.`)
+          .join('\n')
+        : '';
+      return { success: true, premierMsg, raceMsg, fedRacers };
 
     } catch (error) {
       console.error('❌ 재고 업데이트 실패:', error);

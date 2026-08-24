@@ -44825,6 +44825,43 @@
                 "quality": "normal"
             },
             "onUse": null
+        },
+        {
+            "id": "custom-nunmegi-snowball",
+            "name": "누니머기의 눈덩이",
+            "nameEn": "Nunmegi Snowball",
+            "category": "misc",
+            "categoryData": {
+                "id": "misc",
+                "nameEn": "misc",
+                "name": "misc",
+                "pocket": "misc"
+            },
+            "cost": 100,
+            "sellPrice": 0,
+            "canSell": false,
+            "effect": "누니머기가 좋아하는 눈덩이. 구매하여 누니머기에게 먹이면 조금 더 힘을 내서 달린다.",
+            "description": "누니머기가 좋아하는 눈덩이. 구매하여 누니머기에게 먹이면 조금 더 힘을 내서 달린다.",
+            "spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/snowball.png",
+            "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/snowball.png",
+            "attributes": ["custom"],
+            "flingPower": null,
+            "flingEffect": null,
+            "isCustom": true,
+            "isOfficial": false,
+            "createdBy": "nunmegiRace",
+            "createdAt": null,
+            "cooking": {
+                "isIngredient": false,
+                "isCookable": false,
+                "resultItem": null,
+                "requiredItems": [],
+                "cookingTime": 0,
+                "difficulty": "easy",
+                "quality": "normal"
+            },
+            "onUse": null,
+            "nunmegiRace": true
         }
     ],
     "metadata": {
