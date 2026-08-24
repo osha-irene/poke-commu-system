@@ -11,6 +11,10 @@ import {
   getMillisecondsUntilNextKoreaMidnight,
 } from '../../utils/shopTime';
 
+// 누니머기 레이스 참가 마리 수 - functions/raceBot.js, NunmegiRaceAdminPanel.jsx에도
+// 같은 값을 맞춰줘야 한다(레이스 상태를 함께 읽고 쓰는 세 곳이라 한쪽만 바꾸면 어긋난다).
+const NUNMEGI_RACER_COUNT = 5;
+
 // enrichItemData 함수
 const enrichItemData = (itemTemplate, allItems) => {
   if (!itemTemplate) return null;
@@ -146,10 +150,10 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
     const result = await runTransaction(raceRef, (current) => {
       const base = current || {};
       const racers = { ...(base.racers || {}) };
-      ['1', '2', '3'].forEach((id) => {
+      Array.from({ length: NUNMEGI_RACER_COUNT }, (_, i) => String(i + 1)).forEach((id) => {
         if (!racers[id]) racers[id] = { progressMm: 0 };
       });
-      const racerId = String(1 + Math.floor(Math.random() * 3));
+      const racerId = String(1 + Math.floor(Math.random() * NUNMEGI_RACER_COUNT));
       racers[racerId] = { progressMm: (Number(racers[racerId]?.progressMm) || 0) + 1 };
       return {
         racers,

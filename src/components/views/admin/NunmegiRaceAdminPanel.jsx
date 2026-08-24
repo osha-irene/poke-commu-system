@@ -6,10 +6,12 @@ import { ref, onValue, set } from 'firebase/database';
 import { database } from '../../../firebase';
 import { Snowflake, RotateCcw } from 'lucide-react';
 
-const RACER_IDS = [1, 2, 3];
+// 참가 마리 수 - src/hooks/shop/useShop.js의 NUNMEGI_RACER_COUNT,
+// functions/raceBot.js의 RACER_IDS와 값을 맞춰야 한다.
+const RACER_IDS = [1, 2, 3, 4, 5];
 
 const emptyRaceState = () => ({
-  racers: { 1: { progressMm: 0 }, 2: { progressMm: 0 }, 3: { progressMm: 0 } },
+  racers: Object.fromEntries(RACER_IDS.map((id) => [id, { progressMm: 0 }])),
   totalFed: 0,
   lastFedRacer: null,
   lastFedAt: null,
