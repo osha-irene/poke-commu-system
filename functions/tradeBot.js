@@ -110,6 +110,18 @@ const createTradeBot = ({ db, pokemonData, findMemberByAccount, extractMentionAc
       // 매치 조건으로 쓰기 때문에, 이걸 안 갱신하면 진화 후에도 특성패치 등 여러 기능이
       // 진화 전 종족 데이터(예: 파오리)를 계속 참조하게 된다 - 반드시 함께 갱신해야 한다.
       pokemonId: template.number,
+      // ⭐ 폼 정체성 필드. 이걸 안 갱신하면 알로라 데구리→딱구리 같은 지역폼 교환진화에서
+      // baseSpecies("데구리")/species/formVariant("graveler-alola")가 그대로 남아,
+      // getPokemonDisplayParts(src/utils/pokemonDisplayName.js)가 지역폼일 때 rawName보다
+      // pokemon.baseSpecies를 우선 채택하기 때문에 number는 딱구리(10111)인데 화면엔 계속
+      // "데구리 (알로라의 모습)"로 표시된다. 클라이언트 진화(useEvolution.js evolvePokemonObject)와
+      // 동일하게 새 템플릿 값으로 덮어쓴다(폼이 없는 일반 교환진화는 전부 null이라 무해).
+      species: template.species || template.nameEn || pokemon.species,
+      baseSpecies: template.baseSpecies ?? pokemon.baseSpecies ?? null,
+      baseSpeciesEn: template.baseSpeciesEn ?? pokemon.baseSpeciesEn ?? null,
+      regionalForm: template.regionalForm || null,
+      formVariant: template.formVariant || null,
+      isRegionalForm: Boolean(template.isRegionalForm),
       abilitiesEn: template.abilitiesEn || pokemon.abilitiesEn,
       hiddenAbilityEn: template.hiddenAbilityEn ?? pokemon.hiddenAbilityEn,
       ...resolveEvolvedAbility(pokemon, template),

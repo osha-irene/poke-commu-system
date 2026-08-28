@@ -396,6 +396,13 @@ export const customAbilities = {
   // 메가따라큐 전용 "Busted" 폼(스탯/스프라이트)은 만들지 않았으므로, 메가폼이 깨질
   // 때는 폼체인지 대신 최대체력 1/8 대미지만 주고 이후로는 계속 무력화 상태로 남는다
   // (실전 결과는 원본과 동일: 스위치인당 1회용 방어, 깨진 뒤엔 재사용 불가).
+  //
+  // ⚠️ busted 여부를 this.effectState(= abilityState)에만 기록하면 안 된다. 메가진화는
+  // pokemon.formeChange(..., isPermanent=true) 안에서 setAbility('Disguise', ...)를 다시
+  // 호출하고, 그때 abilityState가 통째로 새 객체로 교체되면서 busted가 초기화된다
+  // (@pkmn/sim pokemon.js). 그래서 "탈 발동 → 메가진화 → 탈 다시 발동" 회귀가 있었다.
+  // pokemon 인스턴스 자체의 disguiseBusted 필드에도 함께 기록해서, formeChange/setAbility를
+  // 거쳐도 살아남고 볼로 교체될 때(onSwitchOut)만 초기화되도록 한다.
   disguise: {
     name: 'Disguise',
     shortDesc: 'If this Pokemon is a Mimikyu (or Mega Mimikyu), the first hit it takes in '
@@ -406,15 +413,18 @@ export const customAbilities = {
         effect?.effectType === 'Move'
         && ['mimikyu', 'mimikyutotem', 'mimikyumega'].includes(target.species.id)
         && !this.effectState.busted
+        && !target.disguiseBusted
       ) {
         this.add('-activate', target, 'ability: Disguise');
         this.effectState.busted = true;
+        target.disguiseBusted = true;
         return 0;
       }
     },
     onCriticalHit(target, source, move) {
       if (!target) return;
       if (!['mimikyu', 'mimikyutotem', 'mimikyumega'].includes(target.species.id)) return;
+      if (target.disguiseBusted) return;
       const hitSub = target.volatiles['substitute'] && !move.flags['bypasssub']
         && !(move.infiltrates && this.gen >= 6);
       if (hitSub) return;
@@ -424,6 +434,7 @@ export const customAbilities = {
     onEffectiveness(typeMod, target, type, move) {
       if (!target || move.category === 'Status') return;
       if (!['mimikyu', 'mimikyutotem', 'mimikyumega'].includes(target.species.id)) return;
+      if (target.disguiseBusted) return;
       const hitSub = target.volatiles['substitute'] && !move.flags['bypasssub']
         && !(move.infiltrates && this.gen >= 6);
       if (hitSub) return;
@@ -440,6 +451,9 @@ export const customAbilities = {
         this.effectState.bustedDamageDealt = true;
         this.damage(pokemon.baseMaxhp / 8, pokemon, pokemon, this.effect);
       }
+    },
+    onSwitchOut(pokemon) {
+      pokemon.disguiseBusted = false;
     },
     flags: {
       failroleplay: 1, noreceiver: 1, noentrain: 1, notrace: 1, failskillswap: 1, cantsuppress: 1,
