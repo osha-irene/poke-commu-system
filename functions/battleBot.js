@@ -117,10 +117,17 @@ const registerCustomBattleData = () => {
   if (Dex.data.Species.raichumegay) Dex.data.Species.raichumegay.abilities = { 0: 'No Guard' };
 
   (customBattleData.customMegaEvolutions || []).forEach((mega) => {
+    // ⚠️ Dex가 쓰는 정식 종족명으로 정규화한다. customBattleData.json은 아포스트로피를
+    // ASCII("Sirfetch'd", U+0027)로 적어놨지만 @pkmn/sim의 정식 이름은 타이포그래픽
+    // 아포스트로피("Sirfetch’d", U+2019)라서, megaStone 키를 raw 문자열로 두면
+    // canMegaEvo()의 item.megaStone[species.name] 조회가 항상 빗나가 메가진화가 조용히
+    // 실패한다(창파나이트/파오리 계열). 종족명에 특수문자가 없으면 그대로 통과된다.
+    const canonicalBaseSpecies = Dex.species.get(mega.baseSpecies)?.name || mega.baseSpecies;
+
     Dex.data.Species[normalizeId(mega.name)] = {
       num: 350,
       name: mega.name,
-      baseSpecies: mega.baseSpecies,
+      baseSpecies: canonicalBaseSpecies,
       forme: mega.forme || 'Mega',
       types: mega.types || ['Normal'],
       abilities: { 0: mega.ability || 'No Ability' },
@@ -132,16 +139,16 @@ const registerCustomBattleData = () => {
       requiredItem: mega.item,
       requiredItems: [mega.item].filter(Boolean),
       isMega: true,
-      battleOnly: mega.baseSpecies,
-      changesFrom: mega.baseSpecies,
+      battleOnly: canonicalBaseSpecies,
+      changesFrom: canonicalBaseSpecies,
     };
 
     Dex.data.Items[normalizeId(mega.item)] = {
       name: mega.item,
       spritenum: 0,
-      megaStone: { [mega.baseSpecies]: mega.name },
-      megaEvolves: mega.baseSpecies,
-      itemUser: [mega.baseSpecies],
+      megaStone: { [canonicalBaseSpecies]: mega.name },
+      megaEvolves: canonicalBaseSpecies,
+      itemUser: [canonicalBaseSpecies],
       onTakeItem: false,
     };
   });

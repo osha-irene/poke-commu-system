@@ -52,10 +52,17 @@ const registerCustomBattleData = () => {
     const itemId = normalizeBattleKey(mega.item);
     if (!speciesId || !itemId) return;
 
+    // ⚠️ Dex가 쓰는 정식 종족명으로 정규화한다. customBattleData.json은 아포스트로피를
+    // ASCII("Sirfetch'd", U+0027)로 적어놨지만 @pkmn/sim의 정식 이름은 타이포그래픽
+    // 아포스트로피("Sirfetch’d", U+2019)라서, megaStone 키를 raw 문자열로 두면
+    // canMegaEvo()의 item.megaStone[species.name] 조회가 항상 빗나가 메가진화가 조용히
+    // 실패한다(창파나이트/파오리 계열). 종족명에 특수문자가 없으면 그대로 통과된다.
+    const canonicalBaseSpecies = Dex.species.get(mega.baseSpecies)?.name || mega.baseSpecies;
+
     Dex.data.Species[speciesId] = {
       num: 350,
       name: mega.name,
-      baseSpecies: mega.baseSpecies,
+      baseSpecies: canonicalBaseSpecies,
       forme: mega.forme || 'Mega',
       types: mega.types || ['Normal'],
       abilities: { 0: mega.ability || 'No Ability' },
@@ -65,7 +72,7 @@ const registerCustomBattleData = () => {
       color: mega.color,
       eggGroups: mega.eggGroups || ['Water 1', 'Dragon'],
       requiredItem: mega.item,
-      battleOnly: mega.baseSpecies,
+      battleOnly: canonicalBaseSpecies,
       isNonstandard: 'Custom',
     };
 
@@ -75,9 +82,9 @@ const registerCustomBattleData = () => {
       // battle-actions.js의 canMegaEvo()는 item.megaStone[species.name]으로 조회하므로
       // { baseSpecies: megaFormeName } 형태의 객체여야 한다. 문자열이면 실제 메가진화
       // 선택(choose 'move X mega')이 항상 조용히 실패한다.
-      megaStone: { [mega.baseSpecies]: mega.name },
-      megaEvolves: mega.baseSpecies,
-      itemUser: [mega.baseSpecies],
+      megaStone: { [canonicalBaseSpecies]: mega.name },
+      megaEvolves: canonicalBaseSpecies,
+      itemUser: [canonicalBaseSpecies],
       onTakeItem: false,
       isNonstandard: 'Custom',
     };
@@ -795,6 +802,12 @@ const convertPokemon = (battle, pokemon, activeRequest = null, forceSwitch = fal
   const customMega = customMegaCandidate && hasUsableMegaSpecies(battle, customMegaCandidate.name)
     ? customMegaCandidate
     : null;
+  // 커스텀 메가는 이제 sim의 canMegaEvo가 정상 인식하므로 builtInMegaSpecies 경로로 잡힌다.
+  // 버튼에 영문 폼명("Sirfetchd-Mega")이 아니라 한글 표시명("메가창파나이트")을 쓰기 위해
+  // customMegaEvolutions에서 폼명으로 역조회한다.
+  const builtInMegaCustomEntry = builtInMegaSpecies
+    ? customMegaEvolutions.find((entry) => normalizeBattleKey(entry.name) === normalizeBattleKey(builtInMegaSpecies))
+    : null;
   const speciesName = pokemon.species?.name || pokemon.species;
   const speciesLabel = /-Mega(?:-[XY])?$/i.test(speciesName)
     ? formatMegaSpeciesName(speciesName)
@@ -815,7 +828,7 @@ const convertPokemon = (battle, pokemon, activeRequest = null, forceSwitch = fal
     itemEn: pokemon.item || null,
     hasItem: Boolean(pokemon.item),
     canMegaEvolve: Boolean(builtInMegaSpecies || customMega),
-    megaSpecies: builtInMegaSpecies || customMega?.displayName || customMega?.name || null,
+    megaSpecies: builtInMegaCustomEntry?.displayName || builtInMegaSpecies || customMega?.displayName || customMega?.name || null,
     status: pokemon.status ? translateStatusName(pokemon.status) : null,
     statusEn: pokemon.status || null,
     volatileStatus: Object.keys(pokemon.volatiles || {}).map(translateVolatileName),
