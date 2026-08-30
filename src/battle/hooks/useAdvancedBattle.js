@@ -61,6 +61,13 @@ const registerCustomBattleData = () => {
 
     Dex.data.Species[speciesId] = {
       num: 350,
+      // ⚠️ gen: 9 필수. battle-actions.js canMegaEvo()는 두 경로로 조회한다:
+      //   1) item.megaStone[species.name]  ─ 단, dex.species.get(mega).gen >= 9 일 때만 즉시 반환
+      //   2) item.megaStone[species.baseSpecies]  ─ 지역폼이면 baseSpecies가 원종("Samurott",
+      //      "Lycanroc")이라 우리 megaStone 키("Samurott-Hisui" 등)와 안 맞아 null이 된다
+      // 즉 대검귀(히스이)/황혼의 모습 루가루암 같은 폼 기반 커스텀 메가는 gen:9로 경로1을
+      // 태워야만 메가진화가 먹힌다. (일반 종족도 경로1로 통일되어 무해.)
+      gen: 9,
       name: mega.name,
       baseSpecies: canonicalBaseSpecies,
       forme: mega.forme || 'Mega',
