@@ -6,6 +6,7 @@ import { calculate, Pokemon, Move, Field, Side } from '@smogon/calc';
 import movesData from '../data/moves.json';
 import abilitiesData from '../data/abilities.json';
 import allPokemonData from '../data/allPokemon.json';
+import itemsData from '../data/items.json';
 
 /**
  * 쇼다운 데이터와 로컬(한글) 데이터를 통합하는 클래스.
@@ -26,6 +27,7 @@ class ShowdownIntegration {
     this.localMoves = this._indexLocalData(movesData.moves, ['id', 'nameEn', 'name']);
     this.localAbilities = this._indexLocalData(abilitiesData.abilities, ['id', 'nameEn', 'name']);
     this.localSpecies = this._indexLocalData(allPokemonData, ['nameEn', 'name']);
+    this.localItems = this._indexLocalData(itemsData.items || itemsData, ['nameEn', 'name']);
   }
 
   normalizeKey(value) {
@@ -114,6 +116,9 @@ class ShowdownIntegration {
       boosts: showdownMove.boosts,
       weather: showdownMove.weather,
       terrain: showdownMove.terrain,
+      // 순풍/리플렉터/빛의장막/오로라베일/신비의부적/하얀안개(sideCondition), 트릭룸(pseudoWeather)
+      sideCondition: showdownMove.sideCondition,
+      pseudoWeather: showdownMove.pseudoWeather,
       isZ: showdownMove.isZ || false,
       isMax: showdownMove.isMax || false,
       description: localMove?.description || showdownMove.desc || '',
@@ -144,19 +149,23 @@ class ShowdownIntegration {
     };
   }
 
-  /** 도구는 로컬 한글 데이터가 없어 @pkmn/dex 아이템 데이터를 그대로 사용 (영문 입력 필요) */
+  /** itemName은 로컬 items.json에서 한글 이름 매칭에만 쓰이고, 실제 도구 효과는
+   * @smogon/calc(데미지) / traits.js(그 외)가 쇼다운 id로 처리한다. */
   getItem(itemName) {
     if (!itemName) return null;
 
     const normalizedName = this.normalizeKey(itemName);
-    const item = this.currentGen.items.get(normalizedName);
+    const localItem = this.localItems[normalizedName];
+    const lookupName = localItem?.nameEn || itemName;
+    const item = this.currentGen.items.get(this.normalizeKey(lookupName));
 
     if (!item) {
       console.warn(`[showdownIntegration] 도구를 찾을 수 없음(쇼다운 데이터 없음): ${itemName}`);
       return null;
     }
 
-    return { id: item.id, name: item.name };
+    // name은 @smogon/calc가 인식하도록 영문명을 유지한다 (한글명은 nameKo)
+    return { id: item.id, name: item.name, nameEn: item.name, nameKo: localItem?.name || item.name };
   }
 
   getSpecies(speciesName) {
@@ -265,9 +274,13 @@ class ShowdownIntegration {
         useZ: moveData?.isZ || false,
         useMax: moveData?.isMax || false,
         isCrit: options.isCrit || false,
-        hits: moveData?.multihit
-          ? (Array.isArray(moveData.multihit) ? moveData.multihit[1] : moveData.multihit)
-          : (options.hits || 1),
+        hits:
+          options.hits ||
+          (moveData?.multihit
+            ? Array.isArray(moveData.multihit)
+              ? moveData.multihit[1]
+              : moveData.multihit
+            : 1),
       });
     } catch (error) {
       console.error('[showdownIntegration] Move 생성 실패:', error);

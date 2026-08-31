@@ -4,7 +4,9 @@ import {
   executeParticipantAction,
   executeBossAction,
   executeParticipantCheer,
+  resolveQueuedActions,
   resetFieldBoosts,
+  clearFieldConditions,
   cureBossStatus,
   endRound,
 } from '../engine/raidEngine.js';
@@ -76,6 +78,11 @@ export function useRaidState() {
   const [maxRounds, setMaxRounds] = useState(draft?.maxRounds || 6);
   const [selectedTeam, setSelectedTeam] = useState('');
   const [battle, setBattle] = useState(null);
+  // 우선도 일괄 처리용 예약 행동 큐 (라운드 전환/전투 리셋 시 비운다)
+  //   participants: { [participantId]: { kind:'move'|'cheer', moveId?, cheerId?, targetParticipantId? } }
+  //   boss: [{ moveId, targetId }]  (targetId: 참가자 id 또는 'random')
+  const [queue, setQueue] = useState({ participants: {}, boss: [] });
+  const clearQueue = useCallback(() => setQueue({ participants: {}, boss: [] }), []);
 
   useEffect(() => {
     const payload = JSON.stringify({ boss, participants, maxRounds });
@@ -143,11 +150,13 @@ export function useRaidState() {
       ? participants.filter((p) => String(p.team || '') === String(selectedTeam))
       : participants;
     setBattle(createInitialBattleState({ boss, participants: battleParticipants, maxRounds }));
-  }, [boss, participants, maxRounds, selectedTeam]);
+    clearQueue();
+  }, [boss, participants, maxRounds, selectedTeam, clearQueue]);
 
   const resetBattle = useCallback(() => {
     setBattle(null);
-  }, []);
+    clearQueue();
+  }, [clearQueue]);
 
   const runParticipantAction = useCallback((participantId, moveId, targetParticipantId) => {
     setBattle((prev) =>
@@ -165,10 +174,48 @@ export function useRaidState() {
 
   const runEndRound = useCallback(() => {
     setBattle((prev) => (prev ? endRound(prev) : prev));
+    clearQueue();
+  }, [clearQueue]);
+
+  // --- 우선도 일괄 처리 큐 ---
+  const queueParticipantAction = useCallback((participantId, action) => {
+    setQueue((q) => ({ ...q, participants: { ...q.participants, [participantId]: action } }));
   }, []);
+
+  const unqueueParticipantAction = useCallback((participantId) => {
+    setQueue((q) => {
+      const nextParticipants = { ...q.participants };
+      delete nextParticipants[participantId];
+      return { ...q, participants: nextParticipants };
+    });
+  }, []);
+
+  const queueBossAction = useCallback((action) => {
+    setQueue((q) => ({ ...q, boss: [...q.boss, action] }));
+  }, []);
+
+  const unqueueBossAction = useCallback((index) => {
+    setQueue((q) => ({ ...q, boss: q.boss.filter((_, i) => i !== index) }));
+  }, []);
+
+  const runResolveQueue = useCallback(() => {
+    setBattle((prev) => {
+      if (!prev) return prev;
+      const participantActions = Object.entries(queue.participants).map(([id, action]) => ({
+        participantId: Number(id),
+        ...action,
+      }));
+      return resolveQueuedActions(prev, { participantActions, bossActions: queue.boss });
+    });
+    clearQueue();
+  }, [queue, clearQueue]);
 
   const runResetFieldBoosts = useCallback(() => {
     setBattle((prev) => (prev ? resetFieldBoosts(prev) : prev));
+  }, []);
+
+  const runClearFieldConditions = useCallback(() => {
+    setBattle((prev) => (prev ? clearFieldConditions(prev) : prev));
   }, []);
 
   const runCureBossStatus = useCallback(() => {
@@ -221,7 +268,15 @@ export function useRaidState() {
     runCheer,
     runEndRound,
     runResetFieldBoosts,
+    runClearFieldConditions,
     runCureBossStatus,
+    queue,
+    queueParticipantAction,
+    unqueueParticipantAction,
+    queueBossAction,
+    unqueueBossAction,
+    runResolveQueue,
+    clearQueue,
     exportDraft,
     importDraft,
   };

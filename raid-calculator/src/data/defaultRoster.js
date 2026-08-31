@@ -63,12 +63,6 @@ export const DEFAULT_ROSTER = [
   },
   {
     position: "칼춤",
-    nickname: "피요",
-    pokemon: "따라큐",
-    types: ["Ghost", "Fairy"],
-  },
-  {
-    position: "칼춤",
     nickname: "마노",
     pokemon: "번치코",
     types: ["Fire", "Fighting"],
@@ -128,11 +122,5 @@ export const DEFAULT_ROSTER = [
     nickname: "바보",
     pokemon: "오롱털",
     types: ["Dark", "Fairy"],
-  },
-  {
-    position: "도우미",
-    nickname: "방울이",
-    pokemon: "치렁",
-    types: ["Psychic"],
   },
 ];
