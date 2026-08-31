@@ -144,7 +144,11 @@ export const useRegionExplore = (
         ? allPokemonMaster.filter(p => missingIds.includes(p.id) || missingIds.includes(p.number))
         : [];
 
-      const availablePokemon = [...matchedPokemon, ...fallbackPokemon];
+      // 메가진화 폼은 배틀 전용이라 야생 조우에 절대 나오면 안 된다. 예전 장소 설정에
+      // 실수로 메가폼 번호(예: tatsugiri-*-mega)가 저장돼 있어도 여기서 방어적으로 거른다.
+      const isMegaForm = (p) =>
+        /-mega(-[xy])?$/i.test(String(p?.formVariant || p?.nameEn || p?.species || ''));
+      const availablePokemon = [...matchedPokemon, ...fallbackPokemon].filter(p => !isMegaForm(p));
 
       if (availablePokemon.length > 0) {
         const rates = region.pokemonRates || {};

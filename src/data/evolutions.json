@@ -4635,16 +4635,6 @@
             }
         },
         {
-            "from": 976,
-            "to": 977,
-            "fromName": "veluza",
-            "toName": "dondozo",
-            "condition": {
-                "type": "level",
-                "level": 38
-            }
-        },
-        {
             "from": 909,
             "to": 910,
             "fromName": "fuecoco",

@@ -190,6 +190,13 @@ export default function MobileItemsView() {
       }
       return;
     }
+    if (details?.specialEffect === 'nunmegiRace') {
+      if (onUseItem && selectedItem) {
+        onUseItem({ ...selectedItem, specialEffect: 'nunmegiRace' }, null, null, useQuantity);
+        closeAll();
+      }
+      return;
+    }
     if (!selectedPokemon) { alert('포켓몬을 선택해주세요!'); return; }
 
     const itemNameEn = getItemNameEn(selectedItem);
@@ -479,6 +486,16 @@ export default function MobileItemsView() {
           body = (
             <div style={{ padding: 20, textAlign: 'center', color: P.text, fontSize: 13, lineHeight: 1.6 }}>
               <span style={{ color: '#4d7c0f', fontWeight: 700 }}>{selectedDetails.name}</span>을(를) 사용하시겠습니까?
+            </div>
+          );
+        } else if (selectedDetails.specialEffect === 'nunmegiRace') {
+          title = '누니머기에게 먹이기';
+          canConfirm = true;
+          confirmLabel = '먹이기';
+          body = (
+            <div style={{ padding: 20, textAlign: 'center', color: P.text, fontSize: 13, lineHeight: 1.6 }}>
+              <span style={{ color: '#0369a1', fontWeight: 700 }}>{selectedDetails.name}</span>을(를) 누니머기에게 먹이겠습니까?<br />
+              <span style={{ color: P.muted }}>먹인 개수만큼 누니머기 레이스가 전진합니다.</span>
             </div>
           );
         } else if (isNectar && selectedPokemon) {

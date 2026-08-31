@@ -358,6 +358,17 @@ const categories = CATEGORIES.map(cat => {
       return;
     }
 
+    // 누니머기의 눈덩이: 포켓몬 선택 없이 바로 사용 → 누니머기 레이스에 먹인다
+    if (details.specialEffect === 'nunmegiRace') {
+      if (onUseItem && selectedItem) {
+        onUseItem({ ...selectedItem, specialEffect: 'nunmegiRace' }, null, null, useQuantity);
+        closeModal();
+      } else {
+        alert('아이템 사용 기능이 연결되지 않았습니다.');
+      }
+      return;
+    }
+
     if (!selectedPokemon) {
       alert('포켓몬을 선택해주세요!');
       return;
@@ -784,6 +795,31 @@ const categories = CATEGORIES.map(cat => {
                                 >
                                   <Sparkles size={18} />
                                   사용하기
+                                </button>
+                              </div>
+                            </>
+                          );
+                        }
+
+                        // 누니머기의 눈덩이: 포켓몬 선택 없이 바로 확인만
+                        if (details.specialEffect === 'nunmegiRace') {
+                          return (
+                            <>
+                              <p className="text-gray-700 mb-4 text-center">
+                                <span className="text-sky-700 font-semibold">{details.name}</span>을(를) 누니머기에게 먹이겠습니까?<br />
+                                <span className="text-sm text-gray-500">먹인 개수만큼 누니머기 레이스가 전진합니다.</span>
+                              </p>
+                              {renderUseQuantityPicker()}
+                              <div className="flex gap-2">
+                                <button onClick={closeModal} className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+                                  취소
+                                </button>
+                                <button
+                                  onClick={handleUse}
+                                  className="flex-1 bg-sky-600 text-white py-3 rounded-lg font-semibold hover:bg-sky-700 transition-colors flex items-center justify-center gap-2"
+                                >
+                                  <Sparkles size={18} />
+                                  먹이기
                                 </button>
                               </div>
                             </>

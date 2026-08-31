@@ -4,16 +4,13 @@ import { useState, useEffect, useRef } from 'react';
 import { ref, get, onChildAdded, onChildChanged, onChildRemoved, set, runTransaction } from 'firebase/database';
 import { database } from '../../firebase';
 import { getItemPocket } from '../../utils/itemUtils';
+import { feedNunmegiRaceOnce } from '../../utils/nunmegiRace';
 import {
   getKoreaDateKey,
   getKoreaDayIndex,
   getKoreaWeekKey,
   getMillisecondsUntilNextKoreaMidnight,
 } from '../../utils/shopTime';
-
-// 누니머기 레이스 참가 마리 수 - functions/raceBot.js, NunmegiRaceAdminPanel.jsx에도
-// 같은 값을 맞춰줘야 한다(레이스 상태를 함께 읽고 쓰는 세 곳이라 한쪽만 바꾸면 어긋난다).
-const NUNMEGI_RACER_COUNT = 5;
 
 // enrichItemData 함수
 const enrichItemData = (itemTemplate, allItems) => {
@@ -143,27 +140,9 @@ export const useShop = (currentUser, updateCurrentUser, allItems, updateInventor
   };
 
   // 누니머기 레이스 - 여러 명이 거의 동시에 눈덩이를 사도(=먹여도) 유실 없이 반영되도록,
-  // gameData/nunmegiRace 전체를 runTransaction으로 원자적으로 갱신한다. money/inventory와
-  // 같은 이유(CLAUDE.md 재화 갱신 규칙) - 클로저에 캡처된 로컬 스냅샷 기준으로 덮어쓰지 않는다.
-  const feedNunmegiRace = async () => {
-    const raceRef = ref(database, 'gameData/nunmegiRace');
-    const result = await runTransaction(raceRef, (current) => {
-      const base = current || {};
-      const racers = { ...(base.racers || {}) };
-      Array.from({ length: NUNMEGI_RACER_COUNT }, (_, i) => String(i + 1)).forEach((id) => {
-        if (!racers[id]) racers[id] = { progressMm: 0 };
-      });
-      const racerId = String(1 + Math.floor(Math.random() * NUNMEGI_RACER_COUNT));
-      racers[racerId] = { progressMm: (Number(racers[racerId]?.progressMm) || 0) + 1 };
-      return {
-        racers,
-        totalFed: (Number(base.totalFed) || 0) + 1,
-        lastFedRacer: racerId,
-        lastFedAt: Date.now(),
-      };
-    });
-    return result.committed ? result.snapshot.val()?.lastFedRacer : null;
-  };
+  // gameData/nunmegiRace 전체를 runTransaction으로 원자적으로 갱신한다(CLAUDE.md 재화 갱신 규칙).
+  // 실제 로직은 가방에서 눈덩이를 쓰는 경로(useItemEffects)와 공유하려고 utils/nunmegiRace.js로 뺐다.
+  const feedNunmegiRace = feedNunmegiRaceOnce;
 
   useEffect(() => {
     if (!hasItems) return;

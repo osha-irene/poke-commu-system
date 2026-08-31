@@ -7,6 +7,7 @@ import { isSoyYYNItem } from '../../utils/specialItemUtils';
 import { findPokemonTemplate } from '../../utils/pokemonBaseStats';
 import { getPokemonAbilities } from '../../utils/abilityUtils';
 import { MAX_BERRY_PLANTER_SLOTS } from '../game/useBerryFarm';
+import { feedNunmegiRace, buildNunmegiFeedMessage } from '../../utils/nunmegiRace';
 
 // 아이템 nameEn → 변경 가능한 포켓몬 originalNumber 목록
 const FORM_CHANGE_ITEMS = {
@@ -234,6 +235,42 @@ export const useItemEffects = (
         return;
       }
       onRequestQnaWrite(item, src.permitKind || 'general');
+      return;
+    }
+
+    // 누니머기의 눈덩이 - 대상 포켓몬 없이 가방에서 바로 사용. 모험 전리품으로 얻어 가방에
+    // 쌓인 눈덩이를 여기서 소비하면, 상점 구매(useShop.feedNunmegiRace)와 똑같이 누니머기
+    // 레이스를 사용한 개수만큼 전진시키고 "N번 누니머기가 눈덩이를 X개 먹었다!" 팝업을 띄운다.
+    // 레이스 갱신은 utils/nunmegiRace.js에서 runTransaction으로 처리한다(CLAUDE.md 재화/누적값 규칙).
+    if (src.specialEffect === 'nunmegiRace' || src.nunmegiRace || itemData?.nunmegiRace) {
+      // 실제로 몇 개까지 먹일 수 있는지: 슈퍼 관리자는 consumeItem이 인벤토리를 소모하지
+      // 않으므로(무한 사용) 요청 개수를 그대로, 그 외에는 최신 보유 수량으로 클램프한다.
+      const matchesSnowball = (inv) => {
+        const invData = resolveItemData(allItems, inv);
+        if (itemData?.id != null && invData?.id != null) return itemData.id === invData.id;
+        if (item.itemId != null && inv.itemId != null) return item.itemId === inv.itemId;
+        return (item.name && inv.name === item.name) || (item.nameEn && inv.nameEn === item.nameEn);
+      };
+      const ownedCount = currentUser.isSuperAdmin
+        ? requestedQuantity
+        : (currentUser.inventory || []).reduce(
+            (sum, inv) => (matchesSnowball(inv) ? sum + (Number(inv.count) || 0) : sum),
+            0
+          );
+      const feedCount = Math.max(0, Math.min(requestedQuantity, ownedCount));
+      if (feedCount <= 0) {
+        alert('사용할 누니머기의 눈덩이가 없습니다!');
+        return;
+      }
+
+      const fedRacers = await feedNunmegiRace(feedCount);
+      if (fedRacers.length === 0) {
+        alert('누니머기 레이스 반영 중 오류가 발생했습니다. 다시 시도해주세요.');
+        return;
+      }
+
+      await consumeItem(item, {}, fedRacers.length);
+      alert(buildNunmegiFeedMessage(fedRacers));
       return;
     }
 

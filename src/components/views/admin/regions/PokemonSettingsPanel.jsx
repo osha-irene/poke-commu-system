@@ -18,6 +18,20 @@ const toRate = (value, fallback = 1) => {
   return Math.max(0, Math.min(100, parsed)) / 100;
 };
 
+// 메가진화 폼은 배틀 전용이라 야생 조우 폼 후보에서 제외한다. (allPokemon.json에는
+// tatsugiri-*-mega 처럼 일반 폼과 구분이 안 되는 형태로 들어있는 항목이 있어서,
+// 안 걸러주면 관리자가 "싸리용" 카드 여러 개 중 메가를 실수로 골라 야생에 튀어나온다.)
+const isMegaFormVariant = (pokemon) =>
+  /-mega(-[xy])?$/i.test(String(pokemon?.formVariant || pokemon?.nameEn || pokemon?.species || ''));
+
+// 폼 카드/칩에 "싸리용 (말린모습)"처럼 폼 이름을 같이 보여준다.
+const getPokemonNameWithForm = (pokemon) => {
+  const base = pokemon?.name || pokemon?.nameEn || '';
+  if (!base || base.includes('(')) return base;
+  const { formLabel } = getPokemonDisplayParts(pokemon);
+  return formLabel ? `${base} (${formLabel})` : base;
+};
+
 const getPokemonSpriteSrc = (pokemon, fallbackNumber = pokemon?.number) =>
   pokemon?.spriteUrl || `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${fallbackNumber}.png`;
 
@@ -165,7 +179,7 @@ function FormSelectPopup({ basePokemon, forms, selected, onToggle, onClose }) {
                   className="w-8 h-8 object-contain"
                   style={{ imageRendering: 'pixelated' }}
                 />
-                <span className="text-sm font-medium text-gray-700">{f.name}</span>
+                <span className="text-sm font-medium text-gray-700">{getPokemonNameWithForm(f)}</span>
               </label>
             );
           })}
@@ -298,9 +312,10 @@ export default function PokemonSettingsPanel({
   const getPokemonById = (pokemonId) =>
     pokemonLookup.byId.get(String(pokemonId));
 
-  // 폼 변형 목록 (사철록 봄의 모습 레이블 포함)
+  // 폼 변형 목록 (사철록 봄의 모습 레이블 포함). 메가폼은 배틀 전용이라 조우 폼 후보에서 뺀다.
   const getFormsForPokemon = (baseNumber) => {
-    const forms = pokemonLookup.formsByOriginal.get(Number(baseNumber)) || [];
+    const forms = (pokemonLookup.formsByOriginal.get(Number(baseNumber)) || [])
+      .filter(f => !isMegaFormVariant(f));
     const hasBase = forms.some(f => f.number === baseNumber);
     let result;
     if (!hasBase) {
@@ -392,7 +407,7 @@ export default function PokemonSettingsPanel({
       if (configForms && configForms.length > 0) {
         return configForms.map(fid => {
           const p = pokemonLookup.byId.get(String(fid));
-          if (!p) return null;
+          if (!p || isMegaFormVariant(p)) return null;
           // 사철록 봄의 모습 레이블
           if (fid === baseId) {
             const siblings = pokemonLookup.formsByOriginal.get(Number(baseId)) || [];
@@ -572,7 +587,7 @@ export default function PokemonSettingsPanel({
           style={{ imageRendering: 'pixelated' }}
         />
         <div className="text-sm font-bold leading-tight text-gray-800 min-h-[2rem] flex items-center justify-center text-center">
-          {displayPokemon.name}
+          {getPokemonNameWithForm(displayPokemon)}
         </div>
         <div className="text-xs text-gray-500">No.{baseId}</div>
 
@@ -586,7 +601,7 @@ export default function PokemonSettingsPanel({
                   key={fid}
                   className="px-1.5 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-semibold rounded-full border border-indigo-300 leading-tight"
                 >
-                  {f?.name || fid}
+                  {f ? getPokemonNameWithForm(f) : fid}
                 </span>
               );
             })}
@@ -627,7 +642,7 @@ export default function PokemonSettingsPanel({
           className="text-xs font-semibold leading-tight mt-1 min-h-[2rem] flex items-center justify-center"
           style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
         >
-          {formPokemon.name}
+          {getPokemonNameWithForm(formPokemon)}
         </div>
 
         {isSelected && (
