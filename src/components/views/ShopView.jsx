@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
 import ballsImage from '../../assets/shop/balls.png';
 import cramorantImage from '../../assets/shop/cramorant.png';
 import contextImage from '../../assets/shop/context.png';
@@ -189,6 +189,10 @@ export default function ShopView() {
 
   const handlePurchase = async () => {
     if (!selectedItem) return;
+    // 연타/더블탭으로 구매가 두 번 실행되는 걸 막는다.
+    if (isPurchasingRef.current) return;
+    isPurchasingRef.current = true;
+    try {
 
     // 랜덤박스 구매
     if (selectedItem.type === 'randombox') {
@@ -270,6 +274,10 @@ export default function ShopView() {
       if (result?.raceMsg) alert(result.raceMsg);
       setSelectedItem(null);
       setQuantity(1);
+    }
+
+    } finally {
+      isPurchasingRef.current = false;
     }
   };
 
@@ -419,6 +427,10 @@ export default function ShopView() {
   const [shopListMode, setShopListMode] = useState('permanent');
   const buy2Ref = useRef(null);
   const skipNextSceneClickRef = useRef(false);
+  // 구매 중복 실행 방지: 실제 구매 요청이 진행 중이면 재클릭을 무시한다.
+  const isPurchasingRef = useRef(false);
+  // 2단계 확인 유지: '확인'이 뜬 직후의 연타로 곧바로 구매되는 걸 막기 위한 최소 대기 시각.
+  const buyConfirmReadyAtRef = useRef(0);
   const permanentListRef = useRef(null);
   const [permanentListScrollbar, setPermanentListScrollbar] = useState({ visible: false, height: 0, top: 0 });
 
@@ -503,6 +515,9 @@ export default function ShopView() {
   const beakWordRef = useRef(null);
   const [beakWordBox, setBeakWordBox] = useState(null);
   const [shopTextLength, setShopTextLength] = useState(0);
+  // 대사가 출력 칸을 넘치면 폰트를 줄여 맞춘다 (1 = 기본 크기).
+  const [shopTextScale, setShopTextScale] = useState(1);
+  const shopTextMeasureRef = useRef(null);
   const [listMessage, setListMessage] = useState('');
   const [activeListButton, setActiveListButton] = useState(null);
   const [thrownItem, setThrownItem] = useState(null);
@@ -1223,6 +1238,31 @@ export default function ShopView() {
     return () => window.clearInterval(timer);
   }, [shopText]);
 
+  // 대사가 출력 칸(.shop-scene__text-box) 높이/너비를 넘치면 들어맞을 때까지 폰트를 줄인다.
+  // 숨겨둔 측정용 노드에 '완성된 전체 문장'을 넣고 재보므로 타이핑 도중 크기가 흔들리지 않는다.
+  useLayoutEffect(() => {
+    const el = shopTextMeasureRef.current;
+    if (!el || !shopText) { setShopTextScale(1); return; }
+
+    const BASE = 29;   // .shop-scene__text-box 기본 font-size (px)
+    const MIN = 15;     // 이 이하로는 줄이지 않는다
+    let size = BASE;
+    el.style.fontSize = `${size}px`;
+    let guard = 0;
+    while (
+      (el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1)
+      && size > MIN
+      && guard < 40
+    ) {
+      size -= 1;
+      el.style.fontSize = `${size}px`;
+      guard += 1;
+    }
+    setShopTextScale(size / BASE);
+  }, [shopText]);
+
+  const shopTextBoxStyle = shopTextScale < 1 ? { fontSize: `${(29 * shopTextScale).toFixed(2)}px` } : undefined;
+
   useEffect(() => {
     if (!beakMsg || !isShopTextComplete || !shopText.includes('상처약')) {
       setBeakWordBox(null);
@@ -1585,9 +1625,18 @@ export default function ShopView() {
           style={(beakMsg || phase !== 'shop' || showBuy2 || purchaseMsg || isGachaContextActive) ? { cursor: 'pointer', pointerEvents: 'auto' } : undefined}
         />
 
+        {/* 출력 칸 넘침 판정용 숨김 노드 (완성된 전체 문장을 기본 폰트로 측정) */}
+        <div
+          ref={shopTextMeasureRef}
+          className="shop-scene__text-box shop-scene__text-box--measure"
+          aria-hidden="true"
+        >
+          {shopText}
+        </div>
+
         {/* 윽우지 부리 이스터에그 메시지 */}
         {beakMsg && (
-          <div className="shop-scene__text-box" onClick={(e) => { e.stopPropagation(); handleSceneAdvanceClick(); }} style={{ cursor: 'pointer' }}>
+          <div className="shop-scene__text-box" onClick={(e) => { e.stopPropagation(); handleSceneAdvanceClick(); }} style={{ cursor: 'pointer', ...shopTextBoxStyle }}>
             {renderBeakText()}
             {renderBeakItemHover()}
             {isShopTextComplete && (
@@ -1792,7 +1841,7 @@ export default function ShopView() {
 
         {/* shop: 아이템 설명 / 구매확인 / 구매완료 텍스트 */}
         {!beakMsg && (listMessage || (phase === 'shop' && selectedShopItem)) && (
-          <div className="shop-scene__text-box" onClick={(e) => { e.stopPropagation(); handleSceneAdvanceClick(); }}>
+          <div className="shop-scene__text-box" onClick={(e) => { e.stopPropagation(); handleSceneAdvanceClick(); }} style={shopTextBoxStyle}>
             {renderShopText()}
             {renderThrownItemHover()}
             {isShopTextComplete && (
@@ -1847,7 +1896,16 @@ export default function ShopView() {
                     e.stopPropagation();
                     if (!buyConfirming) {
                       setBuyConfirming(true);
-                    } else {
+                      // '확인'이 막 뜬 직후(더블클릭의 두 번째 클릭)엔 곧바로 구매되지 않도록 짧게 잠근다.
+                      buyConfirmReadyAtRef.current = Date.now() + 400;
+                      return;
+                    }
+                    // 2단계 확인 유지: 확인이 뜬 직후의 연타는 무시하고 의도적인 두 번째 클릭만 받는다.
+                    if (Date.now() < buyConfirmReadyAtRef.current) return;
+                    // 구매 요청 중복 실행 방지.
+                    if (isPurchasingRef.current) return;
+                    isPurchasingRef.current = true;
+                    try {
                       const itemName = selectedShopItem?.item?.name || '';
                       if (selectedShopItem.type === 'gachaball') {
                         const result = purchaseDesktopGacha(selectedShopItem, quantity);
@@ -1904,6 +1962,8 @@ export default function ShopView() {
                         setSelectedItem(null);
                         const aud = new Audio('/sound/purchase.mp3'); aud.currentTime = 0.4; aud.play().catch(() => {});
                       }
+                    } finally {
+                      isPurchasingRef.current = false;
                     }
                   }}
                   style={{ position: 'relative', display: 'block', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
