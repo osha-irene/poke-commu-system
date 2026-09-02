@@ -5165,6 +5165,16 @@
             }
         },
         {
+            "from": 10247,
+            "to": 902,
+            "fromName": "basculin-white-striped",
+            "toName": "basculegion",
+            "condition": {
+                "type": "level",
+                "level": 28
+            }
+        },
+        {
             "from": 10235,
             "to": 903,
             "fromName": "sneasel-hisui",

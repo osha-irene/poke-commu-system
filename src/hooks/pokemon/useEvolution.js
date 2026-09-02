@@ -127,6 +127,16 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster, u
     const toNameEn = (evolution.toName || '').toLowerCase();
     const sourceVariant = (pokemon.formVariant || pokemon.species || pokemon.nameEn || '').toLowerCase();
 
+    // 배쓰나이(흰색근) → 대쓰여너: 대쓰여너는 성별로 폼(수컷 902 / 암컷 10248)이 갈리고
+    // 스탯·스프라이트도 다르므로, 진화 전 개체의 성별에 맞는 템플릿을 골라준다.
+    if (toNameEn === 'basculegion') {
+      const wantFemale = String(pokemon.gender || '').toLowerCase() === 'female';
+      const genderedTemplate = allPokemonMaster.find((p) =>
+        (p.nameEn || '').toLowerCase() === (wantFemale ? 'basculegion-female' : 'basculegion-male')
+      );
+      if (genderedTemplate) return genderedTemplate;
+    }
+
     if (fromNameEn && toNameEn && sourceVariant.startsWith(`${fromNameEn}-`)) {
       const suffix = sourceVariant.slice(fromNameEn.length);
       const expectedVariant = `${toNameEn}${suffix}`;
