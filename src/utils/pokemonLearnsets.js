@@ -14,6 +14,18 @@ export const getPokemonLearnsetKeys = (pokemonOrNumber) => {
     if (!keys.includes(key)) keys.push(key);
   };
 
+  // 암/수로 자력기가 갈리는 포켓몬(예: 냐오닉스 암컷의 미래예지)은
+  // "<종족명>-female" / "<종족명>-male" 학습셋이 있으면 그것을 먼저 쓴다.
+  // 해당 키의 데이터가 없으면 아래 일반 키(number/nameEn 등)로 자연스럽게 폴백된다.
+  const gender = String(pokemonOrNumber.gender || '').toLowerCase();
+  if (gender === 'female' || gender === 'male') {
+    [pokemonOrNumber.formVariant, pokemonOrNumber.nameEn].forEach((value) => {
+      if (!value) return;
+      const base = String(value).replace(/-(male|female)$/i, '');
+      addKey(`${base}-${gender}`);
+    });
+  }
+
   addKey(pokemonOrNumber.number);
   addKey(pokemonOrNumber.pokemonId);
   addKey(pokemonOrNumber.id);

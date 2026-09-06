@@ -14,6 +14,47 @@ const getItemList = (items) => {
   return itemsData.items || [];
 };
 
+// 로토무 폼별 전용기 (도감번호 기준). 노말 폼(479)은 전용기가 없다.
+const ROTOM_FORME_MOVE_BY_NUMBER = {
+  10008: 'overheat',    // 히트로토무
+  10009: 'hydro-pump',  // 워시로토무
+  10010: 'blizzard',    // 프로스트로토무
+  10011: 'air-slash',   // 스핀로토무
+  10012: 'leaf-storm',  // 커트로토무
+};
+
+// 본가처럼: 로토무의 폼을 바꾸면 이전 폼의 전용기를 새 폼의 전용기로 교체한다.
+// - 이전 폼 전용기를 알고 있으면 그 자리에 새 전용기를 넣는다.
+// - 노말 폼으로 돌아가면 전용기를 잊는다(빈 슬롯).
+// - 노말 → 가전 폼처럼 교체할 전용기가 없으면 빈 슬롯에 새로 배우고, 꽉 찼으면 마지막 슬롯을 대체한다.
+const applyRotomFormeMoveSwap = (prevPokemon, nextPokemon, targetTemplate, allMoves = []) => {
+  const prevOriginal = Number(prevPokemon?.originalNumber || prevPokemon?.number);
+  const targetOriginal = Number(targetTemplate?.originalNumber || targetTemplate?.number);
+  if (prevOriginal !== 479 && targetOriginal !== 479) return nextPokemon;
+
+  const oldMoveId = ROTOM_FORME_MOVE_BY_NUMBER[Number(prevPokemon?.number)] || null;
+  const newMoveId = ROTOM_FORME_MOVE_BY_NUMBER[Number(targetTemplate?.number)] || null;
+  if (!oldMoveId && !newMoveId) return nextPokemon;
+
+  let moves = Array.isArray(nextPokemon.moves) ? [...nextPokemon.moves] : [];
+
+  // 이전 폼 전용기 제거
+  if (oldMoveId) moves = moves.filter((m) => m.moveId !== oldMoveId);
+
+  // 새 폼 전용기 습득
+  if (newMoveId && !moves.some((m) => m.moveId === newMoveId)) {
+    const pp = allMoves.find((m) => m.id === newMoveId)?.pp || 0;
+    const entry = { moveId: newMoveId, currentPp: pp, learnedAt: nextPokemon.level ?? prevPokemon?.level ?? 1 };
+    if (moves.length < 4) {
+      moves.push(entry);
+    } else {
+      moves[moves.length - 1] = entry;
+    }
+  }
+
+  return { ...nextPokemon, moves };
+};
+
 const usePokemonManagement = (
   currentUser,
   updateCurrentUser,
@@ -570,7 +611,9 @@ const usePokemonManagement = (
     let found = false;
     const result = await updateOwnedPokemonByUniqueId(uniqueId, (latestPokemon) => {
       found = true;
-      return applyTemplateToOwnedPokemon(latestPokemon, targetTemplate);
+      const applied = applyTemplateToOwnedPokemon(latestPokemon, targetTemplate);
+      // 로토무: 폼 변경 시 전용기도 새 폼에 맞게 자동 교체
+      return applyRotomFormeMoveSwap(latestPokemon, applied, targetTemplate, allMoves);
     });
 
     if (!result.committed) {
@@ -583,7 +626,14 @@ const usePokemonManagement = (
       return false;
     }
 
-    alert((targetTemplate.name || targetTemplate.nameEn) + '으로 변경되었습니다.');
+    const newFormeMoveId = ROTOM_FORME_MOVE_BY_NUMBER[Number(targetTemplate.number)];
+    const newFormeMoveName = newFormeMoveId
+      ? (allMoves.find((m) => m.id === newFormeMoveId)?.name || newFormeMoveId)
+      : null;
+    alert(
+      (targetTemplate.name || targetTemplate.nameEn) + '으로 변경되었습니다.'
+      + (newFormeMoveName ? `\n전용기가 ${newFormeMoveName}(으)로 바뀌었습니다.` : '')
+    );
     return true;
   };
 

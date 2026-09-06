@@ -533,7 +533,8 @@
             "fromName": "magneton",
             "toName": "magnezone",
             "condition": {
-                "location": "mt-coronet"
+                "type": "item",
+                "item": "thunder-stone"
             }
         },
         {
@@ -1749,7 +1750,8 @@
             "fromName": "nosepass",
             "toName": "probopass",
             "condition": {
-                "location": "mt-coronet"
+                "type": "item",
+                "item": "thunder-stone"
             }
         },
         {
@@ -3679,7 +3681,8 @@
             "fromName": "crabrawler",
             "toName": "crabominable",
             "condition": {
-                "location": "mount-lanakila"
+                "type": "item",
+                "item": "ice-stone"
             }
         },
         {

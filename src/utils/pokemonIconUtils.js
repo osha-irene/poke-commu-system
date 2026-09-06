@@ -67,11 +67,21 @@ export function toPokemonIconFileName(pokemon = {}, options = {}) {
     baseName = `${baseName}-${regionalSuffix}`;
   }
 
-  // 암수 아이콘이 따로 있는 포켓몬은 성별 suffix 추가
-  if (GENDER_ICON_SET.has(baseName)) {
-    const gender = pokemon.gender;
-    if (gender === 'female') return `${baseName}-FEMALE`;
-    if (gender === 'male')   return `${baseName}-MALE`;
+  // 암수 아이콘이 따로 있는 포켓몬은 성별 suffix 추가.
+  // 냐오닉스/엘풍/배쓰나이처럼 formVariant가 "meowstic-male"같이 성별 접미사를 이미
+  // 달고 오는 경우가 있어(템플릿 기본값이 수컷), 그대로 두면 암컷 개체도 -MALE 아이콘이
+  // 나온다. 접미사를 떼어낸 기준명으로 GENDER_ICON_SET을 확인하고, 실제 개체 성별로
+  // 다시 붙인다.
+  const genderSuffixMatch = baseName.match(/-(MALE|FEMALE)$/);
+  const genderBaseName = genderSuffixMatch
+    ? baseName.slice(0, -genderSuffixMatch[0].length)
+    : baseName;
+  if (GENDER_ICON_SET.has(genderBaseName)) {
+    const gender = String(pokemon.gender || '').toLowerCase();
+    if (gender === 'female') return `${genderBaseName}-FEMALE`;
+    if (gender === 'male')   return `${genderBaseName}-MALE`;
+    // 개체 성별 정보가 없으면: 이름에 이미 성별이 박혀 있으면 그걸 쓰고, 없으면 수컷 아이콘
+    return genderSuffixMatch ? baseName : `${genderBaseName}-MALE`;
   }
 
   return baseName;

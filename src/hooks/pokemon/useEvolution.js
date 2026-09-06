@@ -4,6 +4,7 @@ import { database } from '../../firebase';
 import evolutionsData from '../../data/evolutions.json';
 import movesDataRaw from '../../data/moves.json';
 import itemsDataRaw from '../../data/items.json';
+import typesDataRaw from '../../data/types.json';
 import { getBaseStatPatch } from '../../utils/pokemonBaseStats';
 import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
 import {
@@ -16,6 +17,30 @@ import { getAbilityKoreanName } from '../../utils/abilityUtils';
 
 const allMovesData = Array.isArray(movesDataRaw) ? movesDataRaw : movesDataRaw.moves || [];
 const allItemsData = Array.isArray(itemsDataRaw) ? itemsDataRaw : itemsDataRaw.items || [];
+const allTypesData = Array.isArray(typesDataRaw) ? typesDataRaw : typesDataRaw.types || [];
+
+// 포켓몬 개체의 type/type2는 한글명("악", "에스퍼" 등)으로 저장되는데,
+// evolutions.json의 조건(partyType 등)은 영문 슬러그("dark", "psychic")를 쓴다.
+// 어느 쪽 표기로 와도 같은 타입이면 매칭되도록 정규화한다.
+const normalizeTypeToken = (value) => {
+  const raw = String(value || '').trim().toLowerCase();
+  if (!raw) return '';
+  const match = allTypesData.find((t) => (
+    String(t.name || '').toLowerCase() === raw ||
+    String(t.nameEn || '').toLowerCase() === raw ||
+    String(t.nameKo || '') === String(value || '').trim() ||
+    String(t.nameJa || '') === String(value || '').trim()
+  ));
+  return match ? String(match.name || '').toLowerCase() : raw;
+};
+
+const pokemonHasType = (pokemon, typeToken) => {
+  if (!pokemon) return false;
+  const target = normalizeTypeToken(typeToken);
+  if (!target) return false;
+  return normalizeTypeToken(pokemon.type) === target
+    || normalizeTypeToken(pokemon.type2) === target;
+};
 
 const getBaseName = (pokemon) => getPokemonDisplayParts(pokemon).name;
 
@@ -205,9 +230,11 @@ export const useEvolution = (currentUser, updateCurrentUser, allPokemonMaster, u
       }
 
       if (condition.partyType) {
-        const hasType = currentUser.caughtPokemon
+        // 개체의 type은 한글("악")로 저장되고 조건은 영문("dark")이라 직접 비교하면
+        // 절대 매칭되지 않는다(판짱→부란다 진화 불가 회귀). 타입 토큰을 정규화해서 비교한다.
+        const hasType = (currentUser.caughtPokemon || [])
           .slice(0, 6)
-          .some(p => p && (p.type === condition.partyType || p.type2 === condition.partyType));
+          .some(p => pokemonHasType(p, condition.partyType));
         if (!hasType) return false;
       }
 
