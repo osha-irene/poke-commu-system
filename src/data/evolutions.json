@@ -3676,6 +3676,16 @@
             }
         },
         {
+            "from": 737,
+            "to": 738,
+            "fromName": "charjabug",
+            "toName": "vikavolt",
+            "condition": {
+                "type": "item",
+                "item": "thunder-stone"
+            }
+        },
+        {
             "from": 739,
             "to": 740,
             "fromName": "crabrawler",
