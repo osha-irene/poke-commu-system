@@ -4628,16 +4628,6 @@
             }
         },
         {
-            "from": 967,
-            "to": 968,
-            "fromName": "cyclizar",
-            "toName": "orthworm",
-            "condition": {
-                "type": "level",
-                "level": 30
-            }
-        },
-        {
             "from": 974,
             "to": 975,
             "fromName": "cetoddle",
