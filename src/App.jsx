@@ -567,6 +567,11 @@ function HomeCalendar({ koreaToday, calendarDays, calendarLabel, weekDays, sched
 
 const DEPLOYED_HOME_FEED_START_TIME = Date.parse('2026-07-04T00:00:00+09:00');
 
+// 2026-09-15 00:00(KST) ~ 2026-09-16 00:00(KST) 사이엔 관리자 수동 점검 토글과 별개로
+// 기존 회원 로그인까지 포함해 전체 접근을 막는다(로그인 모달 없는 점검 화면만 노출).
+const SCHEDULED_LOCKOUT_START = Date.parse('2026-09-15T00:00:00+09:00');
+const SCHEDULED_LOCKOUT_END = Date.parse('2026-09-16T00:00:00+09:00');
+
 function isLocalRuntime() {
   if (typeof window === 'undefined') return true;
 
@@ -1455,7 +1460,15 @@ export default function App() {
     [sharedPokedexData, displayMembers]
   );
 
-  const effectiveMaintenanceMode = maintenanceMode || publicMaintenanceMode;
+  // 스케줄된 잠금 구간(9/15~9/16 KST) 경계를 넘을 때 자동으로 재평가되도록 주기적으로 틱.
+  const [scheduledLockoutNow, setScheduledLockoutNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setScheduledLockoutNow(Date.now()), 30000);
+    return () => clearInterval(id);
+  }, []);
+  const isScheduledLockoutActive = scheduledLockoutNow >= SCHEDULED_LOCKOUT_START && scheduledLockoutNow < SCHEDULED_LOCKOUT_END;
+
+  const effectiveMaintenanceMode = maintenanceMode || publicMaintenanceMode || isScheduledLockoutActive;
   const effectiveScheduledAt = maintenanceScheduledAt || publicMaintenanceScheduledAt;
   const isMaintenanceActive = effectiveMaintenanceMode || (effectiveScheduledAt && Date.now() >= effectiveScheduledAt);
   const [isLoadingOverlayVisible, setIsLoadingOverlayVisible] = useState(true);

@@ -34,6 +34,15 @@ const FORM_ICON_ALIASES = {
   'TAUROS-PALDEA-AQUA-BREED': 'TAUROS-PALDEA-AQUA',
   'TAUROS-PALDEA-BLAZE-BREED': 'TAUROS-PALDEA-BLAZE',
   'TAUROS-PALDEA-COMBAT-BREED': 'TAUROS-PALDEA-COMBAT',
+  // 스트린더: 하이(Amped)/로우(Low Key) 폼이 formVariant로 오는데, 아이콘 파일은
+  // TOXTRICITY.png(하이)/TOXTRICITY-1.png(로우) 두 장뿐이라 별칭이 필요하다.
+  'TOXTRICITY-AMPED': 'TOXTRICITY',
+  'TOXTRICITY-AMPED-GMAX': 'TOXTRICITY',
+  'TOXTRICITY-LOW-KEY': 'TOXTRICITY-1',
+  'TOXTRICITY-LOW-KEY-GMAX': 'TOXTRICITY-1',
+  // 비비용 볼의 모양: formVariant는 "vivillon-poke-ball"이지만 아이콘 파일명은
+  // 하이픈 없는 "VIVILLON-POKEBALL.png"라 그대로 두면 매칭이 안 된다.
+  'VIVILLON-POKE-BALL': 'VIVILLON-POKEBALL',
 };
 
 const REGIONAL_ICON_SUFFIXES = {
