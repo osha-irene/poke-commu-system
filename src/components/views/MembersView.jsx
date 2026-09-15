@@ -3486,19 +3486,17 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
           title={showRenewalSnapshot ? '최신 모습으로 돌아가기' : '리뉴얼 전 모습 보기'}
           style={{
             position: 'absolute', top: '7.5rem', right: -64,
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '8px 14px',
+            width: 40, height: 40,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
             border: 'none', borderRadius: 999,
             background: showRenewalSnapshot ? `rgb(${selectedAccentRgb})` : 'rgba(255,255,255)',
             color: showRenewalSnapshot ? '#fff' : `rgb(${accentRgb})`,
-            fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap',
             boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
             cursor: 'pointer',
             zIndex: MEMBER_DETAIL_UI_Z_INDEX,
           }}
         >
-          <History size={14} strokeWidth={2} />
-          {showRenewalSnapshot ? '최신 보기' : '리뉴얼 전 보기'}
+          <History size={16} strokeWidth={2} />
         </button>
       )}
 
