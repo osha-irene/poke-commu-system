@@ -1882,7 +1882,7 @@ export default function ShopView() {
       {phase === 'shop' && selectedShopItem && !purchaseMsg && (!thrownShopItem || isShopTextComplete || showBuy2) && (selectedShopItem.type !== 'gachaball' || showBuy2 || (gachaContextStep >= 1 && isShopTextComplete)) && (
         <div style={{
           position: 'absolute',
-          right: 'calc(39% + 150px)',
+          right: 'calc(39% + 50px)',
           bottom: 'calc(6% + 50px)',
           zIndex: 40,
           pointerEvents: 'auto',
@@ -1895,15 +1895,16 @@ export default function ShopView() {
                   <div style={{
                     position: 'absolute', inset: 0, paddingTop: 2,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                    transform: 'translate(-10px, 5px)',
                   }}>
                     <button
                       onClick={(e) => { e.stopPropagation(); setQuantity(q => Math.max(1, q - 1)); }}
-                      style={{ fontFamily: "'Mona12 Text KR','Mona12',monospace", color: '#fff', background: 'none', border: 'none', fontSize: 22, fontWeight: 700, cursor: 'pointer', lineHeight: 1, padding: '0 2px' }}
+                      style={{ fontFamily: "'Mona12 Text KR','Mona12',monospace", color: '#1d6343', background: 'none', border: 'none', fontSize: 22, fontWeight: 700, cursor: 'pointer', lineHeight: 1, padding: '0 2px' }}
                     >−</button>
-                    <span style={{ fontFamily: "'Mona12 Text KR','Mona12',monospace", color: '#fff', fontSize: 22, fontWeight: 700, minWidth: 28, textAlign: 'center', transform: quantity < 10 ? 'translateX(-2px)' : 'none' }}>{quantity}</span>
+                    <span style={{ fontFamily: "'Mona12 Text KR','Mona12',monospace", color: '#1d6343', fontSize: 22, fontWeight: 700, minWidth: 28, textAlign: 'center', transform: quantity < 10 ? 'translateX(-2px)' : 'none' }}>{quantity}</span>
                     <button
                       onClick={(e) => { e.stopPropagation(); setQuantity(q => Math.min(selectedShopItem.stock === 99 ? 999 : selectedShopItem.stock, q + 1)); }}
-                      style={{ fontFamily: "'Mona12 Text KR','Mona12',monospace", color: '#fff', background: 'none', border: 'none', fontSize: 22, fontWeight: 700, cursor: 'pointer', lineHeight: 1, padding: '0 2px' }}
+                      style={{ fontFamily: "'Mona12 Text KR','Mona12',monospace", color: '#1d6343', background: 'none', border: 'none', fontSize: 22, fontWeight: 700, cursor: 'pointer', lineHeight: 1, padding: '0 2px' }}
                     >+</button>
                   </div>
                 </div>

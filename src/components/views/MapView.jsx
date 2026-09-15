@@ -466,18 +466,13 @@ export default function MapView({
         transition: 'opacity 0.2s',
       }}
     >
-      <img src={arrowImgs[dir]} alt={dir} style={{ display: 'block', width: 36, height: 36, imageRendering: 'auto' }} />
+      <img src={arrowImgs[dir]} alt={dir} style={{ display: 'block', width: 36, height: 36, imageRendering: 'auto', filter: 'drop-shadow(0 3px 3px rgba(0,0,0,0.35))' }} />
     </button>
   );
 
   /* ── 스크린 내 상세 뷰 ── */
 
   const DeviceMobileDetailPanel = () => {
-    const scrollRef = React.useRef(null);
-    const [headerVisible, setHeaderVisible] = React.useState(true);
-    const handleDetailScroll = () => {
-      if (scrollRef.current) setHeaderVisible(scrollRef.current.scrollTop < 50);
-    };
     if (!selectedArea) return null;
     const places = Array.isArray(selectedArea.places) ? selectedArea.places.filter(p => p?.name && p.visible !== false) : [];
     const accentColor = selectedArea.color || selectedTown?.color || '#089a4f';
@@ -489,153 +484,152 @@ export default function MapView({
 
     return (
       <>
-        {/* 헤더 영역 hover 차단 마스크 */}
-        {headerVisible && (
-          <div style={{ position: 'absolute', top: 18, left: 14, right: 14, height: 90, zIndex: 66, pointerEvents: 'auto' }} />
-        )}
         {/* 배경 오버레이 */}
         <div className="absolute inset-0" style={{ background: 'rgba(0, 0, 0, 0.42)', pointerEvents: 'none' }} />
 
         {/* 본문 — zIndex 없음 → 내부 버튼이 마스크(66) 위로 올라갈 수 있음 */}
         <div className="absolute inset-0" style={{ overflow: 'hidden' }}>
-          <div style={{ height: '100%', maxWidth: 520, margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
-          <div ref={scrollRef} onScroll={handleDetailScroll} style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '18px 14px 50px' }}>
-            {/* 헤더 */}
-            <div style={{ position: 'relative', marginBottom: 15, height: 72, borderRadius: 16, background: 'rgba(255,255,255,0.92)', boxShadow: '0 2px 10px rgba(0,0,0,0.15)' }}>
-              <button
-                onClick={() => setScreenView('map')}
-                style={{ position: 'absolute', top: '50%', left: 23, transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 4, zIndex: 67, display: 'flex' }}
-              >
-                <ChevronLeft size={22} color="#373a33" />
-              </button>
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale', transform: 'translateY(5px)' }}>
-                <div style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 22, fontWeight: 700, color: '#373a33', lineHeight: 1.2 }}>
-                  {selectedArea.name}
-                </div>
-                <div style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 13, fontWeight: 700, color: '#65c493', marginTop: 0, position: 'relative', top: -2 }}>
-                  {selectedTown?.groupName}
-                </div>
-              </div>
-              <div style={{ position: 'absolute', top: '50%', right: 30, transform: 'translateY(calc(-50% + 3px))', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, zIndex: 1 }}>
-                <span style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 11, fontWeight: 700, color: '#089a4f', background: 'rgba(74,154,8,0.13)', borderRadius: 20, padding: '2px 8px' }}>
-                  Lv.{activeLevel.min}-{activeLevel.max}
-                </span>
-                {activeRate !== undefined && (
-                  <span style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 11, fontWeight: 700, color: '#407a5c', background: 'rgba(255,255,255,0.85)', borderRadius: 20, padding: '2px 8px', border: '1px solid rgba(120,180,60,0.22)' }}>
-                    {activeRate < 1 ? Math.round(activeRate * 100) : activeRate}%
-                  </span>
-                )}
-              </div>
-            </div>
-            {places.length > 0 && (
-              <div style={{ marginBottom: 14 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {places.map(place => {
-                    const active = selectedPlace?.id === place.id;
-                    return (
-                      <button
-                        key={place.id}
-                        onClick={() => setSelectedPlace(place)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 10,
-                          padding: '11px 14px',
-                          marginLeft: 50,
-                          marginRight: 50,
-                          background: active ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.70)',
-                          border: `1.5px solid ${active ? accentColor : 'rgba(255,255,255,0.4)'}`,
-                          borderRadius: 12,
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                          boxShadow: active ? '0 2px 12px rgba(74,154,8,0.25)' : 'none',
-                        }}
-                      >
-                        <span style={{ color: active ? accentColor : '#407a5c', display: 'flex', alignItems: 'center' }}>
-                          {place.isCave ? <Mountain size={18} /> : place.isWaterside ? <Waves size={18} /> : <Trees size={18} />}
-                        </span>
-                        <span style={{ flex: 1, fontFamily: 'GmarketSans, sans-serif', fontSize: 16, fontWeight: 500, color: '#373a33', WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale', position: 'relative', top: 3 }}>{place.name}</span>
-                        <span style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 11, color: '#407a5c' }}>
-                          Lv.{place.minLevel ?? selectedArea.minLevel ?? 1}-{place.maxLevel ?? selectedArea.maxLevel ?? 20}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            <button onClick={handleExplore} style={{
-              width: '100%',
-              padding: 0,
-              borderRadius: 18,
-              marginBottom: 18,
-              background: 'transparent',
-              color: '#fff',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.35))',
-            }}>
-              <img src={searchGoImg} alt={selectedPlace ? `${selectedPlace.name} 탐험하기` : '탐험하기'} style={{ width: 150, maxWidth: '58%', display: 'block' }} />
+          <div style={{ height: '100%', maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', padding: '18px 14px 50px' }}>
+            {/* 뒤로가기 */}
+            <button
+              onClick={() => setScreenView('map')}
+              style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 12, background: 'rgba(255,255,255,0.92)', border: 'none', borderRadius: 10, padding: '6px 10px 6px 6px', cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.15)', zIndex: 67, position: 'relative', flexShrink: 0 }}
+            >
+              <ChevronLeft size={18} color="#373a33" />
+              <span style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 12, fontWeight: 700, color: '#373a33' }}>뒤로</span>
             </button>
 
-            <div style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.75)', marginBottom: 10 }}>
-              등장 포켓몬 <span style={{ color: 'rgba(180,230,100,0.9)' }}>{areaPokemon.length}</span>
-            </div>
+            {/* 좌: 등장 포켓몬 / 우: 지역·장소 */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, flex: 1, minHeight: 0 }}>
+              {/* 왼쪽 — 등장 포켓몬 (이 영역만 스크롤) */}
+              <div style={{ flex: 1, minWidth: 0, height: '100%', overflowY: 'auto', paddingRight: 2 }}>
+                <div style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.75)', marginBottom: 10 }}>
+                  등장 포켓몬 <span style={{ color: 'rgba(180,230,100,0.9)' }}>{areaPokemon.length}</span>
+                </div>
 
-            {areaPokemon.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 0', color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>
-                등록된 포켓몬이 없습니다
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 4 }}>
-                {areaPokemon.map(p => {
-                  const caught = caughtNumbers.has(Number(p.number));
-                  const known = caught || isPokemonUnlocked(p);
-                  const iconUrl = known ? getPokemonLocalIconUrl({ ...p, nameEn: p.nameEn || p.name || 'UNKNOWN' }) : null;
-                  // "이름 (폼 설명)" 형태는 뒤 괄호를 떼고, 리전 폼(알로라/가라르/히스이/팔데아)만
-                  // 이름 아래에 작게 리전 이름을 따로 표시한다.
-                  const { name: displayName, formLabel } = getPokemonDisplayParts(p);
-                  const isRegionalLabel = !!p.regionalForm;
-                  return (
-                    <div key={p.id || p.number} style={{
-                      position: 'relative',
-                      backgroundColor: 'rgba(255,255,255,0.95)',
-                      border: `1.5px solid ${caught ? 'rgba(74,154,8,0.30)' : 'rgba(255,255,255,0.5)'}`,
-                      borderRadius: 10,
-                      padding: '8px 2px 6px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: 4,
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
-                      overflow: 'hidden',
-                    }}>
-                      {caught && <img src={pokeballImg} alt="" style={{ position: 'absolute', width: '55%', top: '50%', left: '50%', transform: 'translate(-50%, -53%)', opacity: 0.9, zIndex: 0 }} />}
-                      <div style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 1 }}>
-                        {iconUrl ? (
-                          <div style={{ width: 32, height: 32, backgroundImage: `url(${iconUrl})`, backgroundSize: '64px 32px', backgroundPosition: 'left center', backgroundRepeat: 'no-repeat', imageRendering: 'pixelated' }} />
-                        ) : (
-                          <span style={{ fontSize: 16, color: 'rgba(0,0,0,0.15)' }}>?</span>
-                        )}
-                      </div>
-                      <div style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 10, fontWeight: 700, color: known ? '#102e1f' : '#bbb', textAlign: 'center', lineHeight: 1.3, position: 'relative', zIndex: 1 }}>
-                        {known ? displayName : '???'}
-                      </div>
-                      {known && isRegionalLabel && formLabel && (
-                        <div style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 7, fontWeight: 600, color: 'rgba(26,46,16,0.55)', textAlign: 'center', lineHeight: 1, marginTop: -2, position: 'relative', zIndex: 1 }}>
-                          {formLabel}
+                {areaPokemon.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px 0', color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>
+                    등록된 포켓몬이 없습니다
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 4 }}>
+                    {areaPokemon.map(p => {
+                      const caught = caughtNumbers.has(Number(p.number));
+                      const known = caught || isPokemonUnlocked(p);
+                      const iconUrl = known ? getPokemonLocalIconUrl({ ...p, nameEn: p.nameEn || p.name || 'UNKNOWN' }) : null;
+                      // "이름 (폼 설명)" 형태는 뒤 괄호를 떼고, 리전 폼(알로라/가라르/히스이/팔데아)만
+                      // 이름 아래에 작게 리전 이름을 따로 표시한다.
+                      const { name: displayName, formLabel } = getPokemonDisplayParts(p);
+                      const isRegionalLabel = !!p.regionalForm;
+                      return (
+                        <div key={p.id || p.number} style={{
+                          position: 'relative',
+                          backgroundColor: 'rgba(255,255,255,0.95)',
+                          border: `1.5px solid ${caught ? 'rgba(74,154,8,0.30)' : 'rgba(255,255,255,0.5)'}`,
+                          borderRadius: 9,
+                          padding: '6px 2px 5px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: 3,
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
+                          overflow: 'hidden',
+                        }}>
+                          {caught && <img src={pokeballImg} alt="" style={{ position: 'absolute', width: '48%', top: '50%', left: '50%', transform: 'translate(-50%, -53%)', opacity: 0.9, zIndex: 0 }} />}
+                          <div style={{ width: 27, height: 27, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 1 }}>
+                            {iconUrl ? (
+                              <div style={{ width: 27, height: 27, backgroundImage: `url(${iconUrl})`, backgroundSize: '54px 27px', backgroundPosition: 'left center', backgroundRepeat: 'no-repeat', imageRendering: 'pixelated' }} />
+                            ) : (
+                              <span style={{ fontSize: 14, color: 'rgba(0,0,0,0.15)' }}>?</span>
+                            )}
+                          </div>
+                          <div style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 10, fontWeight: 700, color: known ? '#102e1f' : '#bbb', textAlign: 'center', lineHeight: 1.3, position: 'relative', zIndex: 1 }}>
+                            {known ? displayName : '???'}
+                          </div>
+                          {known && isRegionalLabel && formLabel && (
+                            <div style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 7, fontWeight: 600, color: 'rgba(26,46,16,0.55)', textAlign: 'center', lineHeight: 1, marginTop: -2, position: 'relative', zIndex: 1 }}>
+                              {formLabel}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+
+              {/* 오른쪽 — 지역 이름 + 장소 선택 */}
+              <div style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
+                <div style={{ marginBottom: 14, borderRadius: 16, padding: '16px 18px', background: 'rgba(255,255,255,0.92)', boxShadow: '0 2px 10px rgba(0,0,0,0.15)' }}>
+                  <div style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 20, fontWeight: 700, color: '#373a33', lineHeight: 1.2, WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale' }}>
+                    {selectedArea.name}
+                  </div>
+                  <div style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 13, fontWeight: 700, color: '#65c493', marginTop: 2, marginBottom: 10 }}>
+                    {selectedTown?.groupName}
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    <span style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 11, fontWeight: 700, color: '#089a4f', background: 'rgba(74,154,8,0.13)', borderRadius: 20, padding: '2px 8px' }}>
+                      Lv.{activeLevel.min}-{activeLevel.max}
+                    </span>
+                    {activeRate !== undefined && (
+                      <span style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 11, fontWeight: 700, color: '#407a5c', background: 'rgba(255,255,255,0.85)', borderRadius: 20, padding: '2px 8px', border: '1px solid rgba(120,180,60,0.22)' }}>
+                        {activeRate < 1 ? Math.round(activeRate * 100) : activeRate}%
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {places.length > 0 && (
+                  <div style={{ marginBottom: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {places.map(place => {
+                      const active = selectedPlace?.id === place.id;
+                      return (
+                        <button
+                          key={place.id}
+                          onClick={() => setSelectedPlace(place)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 10,
+                            padding: '11px 14px',
+                            background: active ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.70)',
+                            border: `1.5px solid ${active ? accentColor : 'rgba(255,255,255,0.4)'}`,
+                            borderRadius: 12,
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            boxShadow: active ? '0 2px 12px rgba(74,154,8,0.25)' : 'none',
+                          }}
+                        >
+                          <span style={{ color: active ? accentColor : '#407a5c', display: 'flex', alignItems: 'center' }}>
+                            {place.isCave ? <Mountain size={18} /> : place.isWaterside ? <Waves size={18} /> : <Trees size={18} />}
+                          </span>
+                          <span style={{ flex: 1, fontFamily: 'GmarketSans, sans-serif', fontSize: 15, fontWeight: 500, color: '#373a33', WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale', position: 'relative', top: 3 }}>{place.name}</span>
+                          <span style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 11, color: '#407a5c' }}>
+                            Lv.{place.minLevel ?? selectedArea.minLevel ?? 1}-{place.maxLevel ?? selectedArea.maxLevel ?? 20}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <button onClick={handleExplore} style={{
+                  width: '100%',
+                  padding: 0,
+                  borderRadius: 18,
+                  background: 'transparent',
+                  color: '#fff',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.35))',
+                }}>
+                  <img src={searchGoImg} alt={selectedPlace ? `${selectedPlace.name} 탐험하기` : '탐험하기'} style={{ width: 150, maxWidth: '58%', display: 'block' }} />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </>
@@ -700,22 +694,12 @@ export default function MapView({
             <ArrowBtn dir="right" />
           </>}
 
-          {/* 탑시트 — 마우스오버 시 표시 */}
-          <div className="top-sheet-trigger" style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 55, pointerEvents: 'auto' }}>
-            <div className="top-sheet-content" style={{
-              background: 'linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, transparent 100%)',
-              padding: '24px 16px 24px',
-              display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 8,
-              opacity: 0, transition: 'opacity 0.2s',
-              pointerEvents: 'none',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 15 }}>
-                <Footprints size={24} color="#fff" />
-                <span style={{ fontFamily: "'Mona12 Text KR','Mona12',monospace", fontSize: 18, fontWeight: 700, color: '#fff', position: 'relative', left: -3 }}>
-                  {dailyWalks} / {maxDailyWalks}
-                </span>
-              </div>
-            </div>
+          {/* 남은 탐험 횟수 — 우측 상단 고정 */}
+          <div style={{ position: 'absolute', top: 24, right: 36, zIndex: 55, display: 'flex', alignItems: 'center', gap: 6, pointerEvents: 'none', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.65))' }}>
+            <Footprints size={18} color="#fff" />
+            <span style={{ fontFamily: "'Mona12 Text KR','Mona12',monospace", fontSize: 15, fontWeight: 700, color: '#fff' }}>
+              {dailyWalks} / {maxDailyWalks}
+            </span>
           </div>
 
           {/* 네비게이션 — 상단 */}
