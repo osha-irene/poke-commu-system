@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.72d20e8e.css",
-    "main.js": "/static/js/main.b8c5a022.js",
+    "main.css": "/static/css/main.ef5f6ca8.css",
+    "main.js": "/static/js/main.9d0800ec.js",
     "static/js/623.69c45dc4.chunk.js": "/static/js/623.69c45dc4.chunk.js",
     "static/media/map.png": "/static/media/map.8a41709af9a828a3bcbb.png",
     "static/media/forest-bg (2).png": "/static/media/forest-bg (2).1ce5c2a10d227383e0b4.png",
@@ -42,7 +42,6 @@
     "static/media/polaroid-list.png": "/static/media/polaroid-list.94564cca15db50b21b0e.png",
     "static/media/main_calendar.png": "/static/media/main_calendar.388137a98bca8f33dc27.png",
     "static/media/UNDERWATER.png": "/static/media/UNDERWATER.0edd13bc0477497eb688.png",
-    "static/media/setting.png": "/static/media/setting.d6ebc989859ec8ea3d5e.png",
     "static/media/encounter-ball.png": "/static/media/encounter-ball.dffebbf7fe235878e024.png",
     "static/media/member.png": "/static/media/member.7239f32f3f9796547197.png",
     "static/media/PATH NIGHT.png": "/static/media/PATH NIGHT.4061115b04b377ca16ca.png",
@@ -51,7 +50,6 @@
     "static/media/balls.png": "/static/media/balls.3c9903396f8a984dff92.png",
     "static/media/TALL GRASS.png": "/static/media/TALL GRASS.32821dbafde452740d16.png",
     "static/media/context.png": "/static/media/context.9bc4a9497cd44e605103.png",
-    "static/media/admin.png": "/static/media/admin.094df088c494cd04ad4c.png",
     "static/media/text2.png": "/static/media/text2.4c6901af859203a30198.png",
     "static/media/map-viewport.png": "/static/media/map-viewport.a22158ec0dabcc4370ea.png",
     "static/media/Safari 240_arnie.png": "/static/media/Safari 240_arnie.539f1c2d2956be40c666.png",
@@ -61,6 +59,7 @@
     "static/media/MOUNTAIN.png": "/static/media/MOUNTAIN.636fe1e6117896e4b000.png",
     "static/media/MOUNTAIN 2.png": "/static/media/MOUNTAIN 2.8222f3ea4436c19e1cf1.png",
     "static/media/MOUNTAIN NIGHT.png": "/static/media/MOUNTAIN NIGHT.19acb5e20c3ea8a517da.png",
+    "static/media/setting.png": "/static/media/setting.f27042e77c731cd75ca4.png",
     "static/media/encounter-pokemon.png": "/static/media/encounter-pokemon.2bb5ef59583afe63b87a.png",
     "static/media/advent.png": "/static/media/advent.6a5e28582e75ac49c696.png",
     "static/media/shop.png": "/static/media/shop.96baf0c0c7bc5d2bb5ef.png",
@@ -68,6 +67,7 @@
     "static/media/main_npc.png": "/static/media/main_npc.e271ab945810b4f23b5a.png",
     "static/media/dex.png": "/static/media/dex.dcf45fc5733175a2c777.png",
     "static/media/Cerulean Cave_arnie.png": "/static/media/Cerulean Cave_arnie.48ba9ac6e5e276b5d8f3.png",
+    "static/media/main-link.png": "/static/media/main-link.61cd9213ee6406643198.png",
     "static/media/trainercard.png": "/static/media/trainercard.a2e6b6b309aa0d7f0645.png",
     "static/media/SNOW NIGHT.png": "/static/media/SNOW NIGHT.056ccfe52fca52259ca8.png",
     "static/media/CAVE 2.png": "/static/media/CAVE 2.9125ea3a4cb2f91b8d81.png",
@@ -77,12 +77,12 @@
     "static/media/Whirl Islands cave_arnie.png": "/static/media/Whirl Islands cave_arnie.66120ee2033224a9cc5d.png",
     "index.html": "/index.html",
     "static/media/pokemon-icon.svg": "/static/media/pokemon-icon.d36b6f0655c180980d5acb3287a88011.svg",
-    "main.72d20e8e.css.map": "/static/css/main.72d20e8e.css.map",
-    "main.b8c5a022.js.map": "/static/js/main.b8c5a022.js.map",
+    "main.ef5f6ca8.css.map": "/static/css/main.ef5f6ca8.css.map",
+    "main.9d0800ec.js.map": "/static/js/main.9d0800ec.js.map",
     "623.69c45dc4.chunk.js.map": "/static/js/623.69c45dc4.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.72d20e8e.css",
-    "static/js/main.b8c5a022.js"
+    "static/css/main.ef5f6ca8.css",
+    "static/js/main.9d0800ec.js"
   ]
 }
