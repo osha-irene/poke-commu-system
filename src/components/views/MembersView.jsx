@@ -36,6 +36,24 @@ import badge8Img from '../../assets/members/badge/badge8.png';
 import chimeSound from '../../assets/sounds/chime.mp3';
 import rubbingSound from '../../assets/sounds/rubbing.mp3';
 
+// 파트너 포켓몬 영어이름(nameEn)에 맞는 메가진화 일러스트가 있으면 src/assets/members/pokemonC에서 찾아 쓴다.
+const partnerCImageContext = require.context('../../assets/members/pokemonC', false, /\.png$/);
+const partnerCImageMap = partnerCImageContext.keys().reduce((acc, key) => {
+  const nameKey = key.replace(/^\.\//, '').replace(/\.png$/i, '').toLowerCase();
+  acc[nameKey] = partnerCImageContext(key);
+  return acc;
+}, {});
+// 정확히 일치하는 파일이 없으면 기본 이름으로 시작하는 파일도 찾아본다 (예: "sneasel-alola.png").
+const getPartnerCImage = p => {
+  const base = String(p?.nameEn || p?.nameEnglish || p?.speciesNameEn || p?.species || p?.name || '').toLowerCase().trim();
+  if (!base) return null;
+  if (partnerCImageMap[base]) return partnerCImageMap[base];
+  const regionalForm = String(p?.regionalForm || '').toLowerCase().trim();
+  if (regionalForm && partnerCImageMap[`${base}-${regionalForm}`]) return partnerCImageMap[`${base}-${regionalForm}`];
+  const prefixKey = Object.keys(partnerCImageMap).find(key => key === base || key.startsWith(`${base}-`));
+  return prefixKey ? partnerCImageMap[prefixKey] : null;
+};
+
 const BADGE_IMGS = [badge1Img, badge2Img, badge3Img, badge4Img, badge5Img, badge6Img, badge7Img, badge8Img];
 // 특정 칭호는 기존 스티커를 교체하지 않고, 보조 이미지를 대각선 반대편에 겹쳐 붙여서 함께 보여준다.
 const TITLE_BONUS_STICKERS = {
@@ -841,6 +859,7 @@ const DEFAULT_RIGHT_GRADIENT_TABS = {
   text: true,
   entry: false,
   relation: false,
+  partner: true,
 };
 
 function getRightGradientTabs(member) {
@@ -1044,8 +1063,21 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     setTab(id);
     onTabChange?.(id);
   };
+  const togglePartnerReveal = () => {
+    setPartnerTextOpen(open => {
+      const next = !open;
+      onTabChange?.(next ? 'partner' : tab);
+      return next;
+    });
+    setPartnerEditing(false);
+  };
   const changeTab = (id) => {
     if (id === tab) return;
+    if (partnerTextOpen) {
+      setPartnerTextOpen(false);
+      setPartnerEditing(false);
+      setPartnerNoteOpen(false);
+    }
     if (tab === 'main' && member.charImageScrollEnabled && charImageOffset > 0) {
       if (charReturnTimerRef.current) clearTimeout(charReturnTimerRef.current);
       setCharImageOffset(0);
@@ -1073,6 +1105,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   const [partnerTextOpen, setPartnerTextOpen] = useState(false);
   const [partnerEditing, setPartnerEditing] = useState(false);
   const [partnerHovered, setPartnerHovered] = useState(false);
+  const [partnerNoteOpen, setPartnerNoteOpen] = useState(false);
   const [hoveredEntryIndex, setHoveredEntryIndex] = useState(null);
   const [flippedEntryIndex, setFlippedEntryIndex] = useState(null);
   const [partnerTopOffset, setPartnerTopOffset] = useState(0.0);
@@ -1634,7 +1667,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     const updateMemoHeights = () => {
       const nextNoteMaxHeight = getAvailableHeight(noteScrollRef.current, 10);
       setNoteMaxHeight(prev => nextNoteMaxHeight == null ? prev : Math.max(prev || 0, nextNoteMaxHeight));
-      setPartnerMemoMaxHeight(getAvailableHeight(partnerMemoRef.current, 20));
+      setPartnerMemoMaxHeight(getAvailableHeight(partnerMemoRef.current, 10));
       setBioMemoMaxHeight(getAvailableHeight(bioMemoRef.current, 15));
     };
 
@@ -1745,29 +1778,38 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     setCharImageOffset(current => clamp(current + step, 0, maxOffset));
   };
 
+  // 파트너 아이콘 클릭 시 캐릭터 이미지/캐치프레이즈/소개 말풍선을 플립하며 감춘다
+  const partnerFlipHiding = tab === 'main' && partnerTextOpen;
+
   return (
-    <div className="relative flex" style={{ height: '100vh', minHeight: '100dvh' }} onWheel={member.charImageScrollEnabled && tab === 'main' ? moveScrollableCharacter : undefined}>
-
-
-
-      {/* 좌측: 캐치프레이즈(뒤) + 캐릭터 이미지 */}
+    <div
+      className="relative flex"
+      style={{ height: '100vh', minHeight: '100dvh' }}
+      onWheel={member.charImageScrollEnabled && tab === 'main' ? moveScrollableCharacter : undefined}
+    >
+      {/* 좌측: 캐치프레이즈(뒤) + 캐릭터 이미지 — 캐치프레이즈만 플립 그룹으로 감싸 파트너 표시 중 페이드아웃, 캐릭터 이미지는 밖에 있어 계속 보이며 밀리기만 한다 */}
       <div className="relative" style={{ width: 'calc(100% - 240px)', flexShrink: 0, height: '100vh', minHeight: '100dvh', overflow: 'visible' }}>
         {tab === 'main' && (
           <div
-            className="rmv-catchphrase-fade"
-            style={{
-              position: 'fixed',
-              top: '0.15rem',
-              left: 0,
-              width: '39vw',
-              zIndex: 1,
-              pointerEvents: 'none',
-            }}
+            className={`rmv-partner-flip-group${partnerFlipHiding ? ' rmv-partner-flip-hide' : ''}`}
+            style={{ position: 'fixed', inset: 0 }}
           >
-            <CatchphraseDisplay
-              value={member.catchphrase || ''}
-              color={quoteAccentRgb}
-            />
+            <div
+              className="rmv-catchphrase-fade"
+              style={{
+                position: 'fixed',
+                top: '0.15rem',
+                left: 0,
+                width: '39vw',
+                zIndex: 1,
+                pointerEvents: 'none',
+              }}
+            >
+              <CatchphraseDisplay
+                value={member.catchphrase || ''}
+                color={quoteAccentRgb}
+              />
+            </div>
           </div>
         )}
         {fullImg && !member.profileImageFull ? (
@@ -1782,7 +1824,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             zIndex: MEMBER_CHARACTER_Z_INDEX, pointerEvents: 'none',
           }}>
             <div
-              className={`rmv-polaroid-detail${(tab === 'text' || tab === 'relation' || tab === 'entry') ? ' rmv-polaroid-pushed' : ''}${charTabTransition ? ` ${charTabTransition}` : ''}`}
+              className={`rmv-polaroid-detail${(tab === 'text' || tab === 'relation' || tab === 'entry' || (tab === 'main' && partnerTextOpen)) ? ' rmv-polaroid-pushed' : ''}${charTabTransition ? ` ${charTabTransition}` : ''}`}
               style={{
               position: 'relative',
               aspectRatio: '628 / 747',
@@ -1866,7 +1908,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               crossOrigin="anonymous"
               onLoad={handleImgLoad}
               onError={() => setImgLoaded(true)}
-              className={`rmv-char-base${(tab === 'text' || tab === 'relation' || tab === 'entry') ? ' rmv-char-pushed' : ''}${charTabTransition ? ` ${charTabTransition}` : ''}`}
+              className={`rmv-char-base${(tab === 'text' || tab === 'relation' || tab === 'entry' || (tab === 'main' && partnerTextOpen)) ? ' rmv-char-pushed' : ''}${charTabTransition ? ` ${charTabTransition}` : ''}`}
               style={{
                 position: 'fixed',
                 top: member.charImageTop ?? 0,
@@ -1884,7 +1926,8 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               }}
             />
           )
-        ) : (
+        ) : null}
+        {!fullImg && (
           <div className="absolute inset-0 flex items-start justify-center pt-8" style={{ zIndex: 2 }}>
             <div className="w-28 h-28 rounded-full bg-gray-100 flex items-center justify-center text-5xl">
               {member.name?.charAt(0)}
@@ -1900,58 +1943,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
         pointerEvents: 'none', zIndex: 1,
       }} />
 
-      {/* 사이드 내비게이션 */}
-      <div style={{
-        position: 'absolute', top: '10rem', right: -64,
-        display: 'flex', flexDirection: 'column',
-        background: 'rgba(255,255,255)',
-        borderRadius: 999,
-        boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
-        zIndex: MEMBER_DETAIL_UI_Z_INDEX,
-      }}>
-        {TABS.map(({ id, label, Icon, iconSrc }, i) => (
-          <button
-            key={id}
-            onClick={() => changeTab(id)}
-            onMouseEnter={() => setHoveredTab(id)}
-            onMouseLeave={() => setHoveredTab(null)}
-            title={label}
-            style={{
-              width: 40, height: 40,
-              border: 'none',
-              background: tab === id
-                ? `rgb(${selectedAccentRgb})`
-                : hoveredTab === id
-                  ? `rgba(${accentRgb},0.15)`
-                  : 'transparent',
-              color: tab === id ? '#fff' : `rgb(${accentRgb})`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'all 0.18s ease',
-              borderRadius: i === 0 ? '999px 999px 0 0' : i === TABS.length - 1 ? '0 0 999px 999px' : 0,
-            }}
-          >
-            {iconSrc ? (
-              <span
-                aria-hidden="true"
-                style={{
-                  width: 16,
-                  height: 16,
-                  display: 'block',
-                  backgroundColor: 'currentColor',
-                  WebkitMask: `url(${iconSrc}) center / contain no-repeat`,
-                  mask: `url(${iconSrc}) center / contain no-repeat`,
-                  transition: 'background-color 0.18s ease',
-                }}
-              />
-            ) : (
-              <Icon size={16} strokeWidth={2} />
-            )}
-          </button>
-        ))}
-      </div>
-
-
+      {/* 우측 그라데이션 — main/text/entry/relation 탭용 */}
       {shouldShowRightGradient && (
         <div
           className="rmv-text-bg-reveal"
@@ -1966,7 +1958,6 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
           }}
         />
       )}
-
 
       {/* 설정 탭 — 스크롤 컨테이너 (오버레이에 붙음) */}
       {tab === 'text' && (() => {
@@ -2390,250 +2381,6 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
         );
       })()}
 
-            {/* 메인 탭 콘텐츠 */}
-      {tab === 'main' && (
-        <div
-          key="main"
-          className="rmv-tab-content flex flex-col justify-start gap-3"
-          style={{ position: 'absolute', top: '16.5rem', left: '57%', width: 280, overflowX: 'visible', paddingBottom: 24, boxSizing: 'border-box', zIndex: gradientAwareContentZIndex }}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 28 }}>
-            {(() => {
-              const titleLabel = member.title && member.title !== 'none'
-                ? titles.find(t => t.id === member.title)?.label
-                : null;
-              return (
-                <span style={{
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: `rgb(${accentRgb})`,
-                  letterSpacing: '0.05em',
-                  lineHeight: 1,
-                  visibility: titleLabel ? 'visible' : 'hidden',
-                  ...getTitleDisplayStyle(titleLabel, { compactFontSize: 12 })
-                }}>
-                  {titleLabel || ' '}
-                </span>
-              );
-            })()}
-            <h2 style={{ fontFamily: "'SBAggroB', sans-serif", fontWeight: 700, fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#1a1a1a', lineHeight: 1.1 }}>{member.name}</h2>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: -12 }}>
-            {partner && (
-              <div style={{ position: 'relative', height: 65, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end', paddingRight: 110, transform: 'translateY(16px)' }}>
-                <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.25)', fontWeight: 500, letterSpacing: '0.05em' }}>파트너</span>
-                <button
-                  type="button"
-                  onClick={() => { setPartnerTextOpen(open => !open); setPartnerEditing(false); }}
-                  style={{ border: 0, padding: 0, background: 'transparent', fontSize: 22, fontWeight: 700, color: '#1a1a1a', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-                >
-                  <span style={{ position: 'relative' }}>
-                    {getPokemonName(partner)}
-                    {partner.isShiny && <span style={{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)', color: '#e53e3e', fontSize: 13, lineHeight: 1, marginLeft: 3 }}>★</span>}
-                  </span>
-                </button>
-                <img
-                  src={partnerDisplayUrl}
-                  alt={getPokemonName(partner)}
-                  onError={e => {
-                    const fallback = partnerDbSpriteUrl || partnerOfficialArtworkUrl;
-                    if (fallback && e.currentTarget.dataset.fallbackApplied !== '1') {
-                      e.currentTarget.dataset.fallbackApplied = '1';
-                      const usesArtworkFallback = isOfficialArtworkUrl(fallback);
-                      setPartnerImageUsesArtwork(usesArtworkFallback);
-                      e.currentTarget.src = fallback;
-                      if (usesArtworkFallback) {
-                        e.currentTarget.style.width = '107px';
-                        e.currentTarget.style.height = '107px';
-                        e.currentTarget.style.maxHeight = '107px';
-                        e.currentTarget.style.maxWidth = '107px';
-                        e.currentTarget.style.imageRendering = 'auto';
-                        e.currentTarget.style.objectFit = 'contain';
-                        e.currentTarget.style.right = '0';
-                      }
-                    }
-                  }}
-                  onClick={() => { setPartnerTextOpen(open => !open); setPartnerEditing(false); }}
-                  onMouseEnter={() => setPartnerHovered(true)}
-                  onMouseLeave={() => setPartnerHovered(false)}
-                  style={{
-                    position: 'absolute',
-                    bottom: '0',
-                    right: effectivePartnerUsesArtwork ? 0 : '-2rem',
-                    width: effectivePartnerUsesArtwork ? 107 : 'auto',
-                    height: effectivePartnerUsesArtwork ? 107 : 'auto',
-                    maxHeight: effectivePartnerUsesArtwork ? 107 : 160,
-                    maxWidth: effectivePartnerUsesArtwork ? 107 : 160,
-                    objectFit: effectivePartnerUsesArtwork ? 'contain' : 'initial',
-                    imageRendering: effectivePartnerUsesArtwork ? 'auto' : 'pixelated',
-                    zIndex: 5,
-                    cursor: 'pointer',
-                  }}
-                />
-                {partnerHovered && (() => {
-                  const imgH = partnerImgHeight;
-                  const topPx = partnerTopOffset * imgH;
-                  const tooltipOffset = getPartnerTooltipOffset(partner);
-                  const bottomFromContainerBottom = imgH - topPx + 7;
-                  return (
-                    <div style={{ position: 'absolute', bottom: bottomFromContainerBottom + tooltipOffset.y, right: 18 - tooltipOffset.x, zIndex: 10, pointerEvents: 'none' }}>
-                      <div style={{ background: `rgb(${selectedAccentRgb})`, color: partnerTextColor, padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', whiteSpace: 'nowrap', boxShadow: '3px 3px 6px rgba(0,0,0,0.18)' }}>
-                        CLICK!
-                      </div>
-                      <div style={{ width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: `7px solid rgb(${selectedAccentRgb})`, margin: '0 auto' }} />
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
-            {partner && (
-              <div
-                style={{ display: 'grid', gridTemplateRows: partnerTextOpen ? '1fr' : '0fr', marginTop: partnerTextOpen ? 5 : 0, marginBottom: partnerTextOpen ? 10 : 0, transition: 'grid-template-rows 0.38s cubic-bezier(0.16,1,0.3,1), margin-top 0.38s cubic-bezier(0.16,1,0.3,1), margin-bottom 0.38s cubic-bezier(0.16,1,0.3,1)' }}
-              >
-              <div style={{ overflow: 'hidden' }}>
-              <div
-                ref={partnerMemoRef}
-                className={partnerTextOpen ? 'rmv-partner-text-in' : ''}
-                onClick={() => { if (!partnerEditing && canEdit) setPartnerEditing(true); }}
-                onWheel={e => e.stopPropagation()}
-                style={{
-                  position: 'relative',
-                  zIndex: 6,
-                  background: `rgba(${selectedAccentRgb}, ${savedPartnerText ? 1 : 0.45})`,
-                  borderRadius: 8,
-                  padding: 0,
-                  marginTop: 2,
-                  minHeight: 36,
-                  maxHeight: partnerMemoMaxHeight ? `${partnerMemoMaxHeight}px` : 'calc(100dvh - 10px)',
-                  overflowY: 'auto',
-                  overscrollBehavior: 'contain',
-                  scrollPaddingBlock: 20,
-                  boxSizing: 'border-box',
-                  cursor: partnerEditing ? 'text' : (canEdit ? 'pointer' : 'default'),
-                  transition: 'background 0.3s',
-                }}
-              >
-                {partnerEditing ? (
-                  <textarea
-                    className="rmv-partner-text-input"
-                    value={partnerText}
-                    onChange={event => {
-                      setPartnerText(event.target.value);
-                      event.currentTarget.style.height = 'auto';
-                      event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
-                    }}
-                    onBlur={async () => {
-                      const saved = await savePartnerText();
-                      if (saved) setPartnerEditing(false);
-                    }}
-                    onKeyDown={async event => {
-                      if (event.key === 'Enter' && !event.shiftKey) {
-                        event.preventDefault();
-                        const saved = await savePartnerText();
-                        if (saved) setPartnerEditing(false);
-                      }
-                      if (event.key === 'Escape') {
-                        setPartnerText(savedPartnerText);
-                        setPartnerEditing(false);
-                      }
-                    }}
-                    ref={element => {
-                      if (!element) return;
-                      element.style.height = 'auto';
-                      element.style.height = `${element.scrollHeight}px`;
-                      element.focus({ preventScroll: true });
-                    }}
-                    rows={4}
-                    placeholder="파트너에 대한 설명을 입력하세요."
-                    disabled={partnerTextSaving}
-                    style={{
-                      ...partnerEditFieldStyle,
-                      display: 'block',
-                      color: partnerTextColor,
-                      caretColor: partnerTextColor,
-                      padding: '20px 14px',
-                      fontSize: 14,
-                      fontWeight: 500,
-                      lineHeight: 1.65,
-                      fontFamily: 'inherit',
-                      minHeight: 128,
-                    }}
-                  />
-                ) : savedPartnerText ? (
-                  <div
-                    style={{
-                      color: partnerTextColor,
-                      fontSize: 14,
-                      fontWeight: 500,
-                      lineHeight: 1.65,
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'keep-all',
-                      padding: '20px 14px',
-                      boxSizing: 'border-box',
-                    }}
-                  >
-                    {renderPartnerMemoText(savedPartnerText)}
-                  </div>
-                ) : (
-                  <div style={{ color: `rgba(255,255,255,0.5)`, fontSize: 13, fontWeight: 500, padding: '20px 14px', boxSizing: 'border-box' }}>
-                    클릭해서 설명 추가...
-                  </div>
-                )}
-              </div>
-              </div>
-              </div>
-            )}
-            {(() => {
-              const stats = [member.age, member.height, member.weight, member.hometown].filter(Boolean);
-              return stats.length > 0 ? (
-                <div style={{ fontSize: 17, fontWeight: 700, color: `rgb(${accentRgb})`, letterSpacing: '0.04em', lineHeight: 1.4, marginTop: 16 }}>
-                  {stats.join(' · ')}
-                </div>
-              ) : null;
-            })()}
-            <div
-              ref={noteScrollRef}
-              onWheel={e => e.stopPropagation()}
-              style={{ maxHeight: noteMaxHeight ? `${noteMaxHeight}px` : 'calc(100dvh - 10px)', overflowY: 'auto', overflowX: 'hidden', paddingRight: 2, paddingBottom: 6, boxSizing: 'border-box', overscrollBehavior: 'contain', scrollPaddingBottom: 6 }}
-            >
-              {noteEditing ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <textarea
-                    ref={el => { noteRef.current = el; if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; el.focus({ preventScroll: true }); } }}
-                    value={note}
-                    onChange={e => { setNote(e.target.value); if (noteRef.current) { noteRef.current.style.height = 'auto'; noteRef.current.style.height = noteRef.current.scrollHeight + 'px'; } }}
-                    style={{ ...textEditFieldStyle, backdropFilter: 'blur(6px)', borderRadius: 10, padding: '10px 12px', fontSize: 15, color: '#333', lineHeight: 1.6, zIndex: 5 }}
-                  />
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <button onClick={saveNote} disabled={noteSaving}
-                      style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: `rgb(${accentRgb})`, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                      {noteSaving ? '저장 중...' : '저장'}
-                    </button>
-                    <button onClick={() => { setNote(member.note || ''); setNoteEditing(false); }}
-                      style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: 'rgba(0,0,0,0.08)', color: '#555', fontSize: 13, cursor: 'pointer' }}>
-                      취소
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div onClick={() => canEdit && setNoteEditing(true)}
-                  style={{ minHeight: 48, fontSize: 15, color: note ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.6, cursor: canEdit ? 'text' : 'default', padding: '4px 2px 6px', position: 'relative', zIndex: 1, boxSizing: 'border-box' }}>
-                  {note
-                    ? (() => {
-                        const lines = note.split('\n');
-                        return lines.map((line, i) => (
-                          <p key={i} style={{ margin: 0, marginBottom: i === lines.length - 1 ? 0 : '1.4em', textIndent: '0.5em' }}>
-                            {renderMarkedText(line, selectedAccentRgb) || ' '}
-                          </p>
-                        ));
-                      })()
-                    : (canEdit ? '클릭해서 메모 추가...' : '')}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
             {/* 엔트리 탭 콘텐츠 */}
       {tab === 'entry' && (
@@ -3212,8 +2959,12 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
         );
       })()}
 
-    {/* 말풍선 — 메인 탭에서만 표시 */}
+    {/* 말풍선 — 메인 탭에서만 표시, 파트너 표시 중에는 플립 그룹으로 페이드아웃 */}
       {tab === 'main' && member.bio && (
+        <div
+          className={`rmv-partner-flip-group${partnerFlipHiding ? ' rmv-partner-flip-hide' : ''}`}
+          style={{ position: 'fixed', inset: 0 }}
+        >
         <div
           ref={bioMemoRef}
           className="rmv-bio-slide"
@@ -3281,7 +3032,484 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             </div>
           </div>
         </div>
+        </div>
       )}
+
+      {/* 파트너 표시 종료 — 캐릭터 프로필로 복귀 */}
+      {tab === 'main' && partnerTextOpen && (
+        <button
+          type="button"
+          onClick={togglePartnerReveal}
+          className="rmv-partner-float-up"
+          style={{
+            position: 'fixed',
+            top: '1.5rem',
+            right: '2rem',
+            zIndex: MEMBER_DETAIL_UI_Z_INDEX + 1,
+            border: 0,
+            padding: 8,
+            background: 'rgba(255,255,255,0.7)',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+          }}
+        >
+          <ChevronLeft className="w-6 h-6" strokeWidth={2} color={`rgb(${accentRgb})`} />
+        </button>
+      )}
+
+      {/* MEGA-C 타이틀 — 다른 탭의 ENTRY/RELATIONS 같은 대형 테마색 타이틀을 파트너 표시 상태에도 동일하게 */}
+      {tab === 'main' && partnerTextOpen && partner && (
+        <div
+          className="rmv-entry-title"
+          style={{
+            position: 'absolute',
+            top: 'calc(2rem + 17px)',
+            left: 'calc(37% - 215px)',
+            right: 0,
+            zIndex: MEMBER_CHARACTER_Z_INDEX - 1,
+            pointerEvents: 'none',
+            overflowX: 'hidden',
+            overflowY: 'visible',
+          }}
+        >
+          <div
+            style={{
+              fontFamily: "'SUITE', sans-serif",
+              fontSize: 180,
+              fontWeight: 300,
+              lineHeight: 1,
+              letterSpacing: '-0.06em',
+              color: `rgb(${accentRgb})`,
+              opacity: 0.58,
+              transform: 'scaleX(1.1)',
+              transformOrigin: 'left center',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            MEGA-C
+          </div>
+        </div>
+      )}
+
+      {/* 메가진화 포켓몬 일러스트 — 캐릭터 이미지가 있던 그 자리에, 캐릭터가 사라지는 동안 페이드인 (플립 그룹 밖에 있어야 페이드가 겹쳐서 상쇄되지 않는다) */}
+      {tab === 'main' && partner && (() => {
+        const partnerSideImg = getPartnerCImage(partner);
+        if (!partnerSideImg) return null;
+        return (
+          <img
+            src={partnerSideImg}
+            alt=""
+            draggable={false}
+            style={{
+              position: 'fixed',
+              top: member.partnerImageTop ?? member.charImageTop ?? 0,
+              left: member.partnerImageLeft ?? member.charImageLeft ?? '9vw',
+              height: 'auto',
+              width: member.partnerImageWidth ?? member.charImageWidth ?? '70vh',
+              maxWidth: 'none',
+              objectFit: 'contain',
+              objectPosition: 'top center',
+              transform: partnerTextOpen ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(-60px)',
+              zIndex: MEMBER_CHARACTER_Z_INDEX,
+              pointerEvents: 'none',
+              opacity: partnerTextOpen ? 1 : 0,
+              transition: partnerTextOpen ? 'opacity 0.5s ease' : 'opacity 0.2s ease, transform 0.2s ease',
+            }}
+          />
+        );
+      })()}
+
+            {/* 메인 탭 콘텐츠 */}
+      {tab === 'main' && (
+        <div
+          key="main"
+          className="rmv-tab-content flex flex-col justify-start gap-3"
+          style={{
+            position: 'absolute',
+            top: partnerTextOpen ? `calc(16.5rem + ${member.partnerInfoTop ?? 50}px)` : '16.5rem',
+            left: partnerTextOpen ? `calc(57% + ${member.partnerInfoLeft ?? 50}px)` : '57%',
+            width: 280, overflowX: 'visible', paddingBottom: 24, boxSizing: 'border-box', zIndex: gradientAwareContentZIndex,
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 28 }}>
+            {(() => {
+              const titleLabel = member.title && member.title !== 'none'
+                ? titles.find(t => t.id === member.title)?.label
+                : null;
+              const displayLabel = partnerTextOpen && partner ? `${member.name}의 파트너` : titleLabel;
+              return (
+                <span
+                  key={partnerTextOpen ? 'partner-title' : 'default-title'}
+                  className={partnerTextOpen ? 'rmv-partner-float-up' : ''}
+                  style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: `rgb(${accentRgb})`,
+                  letterSpacing: '0.05em',
+                  lineHeight: 1,
+                  visibility: displayLabel ? 'visible' : 'hidden',
+                  ...getTitleDisplayStyle(displayLabel, { compactFontSize: 12 })
+                }}>
+                  {displayLabel || ' '}
+                </span>
+              );
+            })()}
+            <h2
+              key={partnerTextOpen ? 'partner-name' : 'default-name'}
+              className={partnerTextOpen ? 'rmv-partner-float-up' : ''}
+              style={{ fontFamily: "'SBAggroB', sans-serif", fontWeight: 700, fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#1a1a1a', lineHeight: 1.1 }}
+            >
+              {partnerTextOpen && partner ? (
+                <>
+                  <span style={{ position: 'relative' }}>
+                    {getPokemonName(partner)}
+                    {partner.isShiny && <span style={{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)', color: '#e53e3e', fontSize: '0.4em', lineHeight: 1, marginLeft: 6 }}>★</span>}
+                  </span>
+                  {partner.nickname && (
+                    <span style={{ fontSize: '0.32em', fontWeight: 600, color: `rgba(${accentRgb}, 0.5)`, marginLeft: 10, verticalAlign: 'baseline' }}>
+                      메가{partner.nameKo || partner.name || ''}C
+                    </span>
+                  )}
+                </>
+              ) : member.name}
+            </h2>
+            {partnerTextOpen && partner && (() => {
+              const partnerTypes = Array.from(new Set(
+                [...(Array.isArray(partner.types) ? partner.types : []), partner.type, partner.type2].filter(Boolean)
+              ));
+              if (partnerTypes.length === 0) return null;
+              return (
+                <div className="rmv-partner-float-up" style={{ display: 'flex', gap: 6, marginTop: 15 }}>
+                  {partnerTypes.map((t, ti) => {
+                    const tc = TYPE_COLORS[t] || { bg: '#888', text: '#fff' };
+                    return (
+                      <span key={ti} style={{ fontSize: 12, fontWeight: 700, padding: '2px 9px', borderRadius: 5, background: tc.bg, color: tc.text }}>
+                        {t}
+                      </span>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: -12 }}>
+            {partner && !partnerTextOpen && (
+              <div style={{ position: 'relative', height: 65, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end', paddingRight: 110, transform: 'translateY(16px)', opacity: 1, transition: 'opacity 0.4s ease' }}>
+                <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.25)', fontWeight: 500, letterSpacing: '0.05em' }}>파트너</span>
+                <button
+                  type="button"
+                  onClick={togglePartnerReveal}
+                  style={{ border: 0, padding: 0, background: 'transparent', fontSize: 22, fontWeight: 700, color: '#1a1a1a', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                >
+                  <span style={{ position: 'relative' }}>
+                    {getPokemonName(partner)}
+                    {partner.isShiny && <span style={{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)', color: '#e53e3e', fontSize: 13, lineHeight: 1, marginLeft: 3 }}>★</span>}
+                  </span>
+                </button>
+                <img
+                  src={partnerDisplayUrl}
+                  alt={getPokemonName(partner)}
+                  onError={e => {
+                    const fallback = partnerDbSpriteUrl || partnerOfficialArtworkUrl;
+                    if (fallback && e.currentTarget.dataset.fallbackApplied !== '1') {
+                      e.currentTarget.dataset.fallbackApplied = '1';
+                      const usesArtworkFallback = isOfficialArtworkUrl(fallback);
+                      setPartnerImageUsesArtwork(usesArtworkFallback);
+                      e.currentTarget.src = fallback;
+                      if (usesArtworkFallback) {
+                        e.currentTarget.style.width = '107px';
+                        e.currentTarget.style.height = '107px';
+                        e.currentTarget.style.maxHeight = '107px';
+                        e.currentTarget.style.maxWidth = '107px';
+                        e.currentTarget.style.imageRendering = 'auto';
+                        e.currentTarget.style.objectFit = 'contain';
+                        e.currentTarget.style.right = '0';
+                      }
+                    }
+                  }}
+                  onClick={togglePartnerReveal}
+                  onMouseEnter={() => { if (partnerTextOpen) return; setPartnerHovered(true); setPartnerNoteOpen(open => !open); }}
+                  onMouseLeave={() => setPartnerHovered(false)}
+                  style={{
+                    position: 'absolute',
+                    bottom: '0',
+                    right: effectivePartnerUsesArtwork ? 0 : '-2rem',
+                    width: effectivePartnerUsesArtwork ? 107 : 'auto',
+                    height: effectivePartnerUsesArtwork ? 107 : 'auto',
+                    maxHeight: effectivePartnerUsesArtwork ? 107 : 160,
+                    maxWidth: effectivePartnerUsesArtwork ? 107 : 160,
+                    objectFit: effectivePartnerUsesArtwork ? 'contain' : 'initial',
+                    imageRendering: effectivePartnerUsesArtwork ? 'auto' : 'pixelated',
+                    zIndex: 5,
+                    cursor: 'pointer',
+                  }}
+                />
+                {partnerHovered && (() => {
+                  const imgH = partnerImgHeight;
+                  const topPx = partnerTopOffset * imgH;
+                  const tooltipOffset = getPartnerTooltipOffset(partner);
+                  const bottomFromContainerBottom = imgH - topPx + 7;
+                  return (
+                    <div style={{ position: 'absolute', bottom: bottomFromContainerBottom + tooltipOffset.y, right: 18 - tooltipOffset.x, zIndex: 10, pointerEvents: 'none' }}>
+                      <div style={{ background: `rgb(${selectedAccentRgb})`, color: partnerTextColor, padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', whiteSpace: 'nowrap', boxShadow: '3px 3px 6px rgba(0,0,0,0.18)' }}>
+                        CLICK!
+                      </div>
+                      <div style={{ width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: `7px solid rgb(${selectedAccentRgb})`, margin: '0 auto' }} />
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+            {partner && (
+              <div
+                style={{ display: 'grid', gridTemplateRows: (!partnerTextOpen && (partnerNoteOpen || partnerEditing)) ? '1fr' : '0fr', marginTop: (!partnerTextOpen && (partnerNoteOpen || partnerEditing)) ? 5 : 0, marginBottom: (!partnerTextOpen && (partnerNoteOpen || partnerEditing)) ? 10 : 0, transition: 'grid-template-rows 0.38s cubic-bezier(0.16,1,0.3,1), margin-top 0.38s cubic-bezier(0.16,1,0.3,1), margin-bottom 0.38s cubic-bezier(0.16,1,0.3,1)' }}
+              >
+              <div style={{ overflow: 'hidden' }}>
+              <div
+                ref={partnerMemoRef}
+                className={partnerNoteOpen ? 'rmv-partner-text-in' : ''}
+                onClick={() => { if (!partnerEditing && canEdit) setPartnerEditing(true); }}
+                onWheel={e => e.stopPropagation()}
+                style={{
+                  position: 'relative',
+                  zIndex: 6,
+                  background: `rgba(${selectedAccentRgb}, ${savedPartnerText ? 1 : 0.45})`,
+                  borderRadius: 8,
+                  padding: 0,
+                  marginTop: 2,
+                  minHeight: 36,
+                  maxHeight: partnerMemoMaxHeight ? `${partnerMemoMaxHeight}px` : 'calc(100dvh - 10px)',
+                  overflowY: 'auto',
+                  overscrollBehavior: 'contain',
+                  scrollPaddingBlock: 20,
+                  boxSizing: 'border-box',
+                  cursor: partnerEditing ? 'text' : (canEdit ? 'pointer' : 'default'),
+                  transition: 'background 0.3s',
+                }}
+              >
+                {partnerEditing ? (
+                  <textarea
+                    className="rmv-partner-text-input"
+                    value={partnerText}
+                    onChange={event => {
+                      setPartnerText(event.target.value);
+                      event.currentTarget.style.height = 'auto';
+                      event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
+                    }}
+                    onBlur={async () => {
+                      const saved = await savePartnerText();
+                      if (saved) setPartnerEditing(false);
+                    }}
+                    onKeyDown={async event => {
+                      if (event.key === 'Enter' && !event.shiftKey) {
+                        event.preventDefault();
+                        const saved = await savePartnerText();
+                        if (saved) setPartnerEditing(false);
+                      }
+                      if (event.key === 'Escape') {
+                        setPartnerText(savedPartnerText);
+                        setPartnerEditing(false);
+                      }
+                    }}
+                    ref={element => {
+                      if (!element) return;
+                      element.style.height = 'auto';
+                      element.style.height = `${element.scrollHeight}px`;
+                      element.focus({ preventScroll: true });
+                    }}
+                    rows={4}
+                    placeholder="파트너에 대한 설명을 입력하세요."
+                    disabled={partnerTextSaving}
+                    style={{
+                      ...partnerEditFieldStyle,
+                      display: 'block',
+                      color: partnerTextColor,
+                      caretColor: partnerTextColor,
+                      padding: '20px 14px',
+                      fontSize: 14,
+                      fontWeight: 500,
+                      lineHeight: 1.65,
+                      fontFamily: 'inherit',
+                      minHeight: 128,
+                    }}
+                  />
+                ) : savedPartnerText ? (
+                  <div
+                    style={{
+                      color: partnerTextColor,
+                      fontSize: 14,
+                      fontWeight: 500,
+                      lineHeight: 1.65,
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'keep-all',
+                      padding: '20px 14px',
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    {renderPartnerMemoText(savedPartnerText)}
+                  </div>
+                ) : (
+                  <div style={{ color: `rgba(255,255,255,0.5)`, fontSize: 13, fontWeight: 500, padding: '20px 14px', boxSizing: 'border-box' }}>
+                    클릭해서 설명 추가...
+                  </div>
+                )}
+              </div>
+              </div>
+              </div>
+            )}
+            {partnerTextOpen && partner && (() => {
+              const megaStats = [
+                { label: 'H', val: member.megaEvolutionStatH },
+                { label: 'A', val: member.megaEvolutionStatA },
+                { label: 'B', val: member.megaEvolutionStatB },
+                { label: 'C', val: member.megaEvolutionStatC },
+                { label: 'D', val: member.megaEvolutionStatD },
+                { label: 'S', val: member.megaEvolutionStatS },
+              ];
+              if (!megaStats.some(s => s.val != null)) return null;
+              return (
+                <div className="rmv-partner-float-up" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4 }}>
+                  {megaStats.map(({ label, val }) => (
+                    <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, background: `rgb(${accentRgb})`, borderRadius: 999, padding: '0 4px', height: 16 }}>
+                      <span style={{ fontSize: 10, fontWeight: 800, color: partnerTextColor, lineHeight: 1 }}>{label}</span>
+                      <span style={{ fontSize: 10, fontWeight: 300, color: partnerTextColor, opacity: val != null ? 1 : 0.5, lineHeight: 1 }}>{val ?? 0}</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+            {partnerTextOpen && partner && (member.megaEvolutionText || member.megaEvolutionTrait) && (
+              <div className="rmv-partner-float-up" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {member.megaEvolutionText && (
+                  <div style={{ fontSize: 14, fontWeight: 500, color: '#333', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
+                    {member.megaEvolutionText}
+                  </div>
+                )}
+                {member.megaEvolutionTrait && (() => {
+                  const raw = member.megaEvolutionTrait;
+                  const colonIdx = raw.indexOf(':');
+                  const traitName = colonIdx >= 0 ? raw.slice(0, colonIdx).trim() : '';
+                  const traitContent = colonIdx >= 0 ? raw.slice(colonIdx + 1).trim() : raw.trim();
+                  return (
+                    <div style={{ background: `rgba(${accentRgb}, 0.08)`, borderRadius: 6, padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      {traitName && (
+                        <span style={{ fontSize: 15, fontWeight: 700, color: `rgb(${accentRgb})` }}>{traitName}</span>
+                      )}
+                      <span style={{ fontSize: 13, fontWeight: 500, color: '#333' }}>{traitContent}</span>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+            {!partnerTextOpen && (() => {
+              const stats = [member.age, member.height, member.weight, member.hometown].filter(Boolean);
+              return stats.length > 0 ? (
+                <div style={{ fontSize: 17, fontWeight: 700, color: `rgb(${accentRgb})`, letterSpacing: '0.04em', lineHeight: 1.4, marginTop: 16 }}>
+                  {stats.join(' · ')}
+                </div>
+              ) : null;
+            })()}
+            {!partnerTextOpen && (
+            <div
+              ref={noteScrollRef}
+              onWheel={e => e.stopPropagation()}
+              style={{ maxHeight: noteMaxHeight ? `${noteMaxHeight}px` : 'calc(100dvh - 10px)', overflowY: 'auto', overflowX: 'hidden', paddingRight: 2, paddingBottom: 6, boxSizing: 'border-box', overscrollBehavior: 'contain', scrollPaddingBottom: 6 }}
+            >
+              {noteEditing ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <textarea
+                    ref={el => { noteRef.current = el; if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; el.focus({ preventScroll: true }); } }}
+                    value={note}
+                    onChange={e => { setNote(e.target.value); if (noteRef.current) { noteRef.current.style.height = 'auto'; noteRef.current.style.height = noteRef.current.scrollHeight + 'px'; } }}
+                    style={{ ...textEditFieldStyle, backdropFilter: 'blur(6px)', borderRadius: 10, padding: '10px 12px', fontSize: 15, color: '#333', lineHeight: 1.6, zIndex: 5 }}
+                  />
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button onClick={saveNote} disabled={noteSaving}
+                      style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', background: `rgb(${accentRgb})`, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                      {noteSaving ? '저장 중...' : '저장'}
+                    </button>
+                    <button onClick={() => { setNote(member.note || ''); setNoteEditing(false); }}
+                      style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: 'rgba(0,0,0,0.08)', color: '#555', fontSize: 13, cursor: 'pointer' }}>
+                      취소
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div onClick={() => canEdit && setNoteEditing(true)}
+                  style={{ minHeight: 48, fontSize: 15, color: note ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.6, cursor: canEdit ? 'text' : 'default', padding: '4px 2px 6px', position: 'relative', zIndex: 1, boxSizing: 'border-box' }}>
+                  {note
+                    ? (() => {
+                        const lines = note.split('\n');
+                        return lines.map((line, i) => (
+                          <p key={i} style={{ margin: 0, marginBottom: i === lines.length - 1 ? 0 : '1.4em', textIndent: '0.5em' }}>
+                            {renderMarkedText(line, selectedAccentRgb) || ' '}
+                          </p>
+                        ));
+                      })()
+                    : (canEdit ? '클릭해서 메모 추가...' : '')}
+                </div>
+              )}
+            </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 사이드 내비게이션 — 파트너 아이콘에 호버해도 메뉴는 그대로 남아있는다 */}
+      <div
+        style={{
+        position: 'absolute', top: '10rem', right: -64,
+        display: 'flex', flexDirection: 'column',
+        background: 'rgba(255,255,255)',
+        borderRadius: 999,
+        boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+        zIndex: MEMBER_DETAIL_UI_Z_INDEX,
+      }}>
+        {TABS.map(({ id, label, Icon, iconSrc }, i) => (
+          <button
+            key={id}
+            onClick={() => changeTab(id)}
+            onMouseEnter={() => setHoveredTab(id)}
+            onMouseLeave={() => setHoveredTab(null)}
+            title={label}
+            style={{
+              width: 40, height: 40,
+              border: 'none',
+              background: tab === id
+                ? `rgb(${selectedAccentRgb})`
+                : hoveredTab === id
+                  ? `rgba(${accentRgb},0.15)`
+                  : 'transparent',
+              color: tab === id ? '#fff' : `rgb(${accentRgb})`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.18s ease',
+              borderRadius: i === 0 ? '999px 999px 0 0' : i === TABS.length - 1 ? '0 0 999px 999px' : 0,
+            }}
+          >
+            {iconSrc ? (
+              <span
+                aria-hidden="true"
+                style={{
+                  width: 16,
+                  height: 16,
+                  display: 'block',
+                  backgroundColor: 'currentColor',
+                  WebkitMask: `url(${iconSrc}) center / contain no-repeat`,
+                  mask: `url(${iconSrc}) center / contain no-repeat`,
+                  transition: 'background-color 0.18s ease',
+                }}
+              />
+            ) : (
+              <Icon size={16} strokeWidth={2} />
+            )}
+          </button>
+        ))}
+      </div>
 
     </div>
   );
@@ -3430,7 +3658,7 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
           className="rmv-overlay"
           style={{
             position: 'fixed',
-            top: 0, bottom: 0, left: '30%', right: activeTab === 'text' ? '23%' : activeTab === 'entry' ? '16%' : '27%',
+            top: 0, bottom: 0, left: '30%', right: (activeTab === 'text' || activeTab === 'partner') ? '23%' : activeTab === 'entry' ? '16%' : '27%',
             zIndex: 50,
             overflow: 'visible',
             background: 'rgba(255, 255, 255)',

@@ -172,6 +172,13 @@ export const useAuth = (members, setMembers, allPokemonMaster = []) => {
     };
   }, [currentUser?.id, allPokemonMaster, setMembers]);
 
+  // 점검 모드로 로그인 화면 자체가 막혀 있을 때도, 개발 환경 콘솔에서는
+  // window.__pokeLogin('아이디', '비밀번호')로 실제 로그인 화면과 동일하게 로그인할 수 있게 한다.
+  // 프로덕션 빌드(NODE_ENV !== 'development')에는 포함되지 않는다.
+  if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+    window.__pokeLogin = (userId, password) => handleLogin(userId, password);
+  }
+
   const handleLogin = async (userId, password) => {
     try {
       const email = `${userId}@pokemon.com`;

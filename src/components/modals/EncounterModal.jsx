@@ -600,28 +600,6 @@ export default function EncounterModal({
 
             {/* encounter-ball — 분리, 아래에 독립 배치 */}
             <div style={{ marginTop: 12, position: 'relative', aspectRatio: '1543 / 353', zIndex: -1, transform: 'translateY(10px)' }}>
-              {/* 도망치기 히트박스 — 우하단 */}
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (!isReady || catching || result) return;
-                  onClose();
-                }}
-                aria-label="도망치기"
-                style={{
-                  position: 'absolute',
-                  right: -20,
-                  bottom: 0,
-                  width: 108,
-                  height: 33,
-                  zIndex: 30,
-                  background: 'transparent',
-                  border: 'none',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                }}
-              />
               {/* encounter-ball 배경 이미지 — 박스가 이미지 비율(aspectRatio)에 고정돼 있어 그대로 깔면 왜곡 없음 */}
               <div style={{
                 position: 'absolute',
@@ -756,6 +734,29 @@ export default function EncounterModal({
                 </div>
               )}
             </div>
+
+            {/* 도망치기 히트박스 — encounter-ball의 zIndex:-1에 갇히지 않도록 바깥 형제로 분리, 항상 최상단 */}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isReady || catching || result) return;
+                onClose();
+              }}
+              aria-label="도망치기"
+              style={{
+                position: 'absolute',
+                right: -16,
+                bottom: -9,
+                width: 108,
+                height: 33,
+                zIndex: 999,
+                background: 'transparent',
+                border: 'none',
+                borderRadius: 8,
+                cursor: 'pointer',
+              }}
+            />
           </div>
         )}
 

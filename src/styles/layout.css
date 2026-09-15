@@ -987,6 +987,33 @@ body.rmv-detail-open .site-header {
   opacity: 0.58;
 }
 
+/* 파트너 아이콘 클릭 시 프로필 전체(캐릭터 이미지/캐치프레이즈/말풍선 등)가 하나로 묶여 아래로 내려가며 페이드아웃된다 */
+.rmv-partner-flip-group {
+  transform: translateY(0);
+  opacity: 1;
+  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
+}
+.rmv-partner-flip-group.rmv-partner-flip-hide {
+  transform: translateY(80px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 파트너 정보(칭호/이름/타입/메가진화 설명·특성/편집 텍스트)는 아래에서 위로 떠오르며 나타난다 */
+@keyframes rmv-partner-float-up {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.rmv-partner-float-up {
+  animation: rmv-partner-float-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 .rmv-relation-card {
   transition:
     background 0.18s ease,

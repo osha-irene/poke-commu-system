@@ -9,12 +9,14 @@ const RIGHT_GRADIENT_TAB_OPTIONS = [
   { key: 'text', label: '설정' },
   { key: 'entry', label: '엔트리' },
   { key: 'relation', label: '관계' },
+  { key: 'partner', label: '파트너 표시' },
 ];
 const DEFAULT_RIGHT_GRADIENT_TABS = {
   main: false,
   text: true,
   entry: false,
   relation: false,
+  partner: false,
 };
 
 function getInitialRightGradientTabs(member) {
@@ -156,10 +158,23 @@ function MemberProfileTab({ member, titles = [], onGrantTitle, onRevokeTitle, on
   const [npcOccupation, setNpcOccupation] = useState(member.npcOccupation || '');
   const [npcBio, setNpcBio] = useState(member.npcBio || '');
   const [catchphrase, setCatchphrase] = useState(member.catchphrase || '');
+  const [megaEvolutionText, setMegaEvolutionText] = useState(member.megaEvolutionText || '');
+  const [megaEvolutionTrait, setMegaEvolutionTrait] = useState(member.megaEvolutionTrait || '');
+  const [megaEvolutionStatH, setMegaEvolutionStatH] = useState(member.megaEvolutionStatH ?? '');
+  const [megaEvolutionStatA, setMegaEvolutionStatA] = useState(member.megaEvolutionStatA ?? '');
+  const [megaEvolutionStatB, setMegaEvolutionStatB] = useState(member.megaEvolutionStatB ?? '');
+  const [megaEvolutionStatC, setMegaEvolutionStatC] = useState(member.megaEvolutionStatC ?? '');
+  const [megaEvolutionStatD, setMegaEvolutionStatD] = useState(member.megaEvolutionStatD ?? '');
+  const [megaEvolutionStatS, setMegaEvolutionStatS] = useState(member.megaEvolutionStatS ?? '');
   const [charImageLeft, setCharImageLeft] = useState(member.charImageLeft ?? '');
   const [charImageTop, setCharImageTop] = useState(member.charImageTop ?? '');
   const [charImageWidth, setCharImageWidth] = useState(member.charImageWidth ?? '');
   const [charImageScrollEnabled, setCharImageScrollEnabled] = useState(Boolean(member.charImageScrollEnabled));
+  const [partnerImageLeft, setPartnerImageLeft] = useState(member.partnerImageLeft ?? '');
+  const [partnerImageTop, setPartnerImageTop] = useState(member.partnerImageTop ?? '');
+  const [partnerImageWidth, setPartnerImageWidth] = useState(member.partnerImageWidth ?? '');
+  const [partnerInfoLeft, setPartnerInfoLeft] = useState(member.partnerInfoLeft ?? '');
+  const [partnerInfoTop, setPartnerInfoTop] = useState(member.partnerInfoTop ?? '');
   const [accentColor, setAccentColor] = useState(member.accentColor || '');
   const [rightGradientTabs, setRightGradientTabs] = useState(() => getInitialRightGradientTabs(member));
   const [saving, setSaving] = useState(false);
@@ -202,6 +217,19 @@ function MemberProfileTab({ member, titles = [], onGrantTitle, onRevokeTitle, on
       if (charImageTop.trim()) updates.charImageTop = charImageTop.trim(); else updates.charImageTop = null;
       if (charImageWidth.trim()) updates.charImageWidth = charImageWidth.trim(); else updates.charImageWidth = null;
       updates.charImageScrollEnabled = charImageScrollEnabled;
+      if (partnerImageLeft.trim()) updates.partnerImageLeft = partnerImageLeft.trim(); else updates.partnerImageLeft = null;
+      if (partnerImageTop.trim()) updates.partnerImageTop = partnerImageTop.trim(); else updates.partnerImageTop = null;
+      if (partnerImageWidth.trim()) updates.partnerImageWidth = partnerImageWidth.trim(); else updates.partnerImageWidth = null;
+      updates.partnerInfoLeft = partnerInfoLeft.toString().trim() !== '' ? Number(partnerInfoLeft) : null;
+      updates.partnerInfoTop = partnerInfoTop.toString().trim() !== '' ? Number(partnerInfoTop) : null;
+      updates.megaEvolutionText = megaEvolutionText.trim() || null;
+      updates.megaEvolutionTrait = megaEvolutionTrait.trim() || null;
+      updates.megaEvolutionStatH = megaEvolutionStatH.toString().trim() !== '' ? Number(megaEvolutionStatH) : null;
+      updates.megaEvolutionStatA = megaEvolutionStatA.toString().trim() !== '' ? Number(megaEvolutionStatA) : null;
+      updates.megaEvolutionStatB = megaEvolutionStatB.toString().trim() !== '' ? Number(megaEvolutionStatB) : null;
+      updates.megaEvolutionStatC = megaEvolutionStatC.toString().trim() !== '' ? Number(megaEvolutionStatC) : null;
+      updates.megaEvolutionStatD = megaEvolutionStatD.toString().trim() !== '' ? Number(megaEvolutionStatD) : null;
+      updates.megaEvolutionStatS = megaEvolutionStatS.toString().trim() !== '' ? Number(megaEvolutionStatS) : null;
       updates.accentColor = accentColor || null;
       updates.rightGradientTabs = rightGradientTabs;
       updates.rightGradientEnabled = Object.values(rightGradientTabs).some(Boolean);
@@ -433,6 +461,53 @@ function MemberProfileTab({ member, titles = [], onGrantTitle, onRevokeTitle, on
                   />
                 </div>
                 <div>
+                  <label className="text-xs font-semibold text-gray-600 block mb-1">메가진화 설명</label>
+                  <textarea
+                    rows={3}
+                    value={megaEvolutionText}
+                    onChange={e => canEdit && setMegaEvolutionText(e.target.value)}
+                    placeholder="파트너 포켓몬 공개 화면에 표시할 설명 텍스트..."
+                    disabled={!canEdit}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:outline-none resize-none disabled:bg-gray-100 disabled:text-gray-400"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 block mb-1">메가진화 특성</label>
+                  <input
+                    type="text"
+                    value={megaEvolutionTrait}
+                    onChange={e => canEdit && setMegaEvolutionTrait(e.target.value)}
+                    placeholder="메가진화 설명 아래에 한 줄로 표시할 특성 문구..."
+                    disabled={!canEdit}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 block mb-2">메가진화 종족치 (H/A/B/C/D/S)</label>
+                  <div className="grid grid-cols-6 gap-1">
+                    {[
+                      ['H', megaEvolutionStatH, setMegaEvolutionStatH],
+                      ['A', megaEvolutionStatA, setMegaEvolutionStatA],
+                      ['B', megaEvolutionStatB, setMegaEvolutionStatB],
+                      ['C', megaEvolutionStatC, setMegaEvolutionStatC],
+                      ['D', megaEvolutionStatD, setMegaEvolutionStatD],
+                      ['S', megaEvolutionStatS, setMegaEvolutionStatS],
+                    ].map(([label, value, setValue]) => (
+                      <div key={label}>
+                        <label className="text-[10px] font-semibold text-gray-400 block text-center">{label}</label>
+                        <input
+                          type="number"
+                          value={value}
+                          onChange={e => canEdit && setValue(e.target.value)}
+                          placeholder="-"
+                          disabled={!canEdit}
+                          className="w-full px-1 py-1.5 border border-gray-300 rounded text-sm text-center focus:border-indigo-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
                   <label className="text-xs font-semibold text-gray-600 block mb-2">키워드 (최대 3개)</label>
                   <div className="flex flex-col gap-2">
                     {keywords.map((kw, i) => (
@@ -483,6 +558,53 @@ function MemberProfileTab({ member, titles = [], onGrantTitle, onRevokeTitle, on
                 캐릭터 이미지 스크롤 허용
               </label>
               <p className="text-xs text-gray-400 mt-1.5">CSS 값 사용 (예: <code>5vw</code>, <code>-30px</code>, <code>80vh</code>). 비우면 기본값 적용.</p>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-gray-600 block mb-2">🐾 메가진화 포켓몬 이미지 위치</label>
+              <div className="flex flex-col gap-2">
+                {[
+                  { label: '좌우 위치 (left)', value: partnerImageLeft, set: setPartnerImageLeft, placeholder: '캐릭터와 동일' },
+                  { label: '상하 위치 (top)', value: partnerImageTop, set: setPartnerImageTop, placeholder: '캐릭터와 동일' },
+                  { label: '크기 (width)', value: partnerImageWidth, set: setPartnerImageWidth, placeholder: '캐릭터와 동일' },
+                ].map(({ label, value, set, placeholder }) => (
+                  <div key={label} className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500 w-28 shrink-0">{label}</span>
+                    <input
+                      type="text"
+                      value={value}
+                      onChange={e => canEdit && set(e.target.value)}
+                      placeholder={placeholder}
+                      disabled={!canEdit}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400 font-mono"
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-400 mt-1.5">파트너 아이콘을 눌렀을 때 캐릭터 이미지 자리에 대신 뜨는 메가진화 일러스트 위치/크기. 비우면 위 캐릭터 이미지 위치값을 그대로 씁니다.</p>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-gray-600 block mb-2">📋 파트너 표시 정보 영역 위치 (제목/이름/타입/종족치/설명)</label>
+              <div className="flex flex-col gap-2">
+                {[
+                  { label: '오른쪽 이동 (px)', value: partnerInfoLeft, set: setPartnerInfoLeft },
+                  { label: '아래 이동 (px)', value: partnerInfoTop, set: setPartnerInfoTop },
+                ].map(({ label, value, set }) => (
+                  <div key={label} className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500 w-28 shrink-0">{label}</span>
+                    <input
+                      type="number"
+                      value={value}
+                      onChange={e => canEdit && set(e.target.value)}
+                      placeholder="50"
+                      disabled={!canEdit}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-indigo-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400 font-mono"
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-400 mt-1.5">기본 위치에서 오른쪽/아래로 얼마나 이동할지 픽셀 단위로 입력. 비우면 50px.</p>
             </div>
 
             {canEdit && (
