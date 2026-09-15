@@ -3485,8 +3485,8 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
           onClick={() => setShowRenewalSnapshot(v => !v)}
           title={showRenewalSnapshot ? '최신 모습으로 돌아가기' : '리뉴얼 전 모습 보기'}
           style={{
-            position: 'absolute', top: '7.5rem', right: -64,
-            width: 40, height: 40,
+            position: 'absolute', top: 'calc(10rem - 43px)', right: -64,
+            width: 38, height: 38,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             border: 'none', borderRadius: 999,
             background: showRenewalSnapshot ? `rgb(${selectedAccentRgb})` : 'rgba(255,255,255)',
