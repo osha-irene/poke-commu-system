@@ -11,11 +11,11 @@ const P = {
   bg:          'rgba(255,255,255,0.88)',
   bgDrawer:    'rgba(255,255,255,0.97)',
   border:      'rgba(90,150,30,0.18)',
-  textPrimary: '#1a2e10',
-  textMuted:   '#5a7a40',
-  accent:      '#4a9a08',
+  textPrimary: '#102e1f',
+  textMuted:   '#407a5c',
+  accent:      '#089a4f',
   accentBg:    'rgba(80,160,16,0.12)',
-  inactive:    '#8aaa60',
+  inactive:    '#60aa84',
 };
 
 export default function MobileLayout({

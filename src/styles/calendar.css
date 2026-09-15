@@ -39,40 +39,20 @@
   flex-shrink: 0;
 }
 
-.home-cal-today-events {
-  margin-top: 20px;
-  margin-left: 30px;
-  position: relative;
-}
-
-.home-cal-today-events__img {
-  width: 100%;
-  display: block;
-}
-
-.home-cal-today-events__list {
-  position: absolute;
-  top: 50%;
-  left: 33%;
-  right: 8px;
-  transform: translateY(-50%);
-  padding: 0 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-height: 100%;
-  overflow: hidden;
-}
-
 .home-cal-today-events__empty {
-  font-size: 11px;
+  display: inline-block;
+  font-size: 12px;
   color: rgba(60, 45, 20, 0.5);
-  font-family: Georgia, serif;
+  font-family: 'SUITE', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  white-space: nowrap;
+  text-align: center;
+  transform: translateX(20px);
 }
 
 .home-cal-today-events__item {
   display: flex;
   align-items: baseline;
+  justify-content: center;
   flex-wrap: nowrap;
   gap: 6px;
   line-height: 1.3;
@@ -81,7 +61,7 @@
 }
 
 .home-cal-today-events__sep {
-  font-size: 10px;
+  font-size: 12px;
   color: rgba(60, 40, 10, 0.45);
   flex-shrink: 0;
 }
@@ -97,16 +77,16 @@
 }
 
 .home-cal-today-events__title {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   color: #3a2a10;
-  font-family: Georgia, serif;
+  font-family: 'SUITE', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
 .home-cal-today-events__desc {
-  font-size: 10px;
+  font-size: 12px;
   color: rgba(60, 40, 10, 0.6);
-  font-family: Georgia, serif;
+  font-family: 'SUITE', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
 @keyframes tip-in {

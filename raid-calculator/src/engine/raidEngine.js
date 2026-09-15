@@ -61,6 +61,7 @@ import {
   fieldDurationBonus,
   critStageBonus,
   noContact,
+  accuracyAbilityMods,
 } from './traits.js';
 import {
   isChargeMove,
@@ -129,8 +130,8 @@ const DEFAULT_BASE_STATS = { hp: 100, atk: 100, def: 100, spa: 100, spd: 100, sp
 const FIXED_IVS = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
 const EMPTY_EVS = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
 const EMPTY_BOOSTS = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
-// 응원(철통방어/힘내라힘)이 임시로 걸 수 있는 스탯 — 라운드 전환마다 buffTimers를 감소시켜 만료시킨다
-const BUFF_STATS = ['atk', 'def', 'spa', 'spd'];
+// 응원 배율의 기본값(효과 없음). 힘내라힘/철통방어 = 1.5배, 끝내버려 = 3배.
+const NO_CHEER = { mult: 1, turns: 0 };
 
 /** 입력 폼 데이터(raw)를 실제 전투에 쓸 수 있는 파생 상태를 가진 객체로 변환 */
 export function buildBattlePokemon(raw) {
@@ -168,7 +169,11 @@ export function buildBattlePokemon(raw) {
     currentHP: maxHP,
     fainted: false,
     boosts: { ...EMPTY_BOOSTS },
-    buffTimers: {},
+    // 응원 배율: 랭크(칼춤 등)와 별개로 데미지에 곱해지는 임시 버프. 라운드 전환마다 turns 감소.
+    //  cheerOffense = 자신이 주는 데미지 배율(힘내라힘 1.5 / 끝내버려 3)
+    //  cheerDefense = 자신이 받는 데미지를 나누는 값(철통방어 1.5)
+    cheerOffense: { ...NO_CHEER },
+    cheerDefense: { ...NO_CHEER },
     status: '',
     toxicCounter: 0,
     sleepTurns: 0, // 잠듦 남은 턴 (0이 되는 행동 시도에서 기상)
@@ -233,21 +238,44 @@ function rollCrit(critRatio) {
 const ACCURACY_STAGE_MULTIPLIER = [3 / 9, 3 / 8, 3 / 7, 3 / 6, 3 / 5, 3 / 4, 1, 4 / 3, 5 / 3, 2, 7 / 3, 8 / 3, 3];
 
 /**
+ * 날씨에 따라 명중률이 바뀌는 기술 (실제 게임 규칙).
+ *  - 눈보라: 설경(Snow)/싸라기눈(Hail)에서 명중 판정 없이 필중
+ *  - 번개·폭풍: 비(Rain)에서 필중, 쨍쨍햇살(Sun)에서 명중률 50
+ * true를 돌려주면 "이 날씨에서는 필중", 숫자면 그 값으로 명중률 대체, 그 외엔 baseAcc 그대로.
+ */
+function weatherAccuracy(moveId, baseAcc, weather) {
+  if (moveId === 'blizzard') return weather === 'Snow' || weather === 'Hail' ? true : baseAcc;
+  if (moveId === 'thunder' || moveId === 'hurricane') {
+    if (weather === 'Rain') return true;
+    if (weather === 'Sun') return 50;
+  }
+  return baseAcc;
+}
+
+/**
  * 기술의 명중 여부를 판정한다. accuracy: true(=alwaysHit, 스매쉬다운/에어로블래스트류처럼
  * "명중 판정 자체가 없는" 기술)는 랭크와 무관하게 항상 명중.
  * 그 외에는 (시전자 명중률 랭크 - 상대 회피율 랭크, ignoreEvasion 기술은 상대 회피율 무시)를
- * 배율로 환산해 기본 명중률에 곱한 확률로 판정한다.
+ * 배율로 환산해 기본 명중률에 곱한 확률로 판정한다. 날씨 연동기(눈보라/번개/폭풍)는
+ * weatherAccuracy로, 명중률 특성(노가드·복안·승리의별·근성·모래숨기·눈숨기)은
+ * accuracyAbilityMods로 보정한다.
  */
-function rollAccuracy(moveData, attacker, defender, gravity) {
+function rollAccuracy(moveData, attacker, defender, gravity, weather, ignoreAbility) {
   if (moveData.alwaysHit || moveData.accuracy == null) return true;
+
+  const wAcc = weatherAccuracy(moveData.id, moveData.accuracy, weather);
+  if (wAcc === true) return true; // 날씨로 필중 (설경 눈보라 등)
+
+  const abil = accuracyAbilityMods(attacker, defender, moveData, weather, ignoreAbility);
+  if (abil.alwaysHit) return true; // 노가드
 
   const accStage = attacker.boosts?.accuracy || 0;
   const evaStage = moveData.ignoreEvasion ? 0 : defender.boosts?.evasion || 0;
   const stage = clampStage(accStage - evaStage);
   const multiplier = ACCURACY_STAGE_MULTIPLIER[stage + 6];
-  let acc = moveData.accuracy;
+  let acc = wAcc;
   if (gravity) acc = acc * (5 / 3); // 중력: 명중률 5/3배
-  const hitChance = Math.min(100, acc * multiplier);
+  const hitChance = Math.min(100, acc * multiplier * abil.multiplier);
 
   return Math.random() * 100 < hitChance;
 }
@@ -306,15 +334,12 @@ function applyStatDeltas(pokemon, deltas, opts = {}) {
   return { ...pokemon, boosts };
 }
 
-/** 응원(철통방어/힘내라힘)처럼 정해진 랭크값을 N턴 동안 고정으로 거는 버프 (라운드 전환마다 buffTimers 감소, 0되면 원복) */
-function applyStatBuff(participant, buffs, turns) {
-  const boosts = { ...participant.boosts };
-  const buffTimers = { ...participant.buffTimers };
-  Object.entries(buffs).forEach(([stat, stage]) => {
-    boosts[stat] = stage;
-    buffTimers[stat] = turns;
-  });
-  return { ...participant, boosts, buffTimers };
+/**
+ * 응원 배율 버프(힘내라힘/철통방어/끝내버려)를 참가자에게 건다. 랭크(칼춤 등)와 곱해지도록
+ * boosts는 건드리지 않고 cheerOffense/cheerDefense 배율만 세팅한다. 이미 걸려 있으면 갱신(비중첩).
+ */
+function applyCheerMult(participant, key, mult, turns) {
+  return { ...participant, [key]: { mult, turns } };
 }
 
 function describeStatChange(nickname, deltas) {
@@ -578,6 +603,8 @@ function attack(attacker, defender, moveId, options = {}) {
       else {
         const rd = pickDamageValue(result.damage);
         d = options.isSpread ? Math.floor(rd * 0.75) : rd;
+        const offMult = (nextAttacker.cheerOffense && nextAttacker.cheerOffense.mult) || 1;
+        if (offMult !== 1) d = Math.round(d * offMult);
       }
       const subHP = nextDefender.substitute.hp - d;
       if (subHP <= 0) {
@@ -649,7 +676,7 @@ function attack(attacker, defender, moveId, options = {}) {
 
   // 명중 판정: accuracy: true(=alwaysHit)인 기술이 아니면 시전자 명중률 랭크 - 상대 회피율 랭크를
   // 배율로 환산해 기본 명중률에 곱한 확률로 판정한다 (자신/자신의 조 대상 기술은 애초에 빗나가지 않음)
-  if (!isSelfOrTeamTargeted && !rollAccuracy(moveData, nextAttacker, defender, gravityOn)) {
+  if (!isSelfOrTeamTargeted && !rollAccuracy(moveData, nextAttacker, defender, gravityOn, fld.weather, ignoreAbility)) {
     lines.push(`${nextAttacker.nickname}의 공격이 빗나갔다!`);
 
     // 옥탄포화/스틸빔: 명중 성공 여부와 무관하게 자신이 최대 HP의 절반을 잃는다
@@ -939,11 +966,21 @@ function attack(attacker, defender, moveId, options = {}) {
       allyFaintedLastRound: options.allyFaintedLastRound,
     });
     if (mult !== 1) dmg = Math.round(dmg * mult);
+    // 응원 배율: 시전자 공격 배율(힘내라힘/끝내버려) 곱 → 대상 방어 배율(철통방어)로 나눔
+    const offMult = (nextAttacker.cheerOffense && nextAttacker.cheerOffense.mult) || 1;
+    const defMult = (defender.cheerDefense && defender.cheerDefense.mult) || 1;
+    if (offMult !== 1) dmg = Math.round(dmg * offMult);
+    if (defMult !== 1) dmg = Math.round(dmg / defMult);
     dmg = Math.min(defender.currentHP, dmg);
   }
 
-  // 옹골참/기합의띠/기합의머리띠/버티기: 쓰러질 타격을 맞아도 HP 1로 버틴다
-  const endure = checkEndure(defender, dmg, defender.currentHP >= defender.maxHP);
+  // 옹골참/기합의띠/기합의머리띠/버티기: 쓰러질 타격을 맞아도 HP 1로 버틴다.
+  // 다연발기(락블레스트 등 2회 이상)는 첫 타격이 "풀피"를 깨므로 옹골참·기합의띠가 발동하지
+  // 않는다(버티기·기합의머리띠는 매 타격마다 판정되므로 그대로 둔다).
+  const isMultiHit =
+    (rolledHits || 0) >= 2 ||
+    (typeof (moveInfo && moveInfo.multihit) === 'number' && moveInfo.multihit >= 2);
+  const endure = checkEndure(defender, dmg, defender.currentHP >= defender.maxHP && !isMultiHit);
   if (endure.survive) dmg = defender.currentHP - 1;
 
   const nextHP = Math.max(0, defender.currentHP - dmg);
@@ -1001,7 +1038,9 @@ function attack(attacker, defender, moveId, options = {}) {
     isContactHit,
     fainted,
     effectiveness > 1,
-    ignoreAbility
+    ignoreAbility,
+    // 다연발기는 까칠한피부/철가시/까칠한바위 반동과 접촉 부가효과가 타격마다 발동한다
+    isMultiHit ? rolledHits || (typeof (moveInfo && moveInfo.multihit) === 'number' ? moveInfo.multihit : 2) : 1
   );
   if (reactions.attackerPatch) {
     const p = reactions.attackerPatch;
@@ -1308,8 +1347,9 @@ function advanceEntityVolatiles(entity) {
 
 /**
  * 라운드 전환 시 참가자별 응원 버프/지속효과를 갱신한다.
- * - 철통방어/힘내라힘(3턴 버프): 매 라운드 전환마다 1씩 감소, 0이 되면 스탯 원복
- * - 끝내버려: 시전한 다음 라운드에 물공/특공 3배(+4스택)가 발동하고, 그 버프가 끝나는 라운드
+ * - 힘내라힘(cheerOffense)/철통방어(cheerDefense): 3턴 배율 버프. 매 전환마다 turns 1 감소, 0이면 해제.
+ *   랭크와 별개인 곱연산이라 칼춤 등 기술 랭크와 독립적으로 유지·만료된다.
+ * - 끝내버려: 시전한 다음 라운드에 cheerOffense ×3(1턴)이 발동하고, 그 턴이 끝나는 라운드
  *   전환 시 "다음 턴 행동불가"가 걸린다 (mustSkipTurn)
  * - 뒤는맡기라고(redirectActive)는 보스 행동 1회(이번 턴)만 받아내면 바로 해제되지만(executeBossAction에서
  *   처리), 그 전에 라운드가 넘어가 버리면 여기서 안전장치로 한 번 더 해제한다
@@ -1317,34 +1357,26 @@ function advanceEntityVolatiles(entity) {
 function advanceParticipantTurnState(p) {
   if (!p) return { participant: p, logs: [] };
 
-  const boosts = { ...(p.boosts || {}) };
-  const buffTimers = { ...(p.buffTimers || {}) };
+  let cheerOffense = { ...(p.cheerOffense || NO_CHEER) };
+  let cheerDefense = { ...(p.cheerDefense || NO_CHEER) };
   let pendingFinisher = p.pendingFinisher;
   let finisherTimer = p.finisherTimer || 0;
   let mustSkipTurn = false;
   const logs = [];
 
-  BUFF_STATS.forEach((stat) => {
-    if (buffTimers[stat] > 0) {
-      buffTimers[stat] -= 1;
-      if (buffTimers[stat] <= 0) {
-        boosts[stat] = 0;
-        buffTimers[stat] = 0;
-      }
-    }
-  });
+  // 응원 배율(힘내라힘/철통방어) 지속시간 감소
+  if (cheerOffense.turns > 0 && --cheerOffense.turns <= 0) cheerOffense = { ...NO_CHEER };
+  if (cheerDefense.turns > 0 && --cheerDefense.turns <= 0) cheerDefense = { ...NO_CHEER };
 
   if (finisherTimer > 0) {
     finisherTimer -= 1;
     if (finisherTimer <= 0) {
-      boosts.atk = 0;
-      boosts.spa = 0;
+      cheerOffense = { ...NO_CHEER };
       mustSkipTurn = true;
       logs.push(`${p.nickname}은(는) 반동으로 이번 턴 행동할 수 없다!`);
     }
   } else if (pendingFinisher) {
-    boosts.atk = 4;
-    boosts.spa = 4;
+    cheerOffense = { mult: 3, turns: 1 };
     finisherTimer = 1;
     pendingFinisher = false;
     logs.push(`${p.nickname}의 힘이 폭발한다! (물리/특수공격 3배)`);
@@ -1352,8 +1384,8 @@ function advanceParticipantTurnState(p) {
 
   const buffed = {
     ...p,
-    boosts,
-    buffTimers,
+    cheerOffense,
+    cheerDefense,
     pendingFinisher,
     finisherTimer,
     mustSkipTurn,
@@ -1424,10 +1456,11 @@ function applyResultSideEffects(state, result, actor, roundNum) {
     p && !p.fainted && (teamKey === null ? !p.isParticipant : (p.team || '') === teamKey);
 
   if (result.hazeAll) {
+    // 명경지수는 랭크(boosts)만 초기화한다. 응원 배율(cheerOffense/cheerDefense)은 랭크가 아니므로 유지.
     next = {
       ...next,
-      boss: { ...next.boss, boosts: { ...EMPTY_BOOSTS }, buffTimers: {} },
-      participants: next.participants.map((p) => (p ? { ...p, boosts: { ...EMPTY_BOOSTS }, buffTimers: {} } : p)),
+      boss: { ...next.boss, boosts: { ...EMPTY_BOOSTS } },
+      participants: next.participants.map((p) => (p ? { ...p, boosts: { ...EMPTY_BOOSTS } } : p)),
     };
   }
   if (result.partyCure) {
@@ -2236,9 +2269,9 @@ export function executeParticipantCheer(state, participantId, cheerId) {
   switch (cheerId) {
     case 'ironwall':
       participants = participants.map((p) =>
-        p && !p.fainted && isSameTeam(p) ? applyStatBuff(p, { def: 1, spd: 1 }, 3) : p
+        p && !p.fainted && isSameTeam(p) ? applyCheerMult(p, 'cheerDefense', 1.5, 3) : p
       );
-      lines.push(`${actor.team ? `${actor.team}조` : '같은 조'} 아군의 방어/특수방어가 상승했다!`);
+      lines.push(`${actor.team ? `${actor.team}조` : '같은 조'} 아군의 방어/특수방어가 3턴 동안 1.5배가 됐다!`);
       break;
     case 'guard':
       participants = participants.map((p, i) => (i === idx ? { ...p, redirectActive: true } : p));
@@ -2305,8 +2338,9 @@ export function executeParticipantCheer(state, participantId, cheerId) {
 export function resetFieldBoosts(state) {
   if (state.status !== 'ongoing') return state;
   const roundNum = state.round + 1;
-  const boss = { ...state.boss, boosts: { ...EMPTY_BOOSTS }, buffTimers: {} };
-  const participants = state.participants.map((p) => (p ? { ...p, boosts: { ...EMPTY_BOOSTS }, buffTimers: {} } : p));
+  // 랭크(boosts)만 초기화. 응원 배율은 랭크가 아니므로 건드리지 않는다.
+  const boss = { ...state.boss, boosts: { ...EMPTY_BOOSTS } };
+  const participants = state.participants.map((p) => (p ? { ...p, boosts: { ...EMPTY_BOOSTS } } : p));
   const line = {
     round: roundNum,
     phase: 'boss',

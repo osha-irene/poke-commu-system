@@ -502,7 +502,7 @@ const ballImage = getBallImage();
             }
             setExpInput(String(Math.max(0, Math.floor(Number(value) || 0))));
           }}
-          className="h-9 w-24 rounded-lg border border-[#a7c86f] bg-[#f8fbef] px-2 text-sm font-bold text-[#2f4a24] focus:border-[#7fa438] focus:outline-none"
+          className="h-9 w-24 rounded-lg border border-[#6fc89a] bg-[#effbf5] px-2 text-sm font-bold text-[#244a36] focus:border-[#38a46c] focus:outline-none"
           placeholder="EXP"
         />
         <button
@@ -517,8 +517,8 @@ const ballImage = getBallImage();
           disabled={!canAllocateExp}
           className={`h-9 rounded-lg px-3 text-xs font-bold transition-colors ${
             canAllocateExp
-              ? 'bg-[#6f8f25] text-white hover:bg-[#4f741f]'
-              : 'bg-[#dbeabf] text-[#7f9360] cursor-not-allowed'
+              ? 'bg-[#258f58] text-white hover:bg-[#1f7448]'
+              : 'bg-[#bfead4] text-[#609379] cursor-not-allowed'
           }`}
         >
           배분
@@ -538,7 +538,7 @@ const ballImage = getBallImage();
           key={form.id || form.nameEn || form.name}
           type="button"
           onClick={() => handleChangeForm(form)}
-          className="flex w-full items-center gap-3 rounded-lg border border-[#c8dda4] bg-[#f8fbef] px-3 py-2 text-left transition-colors hover:bg-[#eef7df]"
+          className="flex w-full items-center gap-3 rounded-lg border border-[#a4ddc0] bg-[#effbf5] px-3 py-2 text-left transition-colors hover:bg-[#dff7eb]"
         >
           <FormIconSprite
             form={form}
@@ -547,8 +547,8 @@ const ballImage = getBallImage();
             className="h-9 w-9"
           />
           <span className="min-w-0">
-            <span className="block truncate text-sm font-bold text-[#26351f]">{getBaseName(form)}</span>
-            <span className="block truncate text-xs text-[#6f8150]">
+            <span className="block truncate text-sm font-bold text-[#1f352a]">{getBaseName(form)}</span>
+            <span className="block truncate text-xs text-[#508168]">
               {form.type}{form.type2 ? ` / ${form.type2}` : ''}
             </span>
           </span>
@@ -573,7 +573,7 @@ const ballImage = getBallImage();
     <div className="pokemon-detail-card w-full rounded-lg p-6">
       {/* 헤더 */}
       <div className="flex justify-between items-start mb-2">
-        <h3 className="text-xl font-bold text-[#26351f]" style={{ position: 'relative', top: 5 }}>포켓몬 정보</h3>
+        <h3 className="text-xl font-bold text-[#1f352a]" style={{ position: 'relative', top: 5 }}>포켓몬 정보</h3>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
           <X size={20} />
         </button>
@@ -661,22 +661,22 @@ const ballImage = getBallImage();
 
                       {showMobileMenu && (
                         <div className="pokemon-detail-exp-popover right-0 left-auto w-64 p-0 overflow-hidden">
-                          <div className="flex items-center justify-between gap-3 px-3 py-2 border-b border-[#dfe9c8]">
+                          <div className="flex items-center justify-between gap-3 px-3 py-2 border-b border-[#c8e9d8]">
                             <strong>메뉴</strong>
                             <button
                               type="button"
                               onClick={() => setShowMobileMenu(false)}
-                              className="text-[#789252] hover:text-[#2f4a24]"
+                              className="text-[#529271] hover:text-[#244a36]"
                             >
                               <X size={14} />
                             </button>
                           </div>
 
-                          <div className="border-b border-[#eef3e0]">
+                          <div className="border-b border-[#e0f3e9]">
                             <button
                               type="button"
                               onClick={() => setShowExpPanel((value) => !value)}
-                              className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-semibold text-[#2f4a24] hover:bg-[#f2f8e6]"
+                              className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-semibold text-[#244a36] hover:bg-[#e6f8ef]"
                               title={levelExpTitle}
                             >
                               <ArrowUp size={18} />
@@ -692,18 +692,18 @@ const ballImage = getBallImage();
                           <button
                             type="button"
                             onClick={() => { onMove(); setShowMobileMenu(false); }}
-                            className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-semibold text-[#2f4a24] hover:bg-[#f2f8e6] border-b border-[#eef3e0]"
+                            className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-semibold text-[#244a36] hover:bg-[#e6f8ef] border-b border-[#e0f3e9]"
                           >
                             {isInParty ? <ArrowDownCircle size={18} /> : <ArrowUpCircle size={18} />}
                             {isInParty ? '박스로 이동' : '엔트리로 이동'}
                           </button>
 
                           {canChangeForm && (
-                            <div className="border-b border-[#eef3e0]">
+                            <div className="border-b border-[#e0f3e9]">
                               <button
                                 type="button"
                                 onClick={() => setShowFormPanel((value) => !value)}
-                                className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-semibold text-[#2f4a24] hover:bg-[#f2f8e6]"
+                                className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-semibold text-[#244a36] hover:bg-[#e6f8ef]"
                               >
                                 <RefreshCw size={18} />
                                 폼체인지
@@ -719,7 +719,7 @@ const ballImage = getBallImage();
                           <button
                             type="button"
                             onClick={() => { onRelease(); setShowMobileMenu(false); }}
-                            className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-semibold text-[#6f8f25] hover:bg-[#f2f8e6]"
+                            className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-semibold text-[#258f58] hover:bg-[#e6f8ef]"
                           >
                             <Trees size={18} />
                             방생
@@ -753,7 +753,7 @@ const ballImage = getBallImage();
                               <button
                                 type="button"
                                 onClick={() => setShowExpPanel(false)}
-                                className="text-[#789252] hover:text-[#2f4a24]"
+                                className="text-[#529271] hover:text-[#244a36]"
                               >
                                 <X size={14} />
                               </button>
@@ -789,7 +789,7 @@ const ballImage = getBallImage();
                                 <button
                                   type="button"
                                   onClick={() => setShowFormPanel(false)}
-                                  className="text-[#789252] hover:text-[#2f4a24]"
+                                  className="text-[#529271] hover:text-[#244a36]"
                                 >
                                   <X size={14} />
                                 </button>
@@ -802,7 +802,7 @@ const ballImage = getBallImage();
 
                       <button
                         onClick={onRelease}
-                        className="p-2 rounded-lg transition-colors text-[#6f8f25] hover:bg-[#eef7df]"
+                        className="p-2 rounded-lg transition-colors text-[#258f58] hover:bg-[#dff7eb]"
                         title="포켓몬 방생"
                       >
                         <Trees size={20} />

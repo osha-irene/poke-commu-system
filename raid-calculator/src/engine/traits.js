@@ -266,6 +266,28 @@ export function critStageBonus(entity) {
   if (['scopelens', 'razorclaw'].includes(itemId(entity))) b += 1;
   return b;
 }
+// ── 명중률 특성 ─────────────────────────────────────
+/**
+ * 명중 판정에 곱하는 특성 배율과 필중 여부.
+ *  - 노가드(공·방 누구든): 필중
+ *  - 복안(공격): ×1.3 / 승리의별(공격): ×1.1 / 근성(공격, 물리기): ×0.8
+ *  - 모래숨기(방어, 모래): ×0.8 / 눈숨기(방어, 설경·싸라기눈): ×0.8
+ * ignoreAbility(몰드브레이커류)면 방어 측 특성(노가드·모래숨기·눈숨기)은 무시하고,
+ * 공격 측 자기 특성(복안·승리의별·근성)은 그대로 유효하다.
+ */
+export function accuracyAbilityMods(attacker, defender, moveData, weather, ignoreAbility) {
+  const atkA = abilityId(attacker);
+  const defA = ignoreAbility ? '' : abilityId(defender);
+  if (atkA === 'noguard' || defA === 'noguard') return { alwaysHit: true, multiplier: 1 };
+  let multiplier = 1;
+  if (atkA === 'compoundeyes') multiplier *= 1.3;
+  if (atkA === 'victorystar') multiplier *= 1.1;
+  if (atkA === 'hustle' && moveData && moveData.category === 'Physical') multiplier *= 0.8;
+  if (defA === 'sandveil' && weather === 'Sand') multiplier *= 0.8;
+  if (defA === 'snowcloak' && (weather === 'Hail' || weather === 'Snow')) multiplier *= 0.8;
+  return { alwaysHit: false, multiplier };
+}
+
 /** 접촉 무효화 (긴손아귀 특성 / 방어패드·펀치글러브 도구) */
 export function noContact(entity, moveData) {
   if (abilityId(entity) === 'longreach') return true;

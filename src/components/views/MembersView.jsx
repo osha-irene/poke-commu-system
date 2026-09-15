@@ -14,8 +14,7 @@ import { getAbilityKoreanName } from '../../utils/abilityUtils';
 import CachedImage from '../common/CachedImage';
 import { useMemberCaughtPokemon } from '../../hooks/members/useMemberCaughtPokemon';
 import { useGame } from '../../contexts/GameContext';
-import { loginIcon1, loginIcon2, loginIcon3, loginIcon4 } from '../../assets/images';
-import polaroidListWhite from '../../assets/members/polaroid-list-white.png';
+import polaroidListWhite from '../../assets/members/polaroid-list.png';
 import polaroidDetailWhite from '../../assets/members/polaroid-detail-white.png';
 import npcButtonImg from '../../assets/members/npc-button.png';
 import topButtonImg from '../../assets/members/top-button.png';
@@ -38,7 +37,6 @@ import chimeSound from '../../assets/sounds/chime.mp3';
 import rubbingSound from '../../assets/sounds/rubbing.mp3';
 
 const BADGE_IMGS = [badge1Img, badge2Img, badge3Img, badge4Img, badge5Img, badge6Img, badge7Img, badge8Img];
-const STATIC_TITLE_ICONS = { icon1: loginIcon1, icon2: loginIcon2, icon3: loginIcon3, icon4: loginIcon4 };
 // 특정 칭호는 기존 스티커를 교체하지 않고, 보조 이미지를 대각선 반대편에 겹쳐 붙여서 함께 보여준다.
 const TITLE_BONUS_STICKERS = {
   millonaire: '/img/titles/millonaire-coin.webp',
@@ -177,7 +175,7 @@ const getTitleIconUrl = (titleId, titles = []) => {
   const titleData = titles.find(t => t.id === titleId) || getTitleById(titleId);
   if (!titleData) return null;
   const icon = titleData.iconUrl || titleData.icon || '';
-  return STATIC_TITLE_ICONS[icon] || icon || null;
+  return icon || null;
 };
 
 const getTitleLabel = (titleId, titles = []) => {
@@ -692,7 +690,7 @@ function MemberCard({ member, titles, onClick }) {
         src={polaroidListWhite}
         alt=""
         draggable={false}
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill', pointerEvents: 'none', userSelect: 'none' }}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill', pointerEvents: 'none', userSelect: 'none', zIndex: 5 }}
       />
       {titleIcon && (
         <div
@@ -760,7 +758,8 @@ function MemberCard({ member, titles, onClick }) {
         document.body
       )}
       {/* 멤버 사진 */}
-      <div style={{ position: 'absolute', left: '9.6%', top: '14%', width: '80.7%', height: '77.1%', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', left: '17.88%', top: '11.63%', width: '63.67%', height: '52.53%', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.6)' }} />
         {faceImg ? (
           <CachedImage
             src={faceImg}
@@ -768,7 +767,7 @@ function MemberCard({ member, titles, onClick }) {
             loading="eager"
             decoding="async"
             fetchPriority="high"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', display: 'block' }}
+            style={{ position: 'absolute', left: '50%', top: 0, height: '100%', width: 'auto', maxWidth: 'none', transform: 'translateX(-50%)', display: 'block' }}
           />
         ) : (
           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(to bottom, #eef2ff, #f5f3ff)' }}>
@@ -781,13 +780,10 @@ function MemberCard({ member, titles, onClick }) {
       {/* 파트너 포켓몬 아이콘 — 우상단 */}
       {partnerIcon && (
         <div style={{
-          position: 'absolute', top: 'calc(1% + 32px)', right: 'calc(-2% + 25px)',
+          position: 'absolute', top: 'calc(1% + 32px + 215px)', right: 'calc(-2% + 61px)',
           width: 36, height: 36,
           zIndex: 10,
-          borderRadius: '50%',
           overflow: 'hidden',
-          border: '2px solid white',
-          background: 'rgba(255,255,255,0.9)',
           pointerEvents: 'none', userSelect: 'none',
         }}>
           <img
@@ -814,6 +810,8 @@ function MemberCard({ member, titles, onClick }) {
       {/* 이름 — 폴라로이드 하단 여백 */}
       <div style={{
         position: 'absolute', bottom: '2.5%', left: 0, right: 0,
+        zIndex: 6,
+        transform: 'translate(-50px, -40px)',
         textAlign: 'center',
         fontFamily: "'Aggravo', sans-serif",
         fontWeight: 300,
@@ -3391,9 +3389,9 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
             <button
               onClick={() => onSwitchTab('npcs')}
               className="tab-switch-btn"
-              style={{ position: 'absolute', top: -51, left: 0, zIndex: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+              style={{ position: 'absolute', top: -51, left: -40, right: -40, zIndex: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
             >
-              <img src={npcButtonImg} alt="NPC 보기" style={{ width: 198, height: 'auto', display: 'block' }} />
+              <img src={npcButtonImg} alt="NPC 보기" style={{ width: '100%', height: 'auto', display: 'block', transform: 'scale(1.21) translateX(90px)', transformOrigin: 'center' }} />
             </button>
           )}
           {createPortal(
@@ -3408,10 +3406,11 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
           )}
           <div className="member-list-enter" style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(5, 1fr)',
+            gridTemplateColumns: 'repeat(4, 1fr)',
             gap: '10px',
             padding: '20px 20px 60px',
-            margin: '0 -40px',
+            marginLeft: '-40px',
+            marginRight: '-210px',
           }}>
             {memberList.map(m => (
               <MemberCard

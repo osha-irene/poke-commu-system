@@ -45,15 +45,15 @@ import { PokemonProvider } from './contexts/PokemonContext';
 import { GameProvider } from './contexts/GameContext';
 import BattleView from './components/views/BattleView';
 import MaintenanceScreen from './components/layout/MaintenanceScreen';
-import { mainNewsButton, doctorWpenImage, logoText, logoCompass, forestBgBlurred, mainNpcPanel, loginMemberImg, loginTitle, loginBag, loginEntry, loginReport, loginLogout, loginIcon1, loginIcon2, loginIcon3, loginIcon4 } from './assets/images';
+import { logoText, forestBgBlurred, mainPlayerImg, mainLinkImg, mainDeco2Img, mainDeco4Img } from './assets/images';
+import text2Img from './assets/text2.png';
+import mukImg from './assets/muk.png';
 import { getTitleById } from './data/titles';
 import { User, Lock, Music, X, Play, Pause, SkipBack, SkipForward, Volume2, ChefHat, Sparkles } from 'lucide-react';
 import { DAILY_ATTENDANCE_EXP, getKoreaDateKey } from './utils/experience';
 import { getPokemonLocalIconUrl } from './utils/pokemonIconUtils';
-import { getTitleDisplayStyle } from './utils/titleDisplay';
 import CachedImage from './components/common/CachedImage';
 
-const STATIC_TITLE_ICONS = { icon1: loginIcon1, icon2: loginIcon2, icon3: loginIcon3, icon4: loginIcon4 };
 // 2026-08-04 00시(KST)부터 기본 용돈(레포트 출석 보상금)이 2000원 -> 3000원으로 인상된다.
 const getDailyAttendanceMoney = (todayKey) => (todayKey >= '2026-08-04' ? 3000 : 2000);
 
@@ -459,8 +459,25 @@ function HomeCalendar({ koreaToday, calendarDays, calendarLabel, weekDays, sched
   return (
     <div className="home-calendar" aria-label="Korea time calendar">
       <div className="home-calendar__header">
-        <span>Calendar</span>
-        <strong>{calendarLabel}</strong>
+        <strong className="home-calendar__month-number">{koreaToday.month}</strong>
+        <div className="home-calendar__month-top">
+          <span className="home-calendar__month-name">{calendarLabel}</span>
+        </div>
+        <div className={`home-cal-today-events${todayEvents.length === 0 ? ' is-empty' : ''}`}>
+          {todayEvents.length === 0 ? (
+            <span className="home-cal-today-events__empty">진행되는 이벤트가 없습니다.</span>
+          ) : (
+            <span className="home-cal-today-events__item">
+              {todayEvents.map((ev, i) => (
+                <React.Fragment key={ev.id}>
+                  {i > 0 && <span className="home-cal-today-events__sep">·</span>}
+                  <span className="home-cal-today-events__title">{ev.title}</span>
+                  {ev.desc && <span className="home-cal-today-events__desc">{ev.desc}</span>}
+                </React.Fragment>
+              ))}
+            </span>
+          )}
+        </div>
       </div>
       <div className="home-calendar__weekdays">
         {weekDays.map((day, di) => (
@@ -517,24 +534,6 @@ function HomeCalendar({ koreaToday, calendarDays, calendarLabel, weekDays, sched
             </div>
           );
         })}
-      </div>
-      <div className="home-cal-today-events">
-        <img src="/img/ui/main_event.png" alt="오늘의 이벤트" className="home-cal-today-events__img" />
-        <div className="home-cal-today-events__list">
-          {todayEvents.length === 0 ? (
-            <span className="home-cal-today-events__empty">진행되는 이벤트가 없습니다.</span>
-          ) : (
-            <div className="home-cal-today-events__item">
-              {todayEvents.map((ev, i) => (
-                <React.Fragment key={ev.id}>
-                  {i > 0 && <span className="home-cal-today-events__sep">·</span>}
-                  <span className="home-cal-today-events__title">{ev.title}</span>
-                  {ev.desc && <span className="home-cal-today-events__desc">{ev.desc}</span>}
-                </React.Fragment>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
       {tooltip && createPortal(
         <div
@@ -660,14 +659,6 @@ function HomeDashboard({
 
   const { cookingFeed, evolutionFeed } = getHomeFeeds(homeFeed);
 
-  const handleNewsClick = () => {
-    const newsUrl = '';
-
-    if (newsUrl) {
-      window.location.href = newsUrl;
-    }
-  };
-
   const handleLoginSubmit = async (event) => {
     event.preventDefault();
 
@@ -681,9 +672,125 @@ function HomeDashboard({
       {Array.from({ length: 4 }, (_, index) => (
         <article key={index} className="home-dashboard__panel">
           {index === 0 && (
-            <div className="home-doctor-crop" aria-hidden="true">
-              <img src={doctorWpenImage} alt="" />
+            <>
+              <img className="home-npc-muk" src={mukImg} alt="" aria-hidden="true" />
+              <img className="home-npc-text2" src={text2Img} alt="" aria-hidden="true" />
+            </>
+          )}
+          {index === 1 && (
+            <div className="home-player-frame">
+              <img className="home-player-frame__bg" src={mainPlayerImg} alt="" aria-hidden="true" />
+              {!showLogin && onLogout && (
+                <div
+                  className="home-player-frame__photo"
+                  onClick={onProfileClick}
+                  style={onProfileClick ? { cursor: 'pointer' } : undefined}
+                  role={onProfileClick ? 'button' : undefined}
+                  aria-label={onProfileClick ? '내 프로필 보기' : undefined}
+                >
+                  {(trainer?.profileImageThumb || trainer?.profileImage) && (
+                    <CachedImage
+                      className="home-player-frame__photo-face"
+                      src={trainer.profileImageThumb || trainer.profileImage}
+                      alt={trainer.name || ''}
+                    />
+                  )}
+                  {(() => {
+                    if (!trainer?.title || trainer.title === 'none') return null;
+                    const found = titles.find(t => t.id === trainer.title);
+                    const iconUrl = found?.iconUrl
+                      || found?.icon
+                      || getTitleById(trainer.title)?.icon;
+                    if (!iconUrl) return null;
+                    return (
+                      <img
+                        className="home-player-frame__title-icon"
+                        src={iconUrl}
+                        alt=""
+                        aria-hidden="true"
+                      />
+                    );
+                  })()}
+                </div>
+              )}
+              {!showLogin && onLogout && (
+                <>
+                  <button
+                    type="button"
+                    className="home-player-frame__hitbox home-player-frame__hitbox--report"
+                    onClick={!attendanceClaimed && !isClaimingAttendance ? onClaimAttendance : undefined}
+                    aria-label="레포트 작성"
+                  />
+                  <button
+                    type="button"
+                    className="home-player-frame__hitbox home-player-frame__hitbox--pokemon"
+                    onClick={onPokemonClick}
+                    aria-label="포켓몬박스"
+                  />
+                  <button
+                    type="button"
+                    className="home-player-frame__hitbox home-player-frame__hitbox--profile"
+                    onClick={onProfileClick}
+                    aria-label="프로필"
+                  />
+                </>
+              )}
             </div>
+          )}
+          {index === 1 && !showLogin && onLogout && (
+            <div className="home-player-frame-overlay">
+              <div className="home-player-frame__name-row">
+                <div className="home-player-frame__title-wrap">
+                  <button
+                    type="button"
+                    className="home-player-frame__title-overlay"
+                    onClick={() => setTitleOpen(v => !v)}
+                    aria-label="칭호 선택"
+                  >
+                    {(() => {
+                      let label = '';
+                      if (trainer?.title && trainer.title !== 'none') {
+                        const found = titles.find(t => t.id === trainer.title);
+                        if (found) label = found.label;
+                        else {
+                          const staticData = getTitleById(trainer.title);
+                          label = staticData && staticData.id !== 'none' ? staticData.label : '';
+                        }
+                      }
+                      const len = label.length || 1;
+                      const fontSize = Math.max(9, Math.min(15, 130 / len));
+                      return (
+                        <span className="home-player-frame__title-text" style={{ fontSize: `${fontSize}px` }}>
+                          {label}
+                        </span>
+                      );
+                    })()}
+                    <span className="home-player-frame__title-caret" aria-hidden="true">▼</span>
+                  </button>
+                  {titleOpen && (
+                    <div className="home-player-frame__title-dropdown">
+                      <div onClick={() => { onUpdateTitle?.('none'); setTitleOpen(false); }}>
+                        칭호 없음
+                      </div>
+                      {titles
+                        .filter(t => (trainer.assignedTitles || []).includes(t.id))
+                        .map(t => (
+                          <div key={t.id} onClick={() => { onUpdateTitle?.(t.id); setTitleOpen(false); }}>
+                            {t.label}
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+                <span className="home-player-frame__name">{trainer?.name || 'Trainer'}</span>
+              </div>
+            </div>
+          )}
+          {index === 1 && (
+            <img className="home-player-link" src={mainLinkImg} alt="" aria-hidden="true" />
+          )}
+          {index === 1 && (
+            <img className="home-deco-2" src={mainDeco2Img} alt="" aria-hidden="true" />
           )}
           {index === 1 && showLogin && (
             <form className="home-login-panel" onSubmit={handleLoginSubmit}>
@@ -715,90 +822,10 @@ function HomeDashboard({
           {index === 1 && !showLogin && onLogout && (
             <div className="home-session-panel">
               <div className="home-session-panel__top">
-                <div
-                  className="home-session-panel__member-img"
-                  onClick={onProfileClick}
-                  style={onProfileClick ? { cursor: 'pointer' } : undefined}
-                  role={onProfileClick ? 'button' : undefined}
-                  aria-label={onProfileClick ? '내 프로필 보기' : undefined}
-                >
-                  <div className="home-session-panel__member-clip">
-                    {(trainer?.profileImageThumb || trainer?.profileImage) && (
-                      <CachedImage
-                        className="home-session-panel__member-face"
-                        src={trainer.profileImageThumb || trainer.profileImage}
-                        alt={trainer.name || ''}
-                      />
-                    )}
-                  </div>
-                  <img className="home-session-panel__member-frame" src={loginMemberImg} alt="" aria-hidden="true" />
-                  {(() => {
-                    if (!trainer?.title || trainer.title === 'none') return null;
-                    const found = titles.find(t => t.id === trainer.title);
-                    const iconUrl = found?.iconUrl
-                      || (found?.icon ? STATIC_TITLE_ICONS[found.icon] : null)
-                      || (() => { const s = getTitleById(trainer.title); return s?.icon ? STATIC_TITLE_ICONS[s.icon] : null; })();
-                    if (!iconUrl) return null;
-                    return (
-                      <img
-                        className="home-session-panel__title-icon"
-                        src={iconUrl}
-                        alt=""
-                        aria-hidden="true"
-                      />
-                    );
-                  })()}
-                </div>
                 <div className="home-session-panel__info">
-                  {(() => {
-                    const currentTitleLabel = (() => {
-                      if (!trainer?.title || trainer.title === 'none') return null;
-                      const found = titles.find(t => t.id === trainer.title);
-                      if (found) return found.label;
-                      // fallback to static data
-                      const staticData = getTitleById(trainer.title);
-                      return staticData && staticData.id !== 'none' ? staticData.label : null;
-                    })();
-                    return (
-                      <div className="home-session-panel__title-wrap" style={{ position: 'relative' }}>
-                        <img className="home-session-panel__title" src={loginTitle} alt="" aria-hidden="true" />
-                        <button
-                          className="home-session-panel__title-overlay"
-                          onClick={() => setTitleOpen(v => !v)}
-                          aria-label="칭호 선택"
-                        >
-                          <span
-                            className="home-session-panel__title-text"
-                            style={getTitleDisplayStyle(currentTitleLabel, { compactFontSize: 12 })}
-                          >
-                            {currentTitleLabel || ''}
-                          </span>
-                        </button>
-                        {titleOpen && (
-                          <div className="home-session-panel__title-dropdown">
-                            <div onClick={() => { onUpdateTitle?.('none'); setTitleOpen(false); }}>
-                              칭호 없음
-                            </div>
-                            {titles
-                              .filter(t => (trainer.assignedTitles || []).includes(t.id))
-                              .map(t => (
-                                <div key={t.id} onClick={() => { onUpdateTitle?.(t.id); setTitleOpen(false); }}>
-                                  {t.label}
-                                </div>
-                              ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
-                  <span className="home-session-panel__name">{trainer?.name || 'Trainer'}</span>
                   <div className="home-session-panel__quick-actions" aria-label="\uBC14\uB85C\uAC00\uAE30">
-                    <button type="button" onClick={onItemsClick} aria-label="\uAC00\uBC29">
-                      <img src={loginBag} alt="\uAC00\uBC29" />
-                    </button>
-                    <button type="button" onClick={onPokemonClick} aria-label="\uC5D4\uD2B8\uB9AC">
-                      <img src={loginEntry} alt="\uC5D4\uD2B8\uB9AC" />
-                    </button>
+                    <button type="button" onClick={onItemsClick} aria-label="\uAC00\uBC29" />
+                    <button type="button" onClick={onPokemonClick} aria-label="\uC5D4\uD2B8\uB9AC" />
                   </div>
                 </div>
               </div>
@@ -810,18 +837,14 @@ function HomeDashboard({
                   className={`home-session-panel__report${attendanceClaimed || isClaimingAttendance ? ' is-disabled' : ''}`}
                   aria-label="\uB808\uD3EC\uD2B8 \uC791\uC131"
                   aria-disabled={attendanceClaimed || isClaimingAttendance}
-                >
-                  <img src={loginReport} alt="\uB808\uD3EC\uD2B8 \uC791\uC131" />
-                </div>
+                />
                 <div
                   role="button"
                   tabIndex={0}
                   onClick={onLogout}
                   className="home-session-panel__logout"
                   aria-label="\uB85C\uADF8\uC544\uC6C3"
-                >
-                  <img src={loginLogout} alt="\uB85C\uADF8\uC544\uC6C3" />
-                </div>
+                />
               </div>
             </div>
           )}
@@ -829,7 +852,6 @@ function HomeDashboard({
             <div className="home-issue-board" aria-label="home issue feed">
               <section className="home-issue-board__section" aria-label="cooking news">
                 <div className="home-issue-board__heading">
-                  <img src="/today-recipe.png" alt="오늘의 요리" />
                   <strong>COOK</strong>
                 </div>
                 {!cookingFeed.some((entry) => entry.image) && (
@@ -840,11 +862,22 @@ function HomeDashboard({
                     {cookingFeed.map((entry) => (
                       <li key={entry.id} className="home-issue-item home-issue-item--item">
                         {entry.image ? <img src={entry.image} alt="" /> : <span className="home-issue-item__fallback home-issue-item__fallback--item" aria-hidden="true">I</span>}
-                        <span className="home-issue-item__text">
-                          <span>{entry.trainerName}{'\uAC00'}</span>
-                          <span>{entry.itemName}{'\uC744(\uB97C)'}</span>
-                          <span>{'\uB9CC\uB4E4\uC5C8\uB2E4'}</span>
-                        </span>
+                        {(() => {
+                          const line1 = `${entry.trainerName}\uAC00`;
+                          const line2 = `${entry.itemName}\uC744(\uB97C) \uB9CC\uB4E4\uC5C8\uB2E4`;
+                          const maxLen = Math.max(line1.length, line2.length);
+                          const fontSize = Math.max(11, Math.min(15, 230 / maxLen));
+                          const isMax = fontSize >= 15;
+                          return (
+                            <span
+                              className="home-issue-item__text"
+                              style={{ fontSize: `${fontSize}px`, transform: isMax ? 'translate(-5px, -7px)' : undefined }}
+                            >
+                              <span>{line1}</span>
+                              <span>{line2}</span>
+                            </span>
+                          );
+                        })()}
                       </li>
                     ))}
                   </ul>
@@ -854,7 +887,6 @@ function HomeDashboard({
               </section>
               <section className="home-issue-board__section" aria-label="evolution news">
                 <div className="home-issue-board__heading">
-                  <img src="/today-evolve.png" alt="오늘의 진화" />
                   <strong>EVOLVE</strong>
                 </div>
                 {!evolutionFeed.some((entry) => entry.spriteUrl) && (
@@ -871,11 +903,22 @@ function HomeDashboard({
                             aria-hidden="true"
                           />
                         ) : <span className="home-issue-item__fallback home-issue-item__fallback--catch" aria-hidden="true">P</span>}
-                        <span className="home-issue-item__text">
-                          <span>{entry.trainerName}{'\uC758'}</span>
-                          <span>{entry.pokemonName}{'\uC774(\uAC00)'}</span>
-                          <span>{'\uC9C4\uD654\uD588\uB2E4'}</span>
-                        </span>
+                        {(() => {
+                          const line1 = `${entry.trainerName}\uC758`;
+                          const line2 = `${entry.pokemonName}\uC774(\uAC00) \uC9C4\uD654\uD588\uB2E4`;
+                          const maxLen = Math.max(line1.length, line2.length);
+                          const fontSize = Math.max(11, Math.min(15, 230 / maxLen));
+                          const isMax = fontSize >= 15;
+                          return (
+                            <span
+                              className="home-issue-item__text"
+                              style={{ fontSize: `${fontSize}px`, transform: isMax ? 'translate(-5px, -7px)' : undefined }}
+                            >
+                              <span>{line1}</span>
+                              <span>{line2}</span>
+                            </span>
+                          );
+                        })()}
                       </li>
                     ))}
                   </ul>
@@ -903,14 +946,6 @@ function HomeDashboard({
           )}
         </article>
       ))}
-      <button
-        type="button"
-        className="home-dashboard__news-button"
-        aria-label="news"
-        onClick={handleNewsClick}
-      >
-        <img src={mainNewsButton} alt="" aria-hidden="true" />
-      </button>
     </section>
   );
 }
@@ -940,15 +975,7 @@ function MobileHomeDashboard({
   return (
     <section className="mobile-home" aria-label="모바일 메인">
       <div className="mobile-home__logo">
-        <img className="mobile-home__logo-compass" src={logoCompass} alt="" aria-hidden="true" />
         <img src={logoText} alt="Origin Beyond" />
-      </div>
-
-      <div className="mobile-home__npc" aria-hidden="true">
-        <img className="mobile-home__npc-panel-image" src={mainNpcPanel} alt="" aria-hidden="true" />
-        <span className="mobile-home__npc-crop" aria-hidden="true">
-          <img src={doctorWpenImage} alt="" />
-        </span>
       </div>
 
       <section className="mobile-home__calendar" aria-label="캘린더">
@@ -1127,15 +1154,6 @@ function DesktopLoginGate({ onLogin, banner }) {
         backgroundColor: 'rgba(10, 20, 10, 0.55)',
       }} />
 
-      <img src={logoCompass} alt="" style={{
-        position: 'absolute',
-        width: 360, height: 360,
-        top: 'calc(50% - 84px)', left: '50%',
-        transform: 'translate(-50%, -62%)',
-        mixBlendMode: 'overlay',
-        pointerEvents: 'none',
-      }} />
-
       <img src={logoText} alt="사이트명" style={{
         position: 'absolute',
         width: 490,
@@ -1217,34 +1235,34 @@ function ForcePasswordChangeModal({ onChangePassword }) {
     <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/55 px-4">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md rounded-2xl border-2 border-lime-300 bg-[#f4f8e8] p-6 shadow-2xl"
+        className="w-full max-w-md rounded-2xl border-2 border-lime-300 bg-[#e8f8f0] p-6 shadow-2xl"
       >
-        <h2 className="mb-2 text-2xl font-bold text-[#26351f]">비밀번호 변경</h2>
-        <p className="mb-5 text-sm leading-relaxed text-[#5f7342]">
+        <h2 className="mb-2 text-2xl font-bold text-[#1f352a]">비밀번호 변경</h2>
+        <p className="mb-5 text-sm leading-relaxed text-[#42735a]">
           임시 비밀번호로 로그인했습니다. 계속 이용하려면 새 비밀번호를 설정해주세요.
         </p>
 
         <label className="mb-3 block">
-          <span className="mb-1 block text-sm font-semibold text-[#384b27]">새 비밀번호</span>
+          <span className="mb-1 block text-sm font-semibold text-[#274b38]">새 비밀번호</span>
           <input
             type="password"
             value={newPassword}
             onChange={(event) => setNewPassword(event.target.value)}
             autoComplete="new-password"
-            className="w-full rounded-lg border border-[#a7c86f] bg-white px-4 py-3 focus:border-[#7fa438] focus:outline-none"
+            className="w-full rounded-lg border border-[#6fc89a] bg-white px-4 py-3 focus:border-[#38a46c] focus:outline-none"
             minLength={6}
             required
           />
         </label>
 
         <label className="mb-5 block">
-          <span className="mb-1 block text-sm font-semibold text-[#384b27]">새 비밀번호 확인</span>
+          <span className="mb-1 block text-sm font-semibold text-[#274b38]">새 비밀번호 확인</span>
           <input
             type="password"
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
             autoComplete="new-password"
-            className="w-full rounded-lg border border-[#a7c86f] bg-white px-4 py-3 focus:border-[#7fa438] focus:outline-none"
+            className="w-full rounded-lg border border-[#6fc89a] bg-white px-4 py-3 focus:border-[#38a46c] focus:outline-none"
             minLength={6}
             required
           />
@@ -1253,7 +1271,7 @@ function ForcePasswordChangeModal({ onChangePassword }) {
         <button
           type="submit"
           disabled={isSaving}
-          className="w-full rounded-lg bg-[#4f741f] px-4 py-3 font-bold text-white transition-colors hover:bg-[#3f5f18] disabled:cursor-not-allowed disabled:bg-gray-400"
+          className="w-full rounded-lg bg-[#1f7448] px-4 py-3 font-bold text-white transition-colors hover:bg-[#185f3a] disabled:cursor-not-allowed disabled:bg-gray-400"
         >
           {isSaving ? '저장 중...' : '비밀번호 저장'}
         </button>
@@ -2048,6 +2066,10 @@ return (
             onToggleSound={() => setSoundEnabled(!soundEnabled)}
             hasQnaUpdate={hasQnaUpdate}
           />
+
+      {currentTab === 'home' && (
+        <img className="home-deco-4" src={mainDeco4Img} alt="" aria-hidden="true" />
+      )}
 
       {hasContentSurface && <span className={`content-stage__surface${currentTab === 'qna' ? ' content-stage__surface--light' : ''}`} aria-hidden="true" />}
 

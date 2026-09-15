@@ -344,12 +344,12 @@ export default function CookingView() {
         {/* 요리 냄비 (선택된 재료) */}
         <div style={{
           background: 'rgba(255,255,255,0.85)', borderRadius: 16,
-          border: '1.5px solid rgba(200,230,140,0.5)', padding: '14px 14px 10px',
+          border: '1.5px solid rgba(140, 230, 184,0.5)', padding: '14px 14px 10px',
           marginBottom: 12, boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontWeight: 800, fontSize: 14, color: '#1a2e10', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <ChefHat size={16} style={{ color: '#4a7a08' }} /> 요리 냄비
+            <span style={{ fontWeight: 800, fontSize: 14, color: '#102e1f', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <ChefHat size={16} style={{ color: '#087a3f' }} /> 요리 냄비
             </span>
             <span style={{ fontSize: 12, color: '#888' }}>{totalIngredientCount}/3</span>
           </div>
@@ -369,7 +369,7 @@ export default function CookingView() {
                 }}>
                   <CookingItemImage item={item} allItems={allItems} size={64} />
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: '#1a2e10' }}>{item.name}</div>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: '#102e1f' }}>{item.name}</div>
                     <div style={{ fontSize: 11, color: '#888' }}>사용: {item.count}개</div>
                   </div>
                   <button onClick={() => removeIngredient(item.name)} style={{
@@ -386,12 +386,12 @@ export default function CookingView() {
           {selectedIngredients.length > 0 && (
             <button onClick={handleCook} style={{
               width: '100%', padding: '12px', borderRadius: 12,
-              border: '2px solid #84cc16', background: 'rgba(255,255,255,0.7)',
-              color: '#1a2e10', fontWeight: 800, fontSize: 15, cursor: 'pointer',
+              border: '2px solid #16cc6e', background: 'rgba(255,255,255,0.7)',
+              color: '#102e1f', fontWeight: 800, fontSize: 15, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
             }}>
-              <Sparkles size={18} style={{ color: '#4a7a08' }} />요리!
+              <Sparkles size={18} style={{ color: '#087a3f' }} />요리!
             </button>
           )}
         </div>
@@ -399,12 +399,12 @@ export default function CookingView() {
         {/* 재료 선택 */}
         <div style={{
           background: 'rgba(255,255,255,0.85)', borderRadius: 16,
-          border: '1.5px solid rgba(200,230,140,0.5)', padding: '14px',
+          border: '1.5px solid rgba(140, 230, 184,0.5)', padding: '14px',
           boxShadow: '0 1px 6px rgba(0,0,0,0.06)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontWeight: 800, fontSize: 14, color: '#1a2e10', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Utensils size={16} style={{ color: '#4a7a08' }} /> 재료 선택
+            <span style={{ fontWeight: 800, fontSize: 14, color: '#102e1f', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Utensils size={16} style={{ color: '#087a3f' }} /> 재료 선택
             </span>
             <span style={{ fontSize: 12, color: '#888' }}>{availableIngredients.length}종</span>
           </div>
@@ -425,7 +425,7 @@ export default function CookingView() {
                 }}>
                   <CookingItemImage item={item} allItems={allItems} size={64} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: 12, color: '#1a2e10', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
+                    <div style={{ fontWeight: 700, fontSize: 12, color: '#102e1f', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
                     <div style={{ fontSize: 11, color: '#888' }}>×{item.count}</div>
                   </div>
                   <Plus size={14} style={{ color: '#ea580c', flexShrink: 0 }} />
@@ -438,12 +438,12 @@ export default function CookingView() {
         {/* 레시피 북 버튼 */}
         <button onClick={() => setShowRecipeBook(true)} style={{
           width: '100%', marginTop: 12, padding: '12px',
-          border: '2px solid rgba(132,204,22,0.5)', borderRadius: 12,
-          background: 'rgba(255,255,255,0.75)', color: '#1a2e10',
+          border: '2px solid rgba(22, 204, 110,0.5)', borderRadius: 12,
+          background: 'rgba(255,255,255,0.75)', color: '#102e1f',
           fontWeight: 700, fontSize: 14, cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
         }}>
-          <Book size={16} style={{ color: '#4a7a08' }} />레시피 북
+          <Book size={16} style={{ color: '#087a3f' }} />레시피 북
         </button>
 
         {showRecipeBook && (
@@ -712,7 +712,7 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
       <div key={recipe.id} className={`border-2 rounded-lg ${isDiscovered ? 'border-orange-300 bg-orange-50' : 'border-gray-300 bg-gray-50'}`} style={{ display: 'flex', flexDirection: 'column' }}>
         {isDiscovered ? (
           <>
-            <div className="px-3 py-2 border-b border-orange-200 flex items-center justify-between" style={{background:'rgba(40,80,30,0.85)'}}>
+            <div className="px-3 py-2 border-b border-orange-200 flex items-center justify-between" style={{background:'rgba(30, 80, 54,0.85)'}}>
               <h3 className="text-base font-bold text-white">{recipe.name}</h3>
             </div>
             <div className="flex items-center justify-center gap-4 p-3">
@@ -872,7 +872,7 @@ function RecipeBookModal({ recipes, discoveredRecipes, onClose }) {
                   position: 'absolute',
                   width: 6,
                   borderRadius: 999,
-                  background: 'rgba(41, 88, 30, 0.55)',
+                  background: 'rgba(30, 88, 58, 0.55)',
                   cursor: 'grab',
                   height: recipeScrollbar.height,
                   transform: `translateY(${recipeScrollbar.top}px)`,

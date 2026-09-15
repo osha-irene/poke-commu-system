@@ -1,6 +1,6 @@
 ﻿import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { Heart, ChevronLeft, ChevronRight, Shield, User } from 'lucide-react';
-import memberButtonImg from '../../assets/members/member-button.png';
+import npcButtonImg from '../../assets/members/npc-button.png';
 import npcBg from '../../assets/members/npcbg.png';
 import { TYPE_COLORS, getTypeColorByEn } from '../../constants/pokemon';
 import { getTypeColor, POKEBALL_LIST } from '../../styles/theme';
@@ -645,9 +645,9 @@ export default function NpcView({ members = {}, isLoading = false, isAdmin = fal
           <button
             onClick={() => onSwitchTab('members')}
             className="tab-switch-btn"
-            style={{ position: 'absolute', top: 40, left: 28, zIndex: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+            style={{ position: 'absolute', top: 40, left: 0, right: 0, zIndex: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
           >
-            <img src={memberButtonImg} alt="멤버 보기" style={{ width: 198, height: 'auto', display: 'block' }} />
+            <img src={npcButtonImg} alt="멤버 보기" style={{ width: '100%', height: 'auto', display: 'block', transform: 'scale(1.243) translate(88px, 0px)', transformOrigin: 'center' }} />
           </button>
         )}
         <div className={`mbr-page npc-page${returning ? ' npc-page--returning' : ''}`}>

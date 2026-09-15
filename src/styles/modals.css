@@ -2,10 +2,10 @@
 [class*="fixed"][class*="inset-0"] > [class*="bg-white"],
 [class*="fixed"][class*="inset-0"] > [class*="bg-slate-"],
 [class*="fixed"][class*="inset-0"] > [class*="bg-gray-"] {
-  border: 1px solid #b7d982 !important;
-  background: rgba(244, 248, 232, 0.98) !important;
-  color: #26351f !important;
-  box-shadow: 0 24px 58px rgba(47, 74, 36, 0.28) !important;
+  border: 1px solid #82d9ac !important;
+  background: rgba(232, 248, 240, 0.98) !important;
+  color: #1f352a !important;
+  box-shadow: 0 24px 58px rgba(36, 74, 54, 0.28) !important;
 }
 
 [class*="fixed"][class*="inset-0"] .bg-white,
@@ -25,13 +25,13 @@
 [class*="fixed"][class*="inset-0"] .bg-red-100,
 [class*="fixed"][class*="inset-0"] .bg-yellow-100,
 [class*="fixed"][class*="inset-0"] .bg-green-100 {
-  background-color: rgba(248, 251, 239, 0.94) !important;
+  background-color: rgba(239, 251, 245, 0.94) !important;
 }
 
 [class*="fixed"][class*="inset-0"] [class*="bg-gradient-to-r"],
 [class*="fixed"][class*="inset-0"] [class*="bg-gradient-to-br"] {
-  background-image: linear-gradient(135deg, #2f4a24 0%, #6f8f25 58%, #c7e57d 100%) !important;
-  color: #f8fbef !important;
+  background-image: linear-gradient(135deg, #244a36 0%, #65ad88 58%, #7de5b0 100%) !important;
+  color: #effbf5 !important;
 }
 
 [class*="fixed"][class*="inset-0"] .border-gray-100,
@@ -59,7 +59,7 @@
 [class*="fixed"][class*="inset-0"] .border-green-300,
 [class*="fixed"][class*="inset-0"] .border-green-400,
 [class*="fixed"][class*="inset-0"] .border-green-500 {
-  border-color: #b7d982 !important;
+  border-color: #82d9ac !important;
 }
 
 [class*="fixed"][class*="inset-0"] .text-gray-900,
@@ -72,7 +72,7 @@
 [class*="fixed"][class*="inset-0"] .text-yellow-800,
 [class*="fixed"][class*="inset-0"] .text-green-900,
 [class*="fixed"][class*="inset-0"] .text-green-800 {
-  color: #26351f !important;
+  color: #1f352a !important;
 }
 
 [class*="fixed"][class*="inset-0"] .text-gray-600,
@@ -92,22 +92,22 @@
 [class*="fixed"][class*="inset-0"] .text-yellow-700,
 [class*="fixed"][class*="inset-0"] .text-green-600,
 [class*="fixed"][class*="inset-0"] .text-green-700 {
-  color: #4f741f !important;
+  color: #1f7448 !important;
 }
 
 [class*="fixed"][class*="inset-0"] input,
 [class*="fixed"][class*="inset-0"] select,
 [class*="fixed"][class*="inset-0"] textarea {
-  border-color: #a7c86f !important;
-  background-color: rgba(248, 251, 239, 0.96) !important;
-  color: #26351f !important;
+  border-color: #6fc89a !important;
+  background-color: rgba(239, 251, 245, 0.96) !important;
+  color: #1f352a !important;
 }
 
 [class*="fixed"][class*="inset-0"] input:focus,
 [class*="fixed"][class*="inset-0"] select:focus,
 [class*="fixed"][class*="inset-0"] textarea:focus {
-  border-color: #7fa438 !important;
-  box-shadow: 0 0 0 3px rgba(199, 229, 125, 0.34) !important;
+  border-color: #38a46c !important;
+  box-shadow: 0 0 0 3px rgba(125, 229, 176, 0.34) !important;
   outline: none !important;
 }
 
@@ -125,8 +125,8 @@
 [class*="fixed"][class*="inset-0"] .bg-green-600,
 [class*="fixed"][class*="inset-0"] .bg-yellow-400,
 [class*="fixed"][class*="inset-0"] .bg-yellow-500 {
-  background-color: #6f8f25 !important;
-  color: #f8fbef !important;
+  background-color: #65ad88 !important;
+  color: #effbf5 !important;
 }
 
 [class*="fixed"][class*="inset-0"] .hover\:bg-blue-50:hover,
@@ -143,7 +143,7 @@
 [class*="fixed"][class*="inset-0"] .hover\:bg-red-100:hover,
 [class*="fixed"][class*="inset-0"] .hover\:bg-yellow-100:hover,
 [class*="fixed"][class*="inset-0"] .hover\:bg-green-100:hover {
-  background-color: #eef7df !important;
+  background-color: #dff7eb !important;
 }
 
 [class*="fixed"][class*="inset-0"] .hover\:bg-blue-700:hover,
@@ -157,21 +157,21 @@
 [class*="fixed"][class*="inset-0"] .hover\:bg-green-700:hover,
 [class*="fixed"][class*="inset-0"] .hover\:bg-yellow-500:hover,
 [class*="fixed"][class*="inset-0"] .hover\:bg-yellow-600:hover {
-  background-color: #4f741f !important;
+  background-color: #1f7448 !important;
 }
 
 [class*="fixed"][class*="inset-0"] .ring-indigo-500,
 [class*="fixed"][class*="inset-0"] .ring-blue-500,
 [class*="fixed"][class*="inset-0"] .ring-green-500,
 [class*="fixed"][class*="inset-0"] .ring-yellow-500 {
-  --tw-ring-color: #9fcf45 !important;
+  --tw-ring-color: #45cf88 !important;
 }
 
 [class*="fixed"][class*="inset-0"][class*="bg-white"],
 [class*="fixed"][class*="inset-0"][class*="bg-slate-"],
 [class*="fixed"][class*="inset-0"][class*="bg-gray-"] {
-  border: 1px solid #b7d982 !important;
-  background: rgba(244, 248, 232, 0.98) !important;
-  color: #26351f !important;
-  box-shadow: 0 24px 58px rgba(47, 74, 36, 0.28) !important;
+  border: 1px solid #82d9ac !important;
+  background: rgba(232, 248, 240, 0.98) !important;
+  color: #1f352a !important;
+  box-shadow: 0 24px 58px rgba(36, 74, 54, 0.28) !important;
 }

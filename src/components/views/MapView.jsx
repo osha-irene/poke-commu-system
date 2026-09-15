@@ -1,16 +1,13 @@
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
-import { Trees, Mountain, Waves } from 'lucide-react';
+import { Trees, Mountain, Waves, ChevronLeft, Footprints } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
 import mapBg from '../../assets/map/map.png';
-import pokeballImg from '../../assets/map/pokeball.png';
-import deviceTop from '../../assets/map/device-top.png';
-import deviceTitle from '../../assets/map/device-title.png';
-import deviceBottom from '../../assets/map/device-bottom.png';
-import deviceBack from '../../assets/map/device-back.png';
-import deviceHeader from '../../assets/map/device-header.png';
+import pokeballImg from '../../assets/pokeball.png';
+import mapBackImg from '../../assets/map/map-back.png';
+import mapViewportImg from '../../assets/map/map-viewport.png';
+import mapDesignImg from '../../assets/map/map-design.png';
 import mapNameImg from '../../assets/map/map-name.png';
-import deviceCountImg from '../../assets/map/device-count.png';
 import searchGoImg from '../../assets/map/search-go.png';
 import arrowTopImg from '../../assets/map/arrow_top.png';
 import arrowBottomImg from '../../assets/map/arrow_bottom.png';
@@ -20,7 +17,7 @@ import { ref, get } from 'firebase/database';
 import { database } from '../../firebase';
 
 const DEFAULT_VIEWPORT = { x: 0, y: 0, w: 100, h: 100 };
-const SCREEN_RATIO = 909 / 655;
+const SCREEN_RATIO = 1545 / 765;
 const TOWN_LABEL_CENTER_Y_OFFSET = 0.075;
 // mapBg(map.png) 실측 픽셀 비율(2539×2535 ≈ 1.0016). map.png를 다른 비율의 이미지로
 // 교체하면 이 값도 같이 갱신해야 한다.
@@ -76,13 +73,13 @@ const toDexNumber = (value) => {
 };
 
 
-// device-map.png 흰색 픽셀 영역 (1322×908 기준, PowerShell로 측정)
-// x=206~1115, y=153~808 → 909×655 px
+// map-back.png 안쪽 투명 영역 (2053×908 기준, PowerShell로 측정)
+// x=0~1545, y=85~850 → 1545×765 px
 const SCREEN = {
-  left:   '15.58%',
-  top:    '16.85%',
-  right:  '15.66%',
-  bottom: '11.01%',
+  left:   '0%',
+  top:    '9.36%',
+  right:  '24.74%',
+  bottom: '6.39%',
 };
 
 export default function MapView({
@@ -456,10 +453,10 @@ export default function MapView({
       onClick={(e) => { e.stopPropagation(); navigateToDirection(dir); }}
       style={{
         position: 'absolute',
-        ...(dir === 'up'    && { top: 6,    left: '50%', transform: 'translateX(-50%)' }),
-        ...(dir === 'down'  && { bottom: 31, left: '50%', transform: 'translateX(-50%)' }),
-        ...(dir === 'left'  && { left: 6,   top: '50%',  transform: 'translateY(-50%)' }),
-        ...(dir === 'right' && { right: 6,  top: '50%',  transform: 'translateY(-50%)' }),
+        ...(dir === 'up'    && { top: 10,    left: '50%', transform: 'translateX(-50%)' }),
+        ...(dir === 'down'  && { bottom: 10, left: '50%', transform: 'translateX(-50%)' }),
+        ...(dir === 'left'  && { left: 10,   top: '50%',  transform: 'translateY(-50%)' }),
+        ...(dir === 'right' && { right: 10,  top: '50%',  transform: 'translateY(-50%)' }),
         zIndex: dir === 'up' ? 70 : 20,
         background: 'none',
         border: 'none',
@@ -469,7 +466,7 @@ export default function MapView({
         transition: 'opacity 0.2s',
       }}
     >
-      <img src={arrowImgs[dir]} alt={dir} style={{ display: 'block', imageRendering: 'auto', transform: 'scale(0.9)', transformOrigin: 'center' }} />
+      <img src={arrowImgs[dir]} alt={dir} style={{ display: 'block', width: 36, height: 36, imageRendering: 'auto' }} />
     </button>
   );
 
@@ -483,7 +480,7 @@ export default function MapView({
     };
     if (!selectedArea) return null;
     const places = Array.isArray(selectedArea.places) ? selectedArea.places.filter(p => p?.name && p.visible !== false) : [];
-    const accentColor = selectedArea.color || selectedTown?.color || '#4a9a08';
+    const accentColor = selectedArea.color || selectedTown?.color || '#089a4f';
     const areaPokemon = getDisplayPokemon(selectedArea, selectedPlace);
     const activeLevel = selectedPlace
       ? { min: selectedPlace.minLevel ?? selectedArea.minLevel ?? 1, max: selectedPlace.maxLevel ?? selectedArea.maxLevel ?? 20 }
@@ -504,28 +501,27 @@ export default function MapView({
           <div style={{ height: '100%', maxWidth: 520, margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
           <div ref={scrollRef} onScroll={handleDetailScroll} style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '18px 14px 50px' }}>
             {/* 헤더 */}
-            <div style={{ position: 'relative', marginBottom: 15 }}>
-              <img src={deviceHeader} alt="" style={{ width: '100%', display: 'block' }} />
+            <div style={{ position: 'relative', marginBottom: 15, height: 72, borderRadius: 16, background: 'rgba(255,255,255,0.92)', boxShadow: '0 2px 10px rgba(0,0,0,0.15)' }}>
               <button
                 onClick={() => setScreenView('map')}
-                style={{ position: 'absolute', top: '50%', left: 23, transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 4, zIndex: 67 }}
+                style={{ position: 'absolute', top: '50%', left: 23, transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 4, zIndex: 67, display: 'flex' }}
               >
-                <img src={deviceBack} alt="뒤로가기" style={{ height: 28 * 0.7, width: 'auto', display: 'block' }} />
+                <ChevronLeft size={22} color="#373a33" />
               </button>
               <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale', transform: 'translateY(5px)' }}>
                 <div style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 22, fontWeight: 700, color: '#373a33', lineHeight: 1.2 }}>
                   {selectedArea.name}
                 </div>
-                <div style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 13, fontWeight: 700, color: '#9fc465', marginTop: 0, position: 'relative', top: -2 }}>
+                <div style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 13, fontWeight: 700, color: '#65c493', marginTop: 0, position: 'relative', top: -2 }}>
                   {selectedTown?.groupName}
                 </div>
               </div>
               <div style={{ position: 'absolute', top: '50%', right: 30, transform: 'translateY(calc(-50% + 3px))', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, zIndex: 1 }}>
-                <span style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 11, fontWeight: 700, color: '#4a9a08', background: 'rgba(74,154,8,0.13)', borderRadius: 20, padding: '2px 8px' }}>
+                <span style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 11, fontWeight: 700, color: '#089a4f', background: 'rgba(74,154,8,0.13)', borderRadius: 20, padding: '2px 8px' }}>
                   Lv.{activeLevel.min}-{activeLevel.max}
                 </span>
                 {activeRate !== undefined && (
-                  <span style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 11, fontWeight: 700, color: '#5a7a40', background: 'rgba(255,255,255,0.85)', borderRadius: 20, padding: '2px 8px', border: '1px solid rgba(120,180,60,0.22)' }}>
+                  <span style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 11, fontWeight: 700, color: '#407a5c', background: 'rgba(255,255,255,0.85)', borderRadius: 20, padding: '2px 8px', border: '1px solid rgba(120,180,60,0.22)' }}>
                     {activeRate < 1 ? Math.round(activeRate * 100) : activeRate}%
                   </span>
                 )}
@@ -555,11 +551,11 @@ export default function MapView({
                           boxShadow: active ? '0 2px 12px rgba(74,154,8,0.25)' : 'none',
                         }}
                       >
-                        <span style={{ color: active ? accentColor : '#5a7a40', display: 'flex', alignItems: 'center' }}>
+                        <span style={{ color: active ? accentColor : '#407a5c', display: 'flex', alignItems: 'center' }}>
                           {place.isCave ? <Mountain size={18} /> : place.isWaterside ? <Waves size={18} /> : <Trees size={18} />}
                         </span>
                         <span style={{ flex: 1, fontFamily: 'GmarketSans, sans-serif', fontSize: 16, fontWeight: 500, color: '#373a33', WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale', position: 'relative', top: 3 }}>{place.name}</span>
-                        <span style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 11, color: '#5a7a40' }}>
+                        <span style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 11, color: '#407a5c' }}>
                           Lv.{place.minLevel ?? selectedArea.minLevel ?? 1}-{place.maxLevel ?? selectedArea.maxLevel ?? 20}
                         </span>
                       </button>
@@ -626,7 +622,7 @@ export default function MapView({
                           <span style={{ fontSize: 16, color: 'rgba(0,0,0,0.15)' }}>?</span>
                         )}
                       </div>
-                      <div style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 10, fontWeight: 700, color: known ? '#1a2e10' : '#bbb', textAlign: 'center', lineHeight: 1.3, position: 'relative', zIndex: 1 }}>
+                      <div style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 10, fontWeight: 700, color: known ? '#102e1f' : '#bbb', textAlign: 'center', lineHeight: 1.3, position: 'relative', zIndex: 1 }}>
                         {known ? displayName : '???'}
                       </div>
                       {known && isRegionalLabel && formLabel && (
@@ -649,14 +645,15 @@ export default function MapView({
   return (
     <div
       className="map-view-root w-full flex items-start justify-center"
-      style={{ marginTop: -58, overflow: 'hidden', paddingBottom: '10%' }}
+      style={{ marginTop: -58, paddingBottom: '10%' }}
     >
       <div
         className="relative w-full"
-        style={{ maxWidth: 1032, width: 'min(100%, 1032px, calc((100vh - 120px) * 1.456))', transform: 'scale(1.1) translateY(30px) translateX(-10px)', transformOrigin: 'top center' }}
+        style={{ maxWidth: 1084, width: 'min(100%, 1084px, calc((100vh - 120px) * 2.374))', transform: 'translateY(30px) translateX(130px) scale(1.15)', transformOrigin: 'top center' }}
       >
-        <img src={deviceTop} className="w-full" style={{ opacity: 0, pointerEvents: 'none', display: 'block' }} alt="" />
-        <img src={deviceBottom} className="absolute inset-0 w-full h-full pointer-events-none select-none" style={{ zIndex: 1 }} alt="" />
+        <img src={mapBackImg} className="w-full" style={{ opacity: 0, pointerEvents: 'none', display: 'block' }} alt="" />
+        <img src={mapBackImg} className="absolute inset-0 w-full h-full pointer-events-none select-none" style={{ zIndex: 1 }} alt="" />
+        <img src={mapDesignImg} className="absolute pointer-events-none select-none" style={{ zIndex: 4, right: 0, top: '50%', transform: 'translate(90px, calc(-50% + 50px))', width: '84%' }} alt="" />
 
         {/* 스크린 영역 */}
         <div
@@ -713,7 +710,7 @@ export default function MapView({
               pointerEvents: 'none',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 15 }}>
-                <img src={deviceCountImg} alt="" style={{ height: 28, width: 'auto', imageRendering: 'auto' }} />
+                <Footprints size={24} color="#fff" />
                 <span style={{ fontFamily: "'Mona12 Text KR','Mona12',monospace", fontSize: 18, fontWeight: 700, color: '#fff', position: 'relative', left: -3 }}>
                   {dailyWalks} / {maxDailyWalks}
                 </span>
@@ -836,10 +833,10 @@ export default function MapView({
 
           {screenView === 'detail' && <DeviceMobileDetailPanel />}
           </div>{/* 맵 콘텐츠 래퍼 끝 */}
+
+          <img src={mapViewportImg} className="absolute inset-0 w-full h-full pointer-events-none select-none" style={{ zIndex: 90 }} alt="" />
         </div>
 
-        <img src={deviceTop} className="absolute inset-0 w-full h-full pointer-events-none select-none" style={{ zIndex: 3 }} alt="" />
-        <img src={deviceTitle} className="absolute pointer-events-none select-none" style={{ zIndex: 4, top: 0, left: '50%', transform: 'translateX(-50%) scale(0.729) translateY(4px)' }} alt="" />
       </div>
     </div>
   );

@@ -7,9 +7,6 @@ import {
 } from 'lucide-react';
 import encounterContextImg from '../../assets/map/encounter-context.png';
 import encounterBallImg from '../../assets/map/encounter-ball.png';
-import encounterBallWatermarkImg from '../../assets/map/encounter-ball-watermark.png';
-import encounterChooseImg from '../../assets/map/encounter-choose.png';
-import encounterRunImg from '../../assets/map/encounter-run.png';
 import encounterPokemonImg from '../../assets/map/encounter-pokemon.png';
 import { getEncounterBackground, isNoBaseBackground } from '../../utils/encounterBackground';
 import { getEncounterBgBase } from '../../utils/encounterBgBase';
@@ -396,27 +393,22 @@ export default function EncounterModal({
     setSelectedBall(ball);
   };
 
-  const handleCloseClick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (!isReady || catching || result) {
-      return;
-    }
-
-    onClose();
-  };
-
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
       onClick={() => {
         if (catching || result) return;
-        setSelectedBall(null);
+        if (selectedBall) {
+          setSelectedBall(null);
+          return;
+        }
+        if (!isReady) return;
+        onClose();
       }}
     >
       <div
-        className="w-full max-w-2xl mx-4"
+        className="w-full max-w-4xl mx-4"
+        style={{ aspectRatio: '1543 / 353' }}
         onClick={e => e.stopPropagation()}
       >
         {!result && !catching && (
@@ -432,17 +424,17 @@ export default function EncounterModal({
             }}>
               {/* encounter-pokemon 이미지 + 포켓몬 정보 */}
               {/* encounter-pokemon 이미지 — 왼쪽 삐져나온 부분 clip */}
-              <div style={{ position: 'absolute', top: 20, left: 0, zIndex: 2, overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: 20, left: 0, zIndex: 2 }}>
                 <img src={encounterPokemonImg} alt="" style={{ height: 120, width: 'auto', display: 'block', marginLeft: -15 }} />
                 {/* 포켓몬 정보 오버레이 */}
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 12px 0 31px', fontFamily: "'Mona12 Text KR','Mona12',monospace" }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 12px 0 31px', fontFamily: "'Mona12 Text KR','Mona12',monospace", transform: 'translate(10px, 10px)' }}>
                   {/* 이름 + 레벨 */}
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, transform: 'translateY(-20px)' }}>
                     <span style={{ fontWeight: 800, fontSize: 20, color: '#1a1a1a', whiteSpace: 'nowrap' }}>야생의 {getBaseName(pokemon.name)}</span>
                     <span style={{ fontSize: 12, color: '#555', fontWeight: 600, whiteSpace: 'nowrap' }}>Lv.{pokemon.level ?? '???'}</span>
                   </div>
                   {/* 타입 뱃지 + 특성 + 성별 */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 9, flexWrap: 'wrap', transform: 'scale(1.32) translateY(-10px)', transformOrigin: 'left center' }}>
                     {[pokemon.type, pokemon.type2].filter(Boolean).map(t => (
                       <span key={t} style={{
                         padding: '1px 7px', borderRadius: 999, fontSize: 10, fontWeight: 700, color: '#fff',
@@ -583,7 +575,7 @@ export default function EncounterModal({
               <img
                 src={encounterContextImg}
                 alt=""
-                style={{ width: '100%', display: 'block', transform: 'scale(1.1)', transformOrigin: 'center' }}
+                style={{ width: '100%', display: 'block', transform: 'scale(1.21)', transformOrigin: 'center' }}
               />
               <div style={{
                 position: 'absolute',
@@ -607,43 +599,49 @@ export default function EncounterModal({
             </div>
 
             {/* encounter-ball — 분리, 아래에 독립 배치 */}
-            <div style={{ marginTop: 12, position: 'relative' }}>
-              {/* 도망치기 — encounter-ball 우상단 */}
-              <button onClick={handleCloseClick} style={{ position: 'absolute', top: 15, right: 8, zIndex: 30, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
-                <img src={encounterRunImg} alt="도망치기" style={{ height: 40, width: 'auto', display: 'block' }} />
-              </button>
-              {/* encounter-ball 9-slice 배경 — 모서리(28px)는 고정, 테두리는 콘텐츠 높이에 맞춰 늘어남.
-                  중앙은 fill 없이 흰 배경 + 워터마크를 원래 비율 그대로(고정 크기) 얹어서 찌그러짐 없이 표시 */}
+            <div style={{ marginTop: 12, position: 'relative', aspectRatio: '1543 / 353', zIndex: -1, transform: 'translateY(10px)' }}>
+              {/* 도망치기 히트박스 — 우하단 */}
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!isReady || catching || result) return;
+                  onClose();
+                }}
+                aria-label="도망치기"
+                style={{
+                  position: 'absolute',
+                  right: -20,
+                  bottom: 0,
+                  width: 108,
+                  height: 33,
+                  zIndex: 30,
+                  background: 'transparent',
+                  border: 'none',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                }}
+              />
+              {/* encounter-ball 배경 이미지 — 박스가 이미지 비율(aspectRatio)에 고정돼 있어 그대로 깔면 왜곡 없음 */}
               <div style={{
                 position: 'absolute',
                 inset: 0,
                 transform: 'scale(1.1)',
                 transformOrigin: 'center',
-                borderStyle: 'solid',
-                borderWidth: 20,
-                borderImageSource: `url(${encounterBallImg})`,
-                borderImageSlice: 28,
-                borderImageRepeat: 'stretch',
-                backgroundColor: '#ffffff',
-                backgroundImage: `url(${encounterBallWatermarkImg})`,
+                backgroundImage: `url(${encounterBallImg})`,
+                backgroundSize: '100% 100%',
                 backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center',
-                backgroundSize: '150px 150px',
-                backgroundClip: 'padding-box',
                 pointerEvents: 'none',
               }} />
               <div style={{
-                position: 'relative',
+                position: 'absolute',
+                inset: 0,
                 display: 'flex',
                 flexDirection: 'column',
-                padding: '20px 30px 30px 22px',
+                padding: '20px 30px 23px 22px',
               }}>
-                <div style={{ marginBottom: 10 }}>
-                  <img src={encounterChooseImg} alt="볼을 선택하세요" style={{ height: 35, width: 'auto', display: 'block' }} />
-                </div>
-
-                {/* 볼 그리드 — 4줄 초과 시 커스텀 스크롤 */}
-                <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', gap: 6 }}>
+                {/* 볼 그리드 — 한 줄에 4개, 남는 세로는 스크롤 */}
+                <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', gap: 6, flex: 1, minHeight: 0, transform: 'translateY(-15px)' }}>
                   {/* 스크롤 영역 */}
                   <div
                     ref={ballGridRef}
@@ -651,11 +649,10 @@ export default function EncounterModal({
                     style={{
                       flex: 1,
                       display: 'grid',
-                      gridTemplateColumns: 'repeat(5, 1fr)',
+                      gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
                       alignContent: 'start',
                       gap: 6,
-                      maxHeight: pokeballs.length > 15 ? 234 : 'none',
-                      overflowY: pokeballs.length > 15 ? 'scroll' : 'visible',
+                      overflowY: 'auto',
                       scrollbarWidth: 'none',
                       msOverflowStyle: 'none',
                     }}
@@ -675,7 +672,7 @@ export default function EncounterModal({
                             key={i}
                             onClick={(e) => !disabled && handleBallSelect(e, ball)}
                             disabled={disabled}
-                            className={`relative flex flex-col items-center gap-1 rounded-lg p-2 border-2 transition-all ${
+                            className={`relative flex flex-row items-center gap-2 rounded-lg p-2 border-2 transition-all ${
                               disabled
                                 ? 'opacity-30 cursor-not-allowed border-gray-300'
                                 : selectedBall?.name === ball.name
@@ -697,8 +694,8 @@ export default function EncounterModal({
                                 imageRendering: 'pixelated'
                               }}
                             />
-                            <div className="text-center w-full">
-                              <div className="font-bold text-sm text-gray-800 leading-tight break-keep">{ball.name}</div>
+                            <div className="text-left flex-1 min-w-0">
+                              <div className="font-bold text-sm text-gray-800 leading-tight break-keep truncate">{ball.name}</div>
                             </div>
                           </button>
                         );
@@ -706,8 +703,8 @@ export default function EncounterModal({
                     )}
                   </div>
 
-                  {/* 커스텀 스크롤바 — 4줄 초과 시만 표시 */}
-                  {pokeballs.length > 15 && (
+                  {/* 커스텀 스크롤바 — 넘칠 때만 의미있게 움직임, 안 넘치면 트랙 꽉 채움 */}
+                  {pokeballs.length > 0 && (
                     <div style={{
                       width: 10,
                       borderRadius: 6,

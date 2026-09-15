@@ -11,6 +11,8 @@ import dexIcon from "../../assets/sidebar/1/dex.png";
 import entryIcon from "../../assets/sidebar/1/entry.png";
 import mapIcon from "../../assets/sidebar/1/map.png";
 import mastodonIcon from "../../assets/sidebar/1/mastodon.png";
+import quickMenuImg from "../../assets/quick-menu.png";
+import copyrightImg from "../../assets/copyright.png";
 import qnaIcon from "../../assets/sidebar/1/qna.png";
 import settingIcon from "../../assets/sidebar/1/setting.png";
 import shopIcon from "../../assets/sidebar/1/shop.png";
@@ -156,6 +158,12 @@ export default function Sidebar({
                     </div>
 
                     <div className="trainer-nav__bottom">
+                        <img
+                            className="trainer-nav__quick-menu"
+                            src={quickMenuImg}
+                            alt=""
+                            aria-hidden="true"
+                        />
                         <div
                             className="trainer-nav__social"
                             aria-label="커뮤니티 링크"
@@ -199,6 +207,11 @@ export default function Sidebar({
                         </div>
                     </div>
                 </nav>
+                <img
+                    className="trainer-rail__copyright"
+                    src={copyrightImg}
+                    alt="Community / Pokemonster Origin Beyond / Site Design © Buggumi"
+                />
             </aside>
 
             {isAdmin && (

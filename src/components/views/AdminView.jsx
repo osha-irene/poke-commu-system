@@ -597,11 +597,11 @@ export default function AdminView() {
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
                 background: adminTab === tab.id
-                  ? (tab.variant === 'danger' ? '#dc2626' : '#4a9a08')
+                  ? (tab.variant === 'danger' ? '#dc2626' : '#089a4f')
                   : 'rgba(255,255,255,0.85)',
                 color: adminTab === tab.id
                   ? '#fff'
-                  : (tab.variant === 'danger' ? '#dc2626' : '#3a5a20'),
+                  : (tab.variant === 'danger' ? '#dc2626' : '#205a3c'),
                 boxShadow: adminTab === tab.id ? '0 2px 8px rgba(0,0,0,0.15)' : 'none',
                 backdropFilter: 'blur(8px)',
               }}

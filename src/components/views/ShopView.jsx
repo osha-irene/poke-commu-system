@@ -2,6 +2,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMe
 import ballsImage from '../../assets/shop/balls.png';
 import cramorantImage from '../../assets/shop/cramorant.png';
 import contextImage from '../../assets/shop/context.png';
+import topImage from '../../assets/shop/top.png';
 import skipImage from '../../assets/shop/skip.png';
 import buyImage from '../../assets/shop/buy.png';
 import buy2Image from '../../assets/shop/buy2.png';
@@ -32,9 +33,9 @@ const P = {
   cardSel:   'rgba(205,230,170,1)',
   border:    'rgba(0,0,0,0.10)',
   borderSel: 'rgba(80,150,20,0.8)',
-  text:      '#1a2e10',
-  muted:     '#5a7a40',
-  accent:    '#4a9a08',
+  text:      '#102e1f',
+  muted:     '#407a5c',
+  accent:    '#089a4f',
   accentBg:  'rgba(74,154,8,0.15)',
   price:     '#a05000',
   daily:     '#1050b8',
@@ -301,7 +302,10 @@ export default function ShopView() {
       ...shopItem,
       item: allItems.find((item) => item.id === shopItem.itemId)
     }))
-    .filter(({ item }) => Boolean(item));
+    .filter(({ item }) => Boolean(item))
+    // dailyItems/permanentItems가 저장 로직 쪽에서 중복 저장될 수 있어, 렌더 직전에
+    // itemId 기준으로 한 번 더 걸러 같은 아이템 카드가 반복 표시되지 않게 한다.
+    .filter((shopItem, index, arr) => arr.findIndex((other) => other.itemId === shopItem.itemId) === index);
   const desktopGachaBallsAll = shopData.gachaBall?.balls || [];
   const desktopGachaBalls = getDailyGachaBalls(desktopGachaBallsAll)
     .map((ballItem) => ({
@@ -1258,6 +1262,14 @@ export default function ShopView() {
       el.style.fontSize = `${size}px`;
       guard += 1;
     }
+
+    // 줄바꿈이 정확히 2줄일 때는 2px 더 줄인다 (1줄/3줄 이상은 그대로)
+    const lineCount = Math.round(el.scrollHeight / (size * 1.2));
+    if (lineCount === 2 && size - 2 >= MIN) {
+      size -= 2;
+      el.style.fontSize = `${size}px`;
+    }
+
     setShopTextScale(size / BASE);
   }, [shopText]);
 
@@ -1464,7 +1476,7 @@ export default function ShopView() {
         {/* 상시 판매 */}
         {permanentItems.length > 0 && (
           <div style={{ margin: '0 12px 14px' }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 8, background: '#2a7a30', borderRadius: 6, padding: '4px 10px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 8, background: '#2a7a51', borderRadius: 6, padding: '4px 10px' }}>
               <FontAwesomeIcon icon={faStore} style={{ color: '#fff', fontSize: 11 }} />
               <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>상시 판매</span>
             </div>
@@ -1483,7 +1495,7 @@ export default function ShopView() {
                     <React.Fragment key={`perm-${shopItem.itemId}`}>
                       {showHeader && (
                         <div style={{ display: 'inline-flex', alignItems: 'center', marginTop: 6, marginBottom: 4 }}>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: '#1a2e10', background: 'rgba(255,255,255,0.92)', borderRadius: 20, padding: '3px 10px', border: '1px solid rgba(90,160,30,0.25)' }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: '#102e1f', background: 'rgba(255,255,255,0.92)', borderRadius: 20, padding: '3px 10px', border: '1px solid rgba(90,160,30,0.25)' }}>
                             {POCKET_LABELS[pocket] || pocket}
                           </span>
                         </div>
@@ -1613,6 +1625,12 @@ export default function ShopView() {
         <img
           className="shop-scene__balls"
           src={ballsImage}
+          alt=""
+          aria-hidden="true"
+        />
+        <img
+          className="shop-scene__top"
+          src={topImage}
           alt=""
           aria-hidden="true"
         />

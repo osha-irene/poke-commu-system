@@ -14,9 +14,9 @@ const isEmptyPokemonSlot = (pokemon) => (
 const S = {
   card:    'rgba(255,255,255,0.90)',
   border:  'rgba(0,0,0,0.08)',
-  text:    '#1a2e10',
-  muted:   '#5a7a40',
-  accent:  '#4a9a08',
+  text:    '#102e1f',
+  muted:   '#407a5c',
+  accent:  '#089a4f',
   accentBg:'rgba(74,154,8,0.15)',
   section: { padding: '0 14px', marginBottom: 10 },
 };
@@ -165,7 +165,7 @@ export default function MobilePokemonView() {
       {/* 엔트리 */}
       <div style={S.section}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#4a9a08', borderRadius: 6, padding: '4px 10px' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#089a4f', borderRadius: 6, padding: '4px 10px' }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>엔트리</span>
           </div>
           <span style={{ fontSize: 12, fontWeight: 700, color: S.accent, background: S.accentBg, borderRadius: 20, padding: '2px 10px' }}>{partyCount}/6</span>

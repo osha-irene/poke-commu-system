@@ -18,9 +18,9 @@ const NECTAR_FORM_MAP = {
 const P = {
   card:     'rgba(255,255,255,0.90)',
   border:   'rgba(0,0,0,0.10)',
-  text:     '#1a2e10',
-  muted:    '#5a7a40',
-  accent:   '#4a9a08',
+  text:     '#102e1f',
+  muted:    '#407a5c',
+  accent:   '#089a4f',
   accentBg: 'rgba(74,154,8,0.15)',
   price:    '#a05000',
 };
@@ -485,7 +485,7 @@ export default function MobileItemsView() {
           canConfirm = true;
           body = (
             <div style={{ padding: 20, textAlign: 'center', color: P.text, fontSize: 13, lineHeight: 1.6 }}>
-              <span style={{ color: '#4d7c0f', fontWeight: 700 }}>{selectedDetails.name}</span>을(를) 사용하시겠습니까?
+              <span style={{ color: '#0f7c44', fontWeight: 700 }}>{selectedDetails.name}</span>을(를) 사용하시겠습니까?
             </div>
           );
         } else if (selectedDetails.specialEffect === 'nunmegiRace') {

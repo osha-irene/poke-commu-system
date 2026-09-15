@@ -1,4 +1,5 @@
 @import url('https://cdn.jsdelivr.net/gh/sun-typeface/SUITE@2/fonts/static/woff2/SUITE.css');
+@import url('https://fonts.cdnfonts.com/css/modern-no-20');
 
 @font-face {
     font-family: 'ChangwonDangamRounded';
@@ -259,11 +260,11 @@ html {
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-gutter: stable;
-  scrollbar-color: rgba(178, 211, 135, 0.82) rgba(63, 74, 42, 0.96);
+  scrollbar-color: rgba(135, 211, 172, 0.82) rgba(42, 74, 58, 0.96);
   scrollbar-width: thin;
 -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  background-color: #3f4a2a;
+  background-color: #2a4a3a;
   background-image: url('../assets/forest-bg (2).png');
   background-size: cover;
   background-position: center;
@@ -283,7 +284,7 @@ html {
   --side-column: 260px;
   --content-column: 980px;
   --main-min-height: 760px;
-  --home-height: 620px;
+  --home-height: 600px;
   --deco-paper-top: -82px;
   --deco-paper-left: -210px;
   --deco-paper-width: 570px;
@@ -301,13 +302,13 @@ html {
   --layout-top-gap: 56px;
   --layout-bottom-gap: 14px;
   --layout-gap: 24px;
-  --sidebar-sticky-top: 304px;
-  --sidebar-shift: -55px;
+  --sidebar-sticky-top: 284px;
+  --sidebar-shift: 45px;
   --sidebar-scale: 1.2;
   --content-padding: 34px 28px 24px;
   --top-panel-lift: -30px;
-  --npc-shift-x: 60px;
-  --npc-shift-y: 30px;
+  --npc-shift-x: 30px;
+  --npc-shift-y: -60px;
   --player-shift-x: 25px;
   --player-shift-y: 45px;
   --news-button-top-offset: 34px;
@@ -324,7 +325,7 @@ body {
   min-width: 100%;
   overflow-x: hidden;
   overflow-y: auto;
-  background-color: #3f4a2a;
+  background-color: #2a4a3a;
   background-image: url('../assets/forest-bg (2).png');
   background-size: cover;
   background-position: center;
@@ -338,7 +339,7 @@ body:has(.npc-page) {
 #root {
   min-width: 100%;
   min-height: 100vh;
-  background-color: #3f4a2a;
+  background-color: #2a4a3a;
   background-image: url('../assets/forest-bg (2).png');
   background-size: cover;
   background-position: center;
@@ -353,25 +354,25 @@ body::-webkit-scrollbar {
 
 html::-webkit-scrollbar-track,
 body::-webkit-scrollbar-track {
-  background: rgba(63, 74, 42, 0.96);
+  background: rgba(42, 74, 58, 0.96);
 }
 
 html::-webkit-scrollbar-thumb,
 body::-webkit-scrollbar-thumb {
-  background: rgba(178, 211, 135, 0.82);
-  border: 2px solid rgba(63, 74, 42, 0.96);
+  background: rgba(135, 211, 172, 0.82);
+  border: 2px solid rgba(42, 74, 58, 0.96);
   border-radius: 999px;
 }
 
 html::-webkit-scrollbar-corner,
 body::-webkit-scrollbar-corner {
-  background: rgba(63, 74, 42, 0.96);
+  background: rgba(42, 74, 58, 0.96);
 }
 
 .move-modal-scroll {
   overflow-y: scroll !important;
   scrollbar-width: thin !important;
-  scrollbar-color: #5a7a5a #f0fdf4 !important;
+  scrollbar-color: #5a7a6a #f0fdf4 !important;
 }
 .move-modal-scroll::-webkit-scrollbar {
   width: 6px !important;
@@ -383,7 +384,7 @@ body::-webkit-scrollbar-corner {
   display: block !important;
 }
 .move-modal-scroll::-webkit-scrollbar-thumb {
-  background: #5a7a5a !important;
+  background: #5a7a6a !important;
   border-radius: 3px !important;
   display: block !important;
 }
@@ -402,7 +403,7 @@ body::-webkit-scrollbar-corner {
   background: #f0fdf4 !important;
 }
 .main-shell .move-modal-scroll::-webkit-scrollbar-thumb {
-  background: #5a7a5a !important;
+  background: #5a7a6a !important;
   border-radius: 3px !important;
 }*,
 *::before,

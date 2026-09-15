@@ -62,7 +62,7 @@ export default function CampingView({ trainer, campingSessions = [] }) {
             fontSize: 12,
             fontWeight: 700,
             color: '#fff',
-            background: '#4a9a08',
+            background: '#089a4f',
             borderRadius: 20,
             padding: '4px 12px',
           }}
@@ -84,7 +84,7 @@ export default function CampingView({ trainer, campingSessions = [] }) {
                   style={{
                     fontSize: 11,
                     fontWeight: 700,
-                    color: '#3a6010',
+                    color: '#106037',
                     background: 'rgba(255,255,255,0.80)',
                     backdropFilter: 'blur(4px)',
                     borderRadius: 20,
@@ -104,8 +104,8 @@ export default function CampingView({ trainer, campingSessions = [] }) {
                   const ok = done && isSuccess(s);
                   const reward = ok ? getReward(s) : null;
 
-                  const borderColor = ok ? '#b8e090' : done ? '#f5c6c6' : '#f0d890';
-                  const accentColor = ok ? '#4a9a08' : done ? '#c0392b' : '#c07000';
+                  const borderColor = ok ? '#90e0b7' : done ? '#f5c6c6' : '#f0d890';
+                  const accentColor = ok ? '#089a4f' : done ? '#c0392b' : '#c07000';
                   const dot = ok ? '✓' : done ? '✗' : '…';
 
                   return (
@@ -128,7 +128,7 @@ export default function CampingView({ trainer, campingSessions = [] }) {
                           height: 24,
                           borderRadius: '50%',
                           flexShrink: 0,
-                          background: ok ? '#eaf6d8' : done ? '#fde8e8' : '#fff9e0',
+                          background: ok ? '#d8f6e7' : done ? '#fde8e8' : '#fff9e0',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -172,7 +172,7 @@ export default function CampingView({ trainer, campingSessions = [] }) {
                               flexWrap: 'wrap',
                               gap: '3px 12px',
                               fontSize: 12,
-                              color: '#5a7a40',
+                              color: '#407a5c',
                             }}
                           >
                             {reward.friendshipBonus > 0 && (

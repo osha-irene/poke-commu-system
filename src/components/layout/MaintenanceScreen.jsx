@@ -1,7 +1,6 @@
 import React from 'react';
-import logoCompass from '../../assets/logo_compass.png';
 import logoText from '../../assets/logo_text.png';
-import forestBg from '../../assets/forest-bg.png';
+import forestBg from '../../assets/forest-bg (2).png';
 
 export default function MaintenanceScreen({ onLogout }) {
   return (
@@ -19,15 +18,6 @@ export default function MaintenanceScreen({ onLogout }) {
         backgroundColor: 'rgba(10, 20, 10, 0.55)',
         backdropFilter: 'blur(6px)',
         WebkitBackdropFilter: 'blur(6px)',
-      }} />
-
-      <img src={logoCompass} alt="" style={{
-        position: 'absolute',
-        width: 360, height: 360,
-        top: 'calc(50% - 20px)', left: '50%',
-        transform: 'translate(-50%, -62%)',
-        mixBlendMode: 'overlay',
-        pointerEvents: 'none',
       }} />
 
       <img src={logoText} alt="사이트명" style={{

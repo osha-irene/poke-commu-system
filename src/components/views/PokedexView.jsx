@@ -485,10 +485,10 @@ export default function PokedexView({
 
   if (isMobile) {
     return (
-      <div style={{ padding: '72px 12px 80px', minHeight: '100%', color: '#2a3d1a' }}>
+      <div style={{ padding: '72px 12px 80px', minHeight: '100%', color: '#1a3d2b' }}>
         {/* 검색 */}
         <div style={{ position: 'relative', marginBottom: 14 }}>
-          <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#7a9a50' }} />
+          <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#509a74' }} />
           <input
             type="text"
             placeholder="포켓몬 이름 검색"
@@ -499,7 +499,7 @@ export default function PokedexView({
               padding: '9px 12px 9px 34px',
               background: 'rgba(255,255,255,0.88)',
               border: '1px solid rgba(120,175,60,0.35)',
-              borderRadius: 12, color: '#2a3d1a',
+              borderRadius: 12, color: '#1a3d2b',
               fontSize: 13, outline: 'none',
               boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
             }}
@@ -565,7 +565,7 @@ export default function PokedexView({
                 </div>
                 <span style={{
                   fontSize: 10, fontWeight: 600,
-                  color: isUnlocked ? '#2a3d1a' : 'rgba(80,110,50,0.65)',
+                  color: isUnlocked ? '#1a3d2b' : 'rgba(80,110,50,0.65)',
                   lineHeight: 1.2, textAlign: 'center',
                   width: '100%',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
@@ -598,7 +598,7 @@ export default function PokedexView({
                 borderRadius: 20,
                 padding: '20px 18px 20px',
                 position: 'relative',
-                color: '#1a2e10',
+                color: '#102e1f',
                 boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
               }}
               onClick={e => e.stopPropagation()}
@@ -611,7 +611,7 @@ export default function PokedexView({
               }}>✕</button>
 
               {/* 번호 + 이름 */}
-              <div style={{ fontSize: 19, fontWeight: 800, color: '#1a2e10', marginBottom: 12 }}>
+              <div style={{ fontSize: 19, fontWeight: 800, color: '#102e1f', marginBottom: 12 }}>
                 {getDexDisplayParts(selectedForm).name}
               </div>
 
@@ -640,9 +640,9 @@ export default function PokedexView({
                       return (
                         <button key={form.number} onClick={() => setSelectedForm(form)} style={{
                           padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
-                          border: `1.5px solid ${isActive ? '#5a9a20' : 'rgba(120,180,60,0.35)'}`,
-                          background: isActive ? '#5a9a20' : 'transparent',
-                          color: isActive ? '#fff' : '#5a7a40', cursor: 'pointer',
+                          border: `1.5px solid ${isActive ? '#209a5b' : 'rgba(120,180,60,0.35)'}`,
+                          background: isActive ? '#209a5b' : 'transparent',
+                          color: isActive ? '#fff' : '#407a5c', cursor: 'pointer',
                         }}>
                           {getPokemonDisplayParts(form).formLabel || '기본형'}
                         </button>
@@ -659,7 +659,7 @@ export default function PokedexView({
                 const pokemonRegions = getPokemonRegions(selectedForm);
                 return (
                   <div style={{ marginBottom: 10 }}>
-                    <div style={{ fontSize: 10, color: '#7a9a50', fontWeight: 700, marginBottom: 5 }}>📍 출현 장소</div>
+                    <div style={{ fontSize: 10, color: '#509a74', fontWeight: 700, marginBottom: 5 }}>📍 출현 장소</div>
                     <div>
                       {pokemonRegions.length > 0
                         ? pokemonRegions.map((r, i) => (
@@ -668,7 +668,7 @@ export default function PokedexView({
                               background: 'rgba(220,245,195,0.8)',
                               border: '1px solid rgba(120,180,60,0.25)',
                               borderRadius: 6, padding: '2px 8px',
-                              margin: '2px 3px 2px 0', fontSize: 11, color: '#2a3d1a',
+                              margin: '2px 3px 2px 0', fontSize: 11, color: '#1a3d2b',
                             }}>{r}</span>
                           ))
                         : <span style={{ color: '#bbb', fontSize: 11 }}>정보 없음</span>
@@ -687,14 +687,14 @@ export default function PokedexView({
                     {entry.firstCatcher && (
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <div style={{ fontSize: 12, color: '#2a3d1a' }}>
-                            <span style={{ color: '#7a9a50', fontWeight: 700 }}>최초 포획 </span>
+                          <div style={{ fontSize: 12, color: '#1a3d2b' }}>
+                            <span style={{ color: '#509a74', fontWeight: 700 }}>최초 포획 </span>
                             <span style={{ fontWeight: 700 }}>{entry.firstCatcher}</span>
                           </div>
                           {entry.firstCatcher === currentUser?.name && !isEditingMemo && (
                             <button
                               onClick={handleEditMemo}
-                              style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', color: '#5f8228', display: 'flex' }}
+                              style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', color: '#288254', display: 'flex' }}
                               aria-label="메모 편집"
                             >
                               <Edit2 size={14} />
@@ -714,19 +714,19 @@ export default function PokedexView({
                                 width: '100%', boxSizing: 'border-box', resize: 'none',
                                 border: '1px solid rgba(120,180,60,0.35)', borderRadius: 8,
                                 background: 'rgba(255,255,255,0.9)', padding: 8,
-                                fontSize: 12, color: '#26351f', outline: 'none',
+                                fontSize: 12, color: '#1f352a', outline: 'none',
                               }}
                             />
                             <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
                               <button
                                 onClick={handleSaveMemo}
-                                style={{ flex: 1, borderRadius: 8, background: '#4f741f', color: '#fff', border: 'none', padding: '6px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                                style={{ flex: 1, borderRadius: 8, background: '#1f7448', color: '#fff', border: 'none', padding: '6px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                               >
                                 저장
                               </button>
                               <button
                                 onClick={() => { setIsEditingMemo(false); setMemoText(entry?.memo || ''); }}
-                                style={{ flex: 1, borderRadius: 8, background: '#d7e7b8', color: '#2f4a24', border: 'none', padding: '6px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                                style={{ flex: 1, borderRadius: 8, background: '#b8e7cf', color: '#244a36', border: 'none', padding: '6px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                               >
                                 취소
                               </button>
@@ -735,12 +735,12 @@ export default function PokedexView({
                         ) : (
                           <>
                             {entry.memo && (
-                              <div style={{ fontSize: 11, color: '#4a6a30', fontStyle: 'italic', borderTop: '1px solid rgba(120,180,60,0.15)', paddingTop: 6, marginTop: 6 }}>
+                              <div style={{ fontSize: 11, color: '#306a4c', fontStyle: 'italic', borderTop: '1px solid rgba(120,180,60,0.15)', paddingTop: 6, marginTop: 6 }}>
                                 "{entry.memo}"
                               </div>
                             )}
                             {!entry.memo && entry.firstCatcher === currentUser?.name && (
-                              <div style={{ fontSize: 11, fontStyle: 'italic', color: '#6f804f', marginTop: 4 }}>
+                              <div style={{ fontSize: 11, fontStyle: 'italic', color: '#4f8067', marginTop: 4 }}>
                                 메모를 남겨보세요
                               </div>
                             )}
@@ -749,8 +749,8 @@ export default function PokedexView({
                       </div>
                     )}
                     {entry.firstEncounter && (
-                      <div style={{ fontSize: 12, color: '#2a3d1a' }}>
-                        <span style={{ color: '#7a9a50', fontWeight: 700 }}>최초 조우 </span>
+                      <div style={{ fontSize: 12, color: '#1a3d2b' }}>
+                        <span style={{ color: '#509a74', fontWeight: 700 }}>최초 조우 </span>
                         {entry.firstEncounter}
                       </div>
                     )}
@@ -765,43 +765,43 @@ export default function PokedexView({
   }
 
   return (
-    <div className="h-full flex flex-col gap-4 text-[#26351f]">
+    <div className="h-full flex flex-col gap-4 text-[#1f352a]">
       {/* 헤더 */}
-      <div className="rounded-lg border border-[#b7d982] bg-[#eef7df]/90 p-6 shadow-sm">
+      <div className="rounded-lg border border-[#82d9ac] bg-[#dff7eb]/90 p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-[#26351f]">포켓몬 도감</h2>
+          <h2 className="text-2xl font-bold text-[#1f352a]">포켓몬 도감</h2>
           <div className="text-right">
-            <div className="text-3xl font-bold text-[#4f741f]">{unlockedCount}/{totalCount}</div>
-            <div className="text-sm text-[#627a3a]">발견 {percentage}%</div>
-            <div className="text-xs text-[#82965d] mt-1">
+            <div className="text-3xl font-bold text-[#1f7448]">{unlockedCount}/{totalCount}</div>
+            <div className="text-sm text-[#3a7a59]">발견 {percentage}%</div>
+            <div className="text-xs text-[#5d9679] mt-1">
               내가 잡은 포켓몬 {myCaughtNumbers.size}마리
             </div>
           </div>
         </div>
 
-        <div className="w-full rounded-full h-3 bg-[#dbeabf]">
+        <div className="w-full rounded-full h-3 bg-[#bfead4]">
           <div
-            className="h-3 rounded-full bg-gradient-to-r from-[#2f4a24] via-[#7fa438] to-[#c7e57d] transition-all duration-300"
+            className="h-3 rounded-full bg-gradient-to-r from-[#244a36] via-[#38a46c] to-[#7de5b0] transition-all duration-300"
             style={{ width: `${percentage}%` }}
           />
         </div>
 
         <div className="mt-4 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#789252]" size={20} />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#529271]" size={20} />
           <input
             type="text"
             placeholder="해금된 포켓몬 검색..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-lg border border-[#a7c86f] bg-[#f8fbef]/90 py-2 pl-10 pr-4 text-[#26351f] placeholder:text-[#7f9360] focus:outline-none focus:ring-2 focus:ring-[#9fcf45]"
+            className="w-full rounded-lg border border-[#6fc89a] bg-[#effbf5]/90 py-2 pl-10 pr-4 text-[#1f352a] placeholder:text-[#609379] focus:outline-none focus:ring-2 focus:ring-[#45cf88]"
           />
         </div>
       </div>
 
       {/* 도감 그리드 */}
-      <div className="flex-1 overflow-y-auto rounded-lg border border-[#b7d982] bg-[#f3f8e8]/75 p-6">
+      <div className="flex-1 overflow-y-auto rounded-lg border border-[#82d9ac] bg-[#e8f8f0]/75 p-6">
         {filteredPokedex.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center text-[#819665]">
+          <div className="flex h-full flex-col items-center justify-center text-[#65967d]">
             <Lock size={64} className="mb-4" />
             <p className="text-lg font-semibold">
               {searchTerm ? '검색 결과가 없습니다' : '아직 발견한 포켓몬이 없습니다'}
@@ -844,12 +844,12 @@ export default function PokedexView({
                   onClick={() => handlePokemonClick(pokemon)}
                   className={`relative rounded-lg border-2 p-3 text-center transition-all ${
                     isUnlocked
-                      ? 'border-[#a9cc62] bg-transparent cursor-pointer hover:shadow-lg hover:shadow-[#6d8f2f]/20 hover:scale-105 hover:border-[#7fa438]'
-                      : 'border-[#d4e4b5] bg-transparent opacity-45'
+                      ? 'border-[#62cc95] bg-transparent cursor-pointer hover:shadow-lg hover:shadow-[#2f8f5e]/20 hover:scale-105 hover:border-[#38a46c]'
+                      : 'border-[#b5e4cc] bg-transparent opacity-45'
                   }`}
                 >
                   {isMyCaught && (
-                    <div className="absolute top-1 left-1 rounded bg-[#6f8f25] px-1.5 py-0.5 text-xs font-bold text-white">
+                    <div className="absolute top-1 left-1 rounded bg-[#258f58] px-1.5 py-0.5 text-xs font-bold text-white">
                       보유
                     </div>
                   )}
@@ -863,17 +863,17 @@ export default function PokedexView({
                         loading="lazy"
                       />
                     ) : (
-                      <span className="text-5xl font-black text-[#8fa66a] drop-shadow-sm">?</span>
+                      <span className="text-5xl font-black text-[#6aa687] drop-shadow-sm">?</span>
                     )}
                   </div>
 
                   {isUnlocked && (
                     <div className="min-h-[36px]">
-                      <div className="truncate text-sm font-bold text-[#26351f]">
+                      <div className="truncate text-sm font-bold text-[#1f352a]">
                         {displayNameParts.name}
                       </div>
                       {displayNameParts.formLabel && (
-                        <div className="mt-0.5 truncate text-[11px] font-semibold text-[#7c9157]">
+                        <div className="mt-0.5 truncate text-[11px] font-semibold text-[#579173]">
                           {displayNameParts.formLabel}
                         </div>
                       )}
@@ -902,14 +902,14 @@ export default function PokedexView({
                   <div className="absolute top-2 right-2 flex gap-1">
                     {entry?.firstCatcher && (
                       <div className="relative group">
-                        <CheckCircle size={16} className="text-[#a7b92d]" />
-                        <div className="absolute bottom-full right-0 mb-1 px-2 py-1 bg-[#21351f] text-[#f2f8de] text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                        <CheckCircle size={16} className="text-[#2db971]" />
+                        <div className="absolute bottom-full right-0 mb-1 px-2 py-1 bg-[#1f352a] text-[#def8eb] text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                           최초 포획: {entry.firstCatcher}
                         </div>
                       </div>
                     )}
                     {hasNote && (
-                      <Edit2 size={14} className="text-[#6f8f25]" />
+                      <Edit2 size={14} className="text-[#258f58]" />
                     )}
                   </div>
                 </div>
@@ -929,7 +929,7 @@ export default function PokedexView({
           }}
         >
           <div
-            className="m-4 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border border-[#b7d982] bg-[#f4f8e8] p-6 shadow-2xl"
+            className="m-4 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border border-[#82d9ac] bg-[#e8f8f0] p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center">
@@ -971,8 +971,8 @@ export default function PokedexView({
                         }}
                         className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                           selectedForm.number === originalForm.number
-                            ? 'bg-[#4f741f] text-white shadow-lg'
-                            : 'bg-[#e2edc6] text-[#2f4a24] hover:bg-[#d0e69b]'
+                            ? 'bg-[#1f7448] text-white shadow-lg'
+                            : 'bg-[#c6edd9] text-[#244a36] hover:bg-[#9be6bf]'
                         }`}
                       >
                         {getPokemonDisplayParts(originalForm).formLabel || '원종'}
@@ -992,8 +992,8 @@ export default function PokedexView({
                           }}
                           className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                             selectedForm.number === form.number
-                              ? 'bg-[#4f741f] text-white shadow-lg'
-                              : 'bg-[#e2edc6] text-[#2f4a24] hover:bg-[#d0e69b]'
+                              ? 'bg-[#1f7448] text-white shadow-lg'
+                              : 'bg-[#c6edd9] text-[#244a36] hover:bg-[#9be6bf]'
                           }`}
                         >
                           {regionName}
@@ -1012,11 +1012,11 @@ export default function PokedexView({
               />
 
               {/* 이름 */}
-              <h3 className="mb-2 text-2xl font-bold text-[#26351f]">
+              <h3 className="mb-2 text-2xl font-bold text-[#1f352a]">
                 {getDexDisplayParts(selectedForm).name}
               </h3>
               {getDexDisplayParts(selectedForm).formLabel && (
-                <div className="mb-3 text-sm font-semibold text-[#7c9157]">
+                <div className="mb-3 text-sm font-semibold text-[#579173]">
                   {getDexDisplayParts(selectedForm).formLabel}
                 </div>
               )}
@@ -1040,16 +1040,16 @@ export default function PokedexView({
 
               <div className="mb-4 flex flex-col gap-3">
               {/* 출현 지역 */}
-              <div className="rounded border border-[#b7d982] bg-[#eef7df] p-3 text-left">
+              <div className="rounded border border-[#82d9ac] bg-[#dff7eb] p-3 text-left">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <MapPin size={16} className="text-[#4f741f]" />
+                    <MapPin size={16} className="text-[#1f7448]" />
                     <div className="text-sm font-semibold text-gray-700">출현 지역</div>
                   </div>
                   {currentUser?.isAdmin && !isEditingRegions && (
                     <button
                       onClick={handleStartEditRegions}
-                      className="rounded bg-[#d9e9ad] px-2 py-1 text-xs font-semibold text-[#355421] hover:bg-[#c7e57d]"
+                      className="rounded bg-[#ade9ca] px-2 py-1 text-xs font-semibold text-[#21543a] hover:bg-[#7de5b0]"
                     >
                       편집
                     </button>
@@ -1059,12 +1059,12 @@ export default function PokedexView({
                 {isEditingRegions ? (
                   <div className="space-y-2">
                     {getEditableRegionOptions().map(region => (
-                      <label key={region.id} className="flex items-center gap-2 cursor-pointer hover:bg-[#d9e9ad] p-1 rounded">
+                      <label key={region.id} className="flex items-center gap-2 cursor-pointer hover:bg-[#ade9ca] p-1 rounded">
                         <input
                           type="checkbox"
                           checked={editableRegions.includes(region.label)}
                           onChange={() => toggleRegion(region.label)}
-                          className="h-4 w-4 text-[#5f8228]"
+                          className="h-4 w-4 text-[#288254]"
                         />
                         <span className="text-sm text-gray-700">{region.label}</span>
                       </label>
@@ -1072,20 +1072,20 @@ export default function PokedexView({
                     <div className="flex gap-2 mt-3">
                       <button
                         onClick={handleSaveRegions}
-                        className="flex-1 rounded bg-[#4f741f] px-3 py-1 text-sm font-semibold text-white hover:bg-[#385b1f]"
+                        className="flex-1 rounded bg-[#1f7448] px-3 py-1 text-sm font-semibold text-white hover:bg-[#1f5b3c]"
                       >
                         저장
                       </button>
                       <button
                         onClick={() => setIsEditingRegions(false)}
-                        className="flex-1 rounded bg-[#d7e7b8] px-3 py-1 text-sm font-semibold text-[#2f4a24] hover:bg-[#c6dc93]"
+                        className="flex-1 rounded bg-[#b8e7cf] px-3 py-1 text-sm font-semibold text-[#244a36] hover:bg-[#93dcb6]"
                       >
                         취소
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-sm text-[#536b35]">
+                  <div className="text-sm text-[#356b4f]">
                     {(() => {
                       // ?꾩옱 ?좏깮???쇱쓽 異쒗쁽 吏???쒖떆
                       const pokemonRegions = getPokemonRegions(selectedForm);
@@ -1105,7 +1105,7 @@ export default function PokedexView({
 
                 if (entry.firstCatcher) {
                   return (
-                    <div className="rounded border border-[#d2df87] bg-[#f4f8d8] p-4 text-left">
+                    <div className="rounded border border-[#87dfb2] bg-[#d8f8e8] p-4 text-left">
                       <div className="flex items-center justify-between mb-2">
                         <div className="text-sm font-semibold text-gray-700">
                           최초 포획: {entry.firstCatcher}
@@ -1113,7 +1113,7 @@ export default function PokedexView({
                         {entry.firstCatcher === currentUser?.name && !isEditingMemo && (
                           <button
                             onClick={handleEditMemo}
-                            className="text-[#5f8228] hover:text-[#385b1f]"
+                            className="text-[#288254] hover:text-[#1f5b3c]"
                           >
                             <Edit2 size={16} />
                           </button>
@@ -1126,14 +1126,14 @@ export default function PokedexView({
                             value={memoText}
                             onChange={(e) => setMemoText(e.target.value)}
                             placeholder="이 포켓몬에 대한 메모를 남겨보세요..."
-                            className="w-full resize-none rounded border border-[#a7c86f] bg-[#fbfdf3] p-2 text-sm text-[#26351f] focus:outline-none focus:ring-2 focus:ring-[#9fcf45]"
+                            className="w-full resize-none rounded border border-[#6fc89a] bg-[#f3fdf8] p-2 text-sm text-[#1f352a] focus:outline-none focus:ring-2 focus:ring-[#45cf88]"
                             rows="3"
                             maxLength="200"
                           />
                           <div className="flex gap-2 mt-2">
                             <button
                               onClick={handleSaveMemo}
-                              className="flex-1 rounded bg-[#4f741f] py-1 text-sm font-semibold text-white hover:bg-[#385b1f]"
+                              className="flex-1 rounded bg-[#1f7448] py-1 text-sm font-semibold text-white hover:bg-[#1f5b3c]"
                             >
                               저장
                             </button>
@@ -1142,7 +1142,7 @@ export default function PokedexView({
                                 setIsEditingMemo(false);
                                 setMemoText(entry?.memo || '');
                               }}
-                              className="flex-1 rounded bg-[#d7e7b8] py-1 text-sm font-semibold text-[#2f4a24] hover:bg-[#c6dc93]"
+                              className="flex-1 rounded bg-[#b8e7cf] py-1 text-sm font-semibold text-[#244a36] hover:bg-[#93dcb6]"
                             >
                               취소
                             </button>
@@ -1150,7 +1150,7 @@ export default function PokedexView({
                         </div>
                       ) : (
                         entry.memo && (
-                          <div className="rounded bg-[#fbfdf3] p-2 text-sm italic text-[#536b35]">
+                          <div className="rounded bg-[#f3fdf8] p-2 text-sm italic text-[#356b4f]">
                             "{entry.memo}"
                           </div>
                         )
@@ -1158,7 +1158,7 @@ export default function PokedexView({
 
                       {!entry.memo && !isEditingMemo &&
                        entry.firstCatcher === currentUser?.name && (
-                        <div className="text-xs italic text-[#6f804f]">
+                        <div className="text-xs italic text-[#4f8067]">
                           메모를 남겨보세요
                         </div>
                       )}
@@ -1167,11 +1167,11 @@ export default function PokedexView({
                 }
 
                 return (
-                  <div className="rounded border border-[#b7d982] bg-[#eef7df] p-4 text-left">
+                  <div className="rounded border border-[#82d9ac] bg-[#dff7eb] p-4 text-left">
                     <div className="text-sm font-semibold text-gray-700 mb-2">
                       최초 조우: {entry.firstEncounter}
                     </div>
-                    <div className="flex items-start gap-2 rounded bg-[#fbfdf3] p-2 text-xs text-[#536b35]">
+                    <div className="flex items-start gap-2 rounded bg-[#f3fdf8] p-2 text-xs text-[#356b4f]">
                       <span>정보</span>
                       <span>아직 아무도 포획하지 않았습니다. 첫 포획자가 되어보세요.</span>
                     </div>
@@ -1185,7 +1185,7 @@ export default function PokedexView({
                   setSelectedPokemon(null);
                   setSelectedForm(null);
                 }}
-                className="w-full rounded-lg bg-[#4f741f] py-2 font-semibold text-white hover:bg-[#385b1f]"
+                className="w-full rounded-lg bg-[#1f7448] py-2 font-semibold text-white hover:bg-[#1f5b3c]"
               >
                 닫기
               </button>

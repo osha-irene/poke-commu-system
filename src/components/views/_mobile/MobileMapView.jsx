@@ -6,10 +6,10 @@ import { getPokemonDisplayParts } from '../../../utils/pokemonDisplayName';
 const P = {
   bg:      'rgba(255,255,255,0.92)',
   border:  'rgba(120,180,60,0.22)',
-  accent:  '#4a9a08',
+  accent:  '#089a4f',
   accentBg:'rgba(74,154,8,0.13)',
-  text:    '#1a2e10',
-  muted:   '#5a7a40',
+  text:    '#102e1f',
+  muted:   '#407a5c',
 };
 
 const TAP = { WebkitTapHighlightColor: 'transparent', outline: 'none' };
@@ -296,8 +296,8 @@ export default function MobileMapView({
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                   padding: '11px 14px',
-                  background: isHidden ? 'rgba(255,255,255,0.60)' : (isOpen ? '#1e4a08' : 'rgba(255,255,255,0.95)'),
-                  border: `1.5px solid ${isOpen ? '#1e4a08' : 'rgba(0,0,0,0.12)'}`,
+                  background: isHidden ? 'rgba(255,255,255,0.60)' : (isOpen ? '#084a28' : 'rgba(255,255,255,0.95)'),
+                  border: `1.5px solid ${isOpen ? '#084a28' : 'rgba(0,0,0,0.12)'}`,
                   borderBottom: isOpen ? 'none' : undefined,
                   borderRadius: isOpen ? '12px 12px 0 0' : 12,
                   cursor: isHidden ? 'default' : 'pointer',
@@ -306,12 +306,12 @@ export default function MobileMapView({
                   ...TAP,
                 }}
               >
-                <MapPin size={16} style={{ color: isOpen ? '#a8d878' : '#1a2e10', flexShrink: 0 }} />
-                <span style={{ flex: 1, fontSize: 14, fontWeight: 700, color: isOpen ? '#fff' : '#1a2e10' }}>{town.groupName}</span>
-                <span style={{ fontSize: 11, color: isOpen ? 'rgba(255,255,255,0.6)' : '#3a5a20', marginRight: 2 }}>{town.areas.length}</span>
+                <MapPin size={16} style={{ color: isOpen ? '#78d8a7' : '#102e1f', flexShrink: 0 }} />
+                <span style={{ flex: 1, fontSize: 14, fontWeight: 700, color: isOpen ? '#fff' : '#102e1f' }}>{town.groupName}</span>
+                <span style={{ fontSize: 11, color: isOpen ? 'rgba(255,255,255,0.6)' : '#205a3c', marginRight: 2 }}>{town.areas.length}</span>
                 {isOpen
                   ? <ChevronDown size={15} style={{ color: 'rgba(255,255,255,0.6)' }} />
-                  : <ChevronRight size={15} style={{ color: '#3a5a20' }} />}
+                  : <ChevronRight size={15} style={{ color: '#205a3c' }} />}
               </button>
 
               {isOpen && (

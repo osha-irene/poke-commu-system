@@ -131,7 +131,7 @@ export default function QnABoard({
             type="button"
             onClick={() => setShowWriteModal(true)}
             className="qna-write-btn inline-flex h-10 items-center gap-2 rounded-md px-4 text-sm font-semibold transition"
-            style={{background:'rgba(80, 120, 60, 0.85)', color:'rgba(230, 248, 220, 1)'}}
+            style={{background:'rgba(60, 120, 89, 0.85)', color:'rgba(220, 248, 234, 1)'}}
           >
             <Plus size={17} />
             질문 작성
@@ -152,7 +152,7 @@ export default function QnABoard({
                 className="rounded-full px-3 py-1 text-sm font-semibold transition"
                 style={isActive
                   ? { background: catStyle ? catStyle.bg.replace('0.55','0.82') : 'rgba(255,255,255,0.4)', color: catStyle ? catStyle.text : '#fff', outline: '1px solid rgba(255,255,255,0.3)' }
-                  : { background: 'rgba(0,0,0,0.07)', color: 'rgba(40,60,20,0.5)' }
+                  : { background: 'rgba(0,0,0,0.07)', color: 'rgba(20, 60, 39,0.5)' }
                 }
               >
                 {tab}
@@ -179,14 +179,14 @@ export default function QnABoard({
                 onChange={e => { setSearch(e.target.value); setPage(1); }}
                 placeholder="검색"
                 className="h-full pr-2 text-sm outline-none bg-transparent"
-                style={{ color: 'rgba(30,50,15,0.85)', minWidth: 0, flex: 1, opacity: searchOpen ? 1 : 0, transition: 'opacity 0.2s ease' }}
+                style={{ color: 'rgba(15, 50, 32,0.85)', minWidth: 0, flex: 1, opacity: searchOpen ? 1 : 0, transition: 'opacity 0.2s ease' }}
               />
             </div>
             <button
               type="button"
               onClick={() => setShowWriteModal(true)}
               className="qna-write-icon-btn flex items-center justify-center rounded-md shrink-0"
-              style={{ width: '32px', height: '32px', background: 'rgba(80,120,60,0.85)', color: 'rgba(230,248,220,1)' }}
+              style={{ width: '32px', height: '32px', background: 'rgba(60, 120, 89,0.85)', color: 'rgba(220, 248, 234,1)' }}
             >
               <Plus size={20} strokeWidth={3} />
             </button>
@@ -209,9 +209,9 @@ export default function QnABoard({
                 key={post.id}
                 onClick={() => setSelectedPostId(post.id)}
                 className={`qna-list-row flex w-full items-center gap-4 px-12 py-4 text-left transition rounded-xl ${index > 0 ? 'mt-1' : ''}`}
-                style={{background: index % 2 === 0 ? 'rgba(200,218,178,0.75)' : 'rgba(188,208,165,0.62)'}}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(175,198,148,0.82)'}
-                onMouseLeave={e => e.currentTarget.style.background = index % 2 === 0 ? 'rgba(200,218,178,0.75)' : 'rgba(188,208,165,0.62)'}
+                style={{background: index % 2 === 0 ? 'rgba(178, 218, 197,0.75)' : 'rgba(165, 208, 186,0.62)'}}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(148, 198, 172,0.82)'}
+                onMouseLeave={e => e.currentTarget.style.background = index % 2 === 0 ? 'rgba(178, 218, 197,0.75)' : 'rgba(165, 208, 186,0.62)'}
               >
                 {/* 번호 열 */}
                 <div className="shrink-0 w-10 text-center">
@@ -248,7 +248,7 @@ export default function QnABoard({
       <div className="flex items-center justify-center gap-1 mt-4">
           <button type="button" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
             className="qna-page-arrow qna-page-arrow--desktop rounded px-3 py-1.5 text-sm font-semibold transition disabled:opacity-30"
-            style={{ background: 'rgba(80,120,60,0.6)', color: 'rgba(230,248,220,1)' }}
+            style={{ background: 'rgba(60, 120, 89,0.6)', color: 'rgba(220, 248, 234,1)' }}
           ><ChevronLeft size={16} /></button>
           <button type="button" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
             className="qna-page-arrow qna-page-arrow--mobile rounded px-2 py-1 transition"
@@ -261,14 +261,14 @@ export default function QnABoard({
               onClick={() => setPage(n)}
               className="rounded px-3 py-1.5 text-sm font-semibold transition"
               style={n === page
-                ? { background: 'rgba(60,100,40,0.85)', color: 'rgba(230,248,220,1)' }
-                : { background: 'rgba(80,120,60,0.35)', color: 'rgba(40,70,20,0.8)' }
+                ? { background: 'rgba(40, 100, 69,0.85)', color: 'rgba(220, 248, 234,1)' }
+                : { background: 'rgba(60, 120, 89,0.35)', color: 'rgba(20, 70, 44,0.8)' }
               }
             >{n}</button>
           ))}
           <button type="button" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
             className="qna-page-arrow qna-page-arrow--desktop rounded px-3 py-1.5 text-sm font-semibold transition disabled:opacity-30"
-            style={{ background: 'rgba(80,120,60,0.6)', color: 'rgba(230,248,220,1)' }}
+            style={{ background: 'rgba(60, 120, 89,0.6)', color: 'rgba(220, 248, 234,1)' }}
           ><ChevronRight size={16} /></button>
           <button type="button" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
             className="qna-page-arrow qna-page-arrow--mobile rounded px-2 py-1 transition"
@@ -283,18 +283,18 @@ export default function QnABoard({
         >
           <div
             className="w-full max-w-xl overflow-hidden rounded-xl shadow-2xl"
-            style={{background:'rgba(245,250,240,0.98)', color:'rgba(40,50,30,1)', border:'1px solid rgba(180,210,150,0.6)', boxShadow:'0 0 0 1px rgba(0,0,0,0.15), 0 24px 48px rgba(0,0,0,0.4)'}}
+            style={{background:'rgba(240, 250, 245,0.98)', color:'rgba(30, 50, 40,1)', border:'1px solid rgba(150, 210, 179,0.6)', boxShadow:'0 0 0 1px rgba(0,0,0,0.15), 0 24px 48px rgba(0,0,0,0.4)'}}
             onClick={event => event.stopPropagation()}
           >
             <div className="flex justify-end px-4 pt-3">
-              <button type="button" onClick={() => setShowWriteModal(false)} className="p-1 transition" style={{color:'rgba(40,60,25,0.4)'}}>
+              <button type="button" onClick={() => setShowWriteModal(false)} className="p-1 transition" style={{color:'rgba(25, 60, 42,0.4)'}}>
                 <X size={20} />
               </button>
             </div>
 
             <div className="space-y-4 p-5">
               <div>
-                <label className="mb-1.5 block text-xs font-semibold" style={{color:'rgba(60,80,40,0.6)'}}>카테고리</label>
+                <label className="mb-1.5 block text-xs font-semibold" style={{color:'rgba(40, 80, 59,0.6)'}}>카테고리</label>
                 <div className="flex gap-2">
                   {WRITE_CATEGORIES.map(cat => (
                     <button
@@ -303,8 +303,8 @@ export default function QnABoard({
                       onClick={() => setNewPost({ ...newPost, category: cat })}
                       className="rounded-md px-4 py-1.5 text-sm font-semibold transition"
                       style={newPost.category === cat
-                        ? {background:'rgba(50,70,35,0.85)', color:'rgba(240,255,225,1)', outline:'none'}
-                        : {background:'rgba(0,0,0,0.06)', color:'rgba(60,80,40,0.55)', border:'1px solid rgba(80,120,60,0.2)'}}
+                        ? {background:'rgba(35, 70, 52,0.85)', color:'rgba(225, 255, 240,1)', outline:'none'}
+                        : {background:'rgba(0,0,0,0.06)', color:'rgba(40, 80, 59,0.55)', border:'1px solid rgba(60, 120, 89,0.2)'}}
                     >
                       {cat}
                     </button>
@@ -312,30 +312,30 @@ export default function QnABoard({
                 </div>
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-semibold" style={{color:'rgba(60,80,40,0.6)'}}>제목</label>
+                <label className="mb-1.5 block text-xs font-semibold" style={{color:'rgba(40, 80, 59,0.6)'}}>제목</label>
                 <input
                   type="text"
                   value={newPost.title}
                   onChange={event => setNewPost({ ...newPost, title: event.target.value })}
                   placeholder="질문 제목"
                   className="w-full rounded-lg px-3 py-2.5 text-sm outline-none transition"
-                  style={{background:'rgba(0,0,0,0.05)', border:'1px solid rgba(80,120,60,0.25)', color:'rgba(25,40,15,1)'}}
+                  style={{background:'rgba(0,0,0,0.05)', border:'1px solid rgba(60, 120, 89,0.25)', color:'rgba(15, 40, 27,1)'}}
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-semibold" style={{color:'rgba(60,80,40,0.6)'}}>내용</label>
+                <label className="mb-1.5 block text-xs font-semibold" style={{color:'rgba(40, 80, 59,0.6)'}}>내용</label>
                 <textarea
                   value={newPost.content}
                   onChange={event => setNewPost({ ...newPost, content: event.target.value })}
                   placeholder="내용을 입력하세요."
                   rows={8}
                   className="w-full rounded-lg px-3 py-2.5 text-sm outline-none resize-none transition"
-                  style={{background:'rgba(0,0,0,0.05)', border:'1px solid rgba(80,120,60,0.25)', color:'rgba(30,50,15,0.9)'}}
+                  style={{background:'rgba(0,0,0,0.05)', border:'1px solid rgba(60, 120, 89,0.25)', color:'rgba(15, 50, 32,0.9)'}}
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-semibold" style={{color:'rgba(60,80,40,0.6)'}}>
-                  이미지 링크 <span style={{color:'rgba(60,80,40,0.4)'}}>({newPost.images.length}/10)</span>
+                <label className="mb-1.5 block text-xs font-semibold" style={{color:'rgba(40, 80, 59,0.6)'}}>
+                  이미지 링크 <span style={{color:'rgba(40, 80, 59,0.4)'}}>({newPost.images.length}/10)</span>
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -353,7 +353,7 @@ export default function QnABoard({
                     }}
                     placeholder="이미지 URL 입력 후 Enter"
                     className="flex-1 rounded-lg px-3 py-2 text-sm outline-none"
-                    style={{background:'rgba(0,0,0,0.05)', border:'1px solid rgba(80,120,60,0.25)', color:'rgba(25,40,15,1)'}}
+                    style={{background:'rgba(0,0,0,0.05)', border:'1px solid rgba(60, 120, 89,0.25)', color:'rgba(15, 40, 27,1)'}}
                   />
                   <button type="button"
                     onClick={() => {
@@ -363,14 +363,14 @@ export default function QnABoard({
                       setNewImageUrl('');
                     }}
                     className="rounded-lg px-3 py-2 text-sm font-semibold"
-                    style={{background:'rgba(80,120,60,0.6)', color:'rgba(230,248,220,1)'}}
+                    style={{background:'rgba(60, 120, 89,0.6)', color:'rgba(220, 248, 234,1)'}}
                   ><Image size={15} /></button>
                 </div>
                 {newPost.images.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-2">
                     {newPost.images.map((url, i) => (
                       <div key={i} className="relative group">
-                        <img src={url} alt="" className="h-16 w-16 rounded object-cover" style={{border:'1px solid rgba(80,120,60,0.3)'}} />
+                        <img src={url} alt="" className="h-16 w-16 rounded object-cover" style={{border:'1px solid rgba(60, 120, 89,0.3)'}} />
                         <button type="button"
                           onClick={() => setNewPost(p => ({ ...p, images: p.images.filter((_, j) => j !== i) }))}
                           className="absolute -top-1.5 -right-1.5 rounded-full w-4 h-4 flex items-center justify-center text-xs"
@@ -381,7 +381,7 @@ export default function QnABoard({
                   </div>
                 )}
               </div>
-              <label className="flex cursor-pointer items-center gap-2 text-sm" style={{color:'rgba(60,80,40,0.65)'}}>
+              <label className="flex cursor-pointer items-center gap-2 text-sm" style={{color:'rgba(40, 80, 59,0.65)'}}>
                 <input
                   type="checkbox"
                   checked={newPost.isPrivate}
@@ -393,11 +393,11 @@ export default function QnABoard({
               </label>
             </div>
 
-            <div className="flex justify-end gap-2 px-5 py-4" style={{borderTop:'1px solid rgba(80,120,60,0.2)'}}>
-              <button type="button" onClick={() => setShowWriteModal(false)} className="rounded-md px-4 py-2 text-sm font-semibold transition" style={{background:'rgba(0,0,0,0.06)', color:'rgba(60,80,40,0.6)'}}>
+            <div className="flex justify-end gap-2 px-5 py-4" style={{borderTop:'1px solid rgba(60, 120, 89,0.2)'}}>
+              <button type="button" onClick={() => setShowWriteModal(false)} className="rounded-md px-4 py-2 text-sm font-semibold transition" style={{background:'rgba(0,0,0,0.06)', color:'rgba(40, 80, 59,0.6)'}}>
                 취소
               </button>
-              <button type="button" onClick={handleCreatePost} className="rounded-md px-4 py-2 text-sm font-semibold transition" style={{background:'rgba(80,130,60,0.85)', color:'rgba(240,255,230,1)'}}>
+              <button type="button" onClick={handleCreatePost} className="rounded-md px-4 py-2 text-sm font-semibold transition" style={{background:'rgba(60, 130, 94,0.85)', color:'rgba(230, 255, 242,1)'}}>
                 등록
               </button>
             </div>
@@ -412,7 +412,7 @@ export default function QnABoard({
         >
           <article
             className="max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-xl shadow-2xl"
-            style={{background:'rgba(245,250,240,0.98)', color:'rgba(40,50,30,1)', border:'1px solid rgba(180,210,150,0.6)', boxShadow:'0 0 0 1px rgba(0,0,0,0.15), 0 24px 48px rgba(0,0,0,0.4)'}}
+            style={{background:'rgba(240, 250, 245,0.98)', color:'rgba(30, 50, 40,1)', border:'1px solid rgba(150, 210, 179,0.6)', boxShadow:'0 0 0 1px rgba(0,0,0,0.15), 0 24px 48px rgba(0,0,0,0.4)'}}
             onClick={event => event.stopPropagation()}
           >
             <header className="px-6 py-5" style={{borderBottom:'1px solid rgba(255,255,255,0.1)'}}>
@@ -420,13 +420,13 @@ export default function QnABoard({
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     {selectedPost.category && (
-                      <span className="rounded px-2 py-0.5 text-sm font-bold" style={{background:'rgba(50,70,35,0.85)', color:'rgba(240,255,225,1)'}}>{selectedPost.category}</span>
+                      <span className="rounded px-2 py-0.5 text-sm font-bold" style={{background:'rgba(35, 70, 52,0.85)', color:'rgba(225, 255, 240,1)'}}>{selectedPost.category}</span>
                     )}
-                    {selectedPost.isPrivate && <Lock size={16} style={{color:'rgba(80,100,60,0.5)'}} />}
-                    <h2 className="text-2xl font-bold" style={{color:'rgba(25,40,15,1)'}}>{selectedPost.title}</h2>
+                    {selectedPost.isPrivate && <Lock size={16} style={{color:'rgba(60, 100, 79,0.5)'}} />}
+                    <h2 className="text-2xl font-bold" style={{color:'rgba(15, 40, 27,1)'}}>{selectedPost.title}</h2>
                   </div>
-                  <div className="mt-2 flex items-center gap-2 text-sm" style={{color:'rgba(60,80,40,0.55)'}}>
-                    <span className="font-semibold" style={{color:'rgba(40,60,25,0.8)'}}>{selectedPost.authorName}</span>
+                  <div className="mt-2 flex items-center gap-2 text-sm" style={{color:'rgba(40, 80, 59,0.55)'}}>
+                    <span className="font-semibold" style={{color:'rgba(25, 60, 42,0.8)'}}>{selectedPost.authorName}</span>
                     <span>·</span>
                     <time>{formatDate(selectedPost.createdAt)}</time>
                   </div>
@@ -452,7 +452,7 @@ export default function QnABoard({
                       <Trash2 size={16} />
                     </button>
                   )}
-                  <button type="button" onClick={() => { setSelectedPostId(null); setEditingPost(null); }} className="p-1 transition" style={{color:'rgba(40,60,25,0.4)'}}>
+                  <button type="button" onClick={() => { setSelectedPostId(null); setEditingPost(null); }} className="p-1 transition" style={{color:'rgba(25, 60, 42,0.4)'}}>
                     <X size={20} />
                   </button>
                 </div>
@@ -465,12 +465,12 @@ export default function QnABoard({
                       <button key={cat} type="button" onClick={() => setEditingPost(e => ({...e, category: cat}))}
                         className="rounded px-3 py-1 text-sm font-semibold transition"
                         style={editingPost.category === cat
-                          ? {background:'rgba(80,120,60,0.2)', color:'rgba(40,80,20,1)', outline:'1px solid rgba(80,120,60,0.4)'}
-                          : {background:'rgba(0,0,0,0.06)', color:'rgba(60,80,40,0.5)'}}>
+                          ? {background:'rgba(60, 120, 89,0.2)', color:'rgba(20, 80, 49,1)', outline:'1px solid rgba(60, 120, 89,0.4)'}
+                          : {background:'rgba(0,0,0,0.06)', color:'rgba(40, 80, 59,0.5)'}}>
                         {cat}
                       </button>
                     ))}
-                    <label className="flex items-center gap-1.5 ml-2 text-sm cursor-pointer" style={{color:'rgba(60,80,40,0.6)'}}>
+                    <label className="flex items-center gap-1.5 ml-2 text-sm cursor-pointer" style={{color:'rgba(40, 80, 59,0.6)'}}>
                       <input type="checkbox" checked={editingPost.isPrivate} onChange={e => setEditingPost(p => ({...p, isPrivate: e.target.checked}))} className="accent-green-600" />
                       <Lock size={13} /> 비공개
                     </label>
@@ -479,16 +479,16 @@ export default function QnABoard({
                     type="text" value={editingPost.title}
                     onChange={e => setEditingPost(p => ({...p, title: e.target.value}))}
                     className="w-full rounded-lg px-3 py-2 text-base font-bold outline-none"
-                    style={{background:'rgba(0,0,0,0.06)', border:'1px solid rgba(80,120,60,0.25)', color:'rgba(25,40,15,1)'}}
+                    style={{background:'rgba(0,0,0,0.06)', border:'1px solid rgba(60, 120, 89,0.25)', color:'rgba(15, 40, 27,1)'}}
                   />
                   <textarea
                     rows={6} value={editingPost.content}
                     onChange={e => setEditingPost(p => ({...p, content: e.target.value}))}
                     className="w-full rounded-lg px-3 py-2.5 text-base outline-none resize-none"
-                    style={{background:'rgba(0,0,0,0.06)', border:'1px solid rgba(80,120,60,0.25)', color:'rgba(30,50,15,0.9)'}}
+                    style={{background:'rgba(0,0,0,0.06)', border:'1px solid rgba(60, 120, 89,0.25)', color:'rgba(15, 50, 32,0.9)'}}
                   />
                   <div>
-                    <p className="mb-1.5 text-xs font-semibold" style={{color:'rgba(60,80,40,0.6)'}}>이미지 링크 ({editingPost.images.length}/10)</p>
+                    <p className="mb-1.5 text-xs font-semibold" style={{color:'rgba(40, 80, 59,0.6)'}}>이미지 링크 ({editingPost.images.length}/10)</p>
                     <div className="flex gap-2">
                       <input
                         type="text"
@@ -505,7 +505,7 @@ export default function QnABoard({
                         }}
                         placeholder="이미지 URL 입력 후 Enter"
                         className="flex-1 rounded-lg px-3 py-2 text-sm outline-none"
-                        style={{background:'rgba(0,0,0,0.06)', border:'1px solid rgba(80,120,60,0.25)', color:'rgba(25,40,15,1)'}}
+                        style={{background:'rgba(0,0,0,0.06)', border:'1px solid rgba(60, 120, 89,0.25)', color:'rgba(15, 40, 27,1)'}}
                       />
                       <button type="button"
                         onClick={() => {
@@ -515,14 +515,14 @@ export default function QnABoard({
                           else setEditingPost(p => ({...p, newImageUrl: ''}));
                         }}
                         className="rounded-lg px-3 py-2 text-sm font-semibold"
-                        style={{background:'rgba(80,120,60,0.6)', color:'rgba(230,248,220,1)'}}
+                        style={{background:'rgba(60, 120, 89,0.6)', color:'rgba(220, 248, 234,1)'}}
                       ><Image size={15} /></button>
                     </div>
                     {editingPost.images.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-2">
                         {editingPost.images.map((url, i) => (
                           <div key={i} className="relative">
-                            <img src={url} alt="" className="h-16 w-16 rounded object-cover" style={{border:'1px solid rgba(80,120,60,0.3)'}} />
+                            <img src={url} alt="" className="h-16 w-16 rounded object-cover" style={{border:'1px solid rgba(60, 120, 89,0.3)'}} />
                             <button type="button"
                               onClick={() => setEditingPost(p => ({ ...p, images: p.images.filter((_, j) => j !== i) }))}
                               className="absolute -top-1.5 -right-1.5 rounded-full w-4 h-4 flex items-center justify-center text-xs"
@@ -534,20 +534,20 @@ export default function QnABoard({
                     )}
                   </div>
                   <div className="flex justify-end gap-2">
-                    <button type="button" onClick={() => setEditingPost(null)} className="rounded-lg px-4 py-2 text-sm font-semibold" style={{background:'rgba(0,0,0,0.07)', color:'rgba(60,80,40,0.6)'}}>취소</button>
-                    <button type="button" onClick={handleSaveEdit} className="rounded-lg px-4 py-2 text-sm font-semibold" style={{background:'rgba(80,130,60,0.8)', color:'rgba(240,255,230,1)'}}>저장</button>
+                    <button type="button" onClick={() => setEditingPost(null)} className="rounded-lg px-4 py-2 text-sm font-semibold" style={{background:'rgba(0,0,0,0.07)', color:'rgba(40, 80, 59,0.6)'}}>취소</button>
+                    <button type="button" onClick={handleSaveEdit} className="rounded-lg px-4 py-2 text-sm font-semibold" style={{background:'rgba(60, 130, 94,0.8)', color:'rgba(230, 255, 242,1)'}}>저장</button>
                   </div>
                 </div>
               ) : (
                 <>
-                  <p className="mt-6 whitespace-pre-wrap text-lg leading-7" style={{color:'rgba(30,50,15,0.85)'}}>
+                  <p className="mt-6 whitespace-pre-wrap text-lg leading-7" style={{color:'rgba(15, 50, 32,0.85)'}}>
                     {selectedPost.content}
                   </p>
                   {selectedPost.images?.length > 0 && (
                     <div className="mt-4 flex flex-wrap gap-2">
                       {selectedPost.images.map((url, i) => (
                         <a key={i} href={url} target="_blank" rel="noreferrer">
-                          <img src={url} alt="" className="rounded-lg object-cover max-h-48" style={{border:'1px solid rgba(80,120,60,0.25)'}} />
+                          <img src={url} alt="" className="rounded-lg object-cover max-h-48" style={{border:'1px solid rgba(60, 120, 89,0.25)'}} />
                         </a>
                       ))}
                     </div>
@@ -558,8 +558,8 @@ export default function QnABoard({
 
             {!editingPost && <section className="px-6 py-5">
               <div className="mb-4 flex items-center gap-2">
-                <MessageSquare size={17} style={{color:'rgba(60,80,40,0.4)'}} />
-                <h3 className="text-base font-bold" style={{color:'rgba(40,60,25,0.65)'}}>답변 {selectedPost.comments?.length || 0}</h3>
+                <MessageSquare size={17} style={{color:'rgba(40, 80, 59,0.4)'}} />
+                <h3 className="text-base font-bold" style={{color:'rgba(25, 60, 42,0.65)'}}>답변 {selectedPost.comments?.length || 0}</h3>
               </div>
 
               <div className="space-y-3">
@@ -567,8 +567,8 @@ export default function QnABoard({
                   <div key={comment.id} className="rounded-lg px-4 py-3" style={{background:'rgba(0,0,0,0.05)'}}>
                     <div className="mb-2 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 text-sm">
-                        <span className="font-semibold" style={{color:'rgba(40,60,25,0.8)'}}>{comment.authorName}</span>
-                        <time style={{color:'rgba(60,80,40,0.45)'}}>{formatDate(comment.createdAt)}</time>
+                        <span className="font-semibold" style={{color:'rgba(25, 60, 42,0.8)'}}>{comment.authorName}</span>
+                        <time style={{color:'rgba(40, 80, 59,0.45)'}}>{formatDate(comment.createdAt)}</time>
                       </div>
                       {(comment.authorId === currentUser.id || isAdmin) && (
                         <button type="button" onClick={() => { if (window.confirm('답변을 삭제할까요?')) onDeleteComment(selectedPost.id, comment.id); }} style={{color:'rgba(180,60,60,0.45)'}}>
@@ -576,26 +576,26 @@ export default function QnABoard({
                         </button>
                       )}
                     </div>
-                    <p className="whitespace-pre-wrap text-base leading-6" style={{color:'rgba(30,50,15,0.8)'}}>{comment.content}</p>
+                    <p className="whitespace-pre-wrap text-base leading-6" style={{color:'rgba(15, 50, 32,0.8)'}}>{comment.content}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-5 pt-5" style={{borderTop:'1px solid rgba(80,120,60,0.2)'}}>
+              <div className="mt-5 pt-5" style={{borderTop:'1px solid rgba(60, 120, 89,0.2)'}}>
                 <textarea
                   value={commentText}
                   onChange={event => setCommentText(event.target.value)}
                   placeholder="답변을 입력하세요."
                   rows={3}
                   className="w-full rounded-lg px-3 py-2.5 text-base outline-none resize-none transition"
-                  style={{background:'rgba(0,0,0,0.05)', border:'1px solid rgba(80,120,60,0.2)', color:'rgba(30,50,15,0.9)'}}
+                  style={{background:'rgba(0,0,0,0.05)', border:'1px solid rgba(60, 120, 89,0.2)', color:'rgba(15, 50, 32,0.9)'}}
                 />
                 <div className="mt-3 flex justify-end">
                   <button
                     type="button"
                     onClick={handleCreateComment}
                     className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-base font-semibold transition"
-                    style={{background:'rgba(80,130,60,0.8)', color:'rgba(240,255,230,1)'}}
+                    style={{background:'rgba(60, 130, 94,0.8)', color:'rgba(230, 255, 242,1)'}}
                   >
                     <Send size={15} />
                     답변 등록
