@@ -1,6 +1,6 @@
 ﻿import React, { useState, useRef, useEffect, useLayoutEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Award, ChevronLeft, Heart, User, Text, Users } from 'lucide-react';
+import { Award, ChevronLeft, Heart, History, User, Text, Users } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import { getOwnedPokemonSpriteUrl } from '../../utils/pokemonImageUtils';
 import { findPokemonTemplate } from '../../utils/pokemonBaseStats';
@@ -1026,15 +1026,20 @@ function scheduleIdleTask(callback) {
 function MemberDetail({ member, members, titles, onBack, onTabChange, currentUserId, isAdmin, allPokemonMaster = [] }) {
   const { allItems = [] } = useGame();
   const isOwner = String(member.id || '') === String(currentUserId || '');
-  const canEdit = isAdmin;
-  const canEditRelations = isAdmin || isOwner;
+  const hasRenewalSnapshot = Boolean(member.renewalSnapshot);
+  const [showRenewalSnapshot, setShowRenewalSnapshot] = useState(false);
+  const snapVal = (key, fallback) => (
+    showRenewalSnapshot && member.renewalSnapshot ? member.renewalSnapshot[key] : fallback
+  );
+  const canEdit = isAdmin && !showRenewalSnapshot;
+  const canEditRelations = (isAdmin || isOwner) && !showRenewalSnapshot;
   const updateMemberViewFields = async (updates) => {
     const { getDatabase, ref, update } = await import('firebase/database');
     const db = getDatabase();
     await update(ref(db, `members/${member.id}`), updates);
     await update(ref(db, `memberSummary/${member.id}`), updates);
   };
-  const fullImg = getFullImg(member);
+  const fullImg = showRenewalSnapshot && member.renewalSnapshot ? getFullImg(member.renewalSnapshot) : getFullImg(member);
   const imgRef = useRef(null);
   const opaqueBottomRatioRef = useRef(1);
   const prevMemberIdRef = useRef(null);
@@ -1685,6 +1690,10 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   }, [member.id, tab]);
 
   useEffect(() => {
+    setShowRenewalSnapshot(false);
+  }, [member.id]);
+
+  useEffect(() => {
     const nextText = member.partnerText || '';
     setPartnerText(nextText);
     setSavedPartnerText(nextText);
@@ -1785,7 +1794,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     <div
       className="relative flex"
       style={{ height: '100vh', minHeight: '100dvh' }}
-      onWheel={member.charImageScrollEnabled && tab === 'main' ? moveScrollableCharacter : undefined}
+      onWheel={snapVal('charImageScrollEnabled', member.charImageScrollEnabled) && tab === 'main' ? moveScrollableCharacter : undefined}
     >
       {/* 좌측: 캐치프레이즈(뒤) + 캐릭터 이미지 — 캐치프레이즈만 플립 그룹으로 감싸 파트너 표시 중 페이드아웃, 캐릭터 이미지는 밖에 있어 계속 보이며 밀리기만 한다 */}
       <div className="relative" style={{ width: 'calc(100% - 240px)', flexShrink: 0, height: '100vh', minHeight: '100dvh', overflow: 'visible' }}>
@@ -1806,13 +1815,13 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               }}
             >
               <CatchphraseDisplay
-                value={member.catchphrase || ''}
+                value={snapVal('catchphrase', member.catchphrase) || ''}
                 color={quoteAccentRgb}
               />
             </div>
           </div>
         )}
-        {fullImg && !member.profileImageFull ? (
+        {fullImg && !snapVal('profileImageFull', member.profileImageFull) ? (
           /* 두상 이미지만 있을 때 — polaroid-detail-white 프레임 */
           <div style={{
             position: 'fixed',
@@ -1858,7 +1867,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             </div>
           </div>
         ) : fullImg ? (
-          member.charImageScrollEnabled && tab === 'main' ? (
+          snapVal('charImageScrollEnabled', member.charImageScrollEnabled) && tab === 'main' ? (
             <div
               className={`rmv-char-scroll${charTabTransition === 'rmv-char-from-text' ? ' rmv-char-scroll-from-text' : ''}`}
               style={{
@@ -1883,11 +1892,11 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                 className="rmv-char-base"
                 style={{
                   position: 'relative',
-                  top: member.charImageTop ?? 0,
-                  left: `calc(30vw + ${member.charImageLeft ?? '9vw'})`,
+                  top: snapVal('charImageTop', member.charImageTop) ?? 0,
+                  left: `calc(30vw + ${snapVal('charImageLeft', member.charImageLeft) ?? '9vw'})`,
                   display: 'block',
                   height: 'auto',
-                  width: member.charImageWidth ?? '70vh',
+                  width: snapVal('charImageWidth', member.charImageWidth) ?? '70vh',
                   maxWidth: 'none',
                   objectFit: 'contain',
                   objectPosition: 'top center',
@@ -1911,10 +1920,10 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               className={`rmv-char-base${(tab === 'text' || tab === 'relation' || tab === 'entry' || (tab === 'main' && partnerTextOpen)) ? ' rmv-char-pushed' : ''}${charTabTransition ? ` ${charTabTransition}` : ''}`}
               style={{
                 position: 'fixed',
-                top: member.charImageTop ?? 0,
-                left: member.charImageLeft ?? '9vw',
+                top: snapVal('charImageTop', member.charImageTop) ?? 0,
+                left: snapVal('charImageLeft', member.charImageLeft) ?? '9vw',
                 height: 'auto',
-                width: member.charImageWidth ?? '70vh',
+                width: snapVal('charImageWidth', member.charImageWidth) ?? '70vh',
                 maxWidth: 'none',
                 objectFit: 'contain',
                 objectPosition: 'top center',
@@ -1965,6 +1974,11 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
         const lum = 0.299 * ar + 0.587 * ag + 0.114 * ab;
         const kwTextColor = lum > 160 ? '#111' : '#fff';
         const renderTextLine = (line, j) => renderDetailTextLine(line, j, selectedAccentRgb);
+        const displayKeywords = snapVal('keywords', member.keywords) || [];
+        const displayKeywordTexts = showRenewalSnapshot && member.renewalSnapshot
+          ? (member.renewalSnapshot.keywordTexts || ['', '', ''])
+          : keywordTexts;
+        const displayEtcText = snapVal('etcText', etcText) || '';
         return (
           <>
             <div
@@ -1973,7 +1987,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             >
               <div className="rmv-text-tab-in flex flex-col justify-start gap-3"
                 style={{ paddingTop: 42, paddingBottom: 40, paddingLeft: 32, paddingRight: 60, boxSizing: 'border-box', minWidth: 'calc((100vw - 53vw) * 0.65)' }}>
-                {(member.keywords || []).slice(0, 3).map((kw, i) => {
+                {displayKeywords.slice(0, 3).map((kw, i) => {
                   if (!kw) return null;
                   const isEditing = kwEditing === i;
                   return (
@@ -2002,9 +2016,9 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                         </>
                       ) : (
                         <div onClick={() => canEdit && setKwEditing(i)}
-                          style={{ fontSize: 15, color: keywordTexts[i] ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.75, cursor: canEdit ? 'text' : 'default', minHeight: 40, paddingLeft: 18 }}>
-                          {keywordTexts[i]
-                            ? keywordTexts[i].split('\n').map(renderTextLine)
+                          style={{ fontSize: 15, color: displayKeywordTexts[i] ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.75, cursor: canEdit ? 'text' : 'default', minHeight: 40, paddingLeft: 18 }}>
+                          {displayKeywordTexts[i]
+                            ? displayKeywordTexts[i].split('\n').map(renderTextLine)
                             : '클릭해서 내용 추가...'}
                         </div>
                       )}
@@ -2036,9 +2050,9 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                     </>
                   ) : (
                     <div onClick={() => canEdit && setEtcEditing(true)}
-                      style={{ fontSize: 15, color: etcText ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.75, cursor: canEdit ? 'text' : 'default', minHeight: 40, paddingLeft: 18 }}>
-                      {etcText
-                        ? etcText.split('\n').map(renderTextLine)
+                      style={{ fontSize: 15, color: displayEtcText ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.75, cursor: canEdit ? 'text' : 'default', minHeight: 40, paddingLeft: 18 }}>
+                      {displayEtcText
+                        ? displayEtcText.split('\n').map(renderTextLine)
                         : '클릭해서 내용 추가...'}
                     </div>
                   )}
@@ -2960,7 +2974,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
       })()}
 
     {/* 말풍선 — 메인 탭에서만 표시, 파트너 표시 중에는 플립 그룹으로 페이드아웃 */}
-      {tab === 'main' && member.bio && (
+      {tab === 'main' && snapVal('bio', member.bio) && (
         <div
           className={`rmv-partner-flip-group${partnerFlipHiding ? ' rmv-partner-flip-hide' : ''}`}
           style={{ position: 'fixed', inset: 0 }}
@@ -3027,7 +3041,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                 fontFamily: ['Aggravo', 'Georgia', 'serif'].join(', '),
                 transform: 'translateY(8px)',
               }}>
-                {member.bio}
+                {snapVal('bio', member.bio)}
               </span>
             </div>
           </div>
@@ -3406,7 +3420,12 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               </div>
             )}
             {!partnerTextOpen && (() => {
-              const stats = [member.age, member.height, member.weight, member.hometown].filter(Boolean);
+              const stats = [
+                snapVal('age', member.age),
+                snapVal('height', member.height),
+                snapVal('weight', member.weight),
+                snapVal('hometown', member.hometown),
+              ].filter(Boolean);
               return stats.length > 0 ? (
                 <div style={{ fontSize: 17, fontWeight: 700, color: `rgb(${accentRgb})`, letterSpacing: '0.04em', lineHeight: 1.4, marginTop: 16 }}>
                   {stats.join(' · ')}
@@ -3440,10 +3459,10 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                 </div>
               ) : (
                 <div onClick={() => canEdit && setNoteEditing(true)}
-                  style={{ minHeight: 48, fontSize: 15, color: note ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.6, cursor: canEdit ? 'text' : 'default', padding: '4px 2px 6px', position: 'relative', zIndex: 1, boxSizing: 'border-box' }}>
-                  {note
+                  style={{ minHeight: 48, fontSize: 15, color: snapVal('note', note) ? '#333' : 'rgba(0,0,0,0.25)', lineHeight: 1.6, cursor: canEdit ? 'text' : 'default', padding: '4px 2px 6px', position: 'relative', zIndex: 1, boxSizing: 'border-box' }}>
+                  {snapVal('note', note)
                     ? (() => {
-                        const lines = note.split('\n');
+                        const lines = snapVal('note', note).split('\n');
                         return lines.map((line, i) => (
                           <p key={i} style={{ margin: 0, marginBottom: i === lines.length - 1 ? 0 : '1.4em', textIndent: '0.5em' }}>
                             {renderMarkedText(line, selectedAccentRgb) || ' '}
@@ -3457,6 +3476,30 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             )}
           </div>
         </div>
+      )}
+
+      {/* 리뉴얼 전 보기 토글 — 스냅샷이 있는 멤버에게만, 전체 이용자에게 노출 */}
+      {hasRenewalSnapshot && (
+        <button
+          type="button"
+          onClick={() => setShowRenewalSnapshot(v => !v)}
+          title={showRenewalSnapshot ? '최신 모습으로 돌아가기' : '리뉴얼 전 모습 보기'}
+          style={{
+            position: 'absolute', top: '7.5rem', right: -64,
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '8px 14px',
+            border: 'none', borderRadius: 999,
+            background: showRenewalSnapshot ? `rgb(${selectedAccentRgb})` : 'rgba(255,255,255)',
+            color: showRenewalSnapshot ? '#fff' : `rgb(${accentRgb})`,
+            fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+            cursor: 'pointer',
+            zIndex: MEMBER_DETAIL_UI_Z_INDEX,
+          }}
+        >
+          <History size={14} strokeWidth={2} />
+          {showRenewalSnapshot ? '최신 보기' : '리뉴얼 전 보기'}
+        </button>
       )}
 
       {/* 사이드 내비게이션 — 파트너 아이콘에 호버해도 메뉴는 그대로 남아있는다 */}
