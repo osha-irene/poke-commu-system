@@ -2042,6 +2042,35 @@ img.emoji {
   font-weight: 700;
 }
 
+.home-player-frame__logout-x {
+  position: absolute;
+  top: 44px;
+  right: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 29px;
+  height: 29px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 26px;
+  line-height: 1;
+  font-weight: 700;
+  cursor: pointer;
+  pointer-events: auto;
+  opacity: 0.85;
+  outline: none;
+  z-index: 2;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s ease;
+}
+
+.home-player-frame__logout-x:hover {
+  opacity: 1;
+}
+
 .home-player-frame__title-wrap {
   position: relative;
   top: 2px;

@@ -791,6 +791,15 @@ function HomeDashboard({
                 </div>
                 <span className="home-player-frame__name">{trainer?.name || 'Trainer'}</span>
               </div>
+              <button
+                type="button"
+                className="home-player-frame__logout-x"
+                onClick={onLogout}
+                aria-label="로그아웃"
+                title="로그아웃"
+              >
+                ×
+              </button>
             </div>
           )}
           {index === 1 && (
