@@ -12,7 +12,11 @@ const CachedImage = forwardRef(function CachedImage(
   const [ready, setReady] = useState(() => isImageCached(originalSrc));
 
   useEffect(() => {
-    if (!originalSrc) return;
+    if (!originalSrc) {
+      setSrc(originalSrc);
+      setReady(false);
+      return;
+    }
     let active = true;
 
     const cached = getCachedSrc(originalSrc);

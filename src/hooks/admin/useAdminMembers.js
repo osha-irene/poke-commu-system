@@ -2062,7 +2062,11 @@ export const useAdminMembers = (
     // type: 'face' | 'body'
     if (!memberId || !file) return null;
     const ext = file.name.split('.').pop() || 'jpg';
-    const path = `members/${memberId}/${type}.${ext}`;
+    // 매번 고유한 경로에 업로드한다 — 고정 파일명(face.png 등)에 덮어쓰면 이전 이미지가
+    // 영구히 사라져서 renewalSnapshot(members/{id}/renewalSnapshot)에 남겨둔 URL도
+    // 결국 새 이미지를 가리키게 되는 문제가 있었다. 경로를 매번 새로 만들면 예전 이미지가
+    // Storage에 그대로 남아 스냅샷/과거 참조가 항상 유효하다.
+    const path = `members/${memberId}/${type}_${Date.now()}.${ext}`;
     const sRef = storageRef(storage, path);
     try {
       await uploadBytes(sRef, file, { contentType: file.type });
@@ -2077,7 +2081,7 @@ export const useAdminMembers = (
           const thumbMime = isPng ? 'image/png' : 'image/jpeg';
           const thumbExt = isPng ? 'png' : 'jpg';
           const thumbBlob = await resizeImage(file, 200, null, thumbMime);
-          const thumbPath = `members/${memberId}/face_thumb.${thumbExt}`;
+          const thumbPath = `members/${memberId}/face_thumb_${Date.now()}.${thumbExt}`;
           const thumbRef = storageRef(storage, thumbPath);
           await uploadBytes(thumbRef, thumbBlob, { contentType: thumbMime });
           updates.profileImageThumb = await getDownloadURL(thumbRef);

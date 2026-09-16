@@ -21,7 +21,7 @@ const force = args.has('--force');
 const SNAPSHOT_FIELDS = [
   'profileImage', 'profileImageFull', 'profileImageThumb', 'profileImageUrl',
   'charImageLeft', 'charImageTop', 'charImageWidth', 'charImageScrollEnabled',
-  'bio', 'note', 'catchphrase',
+  'bio', 'note', 'catchphrase', 'partnerText',
   'age', 'height', 'weight', 'hometown',
   'keywords', 'keywordTexts', 'etcText',
   'accentColor',

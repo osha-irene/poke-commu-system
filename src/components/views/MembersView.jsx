@@ -10,6 +10,7 @@ import { TYPE_COLORS } from '../../constants/pokemon';
 import { POKEBALL_LIST } from '../../styles/theme';
 import { translateMoveName } from '../../battle/utils/move-translations';
 import movesData from '../../data/moves.json';
+import evolutionsData from '../../data/evolutions.json';
 import { getAbilityKoreanName } from '../../utils/abilityUtils';
 import CachedImage from '../common/CachedImage';
 import { useMemberCaughtPokemon } from '../../hooks/members/useMemberCaughtPokemon';
@@ -491,6 +492,65 @@ const getPokeApiSprite = p => {
 };
 const getEntryPokemonSprite = (p, allPokemonMaster = []) =>
   getOwnedPokemonSpriteUrl(p, findPokemonTemplate(p, allPokemonMaster) || p) || getPokemonLocalIconUrl(p);
+
+// 리뉴얼 전 프로필에서는 파트너 포켓몬을 항상 미진화체로 보여준다 (예: 삐삐 -> 삐).
+// evolutions.json을 거슬러 올라가 최초(미진화) 종 번호를 찾는다.
+const getBaseSpeciesNumber = (number) => {
+  let baseNumber = Number(number);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    const prevEvolution = (evolutionsData.evolutions || []).find(e => Number(e.to) === baseNumber);
+    if (prevEvolution) {
+      baseNumber = Number(prevEvolution.from);
+      changed = true;
+    }
+  }
+  return baseNumber;
+};
+
+const getDevolvedPartner = (partner, allPokemonMaster = []) => {
+  if (!partner) return partner;
+  const currentNumber = Number(
+    partner.number || partner.originalNumber || partner.speciesNumber ||
+    partner.speciesOriginalNumber || partner.dexId || partner.nationalDex ||
+    partner.pokemonId || partner.id
+  );
+  if (!Number.isFinite(currentNumber)) return partner;
+
+  const baseNumber = getBaseSpeciesNumber(currentNumber);
+  if (baseNumber === currentNumber) return partner; // 이미 미진화체
+
+  const baseTemplate = (
+    (partner.regionalForm && allPokemonMaster.find(t => Number(t.number) === baseNumber && t.regionalForm === partner.regionalForm)) ||
+    allPokemonMaster.find(t => Number(t.number) === baseNumber && !t.regionalForm) ||
+    allPokemonMaster.find(t => Number(t.number) === baseNumber)
+  );
+  if (!baseTemplate) return partner;
+
+  return {
+    ...partner,
+    number: baseTemplate.number,
+    originalNumber: baseTemplate.number,
+    speciesNumber: baseTemplate.number,
+    speciesOriginalNumber: baseTemplate.number,
+    dexId: undefined,
+    nationalDex: undefined,
+    pokemonId: undefined,
+    id: baseTemplate.id ?? partner.id,
+    name: baseTemplate.name,
+    nameKo: baseTemplate.name,
+    nameEn: baseTemplate.nameEn,
+    species: baseTemplate.name,
+    type: baseTemplate.type,
+    type2: baseTemplate.type2,
+    types: [baseTemplate.type, baseTemplate.type2].filter(Boolean),
+    formName: undefined,
+    formVariant: undefined,
+    regionalForm: baseTemplate.regionalForm || null,
+    sprite: null,
+  };
+};
 
 const MOVE_TYPE_COLORS = {
   normal: { bg: '#A8A878', text: '#fff' },
@@ -1071,6 +1131,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
     onTabChange?.(id);
   };
   const togglePartnerReveal = () => {
+    if (!partnerTextOpen && !getPartnerCImage(partner)) return; // pokemonC 이미지가 현재 파트너 이름과 안 맞으면(진화 전이라 한 단계 낮음) MEGA-C 화면을 열지 않는다
     setPartnerTextOpen(open => {
       const next = !open;
       onTabChange?.(next ? 'partner' : tab);
@@ -1419,11 +1480,13 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   // member.partnerPokemon은 목록 카드 아이콘용 경량 스냅샷이라 기술/IV/EV 등이 빠져 있다
   // (memberViewData.js의 toMemberParty 참고). 그래서 파트너 식별은 여기서 하되, 실제로
   // 보여줄 데이터는 항상 caughtPokemon(party)에서 같은 개체를 찾아 전체 정보로 가져온다.
-  const partner = party.find(p => p?.isPartner)
+  const rawPartner = party.find(p => p?.isPartner)
     || (member.partnerPokemon?.uniqueId && party.find(p => p?.uniqueId === member.partnerPokemon.uniqueId))
     || member.partnerPokemon
     || party[0]
     || null;
+  // 리뉴얼 전 보기에서는 파트너 포켓몬을 미진화체로 표시한다
+  const partner = showRenewalSnapshot && rawPartner ? getDevolvedPartner(rawPartner, allPokemonMaster) : rawPartner;
   const partnerSpriteUrl = partner ? getPokeApiSprite(partner) : null;
   const partnerDbSpriteUrl = partner ? getPokemonDbSprite(partner) : null;
   const partnerUsesDbException = partner ? isPokemonDbSpriteException(partner) : false;
@@ -1809,7 +1872,8 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
         height: '100vh',
         minHeight: '100dvh',
         opacity: renewalFading ? 0 : 1,
-        transition: 'opacity 0.26s ease',
+        transform: renewalFading ? 'translateY(22px)' : 'translateY(0)',
+        transition: 'opacity 0.26s ease, transform 0.26s ease',
       }}
       onWheel={snapVal('charImageScrollEnabled', member.charImageScrollEnabled) && tab === 'main' ? moveScrollableCharacter : undefined}
     >
@@ -3308,7 +3372,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                 style={{
                   position: 'relative',
                   zIndex: 6,
-                  background: `rgba(${selectedAccentRgb}, ${savedPartnerText ? 1 : 0.45})`,
+                  background: `rgba(${selectedAccentRgb}, ${snapVal('partnerText', savedPartnerText) ? 1 : 0.45})`,
                   borderRadius: 8,
                   padding: 0,
                   marginTop: 2,
@@ -3368,7 +3432,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                       minHeight: 128,
                     }}
                   />
-                ) : savedPartnerText ? (
+                ) : snapVal('partnerText', savedPartnerText) ? (
                   <div
                     style={{
                       color: partnerTextColor,
@@ -3381,7 +3445,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                       boxSizing: 'border-box',
                     }}
                   >
-                    {renderPartnerMemoText(savedPartnerText)}
+                    {renderPartnerMemoText(snapVal('partnerText', savedPartnerText))}
                   </div>
                 ) : (
                   <div style={{ color: `rgba(255,255,255,0.5)`, fontSize: 13, fontWeight: 500, padding: '20px 14px', boxSizing: 'border-box' }}>
