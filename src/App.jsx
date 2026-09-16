@@ -619,6 +619,13 @@ function getHomeFeeds(homeFeed = {}) {
   return { cookingFeed, evolutionFeed };
 }
 
+// main-link.png("통합 공지 · 게시판 · 레이드") 위 3개 히트박스가 연결할 링크. 여기 값만 채우면 됨.
+const MAIN_LINK_HREFS = {
+  notice: 'http://docs.google.com/document/d/1l6n_k79zoBwMCn57OMF64EBkZKNZObVO4pUOJFz3Cto/edit?usp=sharing',
+  board: 'https://docs.google.com/spreadsheets/d/1WbiTNm4AWqcfheC_VM16PVTj-IwXpxCVZkedg3QiM2Y/edit?gid=1628659994#gid=1628659994',
+  raid: 'https://docs.google.com/spreadsheets/d/1HAdQl7wAwG2nGEi6wK3qQrbC1utRd2vx52_N23E0mZw/edit?gid=1527180905#gid=1527180905',
+};
+
 function HomeDashboard({
   showLogin = false,
   onLogin,
@@ -787,7 +794,12 @@ function HomeDashboard({
             </div>
           )}
           {index === 1 && (
-            <img className="home-player-link" src={mainLinkImg} alt="" aria-hidden="true" />
+            <div className="home-player-link">
+              <img src={mainLinkImg} alt="" aria-hidden="true" />
+              <a className="home-player-link__hitbox home-player-link__hitbox--notice" href={MAIN_LINK_HREFS.notice} target="_blank" rel="noopener noreferrer" aria-label="통합 공지" />
+              <a className="home-player-link__hitbox home-player-link__hitbox--board" href={MAIN_LINK_HREFS.board} target="_blank" rel="noopener noreferrer" aria-label="게시판" />
+              <a className="home-player-link__hitbox home-player-link__hitbox--raid" href={MAIN_LINK_HREFS.raid} target="_blank" rel="noopener noreferrer" aria-label="레이드" />
+            </div>
           )}
           {index === 1 && (
             <img className="home-deco-2" src={mainDeco2Img} alt="" aria-hidden="true" />
