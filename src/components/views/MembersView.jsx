@@ -1943,7 +1943,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               className={`rmv-polaroid-detail${(tab === 'text' || tab === 'relation' || tab === 'entry' || (tab === 'main' && partnerTextOpen)) ? ' rmv-polaroid-pushed' : ''}${charTabTransition ? ` ${charTabTransition}` : ''}`}
               style={{
               position: 'relative',
-              aspectRatio: '628 / 747',
+              aspectRatio: '1046 / 1266',
               height: '62vh',
               marginTop: '-15%',
               filter: 'drop-shadow(4px 5px 1px rgba(0,0,0,0.32))',
@@ -1953,9 +1953,9 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                 position: 'absolute', inset: 0, width: '100%', height: '100%',
                 objectFit: 'fill', pointerEvents: 'none', userSelect: 'none', zIndex: 1,
               }} />
-              {/* 사진 — 프레임 위 레이어 */}
+              {/* 사진 — 프레임 위 레이어 (새 폴라로이드 틀의 실제 사진창 위치에 맞춤) */}
               <div style={{
-                position: 'absolute', left: '6%', top: '15%', width: '88%', height: '80%',
+                position: 'absolute', left: '6.7%', top: '5.3%', width: '86.4%', height: '73.5%',
                 overflow: 'hidden', zIndex: 2,
               }}>
                 <CachedImage
@@ -3189,7 +3189,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
           style={{
             position: 'absolute',
             top: 'calc(2rem + 17px)',
-            left: 'calc(37% - 215px)',
+            left: 'calc(37% - 235px)',
             right: 0,
             zIndex: MEMBER_CHARACTER_Z_INDEX - 1,
             pointerEvents: 'none',
@@ -3319,7 +3319,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                   ));
               if (partnerTypes.length === 0) return null;
               return (
-                <div className="rmv-partner-float-up" style={{ display: 'flex', gap: 6, marginTop: 15 }}>
+                <div className="rmv-partner-float-up" style={{ display: 'flex', gap: 6, marginTop: 6, marginBottom: 10 }}>
                   {partnerTypes.map((t, ti) => {
                     const tc = TYPE_COLORS[t] || { bg: '#888', text: '#fff' };
                     return (
