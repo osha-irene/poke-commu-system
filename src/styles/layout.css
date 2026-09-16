@@ -2009,14 +2009,17 @@ img.emoji {
   display: block;
 }
 
+/* .home-player-frame__photo가 overflow:hidden이라 안에 두면 잘려서,
+   home-player-frame 직속으로 빼서 같은 자리를 프레임 기준 %로 환산해 배치 (안 잘리게) */
 .home-player-frame__title-icon {
   position: absolute;
-  top: -18%;
-  right: -22%;
-  width: 55%;
-  height: 55%;
+  left: 31.7%;
+  top: 21.5%;
+  width: 18.1%;
+  height: 31.1%;
   object-fit: contain;
   pointer-events: none;
+  z-index: 2;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
 }
 
@@ -2099,6 +2102,7 @@ img.emoji {
 .home-player-frame__title-text {
   display: block;
   flex: 1;
+  min-width: 0;
   line-height: 1;
   text-align: center;
   white-space: nowrap;

@@ -702,24 +702,24 @@ function HomeDashboard({
                       alt={trainer.name || ''}
                     />
                   )}
-                  {(() => {
-                    if (!trainer?.title || trainer.title === 'none') return null;
-                    const found = titles.find(t => t.id === trainer.title);
-                    const iconUrl = found?.iconUrl
-                      || found?.icon
-                      || getTitleById(trainer.title)?.icon;
-                    if (!iconUrl) return null;
-                    return (
-                      <img
-                        className="home-player-frame__title-icon"
-                        src={iconUrl}
-                        alt=""
-                        aria-hidden="true"
-                      />
-                    );
-                  })()}
                 </div>
               )}
+              {!showLogin && onLogout && (() => {
+                if (!trainer?.title || trainer.title === 'none') return null;
+                const found = titles.find(t => t.id === trainer.title);
+                const iconUrl = found?.iconUrl
+                  || found?.icon
+                  || getTitleById(trainer.title)?.icon;
+                if (!iconUrl) return null;
+                return (
+                  <img
+                    className="home-player-frame__title-icon"
+                    src={iconUrl}
+                    alt=""
+                    aria-hidden="true"
+                  />
+                );
+              })()}
               {!showLogin && onLogout && (
                 <>
                   <button
@@ -765,14 +765,17 @@ function HomeDashboard({
                         }
                       }
                       const len = label.length || 1;
-                      const fontSize = Math.max(9, Math.min(15, 130 / len));
+                      const fontSize = Math.max(6, Math.min(14, 118 / len));
+                      const hasTitle = Boolean(trainer?.title && trainer.title !== 'none');
                       return (
-                        <span className="home-player-frame__title-text" style={{ fontSize: `${fontSize}px` }}>
+                        <span className="home-player-frame__title-text" style={{ fontSize: `${fontSize}px`, marginLeft: hasTitle ? 9 : 0 }}>
                           {label}
                         </span>
                       );
                     })()}
-                    <span className="home-player-frame__title-caret" aria-hidden="true">▼</span>
+                    {!(trainer?.title && trainer.title !== 'none') && (
+                      <span className="home-player-frame__title-caret" aria-hidden="true">▼</span>
+                    )}
                   </button>
                   {titleOpen && (
                     <div className="home-player-frame__title-dropdown">
