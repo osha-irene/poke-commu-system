@@ -776,7 +776,7 @@ function MemberCard({ member, titles, onClick }) {
         document.body
       )}
       {/* 멤버 사진 */}
-      <div style={{ position: 'absolute', left: '17.88%', top: '11.63%', width: '63.67%', height: '52.53%', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', left: 'calc(17.88% - 5px)', top: 'calc(11.63% - 5px)', width: 'calc(63.67% + 10px)', height: 'calc(52.53% + 10px)', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.6)' }} />
         {faceImg ? (
           <CachedImage
@@ -1053,6 +1053,8 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   const [tab, setTab] = useState('main');
   const [charImageOffset, setCharImageOffset] = useState(0);
   const [charTabTransition, setCharTabTransition] = useState('');
+  const [renewalFading, setRenewalFading] = useState(false);
+  const renewalFadeTimerRef = useRef(null);
 
   const commitTabChange = (id) => {
     const transition = (id === 'text' || id === 'relation' || id === 'entry')
@@ -1772,8 +1774,18 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   useEffect(() => () => {
     if (charTransitionTimerRef.current) clearTimeout(charTransitionTimerRef.current);
     if (charReturnTimerRef.current) clearTimeout(charReturnTimerRef.current);
+    if (renewalFadeTimerRef.current) clearTimeout(renewalFadeTimerRef.current);
     stopRubbingSound();
   }, []);
+
+  const toggleRenewalSnapshot = () => {
+    if (renewalFadeTimerRef.current) clearTimeout(renewalFadeTimerRef.current);
+    setRenewalFading(true);
+    renewalFadeTimerRef.current = setTimeout(() => {
+      setShowRenewalSnapshot(v => !v);
+      setRenewalFading(false);
+    }, 260);
+  };
 
   const moveScrollableCharacter = (event) => {
     event.preventDefault();
@@ -1793,7 +1805,12 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   return (
     <div
       className="relative flex"
-      style={{ height: '100vh', minHeight: '100dvh' }}
+      style={{
+        height: '100vh',
+        minHeight: '100dvh',
+        opacity: renewalFading ? 0 : 1,
+        transition: 'opacity 0.26s ease',
+      }}
       onWheel={snapVal('charImageScrollEnabled', member.charImageScrollEnabled) && tab === 'main' ? moveScrollableCharacter : undefined}
     >
       {/* 좌측: 캐치프레이즈(뒤) + 캐릭터 이미지 — 캐치프레이즈만 플립 그룹으로 감싸 파트너 표시 중 페이드아웃, 캐릭터 이미지는 밖에 있어 계속 보이며 밀리기만 한다 */}
@@ -3482,7 +3499,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
       {hasRenewalSnapshot && (
         <button
           type="button"
-          onClick={() => setShowRenewalSnapshot(v => !v)}
+          onClick={toggleRenewalSnapshot}
           title={showRenewalSnapshot ? '최신 모습으로 돌아가기' : '리뉴얼 전 모습 보기'}
           style={{
             position: 'absolute', top: 'calc(10rem - 43px)', right: -64,
