@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.9009608a.css",
-    "main.js": "/static/js/main.f5cb1514.js",
+    "main.css": "/static/css/main.e7163dd1.css",
+    "main.js": "/static/js/main.4859bbd1.js",
     "static/js/623.69c45dc4.chunk.js": "/static/js/623.69c45dc4.chunk.js",
     "static/media/Revavroom.png": "/static/media/Revavroom.0da3a031e85226cb8c2d.png",
     "static/media/map.png": "/static/media/map.8a41709af9a828a3bcbb.png",
@@ -11,7 +11,7 @@
     "static/media/GmarketSansTTFLight.ttf": "/static/media/GmarketSansTTFLight.efaa8f19ead1555b1c39.ttf",
     "static/media/YeojuCeramic.ttf": "/static/media/YeojuCeramic.95ed01e4fba0f8c0a443.ttf",
     "static/media/Clefable.png": "/static/media/Clefable.26e4cdc44e3e3efa68f9.png",
-    "static/media/sirfetch'd.png": "/static/media/sirfetch'd.cabffb74febdcde024eb.png",
+    "static/media/sirfetchd.png": "/static/media/sirfetchd.cabffb74febdcde024eb.png",
     "static/media/forest-bg-blurred.jpg": "/static/media/forest-bg-blurred.f419184013955c1bf789.jpg",
     "static/media/Samurott-hisui.png": "/static/media/Samurott-hisui.d31afb788a75daebdf81.png",
     "static/media/logo_text.png": "/static/media/logo_text.b265c70dab03d51f7409.png",
@@ -24,7 +24,7 @@
     "static/media/porygon-z.png": "/static/media/porygon-z.307eb0463de4da9ccb5b.png",
     "static/media/Leavanny.png": "/static/media/Leavanny.76b4c1aa971542a5d08c.png",
     "static/media/main_deco_1.png": "/static/media/main_deco_1.6e1d22c8e84de243ab37.png",
-    "static/media/Skeledirge.png": "/static/media/Skeledirge.f6553a560863d7fe9ee9.png",
+    "static/media/Skeledirge.png": "/static/media/Skeledirge.b2790eb35443fdc4417b.png",
     "static/media/main_deco_3.png": "/static/media/main_deco_3.3d033ec7d0d87bfee1ec.png",
     "static/media/cramorant.png": "/static/media/cramorant.b77088b896dded6e516a.png",
     "static/media/Quagsire.png": "/static/media/Quagsire.6e7d91ce88c5136391f1.png",
@@ -96,12 +96,12 @@
     "static/media/Whirl Islands cave_arnie.png": "/static/media/Whirl Islands cave_arnie.66120ee2033224a9cc5d.png",
     "index.html": "/index.html",
     "static/media/pokemon-icon.svg": "/static/media/pokemon-icon.d36b6f0655c180980d5acb3287a88011.svg",
-    "main.9009608a.css.map": "/static/css/main.9009608a.css.map",
-    "main.f5cb1514.js.map": "/static/js/main.f5cb1514.js.map",
+    "main.e7163dd1.css.map": "/static/css/main.e7163dd1.css.map",
+    "main.4859bbd1.js.map": "/static/js/main.4859bbd1.js.map",
     "623.69c45dc4.chunk.js.map": "/static/js/623.69c45dc4.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.9009608a.css",
-    "static/js/main.f5cb1514.js"
+    "static/css/main.e7163dd1.css",
+    "static/js/main.4859bbd1.js"
   ]
 }
