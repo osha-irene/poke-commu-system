@@ -18,7 +18,6 @@ import { useGame } from '../../contexts/GameContext';
 import polaroidListWhite from '../../assets/members/polaroid-list.png';
 import polaroidDetailWhite from '../../assets/members/polaroid-detail-white.png';
 import npcButtonImg from '../../assets/members/npc-button.png';
-import topButtonImg from '../../assets/members/top-button.png';
 import memberBadgeImg from '../../assets/members/badge/badge.png';
 import ribbonSilhouetteImg from '../../assets/members/ribbon/ribbon-silhouette.png';
 import ribbonCuteImg         from '../../assets/members/ribbon/ribbon-cute.png';
@@ -552,6 +551,22 @@ const getDevolvedPartner = (partner, allPokemonMaster = []) => {
   };
 };
 
+// 파트너 포켓몬의 팬메이드 메가진화 데이터(allPokemon.json에 baseSpecies/baseSpeciesEn으로 연결된 -mega 폼)가
+// 있으면 그 타입을 메가진화 화면에 쓴다 — 관리자가 타입을 따로 입력하지 않아도 기존 데이터와 일치하도록.
+const getMegaFormEntry = (partner, allPokemonMaster = []) => {
+  if (!partner) return null;
+  const baseNameKo = String(partner.nameKo || partner.name || '').trim();
+  const baseNameEn = String(partner.nameEn || '').trim().toLowerCase();
+  if (!baseNameKo && !baseNameEn) return null;
+  return allPokemonMaster.find(p => {
+    const isMegaForm = String(p.formVariant || '').toLowerCase().endsWith('-mega') || String(p.nameEn || '').toLowerCase().endsWith('-mega');
+    if (!isMegaForm) return false;
+    const matchesKo = baseNameKo && p.baseSpecies === baseNameKo;
+    const matchesEn = baseNameEn && String(p.baseSpeciesEn || '').toLowerCase() === baseNameEn;
+    return matchesKo || matchesEn;
+  }) || null;
+};
+
 const MOVE_TYPE_COLORS = {
   normal: { bg: '#A8A878', text: '#fff' },
   fire: { bg: '#F08030', text: '#fff' },
@@ -643,36 +658,39 @@ const getMoveTypeColor = (move) => {
 
 /* ── 편집 가능 텍스트 필드 ── */
 const _catchphraseFontCache = new Map();
+const CATCHPHRASE_MAX_FONT = 115;
 
 function CatchphraseDisplay({ value, color }) {
   const spanRef = useRef(null);
-  const [fontSize, setFontSize] = useState(() => _catchphraseFontCache.get(value) ?? 96);
+  const [fontSize, setFontSize] = useState(CATCHPHRASE_MAX_FONT);
 
   useLayoutEffect(() => {
     const el = spanRef.current;
     if (!el || !value) return;
-    if (_catchphraseFontCache.has(value)) {
-      setFontSize(_catchphraseFontCache.get(value));
+    const containerWidth = Math.round(el.getBoundingClientRect().width);
+    const cacheKey = `${value}::${containerWidth}`;
+    if (_catchphraseFontCache.has(cacheKey)) {
+      setFontSize(_catchphraseFontCache.get(cacheKey));
       return;
     }
 
     const prevWS = el.style.whiteSpace;
     el.style.whiteSpace = 'nowrap';
-    el.style.fontSize = '96px';
+    el.style.fontSize = CATCHPHRASE_MAX_FONT + 'px';
     void el.offsetHeight;
     const oneLineH = el.scrollHeight;
     el.style.whiteSpace = prevWS;
 
-    let lo = 16, hi = 96;
+    let lo = 16, hi = CATCHPHRASE_MAX_FONT;
     while (lo < hi) {
       const mid = Math.ceil((lo + hi) / 2);
       el.style.fontSize = mid + 'px';
       void el.offsetHeight;
-      const twoLineH = (oneLineH / 96) * mid * 2;
+      const twoLineH = (oneLineH / CATCHPHRASE_MAX_FONT) * mid * 2;
       if (el.scrollHeight <= twoLineH + 4) lo = mid;
       else hi = mid - 1;
     }
-    _catchphraseFontCache.set(value, lo);
+    _catchphraseFontCache.set(cacheKey, lo);
     setFontSize(lo);
   }, [value]);
 
@@ -683,8 +701,6 @@ function CatchphraseDisplay({ value, color }) {
         fontFamily: "'SUITE', sans-serif",
         fontSize,
         fontWeight: 500,
-        transform: 'scale(1.2)',
-        transformOrigin: 'center',
         filter: 'blur(1px)',
         width: '100%',
         color: value ? `rgba(${color},0.90)` : `rgba(${color},0.38)`,
@@ -1173,11 +1189,13 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   const [partnerTextOpen, setPartnerTextOpen] = useState(false);
   const [partnerEditing, setPartnerEditing] = useState(false);
   const [partnerHovered, setPartnerHovered] = useState(false);
+  const [partnerInfoHovered, setPartnerInfoHovered] = useState(false);
   const [partnerNoteOpen, setPartnerNoteOpen] = useState(false);
   const [hoveredEntryIndex, setHoveredEntryIndex] = useState(null);
   const [flippedEntryIndex, setFlippedEntryIndex] = useState(null);
   const [partnerTopOffset, setPartnerTopOffset] = useState(0.0);
   const [partnerImgHeight, setPartnerImgHeight] = useState(128);
+  const [partnerImgWidth, setPartnerImgWidth] = useState(107);
   const [partnerImageUsesArtwork, setPartnerImageUsesArtwork] = useState(false);
   const [partnerText, setPartnerText] = useState(() => member.partnerText || '');
   const [savedPartnerText, setSavedPartnerText] = useState(() => member.partnerText || '');
@@ -1494,6 +1512,10 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
   const partnerDisplayUrl = (partnerUsesDbException ? partnerDbSpriteUrl : partnerSpriteUrl) || partnerDbSpriteUrl || partnerOfficialArtworkUrl || '';
   const partnerUsesArtwork = isOfficialArtworkUrl(partnerDisplayUrl);
   const effectivePartnerUsesArtwork = partnerUsesArtwork || partnerImageUsesArtwork;
+  // 파트너 아이콘의 우측 오프셋(-2rem=32px)만큼을 빼고 남는 실제 좌측 침범 폭 + 여유 14px만큼
+  // "파트너 OOO" 텍스트를 왼쪽으로 밀어서, 가로로 긴 아이콘이어도 텍스트와 겹치지 않게 한다.
+  const partnerIconLeftReach = effectivePartnerUsesArtwork ? 107 : Math.max(0, partnerImgWidth - 32);
+  const partnerLabelPaddingRight = Math.max(110, partnerIconLeftReach + 14);
 
   const accentRgb = accent ? `${accent[0]},${accent[1]},${accent[2]}` : '80,120,200';
   const selectedAccent = getSelectedAccentColor(accent);
@@ -1649,6 +1671,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
       setPartnerImageUsesArtwork(cachedMetrics.usesArtwork);
       setPartnerTopOffset(cachedMetrics.topOffset);
       setPartnerImgHeight(cachedMetrics.renderedHeight);
+      setPartnerImgWidth(cachedMetrics.renderedWidth ?? 107);
       return;
     }
     let cancelled = false;
@@ -1663,6 +1686,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
           const maxSize = usesArtwork ? 107 : 160;
           const renderScale = Math.min(maxSize / img.naturalWidth, maxSize / img.naturalHeight, 1);
           const renderedHeight = img.naturalHeight * renderScale;
+          const renderedWidth = img.naturalWidth * renderScale;
           const scanWidth = Math.min(96, img.naturalWidth || 96);
           const scanHeight = Math.max(1, Math.round(scanWidth * img.naturalHeight / img.naturalWidth));
           const canvas = document.createElement('canvas');
@@ -1681,11 +1705,13 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             usesArtwork,
             topOffset: topRow / scanHeight,
             renderedHeight,
+            renderedWidth,
           };
           partnerImageMetricsCache[url] = metrics;
           setPartnerImageUsesArtwork(usesArtwork);
           setPartnerTopOffset(metrics.topOffset);
           setPartnerImgHeight(renderedHeight);
+          setPartnerImgWidth(renderedWidth);
         } catch { setPartnerTopOffset(getPokemonDbExceptionTopOffset(partner)); }
       };
       img.onerror = () => {
@@ -1917,7 +1943,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               className={`rmv-polaroid-detail${(tab === 'text' || tab === 'relation' || tab === 'entry' || (tab === 'main' && partnerTextOpen)) ? ' rmv-polaroid-pushed' : ''}${charTabTransition ? ` ${charTabTransition}` : ''}`}
               style={{
               position: 'relative',
-              aspectRatio: '628 / 747',
+              aspectRatio: '1046 / 1266',
               height: '62vh',
               marginTop: '-15%',
               filter: 'drop-shadow(4px 5px 1px rgba(0,0,0,0.32))',
@@ -1927,9 +1953,9 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                 position: 'absolute', inset: 0, width: '100%', height: '100%',
                 objectFit: 'fill', pointerEvents: 'none', userSelect: 'none', zIndex: 1,
               }} />
-              {/* 사진 — 프레임 위 레이어 */}
+              {/* 사진 — 프레임 위 레이어 (새 폴라로이드 틀의 실제 사진창 위치에 맞춤) */}
               <div style={{
-                position: 'absolute', left: '6%', top: '15%', width: '88%', height: '80%',
+                position: 'absolute', left: '6.7%', top: '5.3%', width: '86.4%', height: '73.5%',
                 overflow: 'hidden', zIndex: 2,
               }}>
                 <CachedImage
@@ -3163,7 +3189,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
           style={{
             position: 'absolute',
             top: 'calc(2rem + 17px)',
-            left: 'calc(37% - 215px)',
+            left: 'calc(37% - 235px)',
             right: 0,
             zIndex: MEMBER_CHARACTER_Z_INDEX - 1,
             pointerEvents: 'none',
@@ -3227,9 +3253,21 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             position: 'absolute',
             top: partnerTextOpen ? `calc(16.5rem + ${member.partnerInfoTop ?? 50}px)` : '16.5rem',
             left: partnerTextOpen ? `calc(57% + ${member.partnerInfoLeft ?? 50}px)` : '57%',
-            width: 280, overflowX: 'visible', paddingBottom: 24, boxSizing: 'border-box', zIndex: gradientAwareContentZIndex,
+            width: 280, overflowX: 'visible', paddingBottom: 24, boxSizing: 'border-box',
+            zIndex: partnerTextOpen ? (partnerInfoHovered ? MEMBER_CHARACTER_Z_INDEX + 1 : MEMBER_CHARACTER_Z_INDEX - 1) : gradientAwareContentZIndex,
           }}
         >
+          <div
+            onMouseEnter={partnerTextOpen ? () => setPartnerInfoHovered(true) : undefined}
+            onMouseLeave={partnerTextOpen ? () => setPartnerInfoHovered(false) : undefined}
+            style={partnerTextOpen ? {
+            background: '#fff',
+            borderRadius: 16,
+            padding: '12px 24px 24px',
+            margin: '-12px -24px -24px',
+            WebkitMaskImage: 'linear-gradient(to right, transparent 0, #000 32px, #000 calc(100% - 32px), transparent 100%)',
+            maskImage: 'linear-gradient(to right, transparent 0, #000 32px, #000 calc(100% - 32px), transparent 100%)',
+          } : undefined}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 28 }}>
             {(() => {
               const titleLabel = member.title && member.title !== 'none'
@@ -3260,9 +3298,9 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             >
               {partnerTextOpen && partner ? (
                 <>
-                  <span style={{ position: 'relative' }}>
+                  <span>
                     {getPokemonName(partner)}
-                    {partner.isShiny && <span style={{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)', color: '#e53e3e', fontSize: '0.4em', lineHeight: 1, marginLeft: 6 }}>★</span>}
+                    {partner.isShiny && <span style={{ color: '#e53e3e', fontSize: '0.4em', lineHeight: 1, marginLeft: 6, verticalAlign: 'top' }}>★</span>}
                   </span>
                   {partner.nickname && (
                     <span style={{ fontSize: '0.32em', fontWeight: 600, color: `rgba(${accentRgb}, 0.5)`, marginLeft: 10, verticalAlign: 'baseline' }}>
@@ -3273,12 +3311,15 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               ) : member.name}
             </h2>
             {partnerTextOpen && partner && (() => {
-              const partnerTypes = Array.from(new Set(
-                [...(Array.isArray(partner.types) ? partner.types : []), partner.type, partner.type2].filter(Boolean)
-              ));
+              const megaFormEntry = getMegaFormEntry(partner, allPokemonMaster);
+              const partnerTypes = megaFormEntry
+                ? Array.from(new Set([megaFormEntry.type, megaFormEntry.type2].filter(Boolean)))
+                : Array.from(new Set(
+                    [...(Array.isArray(partner.types) ? partner.types : []), partner.type, partner.type2].filter(Boolean)
+                  ));
               if (partnerTypes.length === 0) return null;
               return (
-                <div className="rmv-partner-float-up" style={{ display: 'flex', gap: 6, marginTop: 15 }}>
+                <div className="rmv-partner-float-up" style={{ display: 'flex', gap: 6, marginTop: 6, marginBottom: 10 }}>
                   {partnerTypes.map((t, ti) => {
                     const tc = TYPE_COLORS[t] || { bg: '#888', text: '#fff' };
                     return (
@@ -3293,7 +3334,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: -12 }}>
             {partner && !partnerTextOpen && (
-              <div style={{ position: 'relative', height: 65, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end', paddingRight: 110, transform: 'translateY(16px)', opacity: 1, transition: 'opacity 0.4s ease' }}>
+              <div style={{ position: 'relative', height: 65, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end', paddingRight: partnerLabelPaddingRight, transform: 'translateY(16px)', opacity: 1, transition: 'opacity 0.4s ease' }}>
                 <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.25)', fontWeight: 500, letterSpacing: '0.05em' }}>파트너</span>
                 <button
                   type="button"
@@ -3563,6 +3604,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             </div>
             )}
           </div>
+          </div>
         </div>
       )}
 
@@ -3750,16 +3792,6 @@ export default function MembersView({ members = {}, isLoading, currentUserId, is
             >
               <img src={npcButtonImg} alt="NPC 보기" style={{ width: '100%', height: 'auto', display: 'block', transform: 'scale(1.21) translateX(90px)', transformOrigin: 'center' }} />
             </button>
-          )}
-          {createPortal(
-            <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="tab-switch-btn"
-              style={{ position: 'fixed', bottom: 30, right: 'calc(max(0px, (100vw - 1548px) / 2) + 230px)', zIndex: 100, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-            >
-              <img src={topButtonImg} alt="맨 위로" style={{ width: 80, height: 'auto', display: 'block' }} />
-            </button>,
-            document.body
           )}
           <div className="member-list-enter" style={{
             display: 'grid',

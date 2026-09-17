@@ -619,6 +619,13 @@ function getHomeFeeds(homeFeed = {}) {
   return { cookingFeed, evolutionFeed };
 }
 
+// main-link.png("통합 공지 · 게시판 · 레이드") 위 3개 히트박스가 연결할 링크. 여기 값만 채우면 됨.
+const MAIN_LINK_HREFS = {
+  notice: 'http://docs.google.com/document/d/1l6n_k79zoBwMCn57OMF64EBkZKNZObVO4pUOJFz3Cto/edit?usp=sharing',
+  board: 'https://docs.google.com/spreadsheets/d/1WbiTNm4AWqcfheC_VM16PVTj-IwXpxCVZkedg3QiM2Y/edit?gid=1628659994#gid=1628659994',
+  raid: 'https://docs.google.com/spreadsheets/d/1HAdQl7wAwG2nGEi6wK3qQrbC1utRd2vx52_N23E0mZw/edit?gid=1527180905#gid=1527180905',
+};
+
 function HomeDashboard({
   showLogin = false,
   onLogin,
@@ -695,24 +702,24 @@ function HomeDashboard({
                       alt={trainer.name || ''}
                     />
                   )}
-                  {(() => {
-                    if (!trainer?.title || trainer.title === 'none') return null;
-                    const found = titles.find(t => t.id === trainer.title);
-                    const iconUrl = found?.iconUrl
-                      || found?.icon
-                      || getTitleById(trainer.title)?.icon;
-                    if (!iconUrl) return null;
-                    return (
-                      <img
-                        className="home-player-frame__title-icon"
-                        src={iconUrl}
-                        alt=""
-                        aria-hidden="true"
-                      />
-                    );
-                  })()}
                 </div>
               )}
+              {!showLogin && onLogout && (() => {
+                if (!trainer?.title || trainer.title === 'none') return null;
+                const found = titles.find(t => t.id === trainer.title);
+                const iconUrl = found?.iconUrl
+                  || found?.icon
+                  || getTitleById(trainer.title)?.icon;
+                if (!iconUrl) return null;
+                return (
+                  <img
+                    className="home-player-frame__title-icon"
+                    src={iconUrl}
+                    alt=""
+                    aria-hidden="true"
+                  />
+                );
+              })()}
               {!showLogin && onLogout && (
                 <>
                   <button
@@ -758,14 +765,17 @@ function HomeDashboard({
                         }
                       }
                       const len = label.length || 1;
-                      const fontSize = Math.max(9, Math.min(15, 130 / len));
+                      const fontSize = Math.max(6, Math.min(14, 118 / len));
+                      const hasTitle = Boolean(trainer?.title && trainer.title !== 'none');
                       return (
-                        <span className="home-player-frame__title-text" style={{ fontSize: `${fontSize}px` }}>
+                        <span className="home-player-frame__title-text" style={{ fontSize: `${fontSize}px`, marginLeft: hasTitle ? 9 : 0 }}>
                           {label}
                         </span>
                       );
                     })()}
-                    <span className="home-player-frame__title-caret" aria-hidden="true">▼</span>
+                    {!(trainer?.title && trainer.title !== 'none') && (
+                      <span className="home-player-frame__title-caret" aria-hidden="true">▼</span>
+                    )}
                   </button>
                   {titleOpen && (
                     <div className="home-player-frame__title-dropdown">
@@ -784,10 +794,24 @@ function HomeDashboard({
                 </div>
                 <span className="home-player-frame__name">{trainer?.name || 'Trainer'}</span>
               </div>
+              <button
+                type="button"
+                className="home-player-frame__logout-x"
+                onClick={onLogout}
+                aria-label="로그아웃"
+                title="로그아웃"
+              >
+                ×
+              </button>
             </div>
           )}
           {index === 1 && (
-            <img className="home-player-link" src={mainLinkImg} alt="" aria-hidden="true" />
+            <div className="home-player-link">
+              <img src={mainLinkImg} alt="" aria-hidden="true" />
+              <a className="home-player-link__hitbox home-player-link__hitbox--notice" href={MAIN_LINK_HREFS.notice} target="_blank" rel="noopener noreferrer" aria-label="통합 공지" />
+              <a className="home-player-link__hitbox home-player-link__hitbox--board" href={MAIN_LINK_HREFS.board} target="_blank" rel="noopener noreferrer" aria-label="게시판" />
+              <a className="home-player-link__hitbox home-player-link__hitbox--raid" href={MAIN_LINK_HREFS.raid} target="_blank" rel="noopener noreferrer" aria-label="레이드" />
+            </div>
           )}
           {index === 1 && (
             <img className="home-deco-2" src={mainDeco2Img} alt="" aria-hidden="true" />
