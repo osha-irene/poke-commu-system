@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.c1e900f8.css",
-    "main.js": "/static/js/main.1f626ba6.js",
+    "main.js": "/static/js/main.16b11839.js",
     "static/js/623.69c45dc4.chunk.js": "/static/js/623.69c45dc4.chunk.js",
     "static/media/Revavroom.png": "/static/media/Revavroom.0da3a031e85226cb8c2d.png",
     "static/media/map.png": "/static/media/map.8a41709af9a828a3bcbb.png",
@@ -24,6 +24,7 @@
     "static/media/Stoutland.png": "/static/media/Stoutland.c61e91f38f14e0f5e273.png",
     "static/media/porygon-z.png": "/static/media/porygon-z.307eb0463de4da9ccb5b.png",
     "static/media/Leavanny.png": "/static/media/Leavanny.76b4c1aa971542a5d08c.png",
+    "static/media/Sceptile.png": "/static/media/Sceptile.93046ad20a31d01e1934.png",
     "static/media/main_deco_1.png": "/static/media/main_deco_1.6e1d22c8e84de243ab37.png",
     "static/media/Skeledirge.png": "/static/media/Skeledirge.b2790eb35443fdc4417b.png",
     "static/media/main_deco_3.png": "/static/media/main_deco_3.3d033ec7d0d87bfee1ec.png",
@@ -98,11 +99,11 @@
     "index.html": "/index.html",
     "static/media/pokemon-icon.svg": "/static/media/pokemon-icon.d36b6f0655c180980d5acb3287a88011.svg",
     "main.c1e900f8.css.map": "/static/css/main.c1e900f8.css.map",
-    "main.1f626ba6.js.map": "/static/js/main.1f626ba6.js.map",
+    "main.16b11839.js.map": "/static/js/main.16b11839.js.map",
     "623.69c45dc4.chunk.js.map": "/static/js/623.69c45dc4.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.c1e900f8.css",
-    "static/js/main.1f626ba6.js"
+    "static/js/main.16b11839.js"
   ]
 }
