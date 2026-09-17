@@ -3478,7 +3478,14 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
               );
             })()}
             {partnerTextOpen && partner && (member.megaEvolutionText || member.megaEvolutionTrait) && (
-              <div className="rmv-partner-float-up" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div className="rmv-partner-float-up" style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 4, zIndex: MEMBER_CHARACTER_Z_INDEX + 2 }}>
+                <div style={{
+                  position: 'absolute',
+                  inset: '-10px -28px',
+                  background: 'linear-gradient(to right, transparent 0%, rgba(255,255,255,0.92) 14%, rgba(255,255,255,0.92) 86%, transparent 100%)',
+                  zIndex: -1,
+                  pointerEvents: 'none',
+                }} />
                 {member.megaEvolutionText && (
                   <div style={{ fontSize: 14, fontWeight: 500, color: '#333', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
                     {member.megaEvolutionText}
