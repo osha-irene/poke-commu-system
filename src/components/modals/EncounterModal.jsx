@@ -598,8 +598,14 @@ export default function EncounterModal({
               </div>
             </div>
 
-            {/* encounter-ball — 분리, 아래에 독립 배치 */}
-            <div style={{ marginTop: 12, position: 'relative', aspectRatio: '1543 / 353', zIndex: -1, transform: 'translateY(10px)' }}>
+            {/* encounter-ball — 분리, 아래에 독립 배치
+                주의: 예전엔 여기 zIndex: -1이 걸려 있어서, 위쪽 배틀필드 섹션(transform: scale로
+                자체 스태킹 컨텍스트 생성)과 encounter-context 메시지 박스 이미지(transform:
+                scale(1.21)로 박스 밖까지 확대됨)가 이 영역 위에 그려졌다. 두 이미지 모두 투명한
+                영역까지 클릭을 가로채기 때문에, 겹치는 부분에 있는 포켓볼 버튼이 클릭되지 않는
+                회귀가 있었다(도망치기 버튼은 같은 이유로 이미 별도 형제로 분리돼 있었음 — 아래
+                주석 참고). zIndex를 다시 음수로 되돌리지 말 것. */}
+            <div style={{ marginTop: 12, position: 'relative', aspectRatio: '1543 / 353', transform: 'translateY(10px)' }}>
               {/* encounter-ball 배경 이미지 — 박스가 이미지 비율(aspectRatio)에 고정돼 있어 그대로 깔면 왜곡 없음 */}
               <div style={{
                 position: 'absolute',
