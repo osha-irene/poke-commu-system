@@ -45,6 +45,27 @@ export const useAdminItems = (
     return result;
   };
 
+  const buildInventoryRecord = (item, count) => ({
+    itemId: item.id,
+    name: item.name,
+    nameEn: item.nameEn,
+    count,
+    imageUrl: item.spriteUrl || item.imageUrl,
+    category: item.category,
+    pocket: item.pocket,
+    effect: item.effect,
+    cost: item.cost,
+    sellPrice: item.sellPrice,
+    canSell: item.canSell ?? true,
+    isCustom: item.isCustom || false,
+    friendshipBoost: item.friendshipBoost,
+    ivBoost: item.ivBoost,
+    evBoost: item.evBoost,
+    conditionBoost: item.conditionBoost,
+    specialEffect: item.specialEffect,
+    boostAmount: item.boostAmount
+  });
+
   const buildInventoryAddMutator = (item, count) => (inventory) => {
     const existingItem = inventory.find(i =>
       i.itemId === item.id || i.name === item.name
@@ -56,29 +77,7 @@ export const useAdminItems = (
             ? { ...i, count: i.count + count }
             : i
         )
-      : [
-          ...inventory,
-          {
-            itemId: item.id,
-            name: item.name,
-            nameEn: item.nameEn,
-            count: count,
-            imageUrl: item.spriteUrl || item.imageUrl,
-            category: item.category,
-            pocket: item.pocket,
-            effect: item.effect,
-            cost: item.cost,
-            sellPrice: item.sellPrice,
-            canSell: item.canSell ?? true,
-            isCustom: item.isCustom || false,
-            friendshipBoost: item.friendshipBoost,
-            ivBoost: item.ivBoost,
-            evBoost: item.evBoost,
-            conditionBoost: item.conditionBoost,
-            specialEffect: item.specialEffect,
-            boostAmount: item.boostAmount
-          }
-        ];
+      : [...inventory, buildInventoryRecord(item, count)];
   };
 
   // ========== 자신에게 아이템 추가 ==========
@@ -293,12 +292,78 @@ export const useAdminItems = (
     }
   };
 
+  // ========== 아이템 교환 (예: 재료 5개 -> 다른 재료 1개로 변환) ==========
+  // deductEntries/giveEntries: [{ name, count }]
+  // 차감 대상은 회원 인벤토리에 실제 보유한 수량 안에서만, 지급 대상은 allItems 카탈로그에
+  // 존재하는 아이템만 허용한다. 트랜잭션 콜백 내부에서 항상 최신 인벤토리 기준으로
+  // 재고 충분 여부를 다시 확인하므로(CLAUDE.md 재화 갱신 규칙), 다른 화면에서 그 사이
+  // 인벤토리가 바뀌어도 안전하다 — 부족하면 트랜잭션을 중단하고 아무것도 반영하지 않는다.
+  const exchangeMemberItems = async (memberId, deductEntries, giveEntries) => {
+    if (!canManageItems()) {
+      return { success: false, reason: '아이템 관리 권한이 없습니다.' };
+    }
+    const member = members[memberId];
+    if (!member) {
+      return { success: false, reason: '회원 정보를 찾을 수 없습니다.' };
+    }
+    if (!deductEntries?.length || !giveEntries?.length) {
+      return { success: false, reason: '차감/지급 아이템을 입력해주세요.' };
+    }
+
+    const resolvedGiveItems = [];
+    for (const { name, count } of giveEntries) {
+      const catalogItem = allItems.find(i => i.name === name);
+      if (!catalogItem) {
+        return { success: false, reason: `"${name}" 아이템을 카탈로그에서 찾을 수 없습니다.` };
+      }
+      resolvedGiveItems.push({ item: catalogItem, count });
+    }
+
+    let failReason = null;
+
+    const result = await applyInventoryMutation(memberId, (inventory) => {
+      const inv = inventory || [];
+
+      for (const { name, count } of deductEntries) {
+        const found = inv.find(i => i.name === name);
+        if (!found || (found.count || 0) < count) {
+          failReason = `"${name}" 재고 부족 (필요 ${count}개, 보유 ${found?.count || 0}개)`;
+          return undefined; // 트랜잭션 중단
+        }
+      }
+      failReason = null;
+
+      let next = inv
+        .map(i => {
+          const match = deductEntries.find(d => d.name === i.name);
+          return match ? { ...i, count: i.count - match.count } : i;
+        })
+        .filter(i => i.count > 0);
+
+      for (const { item, count } of resolvedGiveItems) {
+        const existingIdx = next.findIndex(i => i.itemId === item.id || i.name === item.name);
+        next = existingIdx >= 0
+          ? next.map((i, idx) => idx === existingIdx ? { ...i, count: i.count + count } : i)
+          : [...next, buildInventoryRecord(item, count)];
+      }
+
+      return next;
+    });
+
+    if (!result.committed) {
+      return { success: false, reason: failReason || '교환 처리 중 오류가 발생했습니다.' };
+    }
+
+    return { success: true };
+  };
+
   return {
     addItemToSelf,
     giveItemToMember,
     bulkGiveItem,
     deleteItemFromMember,
     adjustMemberItemCount,
+    exchangeMemberItems,
     removeItemFromAllInventories,
     createCustomItem,
     updateCustomItem,

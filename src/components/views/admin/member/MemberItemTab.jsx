@@ -1,10 +1,25 @@
 // src/components/views/admin/member/MemberItemTab.jsx
-import React, { useState } from 'react';
-import { Trash2, Minus, Plus } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Trash2, Minus, Plus, ArrowRightLeft, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { getButtonClass } from '../../../../styles/theme';
 import { getItemPocket, CATEGORIES, getItemIcon, getItemColor, filterItemsByPocket } from '../../../../utils/itemUtils';
 
-function MemberItemTab({ member, allItems, onGiveItem, onDeleteItem, onAdjustItemCount }) {
+// "이름*개수" 형식(줄바꿈 또는 쉼표 구분)을 [{ raw, name, count, error }]로 파싱
+const parseItemEntries = (text) => (
+  (text || '')
+    .split(/[\n,]/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(raw => {
+      const match = raw.match(/^(.+?)\s*\*\s*(\d+)\s*$/);
+      if (!match) return { raw, name: null, count: null, error: '형식 오류 (이름*개수)' };
+      const count = parseInt(match[2], 10);
+      if (!count || count < 1) return { raw, name: null, count: null, error: '개수는 1 이상이어야 합니다' };
+      return { raw, name: match[1].trim(), count };
+    })
+);
+
+function MemberItemTab({ member, allItems, onGiveItem, onDeleteItem, onAdjustItemCount, onExchangeItems }) {
   const [itemMode, setItemMode] = useState('view');
   const [selectedItem, setSelectedItem] = useState(null);
   const [itemCount, setItemCount] = useState(1);
@@ -12,9 +27,67 @@ function MemberItemTab({ member, allItems, onGiveItem, onDeleteItem, onAdjustIte
   const [searchQuery, setSearchQuery] = useState('');
   const [editingItem, setEditingItem] = useState(null);
   const [editCount, setEditCount] = useState(1);
-  
+  const [deductText, setDeductText] = useState('');
+  const [giveText, setGiveText] = useState('');
+  const [exchangeLoading, setExchangeLoading] = useState(false);
+
   // ✅ allItems 안전 처리
   const safeAllItems = Array.isArray(allItems) ? allItems : [];
+
+  // 차감 목록 검증: 인벤토리에 실제로 그만큼 있는지 확인
+  const deductEntries = useMemo(() => {
+    const inventory = Array.isArray(member?.inventory) ? member.inventory : [];
+    return parseItemEntries(deductText).map(entry => {
+      if (entry.error) return entry;
+      const owned = inventory.find(i => i.name === entry.name);
+      if (!owned) return { ...entry, error: '보유하고 있지 않은 아이템입니다' };
+      if ((owned.count || 0) < entry.count) {
+        return { ...entry, error: `재고 부족 (보유 ${owned.count || 0}개)` };
+      }
+      return entry;
+    });
+  }, [deductText, member?.inventory]);
+
+  // 지급 목록 검증: 아이템 카탈로그에 존재하는지 확인
+  const giveEntries = useMemo(() => {
+    const catalog = Array.isArray(allItems) ? allItems : [];
+    return parseItemEntries(giveText).map(entry => {
+      if (entry.error) return entry;
+      const found = catalog.find(i => i.name === entry.name);
+      if (!found) return { ...entry, error: '카탈로그에 없는 아이템입니다' };
+      return entry;
+    });
+  }, [giveText, allItems]);
+
+  const deductTotal = deductEntries.reduce((sum, e) => sum + (e.count || 0), 0);
+  const giveTotal = giveEntries.reduce((sum, e) => sum + (e.count || 0), 0);
+  const canExchange = deductEntries.length > 0 && giveEntries.length > 0
+    && deductEntries.every(e => !e.error) && giveEntries.every(e => !e.error);
+
+  const handleExchange = async () => {
+    if (!canExchange || exchangeLoading) return;
+    if (!window.confirm(
+      `차감 ${deductEntries.length}종 (총 ${deductTotal}개)을 지급 ${giveEntries.length}종 (총 ${giveTotal}개)으로 교환하시겠습니까?`
+    )) return;
+
+    setExchangeLoading(true);
+    try {
+      const result = await onExchangeItems?.(
+        member.id,
+        deductEntries.map(({ name, count }) => ({ name, count })),
+        giveEntries.map(({ name, count }) => ({ name, count }))
+      );
+      if (result?.success) {
+        alert('교환이 완료되었습니다!');
+        setDeductText('');
+        setGiveText('');
+      } else {
+        alert(result?.reason || '교환에 실패했습니다.');
+      }
+    } finally {
+      setExchangeLoading(false);
+    }
+  };
   
   // ✅ filteredItems - itemUtils의 filterItemsByPocket 사용
   const filteredItems = (() => {
@@ -48,7 +121,7 @@ function MemberItemTab({ member, allItems, onGiveItem, onDeleteItem, onAdjustIte
       {/* 보기/지급 토글 */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-bold text-lg">
-          {itemMode === 'view' ? '보유 아이템' : '아이템 지급'}
+          {itemMode === 'view' ? '보유 아이템' : itemMode === 'give' ? '아이템 지급' : '아이템 교환'}
         </h3>
         <div className="flex gap-2">
           <button
@@ -62,6 +135,12 @@ function MemberItemTab({ member, allItems, onGiveItem, onDeleteItem, onAdjustIte
             className={getButtonClass(itemMode === 'give' ? 'success' : 'secondary', 'md')}
           >
             🎁 지급
+          </button>
+          <button
+            onClick={() => setItemMode('exchange')}
+            className={getButtonClass(itemMode === 'exchange' ? 'success' : 'secondary', 'md')}
+          >
+            <ArrowRightLeft size={14} className="inline mr-1" />교환
           </button>
         </div>
       </div>
@@ -305,6 +384,73 @@ function MemberItemTab({ member, allItems, onGiveItem, onDeleteItem, onAdjustIte
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* 교환 모드 */}
+      {itemMode === 'exchange' && (
+        <div className="space-y-4">
+          <p className="text-sm text-gray-500">
+            한 줄에 하나씩 <span className="font-mono font-semibold">이름*개수</span> 형식으로 입력하세요. (예: 감자샐러드*10)
+          </p>
+
+          <div className="grid grid-cols-2 gap-4">
+            {/* 차감 목록 */}
+            <div>
+              <label className="font-semibold text-gray-700 text-sm mb-1 block">차감할 아이템 (보유 인벤토리에서 소모)</label>
+              <textarea
+                value={deductText}
+                onChange={(e) => setDeductText(e.target.value)}
+                placeholder={'감자샐러드*10\n굵은대파*11'}
+                rows={8}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 font-mono text-sm focus:border-red-500 focus:ring-2 focus:ring-red-200 focus:outline-none transition-all"
+              />
+              <div className="mt-1 text-xs space-y-0.5">
+                {deductEntries.map((e, idx) => (
+                  <div key={idx} className={`flex items-center gap-1 ${e.error ? 'text-red-500' : 'text-emerald-600'}`}>
+                    {e.error ? <AlertTriangle size={12} /> : <CheckCircle2 size={12} />}
+                    <span>{e.raw}</span>
+                    {e.error && <span className="text-gray-500">— {e.error}</span>}
+                  </div>
+                ))}
+              </div>
+              {deductEntries.length > 0 && (
+                <p className="text-xs text-gray-500 mt-1">총 차감: {deductTotal}개 ({deductEntries.length}종)</p>
+              )}
+            </div>
+
+            {/* 지급 목록 */}
+            <div>
+              <label className="font-semibold text-gray-700 text-sm mb-1 block">지급할 아이템 (교환으로 새로 받음)</label>
+              <textarea
+                value={giveText}
+                onChange={(e) => setGiveText(e.target.value)}
+                placeholder={'밀가루*30\n콩통조림*20'}
+                rows={8}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 font-mono text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none transition-all"
+              />
+              <div className="mt-1 text-xs space-y-0.5">
+                {giveEntries.map((e, idx) => (
+                  <div key={idx} className={`flex items-center gap-1 ${e.error ? 'text-red-500' : 'text-emerald-600'}`}>
+                    {e.error ? <AlertTriangle size={12} /> : <CheckCircle2 size={12} />}
+                    <span>{e.raw}</span>
+                    {e.error && <span className="text-gray-500">— {e.error}</span>}
+                  </div>
+                ))}
+              </div>
+              {giveEntries.length > 0 && (
+                <p className="text-xs text-gray-500 mt-1">총 지급: {giveTotal}개 ({giveEntries.length}종)</p>
+              )}
+            </div>
+          </div>
+
+          <button
+            onClick={handleExchange}
+            disabled={!canExchange || exchangeLoading}
+            className={`w-full ${getButtonClass('success', 'lg')} ${(!canExchange || exchangeLoading) ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {exchangeLoading ? '처리 중...' : '교환 실행'}
+          </button>
         </div>
       )}
     </div>
