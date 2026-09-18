@@ -147,8 +147,8 @@ const effortLabels = {
   hp: 'HP',
   attack: '공격',
   defense: '방어',
-  spAttack: '특수공격',
-  spDefense: '특수방어',
+  specialAttack: '특수공격',
+  specialDefense: '특수방어',
   speed: '스피드'
 };
 
@@ -160,7 +160,7 @@ const RESULT_EFFECT_CATEGORIES = [
   { id: 'trainerExp', label: '경험치 상승' },
 ];
 
-// 결과 아이템은 friendshipBoost/conditionBoost/effortBoost/specialEffect를 동시에 들고 있을 수 있는
+// 결과 아이템은 friendshipBoost/conditionBoost/evBoost/specialEffect를 동시에 들고 있을 수 있는
 // 구조라, 관리 화면에서는 "지금 어떤 효과가 켜져있는지" 하나로 판단해서 보여준다.
 const getResultEffectCategory = (item) => {
   if (item.specialEffect === 'trainerExp') return 'trainerExp';
@@ -168,7 +168,7 @@ const getResultEffectCategory = (item) => {
   if (item.specialEffect === 'evSelect') return 'ev';
   if (item.specialEffect === 'friendship' || Number(item.friendshipBoost) > 0) return 'friendship';
   if (item.specialEffect === 'condition' || Object.values(item.conditionBoost || {}).some(v => Number(v) > 0)) return 'condition';
-  if (item.specialEffect === 'ev' || Object.values(item.effortBoost || {}).some(v => Number(v) > 0)) return 'ev';
+  if (item.specialEffect === 'ev' || Object.values(item.evBoost || {}).some(v => Number(v) > 0)) return 'ev';
   return 'none';
 };
 
@@ -188,7 +188,7 @@ const emptyResultItem = () => ({
   effect: '',
   friendshipBoost: 0,
   conditionBoost: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
-  effortBoost: { hp: 0, attack: 0, defense: 0, spAttack: 0, spDefense: 0, speed: 0 },
+  evBoost: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
   spriteUrl: '',
   // 특수 효과 — conditionSelect/evSelect: 사용 시 유저가 항목 선택, trainerExp: 멤버 경험치 상승
   specialEffect: null,
@@ -215,6 +215,18 @@ const emptyRequiredEfforts = () => ({
   spDefense: 0,
   speed: 0
 });
+
+// 예전 버전은 노력치 증가량을 evBoost가 아니라 effortBoost(게다가 specialAttack/specialDefense
+// 대신 spAttack/spDefense 줄임말 키)로 저장했다 — 이미 저장된 레시피를 편집할 때 값이
+// 사라지지 않도록 여기서 evBoost 형태로 정규화한다.
+const normalizeLegacyEvBoost = (result = {}) => {
+  const raw = result.evBoost || result.effortBoost;
+  if (!raw) return null;
+  const keyMap = { spAttack: 'specialAttack', spDefense: 'specialDefense' };
+  return Object.fromEntries(
+    Object.entries(raw).map(([key, value]) => [keyMap[key] || key, value])
+  );
+};
 
 const recipeSupports = (recipe, type) => {
   if (!recipe) return false;
@@ -267,7 +279,7 @@ export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDe
       boostAmount: 0,
       friendshipBoost: 0,
       conditionBoost: { elegance: 0, beauty: 0, cuteness: 0, intelligence: 0, strength: 0 },
-      effortBoost: { hp: 0, attack: 0, defense: 0, spAttack: 0, spDefense: 0, speed: 0 },
+      evBoost: { hp: 0, attack: 0, defense: 0, specialAttack: 0, specialDefense: 0, speed: 0 },
     };
 
     if (category === 'none') setResultItem(base);
@@ -319,7 +331,16 @@ export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDe
       return null;
     }
 
-    const validIngredients = ingredients.filter((ing) => ing.name.trim());
+    // 같은 재료를 슬롯 두 곳에 나눠 넣으면(예: 튼튼치즈를 두 슬롯에 각각 개수 1로) 저장된
+    // ingredients 배열의 entry 개수가 실제 요리 화면에서 합쳐지는 개수와 어긋나 고정 레시피
+    // 매칭이 항상 실패한다(CookingView.jsx matchFixedRecipe 참고). 저장 시점에 이름별로 합쳐둔다.
+    const mergedIngredients = [];
+    ingredients.filter((ing) => ing.name.trim()).forEach((ing) => {
+      const existing = mergedIngredients.find((m) => m.name === ing.name);
+      if (existing) existing.count += Number(ing.count) || 0;
+      else mergedIngredients.push({ ...ing, count: Number(ing.count) || 0 });
+    });
+    const validIngredients = mergedIngredients;
     const enabledTypes = Object.entries(enabledRecipeTypes)
       .filter(([, enabled]) => enabled)
       .map(([type]) => type);
@@ -387,6 +408,7 @@ export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDe
     setRequiredStats({ ...emptyRequiredStats(), ...(recipe.requiredStats || {}) });
     setRequiredEfforts({ ...emptyRequiredEfforts(), ...(recipe.requiredEfforts || {}) });
     const r = recipe.result || {};
+    const legacyEvBoost = normalizeLegacyEvBoost(r);
     setResultItem({
       ...emptyResultItem(),
       ...r,
@@ -395,6 +417,7 @@ export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDe
       spriteUrl: r.spriteUrl || '',
       specialEffect: r.specialEffect || null,
       boostAmount: r.boostAmount || 0,
+      evBoost: legacyEvBoost ? { ...emptyResultItem().evBoost, ...legacyEvBoost } : emptyResultItem().evBoost,
     });
   };
 
@@ -788,17 +811,17 @@ export default function CookingAdminPanel({ onCreateRecipe, onUpdateRecipe, onDe
                       </div>
                       {resultEffectMode === 'all' ? (
                         <div className="grid grid-cols-6 gap-1">
-                          {Object.keys(resultItem.effortBoost).map((stat) => (
+                          {Object.keys(resultItem.evBoost).map((stat) => (
                             <div key={stat}>
                               <label className="block text-[10px] text-gray-500 mb-0.5">{effortLabels[stat] || stat}</label>
                               <input
                                 type="number"
                                 min="0"
-                                value={resultItem.effortBoost[stat]}
+                                value={resultItem.evBoost[stat]}
                                 onChange={(event) => setResultItem({
                                   ...resultItem,
-                                  effortBoost: {
-                                    ...resultItem.effortBoost,
+                                  evBoost: {
+                                    ...resultItem.evBoost,
                                     [stat]: parseInt(event.target.value, 10) || 0
                                   }
                                 })}

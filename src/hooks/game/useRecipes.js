@@ -239,6 +239,9 @@ export const useRecipes = (currentUser, updateCurrentUser, updateInventory, upda
             effect: resultItem.effect,
             friendshipBoost: resultItem.friendshipBoost || 0,
             conditionBoost: resultItem.conditionBoost || {},
+            evBoost: resultItem.evBoost || {},
+            specialEffect: resultItem.specialEffect || null,
+            boostAmount: resultItem.boostAmount || 0,
             canSell: true,
             isCooked: true
           }

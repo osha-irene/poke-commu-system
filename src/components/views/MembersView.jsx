@@ -308,11 +308,19 @@ const buildStickerStyle = ({ left, top, size, rotation, zIndex = 12 }) => ({
   filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.18)) drop-shadow(0 0 2px rgba(255,255,255,0.95))',
 });
 
+// 다른 칭호 이미지보다 상대적으로 작아 보이는 일부 칭호는 평균 3px 정도 더 크게 보정한다.
+const TITLE_STICKER_SIZE_BOOST = {
+  millonaire: 3,
+  'make-onehit': 3,
+  chubby: 3,
+  comorantlover: 3,
+};
+
 const getTitleStickerStyle = (member, titleId) => {
   const seed = `${member?.id || member?.name || ''}:${titleId || ''}`;
   const { left, top } = getStickerAnchorPosition(seed);
   const rotation = -18 + seededNumber(`${seed}:rotation`) * 36;
-  const size = 63 + seededNumber(`${seed}:size`) * 18;
+  const size = 63 + seededNumber(`${seed}:size`) * 18 + (TITLE_STICKER_SIZE_BOOST[titleId] || 0);
   return buildStickerStyle({ left, top, size, rotation });
 };
 

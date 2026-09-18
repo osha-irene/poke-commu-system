@@ -72,6 +72,19 @@ const markDatabaseCustomItems = (customItems = []) => (
 // create/update (see CookingAdminPanel), which meant every boost/friendship/name edit
 // had to be applied twice and deletes left orphaned entries behind. Deriving the display
 // item straight from the recipe removes that duplication entirely.
+// CookingAdminPanel의 예전 버전은 노력치 증가량을 evBoost가 아니라 effortBoost(게다가
+// specialAttack/specialDefense 대신 spAttack/spDefense 줄임말 키)로 저장했다. 아이템 사용
+// 로직(useItemEffects.js)은 evBoost/specialAttack만 읽으므로 이름이 어긋나 노력치가 전혀
+// 오르지 않는 채로 "이미 최대치입니다"만 뜨는 버그가 있었다 — 이미 저장된 레시피도 살리기
+// 위해 여기서 legacy 필드를 evBoost 형태로 정규화한다.
+const normalizeEvBoost = (result = {}) => {
+  const raw = result.evBoost || result.effortBoost || {};
+  const keyMap = { spAttack: 'specialAttack', spDefense: 'specialDefense' };
+  return Object.fromEntries(
+    Object.entries(raw).map(([key, value]) => [keyMap[key] || key, value])
+  );
+};
+
 const deriveRecipeItems = (recipes = []) => (
   (Array.isArray(recipes) ? recipes : [])
     .filter(recipe => recipe?.result?.name)
@@ -90,7 +103,7 @@ const deriveRecipeItems = (recipes = []) => (
         specialEffect: result.specialEffect || null,
         boostAmount: result.boostAmount || 0,
         conditionBoost: result.conditionBoost || {},
-        effortBoost: result.effortBoost || {},
+        evBoost: normalizeEvBoost(result),
         friendshipBoost: result.friendshipBoost || 0,
         cost: 0,
         sellPrice: result.sellPrice || 0,

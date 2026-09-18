@@ -215,13 +215,27 @@ export default function CookingView() {
     });
   };
 
+  // 관리자가 레시피를 등록할 때 같은 재료를 슬롯 하나에 개수 2로 넣지 않고, 서로 다른 슬롯
+  // 두 곳에 각각 개수 1로 나눠 넣는 경우가 있다(예: 소금 / 튼튼치즈 / 튼튼치즈). 사용자가
+  // 요리할 때 고르는 selectedIngredients는 같은 재료를 항상 하나로 합쳐 개수를 누적하므로,
+  // 이렇게 저장된 레시피는 길이(entry 개수)부터 어긋나 고정 레시피 매칭에 항상 실패하고
+  // 스탯 레시피(오란다 등)로 잘못 빠진다. 양쪽 다 이름별로 합산한 뒤 비교해서 이 어긋남을 없앤다.
+  const sumIngredientsByName = (list) => {
+    const map = new Map();
+    (list || []).forEach(({ name, count }) => {
+      if (!name) return;
+      map.set(name, (map.get(name) || 0) + (Number(count) || 0));
+    });
+    return map;
+  };
+
   const matchFixedRecipe = () => {
+    const selectedMap = sumIngredientsByName(selectedIngredients);
     return fixedRecipes.find(recipe => {
-      if (!recipe.ingredients || recipe.ingredients.length !== selectedIngredients.length) return false;
-      return recipe.ingredients.every(recipeIng => {
-        const userIng = selectedIngredients.find(i => i.name === recipeIng.name);
-        return userIng && userIng.count === recipeIng.count;
-      });
+      if (!recipe.ingredients) return false;
+      const recipeMap = sumIngredientsByName(recipe.ingredients);
+      if (recipeMap.size !== selectedMap.size) return false;
+      return [...recipeMap.entries()].every(([name, count]) => selectedMap.get(name) === count);
     });
   };
 

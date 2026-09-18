@@ -65,11 +65,18 @@ export const useAdminItems = (
             count: count,
             imageUrl: item.spriteUrl || item.imageUrl,
             category: item.category,
+            pocket: item.pocket,
             effect: item.effect,
             cost: item.cost,
             sellPrice: item.sellPrice,
             canSell: item.canSell ?? true,
-            isCustom: item.isCustom || false
+            isCustom: item.isCustom || false,
+            friendshipBoost: item.friendshipBoost,
+            ivBoost: item.ivBoost,
+            evBoost: item.evBoost,
+            conditionBoost: item.conditionBoost,
+            specialEffect: item.specialEffect,
+            boostAmount: item.boostAmount
           }
         ];
   };
