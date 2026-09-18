@@ -1,4 +1,5 @@
 import { isSoyYYNItem } from './specialItemUtils';
+import { isEVItem, getEVItemEffect } from './evItemUtils';
 
 const CONDITION_LABELS = {
   elegance: '우아함',
@@ -123,6 +124,36 @@ export const getItemEffectBadges = (item = {}) => {
   }
 
   return badges;
+};
+
+// 노력치 스탯 이름을 (special-attack 같은 evItems.json 표기든, specialAttack 같은
+// evBoost 표기든) EV_LABELS에서 바로 찾을 수 있게 정규화한다.
+const normalizeEvStatKey = (stat) => stat.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+
+// 가방 목록에서 이름만 보고는 어떤 스탯을 올리는 아이템인지 구분이 안 되는 문제(타우린,
+// 브로멕신처럼 이름에 스탯이 드러나지 않는 공식 영양제/깃털/열매 포함) 때문에, 아이템 이름
+// 앞에 붙일 "OO 노력치" 접두 라벨을 계산한다. custom evBoost/evSelect 아이템과, evBoost
+// 필드 없이 이름으로만 판별되는 공식 노력치 아이템(evItemUtils의 evItems.json 매칭) 둘 다 다룬다.
+export const getEvNamePrefix = (details = {}) => {
+  if (details.specialEffect === 'evSelect') return '노력치(선택)';
+
+  const evEntries = positiveEntries(details.evBoost);
+  if (evEntries.length === 1) {
+    const [stat] = evEntries[0];
+    return `${EV_LABELS[normalizeEvStatKey(stat)] || stat} 노력치`;
+  }
+  if (evEntries.length > 1) return '노력치';
+
+  const nameEn = details.itemData?.nameEn || details.nameEn;
+  if (nameEn && isEVItem(nameEn)) {
+    const effect = getEVItemEffect(nameEn);
+    if (effect?.stat) {
+      const label = EV_LABELS[normalizeEvStatKey(effect.stat)] || effect.stat;
+      return effect.change > 0 ? `${label} 노력치` : `${label} 노력치 감소`;
+    }
+  }
+
+  return null;
 };
 
 export { CONDITION_LABELS, EV_LABELS };
