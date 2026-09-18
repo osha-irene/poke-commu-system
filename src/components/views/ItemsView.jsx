@@ -4,7 +4,7 @@ import { getItemPocket, canUseItem, CATEGORIES } from '../../utils/itemUtils';
 import { canUseItemOnPokemonTarget, FORM_CHANGE_ITEM_POKEMON } from '../../utils/itemUsageRules';
 import { getOwnedPokemonSpriteUrl } from '../../utils/pokemonImageUtils';
 import { isSoyYYNItem } from '../../utils/specialItemUtils';
-import { getItemEffectBadges, getEvNamePrefix } from '../../utils/itemEffectBadges';
+import { getItemEffectBadges } from '../../utils/itemEffectBadges';
 import { Package, Circle, Heart, Dumbbell, Apple, Disc, Backpack, Sparkles, Sword, Key, Search, X,Trash2, ShoppingCart } from 'lucide-react'; 
 import React, { useState } from 'react';
 
@@ -96,14 +96,8 @@ function DesktopItemsView() {
     ? true
     : item.canUse !== undefined ? item.canUse : canUseItem(itemData || item);
 
-  const evNamePrefix = getEvNamePrefix({
-    specialEffect: item.specialEffect || itemData?.specialEffect || null,
-    evBoost: item.evBoost || itemData?.evBoost,
-    itemData
-  });
-
   return {
-    name: evNamePrefix ? `[${evNamePrefix}] ${item.name}` : item.name,
+    name: item.name,
     description: description,
     imageUrl: item.imageUrl || itemData?.spriteUrl || itemData?.imageUrl || '/images/items/default.png',
     cost: itemData?.cost ?? item.cost ?? 0,

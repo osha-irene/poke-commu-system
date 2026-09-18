@@ -67,9 +67,15 @@ function toViewportCoords(px, py, vp) {
   };
 }
 
+// 사철록 여름/가을/겨울 모습처럼 일부 폼은 number가 숫자가 아니라
+// "pokemon-form-10068"처럼 문자열 ID다. Number()로 못 바꾸는 값을 전부 null로
+// 버리면 이런 폼들은 gamePokedexNumbers/unlockedNumbers Set에 절대 들어갈 수
+// 없어서 실제로 잡았어도 포획 표시가 안 된다. 숫자로 못 바꾸는 값은 문자열
+// 그대로 키로 써서(양쪽 다 이 함수를 거치므로 비교는 여전히 일관됨) 살려둔다.
 const toDexNumber = (value) => {
+  if (value === undefined || value === null || value === '') return null;
   const number = Number(value);
-  return Number.isFinite(number) ? number : null;
+  return Number.isFinite(number) ? number : String(value);
 };
 
 

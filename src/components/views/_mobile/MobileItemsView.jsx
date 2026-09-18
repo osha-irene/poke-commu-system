@@ -5,7 +5,7 @@ import { useGame } from '../../../contexts/GameContext';
 import { getItemPocket, canUseItem, CATEGORIES, POCKET_LABELS } from '../../../utils/itemUtils';
 import { isSoyYYNItem } from '../../../utils/specialItemUtils';
 import { getOwnedPokemonSpriteUrl } from '../../../utils/pokemonImageUtils';
-import { getItemEffectBadges, getEvNamePrefix } from '../../../utils/itemEffectBadges';
+import { getItemEffectBadges } from '../../../utils/itemEffectBadges';
 import { canUseItemOnPokemonTarget, FORM_CHANGE_ITEM_POKEMON } from '../../../utils/itemUsageRules';
 
 const NECTAR_FORM_MAP = {
@@ -76,13 +76,8 @@ export default function MobileItemsView() {
     if (!itemData) itemData = allItems.find(i => i.name === item.name || i.nameEn === item.name || i.id === item.name);
     const pocket = getItemPocket(itemData || item);
     const description = itemData?.effect || itemData?.description || item.effect?.replace(/\n/g, ' ') || item.description || '';
-    const evNamePrefix = getEvNamePrefix({
-      specialEffect: item.specialEffect || itemData?.specialEffect || null,
-      evBoost: item.evBoost || itemData?.evBoost,
-      itemData
-    });
     return {
-      name: evNamePrefix ? `[${evNamePrefix}] ${item.name}` : item.name,
+      name: item.name,
       description,
       imageUrl: item.imageUrl || itemData?.spriteUrl || itemData?.imageUrl || '',
       cost: itemData?.cost ?? item.cost ?? 0,

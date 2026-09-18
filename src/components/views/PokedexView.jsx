@@ -25,9 +25,16 @@ const getDexDisplayParts = (pokemon = {}) => {
   return parts;
 };
 
+// 사철록 여름/가을/겨울 모습처럼 일부 폼은 number가 585 같은 숫자가 아니라
+// "pokemon-form-10068"처럼 문자열 ID다. Number()로 못 바꾸는 값을 전부 null로
+// 버리면 이런 폼들은 gamePokedexNumbers/unlockedNumbers(조우·포획 기록) Set에
+// 절대 들어갈 수 없어서, 실제로 잡았어도 도감에서 폼 탭 자체가 안 보이게 된다.
+// 숫자로 못 바꾸는 값은 문자열 그대로 키로 써서(양쪽 다 이 함수를 거치므로 비교는
+// 여전히 일관됨) 살려둔다.
 const toDexNumber = (value) => {
+  if (value === undefined || value === null || value === '') return null;
   const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
+  return Number.isFinite(parsed) ? parsed : String(value);
 };
 
 export default function PokedexView({
