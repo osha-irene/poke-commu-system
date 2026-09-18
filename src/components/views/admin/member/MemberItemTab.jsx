@@ -4,6 +4,10 @@ import { Trash2, Minus, Plus, ArrowRightLeft, CheckCircle2, AlertTriangle } from
 import { getButtonClass } from '../../../../styles/theme';
 import { getItemPocket, CATEGORIES, getItemIcon, getItemColor, filterItemsByPocket } from '../../../../utils/itemUtils';
 
+// 아이템 이름 비교용 정규화: 공백 유무나 유니코드 정규화 형태(NFC/NFD) 차이로 같은
+// 이름인데 문자열이 달라 매칭에 실패하는 걸 막는다 (예: "식용얼음" vs "식용 얼음").
+const normalizeItemName = (name) => (name || '').normalize('NFC').replace(/\s+/g, '');
+
 // "이름*개수" 형식(줄바꿈 또는 쉼표 구분)을 [{ raw, name, count, error }]로 파싱
 const parseItemEntries = (text) => (
   (text || '')
@@ -41,7 +45,8 @@ function MemberItemTab({ member, allItems, onGiveItem, onDeleteItem, onAdjustIte
     const inventory = Array.isArray(member?.inventory) ? member.inventory : [];
     return parseItemEntries(deductText).map(entry => {
       if (entry.error) return entry;
-      const totalOwned = inventory.reduce((sum, i) => sum + (i.name === entry.name ? (i.count || 0) : 0), 0);
+      const target = normalizeItemName(entry.name);
+      const totalOwned = inventory.reduce((sum, i) => sum + (normalizeItemName(i.name) === target ? (i.count || 0) : 0), 0);
       if (totalOwned <= 0) return { ...entry, error: '보유하고 있지 않은 아이템입니다' };
       if (totalOwned < entry.count) {
         return { ...entry, error: `재고 부족 (보유 ${totalOwned}개)` };
@@ -55,7 +60,8 @@ function MemberItemTab({ member, allItems, onGiveItem, onDeleteItem, onAdjustIte
     const catalog = Array.isArray(allItems) ? allItems : [];
     return parseItemEntries(giveText).map(entry => {
       if (entry.error) return entry;
-      const found = catalog.find(i => i.name === entry.name);
+      const target = normalizeItemName(entry.name);
+      const found = catalog.find(i => normalizeItemName(i.name) === target);
       if (!found) return { ...entry, error: '카탈로그에 없는 아이템입니다' };
       return entry;
     });

@@ -4,6 +4,10 @@
 import { ref, get, set, runTransaction } from 'firebase/database';
 import { database } from '../../firebase';
 
+// 아이템 이름 비교용 정규화: 공백 유무나 유니코드 정규화 형태(NFC/NFD) 차이로 같은
+// 이름인데 문자열이 달라 매칭에 실패하는 걸 막는다 (예: "식용얼음" vs "식용 얼음").
+const normalizeItemName = (name) => (name || '').normalize('NFC').replace(/\s+/g, '');
+
 export const useAdminItems = (
   currentUser,
   members,
@@ -312,11 +316,38 @@ export const useAdminItems = (
 
     const resolvedGiveItems = [];
     for (const { name, count } of giveEntries) {
-      const catalogItem = allItems.find(i => i.name === name);
+      const target = normalizeItemName(name);
+      const catalogItem = allItems.find(i => normalizeItemName(i.name) === target);
       if (!catalogItem) {
         return { success: false, reason: `"${name}" 아이템을 카탈로그에서 찾을 수 없습니다.` };
       }
       resolvedGiveItems.push({ item: catalogItem, count });
+    }
+
+    // ⭐ Firebase RTDB 트랜잭션은 해당 경로가 로컬에 캐시돼 있지 않으면 update 함수를
+    // 먼저 null(빈 값)로 "추측 호출"한 뒤, 서버의 실제 값과 비교해서 다르면 그 실제 값으로
+    // 자동 재시도한다. 문제는 우리가 재고 부족을 판단해 return undefined로 "중단"하는
+    // 로직을 쓰고 있다는 것 — 이 추측 호출(빈 배열) 단계에서 바로 중단해버리면 재시도가
+    // 아예 일어나지 않아서, 실제로는 재고가 충분해도 "재고 부족"으로 실패한다.
+    // 관리자가 다른 회원의 인벤토리를 다룰 때는 members/ 전체를 실시간 리스너가 아니라
+    // 최초 1회 get()으로만 읽어오기 때문에(useMembers.js), 이 inventory 경로가 트랜잭션
+    // 캐시에 아직 없는 경우가 흔하다. 그래서 트랜잭션을 걸기 전에 실제 서버 값을 한 번
+    // get()으로 읽어 캐시를 데우고, 그 진짜 최신값 기준으로 먼저 검증한다.
+    const inventoryRef = ref(database, `members/${memberId}/inventory`);
+    let liveInventory;
+    try {
+      const liveSnapshot = await get(inventoryRef);
+      liveInventory = liveSnapshot.exists() ? (liveSnapshot.val() || []) : [];
+    } catch (error) {
+      return { success: false, reason: '인벤토리를 불러오지 못했습니다.' };
+    }
+
+    for (const { name, count } of deductEntries) {
+      const target = normalizeItemName(name);
+      const totalOwned = liveInventory.reduce((sum, i) => sum + (normalizeItemName(i?.name) === target ? (i?.count || 0) : 0), 0);
+      if (totalOwned < count) {
+        return { success: false, reason: `"${name}" 재고 부족 (필요 ${count}개, 보유 ${totalOwned}개)` };
+      }
     }
 
     let failReason = null;
@@ -325,10 +356,13 @@ export const useAdminItems = (
       const inv = inventory || [];
 
       // 커스텀 재료는 과거 itemId 체계가 바뀌면서 같은 이름으로 인벤토리에 항목이
-      // 두 개 이상 나뉘어 있을 수 있다(예: 마이그레이션 전/후 레코드가 둘 다 남음).
-      // 그래서 첫 항목 하나가 아니라 같은 이름의 항목을 모두 합산해서 재고를 확인한다.
+      // 두 개 이상 나뉘어 있을 수 있고("합산" 문제), 공백 유무 등으로 표기가 미묘하게
+      // 달라 문자열이 정확히 일치하지 않을 수도 있다(예: "식용얼음" vs "식용 얼음",
+      // "대포무노먹물" vs "대포무노 먹물"). 그래서 정규화한 이름으로 비교하고,
+      // 첫 항목 하나가 아니라 같은 이름의 항목을 모두 합산해서 재고를 확인한다.
       for (const { name, count } of deductEntries) {
-        const totalOwned = inv.reduce((sum, i) => sum + (i.name === name ? (i.count || 0) : 0), 0);
+        const target = normalizeItemName(name);
+        const totalOwned = inv.reduce((sum, i) => sum + (normalizeItemName(i.name) === target ? (i.count || 0) : 0), 0);
         if (totalOwned < count) {
           failReason = `"${name}" 재고 부족 (필요 ${count}개, 보유 ${totalOwned}개)`;
           return undefined; // 트랜잭션 중단
@@ -339,9 +373,10 @@ export const useAdminItems = (
       // 합산 검증을 통과했으니, 이름이 같은 여러 항목에 걸쳐 필요한 만큼 순서대로 차감한다.
       let next = inv.map(i => ({ ...i }));
       for (const { name, count } of deductEntries) {
+        const target = normalizeItemName(name);
         let remaining = count;
         next = next.map(i => {
-          if (remaining <= 0 || i.name !== name) return i;
+          if (remaining <= 0 || normalizeItemName(i.name) !== target) return i;
           const take = Math.min(i.count || 0, remaining);
           remaining -= take;
           return { ...i, count: (i.count || 0) - take };
@@ -350,7 +385,8 @@ export const useAdminItems = (
       next = next.filter(i => i.count > 0);
 
       for (const { item, count } of resolvedGiveItems) {
-        const existingIdx = next.findIndex(i => i.itemId === item.id || i.name === item.name);
+        const targetName = normalizeItemName(item.name);
+        const existingIdx = next.findIndex(i => i.itemId === item.id || normalizeItemName(i.name) === targetName);
         next = existingIdx >= 0
           ? next.map((i, idx) => idx === existingIdx ? { ...i, count: i.count + count } : i)
           : [...next, buildInventoryRecord(item, count)];
