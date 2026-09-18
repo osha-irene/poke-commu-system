@@ -299,9 +299,16 @@ export const useAdminItems = (
   // ========== 아이템 교환 (예: 재료 5개 -> 다른 재료 1개로 변환) ==========
   // deductEntries/giveEntries: [{ name, count }]
   // 차감 대상은 회원 인벤토리에 실제 보유한 수량 안에서만, 지급 대상은 allItems 카탈로그에
-  // 존재하는 아이템만 허용한다. 트랜잭션 콜백 내부에서 항상 최신 인벤토리 기준으로
-  // 재고 충분 여부를 다시 확인하므로(CLAUDE.md 재화 갱신 규칙), 다른 화면에서 그 사이
-  // 인벤토리가 바뀌어도 안전하다 — 부족하면 트랜잭션을 중단하고 아무것도 반영하지 않는다.
+  // 존재하는 아이템만 허용한다.
+  //
+  // ⭐ 재고 부족 판단은 트랜잭션 "밖"에서, get()으로 읽은 실제 서버 값 기준으로 한 번만 한다.
+  // Firebase RTDB 트랜잭션은 해당 경로가 로컬에 캐시돼 있지 않으면 update 함수를 먼저
+  // null(빈 값)로 "추측 호출"한 뒤 서버 값과 비교해 재시도하는 구조인데, 트랜잭션 콜백
+  // 안에서 "부족하면 return undefined로 중단"하는 로직을 쓰면 바로 이 추측 호출(빈 배열)
+  // 단계에서 중단돼버려서, 재시도가 아예 일어나지 않고 실제로는 재고가 충분해도 실패한다
+  // (실제로 이 버그로 회원별로 되고 안 되고가 갈렸었다). 그래서 트랜잭션 콜백은 다른 관리자
+  // 함수들(지급/삭제/수량조정)과 똑같이 "중단 없이 최신값 기준으로 계산만" 하고, 혹시 모를
+  // 레이스 상황에서도 음수가 되지 않게 0으로 클램프만 해둔다.
   const exchangeMemberItems = async (memberId, deductEntries, giveEntries) => {
     if (!canManageItems()) {
       return { success: false, reason: '아이템 관리 권한이 없습니다.' };
@@ -324,26 +331,12 @@ export const useAdminItems = (
       resolvedGiveItems.push({ item: catalogItem, count });
     }
 
-    // ⭐ Firebase RTDB 트랜잭션은 해당 경로가 로컬에 캐시돼 있지 않으면 update 함수를
-    // 먼저 null(빈 값)로 "추측 호출"한 뒤, 서버의 실제 값과 비교해서 다르면 그 실제 값으로
-    // 자동 재시도한다. 문제는 우리가 재고 부족을 판단해 return undefined로 "중단"하는
-    // 로직을 쓰고 있다는 것 — 이 추측 호출(빈 배열) 단계에서 바로 중단해버리면 재시도가
-    // 아예 일어나지 않아서, 실제로는 재고가 충분해도 "재고 부족"으로 실패한다.
-    // 관리자가 다른 회원의 인벤토리를 다룰 때는 members/ 전체를 실시간 리스너가 아니라
-    // 최초 1회 get()으로만 읽어오기 때문에(useMembers.js), 이 inventory 경로가 트랜잭션
-    // 캐시에 아직 없는 경우가 흔하다. 그래서 트랜잭션을 걸기 전에 실제 서버 값을 한 번
-    // get()으로 읽어 캐시를 데우고, 그 진짜 최신값 기준으로 먼저 검증한다.
     const inventoryRef = ref(database, `members/${memberId}/inventory`);
     let liveInventory;
-    let liveSnapshotExists;
-    let liveSnapshotRaw;
     try {
       const liveSnapshot = await get(inventoryRef);
-      liveSnapshotExists = liveSnapshot.exists();
-      liveSnapshotRaw = liveSnapshotExists ? liveSnapshot.val() : null;
-      liveInventory = Array.isArray(liveSnapshotRaw)
-        ? liveSnapshotRaw
-        : (liveSnapshotRaw && typeof liveSnapshotRaw === 'object' ? Object.values(liveSnapshotRaw) : []);
+      const raw = liveSnapshot.exists() ? liveSnapshot.val() : null;
+      liveInventory = Array.isArray(raw) ? raw : (raw && typeof raw === 'object' ? Object.values(raw) : []);
     } catch (error) {
       return { success: false, reason: `인벤토리를 불러오지 못했습니다. (${error?.message || error})` };
     }
@@ -352,36 +345,18 @@ export const useAdminItems = (
       const target = normalizeItemName(name);
       const totalOwned = liveInventory.reduce((sum, i) => sum + (normalizeItemName(i?.name) === target ? (i?.count || 0) : 0), 0);
       if (totalOwned < count) {
-        // ⭐ 임시 진단 정보 — 원인 파악 후 제거 예정. memberId가 실제로 맞는 경로를
-        // 가리키는지, 그 경로에 데이터가 존재하는지, 배열 형태였는지를 함께 보여준다.
-        return {
-          success: false,
-          reason: `"${name}" 재고 부족 (필요 ${count}개, 보유 ${totalOwned}개) [DEBUG memberId=${memberId}, exists=${liveSnapshotExists}, rawType=${Array.isArray(liveSnapshotRaw) ? 'array' : typeof liveSnapshotRaw}, rawLen=${liveInventory.length}]`
-        };
+        return { success: false, reason: `"${name}" 재고 부족 (필요 ${count}개, 보유 ${totalOwned}개)` };
       }
     }
-
-    let failReason = null;
 
     const result = await applyInventoryMutation(memberId, (inventory) => {
       const inv = inventory || [];
 
-      // 커스텀 재료는 과거 itemId 체계가 바뀌면서 같은 이름으로 인벤토리에 항목이
-      // 두 개 이상 나뉘어 있을 수 있고("합산" 문제), 공백 유무 등으로 표기가 미묘하게
-      // 달라 문자열이 정확히 일치하지 않을 수도 있다(예: "식용얼음" vs "식용 얼음",
-      // "대포무노먹물" vs "대포무노 먹물"). 그래서 정규화한 이름으로 비교하고,
-      // 첫 항목 하나가 아니라 같은 이름의 항목을 모두 합산해서 재고를 확인한다.
-      for (const { name, count } of deductEntries) {
-        const target = normalizeItemName(name);
-        const totalOwned = inv.reduce((sum, i) => sum + (normalizeItemName(i.name) === target ? (i.count || 0) : 0), 0);
-        if (totalOwned < count) {
-          failReason = `"${name}" 재고 부족 (필요 ${count}개, 보유 ${totalOwned}개)`;
-          return undefined; // 트랜잭션 중단
-        }
-      }
-      failReason = null;
-
-      // 합산 검증을 통과했으니, 이름이 같은 여러 항목에 걸쳐 필요한 만큼 순서대로 차감한다.
+      // 커스텀 재료는 과거 itemId 체계가 바뀌면서 같은 이름으로 인벤토리에 항목이 두 개
+      // 이상 나뉘어 있을 수 있고, 공백 유무 등으로 표기가 미묘하게 다를 수도 있다(예:
+      // "식용얼음" vs "식용 얼음"). 그래서 정규화한 이름으로 비교하고, 이름이 같은 여러
+      // 항목에 걸쳐 필요한 만큼 순서대로 차감한다. 재고 부족 여부는 위에서 이미 확인했지만,
+      // 혹시 그 사이 실제로 줄었다면(레이스) 0 밑으로 내려가지 않게만 막는다 — 중단하지 않는다.
       let next = inv.map(i => ({ ...i }));
       for (const { name, count } of deductEntries) {
         const target = normalizeItemName(name);
@@ -407,7 +382,7 @@ export const useAdminItems = (
     });
 
     if (!result.committed) {
-      return { success: false, reason: failReason || '교환 처리 중 오류가 발생했습니다.' };
+      return { success: false, reason: '교환 처리 중 오류가 발생했습니다.' };
     }
 
     return { success: true };
