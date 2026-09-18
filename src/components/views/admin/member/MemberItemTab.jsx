@@ -35,14 +35,16 @@ function MemberItemTab({ member, allItems, onGiveItem, onDeleteItem, onAdjustIte
   const safeAllItems = Array.isArray(allItems) ? allItems : [];
 
   // 차감 목록 검증: 인벤토리에 실제로 그만큼 있는지 확인
+  // 커스텀 재료는 과거 itemId 체계 변경 등으로 같은 이름이 여러 항목에 나뉘어
+  // 저장돼 있을 수 있으므로, 하나만 찾지 않고 같은 이름의 항목을 모두 합산한다.
   const deductEntries = useMemo(() => {
     const inventory = Array.isArray(member?.inventory) ? member.inventory : [];
     return parseItemEntries(deductText).map(entry => {
       if (entry.error) return entry;
-      const owned = inventory.find(i => i.name === entry.name);
-      if (!owned) return { ...entry, error: '보유하고 있지 않은 아이템입니다' };
-      if ((owned.count || 0) < entry.count) {
-        return { ...entry, error: `재고 부족 (보유 ${owned.count || 0}개)` };
+      const totalOwned = inventory.reduce((sum, i) => sum + (i.name === entry.name ? (i.count || 0) : 0), 0);
+      if (totalOwned <= 0) return { ...entry, error: '보유하고 있지 않은 아이템입니다' };
+      if (totalOwned < entry.count) {
+        return { ...entry, error: `재고 부족 (보유 ${totalOwned}개)` };
       }
       return entry;
     });

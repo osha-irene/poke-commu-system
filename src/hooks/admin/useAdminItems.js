@@ -324,21 +324,30 @@ export const useAdminItems = (
     const result = await applyInventoryMutation(memberId, (inventory) => {
       const inv = inventory || [];
 
+      // 커스텀 재료는 과거 itemId 체계가 바뀌면서 같은 이름으로 인벤토리에 항목이
+      // 두 개 이상 나뉘어 있을 수 있다(예: 마이그레이션 전/후 레코드가 둘 다 남음).
+      // 그래서 첫 항목 하나가 아니라 같은 이름의 항목을 모두 합산해서 재고를 확인한다.
       for (const { name, count } of deductEntries) {
-        const found = inv.find(i => i.name === name);
-        if (!found || (found.count || 0) < count) {
-          failReason = `"${name}" 재고 부족 (필요 ${count}개, 보유 ${found?.count || 0}개)`;
+        const totalOwned = inv.reduce((sum, i) => sum + (i.name === name ? (i.count || 0) : 0), 0);
+        if (totalOwned < count) {
+          failReason = `"${name}" 재고 부족 (필요 ${count}개, 보유 ${totalOwned}개)`;
           return undefined; // 트랜잭션 중단
         }
       }
       failReason = null;
 
-      let next = inv
-        .map(i => {
-          const match = deductEntries.find(d => d.name === i.name);
-          return match ? { ...i, count: i.count - match.count } : i;
-        })
-        .filter(i => i.count > 0);
+      // 합산 검증을 통과했으니, 이름이 같은 여러 항목에 걸쳐 필요한 만큼 순서대로 차감한다.
+      let next = inv.map(i => ({ ...i }));
+      for (const { name, count } of deductEntries) {
+        let remaining = count;
+        next = next.map(i => {
+          if (remaining <= 0 || i.name !== name) return i;
+          const take = Math.min(i.count || 0, remaining);
+          remaining -= take;
+          return { ...i, count: (i.count || 0) - take };
+        });
+      }
+      next = next.filter(i => i.count > 0);
 
       for (const { item, count } of resolvedGiveItems) {
         const existingIdx = next.findIndex(i => i.itemId === item.id || i.name === item.name);
