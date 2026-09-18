@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.c1e900f8.css",
-    "main.js": "/static/js/main.00ed3891.js",
+    "main.js": "/static/js/main.a2fabc58.js",
     "static/js/623.69c45dc4.chunk.js": "/static/js/623.69c45dc4.chunk.js",
     "static/media/Revavroom.png": "/static/media/Revavroom.0da3a031e85226cb8c2d.png",
     "static/media/map.png": "/static/media/map.8a41709af9a828a3bcbb.png",
@@ -99,11 +99,11 @@
     "index.html": "/index.html",
     "static/media/pokemon-icon.svg": "/static/media/pokemon-icon.d36b6f0655c180980d5acb3287a88011.svg",
     "main.c1e900f8.css.map": "/static/css/main.c1e900f8.css.map",
-    "main.00ed3891.js.map": "/static/js/main.00ed3891.js.map",
+    "main.a2fabc58.js.map": "/static/js/main.a2fabc58.js.map",
     "623.69c45dc4.chunk.js.map": "/static/js/623.69c45dc4.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.c1e900f8.css",
-    "static/js/main.00ed3891.js"
+    "static/js/main.a2fabc58.js"
   ]
 }
