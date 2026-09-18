@@ -75,7 +75,20 @@ export default function MobileMapView({
 
   const getPokemon = (ids, allowNational) => {
     const pool = allowNational ? allPokemonMaster : gamePokedex;
-    return pool.filter(p => ids.includes(p.id) || ids.includes(p.number));
+    const matched = pool.filter(p => ids.includes(p.id) || ids.includes(p.number));
+
+    // 장소에서 특정 폼(예: 사철록 여름/겨울 모습)을 명시적으로 골라도, 그 폼이 "게임
+    // 도감"에는 원종(봄의 모습)만 등록되어 있고 폼 자체는 별도 등록이 안 돼 있으면 위
+    // 필터에서 조용히 빠져서 항상 원종만 보이는 것처럼 나온다 — 실제 조우 로직
+    // (useRegionExplore.js)에 이미 있는 것과 같은 보정을 미리보기에도 적용한다.
+    const matchedIds = new Set();
+    matched.forEach(p => { matchedIds.add(p.id); matchedIds.add(p.number); });
+    const missingIds = ids.filter(id => !matchedIds.has(id));
+    const fallback = missingIds.length > 0
+      ? allPokemonMaster.filter(p => missingIds.includes(p.id) || missingIds.includes(p.number))
+      : [];
+
+    return [...matched, ...fallback];
   };
 
   const getDisplayPokemon = (area, place) => {

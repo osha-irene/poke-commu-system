@@ -23,6 +23,7 @@ const FORM_ICON_ALIASES = {
   'HAKAMO-O': 'HAKAMOO',
   'KOMMO-O': 'KOMMOO',
   'HO-OH': 'HOOH',
+  'MR-RIME': 'MRRIME',
   'MIME-JR': 'MIMEJR',
   'TYPE-NULL': 'TYPENULL',
   // 돌핀맨은 폼(제로/히어로) 구분 없이 기본 아이콘(PALAFIN.png) 하나만 쓴다.
