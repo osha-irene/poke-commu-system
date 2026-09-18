@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.c1e900f8.css",
-    "main.js": "/static/js/main.a2fabc58.js",
+    "main.css": "/static/css/main.11e9f928.css",
+    "main.js": "/static/js/main.f7827f5f.js",
     "static/js/623.69c45dc4.chunk.js": "/static/js/623.69c45dc4.chunk.js",
     "static/media/Revavroom.png": "/static/media/Revavroom.0da3a031e85226cb8c2d.png",
     "static/media/map.png": "/static/media/map.8a41709af9a828a3bcbb.png",
@@ -98,12 +98,12 @@
     "static/media/Whirl Islands cave_arnie.png": "/static/media/Whirl Islands cave_arnie.66120ee2033224a9cc5d.png",
     "index.html": "/index.html",
     "static/media/pokemon-icon.svg": "/static/media/pokemon-icon.d36b6f0655c180980d5acb3287a88011.svg",
-    "main.c1e900f8.css.map": "/static/css/main.c1e900f8.css.map",
-    "main.a2fabc58.js.map": "/static/js/main.a2fabc58.js.map",
+    "main.11e9f928.css.map": "/static/css/main.11e9f928.css.map",
+    "main.f7827f5f.js.map": "/static/js/main.f7827f5f.js.map",
     "623.69c45dc4.chunk.js.map": "/static/js/623.69c45dc4.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.c1e900f8.css",
-    "static/js/main.a2fabc58.js"
+    "static/css/main.11e9f928.css",
+    "static/js/main.f7827f5f.js"
   ]
 }
