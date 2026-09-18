@@ -335,18 +335,29 @@ export const useAdminItems = (
     // get()으로 읽어 캐시를 데우고, 그 진짜 최신값 기준으로 먼저 검증한다.
     const inventoryRef = ref(database, `members/${memberId}/inventory`);
     let liveInventory;
+    let liveSnapshotExists;
+    let liveSnapshotRaw;
     try {
       const liveSnapshot = await get(inventoryRef);
-      liveInventory = liveSnapshot.exists() ? (liveSnapshot.val() || []) : [];
+      liveSnapshotExists = liveSnapshot.exists();
+      liveSnapshotRaw = liveSnapshotExists ? liveSnapshot.val() : null;
+      liveInventory = Array.isArray(liveSnapshotRaw)
+        ? liveSnapshotRaw
+        : (liveSnapshotRaw && typeof liveSnapshotRaw === 'object' ? Object.values(liveSnapshotRaw) : []);
     } catch (error) {
-      return { success: false, reason: '인벤토리를 불러오지 못했습니다.' };
+      return { success: false, reason: `인벤토리를 불러오지 못했습니다. (${error?.message || error})` };
     }
 
     for (const { name, count } of deductEntries) {
       const target = normalizeItemName(name);
       const totalOwned = liveInventory.reduce((sum, i) => sum + (normalizeItemName(i?.name) === target ? (i?.count || 0) : 0), 0);
       if (totalOwned < count) {
-        return { success: false, reason: `"${name}" 재고 부족 (필요 ${count}개, 보유 ${totalOwned}개)` };
+        // ⭐ 임시 진단 정보 — 원인 파악 후 제거 예정. memberId가 실제로 맞는 경로를
+        // 가리키는지, 그 경로에 데이터가 존재하는지, 배열 형태였는지를 함께 보여준다.
+        return {
+          success: false,
+          reason: `"${name}" 재고 부족 (필요 ${count}개, 보유 ${totalOwned}개) [DEBUG memberId=${memberId}, exists=${liveSnapshotExists}, rawType=${Array.isArray(liveSnapshotRaw) ? 'array' : typeof liveSnapshotRaw}, rawLen=${liveInventory.length}]`
+        };
       }
     }
 
