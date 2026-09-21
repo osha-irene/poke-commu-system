@@ -316,10 +316,18 @@ const TITLE_STICKER_SIZE_BOOST = {
   comorantlover: 3,
 };
 
+// '늘 밥을 해줬어(cooking)' 칭호는 멤버마다 랜덤 배치하지 않고, 항상 사진 가로 중앙·세로 위쪽에 고정한다.
+const TITLE_FIXED_ANCHOR = {
+  cooking: { left: 50, top: 10 },
+};
+
 const getTitleStickerStyle = (member, titleId) => {
   const seed = `${member?.id || member?.name || ''}:${titleId || ''}`;
-  const { left, top } = getStickerAnchorPosition(seed);
-  const rotation = -18 + seededNumber(`${seed}:rotation`) * 36;
+  const fixedAnchor = TITLE_FIXED_ANCHOR[titleId];
+  const { left, top } = fixedAnchor || getStickerAnchorPosition(seed);
+  const rotation = fixedAnchor
+    ? -6 + seededNumber(`${seed}:rotation`) * 12
+    : -18 + seededNumber(`${seed}:rotation`) * 36;
   const size = 63 + seededNumber(`${seed}:size`) * 18 + (TITLE_STICKER_SIZE_BOOST[titleId] || 0);
   return buildStickerStyle({ left, top, size, rotation });
 };
