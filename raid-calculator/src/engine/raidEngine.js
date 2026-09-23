@@ -112,9 +112,29 @@ export function orderingSpeed(state, entity) {
 }
 export { isTrickRoom };
 
+/** 시전자가 접지 상태인가 (와이드포스의 필드 판정 등에 사용). 중력/접지 상태(천개의화살 등)면
+ * 무조건 접지, 그 외엔 부양 특성·공중부양·비행 타입이면 비접지 */
+function isEntityGrounded(entity, state) {
+  if (!entity) return true;
+  if ((state && isGravity(state)) || entity.grounded) return true;
+  if (abilityId(entity) === 'levitate') return false;
+  if (itemId(entity) === 'airballoon') return false;
+  if ((entity.types || []).includes('Flying')) return false;
+  return true;
+}
+
+// 필드 상태에 따라 조건부로 범위기가 되는 기술
+// 와이드포스: 사이코필드 + 시전자가 접지 상태일 때만 상대 전체 공격
+const CONDITIONAL_SPREAD_MOVES = {
+  expandingforce: (terrain, attacker, state) => terrain === 'Psychic' && isEntityGrounded(attacker, state),
+};
+
 // 범위기: allAdjacentFoes = 상대 전체, allAdjacent = 상대+아군 전체(지진/파도타기/폭발 등)
-export function isSpreadMove(moveData) {
-  return !!moveData && (moveData.target === 'allAdjacent' || moveData.target === 'allAdjacentFoes');
+export function isSpreadMove(moveData, terrain, attacker, state) {
+  if (!moveData) return false;
+  if (moveData.target === 'allAdjacent' || moveData.target === 'allAdjacentFoes') return true;
+  const conditional = CONDITIONAL_SPREAD_MOVES[moveData.id];
+  return conditional ? conditional(terrain, attacker, state) : false;
 }
 /** allAdjacent(지진/파도타기 등)만 아군까지 휩쓴다 */
 function hitsAllies(moveData) {
@@ -569,7 +589,11 @@ function attack(attacker, defender, moveId, options = {}) {
       nextDefender.protectedThisRound && !breaksProtect(moveData)) {
     const pt = nextDefender.protectedThisRound.type;
     const blocked =
-      pt === 'wideguard' ? isSpreadMove(moveData) : pt === 'quickguard' ? (moveData.priority || 0) > 0 : true;
+      pt === 'wideguard'
+        ? isSpreadMove(moveData, fld.terrain, nextAttacker, options.state)
+        : pt === 'quickguard'
+          ? (moveData.priority || 0) > 0
+          : true;
     if (blocked) {
       lines.push(`${nextDefender.nickname}은(는) 방어했다!`);
       const isContact = moveData.flags && moveData.flags.contact && !noContact(nextAttacker, moveData);
@@ -2033,19 +2057,45 @@ export function executeBossAction(state, moveId, targetId) {
   const gatedBoss = bossGate.attacker;
   const gateLines = bossGate.lines.map((text) => ({ round: roundNum, phase: 'boss', text }));
 
-  // 범위기(파도타기/지진/락슬라이드/열풍 등): 대상 지정·가로채기(뒤는맡기라고) 무시하고
-  // 살아있는 참가자 전원을 각각 때린다(2명 이상이면 범위 감소 0.75배). 부가효과·급소는 대상별로 굴린다.
-  if (isSpreadMove(bossMoveInfo)) {
+  // 범위기(파도타기/지진/락슬라이드/열풍 등): 살아있는 참가자 전원을 각각 때린다
+  // (2명 이상이면 범위 감소 0.75배). 부가효과·급소는 대상별로 굴린다.
+  // 단, "뒤는 맡기라고"로 가디언이 활성화되어 있으면 원래 노렸던 한 명 몫을 가디언이 대신 받는다
+  // (가디언도 자기 몫이 있으면 중복 집계하지 않고 딱 1번만 맞는다). 나머지 참가자는 그대로 범위 피해를 받는다.
+  if (isSpreadMove(bossMoveInfo, getField(state).terrain, gatedBoss, state)) {
     const targetIdxs = state.participants
       .map((p, i) => (p && !p.fainted ? i : -1))
       .filter((i) => i !== -1);
     if (targetIdxs.length === 0) return state;
 
+    const guardians = state.participants.filter((p) => p && !p.fainted && p.redirectActive);
+    const intendedTarget =
+      targetId !== 'random' ? state.participants.find((p) => p && String(p.id) === String(targetId)) : null;
+    const guardian =
+      guardians.length === 0
+        ? null
+        : (intendedTarget && guardians.find((g) => (g.team || '') === (intendedTarget.team || ''))) || guardians[0];
+    const guardianIdx = guardian ? state.participants.findIndex((p) => p && p.id === guardian.id) : -1;
+    // 대상이 'random'이었으면(보스가 원래 무작위로 노렸을 상황) 가디언 본인을 뺀 생존 참가자 중
+    // 하나를 무작위로 "구해줄 대상"으로 골라 그 몫을 가디언이 대신 받는다.
+    let intendedIdx = intendedTarget ? state.participants.findIndex((p) => p && p.id === intendedTarget.id) : -1;
+    if (guardian && intendedIdx === -1 && targetId === 'random') {
+      const randomPool = targetIdxs.filter((i) => i !== guardianIdx);
+      if (randomPool.length > 0) {
+        intendedIdx = randomPool[Math.floor(Math.random() * randomPool.length)];
+      }
+    }
+
+    let hitIdxs = targetIdxs;
+    if (guardian && intendedIdx !== -1 && intendedIdx !== guardianIdx) {
+      // 지정됐던 대상 자리를 가디언으로 치환. 가디언이 원래도 범위 안에 있었다면 중복 제거해 1번만 맞는다.
+      hitIdxs = [...new Set(targetIdxs.map((i) => (i === intendedIdx ? guardianIdx : i)))];
+    }
+
     let boss = gatedBoss;
     let participants = [...state.participants];
     let lines = [];
     const isSpread = targetIdxs.length > 1;
-    for (const i of targetIdxs) {
+    for (const i of hitIdxs) {
       if (participants[i].fainted) continue;
       const r = attack(boss, participants[i], moveId, {
         state,
@@ -2055,6 +2105,10 @@ export function executeBossAction(state, moveId, targetId) {
       boss = r.attacker;
       participants[i] = r.defender;
       lines = [...lines, ...r.lines];
+    }
+    // 대상으로 지정됐던 가디언은 한 번 받아내면 해제
+    if (guardian) {
+      participants = participants.map((p) => (p && p.id === guardian.id ? { ...p, redirectActive: false } : p));
     }
     const log = [...state.log, ...gateLines, ...lines.map((text) => ({ round: roundNum, phase: 'boss', text }))];
     const next = { ...state, boss, participants, log };
@@ -2278,8 +2332,8 @@ export function executeParticipantCheer(state, participantId, cheerId) {
       lines.push(`${actor.nickname}이(가) 이번 턴 공격을 대신 받아낸다!`);
       break;
     case 'pumpup':
-      participants = participants.map((p, i) => (i === idx ? applyStatBuff(p, { atk: 1, spa: 1 }, 3) : p));
-      lines.push(`${actor.nickname}의 공격/특수공격이 상승했다!`);
+      participants = participants.map((p, i) => (i === idx ? applyCheerMult(p, 'cheerOffense', 1.5, 3) : p));
+      lines.push(`${actor.nickname}의 공격/특수공격이 3턴 동안 1.5배가 됐다!`);
       break;
     case 'finisher':
       participants = participants.map((p, i) => (i === idx ? { ...p, pendingFinisher: true } : p));
