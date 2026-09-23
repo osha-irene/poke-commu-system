@@ -6,7 +6,7 @@ import { getItemPocket, canUseItem, CATEGORIES, POCKET_LABELS } from '../../../u
 import { isSoyYYNItem } from '../../../utils/specialItemUtils';
 import { getOwnedPokemonSpriteUrl } from '../../../utils/pokemonImageUtils';
 import { getItemEffectBadges } from '../../../utils/itemEffectBadges';
-import { canUseItemOnPokemonTarget, FORM_CHANGE_ITEM_POKEMON } from '../../../utils/itemUsageRules';
+import { canUseItemOnPokemonTarget, FORM_CHANGE_ITEM_POKEMON, isEvolutionTriggerItem } from '../../../utils/itemUsageRules';
 
 const NECTAR_FORM_MAP = {
   'red-nectar': 'oricorio-baile',
@@ -110,6 +110,7 @@ export default function MobileItemsView() {
     if (details.itemData?.isTM) return false;
     if (isFormChangeItem(item)) return false;
     if (String(details.itemData?.category || item.category || '').includes('evolution')) return false;
+    if (isEvolutionTriggerItem(item, details.itemData)) return false;
     return ![
       'qnaItemPermit',
       'abilityPatch',

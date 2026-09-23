@@ -65,6 +65,23 @@ const getPokemonNumbers = (pokemon = {}) => {
     .filter((number, index, numbers) => Number.isFinite(number) && numbers.indexOf(number) === index);
 };
 
+// evolutions.json에서 condition.type === 'item'으로 쓰이는 아이템 이름 목록.
+// 부적금화(amulet-coin, 모으령 → 타부자고)처럼 category가 "evolution"이 아닌데도
+// 진화 아이템으로 쓰이는 경우를 잡기 위해 카테고리 대신 진화 데이터 기준으로도 판별한다.
+const ITEM_EVOLUTION_TRIGGER_NAMES = new Set(
+  (evolutionsData.evolutions || [])
+    .filter(evolution => evolution.condition?.type === 'item' && evolution.condition.item)
+    .map(evolution => normalizeItemNameForUse(evolution.condition.item))
+);
+
+export const isEvolutionTriggerItem = (item, itemData = null) => {
+  const src = itemData || item;
+  if (String(src?.category || item?.category || '').includes('evolution')) return true;
+  return [item?.name, item?.nameEn, itemData?.name, itemData?.nameEn]
+    .map(normalizeItemNameForUse)
+    .some(name => name && ITEM_EVOLUTION_TRIGGER_NAMES.has(name));
+};
+
 export const findItemEvolution = (pokemon, item, itemData = null) => {
   const pokemonNumbers = new Set(getPokemonNumbers(pokemon));
   if (pokemonNumbers.size === 0) return null;
@@ -204,6 +221,14 @@ export const canUseItemOnPokemonTarget = ({
 
   if (resolvedItemData?.category?.includes('evolution')) {
     return Boolean(findItemEvolution(pokemon, item, itemData));
+  }
+
+  // category는 evolution이 아니지만 진화 데이터에 쓰이는 아이템(부적금화 등).
+  // 공식 아이템은 진화 말고 다른 사용 효과가 없으므로 진화 가능한 포켓몬에만 쓸 수 있게 한다.
+  // 커스텀 아이템(spicy_wailord 등)은 친밀도 등 다른 효과도 있어서 아래 일반 판정으로 넘긴다.
+  if (isEvolutionTriggerItem(item, itemData)) {
+    if (findItemEvolution(pokemon, item, itemData)) return true;
+    if (!resolvedItemData?.isCustom) return false;
   }
 
   const itemName = resolvedItemData?.nameEn || resolvedItemData?.name || item.nameEn || item.name;

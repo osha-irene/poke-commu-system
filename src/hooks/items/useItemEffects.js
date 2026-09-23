@@ -2,7 +2,7 @@
 import { useRef, useEffect } from 'react';
 import { isEVItem, applyEVItem } from '../../utils/evItemUtils';
 import { getLearnsetTmMoves, getInheritedEggMoves, getPokemonLearnset } from '../../utils/pokemonLearnsets';
-import { isRareCandyItem, resolveItemData } from '../../utils/itemUsageRules';
+import { isRareCandyItem, resolveItemData, isEvolutionTriggerItem } from '../../utils/itemUsageRules';
 import { isSoyYYNItem } from '../../utils/specialItemUtils';
 import { findPokemonTemplate } from '../../utils/pokemonBaseStats';
 import { getPokemonAbilities } from '../../utils/abilityUtils';
@@ -27,6 +27,8 @@ const CONSUMABLE_FORM_CHANGE_ITEMS = new Set(['furfrou-trim-ticket']);
 // category가 "evolution"이 아니어도 진화 체크를 같이 태워야 하는 예외 아이템.
 // "고래왕급 고추장 떡볶이"(spicy_wailord, 관리자가 vitamins 카테고리의 친밀도 아이템으로
 // 만들어서 진화 아이템 분기를 안 타던 커스텀 아이템)만 예외로 처리한다.
+// 부적금화(amulet-coin)처럼 evolutions.json에 진화 아이템으로 등록된 아이템은
+// isEvolutionTriggerItem이 진화 데이터 기준으로 따로 잡아준다.
 const EVOLUTION_CHECK_EXCEPTION_ITEMS = new Set(['spicy_wailord']);
 
 // 꿀 아이템 → 오리코리오 특정 폼 nameEn 직접 매핑
@@ -633,7 +635,7 @@ export const useItemEffects = (
     // 먼저 체크해야 한다 - 안 그러면 spicy_wailord처럼 친밀도 등 다른 효과가 같이 붙은
     // 진화 아이템은 그 효과 처리에서 먼저 return돼버려 진화 체크에 영영 도달하지 못한다.
     // updatedPokemon을 넘겨서 여기서 오른 친밀도 등이 진화 결과에도 반영되게 한다.
-    if (itemData?.category?.includes('evolution') || EVOLUTION_CHECK_EXCEPTION_ITEMS.has(itemData?.nameEn)) {
+    if (isEvolutionTriggerItem(item, itemData) || EVOLUTION_CHECK_EXCEPTION_ITEMS.has(itemData?.nameEn)) {
       const success = evolutionHook.evolveWithItem(updatedPokemon, itemData.nameEn || itemData.name);
       if (success) {
         consumeItem(item);

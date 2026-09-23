@@ -1,6 +1,7 @@
 // src/utils/itemUtils.js
 import { Package, Circle, Heart, Zap, Sparkles, Disc, ShoppingBag, Cpu, Dumbbell, Key, ChefHat } from 'lucide-react';
 import { isSoyYYNItem } from './specialItemUtils';
+import { isEvolutionTriggerItem } from './itemUsageRules';
 
 export const ITEM_POCKETS = {
   POKEBALLS: 'pokeballs',
@@ -253,6 +254,7 @@ export const canUseItem = (item) => {
     category === ITEM_POCKETS.MEDICINE ||
     category === ITEM_POCKETS.MACHINES ||
     category?.includes('evolution') ||
+    isEvolutionTriggerItem(item) ||
     category?.includes('berry') ||
     item.isTM ||
     (item.specialEffect && !(item.isCustom && item.specialEffect === 'iv')) ||
