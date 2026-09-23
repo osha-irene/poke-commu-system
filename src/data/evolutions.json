@@ -4907,6 +4907,17 @@
                 "level": 54
             }
         },
+
+        {
+            "from": 999,
+            "to": 1000,
+            "fromName": "Gimmighoul",
+            "toName": "Gholdengo",
+            "condition": {
+                "type": "item",
+                "item": "amulet-coin"
+            }
+        },
         {
             "from": 349,
             "to": 350,
