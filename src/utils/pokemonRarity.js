@@ -29,6 +29,25 @@ const PARADOX_NUMBERS = new Set([
   1020, 1021, 1022, 1023,
 ]);
 
+// 게임 내부 플래그상 공식 전설/환상은 아니지만, 관리자 요청으로 동일하게 취급하는 예외.
+const SPECIAL_UNCATCHABLE_NUMBERS = new Set([
+  489, // 피오네
+  891, // 치고마 (Kubfu)
+  892, // 우라오스 (Urshifu)
+  // 울트라비스트
+  793, // 텅비드
+  794, // 매시붕
+  795, // 페로코체
+  796, // 전수목
+  797, // 철화구야
+  798, // 종이신도
+  799, // 악식킹
+  803, // 베베놈
+  804, // 아고용
+  805, // 차곡차곡
+  806, // 두파팡
+]);
+
 function getSpeciesNumber(pokemon) {
   const number = Number(pokemon?.originalNumber ?? pokemon?.number);
   return Number.isFinite(number) ? number : null;
@@ -39,5 +58,6 @@ export function isUncatchableRarePokemon(pokemon) {
   if (speciesNumber === null) return false;
   return LEGENDARY_NUMBERS.has(speciesNumber)
     || MYTHICAL_NUMBERS.has(speciesNumber)
-    || PARADOX_NUMBERS.has(speciesNumber);
+    || PARADOX_NUMBERS.has(speciesNumber)
+    || SPECIAL_UNCATCHABLE_NUMBERS.has(speciesNumber);
 }
