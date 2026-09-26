@@ -3,6 +3,7 @@
 
 import { useIndividualValues } from './useIndividualValues';
 import { DEFAULT_IVS } from '../../utils/pokemonIndividualValues';
+import { isUncatchableRarePokemon } from '../../utils/pokemonRarity';
 
 const SAFARI_BALL_DAILY_REWARD_COUNT = 10;
 const DAILY_EXPLORE_EXHAUSTED_EXP = 100;
@@ -176,8 +177,11 @@ export const useRegionExplore = (
 
         const pokemonNumber = String(randomPokemon.number);
 
-        // 첫 조우 기록
-        await recordFirstEncounter(pokemonNumber, encounterLocationName);
+        // 전설/환상/패러독스 포켓몬은 도감에 남기지 않는다 (이름도 ???로 숨기고 포획도 불가능하므로).
+        if (!isUncatchableRarePokemon(randomPokemon)) {
+          // 첫 조우 기록
+          await recordFirstEncounter(pokemonNumber, encounterLocationName);
+        }
 
         const regionMaxLevel = region.regionMaxLevel || region.maxLevel || 20;
         const maxLevel = Math.min(region.maxLevel || regionMaxLevel, regionMaxLevel);

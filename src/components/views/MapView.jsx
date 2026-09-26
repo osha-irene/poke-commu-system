@@ -2,6 +2,7 @@ import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallba
 import { Trees, Mountain, Waves, ChevronLeft, Footprints } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../utils/pokemonIconUtils';
 import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
+import { isUncatchableRarePokemon } from '../../utils/pokemonRarity';
 import mapBg from '../../assets/map/map.png';
 import pokeballImg from '../../assets/pokeball.png';
 import mapBackImg from '../../assets/map/map-back.png';
@@ -333,7 +334,8 @@ export default function MapView({
       ? allPokemonMaster.filter(p => missingIds.includes(p.id) || missingIds.includes(p.number))
       : [];
 
-    return [...matched, ...fallback];
+    // 전설/환상/패러독스 포켓몬은 지역 설정에 포함돼 있어도 등장 포켓몬 미리보기에는 노출하지 않는다.
+    return [...matched, ...fallback].filter(p => !isUncatchableRarePokemon(p));
   };
 
 

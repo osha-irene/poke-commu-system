@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, ChevronLeft, MapPin, Footprints, Trees, Mountain, Waves } from 'lucide-react';
 import { getPokemonLocalIconUrl } from '../../../utils/pokemonIconUtils';
 import { getPokemonDisplayParts } from '../../../utils/pokemonDisplayName';
+import { isUncatchableRarePokemon } from '../../../utils/pokemonRarity';
 
 const P = {
   bg:      'rgba(255,255,255,0.92)',
@@ -88,7 +89,8 @@ export default function MobileMapView({
       ? allPokemonMaster.filter(p => missingIds.includes(p.id) || missingIds.includes(p.number))
       : [];
 
-    return [...matched, ...fallback];
+    // 전설/환상/패러독스 포켓몬은 지역 설정에 포함돼 있어도 등장 포켓몬 미리보기에는 노출하지 않는다.
+    return [...matched, ...fallback].filter(p => !isUncatchableRarePokemon(p));
   };
 
   const getDisplayPokemon = (area, place) => {

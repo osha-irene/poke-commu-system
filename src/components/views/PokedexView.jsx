@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Search, Lock, CheckCircle, Edit2, MapPin } from 'lucide-react';
 import { COLORS } from '../../styles/theme';
 import { getPokemonDisplayParts } from '../../utils/pokemonDisplayName';
+import { isUncatchableRarePokemon } from '../../utils/pokemonRarity';
+import { getGenderedSpriteUrl } from '../../utils/pokemonImageUtils';
 
 const TYPE_COLORS = COLORS.types;
 
@@ -21,6 +23,11 @@ const getDexDisplayParts = (pokemon = {}) => {
   const parts = getPokemonDisplayParts(pokemon);
   if (isSizeUnifiedForm(pokemon)) {
     return { name: pokemon.baseSpecies || parts.name, formLabel: '' };
+  }
+  // 에써르/냐오닉스처럼 formVariant가 "-male"로 저장된 성별차이 포켓몬은 별도 폼이 아니라
+  // 도감 상세의 수컷/암컷 탭으로 보여주므로, 여기서 "수컷" 폼 라벨이 붙지 않게 한다.
+  if (pokemon.hasGenderDiff === true) {
+    return { name: parts.name, formLabel: '' };
   }
   return parts;
 };
@@ -50,9 +57,13 @@ export default function PokedexView({
   pokedexActiveTowns = [],
   isMobile = false,
 }) {
+  // 전설/환상/패러독스 포켓몬은 도감 자체에 노출하지 않는다.
+  pokedex = pokedex.filter(pokemon => !isUncatchableRarePokemon(pokemon));
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPokemon, setSelectedPokemon] = useState(null);
   const [selectedForm, setSelectedForm] = useState(null);
+  const [selectedGender, setSelectedGender] = useState('male');
   const [isEditingMemo, setIsEditingMemo] = useState(false);
   const [memoText, setMemoText] = useState('');
   const [isEditingRegions, setIsEditingRegions] = useState(false);
@@ -436,6 +447,7 @@ export default function PokedexView({
 
     setIsEditingMemo(false);
     setIsEditingRegions(false);
+    setSelectedGender('male');
 
     const entry = getPokedexEntry(pokemon);
     setMemoText(entry?.memo || '');
@@ -489,6 +501,14 @@ export default function PokedexView({
   const getPokemonSpriteUrl = (pokemon) => (
     `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pokemon.number}.png`
   );
+
+  // 상세 화면에서 수컷/암컷 모습이 다른 포켓몬(hasGenderDiff)의 선택된 성별 스프라이트를 반환한다.
+  const getDetailSpriteUrl = (pokemon, gender) => {
+    if (gender === 'female') {
+      return getGenderedSpriteUrl({ gender: 'female' }, pokemon) || getPokemonSpriteUrl(pokemon);
+    }
+    return getPokemonSpriteUrl(pokemon);
+  };
 
   if (isMobile) {
     return (
@@ -622,9 +642,28 @@ export default function PokedexView({
                 {getDexDisplayParts(selectedForm).name}
               </div>
 
+              {/* 수컷/암컷 모습 탭 */}
+              {selectedForm.hasGenderDiff === true && (
+                <div style={{ display: 'flex', gap: 4, justifyContent: 'center', marginBottom: 12 }}>
+                  {['male', 'female'].map(gender => {
+                    const isActive = selectedGender === gender;
+                    return (
+                      <button key={gender} onClick={() => setSelectedGender(gender)} style={{
+                        padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+                        border: `1.5px solid ${isActive ? '#209a5b' : 'rgba(120,180,60,0.35)'}`,
+                        background: isActive ? '#209a5b' : 'transparent',
+                        color: isActive ? '#fff' : '#407a5c', cursor: 'pointer',
+                      }}>
+                        {gender === 'male' ? '수컷' : '암컷'}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
               {/* 스프라이트 */}
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
-                <img src={getPokemonSpriteUrl(selectedForm)} alt={selectedForm.name}
+                <img src={getDetailSpriteUrl(selectedForm, selectedGender)} alt={selectedForm.name}
                   style={{ width: 96, height: 96, imageRendering: 'pixelated', objectFit: 'contain' }} />
               </div>
 
@@ -645,7 +684,7 @@ export default function PokedexView({
                     {allForms.map(form => {
                       const isActive = selectedForm.number === form.number;
                       return (
-                        <button key={form.number} onClick={() => setSelectedForm(form)} style={{
+                        <button key={form.number} onClick={() => { setSelectedForm(form); setSelectedGender('male'); }} style={{
                           padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
                           border: `1.5px solid ${isActive ? '#209a5b' : 'rgba(120,180,60,0.35)'}`,
                           background: isActive ? '#209a5b' : 'transparent',
@@ -975,6 +1014,7 @@ export default function PokedexView({
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedForm(originalForm);
+                          setSelectedGender('male');
                         }}
                         className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                           selectedForm.number === originalForm.number
@@ -996,6 +1036,7 @@ export default function PokedexView({
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedForm(form);
+                            setSelectedGender('male');
                           }}
                           className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                             selectedForm.number === form.number
@@ -1011,9 +1052,28 @@ export default function PokedexView({
                 );
               })()}
 
+              {/* 수컷/암컷 모습 탭 */}
+              {selectedForm.hasGenderDiff === true && (
+                <div className="mb-4 flex gap-2 justify-center">
+                  {['male', 'female'].map(gender => (
+                    <button
+                      key={gender}
+                      onClick={(e) => { e.stopPropagation(); setSelectedGender(gender); }}
+                      className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                        selectedGender === gender
+                          ? 'bg-[#1f7448] text-white shadow-lg'
+                          : 'bg-[#c6edd9] text-[#244a36] hover:bg-[#9be6bf]'
+                      }`}
+                    >
+                      {gender === 'male' ? '수컷' : '암컷'}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {/* 포켓몬 이미지 */}
               <img
-                src={getPokemonSpriteUrl(selectedForm)}
+                src={getDetailSpriteUrl(selectedForm, selectedGender)}
                 alt={selectedForm.name}
                 className="pokedex-modal-sprite mx-auto mb-4 bg-transparent"
               />

@@ -11,6 +11,7 @@ import encounterPokemonImg from '../../assets/map/encounter-pokemon.png';
 import { getEncounterBackground, isNoBaseBackground } from '../../utils/encounterBackground';
 import { getEncounterBgBase } from '../../utils/encounterBgBase';
 import { getGenderedSpriteUrl } from '../../utils/pokemonImageUtils';
+import { isUncatchableRarePokemon } from '../../utils/pokemonRarity';
 
 const getBaseName = (name) => name?.replace(/\s*\(.*?\)\s*/g, '').trim() || name;
 
@@ -40,6 +41,9 @@ export default function EncounterModal({
 }) {
   const bgImage = useMemo(() => getEncounterBackground(encounterBackground), [encounterBackground]);
   const bgBase = useMemo(() => isNoBaseBackground(encounterBackground) ? null : getEncounterBgBase(encounterBackground), [encounterBackground]);
+  // 전설/환상/패러독스 포켓몬은 이름을 ???로 숨기고 어떤 볼로도 잡을 수 없게 한다.
+  const isMysteryEncounter = useMemo(() => isUncatchableRarePokemon(pokemon), [pokemon]);
+  const displayName = isMysteryEncounter ? '???' : getBaseName(pokemon.name);
   const [selectedBall, setSelectedBall] = useState(null);
   const [catching, setCatching] = useState(false);
   const [result, setResult] = useState(null);
@@ -390,6 +394,13 @@ export default function EncounterModal({
   const handleBallSelect = (e, ball) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (isMysteryEncounter) {
+      alert('???가 사라졌다!');
+      onClose();
+      return;
+    }
+
     setSelectedBall(ball);
   };
 
@@ -430,41 +441,58 @@ export default function EncounterModal({
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 12px 0 31px', fontFamily: "'Mona12 Text KR','Mona12',monospace", transform: 'translate(10px, 10px)' }}>
                   {/* 이름 + 레벨 */}
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, transform: 'translateY(-20px)' }}>
-                    <span style={{ fontWeight: 800, fontSize: 20, color: '#1a1a1a', whiteSpace: 'nowrap' }}>야생의 {getBaseName(pokemon.name)}</span>
-                    <span style={{ fontSize: 12, color: '#555', fontWeight: 600, whiteSpace: 'nowrap' }}>Lv.{pokemon.level ?? '???'}</span>
+                    <span style={{ fontWeight: 800, fontSize: 20, color: '#1a1a1a', whiteSpace: 'nowrap' }}>{isMysteryEncounter ? displayName : `야생의 ${displayName}`}</span>
+                    <span style={{ fontSize: 12, color: '#555', fontWeight: 600, whiteSpace: 'nowrap' }}>Lv.{isMysteryEncounter ? '???' : (pokemon.level ?? '???')}</span>
                   </div>
                   {/* 타입 뱃지 + 특성 + 성별 */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 9, flexWrap: 'wrap', transform: 'scale(1.32) translateY(-10px)', transformOrigin: 'left center' }}>
-                    {[pokemon.type, pokemon.type2].filter(Boolean).map(t => (
-                      <span key={t} style={{
+                    {isMysteryEncounter ? (
+                      <span style={{
                         padding: '1px 7px', borderRadius: 999, fontSize: 10, fontWeight: 700, color: '#fff',
-                        background: TYPE_COLORS[t] || '#888',
-                      }}>{t}</span>
-                    ))}
-                    {pokemon.ability && (
+                        background: '#888',
+                      }}>???</span>
+                    ) : (
+                      [pokemon.type, pokemon.type2].filter(Boolean).map(t => (
+                        <span key={t} style={{
+                          padding: '1px 7px', borderRadius: 999, fontSize: 10, fontWeight: 700, color: '#fff',
+                          background: TYPE_COLORS[t] || '#888',
+                        }}>{t}</span>
+                      ))
+                    )}
+                    {isMysteryEncounter ? (
+                      <span style={{ fontSize: 10, color: '#333', fontWeight: 600, whiteSpace: 'nowrap', marginLeft: 8 }}>
+                        ???
+                      </span>
+                    ) : pokemon.ability && (
                       <span style={{ fontSize: 10, color: '#333', fontWeight: 600, whiteSpace: 'nowrap', marginLeft: 8 }}>
                         {pokemon.ability}
                       </span>
                     )}
-                    {pokemon.gender === 'male' && (
-                      <svg width="13" height="13" viewBox="0 0 100 100" style={{ flexShrink: 0 }}>
-                        {/* 원 */}
-                        <circle cx="38" cy="62" r="26" fill="none" stroke="#4a90d9" strokeWidth="10"/>
-                        {/* 화살표 선 */}
-                        <line x1="57" y1="43" x2="90" y2="10" stroke="#4a90d9" strokeWidth="10" strokeLinecap="round"/>
-                        {/* 화살표 머리 */}
-                        <polyline points="65,8 92,8 92,35" fill="none" stroke="#4a90d9" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    )}
-                    {pokemon.gender === 'female' && (
-                      <svg width="13" height="13" viewBox="0 0 100 100" style={{ flexShrink: 0 }}>
-                        {/* 원 */}
-                        <circle cx="50" cy="38" r="28" fill="none" stroke="#e05c8a" strokeWidth="10"/>
-                        {/* 세로선 */}
-                        <line x1="50" y1="66" x2="50" y2="92" stroke="#e05c8a" strokeWidth="10" strokeLinecap="round"/>
-                        {/* 가로선 */}
-                        <line x1="34" y1="82" x2="66" y2="82" stroke="#e05c8a" strokeWidth="10" strokeLinecap="round"/>
-                      </svg>
+                    {isMysteryEncounter ? (
+                      <span style={{ fontSize: 10, color: '#333', fontWeight: 600, whiteSpace: 'nowrap' }}>???</span>
+                    ) : (
+                      <>
+                        {pokemon.gender === 'male' && (
+                          <svg width="13" height="13" viewBox="0 0 100 100" style={{ flexShrink: 0 }}>
+                            {/* 원 */}
+                            <circle cx="38" cy="62" r="26" fill="none" stroke="#4a90d9" strokeWidth="10"/>
+                            {/* 화살표 선 */}
+                            <line x1="57" y1="43" x2="90" y2="10" stroke="#4a90d9" strokeWidth="10" strokeLinecap="round"/>
+                            {/* 화살표 머리 */}
+                            <polyline points="65,8 92,8 92,35" fill="none" stroke="#4a90d9" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                        {pokemon.gender === 'female' && (
+                          <svg width="13" height="13" viewBox="0 0 100 100" style={{ flexShrink: 0 }}>
+                            {/* 원 */}
+                            <circle cx="50" cy="38" r="28" fill="none" stroke="#e05c8a" strokeWidth="10"/>
+                            {/* 세로선 */}
+                            <line x1="50" y1="66" x2="50" y2="92" stroke="#e05c8a" strokeWidth="10" strokeLinecap="round"/>
+                            {/* 가로선 */}
+                            <line x1="34" y1="82" x2="66" y2="82" stroke="#e05c8a" strokeWidth="10" strokeLinecap="round"/>
+                          </svg>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -591,7 +619,7 @@ export default function EncounterModal({
                   </div>
                 ) : (
                   <div style={{ fontFamily: "'Mona12 Text KR','Mona12',monospace", fontWeight: 'bold', color: '#1f2937' }}>
-                    <p style={{ fontSize: 22, lineHeight: 1.4 }}>야생의 {getBaseName(pokemon.name)}이(가) 나타났다!</p>
+                    <p style={{ fontSize: 22, lineHeight: 1.4 }}>{isMysteryEncounter ? displayName : `야생의 ${displayName}`}이(가) 나타났다!</p>
                     <p style={{ fontSize: 22, lineHeight: 1.4 }}>무엇을 할까?</p>
                   </div>
                 )}
