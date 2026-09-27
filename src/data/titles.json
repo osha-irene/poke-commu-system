@@ -145,11 +145,6 @@
         "icon": "/img/titles/top.png"
     },
     {
-        "id": "onecoin",
-        "label": "원코인 클리어",
-        "icon": "/img/titles/onecoin.png"
-    },
-    {
         "id": "watchme",
         "label": "스타랭크 ★★★★★",
         "icon": "/img/titles/watchme.png"
