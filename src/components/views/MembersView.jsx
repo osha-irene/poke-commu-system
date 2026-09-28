@@ -64,6 +64,7 @@ const TITLE_BONUS_STICKERS = {
 // 어떤 칭호로 바꾸더라도(칭호를 착용하고 있는 한) 계속 붙어 있는다.
 const MEMBER_BONUS_STICKERS = {
   xoHhSwEcl3bEbBw3PAOGA7LfS783: '/img/titles/piplup.png',
+  CopeY3T0pFXB7nh3dxJp1DR0s0C2: '/img/titles/SIRFETCHD.png',
 };
 const BADGE_CLEANLINESS_DEFAULT = 2;
 const BADGE_CLEANLINESS_MIN = 1;
@@ -355,6 +356,18 @@ const getDiagonalStickerStyle = (member, titleId, primaryPosition, size) => {
   const mirroredTop = STICKER_TOP_MIRROR_SUM - primaryPosition.top;
   const left = pushTowardEdge(mirroredLeft, 5, 92);
   const top = pushTowardEdge(mirroredTop, 6, 62);
+  return buildStickerStyle({ left, top, size, rotation });
+};
+
+// 멤버 전용 보조 스티커(MEMBER_BONUS_STICKERS)는 칭호 착용 여부와 무관하게 항상 떠 있어야
+// 해서, 칭호 스티커 위치를 반사하는 getDiagonalStickerStyle과 달리 멤버 id만으로 독립적인
+// 위치를 잡는다. 가장자리로 미는 강도도 더 약하게 줘서(1.4) 극단적인 모서리에 붙어
+// 얼굴 사진 밖으로 삐져나오는 것처럼 보이지 않게 한다.
+const getMemberBonusStickerStyle = (member, size) => {
+  const seed = `${member?.id || member?.name || ''}:member-bonus`;
+  const rotation = -18 + seededNumber(`${seed}:rotation`) * 36;
+  const left = pushTowardEdge(11 + seededNumber(`${seed}:left`) * 74, 10, 88, 1.4);
+  const top = pushTowardEdge(10 + seededNumber(`${seed}:top`) * 40, 10, 56, 1.4);
   return buildStickerStyle({ left, top, size, rotation });
 };
 
@@ -752,15 +765,17 @@ function MemberCard({ member, titles, onClick }) {
   const titleIcon = getTitleIconUrl(member?.title, titles);
   const titleLabel = titleIcon ? getTitleLabel(member?.title, titles) : '';
   const titleStickerStyle = titleIcon ? getTitleStickerStyle(member, member.title) : null;
-  const bonusStickerIcon = titleIcon ? (TITLE_BONUS_STICKERS[member?.title] || MEMBER_BONUS_STICKERS[member?.id]) : null;
-  const bonusStickerStyle = bonusStickerIcon
+  const titleBonusIcon = titleIcon ? TITLE_BONUS_STICKERS[member?.title] : null;
+  const memberBonusIcon = MEMBER_BONUS_STICKERS[member?.id] || null;
+  const bonusStickerIcon = titleBonusIcon || memberBonusIcon;
+  const bonusStickerStyle = titleBonusIcon
     ? getDiagonalStickerStyle(
         member,
         member.title,
         getStickerAnchorPosition(`${member?.id || member?.name || ''}:${member.title || ''}`),
         48
       )
-    : null;
+    : (memberBonusIcon ? getMemberBonusStickerStyle(member, 48) : null);
 
   useEffect(() => {
     setTitleTooltipColor({ bg: 'rgba(35, 32, 28, 0.94)', text: '#fff' });
