@@ -60,6 +60,11 @@ const TITLE_BONUS_STICKERS = {
   millonaire: '/img/titles/millonaire-coin.webp',
   comorantlover: '/img/titles/comorantlover2.png',
 };
+// 위와 달리 특정 칭호가 아니라 특정 멤버에게 항상 붙는 보조 스티커.
+// 어떤 칭호로 바꾸더라도(칭호를 착용하고 있는 한) 계속 붙어 있는다.
+const MEMBER_BONUS_STICKERS = {
+  xoHhSwEcl3bEbBw3PAOGA7LfS783: '/img/titles/piplup.png',
+};
 const BADGE_CLEANLINESS_DEFAULT = 2;
 const BADGE_CLEANLINESS_MIN = 1;
 const BADGE_CLEANLINESS_MAX = 5;
@@ -747,7 +752,7 @@ function MemberCard({ member, titles, onClick }) {
   const titleIcon = getTitleIconUrl(member?.title, titles);
   const titleLabel = titleIcon ? getTitleLabel(member?.title, titles) : '';
   const titleStickerStyle = titleIcon ? getTitleStickerStyle(member, member.title) : null;
-  const bonusStickerIcon = titleIcon ? TITLE_BONUS_STICKERS[member?.title] : null;
+  const bonusStickerIcon = titleIcon ? (TITLE_BONUS_STICKERS[member?.title] || MEMBER_BONUS_STICKERS[member?.id]) : null;
   const bonusStickerStyle = bonusStickerIcon
     ? getDiagonalStickerStyle(
         member,
