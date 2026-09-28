@@ -235,28 +235,28 @@
         "icon": "/img/titles/expert/psychic.png"
     },
     {
+        "id": "steel",
+        "label": "강철 타입 전문가",
+        "icon": "/img/titles/expert/steel.png"
+    },
+    {
         "id": "best-tteokbokki",
         "label": "영접(영운님 접신)",
-        "icon": "/img/titles/expert/best-tteokbokki.png"
+        "icon": "/img/titles/best-tteokbokki.png"
     },
     {
         "id": "random-one",
         "label": "이걸 돌리네?",
-        "icon": "/img/titles/expert/random-one.png"
+        "icon": "/img/titles/random-one.png"
     },
     {
         "id": "random-two",
         "label": "돈 많아? 아껴써",
-        "icon": "/img/titles/expert/random-two.png"
+        "icon": "/img/titles/random-two.png"
     },
     {
         "id": "random-three",
         "label": "도파민 중독자",
-        "icon": "/img/titles/expert/random-three.png"
-    },
-    {
-        "id": "steel",
-        "label": "강철 타입 전문가",
-        "icon": "/img/titles/expert/steel.png"
+        "icon": "/img/titles/random-three.png"
     }
 ]
