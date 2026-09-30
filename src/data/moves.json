@@ -23318,7 +23318,12 @@
         "shadow-claw",
         "bulldoze",
         "work-up",
-        "ice-punch"
+        "ice-punch",
+        "body-slam",
+        "hydro-pump",
+        "whirlpool",
+        "thunder-punch",
+        "fire-punch"
       ],
       "eggMoves": [
         "stomp",
