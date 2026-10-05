@@ -346,6 +346,24 @@ const pushTowardEdge = (value, min, max, strength = 2.2) => {
   return Math.min(max, Math.max(min, pushed));
 };
 
+// 보조(미니) 스티커가 사진 한가운데로 들어오지 않도록, 중앙 영역 안에 떨어진 좌표는
+// 가장 가까운 중앙 영역 경계 바깥쪽으로 밀어낸다.
+const BONUS_STICKER_KEEP_OUT = { left: [28, 72], top: [24, 48] };
+const keepBonusStickerOutOfCenter = (left, top) => {
+  const [l0, l1] = BONUS_STICKER_KEEP_OUT.left;
+  const [t0, t1] = BONUS_STICKER_KEEP_OUT.top;
+  if (left <= l0 || left >= l1 || top <= t0 || top >= t1) return { left, top };
+  const dl = left - l0;
+  const dr = l1 - left;
+  const dt = top - t0;
+  const db = t1 - top;
+  const min = Math.min(dl, dr, dt, db);
+  if (min === dl) return { left: l0, top };
+  if (min === dr) return { left: l1, top };
+  if (min === dt) return { left, top: t0 };
+  return { left, top: t1 };
+};
+
 // 보조 스티커(황금몸 금틀니 등)는 기본 스티커와 좌우/상하가 뒤집힌 대각선 반대편에 붙이되,
 // 얼굴이 있는 중앙부는 가리지 않도록 가장자리 쪽으로 밀어서 배치한다.
 // 보조 스티커는 48px로 고정 크기라(기본 스티커의 63~81px보다 작음) 기본 스티커보다
@@ -355,8 +373,10 @@ const getDiagonalStickerStyle = (member, titleId, primaryPosition, size) => {
   const rotation = -18 + seededNumber(`${seed}:bonus-rotation`) * 36;
   const mirroredLeft = STICKER_LEFT_MIRROR_SUM - primaryPosition.left;
   const mirroredTop = STICKER_TOP_MIRROR_SUM - primaryPosition.top;
-  const left = pushTowardEdge(mirroredLeft, 5, 92);
-  const top = pushTowardEdge(mirroredTop, 6, 62);
+  const { left, top } = keepBonusStickerOutOfCenter(
+    pushTowardEdge(mirroredLeft, 5, 92),
+    pushTowardEdge(mirroredTop, 6, 62)
+  );
   return buildStickerStyle({ left, top, size, rotation });
 };
 
@@ -367,8 +387,10 @@ const getDiagonalStickerStyle = (member, titleId, primaryPosition, size) => {
 const getMemberBonusStickerStyle = (member, size) => {
   const seed = `${member?.id || member?.name || ''}:member-bonus`;
   const rotation = -18 + seededNumber(`${seed}:rotation`) * 36;
-  const left = pushTowardEdge(11 + seededNumber(`${seed}:left`) * 74, 10, 88, 1.4);
-  const top = pushTowardEdge(10 + seededNumber(`${seed}:top`) * 40, 10, 56, 1.4);
+  const { left, top } = keepBonusStickerOutOfCenter(
+    pushTowardEdge(11 + seededNumber(`${seed}:left`) * 74, 10, 88, 1.4),
+    pushTowardEdge(10 + seededNumber(`${seed}:top`) * 40, 10, 56, 1.4)
+  );
   return buildStickerStyle({ left, top, size, rotation });
 };
 
