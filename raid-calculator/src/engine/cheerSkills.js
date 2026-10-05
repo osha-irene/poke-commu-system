@@ -16,12 +16,13 @@ export const CHEER_SKILLS = {
     { id: 'guard', name: '뒤는 맡기라고', desc: '이번 턴 공격 대상을 자신으로 고정' },
   ],
   sword: [
-    { id: 'pumpup', name: '힘내라 힘', desc: '3턴 동안 자신의 공격/특공 1.5배' },
-    { id: 'finisher', name: '끝내버려', desc: '다음 턴 물리/특수공격 3배, 그 다음 턴은 행동불가 (마지막 턴 사용 불가)' },
+    { id: 'pumpup', name: '힘내라 힘', desc: '3턴 동안 자신의 공격/특공 2배' },
+    { id: 'finisher', name: '끝내버려', desc: '다음 턴 물리/특수공격 4배, 그 다음 턴은 행동불가 (마지막 턴 사용 불가)' },
   ],
   healer: [
     { id: 'healcry', name: '치유의 함성', desc: '모든 아군 체력 50% 회복' },
     { id: 'cleanse', name: '만전 태세', desc: '모든 아군 상태이상/얽매임 효과 회복' },
+    { id: 'service', name: '서비스입니다!', desc: '아군 1인의 응원 횟수 1회 회복 (레이드당 1회)' },
   ],
 };
 

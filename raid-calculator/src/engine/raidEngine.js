@@ -3,6 +3,7 @@ import { calculateHP, calculateStat, applyStatStage, NATURE_MODIFIERS } from '..
 import { STAT_LABEL, STATUS_LABEL, findCheerSkill, CHEER_MAX_USES } from '../lib/cheers.js';
 import { resolutionSpeed } from '../lib/turnOrder.js';
 import { isMoveBanned } from './bannedMoves.js';
+import { TYPE_OPTIONS } from '../lib/typeOptions.js';
 import {
   emptyField,
   emptySideConditions,
@@ -105,9 +106,25 @@ const SELF_THAW_MOVES = new Set([
   'matchagotcha',
 ]);
 
-/** 우선도 일괄 처리 정렬용 스피드: 실효 스피드(성격·랭크·마비)에 순풍(2배)까지 반영 */
+// 날씨/필드에서 스피드가 2배가 되는 특성 (쓱쓱·엽록소·모래헤치기·눈치우기·서프테일)
+const SPEED_DOUBLE_ABILITIES = {
+  swiftswim: { weather: ['Rain'] },
+  chlorophyll: { weather: ['Sun'] },
+  sandrush: { weather: ['Sand'] },
+  slushrush: { weather: ['Snow', 'Hail'] },
+  surgesurfer: { terrain: ['Electric'] },
+};
+
+/** 우선도 일괄 처리 정렬용 스피드: 실효 스피드(성격·랭크·마비)에 날씨 특성·순풍(2배)까지 반영 */
 export function orderingSpeed(state, entity) {
-  const spe = resolutionSpeed(entity);
+  let spe = resolutionSpeed(entity);
+  const cond = SPEED_DOUBLE_ABILITIES[abilityId(entity)];
+  if (cond) {
+    const field = getField(state);
+    if ((cond.weather && cond.weather.includes(field.weather)) || (cond.terrain && cond.terrain.includes(field.terrain))) {
+      spe *= 2;
+    }
+  }
   return hasTailwind(state, entity) ? spe * 2 : spe;
 }
 export { isTrickRoom };
@@ -146,11 +163,26 @@ function hitsAllies(moveData) {
 // 선제공격기(신속 +2, 속임수 +3, 은혜갚기류 +4, 도우미 +5)보다 위·+6 미만인 5.5로 둔다.
 export const CHEER_PRIORITY = 5.5;
 
+// 메가진화 C: 포켓몬으로 행동(응원 제외)을 이 횟수만큼 누적하면 가능. 진화 후 에너미(보스)에게 주는 대미지 2배.
+export const MEGA_C_ACTIONS_REQUIRED = 3;
+const MEGA_C_DAMAGE_MULT = 2;
+
+export function canMegaEvolve(p) {
+  return !!p && !!p.isParticipant && !p.fainted && !p.megaC && (p.moveActions || 0) >= MEGA_C_ACTIONS_REQUIRED;
+}
+
+/** 시전자 공격 배율: 응원 배율(힘내라힘/끝내버려) × 메가진화 C(에너미 상대 한정) */
+function offenseMultiplier(attacker, defender) {
+  const cheer = (attacker.cheerOffense && attacker.cheerOffense.mult) || 1;
+  const mega = attacker.megaC && defender && !defender.isParticipant ? MEGA_C_DAMAGE_MULT : 1;
+  return cheer * mega;
+}
+
 const DEFAULT_BASE_STATS = { hp: 100, atk: 100, def: 100, spa: 100, spd: 100, spe: 100 };
 const FIXED_IVS = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
 const EMPTY_EVS = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
 const EMPTY_BOOSTS = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
-// 응원 배율의 기본값(효과 없음). 힘내라힘/철통방어 = 1.5배, 끝내버려 = 3배.
+// 응원 배율의 기본값(효과 없음). 힘내라힘 = 2배, 철통방어 = 1.5배, 끝내버려 = 4배.
 const NO_CHEER = { mult: 1, turns: 0 };
 
 /** 입력 폼 데이터(raw)를 실제 전투에 쓸 수 있는 파생 상태를 가진 객체로 변환 */
@@ -190,7 +222,7 @@ export function buildBattlePokemon(raw) {
     fainted: false,
     boosts: { ...EMPTY_BOOSTS },
     // 응원 배율: 랭크(칼춤 등)와 별개로 데미지에 곱해지는 임시 버프. 라운드 전환마다 turns 감소.
-    //  cheerOffense = 자신이 주는 데미지 배율(힘내라힘 1.5 / 끝내버려 3)
+    //  cheerOffense = 자신이 주는 데미지 배율(힘내라힘 2 / 끝내버려 4)
     //  cheerDefense = 자신이 받는 데미지를 나누는 값(철통방어 1.5)
     cheerOffense: { ...NO_CHEER },
     cheerDefense: { ...NO_CHEER },
@@ -233,6 +265,11 @@ export function buildBattlePokemon(raw) {
     finisherTimer: 0,
     mustSkipTurn: false,
     cheerUsed: 0,
+    serviceUsed: false, // 도우미 "서비스입니다!" (레이드당 1회)
+    // 메가진화 C: 행동 누적 횟수 / 진화 여부 / 진화 후 타입 (비어 있으면 타입 변화 없음)
+    moveActions: 0,
+    megaC: false,
+    megaTypes: isParticipant ? (raw.megaTypes || []).filter(Boolean) : [],
   };
 }
 
@@ -627,7 +664,7 @@ function attack(attacker, defender, moveId, options = {}) {
       else {
         const rd = pickDamageValue(result.damage);
         d = options.isSpread ? Math.floor(rd * 0.75) : rd;
-        const offMult = (nextAttacker.cheerOffense && nextAttacker.cheerOffense.mult) || 1;
+        const offMult = offenseMultiplier(nextAttacker, nextDefender);
         if (offMult !== 1) d = Math.round(d * offMult);
       }
       const subHP = nextDefender.substitute.hp - d;
@@ -991,7 +1028,7 @@ function attack(attacker, defender, moveId, options = {}) {
     });
     if (mult !== 1) dmg = Math.round(dmg * mult);
     // 응원 배율: 시전자 공격 배율(힘내라힘/끝내버려) 곱 → 대상 방어 배율(철통방어)로 나눔
-    const offMult = (nextAttacker.cheerOffense && nextAttacker.cheerOffense.mult) || 1;
+    const offMult = offenseMultiplier(nextAttacker, defender);
     const defMult = (defender.cheerDefense && defender.cheerDefense.mult) || 1;
     if (offMult !== 1) dmg = Math.round(dmg * offMult);
     if (defMult !== 1) dmg = Math.round(dmg / defMult);
@@ -1373,7 +1410,7 @@ function advanceEntityVolatiles(entity) {
  * 라운드 전환 시 참가자별 응원 버프/지속효과를 갱신한다.
  * - 힘내라힘(cheerOffense)/철통방어(cheerDefense): 3턴 배율 버프. 매 전환마다 turns 1 감소, 0이면 해제.
  *   랭크와 별개인 곱연산이라 칼춤 등 기술 랭크와 독립적으로 유지·만료된다.
- * - 끝내버려: 시전한 다음 라운드에 cheerOffense ×3(1턴)이 발동하고, 그 턴이 끝나는 라운드
+ * - 끝내버려: 시전한 다음 라운드에 cheerOffense ×4(1턴)이 발동하고, 그 턴이 끝나는 라운드
  *   전환 시 "다음 턴 행동불가"가 걸린다 (mustSkipTurn)
  * - 뒤는맡기라고(redirectActive)는 보스 행동 1회(이번 턴)만 받아내면 바로 해제되지만(executeBossAction에서
  *   처리), 그 전에 라운드가 넘어가 버리면 여기서 안전장치로 한 번 더 해제한다
@@ -1400,10 +1437,10 @@ function advanceParticipantTurnState(p) {
       logs.push(`${p.nickname}은(는) 반동으로 이번 턴 행동할 수 없다!`);
     }
   } else if (pendingFinisher) {
-    cheerOffense = { mult: 3, turns: 1 };
+    cheerOffense = { mult: 4, turns: 1 };
     finisherTimer = 1;
     pendingFinisher = false;
-    logs.push(`${p.nickname}의 힘이 폭발한다! (물리/특수공격 3배)`);
+    logs.push(`${p.nickname}의 힘이 폭발한다! (물리/특수공격 4배)`);
   }
 
   const buffed = {
@@ -1763,6 +1800,13 @@ function resolveActionGate(attacker, moveId) {
   return { attacker: a, canAct: true, lines };
 }
 
+/** 마지막 글자 받침 여부로 조사 선택 (은/는, 을/를). 한글이 아니면 받침 없음으로 취급 */
+function josa(word, withBatchim, withoutBatchim) {
+  const code = String(word || '').trim().slice(-1).charCodeAt(0);
+  const isHangul = code >= 0xac00 && code <= 0xd7a3;
+  return isHangul && (code - 0xac00) % 28 !== 0 ? withBatchim : withoutBatchim;
+}
+
 /** 도발/사슬묶기/트집/앵콜처럼 "행동은 가능하지만 이 기술은 못 쓴다/다른 기술을 강제로 써야 한다"를 판정 */
 function checkMoveLegality(attacker, moveId, moveInfo) {
   const lines = [];
@@ -1780,7 +1824,11 @@ function checkMoveLegality(attacker, moveId, moveInfo) {
   }
 
   if (attacker.tauntTurns > 0 && moveInfo.category === 'Status') {
-    lines.push(`${attacker.nickname}은(는) 도발에 걸려 변화기술을 사용할 수 없다!`);
+    lines.push(
+      `${attacker.nickname}의 ${moveInfo.name}!`,
+      `${attacker.nickname}${josa(attacker.nickname, '은', '는')} 도발당한 상태라서`,
+      `${moveInfo.name}${josa(moveInfo.name, '을', '를')} 쓸 수 없다!`
+    );
     return { blocked: true, finalMoveId: moveId, lines };
   }
 
@@ -1843,6 +1891,9 @@ export function executeParticipantAction(state, participantId, moveId, targetPar
     finalMoveId = participants[idx].chargingMove;
     log = [...log, { round: roundNum, phase: 'participant', text: `${participants[idx].nickname}은(는) 모아둔 힘을 발산한다!` }];
   }
+
+  // 메가진화 C 조건: 실제로 기술을 쓴 행동만 누적한다 (행동 불가/기술 제한으로 막힌 턴, 응원은 제외)
+  participants = participants.map((p, i) => (i === idx ? { ...p, moveActions: (p.moveActions || 0) + 1 } : p));
 
   const targetIdx =
     targetParticipantId != null
@@ -2043,7 +2094,7 @@ export function executeBossAction(state, moveId, targetId) {
   const roundNum = state.round + 1;
   // 보스가 모으기 기술을 충전 중이면 이번 행동은 그 기술 발동으로 강제
   if (state.boss.chargingMove) moveId = state.boss.chargingMove;
-  const bossMoveInfo = showdownIntegration.getMove(moveId);
+  let bossMoveInfo = showdownIntegration.getMove(moveId);
 
   // 보스도 풀죽음/잠듦/냉동/마비/혼란/헤롱헤롱으로 행동이 막힐 수 있다 (기존엔 무조건 행동했음)
   const bossGate = resolveActionGate(state.boss, moveId);
@@ -2056,6 +2107,20 @@ export function executeBossAction(state, moveId, targetId) {
   }
   const gatedBoss = bossGate.attacker;
   const gateLines = bossGate.lines.map((text) => ({ round: roundNum, phase: 'boss', text }));
+
+  // 도발/사슬묶기/트집/앵콜: 참가자와 동일하게 보스도 이 기술을 못 쓰거나 다른 기술을 강제로 쓰게 된다
+  if (bossMoveInfo) {
+    const legality = checkMoveLegality(gatedBoss, moveId, bossMoveInfo);
+    const legalityLines = legality.lines.map((text) => ({ round: roundNum, phase: 'boss', text }));
+    if (legality.blocked) {
+      return { ...state, boss: gatedBoss, log: [...state.log, ...gateLines, ...legalityLines] };
+    }
+    gateLines.push(...legalityLines);
+    if (legality.finalMoveId !== moveId) {
+      moveId = legality.finalMoveId;
+      bossMoveInfo = showdownIntegration.getMove(moveId);
+    }
+  }
 
   // 범위기(파도타기/지진/락슬라이드/열풍 등): 살아있는 참가자 전원을 각각 때린다
   // (2명 이상이면 범위 감소 0.75배). 부가효과·급소는 대상별로 굴린다.
@@ -2276,7 +2341,7 @@ export function resolveQueuedActions(state, queue = {}) {
     const before = next;
     next =
       kind === 'cheer'
-        ? executeParticipantCheer(next, participantId, cheerId)
+        ? executeParticipantCheer(next, participantId, cheerId, targetParticipantId)
         : executeParticipantAction(next, participantId, moveId, targetParticipantId);
 
     // execute* 가 아무 변화 없이(그리고 행동 완료 처리도 없이) 반환됐으면 명시적으로 로그를 남긴다
@@ -2296,10 +2361,38 @@ export function resolveQueuedActions(state, queue = {}) {
 }
 
 /**
+ * 메가진화 C: 행동 누적 3회 이상이면 즉시 진화(턴을 소모하지 않는 무료 행동). 타입이 메가진화 C의
+ * 타입으로 바뀌고, 이후 에너미에게 주는 대미지가 2배가 된다.
+ */
+export function executeMegaEvolution(state, participantId) {
+  if (state.status !== 'ongoing' || participantId == null) return state;
+  const idx = state.participants.findIndex((p) => p && p.id === participantId);
+  if (idx === -1 || !canMegaEvolve(state.participants[idx])) return state;
+
+  const actor = state.participants[idx];
+  const roundNum = state.round + 1;
+  const typeKo = (t) => TYPE_OPTIONS.find((o) => o.en === t)?.ko || t;
+  const nextTypes = actor.megaTypes && actor.megaTypes.length ? actor.megaTypes : actor.types;
+  const typesChanged = nextTypes.join('/') !== (actor.types || []).join('/');
+
+  const lines = [`${actor.nickname}은(는) 메가진화 C를 했다!`];
+  if (typesChanged) lines.push(`${actor.nickname}의 타입이 ${nextTypes.map(typeKo).join('/')} 타입으로 변했다!`);
+  lines.push(`${actor.nickname}${josa(actor.nickname, '이', '가')} 에너미에게 주는 대미지가 ${MEGA_C_DAMAGE_MULT}배가 됐다!`);
+
+  return {
+    ...state,
+    participants: state.participants.map((p, i) =>
+      i === idx ? { ...p, megaC: true, baseTypes: p.types, types: nextTypes } : p
+    ),
+    log: [...state.log, ...lines.map((text) => ({ round: roundNum, phase: 'participant', text }))],
+  };
+}
+
+/**
  * 참가자의 응원(싸운다 대신 선택하는 행동) 실행. 포지션에 맞는 응원 스킬만 사용 가능하며,
  * 레이드당 참가자 1인 최대 2회로 제한된다(규칙 IV장 6항). "끝내버려"는 마지막 라운드에는 사용 불가.
  */
-export function executeParticipantCheer(state, participantId, cheerId) {
+export function executeParticipantCheer(state, participantId, cheerId, targetParticipantId) {
   if (state.status !== 'ongoing' || !cheerId || participantId == null) return state;
   if (state.actedParticipantIds.includes(participantId)) return state;
 
@@ -2316,7 +2409,8 @@ export function executeParticipantCheer(state, participantId, cheerId) {
 
   const roundNum = state.round + 1;
   let participants = state.participants;
-  const lines = [`${actor.nickname}의 ${skill.name}!`];
+  const announce = `${actor.nickname}의 ${skill.name}${skill.name.endsWith('!') ? '' : '!'}`;
+  const lines = [announce];
   // 팀 전체 대상 응원(철통방어/치유의함성/만전태세)은 시전자와 같은 조원에게만 적용된다
   const isSameTeam = (p) => (p.team || '') === (actor.team || '');
 
@@ -2332,13 +2426,37 @@ export function executeParticipantCheer(state, participantId, cheerId) {
       lines.push(`${actor.nickname}이(가) 이번 턴 공격을 대신 받아낸다!`);
       break;
     case 'pumpup':
-      participants = participants.map((p, i) => (i === idx ? applyCheerMult(p, 'cheerOffense', 1.5, 3) : p));
-      lines.push(`${actor.nickname}의 공격/특수공격이 3턴 동안 1.5배가 됐다!`);
+      participants = participants.map((p, i) => (i === idx ? applyCheerMult(p, 'cheerOffense', 2, 3) : p));
+      lines.push(`${actor.nickname}의 공격/특수공격이 3턴 동안 2배가 됐다!`);
       break;
     case 'finisher':
       participants = participants.map((p, i) => (i === idx ? { ...p, pendingFinisher: true } : p));
       lines.push(`${actor.nickname}이(가) 다음 턴을 위해 힘을 모은다!`);
       break;
+    case 'service': {
+      if (actor.serviceUsed) return state;
+      const tIdx = participants.findIndex(
+        (p) => p && !p.fainted && p.id === targetParticipantId && p.id !== actor.id && isSameTeam(p)
+      );
+      if (tIdx === -1) return state;
+      const target = participants[tIdx];
+      if ((target.cheerUsed || 0) <= 0) {
+        return {
+          ...state,
+          log: [
+            ...state.log,
+            { round: roundNum, phase: 'participant', text: announce },
+            { round: roundNum, phase: 'participant', text: `${target.nickname}은(는) 회복할 응원 횟수가 없다!` },
+          ],
+        };
+      }
+      const restoredUsed = target.cheerUsed - 1;
+      participants = participants.map((p, i) =>
+        i === tIdx ? { ...p, cheerUsed: restoredUsed } : i === idx ? { ...p, serviceUsed: true } : p
+      );
+      lines.push(`${target.nickname}의 응원 횟수가 1회 회복됐다! (남은 ${CHEER_MAX_USES - restoredUsed}회)`);
+      break;
+    }
     case 'healcry':
       participants = participants.map((p) =>
         p && !p.fainted && isSameTeam(p)

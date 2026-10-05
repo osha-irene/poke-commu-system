@@ -4,6 +4,7 @@ import {
   executeParticipantAction,
   executeBossAction,
   executeParticipantCheer,
+  executeMegaEvolution,
   resolveQueuedActions,
   resetFieldBoosts,
   clearFieldConditions,
@@ -30,6 +31,7 @@ function emptyParticipant(id) {
     gender: '',
     teraType: '',
     types: ['Normal'],
+    megaTypes: [],
     evs: { ...DEFAULT_EVS },
     moves: ['', '', '', ''],
   };
@@ -139,7 +141,7 @@ export function useRaidState() {
       Array.from({ length: MAX_PARTICIPANTS }, (_, i) => {
         const entry = DEFAULT_ROSTER[i];
         return entry
-          ? { ...emptyParticipant(i), nickname: entry.nickname, pokemon: entry.pokemon, position: entry.position, types: entry.types }
+          ? { ...emptyParticipant(i), nickname: entry.nickname, pokemon: entry.pokemon, position: entry.position, types: entry.types, megaTypes: entry.megaTypes || [] }
           : emptyParticipant(i);
       })
     );
@@ -168,8 +170,12 @@ export function useRaidState() {
     setBattle((prev) => (prev ? executeBossAction(prev, moveId, targetId) : prev));
   }, []);
 
-  const runCheer = useCallback((participantId, cheerId) => {
-    setBattle((prev) => (prev ? executeParticipantCheer(prev, participantId, cheerId) : prev));
+  const runCheer = useCallback((participantId, cheerId, targetParticipantId) => {
+    setBattle((prev) => (prev ? executeParticipantCheer(prev, participantId, cheerId, targetParticipantId) : prev));
+  }, []);
+
+  const runMegaEvolution = useCallback((participantId) => {
+    setBattle((prev) => (prev ? executeMegaEvolution(prev, participantId) : prev));
   }, []);
 
   const runEndRound = useCallback(() => {
@@ -266,6 +272,7 @@ export function useRaidState() {
     runParticipantAction,
     runBossAction,
     runCheer,
+    runMegaEvolution,
     runEndRound,
     runResetFieldBoosts,
     runClearFieldConditions,

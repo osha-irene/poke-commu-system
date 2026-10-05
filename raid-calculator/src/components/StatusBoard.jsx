@@ -35,6 +35,7 @@ function statusBadges(p) {
   if (p.redirectActive) badges.push({ text: '보호중' });
   if (p.mustSkipTurn) badges.push({ text: '행동불가' });
   if (p.cheerUsed > 0) badges.push({ text: `응원 ${p.cheerUsed}/${CHEER_MAX_USES}` });
+  if (p.megaC) badges.push({ text: '메가진화 C', kind: 'status' });
 
   return badges;
 }

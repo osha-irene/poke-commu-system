@@ -65,6 +65,7 @@ const TITLE_BONUS_STICKERS = {
 const MEMBER_BONUS_STICKERS = {
   xoHhSwEcl3bEbBw3PAOGA7LfS783: '/img/titles/piplup.png',
   CopeY3T0pFXB7nh3dxJp1DR0s0C2: '/img/titles/SIRFETCHD.png',
+  uHBgxz581JSaWnxby48l9IbXwFX2: '/img/titles/revavroom.png',
 };
 const BADGE_CLEANLINESS_DEFAULT = 2;
 const BADGE_CLEANLINESS_MIN = 1;

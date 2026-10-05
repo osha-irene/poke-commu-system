@@ -35,6 +35,14 @@ export default function ParticipantRow({ participant, onChange, onClear, disable
     onChange({ types: types.filter(Boolean) });
   }
 
+  // 메가진화 C 타입: 둘 다 비워 두면 진화해도 타입은 그대로
+  const [mega1 = '', mega2 = ''] = p.megaTypes || [];
+  function handleMegaTypeChange(slot, value) {
+    const next = [mega1, mega2];
+    next[slot] = value;
+    onChange({ megaTypes: next.filter(Boolean) });
+  }
+
   function handleMoveSlotChange(slot, value) {
     const next = [...moves];
     next[slot] = value;
@@ -123,6 +131,25 @@ export default function ParticipantRow({ participant, onChange, onClear, disable
                   ))}
                 </select>
                 <select value={type2 || ''} disabled={disabled} onChange={(e) => handleTypeChange(1, e.target.value)}>
+                  <option value="">-</option>
+                  {TYPE_OPTIONS.map((t) => (
+                    <option key={t.en} value={t.en}>
+                      {t.ko}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <span className="moves-row-label">메가진화 C 타입</span>
+              <div className="type-select-pair">
+                <select value={mega1} disabled={disabled} onChange={(e) => handleMegaTypeChange(0, e.target.value)}>
+                  <option value="">-</option>
+                  {TYPE_OPTIONS.map((t) => (
+                    <option key={t.en} value={t.en}>
+                      {t.ko}
+                    </option>
+                  ))}
+                </select>
+                <select value={mega2} disabled={disabled || !mega1} onChange={(e) => handleMegaTypeChange(1, e.target.value)}>
                   <option value="">-</option>
                   {TYPE_OPTIONS.map((t) => (
                     <option key={t.en} value={t.en}>

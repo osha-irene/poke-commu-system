@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { POSITION_CHEERS, CHEER_MAX_USES } from '../lib/cheers.js';
 import { buildTurnOrder } from '../lib/turnOrder.js';
 import { groupByTeam, UNASSIGNED_KEY } from '../lib/teams.js';
-import { CHEER_PRIORITY, orderingSpeed, isTrickRoom } from '../engine/raidEngine.js';
+import { CHEER_PRIORITY, orderingSpeed, isTrickRoom, canMegaEvolve, MEGA_C_ACTIONS_REQUIRED } from '../engine/raidEngine.js';
 import { describeActiveConditions } from '../engine/fieldConditions.js';
 import { priorityBonus } from '../engine/traits.js';
 import showdownIntegration from '../lib/showdownIntegration.js';
@@ -31,7 +31,7 @@ function actionPriority(action, entity, battle) {
 export default function RoundPlanner({ raid }) {
   const { battle, queue } = raid;
   const [activeTeamKey, setActiveTeamKey] = useState(null);
-  const [pendingAlly, setPendingAlly] = useState(null); // { participantId, moveId }
+  const [pendingAlly, setPendingAlly] = useState(null); // { participantId, moveId } | { participantId, cheerId }
   const [bossTarget, setBossTarget] = useState('');
 
   // 라운드가 바뀌어도 조 선택은 유지한다 (한 번 고른 조로 고정). 대상 선택만 초기화.
@@ -100,8 +100,14 @@ export default function RoundPlanner({ raid }) {
   const aliveMembers = activeTeamMembers.filter((p) => !p.fainted);
   const turnOrder = activeTeamKey ? buildTurnOrder({ ...battle, participants: activeTeamMembers }) : [];
 
-  const pendingAllyInfo = pendingAlly ? showdownIntegration.getMove(pendingAlly.moveId) : null;
+  const pendingAllyInfo = pendingAlly?.moveId ? showdownIntegration.getMove(pendingAlly.moveId) : null;
   const allowSelfTarget = pendingAllyInfo?.target === 'adjacentAllyOrSelf';
+  const pendingTargetName = pendingAlly?.cheerId
+    ? (() => {
+        const pp = battle.participants.find((m) => m && m.id === pendingAlly.participantId);
+        return cheerName(pp?.position, pendingAlly.cheerId);
+      })()
+    : pendingAllyInfo?.name || pendingAlly?.moveId;
 
   const queuedCount = Object.keys(queue.participants).length + queue.boss.length;
 
@@ -117,16 +123,21 @@ export default function RoundPlanner({ raid }) {
 
   function queueAllyTarget(targetId) {
     if (!pendingAlly) return;
-    raid.queueParticipantAction(pendingAlly.participantId, {
-      kind: 'move',
-      moveId: pendingAlly.moveId,
-      targetParticipantId: targetId,
-    });
+    raid.queueParticipantAction(
+      pendingAlly.participantId,
+      pendingAlly.cheerId
+        ? { kind: 'cheer', cheerId: pendingAlly.cheerId, targetParticipantId: targetId }
+        : { kind: 'move', moveId: pendingAlly.moveId, targetParticipantId: targetId }
+    );
     setPendingAlly(null);
   }
 
-  function queueCheer(participant, cheerId) {
-    raid.queueParticipantAction(participant.id, { kind: 'cheer', cheerId });
+  function queueCheer(participant, cheer) {
+    if (cheer.needsAllyTarget) {
+      setPendingAlly({ participantId: participant.id, cheerId: cheer.id });
+      return;
+    }
+    raid.queueParticipantAction(participant.id, { kind: 'cheer', cheerId: cheer.id });
     setPendingAlly(null);
   }
 
@@ -207,7 +218,10 @@ export default function RoundPlanner({ raid }) {
                 const cheers = POSITION_CHEERS[p.position] || [];
                 const cheersRemaining = CHEER_MAX_USES - (p.cheerUsed || 0);
                 const isPendingAlly = pendingAlly?.participantId === p.id;
-                const allyOptions = aliveMembers.filter((m) => allowSelfTarget || m.id !== p.id);
+                const allyOptions = aliveMembers.filter(
+                  (m) =>
+                    (allowSelfTarget || m.id !== p.id) && (!pendingAlly?.cheerId || (m.cheerUsed || 0) > 0)
+                );
 
                 return (
                   <div key={p.id} className="action-picker">
@@ -215,6 +229,27 @@ export default function RoundPlanner({ raid }) {
                       <b>{p.nickname}</b>
                       {p.position ? ` (${p.position})` : ''}
                     </p>
+
+                    <div className="button-grid">
+                      {p.megaC ? (
+                        <span className="turn-order-entry">메가진화 C 상태 (에너미 대상 대미지 2배)</span>
+                      ) : (
+                        <>
+                          <span className="plan-hint">
+                            행동 {Math.min(p.moveActions || 0, MEGA_C_ACTIONS_REQUIRED)}/{MEGA_C_ACTIONS_REQUIRED}
+                          </span>
+                          <button
+                            type="button"
+                            className="btn-cheer"
+                            disabled={!canMegaEvolve(p)}
+                            title="행동(응원 제외) 3회 누적 시 진화 가능 · 턴을 소모하지 않음"
+                            onClick={() => raid.runMegaEvolution(p.id)}
+                          >
+                            메가진화 C
+                          </button>
+                        </>
+                      )}
+                    </div>
 
                     {acted ? (
                       <p className="plan-hint">이번 라운드에 이미 행동했습니다.</p>
@@ -250,10 +285,10 @@ export default function RoundPlanner({ raid }) {
                               type="button"
                               className="btn-cheer"
                               title={cheer.desc}
-                              disabled={cheersRemaining <= 0}
-                              onClick={() => queueCheer(p, cheer.id)}
+                              disabled={cheersRemaining <= 0 || (cheer.id === 'service' && p.serviceUsed)}
+                              onClick={() => queueCheer(p, cheer)}
                             >
-                              {cheer.name} (남은 {cheersRemaining})
+                              {cheer.name} ({cheer.id === 'service' && p.serviceUsed ? '사용함' : `남은 ${cheersRemaining}`})
                             </button>
                           ))}
                         </div>
@@ -261,7 +296,7 @@ export default function RoundPlanner({ raid }) {
                         {isPendingAlly && (
                           <>
                             <p className="plan-hint">
-                              {pendingAllyInfo?.name || pendingAlly.moveId}의 대상 선택{allowSelfTarget ? ' (자신 포함)' : ''}
+                              {pendingTargetName}의 대상 선택{allowSelfTarget ? ' (자신 포함)' : ''}
                             </p>
                             <div className="button-grid">
                               {allyOptions.length === 0 && <span className="plan-hint">지정할 수 있는 아군이 없습니다.</span>}
