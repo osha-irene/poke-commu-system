@@ -1,0 +1,138 @@
+{
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/number": 439,
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/originalNumber": 439,
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/pokemonId": 439,
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/name": "흉내내",
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/nameEn": "Mime Jr.",
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/species": null,
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/regionalForm": null,
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/formVariant": null,
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/isRegionalForm": null,
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/baseSpecies": null,
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/baseSpeciesEn": null,
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/type": "에스퍼",
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/type2": "페어리",
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/abilitiesEn": null,
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/hiddenAbilityEn": null,
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/ability": "filter",
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/abilityEn": "filter",
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/baseHp": 20,
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/baseAttack": 25,
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/baseDefense": 45,
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/baseSpAttack": 70,
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/baseSpeed": 60,
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/439.png",
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/iconUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/versions/generation-viii/icons/439.png",
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/spriteUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/439.png",
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/caughtPokemon/18/evolutionCancelled": true,
+  "members/ZsZ3IOSAbAOC1GjgA6HfiwpYkSy1/evolutionHistory": [
+    {
+      "evolvedAt": 1788771935510,
+      "fromName": "금강",
+      "id": "evolution_1787411333969-7rqtc3byw_1788771935510",
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/471.png",
+      "pokemonId": "1787411333969-7rqtc3byw",
+      "toName": "글레이시아",
+      "toNameEn": "glaceon",
+      "toNumber": 471
+    },
+    {
+      "evolvedAt": 1788771911347,
+      "fromName": "한바이트",
+      "id": "evolution_1788621905571-w7htu2wrm_1788771911347",
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/445.png",
+      "pokemonId": "1788621905571-w7htu2wrm",
+      "toName": "한카리아스",
+      "toNameEn": "garchomp",
+      "toNumber": 445
+    },
+    {
+      "evolvedAt": 1788771891117,
+      "fromName": "딥상어동",
+      "id": "evolution_1788621905571-w7htu2wrm_1788771891117",
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/444.png",
+      "pokemonId": "1788621905571-w7htu2wrm",
+      "toName": "한바이트",
+      "toNameEn": "gabite",
+      "toNumber": 444
+    },
+    {
+      "evolvedAt": 1788261101735,
+      "fromName": "찬섬",
+      "id": "evolution_1787670711764-7qya5v231_1788261101735",
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/937.png",
+      "pokemonId": "1787670711764-7qya5v231",
+      "toName": "파라블레이즈",
+      "toNameEn": "ceruledge",
+      "toNumber": 937
+    },
+    {
+      "evolvedAt": 1788245150223,
+      "fromName": "단조",
+      "id": "evolution_1787583920590-ulxvpqw9f_1788245150223",
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/983.png",
+      "pokemonId": "1787583920590-ulxvpqw9f",
+      "toName": "대도각참",
+      "toNameEn": "kingambit",
+      "toNumber": 983
+    },
+    {
+      "evolvedAt": 1788245108871,
+      "fromName": "단조",
+      "id": "evolution_1787583920590-ulxvpqw9f_1788245108871",
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/625.png",
+      "pokemonId": "1787583920590-ulxvpqw9f",
+      "toName": "절각참",
+      "toNameEn": "bisharp",
+      "toNumber": 625
+    },
+    {
+      "evolvedAt": 1787757340972,
+      "fromName": "목도리키텔",
+      "id": "evolution_1787756846749-ntvj099cb_1787757340972",
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/695.png",
+      "pokemonId": "1787756846749-ntvj099cb",
+      "toName": "일레도리자드",
+      "toNameEn": "heliolisk",
+      "toNumber": 695
+    },
+    {
+      "evolvedAt": 1787584213602,
+      "fromName": "단록",
+      "id": "evolution_1785164809695-nuxag94wa_1787584213602",
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/691.png",
+      "pokemonId": "1785164809695-nuxag94wa",
+      "toName": "드래캄",
+      "toNameEn": "dragalge",
+      "toNumber": 691
+    },
+    {
+      "evolvedAt": 1787151914473,
+      "fromName": "두리쥐",
+      "id": "evolution_1787151860718-zdxa6ufpn_1787151914473",
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/925.png",
+      "pokemonId": "1787151860718-zdxa6ufpn",
+      "toName": "파밀리쥐",
+      "toNameEn": "maushold-family-of-four",
+      "toNumber": 925
+    },
+    {
+      "evolvedAt": 1787071174923,
+      "fromName": "영월",
+      "id": "evolution_1787066841530-0aetwe07j_1787071174923",
+      "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/197.png",
+      "pokemonId": "1787066841530-0aetwe07j",
+      "toName": "블래키",
+      "toNameEn": "umbreon",
+      "toNumber": 197
+    }
+  ],
+  "homeFeed/evolution": {
+    "eventTime": 1790928982394,
+    "id": "evolution_1790783438061-yphvdghm4_1790928982394",
+    "imageUrl": "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/681.png",
+    "toName": "킬가르도",
+    "toNameEn": "aegislash-shield",
+    "trainerName": "여울"
+  }
+}
