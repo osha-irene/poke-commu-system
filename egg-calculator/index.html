@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>알 확률 계산기</title>
+<style>
+  :root { --bg:#f5f7f2; --card:#fff; --line:#d9e2cf; --ink:#1f2a1a; --mute:#6b7a63; --acc:#3f7d20; --bad:#b3402f; --ok:#2f7d4f; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#161a14; --card:#20261c; --line:#33402d; --ink:#e6eddf; --mute:#93a38a; --acc:#8fcf63; --bad:#e8806e; --ok:#74cf97; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.5 "Malgun Gothic",system-ui,sans-serif; }
+  .wrap { max-width:1100px; margin:0 auto; padding:16px; }
+  h1 { font-size:20px; margin:0 0 12px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:14px; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
+  label { display:flex; flex-direction:column; gap:3px; font-size:12px; color:var(--mute); }
+  input, select, button { font:inherit; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:6px; padding:5px 8px; }
+  input[type=number] { width:80px; }
+  button { cursor:pointer; }
+  button.primary { background:var(--acc); color:#fff; border-color:var(--acc); }
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:760px) { .cols { grid-template-columns:1fr; } }
+  .trainer h2 { font-size:15px; margin:0 0 8px; }
+  .slot { display:grid; grid-template-columns:22px 1fr 76px 22px; gap:6px; align-items:center; margin-bottom:6px; }
+  .slot .n { color:var(--mute); text-align:center; }
+  .slot input[list] { width:100%; min-width:0; }
+  .slot input[type=number] { width:100%; }
+  .grp { grid-column:2 / 5; font-size:11px; color:var(--mute); margin-top:-4px; min-height:15px; }
+  .x { padding:0 5px; color:var(--mute); }
+  .result { text-align:center; }
+  .big { font-size:34px; font-weight:700; color:var(--acc); }
+  .sub { color:var(--mute); }
+  table { width:100%; border-collapse:collapse; margin-top:10px; }
+  th, td { padding:5px 8px; border-bottom:1px solid var(--line); text-align:left; }
+  th { font-size:12px; color:var(--mute); font-weight:600; }
+  .pill { display:inline-block; font-size:11px; padding:1px 7px; border-radius:99px; background:var(--line); margin-right:3px; }
+  .hit { color:var(--ok); font-weight:600; }
+  .msg { color:var(--bad); }
+  .tabs { display:flex; gap:6px; margin-bottom:12px; }
+  .tabs button.on { background:var(--acc); color:#fff; border-color:var(--acc); }
+  .cmp { display:grid; grid-template-columns:240px 1fr; gap:14px; }
+  @media (max-width:760px) { .cmp { grid-template-columns:1fr; } }
+  .mlist { max-height:560px; overflow:auto; }
+  .mitem { display:block; width:100%; text-align:left; margin-bottom:4px; }
+  .mitem.on { background:var(--acc); color:#fff; border-color:var(--acc); }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+  .box { border:1px solid var(--line); border-radius:8px; padding:10px; text-align:center; }
+  .box .big { font-size:26px; }
+  .box.low .big { color:var(--bad); }
+  .hint { font-size:12px; color:var(--mute); margin:6px 0 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>알 확률 계산기</h1>
+
+  <div class="card">
+    <div class="row">
+      <label>알 확률 n (%)<input type="number" id="pBase" value="5" min="0" max="100" step="0.1"></label>
+      <label>멤버 데이터 불러오기 (members JSON)<input type="file" id="file" accept=".json,application/json"></label>
+    </div>
+    <p class="hint">계산 규칙: 두 트레이너의 포켓몬 중 알그룹이 겹치고 암수가 맞는 조합마다 알 확률 n%를 따로 굴립니다. 성립 조합이 k개면 최종 확률은 1-(1-n)^k 입니다. (현재 게임 코드는 조합 중 하나만 골라 1회 굴리는 방식이라 이 규칙과 다릅니다.)</p>
+  </div>
+
+  <div class="tabs">
+    <button data-tab="calc" class="on">직접 계산</button>
+    <button data-tab="cmp">멤버 비교</button>
+  </div>
+
+  <div id="tabCalc">
+    <div class="cols">
+      <div class="card trainer" id="t0"></div>
+      <div class="card trainer" id="t1"></div>
+    </div>
+
+    <div class="card result" id="result"></div>
+    <div class="card" id="pairs" style="display:none"></div>
+  </div>
+
+  <div id="tabCmp" style="display:none">
+    <div class="cmp">
+      <div class="card mlist" id="mlist"></div>
+      <div class="card" id="cmpResult"></div>
+    </div>
+  </div>
+</div>
+
+<datalist id="names"></datalist>
+<script src="data.js"></script>
+<script>
+const MAX = 7;
+const GROUP_KO = { ground:'필드', water1:'수중1', water2:'수중2', water3:'수중3', bug:'벌레', mineral:'광물', plant:'식물', fairy:'요정', indeterminate:'부정형', monster:'괴수', flying:'비행', dragon:'드래곤', humanshape:'인간형', ditto:'메타몽', 'no-eggs':'알 미발견' };
+const byName = new Map(), byNumber = new Map();
+for (const [number, original, name, groups] of window.POKEMON) {
+  const rec = { number, original, name, groups };
+  if (!byName.has(name)) byName.set(name, rec);
+  if (!byNumber.has(number)) byNumber.set(number, rec);
+}
+document.getElementById('names').innerHTML = [...byName.keys()].map(n => `<option value="${n}">`).join('');
+
+const state = [0, 1].map(i => ({ name: '', slots: Array.from({ length: MAX }, () => ({ species: '', gender: '', friendship: '' })) }));
+let members = null, selMember = null;
+
+function lookup(species) { return byName.get(species.trim()) || null; }
+
+function renderTrainer(i) {
+  const t = state[i], el = document.getElementById('t' + i);
+  const memberOpts = members
+    ? `<select data-load="${i}"><option value="">멤버 선택</option>${members.map((m, k) => `<option value="${k}">${m.name}</option>`).join('')}</select>` : '';
+  el.innerHTML = `<h2>트레이너 ${i + 1}${t.name ? ' - ' + t.name : ''}</h2>
+    <div class="row" style="margin-bottom:8px">${memberOpts}<button data-clear="${i}">비우기</button></div>` +
+    t.slots.map((s, k) => {
+      const rec = lookup(s.species);
+      const g = rec ? rec.groups.map(x => GROUP_KO[x] || x).join(' / ') : (s.species ? '목록에 없는 이름' : '');
+      return `<div class="slot">
+        <span class="n">${k + 1}</span>
+        <input list="names" data-i="${i}" data-k="${k}" data-f="species" value="${s.species}" placeholder="포켓몬 이름">
+        <select data-i="${i}" data-k="${k}" data-f="gender">
+          <option value="" ${!s.gender ? 'selected' : ''}>성별</option>
+          <option value="male" ${s.gender === 'male' ? 'selected' : ''}>수컷</option>
+          <option value="female" ${s.gender === 'female' ? 'selected' : ''}>암컷</option>
+          <option value="none" ${s.gender === 'none' ? 'selected' : ''}>무성</option></select>
+        <button class="x" data-del="${i}:${k}">x</button>
+        <div class="grp">${g}</div></div>`;
+    }).join('');
+}
+
+function evalPair(slotsA, slotsB, base) {
+  const list = slots => slots.map(s => ({ ...s, rec: lookup(s.species) })).filter(s => s.rec);
+  const A = list(slotsA), B = list(slotsB);
+  const pairs = [];
+  let total = 0;
+  for (const a of A) for (const b of B) {
+    total++;
+    const shared = a.rec.groups.filter(g => g !== 'no-eggs' && b.rec.groups.includes(g));
+    const gOk = (a.gender === 'male' && b.gender === 'female') || (a.gender === 'female' && b.gender === 'male');
+    if (shared.length && gOk) pairs.push({ a, b, shared, chance: base });
+  }
+  return { A, B, pairs, total, prob: 1 - Math.pow(1 - base, pairs.length) };
+}
+const pct = v => (v * 100).toFixed(2).replace(/\.?0+$/, '') + '%';
+
+function calc() {
+  renderCompare();
+  const base = (parseFloat(pBase.value) || 0) / 100;
+  const list = t => t.slots.map((s, k) => ({ ...s, k, rec: lookup(s.species) })).filter(s => s.rec);
+  const A = list(state[0]), B = list(state[1]);
+  const pairs = [];
+  let total = 0;
+  for (const a of A) for (const b of B) {
+    total++;
+    const shared = a.rec.groups.filter(g => g !== 'no-eggs' && b.rec.groups.includes(g));
+    const gOk = (a.gender === 'male' && b.gender === 'female') || (a.gender === 'female' && b.gender === 'male');
+    if (!shared.length || !gOk) continue;
+    pairs.push({ a, b, shared, chance: base });
+  }
+  const out = document.getElementById('result'), box = document.getElementById('pairs');
+  if (!A.length || !B.length) {
+    out.innerHTML = '<div class="sub">양쪽 트레이너에 포켓몬을 입력해 주세요.</div>'; box.style.display = 'none'; return;
+  }
+  const avg = 1 - Math.pow(1 - base, pairs.length);
+  const noGender = [...A, ...B].some(s => !s.gender);
+  out.innerHTML = `<div class="sub">1회 캠핑 시 알이 생길 실제 확률</div>
+    <div class="big">${(avg * 100).toFixed(2).replace(/\.?0+$/, '')}%</div>
+    <div class="sub">성립 조합 ${pairs.length} / 전체 ${total}개 (알그룹 일치 + 암수 조합)</div>
+    ${pairs.length ? '' : '<div class="msg">알그룹이 겹치면서 암수가 맞는 조합이 없어 알이 생기지 않습니다.</div>'}
+    ${noGender ? '<div class="hint">성별이 비어 있는 포켓몬은 조합에서 제외됩니다.</div>' : ''}`;
+  if (!pairs.length) { box.style.display = 'none'; return; }
+  box.style.display = '';
+  box.innerHTML = `<table><tr><th>트레이너 1</th><th>트레이너 2</th><th>공통 알그룹</th><th>조합별 확률</th></tr>` +
+    pairs.map(p => {
+      return `<tr><td>${p.a.rec.name} (${p.a.gender === 'male' ? '수' : '암'})</td><td>${p.b.rec.name} (${p.b.gender === 'male' ? '수' : '암'})</td>
+        <td>${p.shared.map(g => `<span class="pill">${GROUP_KO[g] || g}</span>`).join('')}</td>
+        <td>${(p.chance * 100).toFixed(2).replace(/\.?0+$/, '')}%</td></tr>`;
+    }).join('') + '</table>';
+}
+
+function renderAll() { renderTrainer(0); renderTrainer(1); calc(); }
+
+document.addEventListener('input', e => {
+  const d = e.target.dataset;
+  if (d.f) {
+    state[d.i].slots[d.k][d.f] = e.target.value;
+    if (d.f === 'species') {
+      const rec = lookup(e.target.value);
+      e.target.parentElement.querySelector('.grp').textContent = rec ? rec.groups.map(x => GROUP_KO[x] || x).join(' / ') : (e.target.value ? '목록에 없는 이름' : '');
+    }
+    calc();
+  } else if (e.target.closest('.card') === document.querySelector('.card')) calc();
+});
+document.addEventListener('change', e => {
+  if (e.target.dataset.load !== undefined && e.target.value !== '') {
+    const i = +e.target.dataset.load, m = members[+e.target.value];
+    state[i].name = m.name; state[i].slots = m.slots; renderAll();
+  }
+});
+document.addEventListener('click', e => {
+  const d = e.target.dataset;
+  if (d.clear !== undefined) { state[d.clear] = { name: '', slots: Array.from({ length: MAX }, () => ({ species: '', gender: '', friendship: '' })) }; renderAll(); }
+  if (d.del) { const [i, k] = d.del.split(':'); state[i].slots[k] = { species: '', gender: '', friendship: '' }; renderAll(); }
+});
+
+// members JSON: { id: {name, caughtPokemon:[...], partnerPokemon} } 또는 배열
+document.getElementById('file').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const raw = JSON.parse(await f.text());
+    const arr = Array.isArray(raw) ? raw : Object.values(raw);
+    const toSlot = p => {
+      const rec = byNumber.get(p.number) || byNumber.get(p.originalNumber);
+      return { species: rec ? rec.name : (p.name || ''), gender: ['male', 'female', 'none'].includes(String(p.gender).toLowerCase()) ? String(p.gender).toLowerCase() : '', friendship: p.friendship ?? '' };
+    };
+    members = arr.filter(m => m && !m.isNPC && (m.caughtPokemon || m.partnerPokemon)).map(m => {
+      const party = (Array.isArray(m.caughtPokemon) ? m.caughtPokemon : Object.values(m.caughtPokemon || {})).slice(0, 6).filter(Boolean);
+      const all = [...party, ...(m.partnerPokemon ? [m.partnerPokemon] : [])].map(toSlot);
+      while (all.length < MAX) all.push({ species: '', gender: '', friendship: '' });
+      return { name: m.name || m.id || '(이름없음)', slots: all.slice(0, MAX) };
+    });
+    selMember = null; renderAll();
+  } catch (err) { alert('JSON을 읽지 못했습니다: ' + err.message); }
+});
+
+function renderCompare() {
+  const list = document.getElementById('mlist'), out = document.getElementById('cmpResult');
+  if (!members) { list.innerHTML = '<div class="sub">members JSON을 불러오면 멤버 목록이 표시됩니다.</div>'; out.innerHTML = ''; return; }
+  const base = (parseFloat(pBase.value) || 0) / 100;
+  list.innerHTML = members.map((m, k) => `<button class="mitem ${k === selMember ? 'on' : ''}" data-sel="${k}">${m.name}</button>`).join('');
+  if (selMember === null) { out.innerHTML = '<div class="sub">왼쪽에서 멤버를 선택해 주세요.</div>'; return; }
+  const me = members[selMember];
+  const rows = members.map((m, k) => ({ k, m, r: evalPair(me.slots, m.slots, base) })).filter(x => x.k !== selMember)
+    .sort((x, y) => y.r.prob - x.r.prob || y.r.pairs.length - x.r.pairs.length);
+  if (!rows.length) { out.innerHTML = '<div class="sub">비교할 다른 멤버가 없습니다.</div>'; return; }
+  const hi = rows[0], lo = rows[rows.length - 1];
+  const card = (cls, label, x) => `<div class="box ${cls}"><div class="sub">${label}</div><div><b>${x.m.name}</b></div><div class="big">${pct(x.r.prob)}</div><div class="sub">성립 조합 ${x.r.pairs.length} / ${x.r.total}</div></div>`;
+  out.innerHTML = `<h2 style="font-size:15px;margin:0 0 10px">${me.name} 기준 (알 확률 ${pct(base)})</h2>
+    <div class="two">${card('', '가장 높은 멤버', hi)}${card('low', '가장 낮은 멤버', lo)}</div>
+    <table><tr><th>#</th><th>멤버</th><th>성립 조합</th><th>확률</th><th></th></tr>` +
+    rows.map((x, i) => `<tr><td>${i + 1}</td><td>${x.m.name}</td><td>${x.r.pairs.length} / ${x.r.total}</td><td class="${x.r.pairs.length ? 'hit' : ''}">${pct(x.r.prob)}</td><td><button data-detail="${x.k}">상세</button></td></tr>`).join('') + '</table>';
+}
+
+document.addEventListener('click', e => {
+  const d = e.target.dataset;
+  if (d.tab) {
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b === e.target));
+    document.getElementById('tabCalc').style.display = d.tab === 'calc' ? '' : 'none';
+    document.getElementById('tabCmp').style.display = d.tab === 'cmp' ? '' : 'none';
+    renderCompare();
+  }
+  if (d.sel !== undefined) { selMember = +d.sel; renderCompare(); }
+  if (d.detail !== undefined) {
+    state[0].name = members[selMember].name; state[0].slots = members[selMember].slots;
+    state[1].name = members[+d.detail].name; state[1].slots = members[+d.detail].slots;
+    document.querySelector('[data-tab=calc]').click(); renderAll();
+  }
+});
+['pBase'].forEach(id => document.getElementById(id).addEventListener('input', calc));
+renderAll();
+</script>
+</body>
+</html>
