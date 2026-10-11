@@ -14477,7 +14477,7 @@
             "accuracy": 90,
             "pp": 10,
             "priority": 0,
-            "description": "멋들어진 몸놀림으로 공격한다. 입속에 싸리용이 있으면 싸리용의 모습에 따라 능력이 올라간다.",
+            "description": "발꿈치를 들어 올린 뒤 내리찍어 공격한다. 상대를 혼란시킬 때가 있다. 빗나가면 자신이 데미지를 입는다.",
             "contestType": null,
             "contestEffect": "",
             "contestAppeals": 0,
