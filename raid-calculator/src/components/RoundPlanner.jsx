@@ -9,6 +9,13 @@ import showdownIntegration from '../lib/showdownIntegration.js';
 
 // 아군(자기 자신 포함 가능)을 직접 지정해야 하는 기술의 타깃 타입 — 나머지는 지금까지처럼 보스를 자동으로 대상으로 삼는다
 const ALLY_TARGET_TYPES = ['adjacentAlly', 'adjacentAllyOrSelf'];
+// target이 'any'라 위 타입 체크로는 안 걸리지만, 보스를 기본 대상으로 삼으면 의미가 없는(회복) 기술 —
+// ALLY_TARGET_TYPES와 동일하게 자신 포함 아군 지정을 강제한다.
+const FORCED_ALLY_MOVE_IDS = ['healpulse'];
+// 보통은 보스를 공격하지만, 아군(자신 포함)을 지정하면 전혀 다른 효과가 되는 기술 — 아군 지정은
+// 강제가 아니라 선택이므로(보스 공격도 그대로 가능) ALLY_TARGET_TYPES와 달리 "보스" 버튼도 같이 보여준다.
+// 꽃가루경단: 아군/자신 지정 시 데미지 대신 최대 HP 50% 회복.
+const ALLY_OPTIONAL_MOVES = ['pollenpuff'];
 
 function moveLabel(moveId) {
   const mv = showdownIntegration.getMove(moveId);
@@ -101,7 +108,10 @@ export default function RoundPlanner({ raid }) {
   const turnOrder = activeTeamKey ? buildTurnOrder({ ...battle, participants: activeTeamMembers }) : [];
 
   const pendingAllyInfo = pendingAlly?.moveId ? showdownIntegration.getMove(pendingAlly.moveId) : null;
-  const allowSelfTarget = pendingAllyInfo?.target === 'adjacentAllyOrSelf';
+  const allowSelfTarget =
+    pendingAllyInfo?.target === 'adjacentAllyOrSelf' ||
+    !!pendingAlly?.optionalBoss ||
+    FORCED_ALLY_MOVE_IDS.includes(pendingAllyInfo?.id);
   const pendingTargetName = pendingAlly?.cheerId
     ? (() => {
         const pp = battle.participants.find((m) => m && m.id === pendingAlly.participantId);
@@ -113,8 +123,12 @@ export default function RoundPlanner({ raid }) {
 
   function queueMove(participant, moveId) {
     const moveInfo = showdownIntegration.getMove(moveId);
-    if (moveInfo && ALLY_TARGET_TYPES.includes(moveInfo.target)) {
+    if (moveInfo && (ALLY_TARGET_TYPES.includes(moveInfo.target) || FORCED_ALLY_MOVE_IDS.includes(moveInfo.id))) {
       setPendingAlly({ participantId: participant.id, moveId });
+      return;
+    }
+    if (moveInfo && ALLY_OPTIONAL_MOVES.includes(moveInfo.id)) {
+      setPendingAlly({ participantId: participant.id, moveId, optionalBoss: true });
       return;
     }
     raid.queueParticipantAction(participant.id, { kind: 'move', moveId });
@@ -129,6 +143,13 @@ export default function RoundPlanner({ raid }) {
         ? { kind: 'cheer', cheerId: pendingAlly.cheerId, targetParticipantId: targetId }
         : { kind: 'move', moveId: pendingAlly.moveId, targetParticipantId: targetId }
     );
+    setPendingAlly(null);
+  }
+
+  // 아군 지정이 "선택"인 기술(꽃가루경단 등)에서 보스를 대상으로 고른 경우 — 평소처럼 보스를 공격한다
+  function queueBossInstead() {
+    if (!pendingAlly || pendingAlly.cheerId) return;
+    raid.queueParticipantAction(pendingAlly.participantId, { kind: 'move', moveId: pendingAlly.moveId });
     setPendingAlly(null);
   }
 
@@ -299,6 +320,11 @@ export default function RoundPlanner({ raid }) {
                               {pendingTargetName}의 대상 선택{allowSelfTarget ? ' (자신 포함)' : ''}
                             </p>
                             <div className="button-grid">
+                              {pendingAlly?.optionalBoss && (
+                                <button type="button" onClick={queueBossInstead}>
+                                  보스
+                                </button>
+                              )}
                               {allyOptions.length === 0 && <span className="plan-hint">지정할 수 있는 아군이 없습니다.</span>}
                               {allyOptions.map((m) => (
                                 <button key={m.id} type="button" onClick={() => queueAllyTarget(m.id)}>

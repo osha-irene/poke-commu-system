@@ -7,6 +7,7 @@
  *  - 턴 종료 지속 회복/피해 (먹다남은음식·검은해감·포이즌힐·아이스바디·비받이·건조피부·화염구슬 등)
  *  - 1 남기고 버티기 (옹골참·기합의띠·기합의머리띠)
  *  - 연속기 실타수 (스킬링크·구애의주사위)
+ *  - 기술의 실제 타입 변환 (노말스킨류: 비행스킨·요정스킨·차가운스킨·전기스킨 + 노말라이즈)
  *
  * 레이드 규칙상 참가자는 특성·도구가 없으므로 실질적으로 보스에게만 적용된다.
  */
@@ -89,10 +90,11 @@ export function priorityBonus(entity, moveData, state) {
 export function movesLast(entity) {
   return abilityId(entity) === 'stall' || ['laggingtail', 'fullincense'].includes(itemId(entity));
 }
-/** 같은 우선도 안에서 확률적으로 "먼저" (선제공격의발톱 20% / 재빠른발톱 30%) */
+/** 같은 우선도 안에서 확률적으로(또는 애슈열매처럼 확정으로) "먼저" (선제공격의발톱 20% / 재빠른발톱 30%) */
 export function firstChance(entity) {
   if (itemId(entity) === 'quickclaw') return 0.2;
   if (abilityId(entity) === 'quickdraw') return 0.3;
+  if (hasCustapReady(entity)) return 1;
   return 0;
 }
 
@@ -110,6 +112,24 @@ export function multiHitCount(moveData, entity) {
   return min + Math.floor(Math.random() * (max - min + 1));
 }
 
+// ── 현상유지(커스텀 특성): 비(잔비 특성·비바라기 모두 포함)를 제외한 모든 날씨/필드 효과 무시 ──
+/** 보스가 현상유지 특성인가 */
+export function hasStatusQuo(entity) {
+  return abilityId(entity) === 'statusquo';
+}
+/**
+ * 보스가 현상유지면 비를 제외한 필드 전체의 날씨/필드가 아예 없는 것처럼 취급한다(비는 잔비 특성이든
+ * 비바라기든 원인과 무관하게 항상 예외). 날씨/필드의 "지속시간 자체"는 그대로 흐르고(걷히면 정상적으로
+ * 해제), 데미지 배율·명중률·잔여 회복피해·스피드 2배 같은 "효과"만 무시되는 방식(에어록 계열과 동일).
+ */
+export function effectiveWeatherTerrain(state) {
+  const field = getField(state);
+  if (state && state.boss && hasStatusQuo(state.boss) && field.weather !== 'Rain') {
+    return { weather: '', terrain: '' };
+  }
+  return { weather: field.weather, terrain: field.terrain };
+}
+
 // ── 턴 종료 지속 회복/피해 ───────────────────────────
 /** 라운드 종료 시 특성/도구/변화상태에 의한 HP 증감. formulaMaxHP 기준(레이드 배수 전). */
 export function residualHpChange(entity, state) {
@@ -117,7 +137,7 @@ export function residualHpChange(entity, state) {
   const base = entity.formulaMaxHP || entity.maxHP;
   const a = abilityId(entity);
   const it = itemId(entity);
-  const weather = getField(state).weather;
+  const weather = effectiveWeatherTerrain(state).weather;
   const lines = [];
   let delta = 0;
 
@@ -394,6 +414,25 @@ export function onHitReactions(defender, attacker, moveData, dmgDealt, isContact
     lines.push(`${defender.nickname}의 약점보험이 발동했다!`);
   }
 
+  // 악키열매/타라프열매: 물리/특수 공격을 맞고 체력이 1/4 이하가 되면 방어/특방 +1 (소모)
+  if (dmgDealt > 0 && !koed) {
+    const pinchDef = pinchDefenseBerry(defender, moveData.category);
+    if (pinchDef) {
+      const berryName = showdownIntegration.getItem(defender.item)?.nameKo || defender.item;
+      addDef({ boosts: { ...(defenderPatch?.boosts || {}), ...pinchDef }, item: '' });
+      lines.push(`${defender.nickname}의 ${berryName}로 능력이 올랐다!`);
+    }
+  }
+
+  // 구근/충전지/빛이끼/눈덩이: 특정 타입 공격을 맞으면 스탯 상승 (소모)
+  if (dmgDealt > 0 && !koed) {
+    const typeHit = typeHitBoostItem(defender, moveData.type);
+    if (typeHit) {
+      addDef({ boosts: { ...(defenderPatch?.boosts || {}), ...typeHit.boosts }, item: '' });
+      lines.push(`${defender.nickname}의 ${typeHit.label}이(가) 발동했다!`);
+    }
+  }
+
   return { attackerPatch, defenderPatch, lines };
 }
 
@@ -442,6 +481,14 @@ export function itemAddsFlinch(entity, moveData) {
 export function hasShellBell(entity) {
   return itemId(entity) === 'shellbell';
 }
+/** 멘탈허브: 헤롱헤롱/도발/앵콜/트집/회복봉인/사슬묶기에 걸리는 순간 소모되어 무효로 한다 */
+export function hasMentalHerb(entity) {
+  return itemId(entity) === 'mentalherb';
+}
+/** 구애스카프·구애띠·구애안경: 처음 사용한 기술에 고정된다 */
+export function isChoiceLocked(entity) {
+  return ['choiceband', 'choicespecs', 'choicescarf'].includes(itemId(entity));
+}
 /** 만능구근: 흡수 회복량 +30% */
 export function drainBonus(entity) {
   return itemId(entity) === 'bigroot' ? 1.3 : 1;
@@ -456,6 +503,10 @@ export function blocksSecondary(entity) {
 }
 export function blocksSecondaryLabel(entity) {
   return abilityId(entity) === 'shielddust' ? '방진' : '반짝가루망토';
+}
+/** 끈기: 상대 기술(탁쳐서떨구기 등)로 도구를 잃지 않는다 */
+export function blocksItemLoss(entity) {
+  return abilityId(entity) === 'stickyhold';
 }
 /** 능력 저하를 막는 특성/도구 (상대발 한정) */
 export function blocksStatDrop(entity) {
@@ -487,4 +538,157 @@ export function fieldDurationBonus(entity, kind) {
     if (it === 'damprock' || it === 'heatrock' || it === 'smoothrock' || it === 'icyrock') return 8;
   }
   return null;
+}
+
+// ── 그 외 도구 특수효과 (나무열매·풍선·생명의구슬 등) ──────
+/** 체력이 최대 체력 절반 이하일 때 터지는 회복 열매의 회복량(0이면 없음). 자뭉열매=25% / 오랭열매=고정10 */
+export function pinchHealAmount(entity) {
+  if (!entity || entity.fainted || entity.currentHP <= 0) return 0;
+  const base = entity.formulaMaxHP || entity.maxHP;
+  if (entity.currentHP > Math.floor(base / 2)) return 0;
+  const it = itemId(entity);
+  if (it === 'sitrusberry') return Math.max(1, Math.floor(base / 4));
+  if (it === 'oranberry') return 10;
+  return 0;
+}
+const STATUS_CURE_BERRY = {
+  par: 'cheriberry',
+  slp: 'chestoberry',
+  psn: 'pechaberry',
+  tox: 'pechaberry',
+  brn: 'rawstberry',
+  frz: 'aspearberry',
+};
+/** 해당 상태이상을 치료하는 나무열매(리샘열매=전체)를 지니고 있는가 */
+export function curesStatusBerry(entity, status) {
+  const it = itemId(entity);
+  return it === 'lumberry' || STATUS_CURE_BERRY[status] === it;
+}
+/** 혼란을 치료/예방하는 나무열매(시몬열매/리샘열매)를 지니고 있는가 */
+export function curesConfusionBerry(entity) {
+  const it = itemId(entity);
+  return it === 'persimberry' || it === 'lumberry';
+}
+const TYPE_RESIST_BERRY = {
+  occaberry: 'Fire',
+  passhoberry: 'Water',
+  wacanberry: 'Electric',
+  rindoberry: 'Grass',
+  yacheberry: 'Ice',
+  chopleberry: 'Fighting',
+  kebiaberry: 'Poison',
+  shucaberry: 'Ground',
+  cobaberry: 'Flying',
+  payapaberry: 'Psychic',
+  tangaberry: 'Bug',
+  chartiberry: 'Rock',
+  kasibberry: 'Ghost',
+  habanberry: 'Dragon',
+  colburberry: 'Dark',
+  babiriberry: 'Steel',
+  roseliberry: 'Fairy',
+};
+/** 효과가 굉장한 공격의 데미지를 줄이는 반감 열매가 발동하는가 (카리열매는 노말 타입이면 등가여도 발동) */
+export function typeResistBerryActive(entity, moveType, effectiveness) {
+  const it = itemId(entity);
+  if (it === 'chilanberry') return moveType === 'Normal';
+  return effectiveness > 1 && TYPE_RESIST_BERRY[it] === moveType;
+}
+/** 효과가 굉장한 공격을 맞으면 체력을 회복하는 의문열매가 발동하는가 */
+export function enigmaBerryHeals(entity, effectiveness) {
+  return effectiveness > 1 && itemId(entity) === 'enigmaberry';
+}
+/** 물리/특수 공격을 맞으면 공격자에게 반동을 주는 열매 (자보열매=물리 / 애터열매=특수) */
+export function retaliationBerry(entity, moveCategory) {
+  const it = itemId(entity);
+  if (it === 'jabocaberry' && moveCategory === 'Physical') return true;
+  if (it === 'rowapberry' && moveCategory === 'Special') return true;
+  return false;
+}
+/** 가루 기술 면역 (방진고글) */
+export function blocksPowder(entity) {
+  return itemId(entity) === 'safetygoggles';
+}
+/** 땅 기술 면역 + 피격 시 터지는 풍선을 지니고 있는가 */
+export function hasAirBalloon(entity) {
+  return itemId(entity) === 'airballoon';
+}
+/** 생명의구슬: 데미지를 입히면 최대 체력의 1/10을 반동으로 잃는다 */
+export function hasLifeOrb(entity) {
+  return itemId(entity) === 'lifeorb';
+}
+
+// ── 막판 스탯업 열매(치리/용아/캄라/야타비/규살/스타열매) ─────
+// 최대 체력 1/4 이하가 되면 랭크를 올리고 소모된다 (란사열매의 급소율 상승은 랭크가 아니라서 미지원)
+const PINCH_STAT_BERRY = {
+  liechiberry: { atk: 1 },
+  ganlonberry: { def: 1 },
+  salacberry: { spe: 1 },
+  petayaberry: { spa: 1 },
+  apicotberry: { spd: 1 },
+};
+const PINCH_STAT_STATS = ['atk', 'def', 'spa', 'spd', 'spe'];
+/** 체력이 최대 체력 1/4 이하일 때 터지는 스탯업 열매의 랭크 변화({stat: delta} 또는 null) */
+export function pinchStatBoost(entity) {
+  if (!entity || entity.fainted || entity.currentHP <= 0) return null;
+  const base = entity.formulaMaxHP || entity.maxHP;
+  if (entity.currentHP > Math.floor(base / 4)) return null;
+  const it = itemId(entity);
+  if (PINCH_STAT_BERRY[it]) return PINCH_STAT_BERRY[it];
+  // 스타열매: 랜덤 스탯 랭크 +2
+  if (it === 'starfberry') return { [PINCH_STAT_STATS[Math.floor(Math.random() * PINCH_STAT_STATS.length)]]: 2 };
+  return null;
+}
+/** 애슈열매: 체력이 최대 체력 1/4 이하면 같은 우선도 안에서 무조건 선행(1회, 소모) */
+export function hasCustapReady(entity) {
+  if (!entity || entity.fainted || entity.currentHP <= 0) return false;
+  const base = entity.formulaMaxHP || entity.maxHP;
+  return itemId(entity) === 'custapberry' && entity.currentHP <= Math.floor(base / 4);
+}
+/** 악키열매(물리)/타라프열매(특수): 해당 분류 공격을 맞고 체력이 1/4 이하가 되면 방어/특방 +1(소모) */
+export function pinchDefenseBerry(entity, moveCategory) {
+  const base = entity.formulaMaxHP || entity.maxHP;
+  if (entity.currentHP > Math.floor(base / 4)) return null;
+  const it = itemId(entity);
+  if (it === 'keeberry' && moveCategory === 'Physical') return { def: 1 };
+  if (it === 'marangaberry' && moveCategory === 'Special') return { spd: 1 };
+  return null;
+}
+// ── 특정 타입 피격 시 스탯업 도구(약점보험류) ──────────
+const TYPE_HIT_BOOST_ITEM = {
+  absorbbulb: { type: 'Water', boosts: { spa: 1 }, label: '구근' },
+  cellbattery: { type: 'Electric', boosts: { atk: 1 }, label: '충전지' },
+  luminousmoss: { type: 'Water', boosts: { spd: 1 }, label: '빛이끼' },
+  snowball: { type: 'Ice', boosts: { atk: 1 }, label: '눈덩이' },
+};
+/** 특정 타입 공격을 맞으면 스탯이 오르는 도구(구근/충전지/빛이끼/눈덩이)의 { boosts, label } 또는 null */
+export function typeHitBoostItem(entity, moveType) {
+  const def = TYPE_HIT_BOOST_ITEM[itemId(entity)];
+  return def && def.type === moveType ? def : null;
+}
+
+// ── 타입 변환 특성(노말스킨류) ────────────────────────
+// 비행스킨/요정스킨/차가운스킨/전기스킨: 시전자의 노말 타입 기술을 해당 타입으로 바꾼다
+// (위력 1.2배는 @smogon/calc가 attacker.ability로 이미 반영하므로 여기선 타입만 돌려준다)
+const NORMAL_SKIN_ABILITIES = {
+  aerilate: 'Flying',
+  pixilate: 'Fairy',
+  refrigerate: 'Ice',
+  galvanize: 'Electric',
+};
+/**
+ * entity가 moveData를 실제로 사용할 때의 "진짜" 타입. 데미지 배율은 @smogon/calc가 attacker.ability로
+ * 알아서 계산하지만, 엔진이 직접 하는 타입 상성 무효 판정(통하지 않았다)·반감열매·해동 등은 moveData.type
+ * (원래 타입)만 보면 틀리므로 이 함수로 보정한 타입을 써야 한다.
+ *  - 노말라이즈: 모든 기술이 노말 타입이 된다
+ *  - 비행/요정/차가운/전기스킨: 노말 타입 기술만 각각의 타입으로 바뀐다
+ *  - 리퀴드보이스: 소리 기술이 물 타입이 된다
+ */
+export function effectiveMoveType(entity, moveData) {
+  if (!moveData || !moveData.type) return moveData && moveData.type;
+  const a = abilityId(entity);
+  if (a === 'normalize') return 'Normal';
+  if (moveData.type === 'Normal' && NORMAL_SKIN_ABILITIES[a]) return NORMAL_SKIN_ABILITIES[a];
+  if (a === 'liquidvoice' && moveData.flags && moveData.flags.sound) return 'Water';
+  return moveData.type;
 }

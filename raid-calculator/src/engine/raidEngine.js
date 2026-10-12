@@ -12,7 +12,7 @@ import {
   detectFieldEffect,
   isFieldMove,
   applyFieldEffect,
-  buildFieldOptions,
+  buildFieldOptions as buildFieldOptionsRaw,
   hasTailwind,
   isTrickRoom,
   weatherChipTick,
@@ -52,9 +52,12 @@ import {
   endOfRoundBoost,
   itemAddsFlinch,
   hasShellBell,
+  hasMentalHerb,
+  isChoiceLocked,
   drainBonus,
   gripClawTurns,
   blocksSecondary,
+  blocksItemLoss,
   blocksStatDrop,
   hasContrary,
   hasSimple,
@@ -63,6 +66,20 @@ import {
   critStageBonus,
   noContact,
   accuracyAbilityMods,
+  pinchHealAmount,
+  pinchStatBoost,
+  hasCustapReady,
+  curesStatusBerry,
+  curesConfusionBerry,
+  typeResistBerryActive,
+  enigmaBerryHeals,
+  retaliationBerry,
+  blocksPowder,
+  hasAirBalloon,
+  hasLifeOrb,
+  effectiveMoveType,
+  effectiveWeatherTerrain,
+  hasStatusQuo,
 } from './traits.js';
 import {
   isChargeMove,
@@ -138,6 +155,14 @@ function isEntityGrounded(entity, state) {
   if (itemId(entity) === 'airballoon') return false;
   if ((entity.types || []).includes('Flying')) return false;
   return true;
+}
+
+/** fieldConditions.buildFieldOptions를 감싸, 보스가 현상유지(잔비 제외 날씨/필드 무시)면
+ * 데미지 계산에 넘길 weather/terrain을 실제 값이 아니라 무시된 값(없음)으로 바꿔 넘긴다. */
+function buildFieldOptions(state, attacker, defender) {
+  const opts = buildFieldOptionsRaw(state, attacker, defender);
+  const eff = effectiveWeatherTerrain(state);
+  return { ...opts, weather: eff.weather || undefined, terrain: eff.terrain || undefined };
 }
 
 // 필드 상태에 따라 조건부로 범위기가 되는 기술
@@ -388,6 +413,14 @@ function applyStatDeltas(pokemon, deltas, opts = {}) {
   Object.entries(eff).forEach(([stat, delta]) => {
     if (delta) boosts[stat] = clampStage((boosts[stat] || 0) + delta);
   });
+
+  // 하양허브: 떨어진 능력치가 하나라도 있으면 전부 0으로 되돌리고 소모된다
+  if (itemId(pokemon) === 'whiteherb' && Object.values(boosts).some((v) => v < 0)) {
+    const restored = Object.fromEntries(Object.entries(boosts).map(([k, v]) => [k, Math.max(0, v)]));
+    if (opts.lines) opts.lines.push(`${pokemon.nickname}은(는) 하양허브로 떨어진 능력을 원래대로 되돌렸다!`);
+    return { ...pokemon, boosts: restored, item: '' };
+  }
+
   return { ...pokemon, boosts };
 }
 
@@ -439,11 +472,18 @@ function isStatusImmune(status, types) {
   return false;
 }
 
-/** 타입/특성으로 status 획득이 막히는 이유 문자열, 안 막히면 null */
+/** 타입/특성/필드로 status 획득이 막히는 이유 문자열, 안 막히면 null.
+ * 필드(미스트필드 전체 상태이상 차단·일렉트릭필드 수면 차단)는 특성과 무관해서 ignoreAbility(몰드브레이커 등)로도 무시되지 않는다. */
 function statusImmuneReason(target, status, state, ignoreAbility) {
   if (isStatusImmune(status, target.types || [])) return `${target.nickname}에게는 효과가 없다!`;
   if (!ignoreAbility && abilityBlocksStatus(target, status, state))
     return `${target.nickname}은(는) 특성으로 상태이상에 걸리지 않는다!`;
+  if (state && isEntityGrounded(target, state)) {
+    const terrain = effectiveWeatherTerrain(state).terrain;
+    if (terrain === 'Misty') return `${target.nickname}은(는) 미스트필드에 보호받고 있다!`;
+    if (terrain === 'Electric' && status === 'slp')
+      return `${target.nickname}은(는) 일렉트릭필드의 영향으로 잠들지 않는다!`;
+  }
   return null;
 }
 
@@ -452,6 +492,22 @@ function withStatus(target, status) {
   const patch = { status, toxicCounter: status === 'tox' ? 1 : 0 };
   if (status === 'slp') patch.sleepTurns = 1 + Math.floor(Math.random() * 3);
   return { ...target, ...patch };
+}
+
+/**
+ * status를 target에 걸고, 그 상태이상을 치료하는 나무열매(리샘열매=전체)를 지니고 있으면
+ * 즉시 치료해 소모한다. 상태 메시지(또는 치료 메시지)를 lines에 직접 push한다.
+ */
+function inflictStatus(target, status, lines) {
+  let entity = withStatus(target, status);
+  if (curesStatusBerry(entity, status)) {
+    const berryName = showdownIntegration.getItem(entity.item)?.nameKo || entity.item;
+    entity = { ...entity, status: '', toxicCounter: 0, sleepTurns: 0, item: '' };
+    lines.push(`${entity.nickname}은(는) ${berryName}로 ${STATUS_LABEL[status] || status} 상태를 치료했다!`);
+  } else {
+    lines.push(`${entity.nickname}은(는) ${STATUS_LABEL[status] || status} 상태가 되었다!`);
+  }
+  return entity;
 }
 
 /** 기술의 volatileStatus(혼란/씨뿌리기/조이기/도발/앵콜/트집/회복봉인/사슬묶기)를 target에 적용 */
@@ -464,6 +520,11 @@ function applyVolatileStatus(target, volatileId, lines, sourceAttacker) {
       if (abilityBlocksConfusion(target)) {
         lines.push(`${target.nickname}은(는) 마이페이스로 혼란에 빠지지 않는다!`);
         return target;
+      }
+      if (curesConfusionBerry(target)) {
+        const berryName = showdownIntegration.getItem(target.item)?.nameKo || target.item;
+        lines.push(`${target.nickname}은(는) ${berryName}로 혼란을 견뎌냈다!`);
+        return { ...target, item: '' };
       }
       lines.push(`${target.nickname}은(는) 혼란에 빠졌다!`);
       return { ...target, confusionTurns: 1 + Math.floor(Math.random() * 4) };
@@ -521,22 +582,42 @@ function applyVolatileStatus(target, volatileId, lines, sourceAttacker) {
         lines.push(`${target.nickname}에게는 효과가 없다!`);
         return target;
       }
+      if (hasMentalHerb(target)) {
+        lines.push(`${target.nickname}은(는) 멘탈허브로 도발을 무효로 했다!`);
+        return { ...target, item: '' };
+      }
       lines.push(`${target.nickname}은(는) 도발에 걸렸다!`);
       return { ...target, tauntTurns: 3 };
     case 'encore':
       if (target.encoreTurns > 0 || !target.lastMoveId) return target;
+      if (hasMentalHerb(target)) {
+        lines.push(`${target.nickname}은(는) 멘탈허브로 앵콜을 무효로 했다!`);
+        return { ...target, item: '' };
+      }
       lines.push(`${target.nickname}에게 앵콜이 걸렸다!`);
       return { ...target, encoreTurns: 3, encoreMove: target.lastMoveId };
     case 'torment':
       if (target.tormentActive) return target;
+      if (hasMentalHerb(target)) {
+        lines.push(`${target.nickname}은(는) 멘탈허브로 트집을 무효로 했다!`);
+        return { ...target, item: '' };
+      }
       lines.push(`${target.nickname}은(는) 트집이 났다!`);
       return { ...target, tormentActive: true };
     case 'healblock':
       if (target.healBlockTurns > 0) return target;
+      if (hasMentalHerb(target)) {
+        lines.push(`${target.nickname}은(는) 멘탈허브로 회복 봉인을 무효로 했다!`);
+        return { ...target, item: '' };
+      }
       lines.push(`${target.nickname}은(는) 회복 봉인 상태가 되었다!`);
       return { ...target, healBlockTurns: 5 };
     case 'disable':
       if (target.disableTurns > 0 || !target.lastMoveId) return target;
+      if (hasMentalHerb(target)) {
+        lines.push(`${target.nickname}은(는) 멘탈허브로 사슬묶기를 무효로 했다!`);
+        return { ...target, item: '' };
+      }
       lines.push(`${target.nickname}의 기술이 사슬묶였다!`);
       return { ...target, disableTurns: 4, disableMove: target.lastMoveId };
     default:
@@ -643,7 +724,7 @@ function attack(attacker, defender, moveId, options = {}) {
             nextAttacker = { ...nextAttacker, currentHP: hp, fainted: hp <= 0 };
           }
           if (pun.status && !nextAttacker.status && !statusImmuneReason(nextAttacker, pun.status, options.state, ignoreAbility)) {
-            nextAttacker = withStatus(nextAttacker, pun.status);
+            nextAttacker = inflictStatus(nextAttacker, pun.status, lines);
           }
           if (pun.boosts) nextAttacker = applyStatDeltas(nextAttacker, pun.boosts, { fromOpponent: true, lines });
           lines.push(pun.line);
@@ -691,14 +772,46 @@ function attack(attacker, defender, moveId, options = {}) {
     moveData.target === 'self' ||
     moveData.target === 'allies' ||
     moveData.target === 'allySide';
+  // 꽃가루경단: 아군(자신 포함)을 대상으로 지정하면 데미지 대신 최대 HP의 절반을 회복시킨다
+  if (!isSelfOrTeamTargeted && moveData.id === 'pollenpuff' && attacker.isParticipant && defender.isParticipant) {
+    lines.push(`${nextAttacker.nickname}은(는) ${defender.nickname}에게 꽃가루경단을 건넸다!`);
+    const healResult = applyHealToEntity(nextDefender, 0.5);
+    nextDefender = healResult.entity;
+    lines.push(...healResult.lines);
+    return { attacker: nextAttacker, defender: nextDefender, lines };
+  }
+
+  // 치유파동: 지정한 대상(자신/아군/상대 누구든)을 최대 HP의 50% 회복시킨다. 쇼다운 데이터엔
+  // heal 수치가 없어(배틀 엔진에서 특수 처리) 별도로 구현 — target이 'any'라 isSelfOrTeamTargeted를
+  // 안 타므로 명중/타입 상성 판정 전에 여기서 가로채 처리한다.
+  if (!isSelfOrTeamTargeted && moveData.id === 'healpulse') {
+    lines.push(`${nextAttacker.nickname}은(는) ${defender.nickname}에게 치유파동을 보냈다!`);
+    const healResult = applyHealToEntity(nextDefender, 0.5);
+    nextDefender = healResult.entity;
+    lines.push(...healResult.lines);
+    return { attacker: nextAttacker, defender: nextDefender, lines };
+  }
+
+  // 사이코필드: 접지 상태인 상대를 노리는 우선도 기술은 통하지 않는다 (자신/아군 대상 기술은 예외)
+  if (!isSelfOrTeamTargeted && (moveData.priority || 0) > 0 && options.state) {
+    if (effectiveWeatherTerrain(options.state).terrain === 'Psychic' && isEntityGrounded(defender, options.state)) {
+      lines.push(`${defender.nickname}은(는) 사이코필드에 보호받아 기술이 통하지 않았다!`);
+      return { attacker: nextAttacker, defender, lines };
+    }
+  }
+
+  // 특성(비행/요정/차가운/전기스킨·노말라이즈·리퀴드보이스)으로 실제로 바뀐 기술 타입.
+  // 데미지 배율은 @smogon/calc가 attacker.ability로 이미 반영하지만, 아래 타입 무효/반감열매/해동
+  // 판정은 직접 계산하므로 원래 타입(moveData.type)이 아니라 이 값을 써야 한다.
+  const moveType = effectiveMoveType(attacker, moveData);
   const defenderTypes = defender.types && defender.types.length ? defender.types : ['Normal'];
   const gravityOn = options.state ? isGravity(options.state) : false;
   // 중력/천개의화살/스매쉬다운/접지 상태면 땅 기술이 비행 타입에도 명중
   const grounded = gravityOn || defender.grounded || groundsTarget(moveData);
-  const effTypes = grounded && moveData.type === 'Ground' ? defenderTypes.filter((t) => t !== 'Flying') : defenderTypes;
+  const effTypes = grounded && moveType === 'Ground' ? defenderTypes.filter((t) => t !== 'Flying') : defenderTypes;
   let effectiveness = isSelfOrTeamTargeted
     ? 1
-    : showdownIntegration.getTypeEffectiveness(moveData.type, effTypes.length ? effTypes : ['Normal']);
+    : showdownIntegration.getTypeEffectiveness(moveType, effTypes.length ? effTypes : ['Normal']);
   // 프리즈드라이: 얼음 기술이지만 물 타입에 효과가 굉장 (얼음↔물 0.5배를 2배로 뒤집음)
   if (!isSelfOrTeamTargeted && moveData.id === 'freezedry' && defenderTypes.includes('Water')) {
     effectiveness *= 4;
@@ -708,17 +821,22 @@ function attack(attacker, defender, moveId, options = {}) {
     !isSelfOrTeamTargeted &&
     !ignoresAbilities(attacker) &&
     abilityId(attacker) === 'scrappy' &&
-    (moveData.type === 'Normal' || moveData.type === 'Fighting') &&
+    (moveType === 'Normal' || moveType === 'Fighting') &&
     defenderTypes.includes('Ghost') &&
     effectiveness === 0
   ) {
-    effectiveness = showdownIntegration.getTypeEffectiveness(moveData.type, defenderTypes.filter((t) => t !== 'Ghost'));
+    effectiveness = showdownIntegration.getTypeEffectiveness(moveType, defenderTypes.filter((t) => t !== 'Ghost'));
   }
 
   // 데미지 기술(고정 데미지·일격기 포함)만 타입 무효(0배)로 "통하지 않았다". 변화기술은 타입 상성을 무시하되
   // 전기자석파(전기)는 땅 타입에, 가루/포자 기술은 풀 타입에 무효.
   const isDamagingMove = moveData.category !== 'Status';
   if (!isSelfOrTeamTargeted) {
+    // 풍선: 뜬 상태에서는 땅 기술을 받지 않는다 (중력/접지 상태면 무효)
+    if (isDamagingMove && moveType === 'Ground' && !grounded && hasAirBalloon(defender)) {
+      lines.push(`${defender.nickname}은(는) 풍선에 떠 있어 땅 기술을 받지 않았다!`);
+      return { attacker: nextAttacker, defender, lines };
+    }
     if (isDamagingMove && effectiveness === 0) {
       lines.push(`${defender.nickname}에게는 통하지 않았다!`);
       return { attacker: nextAttacker, defender, lines };
@@ -728,8 +846,10 @@ function attack(attacker, defender, moveId, options = {}) {
         lines.push(`${defender.nickname}에게는 통하지 않았다!`);
         return { attacker: nextAttacker, defender, lines };
       }
-      if (moveData.flags && moveData.flags.powder && defenderTypes.includes('Grass')) {
-        lines.push(`${defender.nickname}에게는 효과가 없다! (풀 타입)`);
+      if (moveData.flags && moveData.flags.powder && (defenderTypes.includes('Grass') || blocksPowder(defender))) {
+        lines.push(
+          `${defender.nickname}에게는 효과가 없다! (${defenderTypes.includes('Grass') ? '풀 타입' : '방진고글'})`
+        );
         return { attacker: nextAttacker, defender, lines };
       }
     }
@@ -777,6 +897,9 @@ function attack(attacker, defender, moveId, options = {}) {
       lines.push(`${defender.nickname}은(는) 둔감으로 헤롱헤롱해지지 않는다!`);
     } else if (!aGender || !dGender || aGender === dGender) {
       lines.push(`${defender.nickname}에게는 효과가 없다!`);
+    } else if (hasMentalHerb(defender)) {
+      nextDefender = { ...defender, item: '' };
+      lines.push(`${defender.nickname}은(는) 멘탈허브로 헤롱헤롱을 무효로 했다!`);
     } else {
       nextDefender = { ...defender, attractActive: true };
       lines.push(`${defender.nickname}은(는) ${attacker.nickname}에게 반했다!`);
@@ -807,6 +930,18 @@ function attack(attacker, defender, moveId, options = {}) {
 
   if (!isDamagingMove) {
     // 변화기술: 랭크 변화/상태이상/변화상태/회복/날씨·필드·사이드컨디션 설치만 적용 (데미지 없음)
+
+    // 현상유지(과거의 영운): 비는 예외(잔비 특성·비바라기 모두)로 두고, 그 외 날씨/필드(터레인)를
+    // 바꾸는 기술 자체를 막는다 (트릭룸·중력·사이드컨디션은 그대로 통과)
+    if (
+      fieldFx &&
+      ((fieldFx.weather && fieldFx.weather !== 'Rain') || fieldFx.terrain) &&
+      hasStatusQuo(options.state && options.state.boss)
+    ) {
+      const kind = fieldFx.terrain ? '필드' : '날씨';
+      lines.push(`과거의 영운님의 힘으로 ${kind}가 변하지 않는다!`);
+      return { attacker: nextAttacker, defender: nextDefender, lines };
+    }
 
     // 날씨/필드(터레인)/트릭룸/사이드컨디션 설치 — 실제 반영은 호출부(executeParticipant/BossAction)에서
     // state.field / state.sideConditions 에 applyFieldEffect로 처리하고, 여기서는 감지 결과만 넘긴다
@@ -847,8 +982,7 @@ function attack(attacker, defender, moveId, options = {}) {
       lines.push(`${nextDefender.nickname}은(는) 매직미러로 ${moveData.name}을(를) 되돌렸다!`);
       if (moveData.boosts) nextAttacker = applyStatDeltas(nextAttacker, moveData.boosts, { fromOpponent: true, lines });
       if (moveData.status && !nextAttacker.status && !statusImmuneReason(nextAttacker, moveData.status, options.state, ignoreAbility)) {
-        nextAttacker = withStatus(nextAttacker, moveData.status);
-        lines.push(`${nextAttacker.nickname}은(는) ${STATUS_LABEL[moveData.status] || moveData.status} 상태가 되었다!`);
+        nextAttacker = inflictStatus(nextAttacker, moveData.status, lines);
       }
       if (moveData.volatileStatus) nextAttacker = applyVolatileStatus(nextAttacker, moveData.volatileStatus, lines, nextDefender);
       return { attacker: nextAttacker, defender: nextDefender, lines };
@@ -859,9 +993,16 @@ function attack(attacker, defender, moveId, options = {}) {
       lines.push('모든 포켓몬의 능력 변화가 사라졌다!');
       return { attacker: { ...nextAttacker, boosts: { ...EMPTY_BOOSTS } }, defender: nextDefender, lines, hazeAll: true };
     }
-    // ── 아로마테라피/치유방울: 상태이상 치유 (호출부에서 팀 전체에 반영) ──
+    // ── 아로마테라피/치료방울: 상태이상 치유 (호출부에서 팀 전체에 반영) ──
     if (isPartyCure(moveData)) {
-      lines.push('상쾌한 향기가 감돈다!');
+      lines.push(moveData.id === 'healbell' ? '방울소리가 울린다!' : '상쾌한 향기가 감돈다!');
+      const teammateStatused =
+        attacker.isParticipant &&
+        options.state &&
+        (options.state.participants || []).some(
+          (p) => p && p.id !== attacker.id && !p.fainted && (p.team || '') === (attacker.team || '') && !!p.status
+        );
+      lines.push(nextAttacker.status || teammateStatused ? '아군의 모든 상태이상이 치료되었다!' : '그러나 아무런 일도 일어나지 않았다!');
       return {
         attacker: { ...nextAttacker, status: '', toxicCounter: 0, sleepTurns: 0 },
         defender: nextDefender,
@@ -927,12 +1068,11 @@ function attack(attacker, defender, moveId, options = {}) {
       if (moveData.target !== 'self' && fld.defenderSafeguard) {
         lines.push(`${nextDefender.nickname}은(는) 신비의 부적에 보호받고 있다!`);
       } else if (nextDefender.status) {
-        lines.push(`${nextDefender.nickname}에게는 효과가 없다! (이미 상태이상)`);
+        // 이미 상태이상이면 아무 효과 없이 조용히 실패한다 (별도 로그 없음)
       } else if (immReason) {
         lines.push(immReason);
       } else {
-        nextDefender = withStatus(nextDefender, moveData.status);
-        lines.push(`${nextDefender.nickname}은(는) ${STATUS_LABEL[moveData.status] || moveData.status} 상태가 되었다!`);
+        nextDefender = inflictStatus(nextDefender, moveData.status, lines);
       }
     }
 
@@ -986,6 +1126,7 @@ function attack(attacker, defender, moveId, options = {}) {
   else if (effectiveness < 1) lines.push('효과가 별로인 듯하다...');
 
   let selfFaintFromMove = false;
+  let resistBerryUsed = false;
   let dmg;
   const fd = fixedDamage(moveData, nextAttacker, defender);
   const ck = counterKind(moveData);
@@ -1032,6 +1173,11 @@ function attack(attacker, defender, moveId, options = {}) {
     const defMult = (defender.cheerDefense && defender.cheerDefense.mult) || 1;
     if (offMult !== 1) dmg = Math.round(dmg * offMult);
     if (defMult !== 1) dmg = Math.round(dmg / defMult);
+    // 반감 열매(오카열매 등): 효과가 굉장한 공격의 데미지를 25% 줄이고 소모된다
+    if (typeResistBerryActive(defender, moveType, effectiveness)) {
+      dmg = Math.max(1, Math.round(dmg * 0.75));
+      resistBerryUsed = true;
+    }
     dmg = Math.min(defender.currentHP, dmg);
   }
 
@@ -1048,9 +1194,14 @@ function attack(attacker, defender, moveId, options = {}) {
   const fainted = nextHP <= 0;
   nextDefender = { ...defender, currentHP: nextHP, fainted };
   if (endure.survive && endure.consumesItem) nextDefender.item = '';
+  if (resistBerryUsed) {
+    const berryName = showdownIntegration.getItem(nextDefender.item)?.nameKo || nextDefender.item;
+    nextDefender.item = '';
+    lines.push(`${defender.nickname}의 ${berryName}로 데미지가 줄었다!`);
+  }
 
   // 불꽃 타입 공격을 맞은 냉동 상태 대상은 해동된다
-  if (!fainted && defender.status === 'frz' && moveData.type === 'Fire' && dmg > 0) {
+  if (!fainted && defender.status === 'frz' && moveType === 'Fire' && dmg > 0) {
     nextDefender.status = '';
     lines.push(`${defender.nickname}의 얼음이 녹았다!`);
   }
@@ -1094,7 +1245,7 @@ function attack(attacker, defender, moveId, options = {}) {
   const reactions = onHitReactions(
     nextDefender,
     nextAttacker,
-    moveData,
+    moveType === moveData.type ? moveData : { ...moveData, type: moveType },
     dmg,
     isContactHit,
     fainted,
@@ -1119,6 +1270,19 @@ function attack(attacker, defender, moveId, options = {}) {
     if (p.item !== undefined) nextDefender = { ...nextDefender, item: p.item };
   }
   lines.push(...reactions.lines);
+
+  // 탁쳐서떨구기: 명중해서 데미지를 입혔고 상대가 쓰러지지 않았다면 지닌 물건을
+  // 배틀이 끝날 때까지 제거한다 (끈기 특성이면 막힘). 레이드 규칙상 참가자는
+  // 도구가 없으므로 실질적으로 보스 도구에만 영향을 준다.
+  if (moveData.id === 'knockoff' && dmg > 0 && !fainted && nextDefender.item) {
+    if (!ignoreAbility && blocksItemLoss(nextDefender)) {
+      lines.push(`${nextDefender.nickname}은(는) 끈기로 도구를 잃지 않았다!`);
+    } else {
+      const droppedItem = showdownIntegration.getItem(nextDefender.item)?.nameKo || nextDefender.item;
+      nextDefender = { ...nextDefender, item: '' };
+      lines.push(`${nextDefender.nickname}의 ${droppedItem}${josa(droppedItem, '이', '가')} 떨어졌다!`);
+    }
+  }
 
   // 킹스록/예리한이빨: 원래 풀죽음 없는 공격에 10% 풀죽음 추가
   if (!fainted && itemAddsFlinch(nextAttacker, moveData) && Math.random() < 0.1) {
@@ -1215,8 +1379,8 @@ function attack(attacker, defender, moveId, options = {}) {
   if (moveData.self?.boosts) {
     const selfChance = moveData.self.chance ?? 100;
     if (Math.random() * 100 < selfChance) {
-      nextAttacker = applyStatDeltas(nextAttacker, moveData.self.boosts);
       lines.push(...describeStatChange(nextAttacker.nickname, moveData.self.boosts));
+      nextAttacker = applyStatDeltas(nextAttacker, moveData.self.boosts, { lines });
     }
   }
 
@@ -1250,10 +1414,7 @@ function attack(attacker, defender, moveId, options = {}) {
         if (fld.defenderSafeguard) {
           lines.push(`${nextDefender.nickname}은(는) 신비의 부적에 보호받고 있다!`);
         } else if (!nextDefender.status && !statusImmuneReason(nextDefender, moveData.secondary.status, options.state, ignoreAbility)) {
-          nextDefender = withStatus(nextDefender, moveData.secondary.status);
-          lines.push(
-            `${nextDefender.nickname}은(는) ${STATUS_LABEL[moveData.secondary.status] || moveData.secondary.status} 상태가 되었다!`
-          );
+          nextDefender = inflictStatus(nextDefender, moveData.secondary.status, lines);
         }
       }
       if (moveData.secondary.volatileStatus) {
@@ -1264,6 +1425,83 @@ function attack(attacker, defender, moveId, options = {}) {
         }
       }
     }
+  }
+
+  // 생명의구슬: 데미지를 입히면 최대 체력의 1/10을 반동으로 잃는다
+  if (dmg > 0 && !nextAttacker.fainted && hasLifeOrb(nextAttacker)) {
+    const recoil = Math.max(1, Math.floor((nextAttacker.formulaMaxHP || nextAttacker.maxHP) / 10));
+    const hp = Math.max(0, nextAttacker.currentHP - recoil);
+    const koed = hp <= 0;
+    nextAttacker = { ...nextAttacker, currentHP: hp, fainted: koed };
+    lines.push(`${nextAttacker.nickname}은(는) 생명의구슬로 반동을 입었다! (-${recoil})`);
+    if (koed) lines.push(`${nextAttacker.nickname}은(는) 쓰러졌다!`);
+  }
+
+  if (!isSelfOrTeamTargeted) {
+    // 자보열매/애터열매: 물리/특수 공격을 맞으면 공격자가 최대 체력의 1/8을 잃는다 (소모됨, 상대가 기절해도 발동)
+    if (dmg > 0 && retaliationBerry(nextDefender, moveData.category) && !nextAttacker.fainted) {
+      const berryName = showdownIntegration.getItem(nextDefender.item)?.nameKo || nextDefender.item;
+      const chip = Math.max(1, Math.floor((nextAttacker.formulaMaxHP || nextAttacker.maxHP) / 8));
+      const hp = Math.max(0, nextAttacker.currentHP - chip);
+      const koed = hp <= 0;
+      nextAttacker = { ...nextAttacker, currentHP: hp, fainted: koed };
+      nextDefender = { ...nextDefender, item: '' };
+      lines.push(`${nextAttacker.nickname}은(는) ${nextDefender.nickname}의 ${berryName}로 상처를 입었다!`);
+      if (koed) lines.push(`${nextAttacker.nickname}은(는) 쓰러졌다!`);
+    }
+
+    // 의문열매: 효과가 굉장한 공격을 맞으면 최대 체력의 1/4을 회복한다 (소모됨)
+    if (!nextDefender.fainted && dmg > 0 && enigmaBerryHeals(nextDefender, effectiveness)) {
+      const healAmt = Math.max(1, Math.floor((nextDefender.formulaMaxHP || nextDefender.maxHP) / 4));
+      const hp = Math.min(nextDefender.maxHP, nextDefender.currentHP + healAmt);
+      nextDefender = { ...nextDefender, currentHP: hp, item: '' };
+      lines.push(`${nextDefender.nickname}은(는) 의문열매로 체력을 회복했다!`);
+    }
+
+    // 풍선: 공격을 맞으면 터진다
+    if (dmg > 0 && hasAirBalloon(nextDefender)) {
+      nextDefender = { ...nextDefender, item: '' };
+      lines.push(`${nextDefender.nickname}의 풍선이 터졌다!`);
+    }
+
+    // 자뭉열매/오랭열매: 체력이 절반 이하가 되면 회복한다 (소모됨)
+    const defHeal = pinchHealAmount(nextDefender);
+    if (defHeal > 0) {
+      const berryName = showdownIntegration.getItem(nextDefender.item)?.nameKo || nextDefender.item;
+      const hp = Math.min(nextDefender.maxHP, nextDefender.currentHP + defHeal);
+      nextDefender = { ...nextDefender, currentHP: hp, item: '' };
+      lines.push(`${nextDefender.nickname}은(는) ${berryName}로 체력을 회복했다!`);
+    }
+
+    // 치리/용아/캄라/야타비/규살/스타열매: 체력이 1/4 이하가 되면 랭크가 오른다 (소모됨)
+    const defStatBoost = pinchStatBoost(nextDefender);
+    if (defStatBoost) {
+      const berryName = showdownIntegration.getItem(nextDefender.item)?.nameKo || nextDefender.item;
+      nextDefender = applyStatDeltas({ ...nextDefender, item: '' }, defStatBoost);
+      lines.push(`${defender.nickname}은(는) ${berryName}로 능력이 올랐다!`, ...describeStatChange(nextDefender.nickname, defStatBoost));
+    }
+  }
+
+  // 자뭉열매/오랭열매: 공격자 쪽(생명의구슬 반동 등으로 체력이 떨어진 경우 포함)도 검사한다
+  const atkHeal = pinchHealAmount(nextAttacker);
+  if (atkHeal > 0) {
+    const berryName = showdownIntegration.getItem(nextAttacker.item)?.nameKo || nextAttacker.item;
+    const hp = Math.min(nextAttacker.maxHP, nextAttacker.currentHP + atkHeal);
+    nextAttacker = { ...nextAttacker, currentHP: hp, item: '' };
+    lines.push(`${nextAttacker.nickname}은(는) ${berryName}로 체력을 회복했다!`);
+  }
+
+  // 치리/용아/캄라/야타비/규살/스타열매: 공격자 쪽(생명의구슬 반동 등으로 체력이 떨어진 경우 포함)도 검사한다
+  const atkStatBoost = pinchStatBoost(nextAttacker);
+  if (atkStatBoost) {
+    const berryName = showdownIntegration.getItem(nextAttacker.item)?.nameKo || nextAttacker.item;
+    nextAttacker = applyStatDeltas({ ...nextAttacker, item: '' }, atkStatBoost);
+    lines.push(`${nextAttacker.nickname}은(는) ${berryName}로 능력이 올랐다!`, ...describeStatChange(nextAttacker.nickname, atkStatBoost));
+  }
+
+  // 애슈열매: 체력이 1/4 이하면 이번 행동에 쓰고 소모된다 (같은 우선도 안 선행은 firstChance에서 처리)
+  if (hasCustapReady(nextAttacker)) {
+    nextAttacker = { ...nextAttacker, item: '' };
   }
 
   return { attacker: nextAttacker, defender: nextDefender, lines, damage: dmg };
@@ -1576,7 +1814,7 @@ function applyResultSideEffects(state, result, actor, roundNum) {
  * 더 하고 싶을 수 있으므로) 강제로 끝내지 않고, 사용자가 이 함수를 호출했을 때만 라운드가 넘어간다
  * — 보스는 라운드 진행과 무관하게 언제든 원하는 만큼 행동할 수 있다.
  */
-export function endRound(state) {
+function endRoundCore(state) {
   if (state.status !== 'ongoing') return state;
 
   const finishedRound = state.round + 1;
@@ -1595,14 +1833,15 @@ export function endRound(state) {
   });
 
   // 1-1) 모래바람/싸라기눈 턴종료 피해 + 그래스필드 회복 + 특성/도구/변화상태 지속 회복·피해 + 화염/맹독구슬
-  const field = getField(state);
+  // (보스가 현상유지면 잔비로 깐 비가 아닌 한 날씨/필드 "효과"는 없는 것으로 취급 — 지속시간 자체는 그대로 흐른다)
+  const effField = effectiveWeatherTerrain(state);
   const residualTick = (entity) => {
     if (!entity) return entity;
     let e = entity;
-    const chip = weatherChipTick(e, field.weather);
+    const chip = weatherChipTick(e, effField.weather);
     log.push(...chip.lines.map((text) => ({ round: finishedRound, phase: 'status', text })));
     e = chip.entity;
-    const heal = grassyHealTick(e, field.terrain);
+    const heal = grassyHealTick(e, effField.terrain);
     log.push(...heal.lines.map((text) => ({ round: finishedRound, phase: 'status', text })));
     e = heal.entity;
 
@@ -1623,6 +1862,26 @@ export function endRound(state) {
       if (selfStat) {
         e = withStatus(e, selfStat.status);
         log.push({ round: finishedRound, phase: 'status', text: selfStat.line });
+      }
+
+      // 자뭉열매/오랭열매: 상태이상·날씨·먹다남은음식 등 라운드 종료 체력 변동으로 절반 이하가 되면 회복한다
+      const pinchHeal = pinchHealAmount(e);
+      if (pinchHeal > 0) {
+        const berryName = showdownIntegration.getItem(e.item)?.nameKo || e.item;
+        const currentHP = Math.min(e.maxHP, e.currentHP + pinchHeal);
+        e = { ...e, currentHP, item: '' };
+        log.push({ round: finishedRound, phase: 'status', text: `${e.nickname}은(는) ${berryName}로 체력을 회복했다!` });
+      }
+
+      // 치리/용아/캄라/야타비/규살/스타열매: 위와 같은 이유로 체력이 1/4 이하가 되면 랭크가 오른다
+      const statBoost = pinchStatBoost(e);
+      if (statBoost) {
+        const berryName = showdownIntegration.getItem(e.item)?.nameKo || e.item;
+        e = applyStatDeltas({ ...e, item: '' }, statBoost);
+        log.push(
+          { round: finishedRound, phase: 'status', text: `${e.nickname}은(는) ${berryName}로 능력이 올랐다!` },
+          ...describeStatChange(e.nickname, statBoost).map((text) => ({ round: finishedRound, phase: 'status', text }))
+        );
       }
     }
     return e;
@@ -1728,6 +1987,18 @@ export function endRound(state) {
   };
 }
 
+/**
+ * 라운드 종료 처리(endRoundCore) + 그 시점 상태를 history에 한 장 남긴다. "로그 복사해서 이어하기"
+ * 기능에서 원하는 라운드의 상태를 그대로 꺼내 쓸 수 있도록, 라운드가 끝날 때마다(승패/타임아웃 포함)
+ * 그 결과 상태(history 자신은 제외 — 중첩 누적 방지)를 라운드 번호와 함께 누적해 둔다.
+ */
+export function endRound(state) {
+  const result = endRoundCore(state);
+  if (!result || result === state) return result;
+  const { history: _omit, ...snapshot } = result;
+  return { ...result, history: [...(state.history || []), { round: result.round, state: snapshot }] };
+}
+
 /** 이번 라운드에 아직 행동하지 않은 생존 참가자 수 (UI에서 "라운드 종료" 전 안내용) */
 export function countUnactedParticipants(state) {
   return aliveNotActed(state.participants, state.actedParticipantIds).length;
@@ -1750,10 +2021,14 @@ function resolveActionGate(attacker, moveId) {
   }
 
   // 잠듦: 라운드 전환 때 sleepTurns가 1씩 줄고(advanceEntityVolatiles), 0이 되는 전환에서 깬다.
-  // 여기(행동 시도)에서는 자고 있으면 무조건 행동 불가 — 보스가 라운드당 여러 번 행동해도 잠은 유지된다.
+  // 여기(행동 시도)에서는 자고 있으면 무조건 행동 불가 — 단, 잠꼬대/잠꼬대어처럼 수면 중에도 쓸 수
+  // 있는 기술(sleepUsable)이면 예외로 그대로 진행한다. 보스가 라운드당 여러 번 행동해도 잠은 유지된다.
   if (a.status === 'slp') {
-    lines.push(`${a.nickname}은(는) 쿨쿨 잠들어 있다.`);
-    return { attacker: a, canAct: false, lines };
+    const moveInfo = moveId ? showdownIntegration.getMove(moveId) : null;
+    if (!moveInfo || !moveInfo.sleepUsable) {
+      lines.push(`${a.nickname}은(는) 쿨쿨 잠들어 있다.`);
+      return { attacker: a, canAct: false, lines };
+    }
   }
 
   if (a.status === 'frz') {
@@ -1800,6 +2075,24 @@ function resolveActionGate(attacker, moveId) {
   return { attacker: a, canAct: true, lines };
 }
 
+/**
+ * 잠꼬대: 수면 중에 자신이 아는 다른 기술 중 하나를 무작위로 대신 사용한다. 잠꼬대 자신·레이드
+ * 금지 기술·잠꼬대로 부를 수 없는 기술(flags.nosleeptalk: 미믹·모으기형 등)·충전(2턴) 기술은 제외.
+ * 부를 수 있는 기술이 하나도 없으면 null(실패).
+ */
+function pickSleepTalkMove(attacker) {
+  const candidates = (attacker.moves || []).filter((m) => {
+    if (!m) return false;
+    const info = showdownIntegration.getMove(m);
+    if (!info || info.id === 'sleeptalk') return false;
+    if (isMoveBanned(info.id)) return false;
+    if (info.flags && info.flags.nosleeptalk) return false;
+    if (isChargeMove(info)) return false;
+    return true;
+  });
+  return candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : null;
+}
+
 /** 마지막 글자 받침 여부로 조사 선택 (은/는, 을/를). 한글이 아니면 받침 없음으로 취급 */
 function josa(word, withBatchim, withoutBatchim) {
   const code = String(word || '').trim().slice(-1).charCodeAt(0);
@@ -1816,6 +2109,14 @@ function checkMoveLegality(attacker, moveId, moveInfo) {
       lines.push(`${attacker.nickname}은(는) 앵콜 상태라 ${moveInfo.name} 대신 이전 기술을 사용한다!`);
     }
     return { blocked: false, finalMoveId: attacker.encoreMove, lines };
+  }
+
+  if (isChoiceLocked(attacker) && attacker.lastMoveId && attacker.lastMoveId !== moveInfo.id) {
+    const lockedMoveName = showdownIntegration.getMove(attacker.lastMoveId)?.name || attacker.lastMoveId;
+    lines.push(
+      `${attacker.nickname}은(는) 구애 아이템 때문에 ${moveInfo.name} 대신 ${lockedMoveName}${josa(lockedMoveName, '을', '를')} 사용한다!`
+    );
+    return { blocked: false, finalMoveId: attacker.lastMoveId, lines };
   }
 
   if (attacker.disableTurns > 0 && attacker.disableMove === moveInfo.id) {
@@ -1892,6 +2193,30 @@ export function executeParticipantAction(state, participantId, moveId, targetPar
     log = [...log, { round: roundNum, phase: 'participant', text: `${participants[idx].nickname}은(는) 모아둔 힘을 발산한다!` }];
   }
 
+  // 잠꼬대: 수면 중 자신의 다른 기술을 무작위로 대신 사용한다
+  if (moveInfo && moveInfo.id === 'sleeptalk' && participants[idx].status === 'slp') {
+    const called = pickSleepTalkMove(participants[idx]);
+    if (called) {
+      finalMoveId = called;
+      const calledName = showdownIntegration.getMove(called)?.name || called;
+      log = [
+        ...log,
+        {
+          round: roundNum,
+          phase: 'participant',
+          text: `${participants[idx].nickname}은(는) 잠든 채로 ${calledName}${josa(calledName, '을', '를')} 사용했다!`,
+        },
+      ];
+    } else {
+      log = [...log, { round: roundNum, phase: 'participant', text: `${participants[idx].nickname}의 잠꼬대는 실패했다!` }];
+      return { ...state, participants, actedParticipantIds: [...state.actedParticipantIds, participantId], log };
+    }
+  }
+  // 앵콜/구애 아이템/잠꼬대 등으로 실제로 쓰는 기술이 처음 고른 기술과 달라졌으면, 타겟 종류(자신/아군
+  // 전체/범위기 등) 판정은 그 실제로 쓰는 기술 기준으로 다시 봐야 한다 (잠꼬대가 몸통박치기를 불렀는데
+  // 잠꼬대 자신의 target:'self'로 판정해 자기 자신을 때리는 사고 방지).
+  const finalMoveInfo = finalMoveId === moveId ? moveInfo : showdownIntegration.getMove(finalMoveId);
+
   // 메가진화 C 조건: 실제로 기술을 쓴 행동만 누적한다 (행동 불가/기술 제한으로 막힌 턴, 응원은 제외)
   participants = participants.map((p, i) => (i === idx ? { ...p, moveActions: (p.moveActions || 0) + 1 } : p));
 
@@ -1937,11 +2262,11 @@ export function executeParticipantAction(state, participantId, moveId, targetPar
   // 날씨/필드/트릭룸/사이드컨디션 설치기(순풍·리플렉터 등)는 "상대"라는 개념이 없으므로 보스를
   // 상대로 실행하지 않고 시전자 자신을 대상으로 실행한다.
   if (
-    moveInfo &&
-    (moveInfo.target === 'self' ||
-      moveInfo.target === 'allies' ||
-      moveInfo.target === 'allySide' ||
-      isFieldMove(moveInfo))
+    finalMoveInfo &&
+    (finalMoveInfo.target === 'self' ||
+      finalMoveInfo.target === 'allies' ||
+      finalMoveInfo.target === 'allySide' ||
+      isFieldMove(finalMoveInfo))
   ) {
     const actorEntity = participants[idx];
     const result = attack(actorEntity, actorEntity, finalMoveId, {
@@ -1962,12 +2287,12 @@ export function executeParticipantAction(state, participantId, moveId, targetPar
     selfLines = [...selfLines, ...feApplied.lines];
 
     // target === 'allies'(생명의물방울 등)는 시전자와 같은 조 전체에도 동일 비율로 회복을 퍼뜨린다
-    if (moveInfo.target === 'allies' && moveInfo.heal) {
+    if (finalMoveInfo.target === 'allies' && finalMoveInfo.heal) {
       const actor = participants[idx];
       const isSameTeamAlly = (p) => p && p.id !== actor.id && !p.fainted && (p.team || '') === (actor.team || '');
       participants = participants.map((p) => {
         if (!isSameTeamAlly(p)) return p;
-        const healResult = applyHealToEntity(p, moveInfo.heal);
+        const healResult = applyHealToEntity(p, finalMoveInfo.heal);
         selfLines = [...selfLines, ...healResult.lines];
         return healResult.entity;
       });
@@ -2000,7 +2325,7 @@ export function executeParticipantAction(state, participantId, moveId, targetPar
   // 범위기(파도타기/지진 등 allAdjacent)는 보스뿐 아니라 시전자와 같은 조의 살아있는 아군에게도
   // 데미지가 간다(범위 감소 0.75배). allAdjacentFoes(락슬라이드/열풍 등)는 상대가 보스 하나뿐이라
   // 사실상 단일 대상이므로 아래 일반 경로로 처리한다.
-  if (hitsAllies(moveInfo)) {
+  if (hitsAllies(finalMoveInfo)) {
     const actor = participants[idx];
     const allyIdxs = participants
       .map((p, i) => (p && !p.fainted && i !== idx && (p.team || '') === (actor.team || '') ? i : -1))
@@ -2122,11 +2447,28 @@ export function executeBossAction(state, moveId, targetId) {
     }
   }
 
+  // 잠꼬대: 수면 중 자신의 다른 기술을 무작위로 대신 사용한다
+  if (bossMoveInfo && bossMoveInfo.id === 'sleeptalk' && gatedBoss.status === 'slp') {
+    const called = pickSleepTalkMove(gatedBoss);
+    if (called) {
+      moveId = called;
+      bossMoveInfo = showdownIntegration.getMove(moveId);
+      gateLines.push({
+        round: roundNum,
+        phase: 'boss',
+        text: `${gatedBoss.nickname}은(는) 잠든 채로 ${bossMoveInfo.name}${josa(bossMoveInfo.name, '을', '를')} 사용했다!`,
+      });
+    } else {
+      gateLines.push({ round: roundNum, phase: 'boss', text: `${gatedBoss.nickname}의 잠꼬대는 실패했다!` });
+      return { ...state, boss: gatedBoss, log: [...state.log, ...gateLines] };
+    }
+  }
+
   // 범위기(파도타기/지진/락슬라이드/열풍 등): 살아있는 참가자 전원을 각각 때린다
   // (2명 이상이면 범위 감소 0.75배). 부가효과·급소는 대상별로 굴린다.
   // 단, "뒤는 맡기라고"로 가디언이 활성화되어 있으면 원래 노렸던 한 명 몫을 가디언이 대신 받는다
   // (가디언도 자기 몫이 있으면 중복 집계하지 않고 딱 1번만 맞는다). 나머지 참가자는 그대로 범위 피해를 받는다.
-  if (isSpreadMove(bossMoveInfo, getField(state).terrain, gatedBoss, state)) {
+  if (isSpreadMove(bossMoveInfo, effectiveWeatherTerrain(state).terrain, gatedBoss, state)) {
     const targetIdxs = state.participants
       .map((p, i) => (p && !p.fainted ? i : -1))
       .filter((i) => i !== -1);
@@ -2600,5 +2942,6 @@ export function createInitialBattleState({ boss, participants, maxRounds = 6 }) 
     sideConditions: emptySideConditions(),
     log,
     actedParticipantIds: [],
+    history: [],
   };
 }

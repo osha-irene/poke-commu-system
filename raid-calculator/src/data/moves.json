@@ -11645,6 +11645,29 @@
       "contestAppeals": 0,
       "contestJam": 0,
       "generation": "ix"
+    },
+    {
+      "id": "mongan",
+      "name": "몽안",
+      "nameEn": "mongan",
+      "type": "normal",
+      "category": "status",
+      "power": null,
+      "accuracy": 80,
+      "pp": 10,
+      "priority": 0,
+      "description": "행복한 꿈의 세계로 데려가 상대를 잠듦 상태로 만든다. 과거의 영운이 아닌 포켓몬이 사용하면 실패한다.",
+      "contestType": null,
+      "contestEffect": "",
+      "contestAppeals": 0,
+      "contestJam": 0,
+      "generation": "custom",
+      "target": "allAdjacentFoes",
+      "status": "slp",
+      "flags": {
+        "protect": 1,
+        "mirror": 1
+      }
     }
   ],
   "pokemonLearnsets": {

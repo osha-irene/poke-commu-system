@@ -21,6 +21,14 @@ export default function App() {
     }
   }
 
+  function handleResume(text) {
+    const res = raid.resumeBattle(text);
+    if (!res.ok) {
+      window.alert(`이어하기 실패: ${res.error}`);
+    }
+    return res;
+  }
+
   function handleLoadRoster() {
     if (window.confirm('현재 참가자 명단을 고정 명단으로 덮어씁니다. 계속할까요?')) {
       raid.loadDefaultRoster();
@@ -100,6 +108,8 @@ export default function App() {
             onReset={raid.resetBattle}
             onExport={raid.exportDraft}
             onImportFile={handleImportFile}
+            onExportSnapshot={raid.exportBattleSnapshot}
+            onResume={handleResume}
           />
 
           <RoundPlanner raid={raid} />

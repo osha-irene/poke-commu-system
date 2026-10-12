@@ -8,6 +8,11 @@ import abilitiesData from '../data/abilities.json';
 import allPokemonData from '../data/allPokemon.json';
 import itemsData from '../data/items.json';
 
+function capitalize(value) {
+  const s = String(value || '');
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+}
+
 /**
  * 쇼다운 데이터와 로컬(한글) 데이터를 통합하는 클래스.
  * poke-commu-system의 src/battle/utils/ShowdownIntegration.js 이식본.
@@ -74,6 +79,53 @@ class ShowdownIntegration {
     const showdownMove = this.currentGen.moves.get(this.normalizeKey(showdownLookupName));
 
     if (!showdownMove) {
+      // 쇼다운(실제 게임) 데이터에 없는 완전 커스텀 기술(generation: "custom")은 로컬 데이터 자체가
+      // 기계적 수치(위력·타입·범위·상태이상 등)를 전부 담고 있다고 보고 그대로 반환한다.
+      // 단, 위력이 있는(데미지를 입히는) 커스텀 기술은 @smogon/calc가 기술 자체를 모르면 데미지를
+      // 계산할 수 없으므로 지원 범위 밖 — 변화기술(권위/power: null)만 지원한다.
+      if (localMove && localMove.generation === 'custom' && !localMove.power) {
+        return {
+          id: localMove.id,
+          name: localMove.name,
+          nameEn: localMove.nameEn || localMove.name,
+          nameKo: localMove.name,
+          type: capitalize(localMove.type) || 'Normal',
+          category: capitalize(localMove.category) || 'Status',
+          basePower: 0,
+          accuracy: localMove.accuracy === true ? 100 : localMove.accuracy ?? 100,
+          alwaysHit: localMove.accuracy === true,
+          hasCrashDamage: false,
+          pp: localMove.pp,
+          priority: localMove.priority || 0,
+          target: localMove.target || 'normal',
+          flags: localMove.flags || {},
+          secondary: localMove.secondary || undefined,
+          secondaryChance: localMove.secondaryChance,
+          self: localMove.self,
+          critRatio: 1,
+          willCrit: false,
+          recoil: undefined,
+          mindBlownRecoil: false,
+          drain: undefined,
+          heal: localMove.heal,
+          multihit: undefined,
+          ignoreDefensive: false,
+          ignoreEvasion: false,
+          ignoreAbility: false,
+          breaksProtect: false,
+          volatileStatus: localMove.volatileStatus,
+          status: localMove.status,
+          boosts: localMove.boosts,
+          weather: localMove.weather,
+          terrain: localMove.terrain,
+          sideCondition: localMove.sideCondition,
+          pseudoWeather: localMove.pseudoWeather,
+          isZ: false,
+          isMax: false,
+          description: localMove.description || '',
+          shortDesc: localMove.shortDesc || '',
+        };
+      }
       console.warn(`[showdownIntegration] 기술을 찾을 수 없음(쇼다운 데이터 없음): ${moveName}`);
       return null;
     }
@@ -95,6 +147,9 @@ class ShowdownIntegration {
       priority: showdownMove.priority,
       target: showdownMove.target,
       flags: showdownMove.flags || {},
+      // 잠듦 상태에서도 쓸 수 있는 기술 (잠꼬대/잠꼬대어) / 잠꼬대로 자신의 다른 기술을 대신 호출하는 기술
+      sleepUsable: showdownMove.sleepUsable || false,
+      callsMove: showdownMove.callsMove || false,
       secondary: showdownMove.secondary,
       secondaryChance: showdownMove.secondaryChance,
       // 오버히트/드래곤에너지/파워제네레이터/절대영도킥 등: secondary(확률부가효과)와 별개로,
@@ -137,6 +192,14 @@ class ShowdownIntegration {
     const showdownAbility = this.currentGen.abilities.get(this.normalizeKey(showdownLookupName));
 
     if (!showdownAbility) {
+      // 쇼다운(실제 게임) 데이터에 없는 완전 커스텀 특성(generation: "custom")은 로컬 데이터의
+      // nameEn을 그대로 특성 id로 쓴다. 데미지 배율처럼 @smogon/calc가 자동으로 처리해주는 효과는
+      // 커스텀 특성엔 없으므로(@smogon/calc는 모르는 특성이면 그냥 무시한다), traits.js/raidEngine.js의
+      // 수작업 코드가 이 id로 효과를 분기해야 한다.
+      if (localAbility && localAbility.generation === 'custom') {
+        const customId = this.normalizeKey(localAbility.nameEn || localAbility.id || abilityName);
+        return { id: customId, name: localAbility.name, nameEn: localAbility.nameEn || localAbility.name, nameKo: localAbility.name };
+      }
       console.warn(`[showdownIntegration] 특성을 찾을 수 없음(쇼다운 데이터 없음): ${abilityName}`);
       return null;
     }

@@ -32,6 +32,13 @@ function statusBadges(p) {
     if (value) badges.push({ text: `${STAT_LABEL[stat] || stat}${value > 0 ? '+' : ''}${value}` });
   });
 
+  if (p.cheerOffense && p.cheerOffense.mult > 1) {
+    badges.push({ text: `응원 공격/특공 x${p.cheerOffense.mult} (${p.cheerOffense.turns}턴)`, kind: 'cheer' });
+  }
+  if (p.cheerDefense && p.cheerDefense.mult > 1) {
+    badges.push({ text: `응원 방어/특방 x${p.cheerDefense.mult} (${p.cheerDefense.turns}턴)`, kind: 'cheer' });
+  }
+
   if (p.redirectActive) badges.push({ text: '보호중' });
   if (p.mustSkipTurn) badges.push({ text: '행동불가' });
   if (p.cheerUsed > 0) badges.push({ text: `응원 ${p.cheerUsed}/${CHEER_MAX_USES}` });
@@ -47,7 +54,10 @@ function ConditionBadges({ pokemon }) {
   return (
     <div className="condition-badges">
       {badges.map((badge, i) => (
-        <span key={i} className={`badge ${badge.kind === 'status' ? 'badge-status' : ''}`}>
+        <span
+          key={i}
+          className={`badge ${badge.kind === 'status' ? 'badge-status' : ''} ${badge.kind === 'cheer' ? 'badge-cheer' : ''}`}
+        >
           {badge.text}
         </span>
       ))}

@@ -57,7 +57,14 @@ export const SIDE_CONDITIONS = {
 const norm = (v) => String(v || '').toLowerCase().replace(/[^a-z]/g, '');
 
 export function emptyField() {
-  return { weather: '', weatherTurns: 0, terrain: '', terrainTurns: 0, trickRoomTurns: 0, gravityTurns: 0 };
+  return {
+    weather: '',
+    weatherTurns: 0,
+    terrain: '',
+    terrainTurns: 0,
+    trickRoomTurns: 0,
+    gravityTurns: 0,
+  };
 }
 export function emptySideConditions() {
   return { boss: {}, teams: {} };

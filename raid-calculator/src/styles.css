@@ -126,13 +126,15 @@ body {
 
 input,
 select,
+textarea,
 button {
   font-family: inherit;
   font-size: 13px;
 }
 
 input,
-select {
+select,
+textarea {
   background: rgba(0, 0, 0, 0.28);
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -141,8 +143,17 @@ select {
 }
 
 input:disabled,
-select:disabled {
+select:disabled,
+textarea:disabled {
   opacity: 0.55;
+}
+
+.snapshot-textarea {
+  width: 100%;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 11px;
+  resize: vertical;
+  margin-top: 10px;
 }
 
 button {
@@ -522,6 +533,12 @@ button:disabled {
   color: var(--hp-mid);
   background: rgba(240, 195, 60, 0.12);
   border-color: rgba(240, 195, 60, 0.35);
+}
+
+.badge-cheer {
+  color: var(--hp-high);
+  background: rgba(60, 200, 120, 0.12);
+  border-color: rgba(60, 200, 120, 0.35);
 }
 
 .result-grid {

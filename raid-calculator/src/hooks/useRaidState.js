@@ -254,6 +254,38 @@ export function useRaidState() {
     }
   }, []);
 
+  // round가 null/undefined면 "현재"(라이브 상태, 아직 라운드가 끝나지 않았어도 지금까지의 진행분 포함)를,
+  // 숫자면 그 라운드가 끝난 시점의 history 스냅샷을 내보낸다. history 자신은 중첩 저장을 피하려고 뺀다.
+  const exportBattleSnapshot = useCallback(
+    (round) => {
+      if (!battle) return null;
+      const source =
+        round == null ? battle : (battle.history || []).find((h) => h.round === round)?.state;
+      if (!source) return null;
+      const { history: _omit, ...clean } = source;
+      return JSON.stringify(clean, null, 2);
+    },
+    [battle]
+  );
+
+  // 복사해 둔 전투 상태 JSON을 그대로 이어서 진행한다
+  const resumeBattle = useCallback(
+    (jsonText) => {
+      try {
+        const parsed = JSON.parse(jsonText);
+        if (!parsed || typeof parsed !== 'object' || !parsed.boss || !Array.isArray(parsed.participants)) {
+          return { ok: false, error: '전투 상태 형식이 올바르지 않습니다.' };
+        }
+        setBattle({ ...parsed, history: parsed.history || [] });
+        clearQueue();
+        return { ok: true };
+      } catch (error) {
+        return { ok: false, error: error.message };
+      }
+    },
+    [clearQueue]
+  );
+
   return {
     boss,
     updateBoss,
@@ -286,5 +318,7 @@ export function useRaidState() {
     clearQueue,
     exportDraft,
     importDraft,
+    exportBattleSnapshot,
+    resumeBattle,
   };
 }

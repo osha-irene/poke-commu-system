@@ -65,6 +65,8 @@ export const BANNED_MOVE_IDS = new Set([
   'guillotine',
   'horn-drill',
   'sheer-cold',
+  // 19. 몽안 — 과거의 영운(보스)만 쓸 수 있는 전용기, 참가자는 사용 불가
+  'mongan',
 ]);
 
 export function isMoveBanned(moveId) {
