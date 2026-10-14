@@ -1857,10 +1857,10 @@ img.emoji {
 
 .home-dashboard__panel > .home-npc-muk {
   position: absolute;
-  top: -65px;
+  top: -20px;
   left: 50%;
-  transform: translateX(calc(-50% + 150px));
-  width: 87.5%;
+  transform: translateX(calc(-50% + 60px));
+  width: 118%;
   max-width: none;
   height: auto;
   z-index: 0;

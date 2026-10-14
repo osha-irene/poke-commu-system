@@ -47,7 +47,7 @@ import BattleView from './components/views/BattleView';
 import MaintenanceScreen from './components/layout/MaintenanceScreen';
 import { logoText, forestBgBlurred, mainPlayerImg, mainLinkImg, mainDeco2Img, mainDeco4Img } from './assets/images';
 import text2Img from './assets/text2.png';
-import mukImg from './assets/muk.png';
+import celebiImg from './assets/celebi.png';
 import { getTitleById } from './data/titles';
 import { User, Lock, Music, X, Play, Pause, SkipBack, SkipForward, Volume2, ChefHat, Sparkles } from 'lucide-react';
 import { DAILY_ATTENDANCE_EXP, getKoreaDateKey } from './utils/experience';
@@ -680,7 +680,7 @@ function HomeDashboard({
         <article key={index} className="home-dashboard__panel">
           {index === 0 && (
             <>
-              <img className="home-npc-muk" src={mukImg} alt="" aria-hidden="true" />
+              <img className="home-npc-muk" src={celebiImg} alt="" aria-hidden="true" />
               <img className="home-npc-text2" src={text2Img} alt="" aria-hidden="true" />
             </>
           )}
