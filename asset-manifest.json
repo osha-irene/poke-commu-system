@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.14d8f9fc.css",
-    "main.js": "/static/js/main.34dd8af3.js",
+    "main.js": "/static/js/main.806bf8d7.js",
     "static/js/623.69c45dc4.chunk.js": "/static/js/623.69c45dc4.chunk.js",
     "static/media/Revavroom.png": "/static/media/Revavroom.0da3a031e85226cb8c2d.png",
     "static/media/map.png": "/static/media/map.8a41709af9a828a3bcbb.png",
@@ -77,7 +77,6 @@
     "static/media/map-back.png": "/static/media/map-back.76387fa0313a558361fd.png",
     "static/media/PATH 2.png": "/static/media/PATH 2.2179a176ce3b0a2cfcf7.png",
     "static/media/PATH.png": "/static/media/PATH.b17077da0d6b9213723b.png",
-    "static/media/text2.png": "/static/media/text2.19efe2c3f23a06732d96.png",
     "static/media/MOUNTAIN.png": "/static/media/MOUNTAIN.636fe1e6117896e4b000.png",
     "static/media/MOUNTAIN 2.png": "/static/media/MOUNTAIN 2.8222f3ea4436c19e1cf1.png",
     "static/media/MOUNTAIN NIGHT.png": "/static/media/MOUNTAIN NIGHT.19acb5e20c3ea8a517da.png",
@@ -95,16 +94,17 @@
     "static/media/CAVE 2.png": "/static/media/CAVE 2.9125ea3a4cb2f91b8d81.png",
     "static/media/Farm_arnie.png": "/static/media/Farm_arnie.8611cc74e920eb61a0a0.png",
     "static/media/pokeball.png": "/static/media/pokeball.0ce8227d4210c4d60ed5.png",
+    "static/media/text2.png": "/static/media/text2.ab91e0ac228e14795564.png",
     "static/media/Volcano_arnie.png": "/static/media/Volcano_arnie.1ed4872fdf4fea880499.png",
     "static/media/Whirl Islands cave_arnie.png": "/static/media/Whirl Islands cave_arnie.66120ee2033224a9cc5d.png",
     "index.html": "/index.html",
     "static/media/pokemon-icon.svg": "/static/media/pokemon-icon.d36b6f0655c180980d5acb3287a88011.svg",
     "main.14d8f9fc.css.map": "/static/css/main.14d8f9fc.css.map",
-    "main.34dd8af3.js.map": "/static/js/main.34dd8af3.js.map",
+    "main.806bf8d7.js.map": "/static/js/main.806bf8d7.js.map",
     "623.69c45dc4.chunk.js.map": "/static/js/623.69c45dc4.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.14d8f9fc.css",
-    "static/js/main.34dd8af3.js"
+    "static/js/main.806bf8d7.js"
   ]
 }
