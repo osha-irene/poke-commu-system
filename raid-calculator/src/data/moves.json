@@ -11668,6 +11668,50 @@
         "protect": 1,
         "mirror": 1
       }
+    },
+    {
+      "id": "jongmalspear",
+      "name": "종말의창",
+      "nameEn": "jongmalspear",
+      "type": "steel",
+      "category": "physical",
+      "power": 120,
+      "accuracy": 100,
+      "pp": 5,
+      "priority": 0,
+      "description": "분노로 벼려낸 날카로운 강철의 창을 상대에게 던져 공격한다.",
+      "contestType": null,
+      "contestEffect": "",
+      "contestAppeals": 0,
+      "contestJam": 0,
+      "generation": "custom",
+      "target": "allAdjacentFoes",
+      "flags": {
+        "protect": 1,
+        "mirror": 1
+      }
+    },
+    {
+      "id": "cheonbeol",
+      "name": "천벌",
+      "nameEn": "cheonbeol",
+      "type": "dragon",
+      "category": "status",
+      "power": null,
+      "accuracy": true,
+      "pp": 5,
+      "priority": 0,
+      "description": "이 낙인이 찍힌 포켓몬은 2턴이 지나면 기절한다. 교체되면 효과가 없어진다.",
+      "contestType": null,
+      "contestEffect": "",
+      "contestAppeals": 0,
+      "contestJam": 0,
+      "generation": "custom",
+      "target": "allAdjacentFoes",
+      "volatileStatus": "doomcounter",
+      "flags": {
+        "protect": 1
+      }
     }
   ],
   "pokemonLearnsets": {

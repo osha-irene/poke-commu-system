@@ -57,7 +57,7 @@ export function abilityBlocksStatus(entity, status, state) {
   return (STATUS_IMMUNE[status] || new Set()).has(a);
 }
 export function abilityBlocksFlinch(entity) {
-  return abilityId(entity) === 'innerfocus';
+  return ['innerfocus', 'statusbreak'].includes(abilityId(entity));
 }
 export function abilityBlocksConfusion(entity) {
   return abilityId(entity) === 'owntempo';
@@ -440,6 +440,7 @@ export function onHitReactions(defender, attacker, moveData, dmgDealt, isContact
 export function onKOBoost(attacker) {
   const a = abilityId(attacker);
   if (a === 'moxie' || a === 'chillingneigh' || a === 'asoneglastrier') return { boosts: { atk: 1 }, label: '자기과신' };
+  if (a === 'statusbreak') return { boosts: { atk: 1 }, label: '현상파괴' };
   if (a === 'grimneigh' || a === 'asonespectrier') return { boosts: { spa: 1 }, label: '검은외침' };
   if (a === 'beastboost') {
     // 가장 높은 스탯 +1 (근사: 종족값 기준)

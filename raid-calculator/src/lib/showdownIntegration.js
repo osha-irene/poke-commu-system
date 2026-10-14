@@ -80,18 +80,19 @@ class ShowdownIntegration {
 
     if (!showdownMove) {
       // 쇼다운(실제 게임) 데이터에 없는 완전 커스텀 기술(generation: "custom")은 로컬 데이터 자체가
-      // 기계적 수치(위력·타입·범위·상태이상 등)를 전부 담고 있다고 보고 그대로 반환한다.
-      // 단, 위력이 있는(데미지를 입히는) 커스텀 기술은 @smogon/calc가 기술 자체를 모르면 데미지를
-      // 계산할 수 없으므로 지원 범위 밖 — 변화기술(권위/power: null)만 지원한다.
-      if (localMove && localMove.generation === 'custom' && !localMove.power) {
+      // 기계적 수치(위력·타입·범위·상태이상 등)를 전부 담고 있다고 보고 그대로 반환한다. 위력이 있는
+      // (데미지를 입히는) 기술은 createCalcMove가 이 데이터를 @smogon/calc Move의 overrides로 넘겨
+      // 실제 계산이 가능하게 한다(custom: true로 표시).
+      if (localMove && localMove.generation === 'custom') {
         return {
           id: localMove.id,
           name: localMove.name,
           nameEn: localMove.nameEn || localMove.name,
           nameKo: localMove.name,
+          custom: true,
           type: capitalize(localMove.type) || 'Normal',
           category: capitalize(localMove.category) || 'Status',
-          basePower: 0,
+          basePower: localMove.power || 0,
           accuracy: localMove.accuracy === true ? 100 : localMove.accuracy ?? 100,
           alwaysHit: localMove.accuracy === true,
           hasCrashDamage: false,
@@ -331,12 +332,27 @@ class ShowdownIntegration {
         normalizedMove = 'tackle';
       }
 
+      // 완전 커스텀 기술(쇼다운 데이터에 없음)은 @smogon/calc가 기술 이름으로 자체 조회를 못 하므로,
+      // overrides로 위력·타입·분류 등을 직접 넘겨야 한다(안 넘기면 위력 0 변화기술로 잘못 취급됨).
+      const overrides = moveData?.custom
+        ? {
+            basePower: moveData.basePower,
+            type: moveData.type,
+            category: moveData.category,
+            accuracy: moveData.alwaysHit ? true : moveData.accuracy,
+            flags: moveData.flags,
+            target: moveData.target,
+            priority: moveData.priority,
+          }
+        : undefined;
+
       return new Move(this.currentGen.num, moveData?.nameEn || moveData?.id || normalizedMove, {
         ability: options.ability,
         item: options.item,
         useZ: moveData?.isZ || false,
         useMax: moveData?.isMax || false,
         isCrit: options.isCrit || false,
+        overrides,
         hits:
           options.hits ||
           (moveData?.multihit

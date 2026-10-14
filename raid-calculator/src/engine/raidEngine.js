@@ -262,6 +262,7 @@ export function buildBattlePokemon(raw) {
     confusionTurns: 0,
     leechSeed: null,
     bindTurns: 0,
+    doomTurns: 0, // 천벌: 0보다 크면 라운드 전환마다 감소, 0이 되면 기절
     tauntTurns: 0,
     encoreTurns: 0,
     encoreMove: null,
@@ -531,7 +532,8 @@ function applyVolatileStatus(target, volatileId, lines, sourceAttacker) {
     case 'flinch':
       if (target.flinched) return target;
       if (abilityBlocksFlinch(target)) {
-        lines.push(`${target.nickname}은(는) 정신력으로 풀죽지 않는다!`);
+        const label = abilityId(target) === 'statusbreak' ? '현상파괴' : '정신력';
+        lines.push(`${target.nickname}은(는) ${label}${josa(label, '으로', '로')} 풀죽지 않는다!`);
         return target;
       }
       lines.push(`${target.nickname}은(는) 풀죽었다!`);
@@ -576,6 +578,10 @@ function applyVolatileStatus(target, volatileId, lines, sourceAttacker) {
       if (target.bindTurns > 0) return target;
       lines.push(`${target.nickname}은(는) 조여져 빠져나갈 수 없게 되었다!`);
       return { ...target, bindTurns: 4 + Math.floor(Math.random() * 2) };
+    case 'doomcounter':
+      if (target.doomTurns > 0) return target;
+      lines.push(`${target.nickname}은(는) 천벌의 낙인이 찍혔다! 2턴 후 쓰러진다!`);
+      return { ...target, doomTurns: 2 };
     case 'taunt':
       if (target.tauntTurns > 0) return target;
       if (abilityBlocksTaunt(target)) {
@@ -1302,7 +1308,11 @@ function attack(attacker, defender, moveId, options = {}) {
     const ko = onKOBoost(nextAttacker);
     if (ko) {
       nextAttacker = applyStatDeltas(nextAttacker, ko.boosts);
-      lines.push(`${nextAttacker.nickname}의 ${ko.label}(으)로 능력이 올랐다!`);
+      lines.push(
+        abilityId(nextAttacker) === 'statusbreak'
+          ? `${nextAttacker.nickname}은(는) 현상파괴로 공격이 올랐다!`
+          : `${nextAttacker.nickname}의 ${ko.label}(으)로 능력이 올랐다!`
+      );
     }
   } else {
     // HP 절반 밑으로 떨어졌을 때 특성(벌서크·분노의껍질)
@@ -1603,6 +1613,17 @@ function advanceEntityVolatiles(entity) {
     }
   }
 
+  // 천벌: 낙인 찍힌 지 2턴이 지나면 기절한다
+  let doomTurns = entity.doomTurns || 0;
+  if (doomTurns > 0) {
+    doomTurns -= 1;
+    if (doomTurns <= 0 && !fainted) {
+      currentHP = 0;
+      fainted = true;
+      lines.push(`${entity.nickname}은(는) 천벌을 받아 쓰러졌다!`);
+    }
+  }
+
   // 가속 등 라운드 종료 시 스탯이 오르는 특성
   let outEntity = {
     ...entity,
@@ -1616,6 +1637,7 @@ function advanceEntityVolatiles(entity) {
     disableTurns,
     disableMove,
     drowsyTurns,
+    doomTurns,
     status,
     sleepTurns,
     flinched: false,

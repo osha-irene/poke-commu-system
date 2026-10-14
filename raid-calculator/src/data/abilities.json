@@ -4427,6 +4427,18 @@
       "effectKo": "잔비를 제외한 날씨 및 필드 효과를 무시한다.",
       "shortEffectKo": "잔비를 제외한 날씨 및 필드 효과를 무시한다.",
       "flavorTextKo": "잔비를 제외한 날씨 및 필드 효과를 무시한다."
+    },
+    {
+      "id": 90003,
+      "name": "현상파괴",
+      "nameEn": "status-break",
+      "effect": "A Pokemon with this ability does not flinch, and its Attack rises by 1 stage whenever it knocks out an opponent.",
+      "shortEffect": "Immune to flinching; Attack +1 whenever this Pokemon knocks out an opponent.",
+      "generation": "custom",
+      "pokemon": 0,
+      "effectKo": "이 특성을 가진 포켓몬은 풀죽음 상태가 되지 않으며 상대를 쓰러뜨릴 때마다 자신의 공격이 1랭크 상승한다.",
+      "shortEffectKo": "풀죽음 면역. 상대를 쓰러뜨릴 때마다 공격 1랭크 상승.",
+      "flavorTextKo": "이 특성을 가진 포켓몬은 풀죽음 상태가 되지 않으며 상대를 쓰러뜨릴 때마다 자신의 공격이 1랭크 상승한다."
     }
   ]
 }

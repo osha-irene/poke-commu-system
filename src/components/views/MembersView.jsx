@@ -383,14 +383,13 @@ const getDiagonalStickerStyle = (member, titleId, primaryPosition, size) => {
 
 // 멤버 전용 보조 스티커(MEMBER_BONUS_STICKERS)는 칭호 착용 여부와 무관하게 항상 떠 있어야
 // 해서, 칭호 스티커 위치를 반사하는 getDiagonalStickerStyle과 달리 멤버 id만으로 독립적인
-// 위치를 잡는다. 가장자리로 미는 강도도 더 약하게 줘서(1.4) 극단적인 모서리에 붙어
-// 얼굴 사진 밖으로 삐져나오는 것처럼 보이지 않게 한다.
+// 위치를 잡는다. 가장자리로 미는 강도를 2.0으로 올려서 더 바깥쪽에 붙게 한다.
 const getMemberBonusStickerStyle = (member, size) => {
   const seed = `${member?.id || member?.name || ''}:member-bonus`;
   const rotation = -18 + seededNumber(`${seed}:rotation`) * 36;
   const { left, top } = keepBonusStickerOutOfCenter(
-    pushTowardEdge(11 + seededNumber(`${seed}:left`) * 74, 10, 88, 1.4),
-    pushTowardEdge(10 + seededNumber(`${seed}:top`) * 40, 10, 56, 1.4)
+    pushTowardEdge(11 + seededNumber(`${seed}:left`) * 74, 6, 92, 2.0),
+    pushTowardEdge(10 + seededNumber(`${seed}:top`) * 40, 6, 60, 2.0)
   );
   return buildStickerStyle({ left, top, size, rotation });
 };
