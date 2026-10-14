@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.11e9f928.css",
-    "main.js": "/static/js/main.24b00fb0.js",
+    "main.css": "/static/css/main.14d8f9fc.css",
+    "main.js": "/static/js/main.34dd8af3.js",
     "static/js/623.69c45dc4.chunk.js": "/static/js/623.69c45dc4.chunk.js",
     "static/media/Revavroom.png": "/static/media/Revavroom.0da3a031e85226cb8c2d.png",
     "static/media/map.png": "/static/media/map.8a41709af9a828a3bcbb.png",
@@ -41,6 +41,7 @@
     "static/media/ribbon-powerful.png": "/static/media/ribbon-powerful.15ee814249274a1b5a6b.png",
     "static/media/rotom.png": "/static/media/rotom.f55ae2ad9b54d35401b1.png",
     "static/media/map-design.png": "/static/media/map-design.032527153608173d2803.png",
+    "static/media/celebi.png": "/static/media/celebi.33ab3564e1dafffe4c98.png",
     "static/media/badge5.png": "/static/media/badge5.77d69b2187a2fa897b05.png",
     "static/media/badge4.png": "/static/media/badge4.a04aa4ec5c634414b933.png",
     "static/media/badge2.png": "/static/media/badge2.1a1a5b7eea6e99e023cc.png",
@@ -53,7 +54,6 @@
     "static/media/badge3.png": "/static/media/badge3.1dd871869e360b98afd2.png",
     "static/media/badge8.png": "/static/media/badge8.89fdb387b11aebb0ae56.png",
     "static/media/rubbing.mp3": "/static/media/rubbing.b846dd12125a470dd965.mp3",
-    "static/media/muk.png": "/static/media/muk.ac874a7f92e7adc5f33f.png",
     "static/media/main_deco_4.png": "/static/media/main_deco_4.4095122a9b5779d3c8ba.png",
     "static/media/main_today.png": "/static/media/main_today.ccde92df14eb60a4610f.png",
     "static/media/badge.png": "/static/media/badge.9940f5dbbf09d4ee3a56.png",
@@ -99,12 +99,12 @@
     "static/media/Whirl Islands cave_arnie.png": "/static/media/Whirl Islands cave_arnie.66120ee2033224a9cc5d.png",
     "index.html": "/index.html",
     "static/media/pokemon-icon.svg": "/static/media/pokemon-icon.d36b6f0655c180980d5acb3287a88011.svg",
-    "main.11e9f928.css.map": "/static/css/main.11e9f928.css.map",
-    "main.24b00fb0.js.map": "/static/js/main.24b00fb0.js.map",
+    "main.14d8f9fc.css.map": "/static/css/main.14d8f9fc.css.map",
+    "main.34dd8af3.js.map": "/static/js/main.34dd8af3.js.map",
     "623.69c45dc4.chunk.js.map": "/static/js/623.69c45dc4.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.11e9f928.css",
-    "static/js/main.24b00fb0.js"
+    "static/css/main.14d8f9fc.css",
+    "static/js/main.34dd8af3.js"
   ]
 }
