@@ -515,6 +515,21 @@ const getPartnerTooltipOffset = p => {
   if (isGalarianFarfetchd(p) || isLillipup(p) || isHerdier(p) || isStoutland(p) || isSirfetchd(p)) return { x: 20, y: -60 };
   return { x: 0, y: 0 };
 };
+// pokemondb.net은 지역폼 접미사를 짧은 코드가 아니라 형용사형으로 쓴다
+// (예: nameEn "samurott-hisui" → 실제 스프라이트 파일명 "samurott-hisuian").
+const POKEMONDB_REGIONAL_SUFFIX = {
+  '-alola': '-alolan',
+  '-galar': '-galarian',
+  '-hisui': '-hisuian',
+  '-paldea': '-paldean',
+};
+const toPokemonDbSlug = name => {
+  let slug = name.toLowerCase().replace(/\s+/g, '-');
+  for (const [from, to] of Object.entries(POKEMONDB_REGIONAL_SUFFIX)) {
+    if (slug.endsWith(from)) return slug.slice(0, -from.length) + to;
+  }
+  return slug;
+};
 const getPokemonDbSprite = p => {
   if (isGalarianFarfetchd(p)) {
     return 'https://img.pokemondb.net/sprites/sword-shield/normal/farfetchd-galarian.png';
@@ -532,7 +547,7 @@ const getPokemonDbSprite = p => {
     return 'https://img.pokemondb.net/sprites/sword-shield/normal/sirfetchd.png';
   }
   const name = p?.nameEn || p?.name;
-  if (name) return `https://img.pokemondb.net/sprites/scarlet-violet/normal/${name.toLowerCase().replace(/\s+/g, '-')}.png`;
+  if (name) return `https://img.pokemondb.net/sprites/scarlet-violet/normal/${toPokemonDbSlug(name)}.png`;
   return getOfficialArtwork(p);
 };
 const getPokemonName = p => p?.nickname || p?.nameKo || p?.name || '포켓몬';

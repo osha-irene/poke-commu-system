@@ -1076,7 +1076,7 @@ export function AdvancedBattleSimulator({
         <div className="mt-5">
           <h3 className={`mb-2 flex items-center gap-2 text-sm font-bold ${titleClass}`}>
             <RotateCcw size={18} />
-            포켓몬 교체
+            {side.isRevivalSwitch ? '부활시킬 포켓몬 선택' : '포켓몬 교체'}
           </h3>
           {switchBlockedReason && (
             <div className="mb-2 rounded-lg bg-white/80 p-2 text-xs font-semibold text-gray-700">{switchBlockedReason}</div>
@@ -1112,7 +1112,9 @@ export function AdvancedBattleSimulator({
               })}
             </div>
           ) : (
-            <div className="rounded-lg bg-white/80 p-3 text-sm text-gray-600">교체 가능한 포켓몬이 없습니다.</div>
+            <div className="rounded-lg bg-white/80 p-3 text-sm text-gray-600">
+              {side.isRevivalSwitch ? '부활시킬 쓰러진 포켓몬이 없습니다.' : '교체 가능한 포켓몬이 없습니다.'}
+            </div>
           )}
         </div>
 
@@ -1120,7 +1122,9 @@ export function AdvancedBattleSimulator({
           <div className={`mt-4 rounded-lg border-2 p-3 text-center ${color === 'blue' ? 'border-blue-300 bg-blue-100' : 'border-red-300 bg-red-100'}`}>
             <div className={`${color === 'blue' ? 'text-blue-800' : 'text-red-800'} font-semibold`}>
               {side.requestType === 'switch'
-                ? (needsForceSwitch ? '교체할 포켓몬을 선택하세요.' : '다른 포켓몬의 교체를 기다리는 중입니다.')
+                ? (needsForceSwitch
+                  ? (side.isRevivalSwitch ? '부활시킬 포켓몬을 선택하세요.' : '교체할 포켓몬을 선택하세요.')
+                  : '다른 포켓몬의 교체를 기다리는 중입니다.')
                 : side.requestType === 'move' ? '기술 또는 교체를 선택하세요.' : '상대 선택을 기다리는 중입니다.'}
             </div>
           </div>

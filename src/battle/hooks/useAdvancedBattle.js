@@ -860,8 +860,16 @@ const convertSide = (battle, side, request) => {
   const requestType = hasSubmittedChoice(side) ? 'wait' : getRequestType(request);
   const activeRequests = request?.active || [];
   const forceSwitch = request?.forceSwitch || [];
+  // 회생의 기도(Revival Blessing) 사용 후에는 side.slotConditions에 'revivalblessing'이
+  // 걸리고, 교체 대상이 평소와 반대로 "쓰러진" 포켓몬이어야 한다(@pkmn/sim side.js의
+  // chooseSwitch가 이 경우 fainted가 아니면 에러를 낸다). 그런데 bench는 항상 살아있는
+  // 포켓몬만 보여줬어서, 벤치가 전부 쓰러진 상태로 이 기술을 쓰면 고를 대상이 하나도 안 보여
+  // 선택이 불가능해지는 버그가 있었다.
+  const isRevivalSwitch = side.active.some((pokemon, index) =>
+    forceSwitch[index] && pokemon && side.slotConditions[pokemon.position]?.['revivalblessing']
+  );
   const bench = side.pokemon
-    .filter(pokemon => !pokemon.isActive && !pokemon.fainted)
+    .filter(pokemon => isRevivalSwitch ? pokemon.fainted : (!pokemon.isActive && !pokemon.fainted))
     .map(pokemon => convertPokemon(battle, pokemon));
   const active = side.active
     .map((pokemon, index) => convertPokemon(battle, pokemon, activeRequests[index], forceSwitch[index]))
@@ -871,6 +879,7 @@ const convertSide = (battle, side, request) => {
   return {
     active,
     bench,
+    isRevivalSwitch,
     fainted: side.pokemon
       .filter(pokemon => pokemon.fainted)
       .map(pokemon => convertPokemon(battle, pokemon)),
@@ -1255,6 +1264,10 @@ export function useAdvancedBattle(initialOptions = {}) {
       const hp = effect.fullHP ? pokemon.maxhp : Math.floor(pokemon.maxhp / 2);
       pokemon.hp = hp;
       pokemon.fainted = false;
+      // @pkmn/sim의 side.pokemonLeft는 faint 시점에만 감소하고 fainted 플래그를
+      // 직접 되돌리는 것만으로는 복구되지 않는다. 복구 안 하면 이후 다른 포켓몬이
+      // 쓰러질 때 checkWin()이 이 사이드를 전멸로 오판해 교체 선택 없이 배틀이 끝난다.
+      pokemon.side.pokemonLeft++;
       const speciesName = pokemon.species?.name || pokemon.name || '포켓몬';
       effectMsg = `${speciesName} 부활 (HP ${formatHpFraction(`${hp}/${pokemon.maxhp}`)})`;
     } else if (effect.type === 'heal') {
@@ -1311,6 +1324,11 @@ export function useAdvancedBattle(initialOptions = {}) {
     pokemon.hp = prevHP;
     pokemon.status = prevStatus;
     pokemon.boosts = { ...prevBoosts };
+    // revive를 롤백해 다시 fainted로 되돌릴 때는 applyBattleItem에서 늘린
+    // side.pokemonLeft도 같이 되돌려야 한다 (그대로 두면 반대로 과다 카운트됨).
+    if (prevFainted && !pokemon.fainted) {
+      pokemon.side.pokemonLeft = Math.max(0, pokemon.side.pokemonLeft - 1);
+    }
     pokemon.fainted = prevFainted;
 
     // 해당 플레이어의 pending choice 제거
