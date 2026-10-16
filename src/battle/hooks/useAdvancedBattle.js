@@ -1032,14 +1032,23 @@ export function useAdvancedBattle(initialOptions = {}) {
         const p = pending[player];
         if (!p) return;
         if (p.type === 'item-pass') {
-          // 아이템 턴 소모: commanding volatile 임시 주입으로 pass 허용
+          // 아이템 턴 소모: commanding volatile 임시 주입으로 pass 허용.
+          // ⚠️ battle.choose()를 그대로 쓰면 안 된다 — 이 플레이어가 양쪽 중 선택을
+          // 마지막으로 채우는 쪽일 때 battle.choose() 내부에서 바로 그 턴이 동기적으로
+          // 커밋/실행되는데, 그 시점엔 아직 우리가 넣은 commanding이 살아있는 상태라
+          // commanding의 onInvulnerability:false 때문에 상대 기술이 전부 "회피됨(miss)"
+          // 처리되는 버그가 있었다. side.choosePass()로 선택만 기록해두고, commanding을
+          // 지운 "다음"에 직접 commitChoices()를 호출해 실제 턴 실행을 그 뒤로 미룬다.
           const side = player === 'player1' ? battle.p1 : battle.p2;
           const pokemon = side.active?.[0];
           if (pokemon && !pokemon.fainted) {
             const had = 'commanding' in pokemon.volatiles;
             pokemon.volatiles['commanding'] = {};
-            battle.choose(playerToSideId(player), 'pass');
+            side.choosePass();
             if (!had) delete pokemon.volatiles['commanding'];
+            if (side.isChoiceDone() && battle.allChoicesDone()) {
+              battle.commitChoices();
+            }
           }
         } else {
           battle.choose(playerToSideId(player), p.choice);

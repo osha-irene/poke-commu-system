@@ -3453,7 +3453,9 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                     maxHeight: effectivePartnerUsesArtwork ? 107 : 160,
                     maxWidth: effectivePartnerUsesArtwork ? 107 : 160,
                     objectFit: effectivePartnerUsesArtwork ? 'contain' : 'initial',
-                    imageRendering: effectivePartnerUsesArtwork ? 'auto' : 'pixelated',
+                    // 큰 파트너 프로필 이미지는 아트워크든 스프라이트든 부드럽게 보이는 쪽이
+                    // 자연스럽다 (작은 볼/도구 아이콘, 엔트리 카드 썸네일은 그대로 pixelated 유지).
+                    imageRendering: 'auto',
                     zIndex: 5,
                     cursor: 'pointer',
                   }}
