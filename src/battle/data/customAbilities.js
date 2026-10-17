@@ -30,28 +30,26 @@ export const customAbilities = {
   },
 
   // 깜부기불 (메가부스터 전용)
-  // 일격필살기 무효 + 대미지로 기절하는 상황이면(HP 잔량과 무관하게) HP 1로 버틴다.
-  // Sturdy와 달리 풀피 조건이 없다. 단, 한 번 발동해 HP 1로 버티고 나면 특성 효과가 사라진다
-  // (기합의띠처럼 1회성). abilityState는 메가진화/교체로 초기화되므로 pokemon 인스턴스에 기록한다. 그렇지 않으면 HP 1 상태에서 맞을 때마다 계속 발동한다.
+  // 옹골참(Sturdy)과 완전히 동일: 일격필살기 무효 + HP가 가득 찬 상태에서
+  // 한 번에 쓰러질 만큼의 대미지를 받으면 HP 1로 버틴다.
   smolderingember: {
     name: 'Smoldering Ember',
-    shortDesc: 'This Pokemon is unaffected by OHKO moves, and cannot be knocked out '
-      + 'by a single hit regardless of its current HP.',
-    onTryHit(target, source, move) {
+    shortDesc: 'If this Pokemon is at full HP, it survives one hit with at least 1 HP. '
+      + 'OHKO moves fail on this Pokemon.',
+    onTryHit(pokemon, target, move) {
       if (move.ohko) {
-        this.add('-immune', target, '[from] ability: Smoldering Ember');
+        this.add('-immune', pokemon, '[from] ability: Smoldering Ember');
         return null;
       }
     },
+    onDamagePriority: -30,
     onDamage(damage, target, source, effect) {
-      if (effect && effect.effectType === 'Move' && damage >= target.hp
-        && !target.emberSpent) {
-        target.emberSpent = true;
+      if (target.hp === target.maxhp && damage >= target.hp && effect && effect.effectType === 'Move') {
         this.add('-ability', target, 'Smoldering Ember');
         return target.hp - 1;
       }
     },
-    flags: {},
+    flags: { breakable: 1 },
     rating: 3,
     num: 9002,
   },
