@@ -2651,7 +2651,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
             }}>
               {/* 왼쪽: 기본 정보 (다른 엔트리 카드 앞면과 동일한 구성) */}
               <div style={{ position: 'relative', flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 8 }}>
-                {!hidePokemonDetails && <img src={getBallImageUrl(partner, allItems)} alt="" style={{ position: 'absolute', top: 0, left: 0, width: 27, height: 27, objectFit: 'contain', imageRendering: 'pixelated', opacity: 0.75, pointerEvents: 'none' }} />}
+                <img src={getBallImageUrl(partner, allItems)} alt="" style={{ position: 'absolute', top: 0, left: 0, width: 27, height: 27, objectFit: 'contain', imageRendering: 'pixelated', opacity: 0.75, pointerEvents: 'none' }} />
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                   <div
                     className="pokemon-bg-sprite"
@@ -2673,11 +2673,11 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                       <span style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a' }}>{partner.nickname || partner.nameKo || partner.name}</span>
                       {partner.gender === 'male' && <GenderMale />}
                       {partner.gender === 'female' && <GenderFemale />}
-                      {!hidePokemonDetails && partnerTypes.map((t, ti) => {
+                      {partnerTypes.map((t, ti) => {
                         const tc = TYPE_COLORS[t] || { bg: '#888', text: '#fff' };
                         return <span key={ti} style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: tc.bg, color: tc.text }}>{t}</span>;
                       })}
-                      {!hidePokemonDetails && partner.level && <span style={{ fontSize: 12, fontWeight: 600, color: '#555' }}>Lv.{partner.level}</span>}
+                      {partner.level && <span style={{ fontSize: 12, fontWeight: 600, color: '#555' }}>Lv.{partner.level}</span>}
                     </div>
                     {!hidePokemonDetails && (partner.ability || partner.heldItem) && (
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginTop: 5 }}>
@@ -2720,7 +2720,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                 )}
               </div>
               {/* 오른쪽: 다른 엔트리 카드 뒷면과 동일한 구성 (출신/개인 메모/컨디션) */}
-              {!hidePokemonDetails && <div style={{
+              <div style={{
                 flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 6,
                 borderLeft: `1px solid rgba(${accentRgb}, 0.2)`, paddingLeft: 16,
               }}>
@@ -2757,7 +2757,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                     })}
                   </div>
                 )}
-              </div>}
+              </div>
             </div>
           );
         })()}
@@ -2795,8 +2795,8 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                   key={i}
                   onMouseEnter={() => setHoveredEntryIndex(i)}
                   onMouseLeave={() => setHoveredEntryIndex(null)}
-                  onClick={() => { if (!hidePokemonDetails) setFlippedEntryIndex(isFlipped ? null : i); }}
-                  style={{ position: 'relative', zIndex: hoveredEntryIndex === i ? 20 : 1, cursor: hidePokemonDetails ? 'default' : 'pointer', borderRadius: 14, display: 'grid', height: '100%', minWidth: 0 }}
+                  onClick={() => setFlippedEntryIndex(isFlipped ? null : i)}
+                  style={{ position: 'relative', zIndex: hoveredEntryIndex === i ? 20 : 1, cursor: 'pointer', borderRadius: 14, display: 'grid', height: '100%', minWidth: 0 }}
                 >
                   {/* 앞면 */}
                   <div style={{
@@ -2818,7 +2818,7 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                     pointerEvents: isFlipped ? 'none' : 'auto',
                   }}>
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                      {!hidePokemonDetails && <img src={getBallImageUrl(p, allItems)} alt="" style={{ position: 'absolute', top: 6, left: 6, width: 27, height: 27, objectFit: 'contain', imageRendering: 'pixelated', opacity: 0.75, pointerEvents: 'none' }} />}
+                      <img src={getBallImageUrl(p, allItems)} alt="" style={{ position: 'absolute', top: 6, left: 6, width: 27, height: 27, objectFit: 'contain', imageRendering: 'pixelated', opacity: 0.75, pointerEvents: 'none' }} />
                       <div
                         className="pokemon-bg-sprite"
                         aria-label={getPokemonName(p)}
@@ -2842,16 +2842,16 @@ function MemberDetail({ member, members, titles, onBack, onTabChange, currentUse
                       <div style={{ flex: 1, minWidth: 0, alignSelf: 'stretch', paddingTop: 3 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
                           <span style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>{nickname || speciesLabel}</span>
-                          {!hidePokemonDetails && p.isShiny && <span aria-label="이로치" title="이로치" style={{ color: '#dc2626', fontSize: 11, lineHeight: 1, fontWeight: 900 }}>★</span>}
-                          {!hidePokemonDetails && nickname && <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.38)' }}>{speciesLabel}</span>}
+                          {p.isShiny && <span aria-label="이로치" title="이로치" style={{ color: '#dc2626', fontSize: 11, lineHeight: 1, fontWeight: 900 }}>★</span>}
+                          {nickname && <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.38)' }}>{speciesLabel}</span>}
                           {p.gender === 'male' && <GenderMale />}
                           {p.gender === 'female' && <GenderFemale />}
-                          {!hidePokemonDetails && types.map((t, ti) => {
+                          {types.map((t, ti) => {
                             const tc = TYPE_COLORS[t] || { bg: '#888', text: '#fff' };
                             return <span key={ti} style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: tc.bg, color: tc.text }}>{t}</span>;
                           })}
-                          {!hidePokemonDetails && p.level && <span style={{ fontSize: 11, fontWeight: 600, color: '#555', whiteSpace: 'nowrap' }}>Lv.{p.level}</span>}
-                          {!hidePokemonDetails && p.isPartner && <span style={{ fontSize: 11, fontWeight: 600, color: '#d97706' }}>파트너</span>}
+                          {p.level && <span style={{ fontSize: 11, fontWeight: 600, color: '#555', whiteSpace: 'nowrap' }}>Lv.{p.level}</span>}
+                          {p.isPartner && <span style={{ fontSize: 11, fontWeight: 600, color: '#d97706' }}>파트너</span>}
                         </div>
                         {!hidePokemonDetails && (p.ability || p.heldItem) && (
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginTop: 0 }}>
