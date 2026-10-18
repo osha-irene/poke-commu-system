@@ -6,6 +6,21 @@ for (const item of (itemsData.items || [])) {
   if (item.nameEn) ITEM_DB[item.nameEn] = item;
 }
 
+// 인벤토리 항목 중에는 nameEn/category 없이 itemId/name만 저장된 것이 있다(예: 기력의덩어리).
+// items.json 기준으로 itemId → name 순으로 보강 조회한다.
+const ITEM_DB_BY_ID = {};
+const ITEM_DB_BY_NAME = {};
+for (const item of (itemsData.items || [])) {
+  if (item.id != null) ITEM_DB_BY_ID[item.id] = item;
+  if (item.name) ITEM_DB_BY_NAME[item.name.replace(/\s+/g, '')] = item;
+}
+
+const resolveDbItem = (item) =>
+  ITEM_DB[item.nameEn]
+  || ITEM_DB_BY_ID[item.itemId ?? item.id]
+  || ITEM_DB_BY_NAME[(item.name || '').replace(/\s+/g, '')]
+  || null;
+
 // 배틀에서 사용 허용할 카테고리
 const ALLOWED_CATEGORIES = new Set([
   'healing',        // 상처약, 좋은상처약, 신선한 물, 원기뿌리 등
@@ -86,10 +101,10 @@ function deriveEffect(nameEn, category) {
 
 export const getBattleItemEffect = (item) => {
   if (!item) return null;
-  const nameEn = item.nameEn || '';
+  const dbItem = resolveDbItem(item);
+  const nameEn = item.nameEn || dbItem?.nameEn || '';
 
   // items.json에서 카테고리 확인 (없으면 인벤토리 아이템의 category 사용)
-  const dbItem = ITEM_DB[nameEn];
   const category = dbItem?.category || item.category || '';
 
   if (!ALLOWED_CATEGORIES.has(category)) return null;

@@ -840,10 +840,10 @@ const convertPokemon = (battle, pokemon, activeRequest = null, forceSwitch = fal
     statusEn: pokemon.status || null,
     volatileStatus: Object.keys(pokemon.volatiles || {}).map(translateVolatileName),
     boosts: { ...pokemon.boosts },
-    currentHP: pokemon.hp,
+    currentHP: Math.max(0, pokemon.hp),
     maxHP: pokemon.maxhp,
-    hp: pokemon.hp,
-    maxHPPercent: pokemon.maxhp ? Math.round((pokemon.hp / pokemon.maxhp) * 100) : 0,
+    hp: Math.max(0, pokemon.hp),
+    maxHPPercent: pokemon.maxhp ? Math.max(0, Math.round((pokemon.hp / pokemon.maxhp) * 100)) : 0,
     stats: { hp: pokemon.maxhp },
     moves: convertMoves(battle, pokemon, activeRequest),
     request: {
@@ -1270,9 +1270,17 @@ export function useAdvancedBattle(initialOptions = {}) {
     let effectMsg = '';
 
     if (effect.type === 'revive') {
-      const hp = effect.fullHP ? pokemon.maxhp : Math.floor(pokemon.maxhp / 2);
+      const hp = Math.max(1, Math.min(
+        pokemon.maxhp,
+        effect.fullHP ? pokemon.maxhp : Math.floor(pokemon.maxhp / 2),
+      ));
       pokemon.hp = hp;
       pokemon.fainted = false;
+      // 회생의 기도(@pkmn/sim moves)와 동일하게 기절 잔재를 지운다. status가 'fnt'로 남으면
+      // 이후 데미지/상태 처리에서 비정상 HP(음수 등)가 나올 수 있다.
+      pokemon.faintQueued = false;
+      pokemon.subFainted = false;
+      if (pokemon.status === 'fnt') pokemon.status = '';
       // @pkmn/sim의 side.pokemonLeft는 faint 시점에만 감소하고 fainted 플래그를
       // 직접 되돌리는 것만으로는 복구되지 않는다. 복구 안 하면 이후 다른 포켓몬이
       // 쓰러질 때 checkWin()이 이 사이드를 전멸로 오판해 교체 선택 없이 배틀이 끝난다.
