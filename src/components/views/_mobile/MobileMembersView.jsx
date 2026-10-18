@@ -538,7 +538,7 @@ function ProfileTab({ member }) {
 }
 
 /* ── 엔트리 탭 ── */
-function EntryTab({ party, allItems = [], allPokemonMaster = [] }) {
+function EntryTab({ party, allItems = [], allPokemonMaster = [], hideDetails = false }) {
   if (!party.length) {
     return <p style={{ color: '#bbb', fontSize: '0.85rem', textAlign: 'center', padding: '40px 0' }}>포켓몬 없음</p>;
   }
@@ -596,9 +596,9 @@ function EntryTab({ party, allItems = [], allPokemonMaster = [] }) {
                   return <span key={ti} style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: tc.bg, color: tc.text }}>{t}</span>;
                 })}
                 {p?.level && <span style={{ fontSize: 10, fontWeight: 600, color: '#666', whiteSpace: 'nowrap' }}>Lv.{p.level}</span>}
-                {p?.ability && <span style={{ fontSize: 10, color: '#666', marginLeft: 'auto', whiteSpace: 'nowrap' }}>{getAbilityKoreanName(p.ability) || p.ability}</span>}
+                {!hideDetails && p?.ability && <span style={{ fontSize: 10, color: '#666', marginLeft: 'auto', whiteSpace: 'nowrap' }}>{getAbilityKoreanName(p.ability) || p.ability}</span>}
               </div>
-              {moves.length > 0 && (
+              {!hideDetails && moves.length > 0 && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
                   {moves.map((mv, mi) => {
                     const mc = getMoveTypeColor(mv);
@@ -825,7 +825,7 @@ function MemberDetail({ member, titles, onBack, allPokemonMaster = [] }) {
     switch (key) {
       case 'main': return <MainTab member={member} title={title} partner={partner} />;
       case 'profile': return <ProfileTab member={member} />;
-      case 'entry': return <EntryTab party={party} allItems={allItems} allPokemonMaster={allPokemonMaster} />;
+      case 'entry': return <EntryTab party={party} allItems={allItems} allPokemonMaster={allPokemonMaster} hideDetails={Boolean(member.hidePokemonDetails)} />;
       case 'achievement': return <AchievementsTab member={member} />;
       case 'relation': return <RelationsTab member={member} allMembers={allMembers} />;
       default: return null;
