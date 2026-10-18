@@ -43,3 +43,6 @@ yarn-error.log*
 functions/.env
 
 Generation 9 Pack v3.3.2.rarpublic/img/icons/
+
+# poke-battle: 별도 GitHub Pages 저장소로 관리 (이 저장소에는 올리지 않음)
+poke-battle/
