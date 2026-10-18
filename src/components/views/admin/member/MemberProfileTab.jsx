@@ -177,6 +177,7 @@ function MemberProfileTab({ member, titles = [], onGrantTitle, onRevokeTitle, on
   const [partnerInfoTop, setPartnerInfoTop] = useState(member.partnerInfoTop ?? '');
   const [accentColor, setAccentColor] = useState(member.accentColor || '');
   const [rightGradientTabs, setRightGradientTabs] = useState(() => getInitialRightGradientTabs(member));
+  const [hidePokemonDetails, setHidePokemonDetails] = useState(Boolean(member.hidePokemonDetails));
   const [saving, setSaving] = useState(false);
 
   const assignedTitles = member.assignedTitles || [];
@@ -231,6 +232,7 @@ function MemberProfileTab({ member, titles = [], onGrantTitle, onRevokeTitle, on
       updates.megaEvolutionStatD = megaEvolutionStatD.toString().trim() !== '' ? Number(megaEvolutionStatD) : null;
       updates.megaEvolutionStatS = megaEvolutionStatS.toString().trim() !== '' ? Number(megaEvolutionStatS) : null;
       updates.accentColor = accentColor || null;
+      updates.hidePokemonDetails = hidePokemonDetails;
       updates.rightGradientTabs = rightGradientTabs;
       updates.rightGradientEnabled = Object.values(rightGradientTabs).some(Boolean);
       await update(ref(db, `members/${member.id}`), updates);
@@ -326,6 +328,19 @@ function MemberProfileTab({ member, titles = [], onGrantTitle, onRevokeTitle, on
               )}
             </div>
             <p className="text-xs text-gray-400 mt-1.5">비워두면 이미지에서 자동 추출.</p>
+            <div className="mt-3">
+              <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={hidePokemonDetails}
+                  onChange={e => canEdit && setHidePokemonDetails(e.target.checked)}
+                  disabled={!canEdit}
+                  className="w-4 h-4 accent-indigo-600 disabled:cursor-not-allowed"
+                />
+                포켓몬 숨기기
+              </label>
+              <p className="text-xs text-gray-400 mt-1">켜면 멤버뷰 엔트리 탭에서 포켓몬의 이미지, 이름, 성별만 보입니다. 저장 버튼을 눌러야 반영됩니다.</p>
+            </div>
             <div className="mt-3">
               <p className="text-xs font-semibold text-gray-600 mb-2">멤버뷰 우측 그라데이션 표시 탭</p>
               <div className="grid grid-cols-2 gap-2">
