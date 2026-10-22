@@ -7,6 +7,8 @@ import { isUncatchableRarePokemon } from '../../utils/pokemonRarity';
 
 const SAFARI_BALL_DAILY_REWARD_COUNT = 10;
 const DAILY_EXPLORE_EXHAUSTED_EXP = 100;
+const CELEBI_SPECIAL_ENCOUNTER_RATE = 0.01;
+const CELEBI_NUMBER = 251;
 
 const getLocalDateKey = (date = new Date()) => {
   const year = date.getFullYear();
@@ -106,6 +108,43 @@ export const useRegionExplore = (
             }
           ];
         });
+      }
+
+      // 세레비 특별 조우 — 지역 설정(포켓몬 목록, 조우 확률)과 무관하게 모든 장소에서
+      // 탐험할 때마다 1% 확률로 독립적으로 등장한다. 일반 조우/미조우 판정보다 먼저
+      // 굴려서, 세레비가 등록되어 있지 않은 장소에서도 나타날 수 있게 한다.
+      if (Math.random() < CELEBI_SPECIAL_ENCOUNTER_RATE) {
+        const celebiMaster = allPokemonMaster.find(p => Number(p.number) === CELEBI_NUMBER)
+          || gamePokedex.find(p => Number(p.number) === CELEBI_NUMBER);
+
+        if (celebiMaster) {
+          const level = Math.floor(Math.random() * 30) + 10;
+          const gender = generateGender(celebiMaster);
+          const ability = generateAbility(celebiMaster, false);
+
+          setEncounterPokemon({
+            ...celebiMaster,
+            level,
+            isShiny: false,
+            gender,
+            ability,
+            ivs: DEFAULT_IVS,
+            regionName: encounterLocationName,
+            baseRegionId: region.baseRegionId || region.regionId || region.id,
+            placeId: region.placeId || null,
+            placeName,
+            isCave: region.isCave === true,
+            isWaterside: region.isWaterside === true,
+            isSafari,
+            background: region.background || null,
+            isFriendlySpecial: true,
+          });
+
+          if (isDailyExploreExhausted) {
+            alert(`오늘의 모든 탐험을 완료했습니다!\n경험치 ${DAILY_EXPLORE_EXHAUSTED_EXP}을 받았습니다.`);
+          }
+          return;
+        }
       }
 
       // 포켓몬 미조우 시

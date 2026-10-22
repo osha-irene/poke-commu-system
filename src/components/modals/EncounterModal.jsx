@@ -15,6 +15,16 @@ import { isUncatchableRarePokemon } from '../../utils/pokemonRarity';
 
 const getBaseName = (name) => name?.replace(/\s*\(.*?\)\s*/g, '').trim() || name;
 
+// 세레비 특별 조우(useRegionExplore의 isFriendlySpecial) 전용 대사 — 포획 대신
+// 끌어안고 사라지는 이벤트라서, 일반 실패/도망 메시지와는 분위기가 다른 문구를 쓴다.
+const CELEBI_HUG_MESSAGES = [
+  '세레비가 당신에게 폴짝 뛰어올라 꼭 끌어안았다!\n포근한 온기만 남기고 사라져 버렸다...',
+  '세레비가 당신 품에 살짝 안겨 웃어 보였다.\n그리고는 빛무리와 함께 사라졌다!',
+  '세레비가 당신 머리 위를 빙글빙글 돌며 장난치다가, 와락 끌어안고는 사라졌다!',
+  '세레비가 당신의 손을 꼭 붙잡고 한참을 함께 놀았다.\n이내 아쉬운 듯 끌어안고는 사라져 버렸다...',
+  '세레비가 당신의 뺨에 살짝 기대어 왔다.\n행복한 표정으로 꼭 끌어안고는 사라졌다!',
+];
+
 const TYPE_COLORS = {
   '노말':'#9fa19f','불꽃':'#e62829','물':'#2980ef','풀':'#3fa129','전기':'#fac000',
   '얼음':'#3dcef3','격투':'#ff8000','독':'#9141cb','땅':'#915121','비행':'#81b9ef',
@@ -41,8 +51,13 @@ export default function EncounterModal({
 }) {
   const bgImage = useMemo(() => getEncounterBackground(encounterBackground), [encounterBackground]);
   const bgBase = useMemo(() => isNoBaseBackground(encounterBackground) ? null : getEncounterBgBase(encounterBackground), [encounterBackground]);
+  // 세레비 특별 조우는 일반 전설/환상 포켓몬과 달리 이름을 가리지 않는다.
+  const isCelebiSpecial = pokemon.isFriendlySpecial === true;
   // 전설/환상/패러독스 포켓몬은 이름을 ???로 숨기고 어떤 볼로도 잡을 수 없게 한다.
-  const isMysteryEncounter = useMemo(() => isUncatchableRarePokemon(pokemon), [pokemon]);
+  const isMysteryEncounter = useMemo(
+    () => !isCelebiSpecial && isUncatchableRarePokemon(pokemon),
+    [pokemon, isCelebiSpecial]
+  );
   const displayName = isMysteryEncounter ? '???' : getBaseName(pokemon.name);
   const [selectedBall, setSelectedBall] = useState(null);
   const [catching, setCatching] = useState(false);
@@ -394,6 +409,13 @@ export default function EncounterModal({
   const handleBallSelect = (e, ball) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (isCelebiSpecial) {
+      const randomHugMessage = CELEBI_HUG_MESSAGES[Math.floor(Math.random() * CELEBI_HUG_MESSAGES.length)];
+      alert(randomHugMessage);
+      onClose();
+      return;
+    }
 
     if (isMysteryEncounter) {
       alert('???가 사라졌다!');
