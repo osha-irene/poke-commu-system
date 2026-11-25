@@ -580,7 +580,7 @@ export default function MapView({
               </div>
 
               {/* 오른쪽 — 지역 이름 + 장소 선택 */}
-              <div style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', maxHeight: '100%', overflowY: 'auto', paddingBottom: 8 }}>
                 <div style={{ marginBottom: 14, borderRadius: 16, padding: '16px 18px', background: 'rgba(255,255,255,0.92)', boxShadow: '0 2px 10px rgba(0,0,0,0.15)' }}>
                   <div style={{ fontFamily: 'GmarketSans, sans-serif', fontSize: 20, fontWeight: 700, color: '#373a33', lineHeight: 1.2, WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale' }}>
                     {selectedArea.name}
@@ -636,6 +636,7 @@ export default function MapView({
 
                 <button onClick={handleExplore} style={{
                   width: '100%',
+                  flexShrink: 0,
                   padding: 0,
                   borderRadius: 18,
                   background: 'transparent',
